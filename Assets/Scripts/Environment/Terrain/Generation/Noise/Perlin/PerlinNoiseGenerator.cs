@@ -16,6 +16,11 @@ namespace Environment.Terrain.Generation.Noise.Perlin
         public float[][] Map;
         protected Vector3Int Offset;
 
+        public PerlinNoiseGenerator(Vector3Int offset, Vector3Int size, WorldGenerationSettings settings) : this(offset,
+            settings.Seed, size, settings.Octaves, settings.Scale, settings.Persistence, settings.Lacunarity)
+        {
+        }
+
         public PerlinNoiseGenerator(Vector3Int offset, WorldSeed seed, Vector3Int size, int octaves, float scale,
             float persistence,
             float lacunarity)

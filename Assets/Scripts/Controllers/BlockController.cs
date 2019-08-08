@@ -26,12 +26,14 @@ namespace Controllers
             {
                 if (!addNewBlock)
                 {
-                    EventLog.Logger.Log(LogLevel.Error, $"Failed to add block rule: specified block `{blockName}` does not exist.");
+                    EventLog.Logger.Log(LogLevel.Error,
+                        $"Failed to add block rule: specified block `{blockName}` does not exist.");
 
                     return false;
                 }
 
-                EventLog.Logger.Log(LogLevel.Warn, $"AddNewBlock flag set, adding block `{blockName}` and continuing...");
+                EventLog.Logger.Log(LogLevel.Warn,
+                    $"AddNewBlock flag set, adding block `{blockName}` and continuing...");
 
                 _Blocks.Add(blockName, new BlockRule(blockName, isTransparent, null));
             }
@@ -69,6 +71,11 @@ namespace Controllers
 
         public bool IsBlockTransparent(string blockName)
         {
+            if (blockName == null)
+            {
+                return false;
+            }
+
             if (string.IsNullOrWhiteSpace(blockName))
             {
                 return true;
@@ -76,7 +83,8 @@ namespace Controllers
 
             if (!_Blocks.ContainsKey(blockName))
             {
-                EventLog.Logger.Log(LogLevel.Error, $"Failed to return block rule for block `{blockName}`: block does not exist.");
+                EventLog.Logger.Log(LogLevel.Error,
+                    $"Failed to return block rule for block `{blockName}`: block does not exist.");
                 return false;
             }
 

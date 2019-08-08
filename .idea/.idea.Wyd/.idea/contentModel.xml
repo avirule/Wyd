@@ -51,6 +51,7 @@
                     <e p="PerlinNoiseGenerator.cs" t="Include" />
                   </e>
                 </e>
+                <e p="WorldGenerationSettings.cs" t="Include" />
                 <e p="WorldGenSettings.cs" t="Include" />
                 <e p="WorldSeed.cs" t="Include" />
               </e>

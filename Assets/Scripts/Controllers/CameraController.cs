@@ -19,7 +19,8 @@ namespace Controllers
             Transform self = transform;
 
             self.rotation =
-                Quaternion.Euler(new Vector3(Mathf.Clamp(-_Pitch * Time.fixedDeltaTime, -90f, 90f), _Yaw * Time.fixedDeltaTime, 0f));
+                Quaternion.Euler(new Vector3(Mathf.Clamp(-_Pitch * Time.fixedDeltaTime, -90f, 90f),
+                    _Yaw * Time.fixedDeltaTime, 0f));
         }
 
         private void Update()

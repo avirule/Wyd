@@ -10,10 +10,12 @@ namespace Environment
 {
     public class MeshBuilder : ThreadedProcess
     {
+        private readonly BlockController _BlockController;
         private readonly string[][][] _Blocks;
         private readonly byte[] _Faces = new byte[Chunk.Size.x * Chunk.Size.y * Chunk.Size.x];
         private readonly Vector3Int _Position;
-        private readonly BlockController _BlockController;
+
+        private readonly WorldController _WorldController;
         private bool _IsVisible;
 
         private Vector3 _SelfForwardTransform;
@@ -24,11 +26,10 @@ namespace Environment
         private Vector2[] _UVs;
         private int _VertexIndex;
         private Vector3[] _Vertices;
-
-        private readonly WorldController _WorldController;
         private Vector3 _WorldControllerForwardTransform;
 
-        public MeshBuilder(WorldController worldController, BlockController blockController, Vector3Int position, string[][][] blocks)
+        public MeshBuilder(WorldController worldController, BlockController blockController, Vector3Int position,
+            string[][][] blocks)
         {
             _WorldController = worldController;
             _BlockController = blockController;
@@ -55,7 +56,7 @@ namespace Environment
                 {
                     for (int z = 0; z < Chunk.Size.x; z++)
                     {
-                        if (string.IsNullOrWhiteSpace(_Blocks[x][y][z]))
+                        if (string.IsNullOrEmpty(_Blocks[x][y][z]))
                         {
                             _Faces[index] = 0;
                             index++;

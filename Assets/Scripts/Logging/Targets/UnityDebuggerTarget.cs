@@ -1,7 +1,6 @@
 using NLog;
 using NLog.Config;
 using NLog.Targets;
-using UnityEditor.U2D;
 using UnityEngine;
 
 namespace Logging.Targets
@@ -14,14 +13,13 @@ namespace Logging.Targets
             Host = "localhost";
             Layout = "(${logger}) : ${message}";
         }
-        
-        [RequiredParameter]
-        public string Host { get; set; }
+
+        [RequiredParameter] public string Host { get; set; }
 
         protected override void Write(LogEventInfo logEvent)
         {
             base.Write(logEvent);
-            
+
             DebugLog(logEvent, Layout.Render(logEvent));
         }
 
@@ -30,10 +28,12 @@ namespace Logging.Targets
             if (logEvent.Level == LogLevel.Info)
             {
                 Debug.Log(logEventMessage);
-            } else if (logEvent.Level == LogLevel.Warn)
+            }
+            else if (logEvent.Level == LogLevel.Warn)
             {
                 Debug.LogWarning(logEventMessage);
-            } else if (logEvent.Level == LogLevel.Error || logEvent.Level == LogLevel.Fatal)
+            }
+            else if ((logEvent.Level == LogLevel.Error) || (logEvent.Level == LogLevel.Fatal))
             {
                 Debug.LogError(logEventMessage);
             }

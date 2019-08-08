@@ -54,7 +54,7 @@ namespace Controllers
         {
             Transform self = transform;
             Grounded = Physics.Raycast(self.position, Vector3.down, (self.localScale.y / 2f) + 0.001f, GroundedMask);
-            
+
             if (Grounded && Input.GetButton("Jump"))
             {
                 Rigidbody.AddForce(Vector3.up * JumpForce, ForceMode.Impulse);

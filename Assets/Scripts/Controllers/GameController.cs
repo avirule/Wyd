@@ -1,7 +1,6 @@
 using System;
 using Entities;
 using Environment.Terrain;
-using Logging;
 using NLog;
 using UnityEngine;
 
@@ -9,10 +8,10 @@ namespace Controllers
 {
     public class GameController : MonoBehaviour
     {
-        public WorldController WorldController;
-        public TextureController TextureController;
         public BlockController BlockController;
-        
+        public TextureController TextureController;
+        public WorldController WorldController;
+
         private void Awake()
         {
             Cursor.lockState = CursorLockMode.Locked;
@@ -33,10 +32,9 @@ namespace Controllers
         {
             RegisterDefaultBlocks();
         }
-        
+
         private void RegisterDefaultBlocks()
         {
-            //blockController.RegisterBlockRules("Glass", true, true, (position, direction) => "Glass");
             BlockController.RegisterBlockRules("Stone", true, false, (position, direction) => "Stone");
             BlockController.RegisterBlockRules("Dirt", true, false, (position, direction) => "Dirt");
             BlockController.RegisterBlockRules("Grass", true, false, (position, direction) =>
@@ -84,6 +82,7 @@ namespace Controllers
                         throw new ArgumentOutOfRangeException(nameof(direction), direction, null);
                 }
             });
+            BlockController.RegisterBlockRules("Glass", true, true, (position, direction) => "Glass");
         }
     }
 }

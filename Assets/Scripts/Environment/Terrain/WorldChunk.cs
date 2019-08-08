@@ -1,18 +1,19 @@
+using Static;
 using UnityEngine;
 
 namespace Environment.Terrain
 {
-    public struct WorldChunk
+    public class WorldChunk
     {
-        public readonly GameObject ChunkObject;
         public readonly Chunk Chunk;
-        public Vector3Int Position => Chunk.Position;
+        public readonly GameObject GameObject;
+        public Vector3Int Position;
 
-        public WorldChunk(GameObject chunkObject)
+        public WorldChunk(GameObject gameObject)
         {
-            ChunkObject = chunkObject;
-
-            Chunk = ChunkObject.GetComponent<Chunk>();
+            GameObject = gameObject;
+            Chunk = gameObject.GetComponent<Chunk>();
+            Chunk.Position = Position = GameObject.transform.position.ToInt();
         }
     }
 }

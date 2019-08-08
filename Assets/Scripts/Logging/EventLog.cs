@@ -13,14 +13,15 @@ namespace Logging
         private static MemoryTarget memoryTarget;
 
         public static readonly Logger Logger;
-        public static IList<string> Logs => memoryTarget.Logs;
-        
+
         static EventLog()
         {
             ConfigureLogger();
             Logger = LogManager.GetCurrentClassLogger();
         }
-        
+
+        public static IList<string> Logs => memoryTarget.Logs;
+
         private static void ConfigureLogger()
         {
             LoggingConfiguration config = new LoggingConfiguration();
@@ -32,7 +33,7 @@ namespace Logging
                 Target.Register<UnityDebuggerTarget>("UnityDebuggerTarget");
 
                 UnityDebuggerTarget unityDebuggerTarget = new UnityDebuggerTarget();
-                
+
                 config.AddRule(LogLevel.Info, LogLevel.Fatal, unityDebuggerTarget);
             }
 

@@ -1,4 +1,3 @@
-using System;
 using System.Collections.Generic;
 using Logging;
 using NLog;
@@ -23,10 +22,10 @@ namespace Controllers
             {
                 return;
             }
-            
+
             ProcessSprites();
         }
-        
+
         private void ProcessSprites()
         {
             Sprite[] terrainSprites = Resources.LoadAll<Sprite>(@"Environment\Terrain\");

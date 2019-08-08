@@ -92,8 +92,9 @@ namespace Environment.Terrain.Generation.Noise.Perlin
                 }
             }
 
-            EventLog.Logger.Log(LogLevel.Info, $"Successfully generated perlin noise map of size ({size.x}, {size.z}) with offsets ({offset.x}, {offset.z}).");
-            
+            EventLog.Logger.Log(LogLevel.Info,
+                $"Successfully generated perlin noise map of size ({size.x}, {size.z}) with offsets ({offset.x}, {offset.z}).");
+
             return noiseHeights;
         }
     }

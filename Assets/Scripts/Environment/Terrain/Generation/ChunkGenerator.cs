@@ -30,20 +30,19 @@ namespace Environment.Terrain.Generation
 
                 for (int y = 0; y < _Size.y; y++)
                 {
-                    Blocks[x][y] = new string[_Size.x];
+                    Blocks[x][y] = new string[_Size.z];
 
                     for (int z = 0; z < _Size.z; z++)
                     {
                         float noiseHeight = _NoiseMap[x][z];
 
-                        int perlinValue = Mathf.RoundToInt(noiseHeight * _Size.y);
+                        int perlinValue = Mathf.FloorToInt(noiseHeight * _Size.y);
 
                         if (y > perlinValue)
                         {
-                            continue;
+                            Blocks[x][y][z] = string.Empty;
                         }
-
-                        if ((y == perlinValue) || (y == (Chunk.Size.y - 1)))
+                        else if ((y == perlinValue) || (y == (Chunk.Size.y - 1)))
                         {
                             Blocks[x][y][z] = "Grass";
                         }

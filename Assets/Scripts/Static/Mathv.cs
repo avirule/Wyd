@@ -36,7 +36,7 @@ namespace Static
         {
             return new Vector3(Mathf.Abs(a.x), Mathf.Abs(a.y), Mathf.Abs(a.z));
         }
-        
+
         public static Vector3 Multiply(this Vector3 a, Vector3 b)
         {
             return new Vector3(a.x * b.x, a.y * b.y, a.z * b.z);
@@ -56,9 +56,8 @@ namespace Static
         {
             return new Vector3(Mathf.Floor(a.x), Mathf.Floor(a.y), Mathf.Floor(a.z));
         }
-        
-        #endregion
 
+        #endregion
 
 
         #region Vector3Int
@@ -67,7 +66,7 @@ namespace Static
         {
             return new Vector3Int(Mathf.Abs(a.x), Mathf.Abs(a.y), Mathf.Abs(a.z));
         }
-        
+
         public static Vector3Int Multiply(this Vector3Int a, Vector3Int b)
         {
             return new Vector3Int(a.x * b.x, a.y * b.y, a.z * b.z);

@@ -15,39 +15,66 @@ namespace Controllers
 {
     public class WorldController : MonoBehaviour
     {
-        private Vector3Int _FollowedCurrentChunk;
         private int _BlockDiameter;
+        private Vector3Int _FollowedCurrentChunk;
         private Vector3Int _LastGenerationPoint;
-        private int _WorldGenDiameter;
 
-        public BlockController BlockController;
         public Dictionary<Vector3Int, WorldChunk> Chunks;
-        public Transform FollowedTransform;
-        public NoiseMap NoiseMap;
-        public float WorldGenLacunarity;
-        public int WorldGenOctaves;
-        public float WorldGenPersistence;
-        public int WorldGenRadius;
-        public float WorldGenScale;
-        public string WorldGenSeed;
 
-        public WorldSeed WorldSeed;
+        public bool ChunksChanged;
+        public Transform FollowedTransform;
+        public bool Meshed;
+        public MeshFilter MeshFilter;
+        public NoiseMap NoiseMap;
+        public WorldGenerationSettings WorldGenerationSettings;
 
         public void Awake()
         {
             _FollowedCurrentChunk = new Vector3Int(0, 0, 0);
             CheckFollowerChangedChunk();
-
-            WorldSeed = new WorldSeed(WorldGenSeed);
+            
             Chunks = new Dictionary<Vector3Int, WorldChunk>();
-            _WorldGenDiameter = (WorldGenRadius * 2) + 1;
-            _BlockDiameter = _WorldGenDiameter * Chunk.Size.x;
+            _BlockDiameter = WorldGenerationSettings.Diameter * Chunk.Size.x;
+
+            ChunksChanged = Meshed = false;
         }
 
         public void Start()
         {
             StartCoroutine(GenerateNoiseMap(_FollowedCurrentChunk));
-            BuildChunkRadius();
+            BuildWorldChunkRadius();
+        }
+
+        public void Update()
+        {
+            (bool allGenerated, bool allMeshed) = CheckAllChunksGeneratedOrMeshed();
+
+            if (!allGenerated)
+            {
+                return;
+            }
+
+            if (!allMeshed || ChunksChanged)
+            {
+                foreach (WorldChunk worldChunk in Chunks.Values)
+                {
+                    if (worldChunk.Chunk.Meshed && !ChunksChanged)
+                    {
+                        continue;
+                    }
+
+                    StartCoroutine(worldChunk.Chunk.GenerateMesh());
+                }
+
+                ChunksChanged = Meshed = false;
+            }
+
+            if (!allMeshed || Meshed)
+            {
+                return;
+            }
+
+            GenerateCombinedMesh();
         }
 
         private void FixedUpdate()
@@ -57,7 +84,8 @@ namespace Controllers
 
         private void CheckFollowerChangedChunk()
         {
-            Vector3Int chunkPosition = GetChunkPositionFromGlobal(FollowedTransform.transform.position).ToInt();
+            Vector3Int chunkPosition =
+                GetWorldChunkOriginFromGlobalPosition(FollowedTransform.transform.position).ToInt();
             chunkPosition.y = 0;
 
             if (chunkPosition == _FollowedCurrentChunk)
@@ -83,82 +111,82 @@ namespace Controllers
         {
             _LastGenerationPoint = _FollowedCurrentChunk;
 
-            CullChunks();
+            CullWorldChunks();
 
             StartCoroutine(GenerateNoiseMap(_FollowedCurrentChunk));
 
-            BuildChunkRadius();
+            BuildWorldChunkRadius();
         }
 
-        private void CullChunks()
-        {
-            foreach (Vector3Int position in CheckCullableChunks())
-            {
-                Destroy(Chunks[position].ChunkObject);
-                Chunks.Remove(position);
+        #region Meshin
 
-                RegenerateAdjacentChunks(position);
+        private (bool, bool) CheckAllChunksGeneratedOrMeshed()
+        {
+            return (Chunks.Values.All(worldChunk => worldChunk.Chunk.Generated),
+                Chunks.Values.All(worldChunk => worldChunk.Chunk.Meshed));
+        }
+
+        private void GenerateCombinedMesh()
+        {
+            Meshed = false;
+
+            int index = 0;
+            CombineInstance[] combines = new CombineInstance[Chunks.Count];
+
+            foreach (WorldChunk worldChunk in Chunks.Values)
+            {
+                CombineInstance combine = new CombineInstance
+                {
+                    mesh = worldChunk.Chunk.MeshFilter.sharedMesh,
+                    transform = worldChunk.Chunk.MeshFilter.transform.localToWorldMatrix
+                };
+                worldChunk.Chunk.MeshFilter.gameObject.SetActive(false);
+
+                combines[index] = combine;
+
+                index++;
+            }
+
+            MeshFilter.mesh = new Mesh();
+            MeshFilter.mesh.CombineMeshes(combines, true, true);
+
+            ChunksChanged = true;
+        }
+
+        #endregion
+
+        #region WorldChunk Building / Culling
+
+        private void CullWorldChunks()
+        {
+            foreach (WorldChunk worldChunk in CheckCullableWorldChunks())
+            {
+                Destroy(worldChunk.GameObject);
+                Chunks.Remove(worldChunk.Position);
+
+                ChunksChanged = true;
             }
         }
 
-        private void RegenerateAdjacentChunks(Vector3Int position)
+        private IEnumerable<WorldChunk> CheckCullableWorldChunks()
         {
-            for (int x = -1; x < 2; x++)
-            {
-                // skip middle chunk
-                if (x == 0)
-                {
-                    continue;
-                }
-
-                Vector3Int xModifiedPosition = position + new Vector3Int(Chunk.Size.x * x, 0, 0);
-
-                if (!Chunks.ContainsKey(xModifiedPosition))
-                {
-                    continue;
-                }
-
-                StartCoroutine(Chunks[xModifiedPosition].Chunk.Generate(false));
-            }
-
-            for (int z = -1; z < 2; z++)
-            {
-                // skip middle chunk
-                if (z == 0)
-                {
-                    continue;
-                }
-
-                Vector3Int zModifiedPosition = position + new Vector3Int(0, 0, Chunk.Size.z * z);
-
-                if (!Chunks.ContainsKey(zModifiedPosition))
-                {
-                    continue;
-                }
-
-                StartCoroutine(Chunks[zModifiedPosition].Chunk.Generate(false));
-            }
-        }
-
-        private IEnumerable<Vector3Int> CheckCullableChunks()
-        {
-            foreach (WorldChunk worldChunk in Chunks.Values.ToList())
+            foreach (WorldChunk worldChunk in Chunks.Values)
             {
                 if (Mathv.ContainsVector3Int(NoiseMap.Bounds, worldChunk.Position))
                 {
                     continue;
                 }
 
-                yield return worldChunk.Position;
+                yield return worldChunk;
             }
         }
 
-        private void BuildChunkRadius()
+        private void BuildWorldChunkRadius()
         {
             // +1 to include player's chunk
-            for (int x = -WorldGenRadius; x < (WorldGenRadius + 1); x++)
+            for (int x = -WorldGenerationSettings.Radius; x < (WorldGenerationSettings.Radius + 1); x++)
             {
-                for (int z = -WorldGenRadius; z < (WorldGenRadius + 1); z++)
+                for (int z = -WorldGenerationSettings.Radius; z < (WorldGenerationSettings.Radius + 1); z++)
                 {
                     Vector3Int pos = new Vector3Int(x * Chunk.Size.x, 0, z * Chunk.Size.x) + _FollowedCurrentChunk;
 
@@ -167,22 +195,27 @@ namespace Controllers
                         continue;
                     }
 
-                    BuildChunk(pos);
+                    BuildWorldChunk(pos);
                 }
             }
         }
 
-        private void BuildChunk(Vector3Int position)
+        private void BuildWorldChunk(Vector3Int position)
         {
             GameObject chunkObject = Instantiate(Resources.Load<GameObject>(@"Environment\Terrain\Chunk"), position,
                 Quaternion.identity);
             WorldChunk worldChunk = new WorldChunk(chunkObject);
+            worldChunk.GameObject.transform.parent = transform;
+            StartCoroutine(worldChunk.Chunk.GenerateBlocks());
 
             Chunks.Add(worldChunk.Position, worldChunk);
 
-            StartCoroutine(Chunks[worldChunk.Position].Chunk.Generate(true));
-            RegenerateAdjacentChunks(worldChunk.Position);
+            ChunksChanged = true;
         }
+
+        #endregion
+
+        #region Noise
 
         private IEnumerator GenerateNoiseMap(Vector3Int offset)
         {
@@ -191,8 +224,7 @@ namespace Controllers
                 new Vector3Int(_BlockDiameter + Chunk.Size.x, 0, _BlockDiameter + Chunk.Size.z));
 
             PerlinNoiseGenerator perlinNoiseGenerator =
-                new PerlinNoiseGenerator(offset, WorldSeed, NoiseMap.Bounds.size, WorldGenOctaves,
-                    WorldGenScale, WorldGenPersistence, WorldGenLacunarity);
+                new PerlinNoiseGenerator(offset, NoiseMap.Bounds.size, WorldGenerationSettings);
             perlinNoiseGenerator.Start();
 
             yield return new WaitUntil(() => perlinNoiseGenerator.Update());
@@ -212,7 +244,7 @@ namespace Controllers
 
             Vector3Int indexes = position - NoiseMap.Bounds.min;
             float[][] noiseMap = new float[size.x][];
-            
+
             for (int x = 0; x < noiseMap.Length; x++)
             {
                 noiseMap[x] = new float[size.z];
@@ -232,14 +264,18 @@ namespace Controllers
             return noiseMap;
         }
 
-        public static Vector3 GetChunkPositionFromGlobal(Vector3 globalPosition)
+        #endregion
+
+        #region WorldChunk Misc
+
+        public static Vector3 GetWorldChunkOriginFromGlobalPosition(Vector3 globalPosition)
         {
             return globalPosition.Divide(Chunk.Size).Floor().Multiply(Chunk.Size);
         }
 
         public string GetBlockAtPosition(Vector3Int position)
         {
-            Vector3Int chunkPosition = GetChunkPositionFromGlobal(position).ToInt();
+            Vector3Int chunkPosition = GetWorldChunkOriginFromGlobalPosition(position).ToInt();
             Chunk refChunk;
 
             try
@@ -249,7 +285,7 @@ namespace Controllers
                     return string.Empty;
                 }
 
-                refChunk = Chunks[chunkPosition].Chunk;
+                refChunk = Chunks[position].Chunk;
 
                 if ((refChunk == null) || (refChunk.Blocks == null))
                 {
@@ -278,5 +314,7 @@ namespace Controllers
 
             return block;
         }
+
+        #endregion
     }
 }
