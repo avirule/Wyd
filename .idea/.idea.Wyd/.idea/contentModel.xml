@@ -1,0 +1,83 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="ContentModelStore">
+    <e p="C:\Users\semiv\.Rider2019.1\system\extResources" t="IncludeRecursive" />
+    <e p="C:\Users\semiv\.Rider2019.1\system\resharper-host\local\Transient\ReSharperHost\v191\SolutionCaches\_Wyd.721110246.00" t="ExcludeRecursive" />
+    <e p="C:\Users\semiv\OneDrive\Documents\Unity\Wyd" t="IncludeRecursive">
+      <e p="Assembly-CSharp.csproj" t="IncludeRecursive" />
+      <e p="Assets" t="Include">
+        <e p="DotProd.cs" t="Include" />
+        <e p="NuGet" t="Include">
+          <e p="LICENSE.txt" t="Include" />
+        </e>
+        <e p="Packages" t="Include">
+          <e p="NLog.4.6.6" t="Include">
+            <e p="lib" t="Include">
+              <e p="net35" t="Include">
+                <e p="NLog.xml" t="Include" />
+              </e>
+            </e>
+          </e>
+        </e>
+        <e p="Scripts" t="Include">
+          <e p="Controllers" t="Include">
+            <e p="BlockController.cs" t="Include" />
+            <e p="CameraController.cs" t="Include" />
+            <e p="GameController.cs" t="Include" />
+            <e p="PlayerController.cs" t="Include" />
+            <e p="TextureController.cs" t="Include" />
+            <e p="WorldController.cs" t="Include" />
+          </e>
+          <e p="Entities" t="Include">
+            <e p="Direction.cs" t="Include" />
+            <e p="Player.cs" t="Include" />
+          </e>
+          <e p="Environment" t="Include">
+            <e p="MeshBuilder.cs" t="Include" />
+            <e p="Terrain" t="Include">
+              <e p="BlockRule.cs" t="Include" />
+              <e p="Chunk.cs" t="Include" />
+              <e p="Generation" t="Include">
+                <e p="ChunkGenerator.cs" t="Include" />
+                <e p="Noise" t="Include">
+                  <e p="NoiseMap.cs" t="Include" />
+                  <e p="OpenSimplex" t="Include">
+                    <e p="OpenSimplex.cs" t="Include" />
+                    <e p="OpenSimplexNoiseGenerator.cs" t="Include" />
+                  </e>
+                  <e p="Perlin" t="Include">
+                    <e p="ChunkedPerlinNoiseGenerator.cs" t="Include" />
+                    <e p="PerlinNoise.cs" t="Include" />
+                    <e p="PerlinNoiseGenerator.cs" t="Include" />
+                  </e>
+                </e>
+                <e p="WorldGenSettings.cs" t="Include" />
+                <e p="WorldSeed.cs" t="Include" />
+              </e>
+              <e p="WorldChunk.cs" t="Include" />
+            </e>
+          </e>
+          <e p="Logging" t="Include">
+            <e p="EventLog.cs" t="Include" />
+            <e p="Targets" t="Include">
+              <e p="UnityDebuggerTarget.cs" t="Include" />
+            </e>
+          </e>
+          <e p="Static" t="Include">
+            <e p="Mathv.cs" t="Include" />
+            <e p="StaticMath.cs" t="Include" />
+            <e p="StaticMethods.cs" t="Include" />
+            <e p="StaticRandom.cs" t="Include" />
+          </e>
+          <e p="Threading" t="Include">
+            <e p="ThreadedProcess.cs" t="Include" />
+          </e>
+        </e>
+      </e>
+      <e p="obj" t="ExcludeRecursive" />
+      <e p="Packages" t="ExcludeRecursive" />
+      <e p="Temp\bin" t="ExcludeRecursive" />
+      <e p="Wyd.sln" t="IncludeFlat" />
+    </e>
+  </component>
+</project>
