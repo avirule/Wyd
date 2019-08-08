@@ -67,12 +67,12 @@ namespace Environment.Terrain
             Meshed = false;
             Meshing = true;
             
-            MeshBuilder builder = new MeshBuilder(_WorldController, _BlockController, Position, Blocks);
-            builder.Start();
+            MeshGenerator meshGenerator = new MeshGenerator(_WorldController, _BlockController, Position, Blocks);
+            meshGenerator.Start();
 
-            yield return new WaitUntil(() => builder.Update());
+            yield return new WaitUntil(() => meshGenerator.Update());
 
-            MeshFilter.mesh = builder.GetMesh(MeshFilter.mesh);
+            MeshFilter.mesh = meshGenerator.GetMesh(MeshFilter.mesh);
 
             Meshing = false;
             Meshed = true;

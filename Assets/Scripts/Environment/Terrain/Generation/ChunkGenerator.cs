@@ -47,11 +47,11 @@ namespace Environment.Terrain.Generation
                         {
                             Blocks[x][y][z] = "Grass";
                         }
-                        else if ((y < perlinValue) && (y > (perlinValue - 4)))
+                        else if ((y < perlinValue) && (y > (perlinValue - 5)))
                         {
                             Blocks[x][y][z] = "Dirt";
                         }
-                        else if (y <= (perlinValue - 4))
+                        else if (y <= (perlinValue - 5))
                         {
                             Blocks[x][y][z] = "Stone";
                         }

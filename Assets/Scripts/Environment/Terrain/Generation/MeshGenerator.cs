@@ -1,13 +1,12 @@
 using System.Threading;
 using Controllers;
-using Environment.Terrain;
 using Threading;
 using UnityEngine;
 using UnityEngine.Rendering;
 
-namespace Environment
+namespace Environment.Terrain.Generation
 {
-    public class MeshBuilder : ThreadedProcess
+    public class MeshGenerator : ThreadedProcess
     {
         private readonly BlockController _BlockController;
         private readonly string[][][] _Blocks;
@@ -27,7 +26,7 @@ namespace Environment
         private Vector3[] _Vertices;
         private Vector3 _WorldControllerForwardTransform;
 
-        public MeshBuilder(WorldController worldController, BlockController blockController, Vector3Int position,
+        public MeshGenerator(WorldController worldController, BlockController blockController, Vector3Int position,
             string[][][] blocks)
         {
             _WorldController = worldController;
@@ -53,7 +52,7 @@ namespace Environment
             {
                 for (int y = 0; y < Chunk.Size.y; y++)
                 {
-                    for (int z = 0; z < Chunk.Size.x; z++)
+                    for (int z = 0; z < Chunk.Size.z; z++)
                     {
                         if (string.IsNullOrWhiteSpace(_Blocks[x][y][z]))
                         {
@@ -141,7 +140,7 @@ namespace Environment
             {
                 for (int y = 0; y < Chunk.Size.y; y++)
                 {
-                    for (int z = 0; z < Chunk.Size.x; z++)
+                    for (int z = 0; z < Chunk.Size.z; z++)
                     {
                         if (_Faces[index] == 0)
                         {
@@ -149,18 +148,19 @@ namespace Environment
                             continue;
                         }
 
-                        Vector3Int globalPosition = new Vector3Int(x, y, z);
+                        Vector3Int localPosition = new Vector3Int(x, y, z);
+                        Vector3Int globalPosition = _Position + localPosition;
 
                         if ((_Faces[index] & (byte) Direction.North) != 0)
                         {
                             _Vertices[_VertexIndex + 0] =
-                                new Vector3(globalPosition.x, globalPosition.y, globalPosition.z + 1);
+                                new Vector3(localPosition.x, localPosition.y, localPosition.z + 1);
                             _Vertices[_VertexIndex + 1] =
-                                new Vector3(globalPosition.x, globalPosition.y + 1, globalPosition.z + 1);
+                                new Vector3(localPosition.x, localPosition.y + 1, localPosition.z + 1);
                             _Vertices[_VertexIndex + 2] =
-                                new Vector3(globalPosition.x + 1, globalPosition.y, globalPosition.z + 1);
+                                new Vector3(localPosition.x + 1, localPosition.y, localPosition.z + 1);
                             _Vertices[_VertexIndex + 3] =
-                                new Vector3(globalPosition.x + 1, globalPosition.y + 1, globalPosition.z + 1);
+                                new Vector3(localPosition.x + 1, localPosition.y + 1, localPosition.z + 1);
 
                             if (_BlockController.GetBlockSpriteUVs(_Blocks[x][y][z], globalPosition, Direction.North,
                                 out Vector2[] uvs))
@@ -186,13 +186,13 @@ namespace Environment
                         if ((_Faces[index] & (byte) Direction.East) != 0)
                         {
                             _Vertices[_VertexIndex + 0] =
-                                new Vector3(globalPosition.x + 1, globalPosition.y, globalPosition.z);
+                                new Vector3(localPosition.x + 1, localPosition.y, localPosition.z);
                             _Vertices[_VertexIndex + 1] =
-                                new Vector3(globalPosition.x + 1, globalPosition.y, globalPosition.z + 1);
+                                new Vector3(localPosition.x + 1, localPosition.y, localPosition.z + 1);
                             _Vertices[_VertexIndex + 2] =
-                                new Vector3(globalPosition.x + 1, globalPosition.y + 1, globalPosition.z);
+                                new Vector3(localPosition.x + 1, localPosition.y + 1, localPosition.z);
                             _Vertices[_VertexIndex + 3] =
-                                new Vector3(globalPosition.x + 1, globalPosition.y + 1, globalPosition.z + 1);
+                                new Vector3(localPosition.x + 1, localPosition.y + 1, localPosition.z + 1);
 
                             if (_BlockController.GetBlockSpriteUVs(_Blocks[x][y][z], globalPosition, Direction.East,
                                 out Vector2[] uvs))
@@ -218,13 +218,13 @@ namespace Environment
                         if ((_Faces[index] & (byte) Direction.South) != 0)
                         {
                             _Vertices[_VertexIndex + 0] =
-                                new Vector3(globalPosition.x, globalPosition.y, globalPosition.z);
+                                new Vector3(localPosition.x, localPosition.y, localPosition.z);
                             _Vertices[_VertexIndex + 1] =
-                                new Vector3(globalPosition.x + 1, globalPosition.y, globalPosition.z);
+                                new Vector3(localPosition.x + 1, localPosition.y, localPosition.z);
                             _Vertices[_VertexIndex + 2] =
-                                new Vector3(globalPosition.x, globalPosition.y + 1, globalPosition.z);
+                                new Vector3(localPosition.x, localPosition.y + 1, localPosition.z);
                             _Vertices[_VertexIndex + 3] =
-                                new Vector3(globalPosition.x + 1, globalPosition.y + 1, globalPosition.z);
+                                new Vector3(localPosition.x + 1, localPosition.y + 1, localPosition.z);
 
                             if (_BlockController.GetBlockSpriteUVs(_Blocks[x][y][z], globalPosition, Direction.South,
                                 out Vector2[] uvs))
@@ -250,13 +250,13 @@ namespace Environment
                         if ((_Faces[index] & (byte) Direction.West) != 0)
                         {
                             _Vertices[_VertexIndex + 0] =
-                                new Vector3(globalPosition.x, globalPosition.y, globalPosition.z);
+                                new Vector3(localPosition.x, localPosition.y, localPosition.z);
                             _Vertices[_VertexIndex + 1] =
-                                new Vector3(globalPosition.x, globalPosition.y + 1, globalPosition.z);
+                                new Vector3(localPosition.x, localPosition.y + 1, localPosition.z);
                             _Vertices[_VertexIndex + 2] =
-                                new Vector3(globalPosition.x, globalPosition.y, globalPosition.z + 1);
+                                new Vector3(localPosition.x, localPosition.y, localPosition.z + 1);
                             _Vertices[_VertexIndex + 3] =
-                                new Vector3(globalPosition.x, globalPosition.y + 1, globalPosition.z + 1);
+                                new Vector3(localPosition.x, localPosition.y + 1, localPosition.z + 1);
 
                             if (_BlockController.GetBlockSpriteUVs(_Blocks[x][y][z], globalPosition, Direction.West,
                                 out Vector2[] uvs))
@@ -282,13 +282,13 @@ namespace Environment
                         if ((_Faces[index] & (byte) Direction.Up) != 0)
                         {
                             _Vertices[_VertexIndex + 0] =
-                                new Vector3(globalPosition.x, globalPosition.y + 1, globalPosition.z);
+                                new Vector3(localPosition.x, localPosition.y + 1, localPosition.z);
                             _Vertices[_VertexIndex + 1] =
-                                new Vector3(globalPosition.x + 1, globalPosition.y + 1, globalPosition.z);
+                                new Vector3(localPosition.x + 1, localPosition.y + 1, localPosition.z);
                             _Vertices[_VertexIndex + 2] =
-                                new Vector3(globalPosition.x, globalPosition.y + 1, globalPosition.z + 1);
+                                new Vector3(localPosition.x, localPosition.y + 1, localPosition.z + 1);
                             _Vertices[_VertexIndex + 3] =
-                                new Vector3(globalPosition.x + 1, globalPosition.y + 1, globalPosition.z + 1);
+                                new Vector3(localPosition.x + 1, localPosition.y + 1, localPosition.z + 1);
 
                             if (_BlockController.GetBlockSpriteUVs(_Blocks[x][y][z], globalPosition, Direction.Up,
                                 out Vector2[] uvs))
@@ -298,7 +298,7 @@ namespace Environment
                                 _UVs[_VertexIndex + 2] = uvs[1];
                                 _UVs[_VertexIndex + 3] = uvs[3];
                             }
-
+                            
                             _Triangles[_TriangleIndex + 0] = _VertexIndex + 0;
                             _Triangles[_TriangleIndex + 1] = _VertexIndex + 2;
                             _Triangles[_TriangleIndex + 2] = _VertexIndex + 1;
@@ -314,13 +314,13 @@ namespace Environment
                         if ((_Faces[index] & (byte) Direction.Down) != 0)
                         {
                             _Vertices[_VertexIndex + 0] =
-                                new Vector3(globalPosition.x, globalPosition.y, globalPosition.z);
+                                new Vector3(localPosition.x, localPosition.y, localPosition.z);
                             _Vertices[_VertexIndex + 1] =
-                                new Vector3(globalPosition.x, globalPosition.y, globalPosition.z + 1);
+                                new Vector3(localPosition.x, localPosition.y, localPosition.z + 1);
                             _Vertices[_VertexIndex + 2] =
-                                new Vector3(globalPosition.x + 1, globalPosition.y, globalPosition.z);
+                                new Vector3(localPosition.x + 1, localPosition.y, localPosition.z);
                             _Vertices[_VertexIndex + 3] =
-                                new Vector3(globalPosition.x + 1, globalPosition.y, globalPosition.z + 1);
+                                new Vector3(localPosition.x + 1, localPosition.y, localPosition.z + 1);
 
                             if (_BlockController.GetBlockSpriteUVs(_Blocks[x][y][z], globalPosition, Direction.Down,
                                 out Vector2[] uvs))

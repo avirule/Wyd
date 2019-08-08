@@ -11,6 +11,7 @@ using Logging;
 using NLog;
 using Static;
 using UnityEngine;
+using UnityEngine.Rendering;
 
 namespace Controllers
 {
@@ -24,9 +25,9 @@ namespace Controllers
 
         public bool ChunksChanged;
         public Transform FollowedTransform;
+        public MeshCollider MeshCollider;
         public bool Meshed;
         public MeshFilter MeshFilter;
-        public MeshCollider MeshCollider;
         public NoiseMap NoiseMap;
         public WorldGenerationSettings WorldGenerationSettings;
 
@@ -34,7 +35,7 @@ namespace Controllers
         {
             _FollowedCurrentChunk = new Vector3Int(0, 0, 0);
             CheckFollowerChangedChunk();
-            
+
             Chunks = new ConcurrentDictionary<Vector3Int, WorldChunk>();
             ChunksChanged = Meshed = false;
         }
@@ -60,18 +61,19 @@ namespace Controllers
             {
                 foreach (WorldChunk worldChunk in Chunks.Values)
                 {
-                    if (worldChunk.Chunk.Meshing || worldChunk.Chunk.Meshed && !ChunksChanged)
+                    if ((worldChunk.Chunk.Meshing || worldChunk.Chunk.Meshed) && !ChunksChanged)
                     {
                         continue;
                     }
 
+                    StopCoroutine(worldChunk.Chunk.GenerateMesh());
                     StartCoroutine(worldChunk.Chunk.GenerateMesh());
                 }
 
                 ChunksChanged = Meshed = false;
             }
 
-            if (!allMeshed || Meshed)
+            if (Meshed || !allMeshed)
             {
                 return;
             }
@@ -140,7 +142,7 @@ namespace Controllers
                 CombineInstance combine = new CombineInstance
                 {
                     mesh = worldChunk.Chunk.MeshFilter.sharedMesh,
-                    transform = worldChunk.Chunk.MeshFilter.transform.localToWorldMatrix
+                    transform = worldChunk.GameObject.transform.localToWorldMatrix
                 };
                 worldChunk.Chunk.MeshFilter.gameObject.SetActive(false);
 
@@ -149,7 +151,7 @@ namespace Controllers
                 index++;
             }
 
-            MeshFilter.mesh = new Mesh();
+            MeshFilter.mesh = new Mesh { indexFormat = IndexFormat.UInt32 };
             MeshFilter.mesh.CombineMeshes(combines, true, true);
             MeshCollider.sharedMesh = MeshFilter.sharedMesh;
 
@@ -173,15 +175,7 @@ namespace Controllers
 
         private IEnumerable<WorldChunk> CheckCullableWorldChunks()
         {
-            foreach (WorldChunk worldChunk in Chunks.Values)
-            {
-                if (Mathv.ContainsVector3Int(NoiseMap.Bounds, worldChunk.Position))
-                {
-                    continue;
-                }
-
-                yield return worldChunk;
-            }
+            return Chunks.Values.Where(worldChunk => !Mathv.ContainsVector3Int(NoiseMap.Bounds, worldChunk.Position));
         }
 
         private void BuildWorldChunkRadius()
@@ -209,9 +203,9 @@ namespace Controllers
                 Quaternion.identity);
             WorldChunk worldChunk = new WorldChunk(chunkObject);
             worldChunk.GameObject.transform.parent = transform;
-            StartCoroutine(worldChunk.Chunk.GenerateBlocks());
 
             Chunks.TryAdd(worldChunk.Position, worldChunk);
+            StartCoroutine(worldChunk.Chunk.GenerateBlocks());
 
             ChunksChanged = true;
         }

@@ -53,6 +53,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   Generated: 0
+  Generating: 0
   Meshed: 0
-  Position: {x: 0, y: 0, z: 0}
+  Meshing: 0
   MeshFilter: {fileID: 3448439260008114609}
+  Position: {x: 0, y: 0, z: 0}

@@ -446,9 +446,9 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   ChunksChanged: 0
   FollowedTransform: {fileID: 963194228}
+  MeshCollider: {fileID: 1461272640}
   Meshed: 0
   MeshFilter: {fileID: 1461272638}
-  MeshCollider: {fileID: 1461272640}
   WorldGenerationSettings: {fileID: 1461272637}
 --- !u!4 &1461272636
 Transform:
@@ -479,7 +479,7 @@ MonoBehaviour:
   Lacunarity: 2
   Octaves: 16
   Persistence: 0.5
-  Radius: 2
+  Radius: 4
   Scale: 128
   SeedString: genericseed
 --- !u!33 &1461272638
@@ -501,9 +501,9 @@ MeshRenderer:
   m_CastShadows: 1
   m_ReceiveShadows: 1
   m_DynamicOccludee: 1
-  m_MotionVectors: 1
-  m_LightProbeUsage: 0
-  m_ReflectionProbeUsage: 0
+  m_MotionVectors: 2
+  m_LightProbeUsage: 1
+  m_ReflectionProbeUsage: 1
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
@@ -668,7 +668,7 @@ Rigidbody:
   m_Mass: 1
   m_Drag: 0
   m_AngularDrag: 0.05
-  m_UseGravity: 1
+  m_UseGravity: 0
   m_IsKinematic: 0
   m_Interpolate: 1
   m_Constraints: 112

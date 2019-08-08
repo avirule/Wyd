@@ -30,12 +30,12 @@
           </e>
           <e p="Environment" t="Include">
             <e p="Direction.cs" t="Include" />
-            <e p="MeshBuilder.cs" t="Include" />
             <e p="Terrain" t="Include">
               <e p="BlockRule.cs" t="Include" />
               <e p="Chunk.cs" t="Include" />
               <e p="Generation" t="Include">
                 <e p="ChunkGenerator.cs" t="Include" />
+                <e p="MeshGenerator.cs" t="Include" />
                 <e p="Noise" t="Include">
                   <e p="NoiseMap.cs" t="Include" />
                   <e p="OpenSimplex" t="Include">
