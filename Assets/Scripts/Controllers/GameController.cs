@@ -1,5 +1,5 @@
 using System;
-using Entities;
+using Environment;
 using Environment.Terrain;
 using NLog;
 using UnityEngine;
@@ -50,7 +50,7 @@ namespace Controllers
                 switch (direction)
                 {
                     case Direction.None:
-                        return BlockRule.DEFAULT_SPRITE_NAME;
+                        return string.Empty;
                     // todo decide on whether to use this ??
 //                    case Direction.North:
 //                        string northCheck = worldController.GetBlockAtPosition(position + new Vector3Int(0, -1, 1));

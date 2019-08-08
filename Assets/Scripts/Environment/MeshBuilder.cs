@@ -1,6 +1,5 @@
 using System.Threading;
 using Controllers;
-using Entities;
 using Environment.Terrain;
 using Threading;
 using UnityEngine;
@@ -56,7 +55,7 @@ namespace Environment
                 {
                     for (int z = 0; z < Chunk.Size.x; z++)
                     {
-                        if (string.IsNullOrEmpty(_Blocks[x][y][z]))
+                        if (string.IsNullOrWhiteSpace(_Blocks[x][y][z]))
                         {
                             _Faces[index] = 0;
                             index++;
@@ -163,12 +162,14 @@ namespace Environment
                             _Vertices[_VertexIndex + 3] =
                                 new Vector3(globalPosition.x + 1, globalPosition.y + 1, globalPosition.z + 1);
 
-                            _BlockController.GetBlockSpriteUVs(_Blocks[x][y][z], globalPosition, Direction.North,
-                                out Vector2[] uvs);
-                            _UVs[_VertexIndex + 0] = uvs[1];
-                            _UVs[_VertexIndex + 1] = uvs[3];
-                            _UVs[_VertexIndex + 2] = uvs[0];
-                            _UVs[_VertexIndex + 3] = uvs[2];
+                            if (_BlockController.GetBlockSpriteUVs(_Blocks[x][y][z], globalPosition, Direction.North,
+                                out Vector2[] uvs))
+                            {
+                                _UVs[_VertexIndex + 0] = uvs[1];
+                                _UVs[_VertexIndex + 1] = uvs[3];
+                                _UVs[_VertexIndex + 2] = uvs[0];
+                                _UVs[_VertexIndex + 3] = uvs[2];
+                            }
 
                             _Triangles[_TriangleIndex + 0] = _VertexIndex + 0;
                             _Triangles[_TriangleIndex + 1] = _VertexIndex + 2;
@@ -193,12 +194,14 @@ namespace Environment
                             _Vertices[_VertexIndex + 3] =
                                 new Vector3(globalPosition.x + 1, globalPosition.y + 1, globalPosition.z + 1);
 
-                            _BlockController.GetBlockSpriteUVs(_Blocks[x][y][z], globalPosition, Direction.East,
-                                out Vector2[] uvs);
-                            _UVs[_VertexIndex + 0] = uvs[0];
-                            _UVs[_VertexIndex + 1] = uvs[1];
-                            _UVs[_VertexIndex + 2] = uvs[2];
-                            _UVs[_VertexIndex + 3] = uvs[3];
+                            if (_BlockController.GetBlockSpriteUVs(_Blocks[x][y][z], globalPosition, Direction.East,
+                                out Vector2[] uvs))
+                            {
+                                _UVs[_VertexIndex + 0] = uvs[0];
+                                _UVs[_VertexIndex + 1] = uvs[1];
+                                _UVs[_VertexIndex + 2] = uvs[2];
+                                _UVs[_VertexIndex + 3] = uvs[3];
+                            }
 
                             _Triangles[_TriangleIndex + 0] = _VertexIndex + 0;
                             _Triangles[_TriangleIndex + 1] = _VertexIndex + 2;
@@ -223,12 +226,14 @@ namespace Environment
                             _Vertices[_VertexIndex + 3] =
                                 new Vector3(globalPosition.x + 1, globalPosition.y + 1, globalPosition.z);
 
-                            _BlockController.GetBlockSpriteUVs(_Blocks[x][y][z], globalPosition, Direction.South,
-                                out Vector2[] uvs);
-                            _UVs[_VertexIndex + 0] = uvs[0];
-                            _UVs[_VertexIndex + 1] = uvs[1];
-                            _UVs[_VertexIndex + 2] = uvs[2];
-                            _UVs[_VertexIndex + 3] = uvs[3];
+                            if (_BlockController.GetBlockSpriteUVs(_Blocks[x][y][z], globalPosition, Direction.South,
+                                out Vector2[] uvs))
+                            {
+                                _UVs[_VertexIndex + 0] = uvs[0];
+                                _UVs[_VertexIndex + 1] = uvs[1];
+                                _UVs[_VertexIndex + 2] = uvs[2];
+                                _UVs[_VertexIndex + 3] = uvs[3];
+                            }
 
                             _Triangles[_TriangleIndex + 0] = _VertexIndex + 0;
                             _Triangles[_TriangleIndex + 1] = _VertexIndex + 2;
@@ -253,12 +258,14 @@ namespace Environment
                             _Vertices[_VertexIndex + 3] =
                                 new Vector3(globalPosition.x, globalPosition.y + 1, globalPosition.z + 1);
 
-                            _BlockController.GetBlockSpriteUVs(_Blocks[x][y][z], globalPosition, Direction.West,
-                                out Vector2[] uvs);
-                            _UVs[_VertexIndex + 0] = uvs[1];
-                            _UVs[_VertexIndex + 1] = uvs[3];
-                            _UVs[_VertexIndex + 2] = uvs[0];
-                            _UVs[_VertexIndex + 3] = uvs[2];
+                            if (_BlockController.GetBlockSpriteUVs(_Blocks[x][y][z], globalPosition, Direction.West,
+                                out Vector2[] uvs))
+                            {
+                                _UVs[_VertexIndex + 0] = uvs[1];
+                                _UVs[_VertexIndex + 1] = uvs[3];
+                                _UVs[_VertexIndex + 2] = uvs[0];
+                                _UVs[_VertexIndex + 3] = uvs[2];
+                            }
 
                             _Triangles[_TriangleIndex + 0] = _VertexIndex + 0;
                             _Triangles[_TriangleIndex + 1] = _VertexIndex + 2;
@@ -283,12 +290,14 @@ namespace Environment
                             _Vertices[_VertexIndex + 3] =
                                 new Vector3(globalPosition.x + 1, globalPosition.y + 1, globalPosition.z + 1);
 
-                            _BlockController.GetBlockSpriteUVs(_Blocks[x][y][z], globalPosition, Direction.Up,
-                                out Vector2[] uvs);
-                            _UVs[_VertexIndex + 0] = uvs[0];
-                            _UVs[_VertexIndex + 1] = uvs[2];
-                            _UVs[_VertexIndex + 2] = uvs[1];
-                            _UVs[_VertexIndex + 3] = uvs[3];
+                            if (_BlockController.GetBlockSpriteUVs(_Blocks[x][y][z], globalPosition, Direction.Up,
+                                out Vector2[] uvs))
+                            {
+                                _UVs[_VertexIndex + 0] = uvs[0];
+                                _UVs[_VertexIndex + 1] = uvs[2];
+                                _UVs[_VertexIndex + 2] = uvs[1];
+                                _UVs[_VertexIndex + 3] = uvs[3];
+                            }
 
                             _Triangles[_TriangleIndex + 0] = _VertexIndex + 0;
                             _Triangles[_TriangleIndex + 1] = _VertexIndex + 2;
@@ -313,12 +322,14 @@ namespace Environment
                             _Vertices[_VertexIndex + 3] =
                                 new Vector3(globalPosition.x + 1, globalPosition.y, globalPosition.z + 1);
 
-                            _BlockController.GetBlockSpriteUVs(_Blocks[x][y][z], globalPosition, Direction.Down,
-                                out Vector2[] uvs);
-                            _UVs[_VertexIndex + 0] = uvs[0];
-                            _UVs[_VertexIndex + 1] = uvs[1];
-                            _UVs[_VertexIndex + 2] = uvs[2];
-                            _UVs[_VertexIndex + 3] = uvs[3];
+                            if (_BlockController.GetBlockSpriteUVs(_Blocks[x][y][z], globalPosition, Direction.Down,
+                                out Vector2[] uvs))
+                            {
+                                _UVs[_VertexIndex + 0] = uvs[0];
+                                _UVs[_VertexIndex + 1] = uvs[1];
+                                _UVs[_VertexIndex + 2] = uvs[2];
+                                _UVs[_VertexIndex + 3] = uvs[3];
+                            }
 
                             _Triangles[_TriangleIndex + 0] = _VertexIndex + 0;
                             _Triangles[_TriangleIndex + 1] = _VertexIndex + 2;

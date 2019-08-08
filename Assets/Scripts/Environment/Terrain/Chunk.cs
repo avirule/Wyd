@@ -1,3 +1,4 @@
+using System;
 using System.Collections;
 using Controllers;
 using Environment.Terrain.Generation;
@@ -15,7 +16,9 @@ namespace Environment.Terrain
 
         public string[][][] Blocks;
         public bool Generated;
+        public bool Generating;
         public bool Meshed;
+        public bool Meshing;
         public MeshFilter MeshFilter;
         public Vector3Int Position;
 
@@ -30,6 +33,7 @@ namespace Environment.Terrain
         public IEnumerator GenerateBlocks()
         {
             Generated = false;
+            Generating = true;
 
             yield return new WaitUntil(() => _WorldController.NoiseMap.Ready);
 
@@ -48,6 +52,8 @@ namespace Environment.Terrain
             yield return new WaitUntil(() => chunkGenerator.Update());
 
             Blocks = chunkGenerator.Blocks;
+
+            Generating = false;
             Generated = true;
         }
 
@@ -59,7 +65,8 @@ namespace Environment.Terrain
             }
 
             Meshed = false;
-
+            Meshing = true;
+            
             MeshBuilder builder = new MeshBuilder(_WorldController, _BlockController, Position, Blocks);
             builder.Start();
 
@@ -67,6 +74,7 @@ namespace Environment.Terrain
 
             MeshFilter.mesh = builder.GetMesh(MeshFilter.mesh);
 
+            Meshing = false;
             Meshed = true;
         }
     }

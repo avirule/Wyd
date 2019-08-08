@@ -1,5 +1,6 @@
 using System;
 using System.Collections;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using Environment.Terrain;
@@ -19,12 +20,13 @@ namespace Controllers
         private Vector3Int _FollowedCurrentChunk;
         private Vector3Int _LastGenerationPoint;
 
-        public Dictionary<Vector3Int, WorldChunk> Chunks;
+        public ConcurrentDictionary<Vector3Int, WorldChunk> Chunks;
 
         public bool ChunksChanged;
         public Transform FollowedTransform;
         public bool Meshed;
         public MeshFilter MeshFilter;
+        public MeshCollider MeshCollider;
         public NoiseMap NoiseMap;
         public WorldGenerationSettings WorldGenerationSettings;
 
@@ -33,14 +35,14 @@ namespace Controllers
             _FollowedCurrentChunk = new Vector3Int(0, 0, 0);
             CheckFollowerChangedChunk();
             
-            Chunks = new Dictionary<Vector3Int, WorldChunk>();
-            _BlockDiameter = WorldGenerationSettings.Diameter * Chunk.Size.x;
-
+            Chunks = new ConcurrentDictionary<Vector3Int, WorldChunk>();
             ChunksChanged = Meshed = false;
         }
 
         public void Start()
         {
+            _BlockDiameter = WorldGenerationSettings.Diameter * Chunk.Size.x;
+
             StartCoroutine(GenerateNoiseMap(_FollowedCurrentChunk));
             BuildWorldChunkRadius();
         }
@@ -58,7 +60,7 @@ namespace Controllers
             {
                 foreach (WorldChunk worldChunk in Chunks.Values)
                 {
-                    if (worldChunk.Chunk.Meshed && !ChunksChanged)
+                    if (worldChunk.Chunk.Meshing || worldChunk.Chunk.Meshed && !ChunksChanged)
                     {
                         continue;
                     }
@@ -149,8 +151,9 @@ namespace Controllers
 
             MeshFilter.mesh = new Mesh();
             MeshFilter.mesh.CombineMeshes(combines, true, true);
+            MeshCollider.sharedMesh = MeshFilter.sharedMesh;
 
-            ChunksChanged = true;
+            Meshed = true;
         }
 
         #endregion
@@ -162,7 +165,7 @@ namespace Controllers
             foreach (WorldChunk worldChunk in CheckCullableWorldChunks())
             {
                 Destroy(worldChunk.GameObject);
-                Chunks.Remove(worldChunk.Position);
+                Chunks.TryRemove(worldChunk.Position, out WorldChunk _);
 
                 ChunksChanged = true;
             }
@@ -208,7 +211,7 @@ namespace Controllers
             worldChunk.GameObject.transform.parent = transform;
             StartCoroutine(worldChunk.Chunk.GenerateBlocks());
 
-            Chunks.Add(worldChunk.Position, worldChunk);
+            Chunks.TryAdd(worldChunk.Position, worldChunk);
 
             ChunksChanged = true;
         }
@@ -276,41 +279,18 @@ namespace Controllers
         public string GetBlockAtPosition(Vector3Int position)
         {
             Vector3Int chunkPosition = GetWorldChunkOriginFromGlobalPosition(position).ToInt();
-            Chunk refChunk;
 
-            try
+            Chunks.TryGetValue(chunkPosition, out WorldChunk worldChunk);
+
+            if (worldChunk == null)
             {
-                if (!Chunks.ContainsKey(chunkPosition))
-                {
-                    return string.Empty;
-                }
-
-                refChunk = Chunks[position].Chunk;
-
-                if ((refChunk == null) || (refChunk.Blocks == null))
-                {
-                    return string.Empty;
-                }
-            }
-            catch (KeyNotFoundException)
-            {
-                // I believe this happens when the collection is edited in another thread
-                // between when the dictionary keys are checked and the actual reference is obtained
                 return string.Empty;
             }
 
             // prevents DivideByZero exception
             Vector3Int localPosition = (position - chunkPosition).Abs();
 
-            // todo possible optimization
-            if ((refChunk.Blocks.Length <= localPosition.x) ||
-                (refChunk.Blocks[localPosition.x].Length <= localPosition.y) ||
-                (refChunk.Blocks[localPosition.x][localPosition.y].Length <= localPosition.z))
-            {
-                return string.Empty;
-            }
-
-            string block = refChunk.Blocks[localPosition.x][localPosition.y][localPosition.z] ?? string.Empty;
+            string block = worldChunk.Chunk.Blocks[localPosition.x][localPosition.y][localPosition.z] ?? string.Empty;
 
             return block;
         }

@@ -1,4 +1,4 @@
-namespace Entities
+namespace Environment
 {
     public enum Direction : byte
     {

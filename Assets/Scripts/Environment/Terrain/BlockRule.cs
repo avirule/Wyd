@@ -1,4 +1,4 @@
-using Entities;
+using System;
 using UnityEngine;
 
 // ReSharper disable MemberCanBePrivate.Global
@@ -9,7 +9,6 @@ namespace Environment.Terrain
 
     public class BlockRule
     {
-        public const string DEFAULT_SPRITE_NAME = "Default";
         protected readonly string BlockName;
 
         public readonly bool IsTransparent;
@@ -19,7 +18,7 @@ namespace Environment.Terrain
         {
             BlockName = blockName;
             IsTransparent = isTransparent;
-            RuleEvaluation = ruleEvaluation ?? ((position, direction) => DEFAULT_SPRITE_NAME);
+            RuleEvaluation = ruleEvaluation ?? ((position, direction) => string.Empty);
         }
 
         public bool SetRuleEvaluation(RuleEvaluation ruleEvaluation)
@@ -34,7 +33,7 @@ namespace Environment.Terrain
             {
                 Debug.Log(
                     $"Failed to get rule of specified block `{blockName}`: block name mismatch (referenced {blockName}, targeted {BlockName}).");
-                spriteName = DEFAULT_SPRITE_NAME;
+                spriteName = string.Empty;
                 return false;
             }
 

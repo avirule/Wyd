@@ -28,11 +28,8 @@
             <e p="TextureController.cs" t="Include" />
             <e p="WorldController.cs" t="Include" />
           </e>
-          <e p="Entities" t="Include">
-            <e p="Direction.cs" t="Include" />
-            <e p="Player.cs" t="Include" />
-          </e>
           <e p="Environment" t="Include">
+            <e p="Direction.cs" t="Include" />
             <e p="MeshBuilder.cs" t="Include" />
             <e p="Terrain" t="Include">
               <e p="BlockRule.cs" t="Include" />

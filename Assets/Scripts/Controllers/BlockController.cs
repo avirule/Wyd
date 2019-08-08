@@ -1,5 +1,5 @@
 using System.Collections.Generic;
-using Entities;
+using Environment;
 using Environment.Terrain;
 using Logging;
 using NLog;
@@ -71,11 +71,6 @@ namespace Controllers
 
         public bool IsBlockTransparent(string blockName)
         {
-            if (blockName == null)
-            {
-                return false;
-            }
-
             if (string.IsNullOrWhiteSpace(blockName))
             {
                 return true;

@@ -40,9 +40,10 @@ namespace Environment.Terrain.Generation
 
                         if (y > perlinValue)
                         {
-                            Blocks[x][y][z] = string.Empty;
+                            continue;
                         }
-                        else if ((y == perlinValue) || (y == (Chunk.Size.y - 1)))
+
+                        if ((y == perlinValue) || (y == (Chunk.Size.y - 1)))
                         {
                             Blocks[x][y][z] = "Grass";
                         }
