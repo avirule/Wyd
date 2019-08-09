@@ -1,8 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
-  <component name="AnalysisUIOptions">
-    <option name="SCOPE_TYPE" value="3" />
-  </component>
   <component name="ChangeListManager">
     <list default="true" id="c75ae2de-3a89-4228-87f5-5925302b6d96" name="Default Changelist" comment="">
       <change afterPath="$PROJECT_DIR$/Assets/Scripts/Controllers/Entity.meta" afterDir="false" />
@@ -49,15 +46,16 @@
       <file pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/Assets/Scripts/Controllers/UI/EscapeMenuController.cs">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="192">
-              <caret line="12" column="9" selection-start-line="12" selection-start-column="9" selection-end-line="12" selection-end-column="9" />
+            <state>
+              <caret column="6" selection-start-column="6" selection-end-column="6" />
               <folding>
-                <marker date="1565345694675" expanded="true" signature="6:54" ph="..." />
-                <marker date="1565345694675" expanded="true" signature="80:484" ph="{...}" />
-                <marker date="1565345694675" expanded="true" signature="136:482" ph="{...}" />
-                <marker date="1565345694675" expanded="true" signature="263:283" ph="{...}" />
-                <marker date="1565345694675" expanded="true" signature="313:374" ph="{...}" />
-                <marker date="1565345694675" expanded="true" signature="424:476" ph="{...}" />
+                <marker date="1565345984192" expanded="true" signature="6:59" ph="..." />
+                <marker date="1565345984192" expanded="true" signature="85:636" ph="{...}" />
+                <marker date="1565345984192" expanded="true" signature="141:634" ph="{...}" />
+                <marker date="1565345984192" expanded="true" signature="268:537" ph="{...}" />
+                <marker date="1565345984192" expanded="true" signature="340:525" ph="{...}" />
+                <marker date="1565345984192" expanded="true" signature="418:511" ph="{...}" />
+                <marker date="1565345984192" expanded="true" signature="567:628" ph="{...}" />
               </folding>
             </state>
           </provider>
@@ -415,12 +413,12 @@
       <workItem from="1565270071394" duration="125000" />
       <workItem from="1565270230623" duration="8261000" />
       <workItem from="1565278604764" duration="12385000" />
-      <workItem from="1565340562649" duration="5083000" />
+      <workItem from="1565340562649" duration="5370000" />
     </task>
     <servers />
   </component>
   <component name="TimeTrackingManager">
-    <option name="totallyTimeSpent" value="207418000" />
+    <option name="totallyTimeSpent" value="207705000" />
   </component>
   <component name="TodoView">
     <todo-panel id="selected-file">
@@ -1443,15 +1441,16 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/Assets/Scripts/Controllers/UI/EscapeMenuController.cs">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="192">
-          <caret line="12" column="9" selection-start-line="12" selection-start-column="9" selection-end-line="12" selection-end-column="9" />
+        <state>
+          <caret column="6" selection-start-column="6" selection-end-column="6" />
           <folding>
-            <marker date="1565345694675" expanded="true" signature="6:54" ph="..." />
-            <marker date="1565345694675" expanded="true" signature="80:484" ph="{...}" />
-            <marker date="1565345694675" expanded="true" signature="136:482" ph="{...}" />
-            <marker date="1565345694675" expanded="true" signature="263:283" ph="{...}" />
-            <marker date="1565345694675" expanded="true" signature="313:374" ph="{...}" />
-            <marker date="1565345694675" expanded="true" signature="424:476" ph="{...}" />
+            <marker date="1565345984192" expanded="true" signature="6:59" ph="..." />
+            <marker date="1565345984192" expanded="true" signature="85:636" ph="{...}" />
+            <marker date="1565345984192" expanded="true" signature="141:634" ph="{...}" />
+            <marker date="1565345984192" expanded="true" signature="268:537" ph="{...}" />
+            <marker date="1565345984192" expanded="true" signature="340:525" ph="{...}" />
+            <marker date="1565345984192" expanded="true" signature="418:511" ph="{...}" />
+            <marker date="1565345984192" expanded="true" signature="567:628" ph="{...}" />
           </folding>
         </state>
       </provider>
