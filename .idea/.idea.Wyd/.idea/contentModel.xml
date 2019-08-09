@@ -32,6 +32,7 @@
             <e p="UI" t="Include">
               <e p="DiagnosticsController.cs" t="Include" />
               <e p="EscapeMenuController.cs" t="Include" />
+              <e p="MainMenuController.cs" t="Include" />
               <e p="UIInputWatcherController.cs" t="Include" />
             </e>
             <e p="WorldController.cs" t="Include" />

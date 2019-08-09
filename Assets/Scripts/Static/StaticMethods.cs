@@ -1,3 +1,4 @@
+using UnityEditor;
 using UnityEngine;
 
 namespace Static
@@ -17,6 +18,15 @@ namespace Static
         public static Vector3Int ToInt(this Vector3 vector)
         {
             return new Vector3Int((int) vector.x, (int) vector.y, (int) vector.z);
+        }
+
+        public static void ApplicationClose(int errorCode = -1)
+        {
+            Application.Quit(errorCode);
+
+#if UNITY_EDITOR
+            EditorApplication.isPlaying = false;
+#endif
         }
     }
 }

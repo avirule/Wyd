@@ -1,4 +1,4 @@
-﻿using UnityEditor;
+﻿using Static;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -11,15 +11,7 @@ namespace Controllers.UI
         // Start is called before the first frame update
         private void Awake()
         {
-            ExitButton.onClick.AddListener(() =>
-            {
-                Application.Quit();
-
-                if (Debug.isDebugBuild)
-                {
-                    EditorApplication.isPlaying = false;
-                }
-            });
+            ExitButton.onClick.AddListener(() => StaticMethods.ApplicationClose());
         }
 
         private void Start()

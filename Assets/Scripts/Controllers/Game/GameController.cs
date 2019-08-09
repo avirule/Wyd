@@ -2,6 +2,7 @@ using System;
 using Environment;
 using NLog;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 
 namespace Controllers.Game
 {
@@ -20,6 +21,8 @@ namespace Controllers.Game
         {
             TextureController.Initialise();
             Initialise();
+
+            SceneManager.LoadScene("UI", LoadSceneMode.Additive);
         }
 
         private void OnApplicationQuit()
