@@ -2,7 +2,7 @@ using Logging;
 using NLog;
 using UnityEngine;
 
-namespace Controllers
+namespace Controllers.Entity
 {
     public class PlayerController : MonoBehaviour
     {
@@ -16,13 +16,13 @@ namespace Controllers
         public Transform RotationTransform;
         public float TravelSpeed;
 
-        public void FixedUpdate()
+        private void FixedUpdate()
         {
             CalculateRotation();
             CalculateMovement();
         }
 
-        public void Update()
+        private void Update()
         {
             UpdateMovement();
             CalculateJump();

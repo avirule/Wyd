@@ -5,8 +5,8 @@ namespace Environment.Terrain.Generation
 {
     public class WorldGenerationSettings : MonoBehaviour
     {
-        [NonSerialized]
-        public int Diameter;
+        [NonSerialized] public int Diameter;
+
         public float Lacunarity;
         public int Octaves;
         public float Persistence;
@@ -15,7 +15,7 @@ namespace Environment.Terrain.Generation
         public WorldSeed Seed;
         public string SeedString;
 
-        public void Awake()
+        private void Awake()
         {
             Seed = new WorldSeed(SeedString);
             Diameter = (Radius * 2) + 1;

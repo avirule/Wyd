@@ -6,7 +6,6 @@
     <e p="C:\Users\semiv\OneDrive\Documents\Unity\Wyd" t="IncludeRecursive">
       <e p="Assembly-CSharp.csproj" t="IncludeRecursive" />
       <e p="Assets" t="Include">
-        <e p="DotProd.cs" t="Include" />
         <e p="NuGet" t="Include">
           <e p="LICENSE.txt" t="Include" />
         </e>
@@ -21,11 +20,20 @@
         </e>
         <e p="Scripts" t="Include">
           <e p="Controllers" t="Include">
-            <e p="BlockController.cs" t="Include" />
-            <e p="CameraController.cs" t="Include" />
-            <e p="GameController.cs" t="Include" />
-            <e p="PlayerController.cs" t="Include" />
-            <e p="TextureController.cs" t="Include" />
+            <e p="Entity" t="Include">
+              <e p="CameraController.cs" t="Include" />
+              <e p="PlayerController.cs" t="Include" />
+            </e>
+            <e p="Game" t="Include">
+              <e p="BlockController.cs" t="Include" />
+              <e p="GameController.cs" t="Include" />
+              <e p="TextureController.cs" t="Include" />
+            </e>
+            <e p="UI" t="Include">
+              <e p="DiagnosticsController.cs" t="Include" />
+              <e p="EscapeMenuController.cs" t="Include" />
+              <e p="UIInputWatcherController.cs" t="Include" />
+            </e>
             <e p="WorldController.cs" t="Include" />
           </e>
           <e p="Environment" t="Include">
@@ -52,7 +60,6 @@
                 <e p="WorldGenSettings.cs" t="Include" />
                 <e p="WorldSeed.cs" t="Include" />
               </e>
-              <e p="WorldChunk.cs" t="Include" />
             </e>
           </e>
           <e p="Logging" t="Include">

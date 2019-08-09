@@ -1,6 +1,6 @@
 using UnityEngine;
 
-namespace Controllers
+namespace Controllers.Entity
 {
     public class CameraController : MonoBehaviour
     {
@@ -8,7 +8,7 @@ namespace Controllers
         private float _RotationSensitivity;
         private float _Yaw;
 
-        public void Start()
+        private void Start()
         {
             _RotationSensitivity =
                 GameObject.FindWithTag("Player").GetComponent<PlayerController>().RotationSensitivity;

@@ -1,10 +1,9 @@
 using System;
 using Environment;
-using Environment.Terrain;
 using NLog;
 using UnityEngine;
 
-namespace Controllers
+namespace Controllers.Game
 {
     public class GameController : MonoBehaviour
     {
@@ -17,7 +16,7 @@ namespace Controllers
             Cursor.lockState = CursorLockMode.Locked;
         }
 
-        public void Start()
+        private void Start()
         {
             TextureController.Initialise();
             Initialise();

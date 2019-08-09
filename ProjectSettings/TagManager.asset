@@ -6,6 +6,7 @@ TagManager:
   tags:
   - WorldController
   - EventLog
+  - DiagnosticInfo
   layers:
   - Default
   - TransparentFX

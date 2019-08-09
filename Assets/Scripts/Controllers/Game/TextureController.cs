@@ -3,7 +3,7 @@ using Logging;
 using NLog;
 using UnityEngine;
 
-namespace Controllers
+namespace Controllers.Game
 {
     public class TextureController : MonoBehaviour
     {

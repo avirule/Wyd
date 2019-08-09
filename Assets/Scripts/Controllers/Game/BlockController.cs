@@ -5,7 +5,7 @@ using Logging;
 using NLog;
 using UnityEngine;
 
-namespace Controllers
+namespace Controllers.Game
 {
     public class BlockController : MonoBehaviour
     {
@@ -14,7 +14,7 @@ namespace Controllers
 
         public Dictionary<string, BlockRule>.KeyCollection RegisteredBlocks => _Blocks.Keys;
 
-        public void Awake()
+        private void Awake()
         {
             _Blocks = new Dictionary<string, BlockRule>();
         }

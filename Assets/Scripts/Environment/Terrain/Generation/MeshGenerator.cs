@@ -1,5 +1,6 @@
 using System.Threading;
 using Controllers;
+using Controllers.Game;
 using Threading;
 using UnityEngine;
 using UnityEngine.Rendering;
@@ -16,7 +17,6 @@ namespace Environment.Terrain.Generation
         private readonly WorldController _WorldController;
         private bool _IsVisible;
 
-        private Vector3 _SelfForwardTransform;
         private int _SizeInVectors;
 
         private int _TriangleIndex;
@@ -24,7 +24,6 @@ namespace Environment.Terrain.Generation
         private Vector2[] _UVs;
         private int _VertexIndex;
         private Vector3[] _Vertices;
-        private Vector3 _WorldControllerForwardTransform;
 
         public MeshGenerator(WorldController worldController, BlockController blockController, Vector3Int position,
             string[][][] blocks)
@@ -298,7 +297,7 @@ namespace Environment.Terrain.Generation
                                 _UVs[_VertexIndex + 2] = uvs[1];
                                 _UVs[_VertexIndex + 3] = uvs[3];
                             }
-                            
+
                             _Triangles[_TriangleIndex + 0] = _VertexIndex + 0;
                             _Triangles[_TriangleIndex + 1] = _VertexIndex + 2;
                             _Triangles[_TriangleIndex + 2] = _VertexIndex + 1;
@@ -349,7 +348,7 @@ namespace Environment.Terrain.Generation
             }
         }
 
-        public Mesh GetMesh(Mesh copy)
+        public Mesh GetMesh(ref Mesh copy)
         {
             if (copy == null)
             {

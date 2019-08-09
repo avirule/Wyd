@@ -1,6 +1,6 @@
-using System;
 using System.Collections;
 using Controllers;
+using Controllers.Game;
 using Environment.Terrain.Generation;
 using Logging;
 using NLog;
@@ -8,26 +8,29 @@ using UnityEngine;
 
 namespace Environment.Terrain
 {
-    public class Chunk : MonoBehaviour
+    public class Chunk
     {
         public static Vector3Int Size = new Vector3Int(8, 32, 8);
-        private BlockController _BlockController;
-        private WorldController _WorldController;
+        private readonly BlockController _BlockController;
+        private readonly WorldController _WorldController;
 
         public string[][][] Blocks;
+        public bool Destroy;
         public bool Generated;
         public bool Generating;
+        public Mesh Mesh;
         public bool Meshed;
         public bool Meshing;
-        public MeshFilter MeshFilter;
         public Vector3Int Position;
 
-        private void Awake()
+        public Chunk(WorldController worldController, BlockController blockController, Vector3Int position)
         {
-            Generated = Meshed = false;
+            Generated = Generating = Meshed = Meshing = Destroy = false;
 
-            _WorldController = GameObject.FindWithTag("WorldController").GetComponent<WorldController>();
-            _BlockController = GameObject.FindWithTag("GameController").GetComponent<BlockController>();
+            _WorldController = worldController;
+            _BlockController = blockController;
+
+            Position = position;
         }
 
         public IEnumerator GenerateBlocks()
@@ -37,8 +40,7 @@ namespace Environment.Terrain
 
             yield return new WaitUntil(() => _WorldController.NoiseMap.Ready);
 
-            float[][] noiseMap =
-                _WorldController.GetNoiseHeightsByPosition(Position, new Vector3Int(Size.x, Size.y, Size.z));
+            float[][] noiseMap = _WorldController.NoiseMap.GetSection(Position, Size);
 
             if (noiseMap == null)
             {
@@ -49,7 +51,14 @@ namespace Environment.Terrain
 
             ChunkGenerator chunkGenerator = new ChunkGenerator(noiseMap, Size);
             chunkGenerator.Start();
-            yield return new WaitUntil(() => chunkGenerator.Update());
+            yield return new WaitUntil(() => chunkGenerator.Update() || Destroy);
+
+            if (Destroy)
+            {
+                chunkGenerator.Abort();
+                Generating = false;
+                yield break;
+            }
 
             Blocks = chunkGenerator.Blocks;
 
@@ -66,13 +75,20 @@ namespace Environment.Terrain
 
             Meshed = false;
             Meshing = true;
-            
+
             MeshGenerator meshGenerator = new MeshGenerator(_WorldController, _BlockController, Position, Blocks);
             meshGenerator.Start();
 
-            yield return new WaitUntil(() => meshGenerator.Update());
+            yield return new WaitUntil(() => meshGenerator.Update() || Destroy);
 
-            MeshFilter.mesh = meshGenerator.GetMesh(MeshFilter.mesh);
+            if (Destroy)
+            {
+                meshGenerator.Abort();
+                Meshing = false;
+                yield break;
+            }
+
+            Mesh = meshGenerator.GetMesh(ref Mesh);
 
             Meshing = false;
             Meshed = true;

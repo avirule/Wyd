@@ -444,6 +444,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 0468092b4dbf446bb494bab4364c5e45, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  BlockController: {fileID: 69703343}
   ChunksChanged: 0
   FollowedTransform: {fileID: 963194228}
   MeshCollider: {fileID: 1461272640}
@@ -477,7 +478,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   Lacunarity: 2
-  Octaves: 16
+  Octaves: 2
   Persistence: 0.5
   Radius: 4
   Scale: 128
@@ -582,7 +583,7 @@ MonoBehaviour:
   Rigidbody: {fileID: 2134891959}
   RotationSensitivity: 40
   RotationTransform: {fileID: 963194228}
-  TravelSpeed: 10
+  TravelSpeed: 40
 --- !u!65 &2134891955
 BoxCollider:
   m_ObjectHideFlags: 0

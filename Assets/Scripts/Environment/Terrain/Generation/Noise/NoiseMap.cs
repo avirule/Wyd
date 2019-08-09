@@ -1,3 +1,6 @@
+using System;
+using Logging;
+using NLog;
 using Static;
 using UnityEngine;
 
@@ -22,6 +25,37 @@ namespace Environment.Terrain.Generation.Noise
             }
 
             StaticMethods.CreateArray(ref Map, size);
+        }
+
+        public float[][] GetSection(Vector3Int position, Vector3Int size)
+        {
+            if (!Mathv.ContainsVector3Int(Bounds, position))
+            {
+                EventLog.Logger.Log(LogLevel.Warn,
+                    $"Failed to retrieve noise map by offset: offset ({position.x}, {position.z}) outside of noise map.");
+                return null;
+            }
+
+            Vector3Int indexes = position - Bounds.min;
+            float[][] noiseMap = new float[size.x][];
+
+            for (int x = 0; x < noiseMap.Length; x++)
+            {
+                noiseMap[x] = new float[size.z];
+
+                for (int z = 0; z < noiseMap[0].Length; z++)
+                {
+                    try
+                    {
+                        noiseMap[x][z] = Map[indexes.x + x][indexes.z + z];
+                    }
+                    catch (IndexOutOfRangeException)
+                    {
+                    }
+                }
+            }
+
+            return noiseMap;
         }
     }
 }
