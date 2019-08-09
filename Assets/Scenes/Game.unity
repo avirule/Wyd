@@ -516,6 +516,7 @@ MonoBehaviour:
   MeshCollider: {fileID: 1461272640}
   Meshed: 0
   MeshFilter: {fileID: 1461272638}
+  Meshing: 0
   WorldGenerationSettings: {fileID: 1461272637}
 --- !u!4 &1461272636
 Transform:

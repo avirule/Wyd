@@ -21,8 +21,6 @@ namespace Controllers.Game
         {
             TextureController.Initialise();
             Initialise();
-
-            SceneManager.LoadScene("UI", LoadSceneMode.Additive);
         }
 
         private void OnApplicationQuit()

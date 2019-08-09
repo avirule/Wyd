@@ -1,5 +1,4 @@
 using System.Collections;
-using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using Controllers.Game;
@@ -21,12 +20,15 @@ namespace Controllers
 
         public BlockController BlockController;
 
-        public ConcurrentDictionary<Vector3Int, Chunk> Chunks;
+        public Dictionary<Vector3Int, Chunk> Chunks;
+        public Queue<Vector3Int> PendingChunkRemovals;
         public bool ChunksChanged;
         public Transform FollowedTransform;
         public MeshCollider MeshCollider;
         public bool Meshed;
         public MeshFilter MeshFilter;
+        public bool Meshing;
+        public bool Building;
         public NoiseMap NoiseMap;
         public WorldGenerationSettings WorldGenerationSettings;
 
@@ -35,7 +37,8 @@ namespace Controllers
             _FollowedCurrentChunk = new Vector3Int(0, 0, 0);
             CheckFollowerChangedChunk();
 
-            Chunks = new ConcurrentDictionary<Vector3Int, Chunk>();
+            Chunks = new Dictionary<Vector3Int, Chunk>();
+            PendingChunkRemovals = new Queue<Vector3Int>();
             ChunksChanged = Meshed = false;
         }
 
@@ -44,12 +47,18 @@ namespace Controllers
             _BlockDiameter = WorldGenerationSettings.Diameter * Chunk.Size.x;
 
             StartCoroutine(GenerateNoiseMap(_FollowedCurrentChunk));
-            BuildChunkRadius();
+            StartCoroutine(BuildChunkRadius());
         }
 
         private void Update()
         {
             CheckFollowerChangedChunk();
+            AllocateDestroyableChunks();
+
+            if (PendingChunkRemovals.Count > 0)
+            {
+                StartCoroutine(DestroyPendingChunks());
+            }
         }
 
         private void FixedUpdate()
@@ -86,11 +95,9 @@ namespace Controllers
         {
             _LastGenerationPoint = _FollowedCurrentChunk;
 
-            CullOutOfRadiusChunks();
-
             StartCoroutine(GenerateNoiseMap(_FollowedCurrentChunk));
 
-            BuildChunkRadius();
+            StartCoroutine(BuildChunkRadius());
         }
 
         #region Noise
@@ -147,23 +154,26 @@ namespace Controllers
                 ChunksChanged = Meshed = false;
             }
 
-            if (Meshed || !allMeshed)
+            if (Meshed || Meshing || !allMeshed || Building || PendingChunkRemovals.Count > 0)
             {
                 return;
             }
 
-            GenerateCombinedMesh();
+            StartCoroutine(GenerateCombinedMesh());
         }
 
-        private void GenerateCombinedMesh()
+        private IEnumerator GenerateCombinedMesh()
         {
             Meshed = false;
+            Meshing = true;
 
             int index = 0;
             CombineInstance[] combines = new CombineInstance[Chunks.Count];
 
             foreach (Chunk chunk in Chunks.Values)
             {
+// todo measure function time and restrict to one frame
+                
                 CombineInstance combine = new CombineInstance
                 {
                     mesh = chunk.Mesh,
@@ -171,45 +181,92 @@ namespace Controllers
                 };
 
                 combines[index] = combine;
-
                 index++;
+
+                yield return null;
             }
 
+            CombineMeshesAndAssign(combines);
+
+            Meshing = false;
+            Meshed = true;
+        }
+
+        private void CombineMeshesAndAssign(CombineInstance[] combines)
+        {
             MeshFilter.mesh = new Mesh {indexFormat = IndexFormat.UInt32};
             MeshFilter.mesh.CombineMeshes(combines, true, true);
             MeshCollider.sharedMesh = MeshFilter.sharedMesh;
-
-            Meshed = true;
         }
 
         #endregion
 
-        #region WorldChunk Building / Culling
+        
+        #region Chunk Building / Culling
 
-        private void CullOutOfRadiusChunks()
+        private void AllocateDestroyableChunks()
         {
-            foreach (Chunk chunk in CheckCullableChunks())
+            foreach (Vector3Int position in Chunks.Keys)
             {
-                chunk.Destroy = true;
-                Destroy(chunk.Mesh);
-                Chunks.TryRemove(chunk.Position, out Chunk _);
-
-                ChunksChanged = true;
+                if (Mathv.ContainsVector3Int(NoiseMap.Bounds, position))
+                {
+                    continue;
+                }
+                
+                PendingChunkRemovals.Enqueue(position);
             }
         }
 
-        private IEnumerable<Chunk> CheckCullableChunks()
+        private IEnumerator DestroyPendingChunks()
         {
-            return Chunks.Values.Where(chunk => !Mathv.ContainsVector3Int(NoiseMap.Bounds, chunk.Position));
+            while (PendingChunkRemovals.Count > 0)
+            {
+                if (Meshing)
+                {
+                    yield return null;
+                }
+                
+                DestroyChunk(PendingChunkRemovals.Dequeue());
+            }
         }
-
-        private void BuildChunkRadius()
+        
+        private void DestroyChunk(Vector3Int position)
         {
+            if (!Chunks.ContainsKey(position))
+            {
+                return;
+            }
+            
+            DestroyChunk(Chunks[position]);
+        }
+        
+        private void DestroyChunk(Chunk chunk)
+        {
+            chunk.Destroy = true;
+            Destroy(chunk.Mesh);
+            Chunks.Remove(chunk.Position);
+
+            ChunksChanged = true;
+        }
+        
+        private IEnumerator BuildChunkRadius()
+        {
+            Building = true;
+            
             // +1 to include player's chunk
             for (int x = -WorldGenerationSettings.Radius; x < (WorldGenerationSettings.Radius + 1); x++)
             {
                 for (int z = -WorldGenerationSettings.Radius; z < (WorldGenerationSettings.Radius + 1); z++)
                 {
+                    // if world is meshing (i.e. enumerating through chunks) wait and continue when complete
+                    if (Meshing)
+                    {
+                        // to restrict z from enumerating forward and breaking out of the for loop
+                        z--;
+                        yield return null;
+                        continue;
+                    }
+                    
                     Vector3Int pos = new Vector3Int(x * Chunk.Size.x, 0, z * Chunk.Size.x) + _FollowedCurrentChunk;
 
                     if ((Chunks == null) || Chunks.ContainsKey(pos))
@@ -217,16 +274,18 @@ namespace Controllers
                         continue;
                     }
 
-                    BuildWorldChunk(pos);
+                    CreateChunk(pos);
                 }
             }
+
+            Building = false;
         }
 
-        private void BuildWorldChunk(Vector3Int position)
+        private void CreateChunk(Vector3Int position)
         {
             Chunk chunk = new Chunk(this, BlockController, position);
 
-            Chunks.TryAdd(chunk.Position, chunk);
+            Chunks.Add(chunk.Position, chunk);
             StartCoroutine(chunk.GenerateBlocks());
 
             ChunksChanged = true;
@@ -247,15 +306,10 @@ namespace Controllers
 
             Chunks.TryGetValue(chunkPosition, out Chunk chunk);
 
-            if (chunk == null)
-            {
-                return string.Empty;
-            }
-
             // prevents DivideByZero exception
             Vector3Int localPosition = (position - chunkPosition).Abs();
 
-            string block = chunk.Blocks[localPosition.x][localPosition.y][localPosition.z] ?? string.Empty;
+            string block = chunk?.Blocks[localPosition.x][localPosition.y][localPosition.z] ?? string.Empty;
 
             return block;
         }
