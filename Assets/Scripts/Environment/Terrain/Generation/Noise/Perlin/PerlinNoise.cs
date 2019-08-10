@@ -1,5 +1,3 @@
-using Logging;
-using NLog;
 using UnityEngine;
 using Random = System.Random;
 
@@ -10,7 +8,8 @@ namespace Environment.Terrain.Generation.Noise.Perlin
         public static float[][] GenerateMap(Vector3Int offset, Vector3Int size,
             WorldGenerationSettings generationSettings)
         {
-            return GenerateMap(offset, generationSettings.Seed, size, generationSettings.Octaves, generationSettings.Scale,
+            return GenerateMap(offset, generationSettings.Seed, size, generationSettings.Octaves,
+                generationSettings.Scale,
                 generationSettings.Persistence, generationSettings.Lacunarity);
         }
 
@@ -92,8 +91,7 @@ namespace Environment.Terrain.Generation.Noise.Perlin
                 }
             }
 
-            EventLog.Logger.Log(LogLevel.Info,
-                $"Successfully generated perlin noise map of size ({size.x}, {size.z}) with offsets ({offset.x}, {offset.z}).");
+            //EventLog.Logger.Log(LogLevel.Info, $"Successfully generated perlin noise map of size ({size.x}, {size.z}) with offsets ({offset.x}, {offset.z}).");
 
             return noiseHeights;
         }

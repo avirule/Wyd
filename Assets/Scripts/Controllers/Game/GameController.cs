@@ -16,6 +16,7 @@ namespace Controllers.Game
         private void Awake()
         {
             Cursor.lockState = CursorLockMode.Locked;
+            QualitySettings.vSyncCount = 0;
         }
 
         private void Start()

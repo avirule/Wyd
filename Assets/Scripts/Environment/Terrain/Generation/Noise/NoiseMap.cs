@@ -49,7 +49,7 @@ namespace Environment.Terrain.Generation.Noise
                     {
                         noiseMap[x][z] = Map[indexes.x + x][indexes.z + z];
                     }
-                    catch (IndexOutOfRangeException)
+                    catch (Exception)
                     {
                     }
                 }

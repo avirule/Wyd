@@ -5,94 +5,68 @@ using System.Linq;
 using Environment.Terrain;
 using Static;
 using UnityEngine;
-using UnityEngine.Rendering;
 
 namespace Controllers.World
 {
     public sealed class ChunkController : MonoBehaviour
     {
-        public Mesh AggregateMesh;
+        private Chunk _ChunkObject;
+        private List<Chunk> _DestroyedChunks;
+
+        public Queue<Vector3Int> BuildChunkQueue;
 
         public bool Building;
-        public Dictionary<Vector3Int, Chunk> Chunks;
-        public bool Meshed;
-        public bool Meshing;
-        public bool ChunksGenerated => Chunks.Values.All(chunk => chunk.Generated);
-        public bool ChunksMeshed => Chunks.Values.All(chunk => chunk.Meshed);
+        public List<Chunk> Chunks;
+        public bool ChunksGenerated => Chunks.All(chunk => chunk.Generated);
+        public bool ChunksMeshed => Chunks.All(chunk => chunk.Meshed);
 
         private void Awake()
         {
-            Chunks = new Dictionary<Vector3Int, Chunk>();
+            _ChunkObject = Resources.Load<Chunk>(@"Environment\Terrain\Chunk");
+            _DestroyedChunks = new List<Chunk>();
+            Chunks = new List<Chunk>();
+            BuildChunkQueue = new Queue<Vector3Int>();
             Building = false;
         }
 
-        public void Tick(BoundsInt loadedBounds)
+        public void Tick(BoundsInt bounds)
         {
-            if (Meshing || !ChunksGenerated)
+            if (Building)
             {
                 return;
             }
 
-            AllocateDestroyableChunks(loadedBounds);
+            if (BuildChunkQueue.Count > 0)
+            {
+                StartCoroutine(ProcessBuildChunkQueue());
+            }
+
+            if (!ChunksGenerated)
+            {
+                return;
+            }
+
+            DestroyOutOfBoundsChunks(bounds);
             GenerateMissingChunkMeshes();
 
-            if (!ChunksMeshed || Meshing || Meshed || Building)
-            {
-                return;
-            }
-
-            StartCoroutine(GenerateCombinedMesh());
+//            if (!ChunksMeshed || Meshing || Meshed || Building)
+//            {
+//                return;
+//            }
+//
+//            StartCoroutine(GenerateCombinedMesh());
         }
 
-        private IEnumerator GenerateCombinedMesh()
+        public Chunk GetChunkAtPosition(Vector3 position)
         {
-            Meshing = true;
-            Meshed = false;
-
-            Stopwatch frameCounter = new Stopwatch();
-            float totalElapsed = 0f;
-
-            int index = 0;
-            CombineInstance[] combines = new CombineInstance[Chunks.Count];
-
-            foreach (Chunk chunk in Chunks.Values)
-            {
-                frameCounter.Restart();
-
-                CombineInstance combine = new CombineInstance
-                {
-                    mesh = chunk.Mesh,
-                    transform = Matrix4x4.TRS(chunk.Position, Quaternion.identity, new Vector3(1f, 1f, 1f))
-                };
-
-                combines[index] = combine;
-                index++;
-
-
-                frameCounter.Stop();
-                totalElapsed += (float) frameCounter.Elapsed.TotalSeconds;
-
-                if (totalElapsed >= WorldController.WORLD_TICK_RATE)
-                {
-                    yield return null;
-                }
-            }
-
-            AggregateMesh = new Mesh {indexFormat = IndexFormat.UInt32};
-            AggregateMesh.CombineMeshes(combines, true, true);
-            AggregateMesh.RecalculateNormals();
-            AggregateMesh.RecalculateTangents();
-            AggregateMesh.Optimize();
-
-            Meshing = false;
-            Meshed = true;
+            return Chunks.FirstOrDefault(chunk => chunk.Position == position);
         }
 
         public Block GetBlockAtPosition(Vector3Int position)
         {
             Vector3Int chunkPosition = WorldController.GetWorldChunkOriginFromGlobalPosition(position).ToInt();
 
-            Chunks.TryGetValue(chunkPosition, out Chunk chunk);
+            Chunk chunk = GetChunkAtPosition(chunkPosition);
 
             if (chunk == null)
             {
@@ -116,28 +90,33 @@ namespace Controllers.World
 
         #region CHUNK DESTROYING
 
-        private void AllocateDestroyableChunks(BoundsInt bounds)
+        private void DestroyOutOfBoundsChunks(BoundsInt bounds)
         {
-            foreach (Vector3Int position in Chunks.Keys.Where(position =>
-                !Mathv.ContainsVector3Int(bounds, position)).ToList())
+            int initialCount = Chunks.Count;
+
+            for (int i = initialCount - 1; i >= 0; i--)
             {
-                DestroyChunk(Chunks[position]);
+                if (Mathv.ContainsVector3Int(bounds, Chunks[i].Position))
+                {
+                    continue;
+                }
+
+                _DestroyedChunks.Add(Chunks[i]);
+                DestroyChunk(Chunks[i]);
             }
         }
 
         private void DestroyChunk(Chunk chunk)
         {
-            chunk.PendingDestruction = true;
-            Chunks.Remove(chunk.Position);
-
-            Meshed = false;
+            chunk.Destroy();
+            Chunks.Remove(chunk);
         }
 
         private void GenerateMissingChunkMeshes()
         {
-            foreach (Chunk chunk in Chunks.Values)
+            foreach (Chunk chunk in Chunks)
             {
-                if (chunk.PendingDestruction || !chunk.PendingUpdate || (!chunk.Meshed && chunk.Meshing))
+                if (chunk.Destroyed || !chunk.PendingUpdate || (!chunk.Meshed && chunk.Meshing))
                 {
                     continue;
                 }
@@ -151,32 +130,47 @@ namespace Controllers.World
 
         #region CHUNK BUILDING
 
-        public IEnumerator BuildChunkArea(Vector3Int origin, int radius)
+        public IEnumerator ProcessBuildChunkQueue()
         {
-            // +1 to include player's chunk
-            for (int x = -radius; x < (radius + 1); x++)
+            Building = true;
+
+            Stopwatch frameCounter = new Stopwatch();
+            float totalElapsed = 0f;
+
+            while (BuildChunkQueue.Count > 0)
             {
-                for (int z = -radius; z < (radius + 1); z++)
+                frameCounter.Restart();
+
+                Vector3Int pos = BuildChunkQueue.Dequeue();
+
+                CreateChunk(pos);
+
+                frameCounter.Stop();
+                totalElapsed += (float) frameCounter.Elapsed.TotalSeconds;
+
+                if (totalElapsed >= WorldController.WORLD_TICK_RATE)
                 {
-                    Vector3Int pos = new Vector3Int(x * Chunk.Size.x, 0, z * Chunk.Size.x) + origin;
-
-                    if ((Chunks == null) || Chunks.ContainsKey(pos))
-                    {
-                        continue;
-                    }
-
-                    CreateChunk(pos);
-
                     yield return null;
                 }
             }
+
+            Building = false;
         }
 
         private void CreateChunk(Vector3Int position)
         {
-            Chunk chunk = new Chunk(position);
+            Chunk chunkAtPosition = GetChunkAtPosition(position);
 
-            Chunks.Add(chunk.Position, chunk);
+            if ((chunkAtPosition != default) && !chunkAtPosition.Destroyed)
+            {
+                return;
+            }
+
+            Chunk chunk = _DestroyedChunks.FirstOrDefault() ?? Instantiate(_ChunkObject, position, Quaternion.identity);
+            chunk.Initialise(position);
+
+            _DestroyedChunks.Remove(chunk);
+            Chunks.Add(chunk);
 
             StartCoroutine(chunk.GenerateBlocks());
         }

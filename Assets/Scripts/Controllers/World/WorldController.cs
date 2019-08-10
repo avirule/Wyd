@@ -18,8 +18,7 @@ namespace Controllers.World
 
         public ChunkController ChunkController;
         public Transform FollowedTransform;
-        public MeshCollider MeshCollider;
-        public MeshFilter MeshFilter;
+        public NoiseMap NoiseMap;
         public WorldGenerationSettings WorldGenerationSettings;
 
         private void Awake()
@@ -33,13 +32,19 @@ namespace Controllers.World
             _BlockDiameter = WorldGenerationSettings.Diameter * Chunk.Size.x;
 
             StartCoroutine(GenerateNoiseMap(_FollowedCurrentChunk));
-            StartCoroutine(ChunkController.BuildChunkArea(_FollowedCurrentChunk, WorldGenerationSettings.Radius));
+
+            EnqueueBuildChunkArea(_FollowedCurrentChunk, WorldGenerationSettings.Radius);
         }
 
         private void Update()
         {
             CheckFollowerChangedChunk();
             CheckMeshingAndTick();
+            
+            foreach (Chunk chunk in ChunkController.Chunks)
+            {
+                Graphics.DrawMesh(chunk.Mesh, chunk.transform.localToWorldMatrix, chunk.BlocksMaterial, 0);
+            }
         }
 
         private void CheckFollowerChangedChunk()
@@ -73,8 +78,21 @@ namespace Controllers.World
 
             StartCoroutine(GenerateNoiseMap(_FollowedCurrentChunk));
 
-            StartCoroutine(ChunkController.BuildChunkArea(_FollowedCurrentChunk, WorldGenerationSettings.Radius));
+            EnqueueBuildChunkArea(_FollowedCurrentChunk, WorldGenerationSettings.Radius);
         }
+
+        public void EnqueueBuildChunkArea(Vector3Int origin, int radius)
+        {
+            // +1 to include player's chunk
+            for (int x = -radius; x < (radius + 1); x++)
+            {
+                for (int z = -radius; z < (radius + 1); z++)
+                {
+                    ChunkController.BuildChunkQueue.Enqueue(origin + Chunk.Size.Multiply(new Vector3Int(x, 0, z)));
+                }
+            }
+        }
+
 
         #region Noise
 
@@ -105,25 +123,8 @@ namespace Controllers.World
             {
                 return;
             }
-            
+
             ChunkController.Tick(NoiseMap.Bounds);
-
-            if (ChunkController.Meshing ||
-                !ChunkController.Meshed ||
-                (ChunkController.AggregateMesh == null) ||
-                ((MeshFilter.sharedMesh != null) &&
-                 (ChunkController.AggregateMesh.vertexCount == MeshFilter.sharedMesh.vertexCount)))
-            {
-                return;
-            }
-
-            CombineMeshesAndAssign(ChunkController.AggregateMesh);
-        }
-
-        private void CombineMeshesAndAssign(Mesh aggregateMesh)
-        {
-            MeshFilter.mesh = aggregateMesh;
-            MeshCollider.sharedMesh = MeshFilter.sharedMesh;
         }
 
         #endregion

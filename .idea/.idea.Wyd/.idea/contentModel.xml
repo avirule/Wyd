@@ -48,7 +48,6 @@
               <e p="Chunk.cs" t="Include" />
               <e p="Generation" t="Include">
                 <e p="ChunkGenerator.cs" t="Include" />
-                <e p="CombinedMeshGenerator.cs" t="Include" />
                 <e p="MeshGenerator.cs" t="Include" />
                 <e p="Noise" t="Include">
                   <e p="NoiseMap.cs" t="Include" />

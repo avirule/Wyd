@@ -461,6 +461,7 @@ GameObject:
   - component: {fileID: 1461272640}
   - component: {fileID: 1461272635}
   - component: {fileID: 1461272637}
+  - component: {fileID: 1461272641}
   m_Layer: 8
   m_Name: WorldController
   m_TagString: WorldController
@@ -480,15 +481,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 0468092b4dbf446bb494bab4364c5e45, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  BlockController: {fileID: 69703343}
-  Building: 0
-  ChunksChanged: 0
-  Destroying: 0
+  ChunkController: {fileID: 1461272641}
   FollowedTransform: {fileID: 963194228}
-  MeshCollider: {fileID: 1461272640}
-  Meshed: 0
-  MeshFilter: {fileID: 1461272638}
-  Meshing: 0
   WorldGenerationSettings: {fileID: 1461272637}
 --- !u!4 &1461272636
 Transform:
@@ -517,10 +511,10 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   Lacunarity: 2
-  Octaves: 2
+  Octaves: 8
   Persistence: 0.5
-  Radius: 2
-  Scale: 128
+  Radius: 4
+  Scale: 64
   SeedString: genericseed
 --- !u!33 &1461272638
 MeshFilter:
@@ -581,6 +575,20 @@ MeshCollider:
   m_Convex: 0
   m_CookingOptions: -1
   m_Mesh: {fileID: 0}
+--- !u!114 &1461272641
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1461272634}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 356af847eb3747ddacc553be20c35101, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  Building: 0
+  Chunks: []
 --- !u!1 &2134891953
 GameObject:
   m_ObjectHideFlags: 0

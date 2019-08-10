@@ -1,6 +1,8 @@
 using System.Threading;
 using Controllers.Game;
 using Controllers.World;
+using Logging;
+using NLog;
 using Threading;
 using UnityEngine;
 using UnityEngine.Rendering;
@@ -37,6 +39,7 @@ namespace Environment.Terrain.Generation
 
         public override void Start()
         {
+            EventLog.Logger.Log(LogLevel.Info, $"Meshing chunk at: ({_Position.x}, {_Position.z})");
             Thread = new Thread(Run);
             Thread.Start();
         }
@@ -354,6 +357,7 @@ namespace Environment.Terrain.Generation
 
             copy.RecalculateTangents();
             copy.RecalculateNormals();
+            copy.Optimize();
 
             return copy;
         }

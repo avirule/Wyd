@@ -1,39 +1,41 @@
+#region
+
 using System.Collections;
 using Controllers.Game;
 using Controllers.World;
 using Environment.Terrain.Generation;
-using Environment.Terrain.Generation.Noise.Perlin;
 using Logging;
 using NLog;
+using Static;
 using UnityEngine;
+
+#endregion
 
 namespace Environment.Terrain
 {
-    public class Chunk
+    public class Chunk : MonoBehaviour
     {
         public static Vector3Int Size = new Vector3Int(8, 32, 8);
-        private readonly BlockController _BlockController;
-        private readonly WorldController _WorldController;
+        private BlockController _BlockController;
+        private WorldController _WorldController;
 
         public Block[][][] Blocks;
+        public Material BlocksMaterial;
+        public bool Destroyed;
         public bool Generated;
         public bool Generating;
         public Mesh Mesh;
+        public MeshCollider MeshCollider;
         public bool Meshed;
         public bool Meshing;
-        public bool PendingDestruction;
         public bool PendingUpdate;
         public Vector3Int Position;
 
-        public Chunk(Vector3Int position)
+        private void Awake()
         {
-            PendingUpdate = true;
-            Generated = Generating = Meshed = Meshing = PendingDestruction = false;
-
+            transform.parent = GameObject.FindWithTag("WorldController").transform;
             _WorldController = GameObject.FindWithTag("WorldController").GetComponent<WorldController>();
             _BlockController = GameObject.FindWithTag("GameController").GetComponent<BlockController>();
-
-            Position = position;
         }
 
         public IEnumerator GenerateBlocks()
@@ -41,9 +43,7 @@ namespace Environment.Terrain
             Generated = false;
             Generating = true;
 
-            yield return new WaitUntil(() => _WorldController.NoiseMap.Ready);
-
-            float[][] noiseMap = PerlinNoise.GenerateMap(Position, Size, _WorldController.WorldGenerationSettings);
+            float[][] noiseMap = _WorldController.NoiseMap.GetSection(Position, Size);
 
             if (noiseMap == null)
             {
@@ -55,11 +55,10 @@ namespace Environment.Terrain
             ChunkGenerator chunkGenerator = new ChunkGenerator(noiseMap, Size);
             chunkGenerator.Start();
 
-            yield return new WaitUntil(() => chunkGenerator.Update() || PendingDestruction);
+            yield return new WaitUntil(() => chunkGenerator.Update() || Destroyed);
 
-            if (PendingDestruction || !Generating)
+            if (Destroyed || !Generating)
             {
-                chunkGenerator.Abort();
                 chunkGenerator.Abort();
                 Generating = false;
 
@@ -85,9 +84,9 @@ namespace Environment.Terrain
             MeshGenerator meshGenerator = new MeshGenerator(_WorldController, _BlockController, Position, Blocks);
             meshGenerator.Start();
 
-            yield return new WaitUntil(() => meshGenerator.Update() || PendingDestruction);
+            yield return new WaitUntil(() => meshGenerator.Update() || Destroyed);
 
-            if (PendingDestruction)
+            if (Destroyed)
             {
                 meshGenerator.Abort();
                 Meshing = false;
@@ -96,9 +95,29 @@ namespace Environment.Terrain
             }
 
             Mesh = meshGenerator.GetMesh(ref Mesh);
+            MeshCollider.sharedMesh = Mesh;
 
             Meshing = PendingUpdate = false;
             Meshed = true;
+        }
+
+        public void Initialise(Vector3 position = default)
+        {
+            transform.position = position;
+            Position = position.ToInt();
+            PendingUpdate = true;
+            Generated = Generating = Meshed = Meshing = Destroyed = false;
+            gameObject.SetActive(true);
+        }
+
+        public void Destroy()
+        {
+            Destroyed = true;
+            transform.position = new Vector3(0f, 0f, 0f);
+            Position = new Vector3Int(0, 0, 0);
+            Mesh = null;
+            MeshCollider.sharedMesh = null;
+            gameObject.SetActive(false);
         }
     }
 }
