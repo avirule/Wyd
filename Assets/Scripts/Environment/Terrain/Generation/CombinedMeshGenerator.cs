@@ -8,7 +8,7 @@ namespace Environment.Terrain.Generation
     public class CombinedMeshGenerator : ThreadedProcess
     {
         private readonly IEnumerable<Chunk> _Chunks;
-        
+
         public Mesh Mesh;
 
         public CombinedMeshGenerator(IEnumerable<Chunk> chunks)
@@ -19,7 +19,7 @@ namespace Environment.Terrain.Generation
         protected override void ThreadFunction()
         {
             base.ThreadFunction();
-            
+
             List<CombineInstance> combines = new List<CombineInstance>();
 
             foreach (Chunk chunk in _Chunks)
@@ -31,10 +31,9 @@ namespace Environment.Terrain.Generation
                 };
 
                 combines.Add(combine);
-
             }
 
-            Mesh = new Mesh()
+            Mesh = new Mesh
             {
                 indexFormat = IndexFormat.UInt32
             };

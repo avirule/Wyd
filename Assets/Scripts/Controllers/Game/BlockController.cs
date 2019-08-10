@@ -9,59 +9,68 @@ namespace Controllers.Game
 {
     public class BlockController : MonoBehaviour
     {
-        private Dictionary<string, BlockRule> _Blocks;
+        public const ushort BLOCK_EMPTY_ID = 0;
+        
+        private Dictionary<ushort, BlockRule> _Blocks;
         public TextureController TextureController;
 
-        public Dictionary<string, BlockRule>.KeyCollection RegisteredBlocks => _Blocks.Keys;
+        public Dictionary<ushort, BlockRule>.KeyCollection RegisteredBlocks => _Blocks.Keys;
 
         private void Awake()
         {
-            _Blocks = new Dictionary<string, BlockRule>();
+            _Blocks = new Dictionary<ushort, BlockRule>();
+            Block.AssignBlockController(this);
         }
 
-        public bool RegisterBlockRules(string blockName, bool addNewBlock, bool isTransparent,
+        public bool RegisterBlockRules(ushort blockId, string blockName, bool addNewBlock, bool isTransparent,
             RuleEvaluation ruleEvaluation)
         {
-            if (!_Blocks.ContainsKey(blockName))
+            if (blockId == 0)
+            {
+                EventLog.Logger.Log(LogLevel.Error, "Failed to add block rule: cannot register block with id of 0.");
+            }
+
+            if (!_Blocks.ContainsKey(blockId))
             {
                 if (!addNewBlock)
                 {
                     EventLog.Logger.Log(LogLevel.Error,
-                        $"Failed to add block rule: specified block `{blockName}` does not exist.");
+                        $"Failed to add block rule: specified block id `{blockId}` does not exist.");
 
                     return false;
                 }
 
                 EventLog.Logger.Log(LogLevel.Warn,
-                    $"AddNewBlock flag set, adding block `{blockName}` and continuing...");
+                    $"AddNewBlock flag set, adding block `{blockName}` with id `{blockId}` and continuing...");
 
-                _Blocks.Add(blockName, new BlockRule(blockName, isTransparent, null));
+                _Blocks.Add(blockId, new BlockRule(blockId, blockName, isTransparent, null));
             }
 
-            _Blocks[blockName].SetRuleEvaluation(ruleEvaluation);
+            _Blocks[blockId].SetRuleEvaluation(ruleEvaluation);
 
-            EventLog.Logger.Log(LogLevel.Info, $"Successfully added rule evaluation for block `{blockName}`.");
+            EventLog.Logger.Log(LogLevel.Info,
+                $"Successfully added rule evaluation for block `{blockName}` with id `{blockId}`.");
 
             return true;
         }
 
-        public bool GetBlockSpriteUVs(string blockName, Vector3Int position, Direction direction, out Vector2[] uvs)
+        public bool GetBlockSpriteUVs(ushort blockId, Vector3Int position, Direction direction, out Vector2[] uvs)
         {
             uvs = null;
 
-            if (!_Blocks.ContainsKey(blockName))
+            if (!_Blocks.ContainsKey(blockId))
             {
                 EventLog.Logger.Log(LogLevel.Error,
-                    $"Failed to return block sprite UVs for direction `{direction}` of block `{blockName}`: block does not exist.");
+                    $"Failed to return block sprite UVs for direction `{direction}` of block with id `{blockId}`: block id does not exist.");
                 return false;
             }
 
-            _Blocks[blockName].ReadRule(blockName, position, direction, out string spriteName);
+            _Blocks[blockId].ReadRule(blockId, position, direction, out string spriteName);
 
             if (!TextureController.Sprites.ContainsKey(spriteName))
             {
                 EventLog.Logger.Log(LogLevel.Error,
-                    $"Failed to return block sprite UVs for direction `{direction}` of block `{blockName}`: sprite does not exist for block.");
+                    $"Failed to return block sprite UVs for direction `{direction}` of block with id `{blockId}`: sprite does not exist for block.");
                 return false;
             }
 
@@ -69,21 +78,21 @@ namespace Controllers.Game
             return true;
         }
 
-        public bool IsBlockTransparent(string blockName)
+        public bool IsBlockDefaultTransparent(ushort blockId)
         {
-            if (string.IsNullOrWhiteSpace(blockName))
+            if (blockId == 0)
             {
                 return true;
             }
 
-            if (!_Blocks.ContainsKey(blockName))
+            if (!_Blocks.ContainsKey(blockId))
             {
                 EventLog.Logger.Log(LogLevel.Error,
-                    $"Failed to return block rule for block `{blockName}`: block does not exist.");
+                    $"Failed to return block rule for block with id `{blockId}`: block does not exist.");
                 return false;
             }
 
-            return _Blocks[blockName].IsTransparent;
+            return _Blocks[blockId].IsTransparent;
         }
     }
 }

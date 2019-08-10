@@ -9,12 +9,14 @@ namespace Environment.Terrain
     public class BlockRule
     {
         protected readonly string BlockName;
+        protected readonly ushort Id;
 
         public readonly bool IsTransparent;
         protected RuleEvaluation RuleEvaluation;
 
-        public BlockRule(string blockName, bool isTransparent, RuleEvaluation ruleEvaluation)
+        public BlockRule(ushort id, string blockName, bool isTransparent, RuleEvaluation ruleEvaluation)
         {
+            Id = id;
             BlockName = blockName;
             IsTransparent = isTransparent;
             RuleEvaluation = ruleEvaluation ?? ((position, direction) => string.Empty);
@@ -26,12 +28,12 @@ namespace Environment.Terrain
             return true;
         }
 
-        public bool ReadRule(string blockName, Vector3Int position, Direction direction, out string spriteName)
+        public bool ReadRule(ushort blockId, Vector3Int position, Direction direction, out string spriteName)
         {
-            if (!BlockName.Equals(blockName))
+            if (Id != blockId)
             {
                 Debug.Log(
-                    $"Failed to get rule of specified block `{blockName}`: block name mismatch (referenced {blockName}, targeted {BlockName}).");
+                    $"Failed to get rule of specified block `{blockId}`: block name mismatch (referenced {blockId}, targeted {BlockName}).");
                 spriteName = string.Empty;
                 return false;
             }

@@ -14,18 +14,20 @@ namespace Environment.Terrain
         private readonly BlockController _BlockController;
         private readonly WorldController _WorldController;
 
-        public string[][][] Blocks;
-        public bool Destroy;
+        public Block[][][] Blocks;
         public bool Generated;
         public bool Generating;
         public Mesh Mesh;
         public bool Meshed;
         public bool Meshing;
+        public bool PendingDestruction;
+        public bool PendingUpdate;
         public Vector3Int Position;
 
         public Chunk(WorldController worldController, BlockController blockController, Vector3Int position)
         {
-            Generated = Generating = Meshed = Meshing = Destroy = false;
+            PendingUpdate = true;
+            Generated = Generating = Meshed = Meshing = PendingDestruction = false;
 
             _WorldController = worldController;
             _BlockController = blockController;
@@ -51,12 +53,15 @@ namespace Environment.Terrain
 
             ChunkGenerator chunkGenerator = new ChunkGenerator(noiseMap, Size);
             chunkGenerator.Start();
-            yield return new WaitUntil(() => chunkGenerator.Update() || Destroy);
 
-            if (Destroy)
+            yield return new WaitUntil(() => chunkGenerator.Update() || PendingDestruction);
+
+            if (PendingDestruction || !Generating)
             {
                 chunkGenerator.Abort();
+                chunkGenerator.Abort();
                 Generating = false;
+
                 yield break;
             }
 
@@ -79,18 +84,19 @@ namespace Environment.Terrain
             MeshGenerator meshGenerator = new MeshGenerator(_WorldController, _BlockController, Position, Blocks);
             meshGenerator.Start();
 
-            yield return new WaitUntil(() => meshGenerator.Update() || Destroy);
+            yield return new WaitUntil(() => meshGenerator.Update() || PendingDestruction);
 
-            if (Destroy)
+            if (PendingDestruction)
             {
                 meshGenerator.Abort();
                 Meshing = false;
+
                 yield break;
             }
 
             Mesh = meshGenerator.GetMesh(ref Mesh);
 
-            Meshing = false;
+            Meshing = PendingUpdate = false;
             Meshed = true;
         }
     }

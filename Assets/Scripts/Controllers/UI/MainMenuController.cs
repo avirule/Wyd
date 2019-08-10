@@ -7,9 +7,9 @@ namespace Controllers.UI
 {
     public class MainMenuController : MonoBehaviour
     {
-        public Button PlayButton;
         public Button ExitButton;
-        
+        public Button PlayButton;
+
         // Start is called before the first frame update
         private void Start()
         {
@@ -18,9 +18,8 @@ namespace Controllers.UI
         }
 
         // Update is called once per frame
-        void Update()
+        private void Update()
         {
-        
         }
 
         private void PlayGame()

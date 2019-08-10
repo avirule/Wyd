@@ -7,7 +7,7 @@ namespace Environment.Terrain.Generation
     {
         private readonly float[][] _NoiseMap;
         private readonly Vector3Int _Size;
-        public string[][][] Blocks;
+        public Block[][][] Blocks;
 
         public ChunkGenerator(float[][] noiseMap, Vector3Int size)
         {
@@ -22,15 +22,15 @@ namespace Environment.Terrain.Generation
 
         protected override void ThreadFunction()
         {
-            Blocks = new string[_Size.x][][];
+            Blocks = new Block[_Size.x][][];
 
             for (int x = 0; x < _Size.x; x++)
             {
-                Blocks[x] = new string[_Size.y][];
+                Blocks[x] = new Block[_Size.y][];
 
                 for (int y = 0; y < _Size.y; y++)
                 {
-                    Blocks[x][y] = new string[_Size.z];
+                    Blocks[x][y] = new Block[_Size.z];
 
                     for (int z = 0; z < _Size.z; z++)
                     {
@@ -45,15 +45,15 @@ namespace Environment.Terrain.Generation
 
                         if ((y == perlinValue) || (y == (Chunk.Size.y - 1)))
                         {
-                            Blocks[x][y][z] = "Grass";
+                            Blocks[x][y][z] = new Block(1);
                         }
                         else if ((y < perlinValue) && (y > (perlinValue - 5)))
                         {
-                            Blocks[x][y][z] = "Dirt";
+                            Blocks[x][y][z] = new Block(2);
                         }
                         else if (y <= (perlinValue - 5))
                         {
-                            Blocks[x][y][z] = "Stone";
+                            Blocks[x][y][z] = new Block(3);
                         }
                     }
                 }

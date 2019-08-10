@@ -1,8 +1,8 @@
 using System;
 using Environment;
+using Environment.Terrain;
 using NLog;
 using UnityEngine;
-using UnityEngine.SceneManagement;
 
 namespace Controllers.Game
 {
@@ -35,14 +35,12 @@ namespace Controllers.Game
 
         private void RegisterDefaultBlocks()
         {
-            BlockController.RegisterBlockRules("Stone", true, false, (position, direction) => "Stone");
-            BlockController.RegisterBlockRules("Dirt", true, false, (position, direction) => "Dirt");
-            BlockController.RegisterBlockRules("Grass", true, false, (position, direction) =>
+            BlockController.RegisterBlockRules(1, "Grass", true, false, (position, direction) =>
             {
                 Vector3Int positionAbove = position + Vector3Int.up;
-                string blockAbove = WorldController.GetBlockAtPosition(positionAbove);
+                Block blockAbove = WorldController.GetBlockAtPosition(positionAbove);
 
-                if (!BlockController.IsBlockTransparent(blockAbove))
+                if (blockAbove.Opaque)
                 {
                     return "Dirt";
                 }
@@ -82,7 +80,9 @@ namespace Controllers.Game
                         throw new ArgumentOutOfRangeException(nameof(direction), direction, null);
                 }
             });
-            BlockController.RegisterBlockRules("Glass", true, true, (position, direction) => "Glass");
+            BlockController.RegisterBlockRules(2, "Dirt", true, false, (position, direction) => "Dirt");
+            BlockController.RegisterBlockRules(3, "Stone", true, false, (position, direction) => "Stone");
+            BlockController.RegisterBlockRules(4, "Glass", true, true, (position, direction) => "Glass");
         }
     }
 }
