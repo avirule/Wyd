@@ -35,7 +35,10 @@
               <e p="MainMenuController.cs" t="Include" />
               <e p="UIInputWatcherController.cs" t="Include" />
             </e>
-            <e p="WorldController.cs" t="Include" />
+            <e p="World" t="Include">
+              <e p="ChunkController.cs" t="Include" />
+              <e p="WorldController.cs" t="Include" />
+            </e>
           </e>
           <e p="Environment" t="Include">
             <e p="Direction.cs" t="Include" />
@@ -60,7 +63,6 @@
                   </e>
                 </e>
                 <e p="WorldGenerationSettings.cs" t="Include" />
-                <e p="WorldGenSettings.cs" t="Include" />
                 <e p="WorldSeed.cs" t="Include" />
               </e>
             </e>

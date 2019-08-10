@@ -1,7 +1,8 @@
 using System.Collections;
-using Controllers;
 using Controllers.Game;
+using Controllers.World;
 using Environment.Terrain.Generation;
+using Environment.Terrain.Generation.Noise.Perlin;
 using Logging;
 using NLog;
 using UnityEngine;
@@ -24,13 +25,13 @@ namespace Environment.Terrain
         public bool PendingUpdate;
         public Vector3Int Position;
 
-        public Chunk(WorldController worldController, BlockController blockController, Vector3Int position)
+        public Chunk(Vector3Int position)
         {
             PendingUpdate = true;
             Generated = Generating = Meshed = Meshing = PendingDestruction = false;
 
-            _WorldController = worldController;
-            _BlockController = blockController;
+            _WorldController = GameObject.FindWithTag("WorldController").GetComponent<WorldController>();
+            _BlockController = GameObject.FindWithTag("GameController").GetComponent<BlockController>();
 
             Position = position;
         }
@@ -42,7 +43,7 @@ namespace Environment.Terrain
 
             yield return new WaitUntil(() => _WorldController.NoiseMap.Ready);
 
-            float[][] noiseMap = _WorldController.NoiseMap.GetSection(Position, Size);
+            float[][] noiseMap = PerlinNoise.GenerateMap(Position, Size, _WorldController.WorldGenerationSettings);
 
             if (noiseMap == null)
             {

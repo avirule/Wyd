@@ -10,7 +10,7 @@ namespace Controllers.Game
     public class BlockController : MonoBehaviour
     {
         public const ushort BLOCK_EMPTY_ID = 0;
-        
+
         private Dictionary<ushort, BlockRule> _Blocks;
         public TextureController TextureController;
 

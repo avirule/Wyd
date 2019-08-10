@@ -7,10 +7,10 @@ namespace Environment.Terrain.Generation.Noise.Perlin
 {
     public static class PerlinNoise
     {
-        public static float[][] GenerateMap(Vector3Int offset, WorldSeed seed, Vector3Int size,
-            WorldGenSettings generationSettings)
+        public static float[][] GenerateMap(Vector3Int offset, Vector3Int size,
+            WorldGenerationSettings generationSettings)
         {
-            return GenerateMap(offset, seed, size, generationSettings.Octaves, generationSettings.Scale,
+            return GenerateMap(offset, generationSettings.Seed, size, generationSettings.Octaves, generationSettings.Scale,
                 generationSettings.Persistence, generationSettings.Lacunarity);
         }
 

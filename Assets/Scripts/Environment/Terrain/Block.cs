@@ -73,7 +73,7 @@ namespace Environment.Terrain
             {
                 return false;
             }
-            
+
             return HasFace(Direction.North) || HasFace(Direction.East) || HasFace(Direction.South) ||
                    HasFace(Direction.East) || HasFace(Direction.Up) || HasFace(Direction.Down);
         }
