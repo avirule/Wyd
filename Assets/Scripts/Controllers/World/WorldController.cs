@@ -20,7 +20,8 @@ namespace Controllers.World
 
         private Vector3Int _ChunkLoaderCurrentChunk;
         private Vector3Int _LastChunkLoadPosition;
-
+        private bool _RegenerateNoise;
+        
         public ChunkController ChunkController;
         public Transform ChunkLoader;
         public NoiseMap NoiseMap;
@@ -62,6 +63,7 @@ namespace Controllers.World
 
         private IEnumerator GenerateNoiseMap(Vector3Int offset)
         {
+            _RegenerateNoise = false;
             // over-generate noise map size to avoid array index overflows
             NoiseMap = new NoiseMap(null, _ChunkLoaderCurrentChunk,
                 new Vector3Int((WorldGenerationSettings.Diameter + 1) * Chunk.Size.x, 0,
@@ -71,8 +73,14 @@ namespace Controllers.World
                 new PerlinNoiseGenerator(offset, NoiseMap.Bounds.size, WorldGenerationSettings);
             perlinNoiseGenerator.Start();
 
-            yield return new WaitUntil(() => perlinNoiseGenerator.Update());
+            yield return new WaitUntil(() => perlinNoiseGenerator.Update() || _RegenerateNoise);
 
+            if (_RegenerateNoise)
+            {
+                perlinNoiseGenerator.Abort();
+                yield break;
+            }
+            
             NoiseMap.Map = perlinNoiseGenerator.Map;
             NoiseMap.Ready = true;
         }
@@ -117,6 +125,7 @@ namespace Controllers.World
         {
             _LastChunkLoadPosition = _ChunkLoaderCurrentChunk;
 
+            _RegenerateNoise = true;            
             StartCoroutine(GenerateNoiseMap(_ChunkLoaderCurrentChunk));
 
             EnqueueBuildChunkArea(_ChunkLoaderCurrentChunk, WorldGenerationSettings.Radius);

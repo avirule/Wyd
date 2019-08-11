@@ -18,9 +18,11 @@ namespace Controllers.World
         private Chunk _ChunkObject;
         private List<Chunk> _DestroyedChunks;
 
-        public Queue<Vector3Int> BuildChunkQueue;
+        public int MaximumChunkCache;
+        public int MaximumChunkLoadTimeCaching;
         public bool BuildingChunkArea;
         public List<Chunk> Chunks;
+        public Queue<Vector3Int> BuildChunkQueue;
         public bool AllChunksGenerated => Chunks.All(chunk => chunk.Generated);
         public bool AllChunksMeshed => Chunks.All(chunk => chunk.Meshed);
 
@@ -45,6 +47,11 @@ namespace Controllers.World
             {
                 DestroyOutOfBoundsChunks(bounds);
                 BeginGeneratingMissingChunkMeshes();
+            }
+
+            if (_DestroyedChunks.Count > MaximumChunkCache)
+            {
+                _DestroyedChunks.RemoveRange(0, _DestroyedChunks.Count - MaximumChunkCache);
             }
         }
 
@@ -146,7 +153,7 @@ namespace Controllers.World
         {
             for (int x = -1; x < 2; x++)
             {
-                Chunk chunkAtPosition = GetChunkAtPosition(position + new Vector3Int(x, 0, 0));
+                Chunk chunkAtPosition = GetChunkAtPosition(position + new Vector3Int(x * Chunk.Size.x, 0, 0));
 
                 if (chunkAtPosition == default)
                 {
@@ -158,7 +165,7 @@ namespace Controllers.World
 
             for (int z = -2; z < 2; z++)
             {
-                Chunk chunkAtPosition = GetChunkAtPosition(position + new Vector3Int(0, 0, z));
+                Chunk chunkAtPosition = GetChunkAtPosition(position + new Vector3Int(0, 0, z * Chunk.Size.z));
 
                 if (chunkAtPosition == default)
                 {

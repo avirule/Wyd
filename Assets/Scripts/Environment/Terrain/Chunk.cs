@@ -1,5 +1,6 @@
 #region
 
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -17,14 +18,14 @@ namespace Environment.Terrain
 {
     public class Chunk : MonoBehaviour
     {
-        public const int MAXIMUM_CHUNK_LOAD_TIME_CACHING = 60;
         public static Vector3Int Size = new Vector3Int(8, 32, 8);
         public static readonly List<float> ChunkBuildTimes = new List<float>();
         public static readonly List<float> ChunkMeshTimes = new List<float>();
 
         private BlockController _BlockController;
         private WorldController _WorldController;
-
+        private ChunkController _ChunkController;
+        
         public Block[] Blocks;
         public bool Destroyed;
         public bool Generated;
@@ -40,8 +41,11 @@ namespace Environment.Terrain
 
         private void Awake()
         {
-            transform.parent = GameObject.FindWithTag("WorldController").transform;
-            _WorldController = GameObject.FindWithTag("WorldController").GetComponent<WorldController>();
+            GameObject worldControllerObject = GameObject.FindWithTag("WorldController");
+            
+            transform.parent = worldControllerObject.transform;
+            _WorldController = worldControllerObject.GetComponent<WorldController>();
+            _ChunkController = worldControllerObject.GetComponent<ChunkController>();
             _BlockController = GameObject.FindWithTag("GameController").GetComponent<BlockController>();
         }
 
@@ -51,8 +55,26 @@ namespace Environment.Terrain
 
             Generated = false;
             Generating = true;
+            
+            yield return new WaitUntil(() => _WorldController.NoiseMap.Ready || Destroyed);
+            
+            if (Destroyed)
+            {
+                Generating = false;
 
-            float[][] noiseMap = _WorldController.NoiseMap.GetSection(Position, Size);
+                yield break;
+            }
+
+            float[][] noiseMap;
+            
+            try
+            {
+                noiseMap = _WorldController.NoiseMap.GetSection(Position, Size);
+            }
+            catch (Exception)
+            {
+                yield break;
+            }
 
             if (noiseMap == null)
             {
@@ -82,9 +104,9 @@ namespace Environment.Terrain
             stopwatch.Stop();
             ChunkBuildTimes.Add(stopwatch.ElapsedMilliseconds);
 
-            if (ChunkMeshTimes.Count > MAXIMUM_CHUNK_LOAD_TIME_CACHING)
+            if (ChunkMeshTimes.Count > _ChunkController.MaximumChunkLoadTimeCaching)
             {
-                ChunkMeshTimes.RemoveRange(0, ChunkBuildTimes.Count - MAXIMUM_CHUNK_LOAD_TIME_CACHING);
+                ChunkMeshTimes.RemoveRange(0, ChunkBuildTimes.Count - _ChunkController.MaximumChunkLoadTimeCaching);
             }
         }
 
@@ -123,9 +145,9 @@ namespace Environment.Terrain
 
             ChunkMeshTimes.Add(stopwatch.ElapsedMilliseconds);
 
-            if (ChunkMeshTimes.Count > MAXIMUM_CHUNK_LOAD_TIME_CACHING)
+            if (ChunkMeshTimes.Count > _ChunkController.MaximumChunkLoadTimeCaching)
             {
-                ChunkMeshTimes.RemoveRange(0, ChunkMeshTimes.Count - MAXIMUM_CHUNK_LOAD_TIME_CACHING);
+                ChunkMeshTimes.RemoveRange(0, ChunkMeshTimes.Count - _ChunkController.MaximumChunkLoadTimeCaching);
             }
         }
 
