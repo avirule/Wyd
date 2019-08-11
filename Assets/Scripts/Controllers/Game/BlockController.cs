@@ -94,7 +94,7 @@ namespace Controllers.Game
                 return false;
             }
 
-            return _Blocks[blockId].IsTransparent;
+            return _Blocks[blockId].Transparent;
         }
     }
 }

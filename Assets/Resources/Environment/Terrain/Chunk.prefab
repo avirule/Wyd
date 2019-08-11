@@ -108,9 +108,10 @@ MonoBehaviour:
   Destroyed: 0
   Generated: 0
   Generating: 0
-  MeshFilter: {fileID: 9170613462872033006}
   MeshCollider: {fileID: 2133818191605063448}
   Meshed: 0
+  MeshFilter: {fileID: 9170613462872033006}
+  MeshRenderer: {fileID: 7285864458151587628}
   Meshing: 0
   PendingUpdate: 0
   Position: {x: 0, y: 0, z: 0}

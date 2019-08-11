@@ -481,6 +481,7 @@ MonoBehaviour:
   ChunkController: {fileID: 1461272641}
   ChunkLoader: {fileID: 963194228}
   WorldGenerationSettings: {fileID: 1461272637}
+  ShadowRadius: 3
 --- !u!4 &1461272636
 Transform:
   m_ObjectHideFlags: 0

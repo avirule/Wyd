@@ -7,6 +7,7 @@ using Environment.Terrain.Generation.Noise;
 using Environment.Terrain.Generation.Noise.Perlin;
 using Static;
 using UnityEngine;
+using UnityEngine.Rendering;
 
 #endregion
 
@@ -24,6 +25,7 @@ namespace Controllers.World
         public Transform ChunkLoader;
         public NoiseMap NoiseMap;
         public WorldGenerationSettings WorldGenerationSettings;
+        public int ShadowRadius;
 
         private void Awake()
         {
@@ -118,6 +120,22 @@ namespace Controllers.World
             StartCoroutine(GenerateNoiseMap(_ChunkLoaderCurrentChunk));
 
             EnqueueBuildChunkArea(_ChunkLoaderCurrentChunk, WorldGenerationSettings.Radius);
+
+            foreach (Chunk chunk in ChunkController.Chunks)
+            {
+                Vector3Int difference = (chunk.Position - _ChunkLoaderCurrentChunk).Abs();
+
+                if (difference.x > (ShadowRadius * Chunk.Size.x) || difference.z > (ShadowRadius * Chunk.Size.z))
+                {
+                    chunk.MeshRenderer.shadowCastingMode = ShadowCastingMode.Off;
+                    chunk.MeshRenderer.receiveShadows = false;
+                }
+                else
+                {
+                    chunk.MeshRenderer.shadowCastingMode = ShadowCastingMode.On;        
+                    chunk.MeshRenderer.receiveShadows = true;
+                }
+            }
         }
 
         private void CheckMeshingAndTick()

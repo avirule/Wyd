@@ -69,6 +69,7 @@ namespace Controllers.World
 
         private void DestroyChunk(Chunk chunk)
         {
+            AssignNeighborsPendingUpdate(chunk.Position);
             chunk.Destroy();
             Chunks.Remove(chunk);
         }

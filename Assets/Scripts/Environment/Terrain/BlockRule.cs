@@ -12,7 +12,7 @@ namespace Environment.Terrain
     {
         ushort Id { get; }
         string BlockName { get; }
-        bool IsTransparent { get; }
+        bool Transparent { get; }
         RuleEvaluation RuleEvaluation { get; }
 
         bool ReadUVsRule(ushort blockId, Vector3Int position, Direction direction, out string spriteName);
@@ -22,14 +22,14 @@ namespace Environment.Terrain
     {
         public ushort Id { get; }
         public string BlockName { get; }
-        public bool IsTransparent { get; }
+        public bool Transparent { get; }
         public RuleEvaluation RuleEvaluation { get; }
 
-        public BlockRule(ushort id, string blockName, bool isTransparent, RuleEvaluation ruleEvaluation)
+        public BlockRule(ushort id, string blockName, bool transparent, RuleEvaluation ruleEvaluation)
         {
             Id = id;
             BlockName = blockName;
-            IsTransparent = isTransparent;
+            Transparent = transparent;
             RuleEvaluation = ruleEvaluation ?? ((position, direction) => string.Empty);
         }
 

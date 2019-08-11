@@ -29,11 +29,12 @@ namespace Environment.Terrain
         public bool Destroyed;
         public bool Generated;
         public bool Generating;
-        public MeshCollider MeshCollider;
         public bool Meshed;
-        public MeshFilter MeshFilter;
         public bool Meshing;
         public bool PendingUpdate;
+        public MeshFilter MeshFilter;
+        public MeshRenderer MeshRenderer;
+        public MeshCollider MeshCollider;    
         public Vector3Int Position;
 
 
