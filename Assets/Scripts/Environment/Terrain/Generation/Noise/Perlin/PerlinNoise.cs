@@ -30,9 +30,10 @@ namespace Environment.Terrain.Generation.Noise.Perlin
         /// <param name="scale"></param>
         /// <param name="persistence">Value between 0 and 1</param>
         /// <param name="lacunarity">Value grater than 1</param>
+        /// <param name="normalize"></param>
         /// <returns></returns>
         public static float[][] GenerateMap(Vector3 offset, WorldSeed seed, Vector3 size, int octaves,
-            float scale, float persistence, float lacunarity, bool normalise = false)
+            float scale, float persistence, float lacunarity, bool normalize = false)
         {
             if (scale <= 0)
             {
@@ -53,8 +54,8 @@ namespace Environment.Terrain.Generation.Noise.Perlin
 
                     for (int o = 0; o < octaves; o++)
                     {
-                        float sampleX = ((offset.x + x) / seed.Normalized) / (scale) * frequency;
-                        float sampleZ = ((offset.z + z) / seed.Normalized) / (scale) * frequency;
+                        float sampleX = ((offset.x + x) / seed.Normalized / scale) * frequency;
+                        float sampleZ = ((offset.z + z) / seed.Normalized / scale) * frequency;
 
                         float perlinValue = Mathf.PerlinNoise(sampleX, sampleZ);
                         noiseHeight += perlinValue * amplitude;
@@ -67,7 +68,7 @@ namespace Environment.Terrain.Generation.Noise.Perlin
                 }
             }
 
-            if (normalise)
+            if (normalize)
             {
                 for (int x = 0; x < noiseHeights.Length; x++)
                 {

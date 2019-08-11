@@ -12,7 +12,7 @@ namespace Threading
         protected bool Done;
         public bool Die;
 
-        public ThreadedProcess()
+        protected ThreadedProcess()
         {
             Done = Die = false;
             Handle = new object();

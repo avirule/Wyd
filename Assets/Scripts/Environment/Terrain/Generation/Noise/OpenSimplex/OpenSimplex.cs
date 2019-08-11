@@ -308,10 +308,19 @@ namespace Environment.Terrain.Generation.Noise.OpenSimplex
                     previous = current;
                 }
 
-                current.Next = new Contribution4(p4D[i + 1], p4D[i + 2], p4D[i + 3], p4D[i + 4], p4D[i + 5]);
-                current.Next.Next = new Contribution4(p4D[i + 6], p4D[i + 7], p4D[i + 8], p4D[i + 9], p4D[i + 10]);
-                current.Next.Next.Next =
-                    new Contribution4(p4D[i + 11], p4D[i + 12], p4D[i + 13], p4D[i + 14], p4D[i + 15]);
+                if (current == null)
+                {
+                    continue;
+                }
+
+                current.Next = new Contribution4(p4D[i + 1], p4D[i + 2], p4D[i + 3], p4D[i + 4], p4D[i + 5])
+                {
+                    Next = new Contribution4(p4D[i + 6], p4D[i + 7], p4D[i + 8], p4D[i + 9], p4D[i + 10])
+                    {
+                        Next = new Contribution4(p4D[i + 11], p4D[i + 12], p4D[i + 13], p4D[i + 14],
+                            p4D[i + 15])
+                    }
+                };
             }
 
             Lookup4D = new Contribution4[1048576];

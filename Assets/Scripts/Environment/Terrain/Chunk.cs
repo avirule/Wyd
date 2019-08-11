@@ -164,7 +164,7 @@ namespace Environment.Terrain
             {
                 _Mesh.Clear();
             }
-            
+
             gameObject.SetActive(false);
         }
 

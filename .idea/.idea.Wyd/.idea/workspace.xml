@@ -1,26 +1,16 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
   <component name="AnalysisUIOptions">
-    <option name="SCOPE_TYPE" value="3" />
     <option name="CUSTOM_SCOPE_NAME" value="All Places" />
   </component>
   <component name="ChangeListManager">
     <list default="true" id="c75ae2de-3a89-4228-87f5-5925302b6d96" name="Default Changelist" comment="">
-      <change beforePath="$PROJECT_DIR$/.idea/.idea.Wyd/.idea/contentModel.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/.idea.Wyd/.idea/contentModel.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/.idea.Wyd/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/.idea.Wyd/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Assets/Resources/Environment/Terrain/Chunk.prefab" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/Resources/Environment/Terrain/Chunk.prefab" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Assets/Resources/UI/Diagnostics.prefab" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/Resources/UI/Diagnostics.prefab" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Assets/Scenes/Game.unity" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/Scenes/Game.unity" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Assets/Scenes/MainMenu.unity" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/Scenes/MainMenu.unity" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Assets/Scripts/Controllers/Game/GameSettingsController.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/Scripts/Controllers/Game/GameSettingsController.cs" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/Assets/Scripts/Controllers/UI/DiagnosticsController.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/Scripts/Controllers/UI/DiagnosticsController.cs" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/Assets/Scripts/Controllers/World/ChunkController.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/Scripts/Controllers/World/ChunkController.cs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Assets/Scripts/Controllers/World/WorldController.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/Scripts/Controllers/World/WorldController.cs" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/Assets/Scripts/Environment/Terrain/Chunk.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/Scripts/Environment/Terrain/Chunk.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Assets/Scripts/Environment/Terrain/Generation/Noise/OpenSimplex/OpenSimplex.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/Scripts/Environment/Terrain/Generation/Noise/OpenSimplex/OpenSimplex.cs" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/Assets/Scripts/Environment/Terrain/Generation/Noise/Perlin/PerlinNoise.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/Scripts/Environment/Terrain/Generation/Noise/Perlin/PerlinNoise.cs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Assets/Scripts/Threading/Generation/ChunkBuilder.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/Scripts/Threading/Generation/ChunkBuilder.cs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Assets/Scripts/Threading/Generation/MeshGenerator.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/Scripts/Threading/Generation/MeshGenerator.cs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Assets/Scripts/Threading/Generation/PerlinNoiseGenerator.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/Scripts/Threading/Generation/PerlinNoiseGenerator.cs" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/Assets/Scripts/Threading/ThreadedProcess.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/Scripts/Threading/ThreadedProcess.cs" afterDir="false" />
     </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
@@ -112,12 +102,10 @@
         <option value="$PROJECT_DIR$/Assets/Scripts/Threading/AwaitCompletionCoProcessor.cs" />
         <option value="$PROJECT_DIR$/Assets/Scripts/Threading/AwaitCompletion.cs" />
         <option value="$PROJECT_DIR$/Assets/Scripts/Threading/AwaitCompletionConsumer.cs" />
-        <option value="$PROJECT_DIR$/Assets/Scripts/Environment/Terrain/Generation/Noise/OpenSimplex/OpenSimplex.cs" />
         <option value="$PROJECT_DIR$/Assets/Scripts/Environment/Terrain/Generation/Noise/NoiseMap.cs" />
         <option value="$PROJECT_DIR$/Assets/Scripts/Static/StaticMethods.cs" />
         <option value="$PROJECT_DIR$/Assets/Scripts/Controllers/UI/UIInputWatcherController.cs" />
         <option value="$PROJECT_DIR$/Assets/Scripts/Controllers/Game/BlockController.cs" />
-        <option value="$PROJECT_DIR$/Assets/Scripts/Environment/Terrain/BlockRule.cs" />
         <option value="$PROJECT_DIR$/Assets/Scripts/Controllers/UI/MainMenuController.cs" />
         <option value="$PROJECT_DIR$/Assets/Scripts/Controllers/UI/EscapeMenuController.cs" />
         <option value="$PROJECT_DIR$/Assets/Scripts/Environment/Terrain/Generation/WorldGenerationSettings.cs" />
@@ -129,15 +117,17 @@
         <option value="$PROJECT_DIR$/Assets/Scripts/Threading/Generation/ChunkGenerator.cs" />
         <option value="$PROJECT_DIR$/Assets/Scripts/Threading/Generation/InfiniteThreadedProcess.cs" />
         <option value="$PROJECT_DIR$/Assets/Scripts/Threading/Generation/MeshGenerator.cs" />
-        <option value="$PROJECT_DIR$/Assets/Scripts/Threading/ThreadedProcess.cs" />
         <option value="$PROJECT_DIR$/Assets/Scripts/Controllers/World/WorldController.cs" />
         <option value="$PROJECT_DIR$/Assets/Scripts/Threading/Generation/PerlinNoiseGenerator.cs" />
-        <option value="$PROJECT_DIR$/Assets/Scripts/Environment/Terrain/Generation/Noise/Perlin/PerlinNoise.cs" />
         <option value="$PROJECT_DIR$/Assets/Scripts/Threading/Generation/ChunkBuilder.cs" />
         <option value="$PROJECT_DIR$/Assets/Scripts/Controllers/Game/GameSettingsController.cs" />
         <option value="$PROJECT_DIR$/Assets/Scripts/Controllers/UI/DiagnosticsController.cs" />
         <option value="$PROJECT_DIR$/Assets/Scripts/Environment/Terrain/Chunk.cs" />
+        <option value="$PROJECT_DIR$/Assets/Scripts/Environment/Terrain/Generation/Noise/Perlin/PerlinNoise.cs" />
+        <option value="$PROJECT_DIR$/Assets/Scripts/Environment/Terrain/Generation/Noise/OpenSimplex/OpenSimplex.cs" />
+        <option value="$PROJECT_DIR$/Assets/Scripts/Threading/ThreadedProcess.cs" />
         <option value="$PROJECT_DIR$/Assets/Scripts/Controllers/World/ChunkController.cs" />
+        <option value="$PROJECT_DIR$/Assets/Scripts/Environment/Terrain/BlockRule.cs" />
       </list>
     </option>
   </component>
@@ -235,7 +225,7 @@
       <workItem from="1565474659744" duration="11098000" />
       <workItem from="1565514620607" duration="7006000" />
       <workItem from="1565521735260" duration="17031000" />
-      <workItem from="1565543111971" duration="5126000" />
+      <workItem from="1565543111971" duration="5862000" />
     </task>
     <servers />
   </component>

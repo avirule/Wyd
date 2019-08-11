@@ -23,7 +23,6 @@ namespace Controllers.World
         private List<Chunk> _CachedChunks;
 
         public int CurrentCacheSize => _CachedChunks.Count;
-        public bool BuildingChunkArea;
         public List<Chunk> Chunks;
         public Queue<Vector3Int> BuildChunkQueue;
         public bool AllChunksGenerated => Chunks.All(chunk => chunk.Generated);
@@ -38,7 +37,6 @@ namespace Controllers.World
 
             Chunks = new List<Chunk>();
             BuildChunkQueue = new Queue<Vector3Int>();
-            BuildingChunkArea = false;
         }
 
         public void Tick(BoundsInt bounds)
@@ -80,7 +78,7 @@ namespace Controllers.World
                 {
                     continue;
                 }
-                
+
                 chunk.AssignMesh();
 
                 if (_WorldTickLimiter.Elapsed.TotalSeconds >= WorldController.WORLD_TICK_RATE)
@@ -150,7 +148,7 @@ namespace Controllers.World
         private void CullCachedChunks()
         {
             bool hasIgnoredCancellation = false;
-            
+
             // controller will cull chunks down to half the maximum when idle
             while (_CachedChunks.Count > (GameController.SettingsController.MaximumChunkCacheSize / 2))
             {
@@ -188,8 +186,6 @@ namespace Controllers.World
 
         public IEnumerator ProcessBuildChunkQueue()
         {
-            BuildingChunkArea = true;
-
             _BuildChunkWorldTickLimiter.Restart();
 
             while (BuildChunkQueue.Count > 0)
@@ -209,8 +205,6 @@ namespace Controllers.World
                     yield return null;
                 }
             }
-
-            BuildingChunkArea = false;
         }
 
         private void CreateChunk(Vector3Int position)

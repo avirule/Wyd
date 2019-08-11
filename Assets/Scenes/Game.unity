@@ -274,8 +274,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: c2bfbe7e71c143e0ad0d7d1269cef501, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  MaximumChunkCache: 30
-  MaximumChunkLoadTimeCaching: 60
+  MaximumChunkCacheSize: 30
+  MaximumChunkLoadTimeCacheSize: 60
+  MaximumFrameRateCacheSize: 60
 --- !u!1 &705507993
 GameObject:
   m_ObjectHideFlags: 0
@@ -543,7 +544,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 356af847eb3747ddacc553be20c35101, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  BuildingChunkArea: 0
   Chunks: []
 --- !u!1 &2134891953
 GameObject:
@@ -753,5 +753,10 @@ PrefabInstance:
       propertyPath: m_IsActive
       value: 1
       objectReference: {fileID: 0}
+    - target: {fileID: 5871095947529393993, guid: d0388db060e4f0d42bfe824d3e9d586f,
+        type: 3}
+      propertyPath: ChunkController
+      value: 
+      objectReference: {fileID: 1461272641}
     m_RemovedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: d0388db060e4f0d42bfe824d3e9d586f, type: 3}

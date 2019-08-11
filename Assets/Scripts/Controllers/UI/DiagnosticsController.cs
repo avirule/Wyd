@@ -49,12 +49,12 @@ namespace Controllers.UI
             {
                 return;
             }
-            
+
             _LocalFrameStopwatch.Restart();
-            
+
             UpdateDeltaTimes();
             CullChunkLoadQueue();
-            
+
             if (!gameObject.activeSelf)
             {
                 return;
@@ -71,7 +71,8 @@ namespace Controllers.UI
 
             if (_DeltaTimes.Count > GameController.SettingsController.MaximumFrameRateCacheSize)
             {
-                _DeltaTimes.RemoveRange(0, _DeltaTimes.Count - GameController.SettingsController.MaximumFrameRateCacheSize);
+                _DeltaTimes.RemoveRange(0,
+                    _DeltaTimes.Count - GameController.SettingsController.MaximumFrameRateCacheSize);
             }
 
             _DeltaTimeAverage = Math.Round(_DeltaTimes.Average(), 4);
