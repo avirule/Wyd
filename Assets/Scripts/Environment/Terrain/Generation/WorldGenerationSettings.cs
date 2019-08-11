@@ -1,12 +1,13 @@
-using System;
+#region
+
 using UnityEngine;
+
+#endregion
 
 namespace Environment.Terrain.Generation
 {
     public class WorldGenerationSettings : MonoBehaviour
     {
-        [NonSerialized] public int Diameter;
-
         public float Lacunarity;
         public int Octaves;
         public float Persistence;
@@ -14,11 +15,11 @@ namespace Environment.Terrain.Generation
         public float Scale;
         public WorldSeed Seed;
         public string SeedString;
+        public int Diameter => (Radius * 2) + 1;
 
         private void Awake()
         {
             Seed = new WorldSeed(SeedString);
-            Diameter = (Radius * 2) + 1;
         }
     }
 }

@@ -1,7 +1,11 @@
+#region
+
 using NLog;
 using NLog.Config;
 using NLog.Targets;
 using UnityEngine;
+
+#endregion
 
 namespace Logging.Targets
 {

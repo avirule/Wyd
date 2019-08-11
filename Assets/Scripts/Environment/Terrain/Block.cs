@@ -1,6 +1,10 @@
+#region
+
 using System;
 using System.Collections.Specialized;
 using Controllers.Game;
+
+#endregion
 
 namespace Environment.Terrain
 {

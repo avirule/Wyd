@@ -1,5 +1,9 @@
+#region
+
 using UnityEngine;
 using Random = System.Random;
+
+#endregion
 
 namespace Environment.Terrain.Generation.Noise.Perlin
 {
@@ -25,9 +29,7 @@ namespace Environment.Terrain.Generation.Noise.Perlin
         /// <param name="lacunarity">Value grater than 1</param>
         /// <returns></returns>
         public static float[][] GenerateMap(Vector3Int offset, WorldSeed seed, Vector3Int size, int octaves,
-            float scale,
-            float persistence,
-            float lacunarity)
+            float scale, float persistence, float lacunarity)
         {
             if (scale <= 0)
             {
@@ -90,8 +92,6 @@ namespace Environment.Terrain.Generation.Noise.Perlin
                     noiseHeights[x][z] = Mathf.InverseLerp(minNoiseHeight, maxNoiseHeight, noiseHeights[x][z]);
                 }
             }
-
-            //EventLog.Logger.Log(LogLevel.Info, $"Successfully generated perlin noise map of size ({size.x}, {size.z}) with offsets ({offset.x}, {offset.z}).");
 
             return noiseHeights;
         }

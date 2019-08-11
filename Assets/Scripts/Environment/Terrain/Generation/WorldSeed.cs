@@ -1,7 +1,11 @@
+#region
+
 using System;
 using System.Text;
 using UnityEngine;
 using Random = System.Random;
+
+#endregion
 
 // ReSharper disable MemberCanBePrivate.Global
 // ReSharper disable PrivateFieldCanBeConvertedToLocalVariable

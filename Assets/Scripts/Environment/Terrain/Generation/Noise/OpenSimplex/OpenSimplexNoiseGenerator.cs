@@ -1,6 +1,9 @@
-using Static;
+#region
+
 using Threading;
 using UnityEngine;
+
+#endregion
 
 namespace Environment.Terrain.Generation.Noise.OpenSimplex
 {
@@ -11,7 +14,7 @@ namespace Environment.Terrain.Generation.Noise.OpenSimplex
         private readonly Vector3Int _Offset;
         private readonly Vector3Int _Size;
 
-        public readonly float[][] Map;
+        public float[][] Map;
 
         public OpenSimplexNoiseGenerator(long seed, Vector3Int offset, Vector3Int size, AnimationCurve curve = null)
         {
@@ -23,8 +26,6 @@ namespace Environment.Terrain.Generation.Noise.OpenSimplex
             _Offset = offset;
             _Size = size;
             _Curve = curve;
-
-            StaticMethods.CreateArray(ref Map, size);
         }
 
         protected override void ThreadFunction()
@@ -34,8 +35,12 @@ namespace Environment.Terrain.Generation.Noise.OpenSimplex
             float maxNoiseHeight = float.MinValue;
             float minNoiseHeight = float.MaxValue;
 
+            Map = new float[_Size.x][];
+
             for (int x = 0; x < _Size.x; x++)
             {
+                Map[x] = new float[_Size.z];
+
                 for (int z = 0; z < _Size.z; z++)
                 {
                     float noiseHeight = (float) openSimplex.Evaluate(_Offset.x + x, _Offset.z + z);

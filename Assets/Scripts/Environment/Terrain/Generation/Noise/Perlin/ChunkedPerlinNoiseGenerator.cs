@@ -1,11 +1,14 @@
-using Static;
+#region
+
 using UnityEngine;
+
+#endregion
 
 namespace Environment.Terrain.Generation.Noise.Perlin
 {
     public class ChunkedPerlinNoiseGenerator : PerlinNoiseGenerator
     {
-        public readonly float[][] ChunkedMap;
+        public float[][] ChunkedMap;
 
         public Vector3Int ChunkSize;
         protected Vector3Int InitialOffset;
@@ -18,14 +21,16 @@ namespace Environment.Terrain.Generation.Noise.Perlin
             InitialOffset = offset;
             ChunkSize = chunkSize;
             SizeInChunks = sizeInChunks;
-            StaticMethods.CreateArray(ref ChunkedMap,
-                new Vector3Int(ChunkSize.x * SizeInChunks.x, 0, ChunkSize.z * SizeInChunks.z));
         }
 
         protected override void ThreadFunction()
         {
+            ChunkedMap = new float[ChunkSize.x][];
+
             for (int chunkX = 0; chunkX < SizeInChunks.x; chunkX++)
             {
+                ChunkedMap[chunkX] = new float[ChunkSize.z];
+
                 for (int chunkZ = 0; chunkZ < SizeInChunks.z; chunkZ++)
                 {
                     int chunkXValue = chunkX * ChunkSize.x;

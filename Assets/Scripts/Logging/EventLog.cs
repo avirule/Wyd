@@ -1,3 +1,5 @@
+#region
+
 using System.Collections.Generic;
 using Logging.Targets;
 using NLog;
@@ -5,6 +7,8 @@ using NLog.Config;
 using NLog.Targets;
 using UnityEngine;
 using Logger = NLog.Logger;
+
+#endregion
 
 namespace Logging
 {

@@ -1,6 +1,10 @@
+#region
+
 using Logging;
 using NLog;
 using UnityEngine;
+
+#endregion
 
 namespace Controllers.Entity
 {

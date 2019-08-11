@@ -1,4 +1,8 @@
+#region
+
 using UnityEngine;
+
+#endregion
 
 namespace Static
 {
@@ -34,27 +38,47 @@ namespace Static
 
         public static Vector3 Abs(this Vector3 a)
         {
-            return new Vector3(Mathf.Abs(a.x), Mathf.Abs(a.y), Mathf.Abs(a.z));
+            a.x = Mathf.Abs(a.x);
+            a.y = Mathf.Abs(a.y);
+            a.z = Mathf.Abs(a.z);
+
+            return a;
         }
 
         public static Vector3 Multiply(this Vector3 a, Vector3 b)
         {
-            return new Vector3(a.x * b.x, a.y * b.y, a.z * b.z);
+            a.x *= b.x;
+            a.y *= b.y;
+            a.z *= b.z;
+
+            return a;
         }
 
         public static Vector3 Divide(this Vector3 a, Vector3 b)
         {
-            return new Vector3(a.x / b.x, a.y / b.y, a.z / b.z);
+            a.x /= b.x;
+            a.y /= b.y;
+            a.z /= b.z;
+
+            return a;
         }
 
         public static Vector3 Mod(this Vector3 a, Vector3 mod)
         {
-            return new Vector3(a.x % mod.x, a.y % mod.y, a.z % mod.z);
+            a.x %= mod.x;
+            a.y %= mod.y;
+            a.z %= mod.z;
+
+            return a;
         }
 
         public static Vector3 Floor(this Vector3 a)
         {
-            return new Vector3(Mathf.Floor(a.x), Mathf.Floor(a.y), Mathf.Floor(a.z));
+            a.x = Mathf.Floor(a.x);
+            a.y = Mathf.Floor(a.y);
+            a.z = Mathf.Floor(a.z);
+
+            return a;
         }
 
         #endregion
@@ -64,12 +88,20 @@ namespace Static
 
         public static Vector3Int Abs(this Vector3Int a)
         {
-            return new Vector3Int(Mathf.Abs(a.x), Mathf.Abs(a.y), Mathf.Abs(a.z));
+            a.x = Mathf.Abs(a.x);
+            a.y = Mathf.Abs(a.y);
+            a.z = Mathf.Abs(a.z);
+
+            return a;
         }
 
         public static Vector3Int Multiply(this Vector3Int a, Vector3Int b)
         {
-            return new Vector3Int(a.x * b.x, a.y * b.y, a.z * b.z);
+            a.x *= b.x;
+            a.y *= b.y;
+            a.z *= b.z;
+
+            return a;
         }
 
         #endregion

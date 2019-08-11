@@ -1,5 +1,9 @@
+#region
+
 using Threading;
 using UnityEngine;
+
+#endregion
 
 namespace Environment.Terrain.Generation
 {
@@ -7,7 +11,7 @@ namespace Environment.Terrain.Generation
     {
         private readonly float[][] _NoiseMap;
         private readonly Vector3Int _Size;
-        public Block[][][] Blocks;
+        public Block[] Blocks;
 
         public ChunkGenerator(float[][] noiseMap, Vector3Int size)
         {
@@ -22,18 +26,16 @@ namespace Environment.Terrain.Generation
 
         protected override void ThreadFunction()
         {
-            Blocks = new Block[_Size.x][][];
+            Blocks = new Block[_Size.x * _Size.y * _Size.z];
 
             for (int x = 0; x < _Size.x; x++)
             {
-                Blocks[x] = new Block[_Size.y][];
-
                 for (int y = 0; y < _Size.y; y++)
                 {
-                    Blocks[x][y] = new Block[_Size.z];
-
                     for (int z = 0; z < _Size.z; z++)
                     {
+                        int index = x + (Chunk.Size.x * (y + (Chunk.Size.y * z)));
+
                         float noiseHeight = _NoiseMap[x][z];
 
                         int perlinValue = Mathf.FloorToInt(noiseHeight * _Size.y);
@@ -45,15 +47,15 @@ namespace Environment.Terrain.Generation
 
                         if ((y == perlinValue) || (y == (Chunk.Size.y - 1)))
                         {
-                            Blocks[x][y][z] = new Block(1);
+                            Blocks[index] = new Block(1);
                         }
                         else if ((y < perlinValue) && (y > (perlinValue - 5)))
                         {
-                            Blocks[x][y][z] = new Block(2);
+                            Blocks[index] = new Block(2);
                         }
                         else if (y <= (perlinValue - 5))
                         {
-                            Blocks[x][y][z] = new Block(3);
+                            Blocks[index] = new Block(3);
                         }
                     }
                 }

@@ -10,8 +10,10 @@ GameObject:
   m_Component:
   - component: {fileID: 2133818191605063449}
   - component: {fileID: 2133818191605063448}
+  - component: {fileID: 9170613462872033006}
+  - component: {fileID: 7285864458151587628}
   - component: {fileID: 2133818191605063653}
-  m_Layer: 0
+  m_Layer: 8
   m_Name: Chunk
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -44,8 +46,53 @@ MeshCollider:
   m_Enabled: 1
   serializedVersion: 3
   m_Convex: 0
-  m_CookingOptions: 14
+  m_CookingOptions: -1
   m_Mesh: {fileID: 0}
+--- !u!33 &9170613462872033006
+MeshFilter:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2133818191605063652}
+  m_Mesh: {fileID: 0}
+--- !u!23 &7285864458151587628
+MeshRenderer:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2133818191605063652}
+  m_Enabled: 1
+  m_CastShadows: 1
+  m_ReceiveShadows: 1
+  m_DynamicOccludee: 1
+  m_MotionVectors: 2
+  m_LightProbeUsage: 1
+  m_ReflectionProbeUsage: 1
+  m_RenderingLayerMask: 1
+  m_RendererPriority: 0
+  m_Materials:
+  - {fileID: 2100000, guid: 7a70b44b137a7f14ea9fe317526a5d97, type: 2}
+  m_StaticBatchInfo:
+    firstSubMesh: 0
+    subMeshCount: 0
+  m_StaticBatchRoot: {fileID: 0}
+  m_ProbeAnchor: {fileID: 0}
+  m_LightProbeVolumeOverride: {fileID: 0}
+  m_ScaleInLightmap: 1
+  m_PreserveUVs: 0
+  m_IgnoreNormalsForChartDetection: 0
+  m_ImportantGI: 0
+  m_StitchLightmapSeams: 1
+  m_SelectedEditorRenderState: 3
+  m_MinimumChartSize: 4
+  m_AutoUVMaxDistance: 0.5
+  m_AutoUVMaxAngle: 89
+  m_LightmapParameters: {fileID: 0}
+  m_SortingLayerID: 0
+  m_SortingLayer: 0
+  m_SortingOrder: 0
 --- !u!114 &2133818191605063653
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -61,10 +108,9 @@ MonoBehaviour:
   Destroyed: 0
   Generated: 0
   Generating: 0
+  MeshFilter: {fileID: 9170613462872033006}
   MeshCollider: {fileID: 2133818191605063448}
   Meshed: 0
   Meshing: 0
   PendingUpdate: 0
   Position: {x: 0, y: 0, z: 0}
-  Mesh: {fileID: 0}
-  BlocksMaterial: {fileID: 2100000, guid: 7a70b44b137a7f14ea9fe317526a5d97, type: 2}

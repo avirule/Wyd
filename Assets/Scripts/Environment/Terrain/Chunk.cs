@@ -1,6 +1,8 @@
 #region
 
 using System.Collections;
+using System.Collections.Generic;
+using System.Diagnostics;
 using Controllers.Game;
 using Controllers.World;
 using Environment.Terrain.Generation;
@@ -15,21 +17,25 @@ namespace Environment.Terrain
 {
     public class Chunk : MonoBehaviour
     {
+        public const int MAXIMUM_CHUNK_LOAD_TIME_CACHING = 60;
         public static Vector3Int Size = new Vector3Int(8, 32, 8);
+        public static readonly List<float> ChunkBuildTimes = new List<float>();
+        public static readonly List<float> ChunkMeshTimes = new List<float>();
+
         private BlockController _BlockController;
         private WorldController _WorldController;
 
-        public Block[][][] Blocks;
-        public Material BlocksMaterial;
+        public Block[] Blocks;
         public bool Destroyed;
         public bool Generated;
         public bool Generating;
-        public Mesh Mesh;
+        public MeshFilter MeshFilter;
         public MeshCollider MeshCollider;
         public bool Meshed;
         public bool Meshing;
         public bool PendingUpdate;
         public Vector3Int Position;
+
 
         private void Awake()
         {
@@ -40,6 +46,8 @@ namespace Environment.Terrain
 
         public IEnumerator GenerateBlocks()
         {
+            Stopwatch stopwatch = Stopwatch.StartNew();
+
             Generated = false;
             Generating = true;
 
@@ -69,6 +77,14 @@ namespace Environment.Terrain
 
             Generating = false;
             Generated = true;
+
+            stopwatch.Stop();
+            ChunkBuildTimes.Add(stopwatch.ElapsedMilliseconds);
+
+            if (ChunkMeshTimes.Count > MAXIMUM_CHUNK_LOAD_TIME_CACHING)
+            {
+                ChunkMeshTimes.RemoveRange(0, ChunkBuildTimes.Count - MAXIMUM_CHUNK_LOAD_TIME_CACHING);
+            }
         }
 
         public IEnumerator GenerateMesh()
@@ -77,6 +93,8 @@ namespace Environment.Terrain
             {
                 yield break;
             }
+
+            Stopwatch stopwatch = Stopwatch.StartNew();
 
             Meshed = false;
             Meshing = true;
@@ -94,11 +112,20 @@ namespace Environment.Terrain
                 yield break;
             }
 
-            Mesh = meshGenerator.GetMesh(ref Mesh);
-            MeshCollider.sharedMesh = Mesh;
+            MeshFilter.mesh = meshGenerator.GetMesh();
+            MeshCollider.sharedMesh = MeshFilter.sharedMesh;
 
             Meshing = PendingUpdate = false;
             Meshed = true;
+
+            stopwatch.Stop();
+
+            ChunkMeshTimes.Add(stopwatch.ElapsedMilliseconds);
+
+            if (ChunkMeshTimes.Count > MAXIMUM_CHUNK_LOAD_TIME_CACHING)
+            {
+                ChunkMeshTimes.RemoveRange(0, ChunkMeshTimes.Count - MAXIMUM_CHUNK_LOAD_TIME_CACHING);
+            }
         }
 
         public void Initialise(Vector3 position = default)
@@ -115,9 +142,13 @@ namespace Environment.Terrain
             Destroyed = true;
             transform.position = new Vector3(0f, 0f, 0f);
             Position = new Vector3Int(0, 0, 0);
-            Mesh = null;
-            MeshCollider.sharedMesh = null;
+            MeshFilter.mesh.Clear();
+            MeshCollider.sharedMesh.Clear();
             gameObject.SetActive(false);
+        }
+
+        public void Tick()
+        {
         }
     }
 }

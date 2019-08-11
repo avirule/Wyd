@@ -482,7 +482,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   ChunkController: {fileID: 1461272641}
-  FollowedTransform: {fileID: 963194228}
+  ChunkLoader: {fileID: 963194228}
   WorldGenerationSettings: {fileID: 1461272637}
 --- !u!4 &1461272636
 Transform:
@@ -511,10 +511,10 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   Lacunarity: 2
-  Octaves: 8
+  Octaves: 16
   Persistence: 0.5
   Radius: 4
-  Scale: 64
+  Scale: 128
   SeedString: genericseed
 --- !u!33 &1461272638
 MeshFilter:
@@ -587,7 +587,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 356af847eb3747ddacc553be20c35101, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  Building: 0
+  BuildingChunkArea: 0
   Chunks: []
 --- !u!1 &2134891953
 GameObject:

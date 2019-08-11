@@ -1,7 +1,11 @@
+#region
+
 using System.Collections.Generic;
 using Logging;
 using NLog;
 using UnityEngine;
+
+#endregion
 
 namespace Controllers.Game
 {

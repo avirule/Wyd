@@ -1,37 +1,38 @@
+#region
+
+using System.Collections.Generic;
 using System.Threading;
 using Controllers.Game;
 using Controllers.World;
-using Logging;
-using NLog;
 using Threading;
 using UnityEngine;
 using UnityEngine.Rendering;
+
+#endregion
 
 namespace Environment.Terrain.Generation
 {
     public class MeshGenerator : ThreadedProcess
     {
         private readonly BlockController _BlockController;
-        private readonly Block[][][] _Blocks;
+        private readonly Block[] _Blocks;
         private readonly Vector3Int _Position;
+
+        private readonly List<int> _Triangles;
+        private readonly List<Vector2> _UVs;
+        private readonly List<Vector3> _Vertices;
 
         private readonly WorldController _WorldController;
         private bool _IsVisible;
 
-        private int _SizeInVectors;
-
-        private int _TriangleIndex;
-        private int[] _Triangles;
-        private Vector2[] _UVs;
-        private int _VertexIndex;
-        private Vector3[] _Vertices;
-
         public MeshGenerator(WorldController worldController, BlockController blockController, Vector3Int position,
-            Block[][][] blocks)
+            Block[] blocks)
         {
             _WorldController = worldController;
             _BlockController = blockController;
-            _SizeInVectors = _VertexIndex = _TriangleIndex = 0;
+            _Triangles = new List<int>();
+            _UVs = new List<Vector2>();
+            _Vertices = new List<Vector3>();
             _IsVisible = false;
             _Position = position;
             _Blocks = blocks;
@@ -39,7 +40,6 @@ namespace Environment.Terrain.Generation
 
         public override void Start()
         {
-            EventLog.Logger.Log(LogLevel.Info, $"Meshing chunk at: ({_Position.x}, {_Position.z})");
             Thread = new Thread(Run);
             Thread.Start();
         }
@@ -52,314 +52,284 @@ namespace Environment.Terrain.Generation
                 {
                     for (int z = 0; z < Chunk.Size.z; z++)
                     {
-                        if (_Blocks[x][y][z].Id == BlockController.BLOCK_EMPTY_ID)
+                        int index = x + (Chunk.Size.x * (y + (Chunk.Size.y * z)));
+
+                        if (_Blocks[index].Id == BlockController.BLOCK_EMPTY_ID)
                         {
                             continue;
                         }
 
                         Vector3Int globalPosition = _Position + new Vector3Int(x, y, z);
 
-                        if (((x == 0) && !_WorldController.GetBlockAtPosition(globalPosition + Vector3Int.left)
-                                 .Opaque) ||
-                            ((x > 0) && !_Blocks[x - 1][y][z].Opaque))
+                        if (((z == (Chunk.Size.z - 1)) && !_WorldController
+                                 .GetBlockAtPosition(globalPosition + new Vector3Int(0, 0, 1)).Opaque) ||
+                            ((z < (Chunk.Size.z - 1)) && !_Blocks[index + (Chunk.Size.x * Chunk.Size.y)].Opaque))
                         {
-                            _Blocks[x][y][z].SetFace(Direction.West, true);
-                            _SizeInVectors += 4;
+                            _Blocks[index].SetFace(Direction.North, true);
+
+                            _Vertices.AddRange(new[]
+                            {
+                                new Vector3(x, y, z + 1),
+                                new Vector3(x, y + 1, z + 1),
+                                new Vector3(x + 1, y, z + 1),
+                                new Vector3(x + 1, y + 1, z + 1)
+                            });
+
+                            if (_BlockController.GetBlockSpriteUVs(_Blocks[index].Id, globalPosition, Direction.North,
+                                out Vector2[] uvs))
+                            {
+                                _UVs.AddRange(new[]
+                                {
+                                    uvs[1],
+                                    uvs[3],
+                                    uvs[0],
+                                    uvs[2]
+                                });
+                            }
+
+                            int vertexIndex = _Vertices.Count - 4;
+
+                            _Triangles.AddRange(new[]
+                            {
+                                vertexIndex + 0,
+                                vertexIndex + 2,
+                                vertexIndex + 1,
+
+                                vertexIndex + 2,
+                                vertexIndex + 3,
+                                vertexIndex + 1
+                            });
                         }
 
                         if (((x == (Chunk.Size.x - 1)) &&
                              !_WorldController.GetBlockAtPosition(globalPosition + Vector3Int.right).Opaque) ||
-                            ((x < (Chunk.Size.x - 1)) && !_Blocks[x + 1][y][z].Opaque))
+                            ((x < (Chunk.Size.x - 1)) && !_Blocks[index + 1].Opaque))
                         {
-                            _Blocks[x][y][z].SetFace(Direction.East, true);
-                            _SizeInVectors += 4;
+                            _Blocks[index].SetFace(Direction.East, true);
+
+                            _Vertices.AddRange(new[]
+                            {
+                                new Vector3(x + 1, y, z),
+                                new Vector3(x + 1, y, z + 1),
+                                new Vector3(x + 1, y + 1, z),
+                                new Vector3(x + 1, y + 1, z + 1)
+                            });
+
+                            if (_BlockController.GetBlockSpriteUVs(_Blocks[index].Id, globalPosition, Direction.East,
+                                out Vector2[] uvs))
+                            {
+                                _UVs.AddRange(new[]
+                                {
+                                    uvs[0],
+                                    uvs[1],
+                                    uvs[2],
+                                    uvs[3]
+                                });
+                            }
+
+                            int vertexIndex = _Vertices.Count - 4;
+
+                            _Triangles.AddRange(new[]
+                            {
+                                vertexIndex + 0,
+                                vertexIndex + 2,
+                                vertexIndex + 1,
+
+                                vertexIndex + 2,
+                                vertexIndex + 3,
+                                vertexIndex + 1
+                            });
                         }
 
-
-                        if (((y == 0) && !_WorldController.GetBlockAtPosition(globalPosition + Vector3Int.down)
+                        if (((z == 0) && !_WorldController.GetBlockAtPosition(globalPosition + new Vector3Int(0, 0, -1))
                                  .Opaque) ||
-                            ((y > 0) && !_Blocks[x][y - 1][z].Opaque))
+                            ((z > 0) && !_Blocks[index - (Chunk.Size.x * Chunk.Size.y)].Opaque))
                         {
-                            _Blocks[x][y][z].SetFace(Direction.Down, true);
-                            _SizeInVectors += 4;
+                            _Blocks[index].SetFace(Direction.South, true);
+
+                            _Vertices.AddRange(new[]
+                            {
+                                new Vector3(x, y, z),
+                                new Vector3(x + 1, y, z),
+                                new Vector3(x, y + 1, z),
+                                new Vector3(x + 1, y + 1, z)
+                            });
+
+                            if (_BlockController.GetBlockSpriteUVs(_Blocks[index].Id, globalPosition, Direction.South,
+                                out Vector2[] uvs))
+                            {
+                                _UVs.AddRange(new[]
+                                {
+                                    uvs[0],
+                                    uvs[1],
+                                    uvs[2],
+                                    uvs[3]
+                                });
+                            }
+
+                            int vertexIndex = _Vertices.Count - 4;
+
+                            _Triangles.AddRange(new[]
+                            {
+                                vertexIndex + 0,
+                                vertexIndex + 2,
+                                vertexIndex + 1,
+
+                                vertexIndex + 2,
+                                vertexIndex + 3,
+                                vertexIndex + 1
+                            });
+                        }
+
+                        if (((x == 0) && !_WorldController.GetBlockAtPosition(globalPosition + Vector3Int.left)
+                                 .Opaque) ||
+                            ((x > 0) && !_Blocks[index - 1].Opaque))
+                        {
+                            _Blocks[index].SetFace(Direction.West, true);
+
+                            _Vertices.AddRange(new[]
+                            {
+                                new Vector3(x, y, z),
+                                new Vector3(x, y + 1, z),
+                                new Vector3(x, y, z + 1),
+                                new Vector3(x, y + 1, z + 1)
+                            });
+
+                            if (_BlockController.GetBlockSpriteUVs(_Blocks[index].Id, globalPosition, Direction.West,
+                                out Vector2[] uvs))
+                            {
+                                _UVs.AddRange(new[]
+                                {
+                                    uvs[1],
+                                    uvs[3],
+                                    uvs[0],
+                                    uvs[2]
+                                });
+                            }
+
+                            int vertexIndex = _Vertices.Count - 4;
+
+                            _Triangles.AddRange(new[]
+                            {
+                                vertexIndex + 0,
+                                vertexIndex + 2,
+                                vertexIndex + 1,
+
+                                vertexIndex + 2,
+                                vertexIndex + 3,
+                                vertexIndex + 1
+                            });
                         }
 
                         if (((y == (Chunk.Size.y - 1)) &&
                              !_WorldController.GetBlockAtPosition(globalPosition + Vector3Int.up).Opaque) ||
-                            ((y < (Chunk.Size.y - 1)) && !_Blocks[x][y + 1][z].Opaque))
+                            ((y < (Chunk.Size.y - 1)) && !_Blocks[index + Chunk.Size.x].Opaque))
                         {
-                            _Blocks[x][y][z].SetFace(Direction.Up, true);
-                            _SizeInVectors += 4;
+                            _Blocks[index].SetFace(Direction.Up, true);
+
+                            _Vertices.AddRange(new[]
+                            {
+                                new Vector3(x, y + 1, z),
+                                new Vector3(x + 1, y + 1, z),
+                                new Vector3(x, y + 1, z + 1),
+                                new Vector3(x + 1, y + 1, z + 1)
+                            });
+
+                            if (_BlockController.GetBlockSpriteUVs(_Blocks[index].Id, globalPosition, Direction.Up,
+                                out Vector2[] uvs))
+                            {
+                                _UVs.AddRange(new[]
+                                {
+                                    uvs[0],
+                                    uvs[2],
+                                    uvs[1],
+                                    uvs[3]
+                                });
+                            }
+
+                            int vertexIndex = _Vertices.Count - 4;
+
+                            _Triangles.AddRange(new[]
+                            {
+                                vertexIndex + 0,
+                                vertexIndex + 2,
+                                vertexIndex + 1,
+
+                                vertexIndex + 2,
+                                vertexIndex + 3,
+                                vertexIndex + 1
+                            });
                         }
 
-
-                        if (((z == 0) && !_WorldController.GetBlockAtPosition(globalPosition + new Vector3Int(0, 0, -1))
+                        if (((y == 0) && !_WorldController.GetBlockAtPosition(globalPosition + Vector3Int.down)
                                  .Opaque) ||
-                            ((z > 0) && !_Blocks[x][y][z - 1].Opaque))
+                            ((y > 0) && !_Blocks[index - Chunk.Size.x].Opaque))
                         {
-                            _Blocks[x][y][z].SetFace(Direction.South, true);
-                            _SizeInVectors += 4;
-                        }
+                            _Blocks[index].SetFace(Direction.Down, true);
 
-                        if (((z == (Chunk.Size.x - 1)) && !_WorldController
-                                 .GetBlockAtPosition(globalPosition + new Vector3Int(0, 0, 1)).Opaque) ||
-                            ((z < (Chunk.Size.x - 1)) && !_Blocks[x][y][z + 1].Opaque))
-                        {
-                            _Blocks[x][y][z].SetFace(Direction.North, true);
-                            _SizeInVectors += 4;
+                            _Vertices.AddRange(new[]
+                            {
+                                new Vector3(x, y, z),
+                                new Vector3(x, y, z + 1),
+                                new Vector3(x + 1, y, z),
+                                new Vector3(x + 1, y, z + 1)
+                            });
+
+                            if (_BlockController.GetBlockSpriteUVs(_Blocks[index].Id, globalPosition, Direction.Down,
+                                out Vector2[] uvs))
+                            {
+                                _UVs.AddRange(new[]
+                                {
+                                    uvs[0],
+                                    uvs[1],
+                                    uvs[2],
+                                    uvs[3]
+                                });
+                            }
+
+                            int vertexIndex = _Vertices.Count - 4;
+
+                            _Triangles.AddRange(new[]
+                            {
+                                vertexIndex + 0,
+                                vertexIndex + 2,
+                                vertexIndex + 1,
+
+                                vertexIndex + 2,
+                                vertexIndex + 3,
+                                vertexIndex + 1
+                            });
                         }
 
                         _IsVisible = true;
                     }
                 }
             }
-
-
-            if (!_IsVisible)
-            {
-                return;
-            }
-
-            _Vertices = new Vector3[_SizeInVectors];
-            _UVs = new Vector2[_SizeInVectors];
-            _Triangles = new int[Mathf.CeilToInt(_SizeInVectors * 1.5f)];
-
-            // Generate mesh
-            for (int x = 0; x < Chunk.Size.x; x++)
-            {
-                for (int y = 0; y < Chunk.Size.y; y++)
-                {
-                    for (int z = 0; z < Chunk.Size.z; z++)
-                    {
-                        Vector3Int localPosition = new Vector3Int(x, y, z);
-                        Vector3Int globalPosition = _Position + localPosition;
-
-                        if (_Blocks[x][y][z].HasFace(Direction.North))
-                        {
-                            _Vertices[_VertexIndex + 0] =
-                                new Vector3(localPosition.x, localPosition.y, localPosition.z + 1);
-                            _Vertices[_VertexIndex + 1] =
-                                new Vector3(localPosition.x, localPosition.y + 1, localPosition.z + 1);
-                            _Vertices[_VertexIndex + 2] =
-                                new Vector3(localPosition.x + 1, localPosition.y, localPosition.z + 1);
-                            _Vertices[_VertexIndex + 3] =
-                                new Vector3(localPosition.x + 1, localPosition.y + 1, localPosition.z + 1);
-
-                            if (_BlockController.GetBlockSpriteUVs(_Blocks[x][y][z].Id, globalPosition, Direction.North,
-                                out Vector2[] uvs))
-                            {
-                                _UVs[_VertexIndex + 0] = uvs[1];
-                                _UVs[_VertexIndex + 1] = uvs[3];
-                                _UVs[_VertexIndex + 2] = uvs[0];
-                                _UVs[_VertexIndex + 3] = uvs[2];
-                            }
-
-                            _Triangles[_TriangleIndex + 0] = _VertexIndex + 0;
-                            _Triangles[_TriangleIndex + 1] = _VertexIndex + 2;
-                            _Triangles[_TriangleIndex + 2] = _VertexIndex + 1;
-
-                            _Triangles[_TriangleIndex + 3] = _VertexIndex + 2;
-                            _Triangles[_TriangleIndex + 4] = _VertexIndex + 3;
-                            _Triangles[_TriangleIndex + 5] = _VertexIndex + 1;
-
-                            _VertexIndex += 4;
-                            _TriangleIndex += 6;
-                        }
-
-                        if (_Blocks[x][y][z].HasFace(Direction.East))
-                        {
-                            _Vertices[_VertexIndex + 0] =
-                                new Vector3(localPosition.x + 1, localPosition.y, localPosition.z);
-                            _Vertices[_VertexIndex + 1] =
-                                new Vector3(localPosition.x + 1, localPosition.y, localPosition.z + 1);
-                            _Vertices[_VertexIndex + 2] =
-                                new Vector3(localPosition.x + 1, localPosition.y + 1, localPosition.z);
-                            _Vertices[_VertexIndex + 3] =
-                                new Vector3(localPosition.x + 1, localPosition.y + 1, localPosition.z + 1);
-
-                            if (_BlockController.GetBlockSpriteUVs(_Blocks[x][y][z].Id, globalPosition, Direction.East,
-                                out Vector2[] uvs))
-                            {
-                                _UVs[_VertexIndex + 0] = uvs[0];
-                                _UVs[_VertexIndex + 1] = uvs[1];
-                                _UVs[_VertexIndex + 2] = uvs[2];
-                                _UVs[_VertexIndex + 3] = uvs[3];
-                            }
-
-                            _Triangles[_TriangleIndex + 0] = _VertexIndex + 0;
-                            _Triangles[_TriangleIndex + 1] = _VertexIndex + 2;
-                            _Triangles[_TriangleIndex + 2] = _VertexIndex + 1;
-
-                            _Triangles[_TriangleIndex + 3] = _VertexIndex + 2;
-                            _Triangles[_TriangleIndex + 4] = _VertexIndex + 3;
-                            _Triangles[_TriangleIndex + 5] = _VertexIndex + 1;
-
-                            _VertexIndex += 4;
-                            _TriangleIndex += 6;
-                        }
-
-                        if (_Blocks[x][y][z].HasFace(Direction.South))
-                        {
-                            _Vertices[_VertexIndex + 0] =
-                                new Vector3(localPosition.x, localPosition.y, localPosition.z);
-                            _Vertices[_VertexIndex + 1] =
-                                new Vector3(localPosition.x + 1, localPosition.y, localPosition.z);
-                            _Vertices[_VertexIndex + 2] =
-                                new Vector3(localPosition.x, localPosition.y + 1, localPosition.z);
-                            _Vertices[_VertexIndex + 3] =
-                                new Vector3(localPosition.x + 1, localPosition.y + 1, localPosition.z);
-
-                            if (_BlockController.GetBlockSpriteUVs(_Blocks[x][y][z].Id, globalPosition, Direction.South,
-                                out Vector2[] uvs))
-                            {
-                                _UVs[_VertexIndex + 0] = uvs[0];
-                                _UVs[_VertexIndex + 1] = uvs[1];
-                                _UVs[_VertexIndex + 2] = uvs[2];
-                                _UVs[_VertexIndex + 3] = uvs[3];
-                            }
-
-                            _Triangles[_TriangleIndex + 0] = _VertexIndex + 0;
-                            _Triangles[_TriangleIndex + 1] = _VertexIndex + 2;
-                            _Triangles[_TriangleIndex + 2] = _VertexIndex + 1;
-
-                            _Triangles[_TriangleIndex + 3] = _VertexIndex + 2;
-                            _Triangles[_TriangleIndex + 4] = _VertexIndex + 3;
-                            _Triangles[_TriangleIndex + 5] = _VertexIndex + 1;
-
-                            _VertexIndex += 4;
-                            _TriangleIndex += 6;
-                        }
-
-                        if (_Blocks[x][y][z].HasFace(Direction.West))
-                        {
-                            _Vertices[_VertexIndex + 0] =
-                                new Vector3(localPosition.x, localPosition.y, localPosition.z);
-                            _Vertices[_VertexIndex + 1] =
-                                new Vector3(localPosition.x, localPosition.y + 1, localPosition.z);
-                            _Vertices[_VertexIndex + 2] =
-                                new Vector3(localPosition.x, localPosition.y, localPosition.z + 1);
-                            _Vertices[_VertexIndex + 3] =
-                                new Vector3(localPosition.x, localPosition.y + 1, localPosition.z + 1);
-
-                            if (_BlockController.GetBlockSpriteUVs(_Blocks[x][y][z].Id, globalPosition, Direction.West,
-                                out Vector2[] uvs))
-                            {
-                                _UVs[_VertexIndex + 0] = uvs[1];
-                                _UVs[_VertexIndex + 1] = uvs[3];
-                                _UVs[_VertexIndex + 2] = uvs[0];
-                                _UVs[_VertexIndex + 3] = uvs[2];
-                            }
-
-                            _Triangles[_TriangleIndex + 0] = _VertexIndex + 0;
-                            _Triangles[_TriangleIndex + 1] = _VertexIndex + 2;
-                            _Triangles[_TriangleIndex + 2] = _VertexIndex + 1;
-
-                            _Triangles[_TriangleIndex + 3] = _VertexIndex + 2;
-                            _Triangles[_TriangleIndex + 4] = _VertexIndex + 3;
-                            _Triangles[_TriangleIndex + 5] = _VertexIndex + 1;
-
-                            _VertexIndex += 4;
-                            _TriangleIndex += 6;
-                        }
-
-                        if (_Blocks[x][y][z].HasFace(Direction.Up))
-                        {
-                            _Vertices[_VertexIndex + 0] =
-                                new Vector3(localPosition.x, localPosition.y + 1, localPosition.z);
-                            _Vertices[_VertexIndex + 1] =
-                                new Vector3(localPosition.x + 1, localPosition.y + 1, localPosition.z);
-                            _Vertices[_VertexIndex + 2] =
-                                new Vector3(localPosition.x, localPosition.y + 1, localPosition.z + 1);
-                            _Vertices[_VertexIndex + 3] =
-                                new Vector3(localPosition.x + 1, localPosition.y + 1, localPosition.z + 1);
-
-                            if (_BlockController.GetBlockSpriteUVs(_Blocks[x][y][z].Id, globalPosition, Direction.Up,
-                                out Vector2[] uvs))
-                            {
-                                _UVs[_VertexIndex + 0] = uvs[0];
-                                _UVs[_VertexIndex + 1] = uvs[2];
-                                _UVs[_VertexIndex + 2] = uvs[1];
-                                _UVs[_VertexIndex + 3] = uvs[3];
-                            }
-
-                            _Triangles[_TriangleIndex + 0] = _VertexIndex + 0;
-                            _Triangles[_TriangleIndex + 1] = _VertexIndex + 2;
-                            _Triangles[_TriangleIndex + 2] = _VertexIndex + 1;
-
-                            _Triangles[_TriangleIndex + 3] = _VertexIndex + 2;
-                            _Triangles[_TriangleIndex + 4] = _VertexIndex + 3;
-                            _Triangles[_TriangleIndex + 5] = _VertexIndex + 1;
-
-                            _VertexIndex += 4;
-                            _TriangleIndex += 6;
-                        }
-
-                        if (_Blocks[x][y][z].HasFace(Direction.Down))
-                        {
-                            _Vertices[_VertexIndex + 0] =
-                                new Vector3(localPosition.x, localPosition.y, localPosition.z);
-                            _Vertices[_VertexIndex + 1] =
-                                new Vector3(localPosition.x, localPosition.y, localPosition.z + 1);
-                            _Vertices[_VertexIndex + 2] =
-                                new Vector3(localPosition.x + 1, localPosition.y, localPosition.z);
-                            _Vertices[_VertexIndex + 3] =
-                                new Vector3(localPosition.x + 1, localPosition.y, localPosition.z + 1);
-
-                            if (_BlockController.GetBlockSpriteUVs(_Blocks[x][y][z].Id, globalPosition, Direction.Down,
-                                out Vector2[] uvs))
-                            {
-                                _UVs[_VertexIndex + 0] = uvs[0];
-                                _UVs[_VertexIndex + 1] = uvs[1];
-                                _UVs[_VertexIndex + 2] = uvs[2];
-                                _UVs[_VertexIndex + 3] = uvs[3];
-                            }
-
-                            _Triangles[_TriangleIndex + 0] = _VertexIndex + 0;
-                            _Triangles[_TriangleIndex + 1] = _VertexIndex + 2;
-                            _Triangles[_TriangleIndex + 2] = _VertexIndex + 1;
-
-                            _Triangles[_TriangleIndex + 3] = _VertexIndex + 2;
-                            _Triangles[_TriangleIndex + 4] = _VertexIndex + 3;
-                            _Triangles[_TriangleIndex + 5] = _VertexIndex + 1;
-
-                            _VertexIndex += 4;
-                            _TriangleIndex += 6;
-                        }
-                    }
-                }
-            }
         }
 
-        public Mesh GetMesh(ref Mesh copy)
+        public Mesh GetMesh()
         {
-            if (copy == null)
+            Mesh mesh = new Mesh();
+            
+            if ((_IsVisible == false) || (_Vertices.Count == 0))
             {
-                copy = new Mesh();
-            }
-            else
-            {
-                copy.Clear();
+                return mesh;
             }
 
-            if ((_IsVisible == false) || (_VertexIndex == 0))
+            if (_Vertices.Count > 65000)
             {
-                return copy;
+                mesh.indexFormat = IndexFormat.UInt32;
             }
 
-            if (_VertexIndex > 65000)
-            {
-                copy.indexFormat = IndexFormat.UInt32;
-            }
+            mesh.vertices = _Vertices.ToArray();
+            mesh.uv = _UVs.ToArray();
+            mesh.triangles = _Triangles.ToArray();
 
-            copy.vertices = _Vertices;
-            copy.uv = _UVs;
-            copy.triangles = _Triangles;
+            mesh.RecalculateTangents();
+            mesh.RecalculateNormals();
+            mesh.Optimize();
 
-            copy.RecalculateTangents();
-            copy.RecalculateNormals();
-            copy.Optimize();
-
-            return copy;
+            return mesh;
         }
     }
 }

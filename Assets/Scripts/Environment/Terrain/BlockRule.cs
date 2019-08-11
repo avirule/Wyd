@@ -1,4 +1,8 @@
+#region
+
 using UnityEngine;
+
+#endregion
 
 // ReSharper disable MemberCanBePrivate.Global
 

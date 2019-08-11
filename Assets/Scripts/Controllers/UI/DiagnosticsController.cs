@@ -1,16 +1,21 @@
-﻿using System;
+﻿#region
+
+using System;
 using System.Collections.Generic;
 using System.Linq;
+using Environment.Terrain;
 using UnityEngine;
 using UnityEngine.Profiling;
 using UnityEngine.UI;
+
+#endregion
 
 namespace Controllers.UI
 {
     public class DiagnosticsController : MonoBehaviour
     {
         private double _DeltaTimeAverage;
-        private Queue<double> _DeltaTimes;
+        private List<double> _DeltaTimes;
 
 
         public Text FrameRateText;
@@ -20,7 +25,7 @@ namespace Controllers.UI
 
         private void Awake()
         {
-            _DeltaTimes = new Queue<double>();
+            _DeltaTimes = new List<double>();
         }
 
         // Start is called before the first frame update
@@ -45,11 +50,11 @@ namespace Controllers.UI
 
         private void UpdateDeltaTimes()
         {
-            _DeltaTimes.Enqueue(1d / Time.deltaTime);
+            _DeltaTimes.Add(1d / Time.deltaTime);
 
-            while (_DeltaTimes.Count > MaximumFrameRateCaching)
+            if (_DeltaTimes.Count > MaximumFrameRateCaching)
             {
-                _DeltaTimes.Dequeue();
+                _DeltaTimes.RemoveRange(0, _DeltaTimes.Count - MaximumFrameRateCaching);
             }
 
             _DeltaTimeAverage = Math.Round(_DeltaTimes.Average(), 5);
@@ -59,7 +64,11 @@ namespace Controllers.UI
         {
             string vSyncStatus = QualitySettings.vSyncCount == 0 ? "Disabled" : "Enabled";
 
-            FrameRateText.text = $"FPS: {_DeltaTimeAverage}\r\nVSync: {vSyncStatus}";
+            List<float> totalList = new List<float>(Chunk.ChunkBuildTimes);
+            totalList.AddRange(Chunk.ChunkMeshTimes);
+            float average = Mathf.Floor(totalList.Count > 0 ? totalList.Average() : 0f);
+
+            FrameRateText.text = $"FPS: {_DeltaTimeAverage}\r\nVSync: {vSyncStatus}\r\nChunk Load Time: {average}ms";
         }
 
         private void UpdateResourcesText()

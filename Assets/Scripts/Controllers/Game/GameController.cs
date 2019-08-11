@@ -1,9 +1,13 @@
+#region
+
 using System;
 using Controllers.World;
 using Environment;
 using Environment.Terrain;
 using NLog;
 using UnityEngine;
+
+#endregion
 
 namespace Controllers.Game
 {

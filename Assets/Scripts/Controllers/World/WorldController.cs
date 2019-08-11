@@ -1,3 +1,5 @@
+#region
+
 using System.Collections;
 using Environment.Terrain;
 using Environment.Terrain.Generation;
@@ -6,80 +8,43 @@ using Environment.Terrain.Generation.Noise.Perlin;
 using Static;
 using UnityEngine;
 
+#endregion
+
 namespace Controllers.World
 {
     public class WorldController : MonoBehaviour
     {
         public const float WORLD_TICK_RATE = 1f / 60f;
+        public static int ChunkLoaderSnapDistance;
 
-        private int _BlockDiameter;
-        private Vector3Int _FollowedCurrentChunk;
-        private Vector3Int _LastGenerationPoint;
+        private Vector3Int _ChunkLoaderCurrentChunk;
+        private Vector3Int _LastChunkLoadPosition;
 
         public ChunkController ChunkController;
-        public Transform FollowedTransform;
+        public Transform ChunkLoader;
         public NoiseMap NoiseMap;
         public WorldGenerationSettings WorldGenerationSettings;
 
         private void Awake()
         {
-            _FollowedCurrentChunk = new Vector3Int(0, 0, 0);
-            CheckFollowerChangedChunk();
+            ChunkLoaderSnapDistance = Chunk.Size.x * 2;
+            _ChunkLoaderCurrentChunk = new Vector3Int(0, 0, 0);
+            CheckChunkLoaderChangedChunk();
         }
 
         private void Start()
         {
-            _BlockDiameter = WorldGenerationSettings.Diameter * Chunk.Size.x;
+            StartCoroutine(GenerateNoiseMap(_ChunkLoaderCurrentChunk));
 
-            StartCoroutine(GenerateNoiseMap(_FollowedCurrentChunk));
-
-            EnqueueBuildChunkArea(_FollowedCurrentChunk, WorldGenerationSettings.Radius);
+            EnqueueBuildChunkArea(_ChunkLoaderCurrentChunk, WorldGenerationSettings.Radius);
         }
 
         private void Update()
         {
-            CheckFollowerChangedChunk();
+            CheckChunkLoaderChangedChunk();
             CheckMeshingAndTick();
-            
-            foreach (Chunk chunk in ChunkController.Chunks)
-            {
-                Graphics.DrawMesh(chunk.Mesh, chunk.transform.localToWorldMatrix, chunk.BlocksMaterial, 0);
-            }
         }
 
-        private void CheckFollowerChangedChunk()
-        {
-            Vector3Int chunkPosition =
-                GetWorldChunkOriginFromGlobalPosition(FollowedTransform.transform.position).ToInt();
-            chunkPosition.y = 0;
-
-            if (chunkPosition == _FollowedCurrentChunk)
-            {
-                return;
-            }
-
-            _FollowedCurrentChunk = chunkPosition;
-
-            Vector3Int absDifference = (_FollowedCurrentChunk - _LastGenerationPoint).Abs();
-
-            int doubleChunkSize = Chunk.Size.x * 2;
-
-            if ((absDifference.x < doubleChunkSize) && (absDifference.z < doubleChunkSize))
-            {
-                return;
-            }
-
-            ExecuteFollowerChangedChunk();
-        }
-
-        private void ExecuteFollowerChangedChunk()
-        {
-            _LastGenerationPoint = _FollowedCurrentChunk;
-
-            StartCoroutine(GenerateNoiseMap(_FollowedCurrentChunk));
-
-            EnqueueBuildChunkArea(_FollowedCurrentChunk, WorldGenerationSettings.Radius);
-        }
 
         public void EnqueueBuildChunkArea(Vector3Int origin, int radius)
         {
@@ -93,14 +58,12 @@ namespace Controllers.World
             }
         }
 
-
-        #region Noise
-
         private IEnumerator GenerateNoiseMap(Vector3Int offset)
         {
             // over-generate noise map size to avoid array index overflows
-            NoiseMap = new NoiseMap(null, _FollowedCurrentChunk,
-                new Vector3Int(_BlockDiameter + Chunk.Size.x, 0, _BlockDiameter + Chunk.Size.z));
+            NoiseMap = new NoiseMap(null, _ChunkLoaderCurrentChunk,
+                new Vector3Int((WorldGenerationSettings.Diameter + 1) * Chunk.Size.x, 0,
+                    (WorldGenerationSettings.Diameter + 1) * Chunk.Size.z));
 
             PerlinNoiseGenerator perlinNoiseGenerator =
                 new PerlinNoiseGenerator(offset, NoiseMap.Bounds.size, WorldGenerationSettings);
@@ -112,10 +75,50 @@ namespace Controllers.World
             NoiseMap.Ready = true;
         }
 
-        #endregion
+        public static Vector3 GetWorldChunkOriginFromGlobalPosition(Vector3 globalPosition)
+        {
+            return globalPosition.Divide(Chunk.Size).Floor().Multiply(Chunk.Size);
+        }
+
+        public Block GetBlockAtPosition(Vector3Int position)
+        {
+            return ChunkController.GetBlockAtPosition(position);
+        }
 
 
-        #region Meshing
+        #region ON UPDATE()
+
+        private void CheckChunkLoaderChangedChunk()
+        {
+            Vector3Int chunkPosition =
+                GetWorldChunkOriginFromGlobalPosition(ChunkLoader.transform.position).ToInt();
+            chunkPosition.y = 0;
+
+            if (chunkPosition == _ChunkLoaderCurrentChunk)
+            {
+                return;
+            }
+
+            _ChunkLoaderCurrentChunk = chunkPosition;
+
+            Vector3Int absDifference = (_ChunkLoaderCurrentChunk - _LastChunkLoadPosition).Abs();
+
+            if ((absDifference.x < ChunkLoaderSnapDistance) && (absDifference.z < ChunkLoaderSnapDistance))
+            {
+                return;
+            }
+
+            UpdateChunkLoadArea();
+        }
+
+        private void UpdateChunkLoadArea()
+        {
+            _LastChunkLoadPosition = _ChunkLoaderCurrentChunk;
+
+            StartCoroutine(GenerateNoiseMap(_ChunkLoaderCurrentChunk));
+
+            EnqueueBuildChunkArea(_ChunkLoaderCurrentChunk, WorldGenerationSettings.Radius);
+        }
 
         private void CheckMeshingAndTick()
         {
@@ -125,20 +128,6 @@ namespace Controllers.World
             }
 
             ChunkController.Tick(NoiseMap.Bounds);
-        }
-
-        #endregion
-
-        #region WorldChunk Misc
-
-        public static Vector3 GetWorldChunkOriginFromGlobalPosition(Vector3 globalPosition)
-        {
-            return globalPosition.Divide(Chunk.Size).Floor().Multiply(Chunk.Size);
-        }
-
-        public Block GetBlockAtPosition(Vector3Int position)
-        {
-            return ChunkController.GetBlockAtPosition(position);
         }
 
         #endregion

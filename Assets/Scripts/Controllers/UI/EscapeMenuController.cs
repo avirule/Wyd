@@ -1,6 +1,10 @@
-﻿using Static;
+﻿#region
+
+using Static;
 using UnityEngine;
 using UnityEngine.UI;
+
+#endregion
 
 namespace Controllers.UI
 {

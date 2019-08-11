@@ -1,3 +1,5 @@
+#region
+
 using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -6,85 +8,44 @@ using Environment.Terrain;
 using Static;
 using UnityEngine;
 
+#endregion
+
 namespace Controllers.World
 {
     public sealed class ChunkController : MonoBehaviour
     {
+        private Stopwatch _BuildChunkQueueStopwatch;
         private Chunk _ChunkObject;
         private List<Chunk> _DestroyedChunks;
 
         public Queue<Vector3Int> BuildChunkQueue;
-
-        public bool Building;
+        public bool BuildingChunkArea;
         public List<Chunk> Chunks;
-        public bool ChunksGenerated => Chunks.All(chunk => chunk.Generated);
-        public bool ChunksMeshed => Chunks.All(chunk => chunk.Meshed);
+        public bool AllChunksGenerated => Chunks.All(chunk => chunk.Generated);
+        public bool AllChunksMeshed => Chunks.All(chunk => chunk.Meshed);
 
         private void Awake()
         {
             _ChunkObject = Resources.Load<Chunk>(@"Environment\Terrain\Chunk");
             _DestroyedChunks = new List<Chunk>();
+            _BuildChunkQueueStopwatch = new Stopwatch();
             Chunks = new List<Chunk>();
             BuildChunkQueue = new Queue<Vector3Int>();
-            Building = false;
+            BuildingChunkArea = false;
         }
 
         public void Tick(BoundsInt bounds)
         {
-            if (Building)
-            {
-                return;
-            }
-
             if (BuildChunkQueue.Count > 0)
             {
                 StartCoroutine(ProcessBuildChunkQueue());
             }
 
-            if (!ChunksGenerated)
+            if (AllChunksGenerated)
             {
-                return;
+                DestroyOutOfBoundsChunks(bounds);
+                BeginGeneratingMissingChunkMeshes();
             }
-
-            DestroyOutOfBoundsChunks(bounds);
-            GenerateMissingChunkMeshes();
-
-//            if (!ChunksMeshed || Meshing || Meshed || Building)
-//            {
-//                return;
-//            }
-//
-//            StartCoroutine(GenerateCombinedMesh());
-        }
-
-        public Chunk GetChunkAtPosition(Vector3 position)
-        {
-            return Chunks.FirstOrDefault(chunk => chunk.Position == position);
-        }
-
-        public Block GetBlockAtPosition(Vector3Int position)
-        {
-            Vector3Int chunkPosition = WorldController.GetWorldChunkOriginFromGlobalPosition(position).ToInt();
-
-            Chunk chunk = GetChunkAtPosition(chunkPosition);
-
-            if (chunk == null)
-            {
-                return default;
-            }
-
-            Vector3Int localPosition = (position - chunkPosition).Abs();
-
-            if ((chunk.Blocks.Length <= localPosition.x) ||
-                (chunk.Blocks[0].Length <= localPosition.y) ||
-                (chunk.Blocks[0][0].Length <= localPosition.z))
-            {
-                return default;
-            }
-
-            Block block = chunk.Blocks[localPosition.x][localPosition.y][localPosition.z];
-
-            return block;
         }
 
 
@@ -112,7 +73,7 @@ namespace Controllers.World
             Chunks.Remove(chunk);
         }
 
-        private void GenerateMissingChunkMeshes()
+        private void BeginGeneratingMissingChunkMeshes()
         {
             foreach (Chunk chunk in Chunks)
             {
@@ -132,21 +93,23 @@ namespace Controllers.World
 
         public IEnumerator ProcessBuildChunkQueue()
         {
-            Building = true;
+            BuildingChunkArea = true;
 
-            Stopwatch frameCounter = new Stopwatch();
             float totalElapsed = 0f;
 
             while (BuildChunkQueue.Count > 0)
             {
-                frameCounter.Restart();
+                _BuildChunkQueueStopwatch.Restart();
 
                 Vector3Int pos = BuildChunkQueue.Dequeue();
 
-                CreateChunk(pos);
+                if (!CheckChunkExistsAtPosition(pos) || GetChunkAtPosition(pos).Destroyed)
+                {
+                    CreateChunk(pos);
+                }
 
-                frameCounter.Stop();
-                totalElapsed += (float) frameCounter.Elapsed.TotalSeconds;
+                _BuildChunkQueueStopwatch.Stop();
+                totalElapsed += (float) _BuildChunkQueueStopwatch.Elapsed.TotalSeconds;
 
                 if (totalElapsed >= WorldController.WORLD_TICK_RATE)
                 {
@@ -154,7 +117,7 @@ namespace Controllers.World
                 }
             }
 
-            Building = false;
+            BuildingChunkArea = false;
         }
 
         private void CreateChunk(Vector3Int position)
@@ -173,6 +136,76 @@ namespace Controllers.World
             Chunks.Add(chunk);
 
             StartCoroutine(chunk.GenerateBlocks());
+
+            // ensures that neighbours update their meshes to cull newly out of sight faces
+            AssignNeighborsPendingUpdate(chunk.Position);
+        }
+
+        private void AssignNeighborsPendingUpdate(Vector3Int position)
+        {
+            for (int x = -1; x < 2; x++)
+            {
+                Chunk chunkAtPosition = GetChunkAtPosition(position + new Vector3Int(x, 0, 0));
+
+                if (chunkAtPosition == default)
+                {
+                    continue;
+                }
+
+                chunkAtPosition.PendingUpdate = true;
+            }
+
+            for (int z = -2; z < 2; z++)
+            {
+                Chunk chunkAtPosition = GetChunkAtPosition(position + new Vector3Int(0, 0, z));
+
+                if (chunkAtPosition == default)
+                {
+                    continue;
+                }
+
+                chunkAtPosition.PendingUpdate = true;
+            }
+        }
+
+        #endregion
+
+
+        #region MISC
+
+        public bool CheckChunkExistsAtPosition(Vector3Int position)
+        {
+            return Chunks.Any(chunk => chunk.Position == position);
+        }
+
+        public Chunk GetChunkAtPosition(Vector3Int position)
+        {
+            return Chunks.FirstOrDefault(chunk => chunk.Position == position);
+        }
+
+        public Block GetBlockAtPosition(Vector3Int position)
+        {
+            Vector3Int chunkPosition = WorldController.GetWorldChunkOriginFromGlobalPosition(position).ToInt();
+
+            Chunk chunk = GetChunkAtPosition(chunkPosition);
+
+            if (chunk == null)
+            {
+                return default;
+            }
+
+            Vector3Int localPosition = (position - chunkPosition).Abs();
+            int localPosition1d =
+                localPosition.x + (Chunk.Size.x * (localPosition.y + (Chunk.Size.y * localPosition.z)));
+
+            if (chunk.Blocks.Length <= localPosition1d)
+            {
+                return default;
+            }
+
+            Block block = chunk.Blocks[localPosition1d];
+
+            return block;
         }
 
         #endregion
