@@ -556,8 +556,8 @@ namespace Environment.Terrain.Generation.Noise.OpenSimplex
             {
                 Dx = -xsb - (multiplier * _SQUISH_2D);
                 Dy = -ysb - (multiplier * _SQUISH_2D);
-                this.Xsb = xsb;
-                this.Ysb = ysb;
+                Xsb = xsb;
+                Ysb = ysb;
             }
         }
 
@@ -576,9 +576,9 @@ namespace Environment.Terrain.Generation.Noise.OpenSimplex
                 Dx = -xsb - (multiplier * _SQUISH_3D);
                 Dy = -ysb - (multiplier * _SQUISH_3D);
                 Dz = -zsb - (multiplier * _SQUISH_3D);
-                this.Xsb = xsb;
-                this.Ysb = ysb;
-                this.Zsb = zsb;
+                Xsb = xsb;
+                Ysb = ysb;
+                Zsb = zsb;
             }
         }
 
@@ -600,10 +600,10 @@ namespace Environment.Terrain.Generation.Noise.OpenSimplex
                 Dy = -ysb - (multiplier * _SQUISH_4D);
                 Dz = -zsb - (multiplier * _SQUISH_4D);
                 Dw = -wsb - (multiplier * _SQUISH_4D);
-                this.Xsb = xsb;
-                this.Ysb = ysb;
-                this.Zsb = zsb;
-                this.Wsb = wsb;
+                Xsb = xsb;
+                Ysb = ysb;
+                Zsb = zsb;
+                Wsb = wsb;
             }
         }
     }
