@@ -4,19 +4,26 @@ using UnityEngine;
 
 #endregion
 
-// ReSharper disable MemberCanBePrivate.Global
-
 namespace Environment.Terrain
 {
     public delegate string RuleEvaluation(Vector3Int position, Direction direction);
 
-    public class BlockRule
+    public interface IBlockRule
     {
-        protected readonly string BlockName;
-        protected readonly ushort Id;
+        ushort Id { get; }
+        string BlockName { get; }
+        bool IsTransparent { get; }
+        RuleEvaluation RuleEvaluation { get; }
 
-        public readonly bool IsTransparent;
-        protected RuleEvaluation RuleEvaluation;
+        bool ReadUVsRule(ushort blockId, Vector3Int position, Direction direction, out string spriteName);
+    }
+
+    public struct BlockRule : IBlockRule
+    {
+        public ushort Id { get; }
+        public string BlockName { get; }
+        public bool IsTransparent { get; }
+        public RuleEvaluation RuleEvaluation { get; }
 
         public BlockRule(ushort id, string blockName, bool isTransparent, RuleEvaluation ruleEvaluation)
         {
@@ -26,13 +33,7 @@ namespace Environment.Terrain
             RuleEvaluation = ruleEvaluation ?? ((position, direction) => string.Empty);
         }
 
-        public bool SetRuleEvaluation(RuleEvaluation ruleEvaluation)
-        {
-            RuleEvaluation = ruleEvaluation;
-            return true;
-        }
-
-        public bool ReadRule(ushort blockId, Vector3Int position, Direction direction, out string spriteName)
+        public bool ReadUVsRule(ushort blockId, Vector3Int position, Direction direction, out string spriteName)
         {
             if (Id != blockId)
             {

@@ -21,12 +21,7 @@ namespace Controllers.UI
             PlayButton.onClick.AddListener(PlayGame);
         }
 
-        // Update is called once per frame
-        private void Update()
-        {
-        }
-
-        private void PlayGame()
+        private static void PlayGame()
         {
             SceneManager.UnloadSceneAsync("MainMenu", UnloadSceneOptions.UnloadAllEmbeddedSceneObjects);
             SceneManager.LoadScene("Game", LoadSceneMode.Single);

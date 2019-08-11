@@ -1,6 +1,5 @@
 #region
 
-using System;
 using Logging;
 using NLog;
 using Static;
@@ -42,13 +41,7 @@ namespace Environment.Terrain.Generation.Noise
 
                 for (int z = 0; z < noiseMap[0].Length; z++)
                 {
-                    try
-                    {
-                        noiseMap[x][z] = Map[indexes.x + x][indexes.z + z];
-                    }
-                    catch (Exception)
-                    {
-                    }
+                    noiseMap[x][z] = Map[indexes.x + x][indexes.z + z];
                 }
             }
 

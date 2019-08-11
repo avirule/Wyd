@@ -310,7 +310,7 @@ namespace Environment.Terrain.Generation
         public Mesh GetMesh()
         {
             Mesh mesh = new Mesh();
-            
+
             if ((_IsVisible == false) || (_Vertices.Count == 0))
             {
                 return mesh;

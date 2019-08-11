@@ -64,11 +64,12 @@ namespace Controllers.UI
         {
             string vSyncStatus = QualitySettings.vSyncCount == 0 ? "Disabled" : "Enabled";
 
-            List<float> totalList = new List<float>(Chunk.ChunkBuildTimes);
-            totalList.AddRange(Chunk.ChunkMeshTimes);
-            float average = Mathf.Floor(totalList.Count > 0 ? totalList.Average() : 0f);
+            float sumLoadTimes = Chunk.ChunkBuildTimes.Sum() + Chunk.ChunkMeshTimes.Sum();
+            float averageLoadTime =
+                Mathf.Floor(sumLoadTimes / (Chunk.ChunkBuildTimes.Count + Chunk.ChunkMeshTimes.Count));
 
-            FrameRateText.text = $"FPS: {_DeltaTimeAverage}\r\nVSync: {vSyncStatus}\r\nChunk Load Time: {average}ms";
+            FrameRateText.text =
+                $"FPS: {_DeltaTimeAverage}\r\nVSync: {vSyncStatus}\r\nChunk Load Time: {averageLoadTime}ms";
         }
 
         private void UpdateResourcesText()

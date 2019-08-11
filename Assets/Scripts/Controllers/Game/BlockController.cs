@@ -15,14 +15,14 @@ namespace Controllers.Game
     {
         public const ushort BLOCK_EMPTY_ID = 0;
 
-        private Dictionary<ushort, BlockRule> _Blocks;
+        private Dictionary<ushort, IBlockRule> _Blocks;
         public TextureController TextureController;
 
-        public Dictionary<ushort, BlockRule>.KeyCollection RegisteredBlocks => _Blocks.Keys;
+        public Dictionary<ushort, IBlockRule>.KeyCollection RegisteredBlocks => _Blocks.Keys;
 
         private void Awake()
         {
-            _Blocks = new Dictionary<ushort, BlockRule>();
+            _Blocks = new Dictionary<ushort, IBlockRule>();
             Block.AssignBlockController(this);
         }
 
@@ -47,10 +47,8 @@ namespace Controllers.Game
                 EventLog.Logger.Log(LogLevel.Warn,
                     $"AddNewBlock flag set, adding block `{blockName}` with id `{blockId}` and continuing...");
 
-                _Blocks.Add(blockId, new BlockRule(blockId, blockName, isTransparent, null));
+                _Blocks.Add(blockId, new BlockRule(blockId, blockName, isTransparent, ruleEvaluation));
             }
-
-            _Blocks[blockId].SetRuleEvaluation(ruleEvaluation);
 
             EventLog.Logger.Log(LogLevel.Info,
                 $"Successfully added rule evaluation for block `{blockName}` with id `{blockId}`.");
@@ -69,7 +67,7 @@ namespace Controllers.Game
                 return false;
             }
 
-            _Blocks[blockId].ReadRule(blockId, position, direction, out string spriteName);
+            _Blocks[blockId].ReadUVsRule(blockId, position, direction, out string spriteName);
 
             if (!TextureController.Sprites.ContainsKey(spriteName))
             {
