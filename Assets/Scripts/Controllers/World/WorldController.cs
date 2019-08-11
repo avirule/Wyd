@@ -21,7 +21,7 @@ namespace Controllers.World
         private Vector3Int _ChunkLoaderCurrentChunk;
         private Vector3Int _LastChunkLoadPosition;
         private bool _RegenerateNoise;
-        
+
         public ChunkController ChunkController;
         public Transform ChunkLoader;
         public NoiseMap NoiseMap;
@@ -80,7 +80,7 @@ namespace Controllers.World
                 perlinNoiseGenerator.Abort();
                 yield break;
             }
-            
+
             NoiseMap.Map = perlinNoiseGenerator.Map;
             NoiseMap.Ready = true;
         }
@@ -125,7 +125,7 @@ namespace Controllers.World
         {
             _LastChunkLoadPosition = _ChunkLoaderCurrentChunk;
 
-            _RegenerateNoise = true;            
+            _RegenerateNoise = true;
             StartCoroutine(GenerateNoiseMap(_ChunkLoaderCurrentChunk));
 
             EnqueueBuildChunkArea(_ChunkLoaderCurrentChunk, WorldGenerationSettings.Radius);
@@ -134,14 +134,14 @@ namespace Controllers.World
             {
                 Vector3Int difference = (chunk.Position - _ChunkLoaderCurrentChunk).Abs();
 
-                if (difference.x > (ShadowRadius * Chunk.Size.x) || difference.z > (ShadowRadius * Chunk.Size.z))
+                if ((difference.x > (ShadowRadius * Chunk.Size.x)) || (difference.z > (ShadowRadius * Chunk.Size.z)))
                 {
                     chunk.MeshRenderer.shadowCastingMode = ShadowCastingMode.Off;
                     chunk.MeshRenderer.receiveShadows = false;
                 }
                 else
                 {
-                    chunk.MeshRenderer.shadowCastingMode = ShadowCastingMode.On;        
+                    chunk.MeshRenderer.shadowCastingMode = ShadowCastingMode.On;
                     chunk.MeshRenderer.receiveShadows = true;
                 }
             }

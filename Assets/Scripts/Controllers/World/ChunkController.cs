@@ -85,7 +85,7 @@ namespace Controllers.World
         {
             foreach (Chunk chunk in Chunks)
             {
-                if (chunk.Destroyed || !chunk.PendingUpdate || (!chunk.Meshed && chunk.Meshing))
+                if (chunk.Destroyed || !chunk.PendingMeshUpdate || (!chunk.Meshed && chunk.Meshing))
                 {
                     continue;
                 }
@@ -160,7 +160,7 @@ namespace Controllers.World
                     continue;
                 }
 
-                chunkAtPosition.PendingUpdate = true;
+                chunkAtPosition.PendingMeshUpdate = true;
             }
 
             for (int z = -2; z < 2; z++)
@@ -172,7 +172,7 @@ namespace Controllers.World
                     continue;
                 }
 
-                chunkAtPosition.PendingUpdate = true;
+                chunkAtPosition.PendingMeshUpdate = true;
             }
         }
 

@@ -25,24 +25,24 @@ namespace Environment.Terrain
         private BlockController _BlockController;
         private WorldController _WorldController;
         private ChunkController _ChunkController;
-        
+
         public Block[] Blocks;
         public bool Destroyed;
         public bool Generated;
         public bool Generating;
         public bool Meshed;
         public bool Meshing;
-        public bool PendingUpdate;
+        public bool PendingMeshUpdate;
         public MeshFilter MeshFilter;
         public MeshRenderer MeshRenderer;
-        public MeshCollider MeshCollider;    
+        public MeshCollider MeshCollider;
         public Vector3Int Position;
 
 
         private void Awake()
         {
             GameObject worldControllerObject = GameObject.FindWithTag("WorldController");
-            
+
             transform.parent = worldControllerObject.transform;
             _WorldController = worldControllerObject.GetComponent<WorldController>();
             _ChunkController = worldControllerObject.GetComponent<ChunkController>();
@@ -55,24 +55,26 @@ namespace Environment.Terrain
 
             Generated = false;
             Generating = true;
-            
+
             yield return new WaitUntil(() => _WorldController.NoiseMap.Ready || Destroyed);
-            
+
             if (Destroyed)
             {
                 Generating = false;
-
                 yield break;
             }
 
             float[][] noiseMap;
-            
+
             try
             {
+                // todo fix retrieval of noise values without errors when player is moving extremely fast
+
                 noiseMap = _WorldController.NoiseMap.GetSection(Position, Size);
             }
             catch (Exception)
             {
+                Generating = false;
                 yield break;
             }
 
@@ -80,6 +82,7 @@ namespace Environment.Terrain
             {
                 EventLog.Logger.Log(LogLevel.Error,
                     $"Failed to generate chunk at position ({Position.x}, {Position.z}): failed to get noise map.");
+                Generating = false;
                 yield break;
             }
 
@@ -92,7 +95,6 @@ namespace Environment.Terrain
             {
                 chunkGenerator.Abort();
                 Generating = false;
-
                 yield break;
             }
 
@@ -138,7 +140,7 @@ namespace Environment.Terrain
             MeshFilter.mesh = meshGenerator.GetMesh();
             MeshCollider.sharedMesh = MeshFilter.sharedMesh;
 
-            Meshing = PendingUpdate = false;
+            Meshing = PendingMeshUpdate = false;
             Meshed = true;
 
             stopwatch.Stop();
@@ -155,7 +157,7 @@ namespace Environment.Terrain
         {
             transform.position = position;
             Position = position.ToInt();
-            PendingUpdate = true;
+            PendingMeshUpdate = true;
             Generated = Generating = Meshed = Meshing = Destroyed = false;
             gameObject.SetActive(true);
         }
