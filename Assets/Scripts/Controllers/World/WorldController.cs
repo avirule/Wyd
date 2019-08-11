@@ -16,7 +16,7 @@ namespace Controllers.World
 {
     public class WorldController : MonoBehaviour
     {
-        public const float WORLD_TICK_RATE = 1f / 60f;
+        public const float WORLD_TICK_RATE = 1f / 90f;
         public static int ChunkLoaderSnapDistance;
 
         private Vector3Int _ChunkLoaderCurrentChunk;

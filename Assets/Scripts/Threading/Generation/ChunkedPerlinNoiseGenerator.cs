@@ -34,11 +34,11 @@ namespace Threading.Generation
 
                 for (int chunkZ = 0; chunkZ < SizeInChunks.z; chunkZ++)
                 {
-                    if (FlagAbort)
+                    if (Die)
                     {
                         return;
                     }
-                    
+
                     int chunkXValue = chunkX * ChunkSize.x;
                     int chunkZValue = chunkZ * ChunkSize.z;
 

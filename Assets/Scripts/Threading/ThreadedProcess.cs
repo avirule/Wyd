@@ -10,11 +10,11 @@ namespace Threading
     {
         protected readonly object Handle;
         protected bool Done;
-        public bool FlagAbort;
+        public bool Die;
 
         public ThreadedProcess()
         {
-            Done = FlagAbort = false;
+            Done = Die = false;
             Handle = new object();
         }
 
@@ -55,7 +55,7 @@ namespace Threading
 
         public virtual void Abort()
         {
-            FlagAbort = true;
+            Die = true;
         }
         
         public virtual bool Update()

@@ -6,9 +6,16 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="c75ae2de-3a89-4228-87f5-5925302b6d96" name="Default Changelist" comment="">
+      <change afterPath="$PROJECT_DIR$/Assets/Scripts/Threading/Generation/ChunkBuilder.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/.idea.Wyd/.idea/contentModel.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/.idea.Wyd/.idea/contentModel.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/.idea.Wyd/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/.idea.Wyd/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Assets/Scripts/Controllers/UI/DiagnosticsController.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/Scripts/Controllers/UI/DiagnosticsController.cs" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/Assets/Scripts/Controllers/World/ChunkController.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/Scripts/Controllers/World/ChunkController.cs" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/Assets/Scripts/Environment/Terrain/Chunk.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/Scripts/Environment/Terrain/Chunk.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Assets/Scripts/Threading/Generation/ChunkGenerator.cs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Assets/Scripts/Threading/Generation/ChunkGenerator.cs.meta" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/Scripts/Threading/Generation/ChunkBuilder.cs.meta" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Assets/Scripts/Threading/Generation/ChunkedPerlinNoiseGenerator.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/Scripts/Threading/Generation/ChunkedPerlinNoiseGenerator.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Assets/Scripts/Threading/Generation/MeshGenerator.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/Scripts/Threading/Generation/MeshGenerator.cs" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/Assets/Scripts/Threading/ThreadedProcess.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/Scripts/Threading/ThreadedProcess.cs" afterDir="false" />
     </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
@@ -25,6 +32,7 @@
   </component>
   <component name="HighlightingSettingsPerFile">
     <setting file="file://$PROJECT_DIR$/Assets/Scripts/Controllers/Game/GameController.cs" root0="FORCE_HIGHLIGHTING" />
+    <setting file="file://$APPLICATION_CONFIG_DIR$/resharper-host/DecompilerCache/decompiler/7D971063-3068-4ADD-86D0-80ECF65BFE69/28/b0fa0ed1/List`1.cs" root0="SKIP_HIGHLIGHTING" />
     <setting file="file://$PROJECT_DIR$/Assets/Scripts/Controllers/Game/BlockController.cs" root0="FORCE_HIGHLIGHTING" />
     <setting file="file://$PROJECT_DIR$/Assets/Scripts/Controllers/Entity/PlayerController.cs" root0="FORCE_HIGHLIGHTING" />
     <setting file="file://$PROJECT_DIR$/Assets/Scripts/Controllers/Entity/CameraController.cs" root0="FORCE_HIGHLIGHTING" />
@@ -35,6 +43,7 @@
     <setting file="file://$PROJECT_DIR$/Assets/Scripts/Environment/Terrain/Chunk.cs" root0="FORCE_HIGHLIGHTING" />
     <setting file="file://$APPLICATION_CONFIG_DIR$/resharper-host/DecompilerCache/decompiler/7D971063-3068-4ADD-86D0-80ECF65BFE69/1e/9a3cfa7b/GenericEqualityComparer`1.cs" root0="SKIP_HIGHLIGHTING" />
     <setting file="file://$PROJECT_DIR$/Assets/Scripts/Environment/Terrain/BlockRule.cs" root0="FORCE_HIGHLIGHTING" />
+    <setting file="file://$APPLICATION_CONFIG_DIR$/resharper-host/DecompilerCache/decompiler/7D971063-3068-4ADD-86D0-80ECF65BFE69/8f/7b5560f3/ConcurrentQueue`1.cs" root0="SKIP_HIGHLIGHTING" />
     <setting file="file://$APPLICATION_CONFIG_DIR$/resharper-host/DecompilerCache/decompiler/7D971063-3068-4ADD-86D0-80ECF65BFE69/e3/4e660b74/Int32.cs" root0="SKIP_HIGHLIGHTING" />
     <setting file="file://$PROJECT_DIR$/Assets/Scripts/Environment/Terrain/Generation/WorldSeed.cs" root0="FORCE_HIGHLIGHTING" />
     <setting file="file://$PROJECT_DIR$/Assets/Scripts/Static/Mathv.cs" root0="FORCE_HIGHLIGHTING" />
@@ -48,7 +57,7 @@
     <setting file="file://$PROJECT_DIR$/Assets/Scripts/Logging/EventLog.cs" root0="FORCE_HIGHLIGHTING" />
     <setting file="file://$APPLICATION_CONFIG_DIR$/resharper-host/DecompilerCache/decompiler/2094A731-351D-475D-BA68-F5920DE30ED8/15/ea514908/Transform.cs" root0="SKIP_HIGHLIGHTING" />
     <setting file="file://$PROJECT_DIR$/Assets/Scripts/Controllers/World/WorldController.cs" root0="FORCE_HIGHLIGHTING" />
-    <setting file="file://$PROJECT_DIR$/Assets/Scripts/Threading/Generation/ChunkGenerator.cs" root0="FORCE_HIGHLIGHTING" />
+    <setting file="file://$PROJECT_DIR$/Assets/Scripts/Threading/Generation/ChunkBuilder.cs" root0="FORCE_HIGHLIGHTING" />
     <setting file="file://$PROJECT_DIR$/Assets/Scripts/Environment/Terrain/Generation/WorldGenerationSettings.cs" root0="FORCE_HIGHLIGHTING" />
     <setting file="file://$APPLICATION_CONFIG_DIR$/resharper-host/DecompilerCache/decompiler/2094A731-351D-475D-BA68-F5920DE30ED8/b6/1b57f6f1/Vector3.cs" root0="SKIP_HIGHLIGHTING" />
     <setting file="file://$PROJECT_DIR$/Assets/Scripts/Environment/Terrain/Generation/Noise/NoiseMap.cs" root0="FORCE_HIGHLIGHTING" />
@@ -72,10 +81,6 @@
   <component name="IdeDocumentHistory">
     <option name="CHANGED_PATHS">
       <list>
-        <option value="$PROJECT_DIR$/Assets/Scripts/Static/EventLog.cs" />
-        <option value="$PROJECT_DIR$/Assets/Scripts/Logging/EventLog.cs" />
-        <option value="$PROJECT_DIR$/Assets/Scripts/Controllers/TextureController.cs" />
-        <option value="$PROJECT_DIR$/Assets/Scripts/Controllers/PlayerController.cs" />
         <option value="$PROJECT_DIR$/Assets/Scripts/Environment/Terrain/WorldChunk.cs" />
         <option value="$PROJECT_DIR$/Assets/Scripts/Environment/Terrain/Generation/Noise/Perlin/PerlinNoiseGenerator.cs" />
         <option value="$PROJECT_DIR$/Assets/Scripts/Controllers/BlockController.cs" />
@@ -114,15 +119,19 @@
         <option value="$PROJECT_DIR$/Assets/Scripts/Controllers/Game/GameSettings.cs" />
         <option value="$PROJECT_DIR$/Assets/Scripts/Controllers/Game/GameSettingsController.cs" />
         <option value="$PROJECT_DIR$/Assets/Scripts/Controllers/Game/GameController.cs" />
-        <option value="$PROJECT_DIR$/Assets/Scripts/Controllers/UI/DiagnosticsController.cs" />
         <option value="$PROJECT_DIR$/Assets/Scripts/Environment/Terrain/Generation/MeshGenerator.cs" />
         <option value="$PROJECT_DIR$/Assets/Scripts/Controllers/World/WorldController.cs" />
         <option value="$PROJECT_DIR$/Assets/Scripts/Threading/Generation/PerlinNoiseGenerator.cs" />
-        <option value="$PROJECT_DIR$/Assets/Scripts/Threading/Generation/ChunkGenerator.cs" />
         <option value="$PROJECT_DIR$/Assets/Scripts/Threading/Generation/ChunkedPerlinNoiseGenerator.cs" />
-        <option value="$PROJECT_DIR$/Assets/Scripts/Environment/Terrain/Chunk.cs" />
+        <option value="$PROJECT_DIR$/Assets/Scripts/Threading/Generation/ChunkProcessor.cs" />
         <option value="$PROJECT_DIR$/Assets/Scripts/Threading/ThreadedProcess.cs" />
+        <option value="$PROJECT_DIR$/Assets/Scripts/Threading/Generation/ChunkGenerator.cs" />
+        <option value="$PROJECT_DIR$/Assets/Scripts/Threading/Generation/InfiniteThreadedProcess.cs" />
+        <option value="$PROJECT_DIR$/Assets/Scripts/Threading/Generation/MeshGenerator.cs" />
+        <option value="$PROJECT_DIR$/Assets/Scripts/Threading/Generation/ChunkBuilder.cs" />
         <option value="$PROJECT_DIR$/Assets/Scripts/Controllers/World/ChunkController.cs" />
+        <option value="$PROJECT_DIR$/Assets/Scripts/Environment/Terrain/Chunk.cs" />
+        <option value="$PROJECT_DIR$/Assets/Scripts/Controllers/UI/DiagnosticsController.cs" />
       </list>
     </option>
   </component>
@@ -219,7 +228,7 @@
       <workItem from="1565455392183" duration="17745000" />
       <workItem from="1565474659744" duration="11098000" />
       <workItem from="1565514620607" duration="7006000" />
-      <workItem from="1565521735260" duration="9094000" />
+      <workItem from="1565521735260" duration="14003000" />
     </task>
     <servers />
   </component>
@@ -254,38 +263,46 @@
     <state x="516" y="258" key="ANALYSIS_DLG_com.jetbrains.rider.actions.impl.cleanup.RiderCodeCleanupAction$actionPerformed$dlg$1/1920.1080" />
     <state width="1324" height="436" key="DebuggerActiveHint" />
     <state width="1324" height="436" key="DebuggerActiveHint/1920.1080" />
-    <state width="735" height="261" key="GridCell.Tab.0.bottom" />
-    <state width="735" height="261" key="GridCell.Tab.0.bottom/1920.1080" />
-    <state width="735" height="261" key="GridCell.Tab.0.center" />
-    <state width="735" height="261" key="GridCell.Tab.0.center/1920.1080" />
-    <state width="735" height="261" key="GridCell.Tab.0.left" />
-    <state width="735" height="261" key="GridCell.Tab.0.left/1920.1080" />
-    <state width="735" height="261" key="GridCell.Tab.0.right" />
-    <state width="735" height="261" key="GridCell.Tab.0.right/1920.1080" />
-    <state width="735" height="261" key="GridCell.Tab.1.bottom" />
-    <state width="735" height="261" key="GridCell.Tab.1.bottom/1920.1080" />
-    <state width="735" height="261" key="GridCell.Tab.1.center" />
-    <state width="735" height="261" key="GridCell.Tab.1.center/1920.1080" />
-    <state width="735" height="261" key="GridCell.Tab.1.left" />
-    <state width="735" height="261" key="GridCell.Tab.1.left/1920.1080" />
-    <state width="735" height="261" key="GridCell.Tab.1.right" />
-    <state width="735" height="261" key="GridCell.Tab.1.right/1920.1080" />
-    <state width="735" height="261" key="GridCell.Tab.2.bottom" />
-    <state width="735" height="261" key="GridCell.Tab.2.bottom/1920.1080" />
-    <state width="735" height="261" key="GridCell.Tab.2.center" />
-    <state width="735" height="261" key="GridCell.Tab.2.center/1920.1080" />
-    <state width="735" height="261" key="GridCell.Tab.2.left" />
-    <state width="735" height="261" key="GridCell.Tab.2.left/1920.1080" />
-    <state width="735" height="261" key="GridCell.Tab.2.right" />
-    <state width="735" height="261" key="GridCell.Tab.2.right/1920.1080" />
-    <state width="735" height="261" key="GridCell.Tab.3.bottom" />
-    <state width="735" height="261" key="GridCell.Tab.3.bottom/1920.1080" />
-    <state width="735" height="261" key="GridCell.Tab.3.center" />
-    <state width="735" height="261" key="GridCell.Tab.3.center/1920.1080" />
-    <state width="735" height="261" key="GridCell.Tab.3.left" />
-    <state width="735" height="261" key="GridCell.Tab.3.left/1920.1080" />
-    <state width="735" height="261" key="GridCell.Tab.3.right" />
-    <state width="735" height="261" key="GridCell.Tab.3.right/1920.1080" />
+    <state width="1493" height="261" key="GridCell.Tab.0.bottom" />
+    <state width="1493" height="261" key="GridCell.Tab.0.bottom/1920.1080" />
+    <state width="1493" height="261" key="GridCell.Tab.0.center" />
+    <state width="1493" height="261" key="GridCell.Tab.0.center/1920.1080" />
+    <state width="1493" height="261" key="GridCell.Tab.0.left" />
+    <state width="1493" height="261" key="GridCell.Tab.0.left/1920.1080" />
+    <state width="1493" height="261" key="GridCell.Tab.0.right" />
+    <state width="1493" height="261" key="GridCell.Tab.0.right/1920.1080" />
+    <state width="1493" height="261" key="GridCell.Tab.1.bottom" />
+    <state width="1493" height="261" key="GridCell.Tab.1.bottom/1920.1080" />
+    <state width="1493" height="261" key="GridCell.Tab.1.center" />
+    <state width="1493" height="261" key="GridCell.Tab.1.center/1920.1080" />
+    <state width="1493" height="261" key="GridCell.Tab.1.left" />
+    <state width="1493" height="261" key="GridCell.Tab.1.left/1920.1080" />
+    <state width="1493" height="261" key="GridCell.Tab.1.right" />
+    <state width="1493" height="261" key="GridCell.Tab.1.right/1920.1080" />
+    <state width="1493" height="261" key="GridCell.Tab.2.bottom" />
+    <state width="1493" height="261" key="GridCell.Tab.2.bottom/1920.1080" />
+    <state width="1493" height="261" key="GridCell.Tab.2.center" />
+    <state width="1493" height="261" key="GridCell.Tab.2.center/1920.1080" />
+    <state width="1493" height="261" key="GridCell.Tab.2.left" />
+    <state width="1493" height="261" key="GridCell.Tab.2.left/1920.1080" />
+    <state width="1493" height="261" key="GridCell.Tab.2.right" />
+    <state width="1493" height="261" key="GridCell.Tab.2.right/1920.1080" />
+    <state width="1493" height="261" key="GridCell.Tab.3.bottom" />
+    <state width="1493" height="261" key="GridCell.Tab.3.bottom/1920.1080" />
+    <state width="1493" height="261" key="GridCell.Tab.3.center" />
+    <state width="1493" height="261" key="GridCell.Tab.3.center/1920.1080" />
+    <state width="1493" height="261" key="GridCell.Tab.3.left" />
+    <state width="1493" height="261" key="GridCell.Tab.3.left/1920.1080" />
+    <state width="1493" height="261" key="GridCell.Tab.3.right" />
+    <state width="1493" height="261" key="GridCell.Tab.3.right/1920.1080" />
+    <state width="1493" height="261" key="GridCell.Tab.4.bottom" />
+    <state width="1493" height="261" key="GridCell.Tab.4.bottom/1920.1080" />
+    <state width="1493" height="261" key="GridCell.Tab.4.center" />
+    <state width="1493" height="261" key="GridCell.Tab.4.center/1920.1080" />
+    <state width="1493" height="261" key="GridCell.Tab.4.left" />
+    <state width="1493" height="261" key="GridCell.Tab.4.left/1920.1080" />
+    <state width="1493" height="261" key="GridCell.Tab.4.right" />
+    <state width="1493" height="261" key="GridCell.Tab.4.right/1920.1080" />
     <state x="262" y="54" key="SettingsEditor" />
     <state x="262" y="54" key="SettingsEditor/1920.1080" />
     <state width="776" height="420" key="XDebugger.FullValuePopup" />

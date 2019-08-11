@@ -1,4 +1,8 @@
+#region
+
 using UnityEngine;
+
+#endregion
 
 namespace Controllers.Game
 {
@@ -6,6 +10,5 @@ namespace Controllers.Game
     {
         public int MaximumChunkCache;
         public int MaximumChunkLoadTimeCaching;
-        
     }
 }

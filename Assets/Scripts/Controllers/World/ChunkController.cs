@@ -1,5 +1,6 @@
 #region
 
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -9,6 +10,7 @@ using Environment.Terrain;
 using Logging;
 using NLog;
 using Static;
+using Threading.Generation;
 using UnityEngine;
 
 #endregion
@@ -34,6 +36,7 @@ namespace Controllers.World
             _CachedChunks = new List<Chunk>();
             _WorldTickLimiter = new Stopwatch();
             _BuildChunkWorldTickLimiter = new Stopwatch();
+            
             Chunks = new List<Chunk>();
             BuildChunkQueue = new Queue<Vector3Int>();
             BuildingChunkArea = false;
@@ -42,7 +45,7 @@ namespace Controllers.World
         public void Tick(BoundsInt bounds)
         {
             _WorldTickLimiter.Restart();
-            
+
             if (BuildChunkQueue.Count > 0)
             {
                 StartCoroutine(ProcessBuildChunkQueue());
@@ -54,7 +57,8 @@ namespace Controllers.World
                 BeginGeneratingMissingChunkMeshes();
             }
 
-            if (_CachedChunks.Count > GameController.SettingsController.MaximumChunkCache)
+            // cull chunks down to half the maximum when idle
+            if (_CachedChunks.Count > (GameController.SettingsController.MaximumChunkCache / 2))
             {
                 CullCachedChunks();
             }
@@ -132,7 +136,7 @@ namespace Controllers.World
         private void CullCachedChunks()
         {
             // controller will cull chunks down to half the maximum when idle
-            while (_CachedChunks.Count > GameController.SettingsController.MaximumChunkCache / 2)
+            while (_CachedChunks.Count > (GameController.SettingsController.MaximumChunkCache / 2))
             {
                 Chunk chunk = _CachedChunks.First();
                 _CachedChunks.Remove(chunk);
@@ -146,10 +150,11 @@ namespace Controllers.World
 
                 if (_CachedChunks.Count > GameController.SettingsController.MaximumChunkCache)
                 {
-                    EventLog.Logger.Log(LogLevel.Warn, $"Controller has cached too many chunks. Ignoring tick rate cancellation and continuing.");
+                    EventLog.Logger.Log(LogLevel.Warn,
+                        "Controller has cached too many chunks. Ignoring tick rate cancellation and continuing.");
                     continue;
                 }
-                    
+
                 break;
             }
         }
@@ -195,13 +200,19 @@ namespace Controllers.World
                 return;
             }
 
-            Chunk chunk = _CachedChunks.FirstOrDefault() ??
-                          Instantiate(_ChunkObject, position, Quaternion.identity);
+            Chunk chunk = _CachedChunks.FirstOrDefault();
+
+            if (chunk == default)
+            {
+                chunk = Instantiate(_ChunkObject, position, Quaternion.identity);
+            }
+            else
+            {
+                _CachedChunks.Remove(chunk);
+            }
+
             chunk.Activate(position);
-
-            _CachedChunks.Remove(chunk);
             Chunks.Add(chunk);
-
             StartCoroutine(chunk.GenerateBlocks());
 
             // ensures that neighbours update their meshes to cull newly out of sight faces
@@ -226,7 +237,7 @@ namespace Controllers.World
             {
                 Chunk chunkAtPosition = GetChunkAtPosition(position + new Vector3Int(0, 0, z * Chunk.Size.z));
 
-                if (chunkAtPosition == default || chunkAtPosition.PendingMeshUpdate)
+                if ((chunkAtPosition == default) || chunkAtPosition.PendingMeshUpdate)
                 {
                     continue;
                 }

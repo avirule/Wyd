@@ -46,7 +46,7 @@ namespace Threading.Generation
                 {
                     for (int z = 0; z < Chunk.Size.z; z++)
                     {
-                        if (FlagAbort)
+                        if (Die)
                         {
                             return;
                         }

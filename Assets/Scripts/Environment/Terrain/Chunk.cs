@@ -85,7 +85,7 @@ namespace Environment.Terrain
                 yield break;
             }
 
-            ChunkGenerator chunkGenerator = new ChunkGenerator(noiseMap, Size);
+            ChunkBuilder chunkGenerator = new ChunkBuilder(noiseMap, Size);
             chunkGenerator.Start();
 
             yield return new WaitUntil(() => chunkGenerator.Update() || Deactivated);
@@ -103,7 +103,7 @@ namespace Environment.Terrain
             Generated = true;
 
             stopwatch.Stop();
-            DiagnosticsController.ChunkBuildTimes.Enqueue(stopwatch.ElapsedMilliseconds);
+            DiagnosticsController.ChunkBuildTimes.Enqueue(stopwatch.Elapsed.TotalMilliseconds);
         }
 
         public IEnumerator GenerateMesh()
@@ -138,7 +138,7 @@ namespace Environment.Terrain
 
             stopwatch.Stop();
 
-            DiagnosticsController.ChunkMeshTimes.Enqueue(stopwatch.ElapsedMilliseconds);
+            DiagnosticsController.ChunkMeshTimes.Enqueue(stopwatch.Elapsed.TotalMilliseconds);
         }
 
         public void Activate(Vector3 position = default)

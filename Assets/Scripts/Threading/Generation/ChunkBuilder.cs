@@ -7,13 +7,13 @@ using UnityEngine;
 
 namespace Threading.Generation
 {
-    public class ChunkGenerator : ThreadedProcess
+    public class ChunkBuilder : ThreadedProcess
     {
         private readonly float[][] _NoiseMap;
         private readonly Vector3Int _Size;
         public Block[] Blocks;
 
-        public ChunkGenerator(float[][] noiseMap, Vector3Int size)
+        public ChunkBuilder(float[][] noiseMap, Vector3Int size)
         {
             if (noiseMap == null)
             {
@@ -34,7 +34,7 @@ namespace Threading.Generation
                 {
                     for (int z = 0; z < _Size.z; z++)
                     {
-                        if (FlagAbort)
+                        if (Die)
                         {
                             return;
                         }

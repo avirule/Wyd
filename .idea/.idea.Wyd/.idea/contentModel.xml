@@ -77,8 +77,9 @@
           </e>
           <e p="Threading" t="Include">
             <e p="Generation" t="Include">
+              <e p="ChunkBuilder.cs" t="Include" />
               <e p="ChunkedPerlinNoiseGenerator.cs" t="Include" />
-              <e p="ChunkGenerator.cs" t="Include" />
+              <e p="InfiniteThreadedProcess.cs" t="Include" />
               <e p="MeshGenerator.cs" t="Include" />
               <e p="PerlinNoiseGenerator.cs" t="Include" />
             </e>

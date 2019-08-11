@@ -19,8 +19,8 @@ namespace Controllers.UI
         private double _DeltaTimeAverage;
         private List<double> _DeltaTimes;
         
-        public static readonly ConcurrentQueue<float> ChunkBuildTimes = new ConcurrentQueue<float>();
-        public static readonly ConcurrentQueue<float> ChunkMeshTimes = new ConcurrentQueue<float>();
+        public static readonly ConcurrentQueue<double> ChunkBuildTimes = new ConcurrentQueue<double>();
+        public static readonly ConcurrentQueue<double> ChunkMeshTimes = new ConcurrentQueue<double>();
         
         public Text FrameRateText;
 
@@ -41,6 +41,7 @@ namespace Controllers.UI
         public void Update()
         {
             UpdateDeltaTimes();
+            CullChunkLoadQueue();
         }
 
         // Update is called once per frame
@@ -71,12 +72,9 @@ namespace Controllers.UI
         private void UpdateFramesText()
         {
             string vSyncStatus = QualitySettings.vSyncCount == 0 ? "Disabled" : "Enabled";
-
-
             
-            float sumLoadTimes = ChunkBuildTimes.Sum() + ChunkMeshTimes.Sum();
-            float averageLoadTime =
-                Mathf.Floor(sumLoadTimes / (ChunkBuildTimes.Count + ChunkMeshTimes.Count));
+            double sumLoadTimes = ChunkBuildTimes.Sum() + ChunkMeshTimes.Sum();
+            double averageLoadTime = Math.Round(sumLoadTimes / (ChunkBuildTimes.Count + ChunkMeshTimes.Count));
 
             FrameRateText.text =
                 $"FPS: {_DeltaTimeAverage}\r\nVSync: {vSyncStatus}\r\nChunk Load Time: {averageLoadTime}ms";
@@ -86,12 +84,12 @@ namespace Controllers.UI
         {
             while (ChunkMeshTimes.Count > GameController.SettingsController.MaximumChunkLoadTimeCaching)
             {
-                ChunkMeshTimes.TryDequeue(out float _);
+                ChunkMeshTimes.TryDequeue(out double _);
             }
             
             while (ChunkMeshTimes.Count > GameController.SettingsController.MaximumChunkLoadTimeCaching)
             {
-                ChunkMeshTimes.TryDequeue(out float _);
+                ChunkMeshTimes.TryDequeue(out double _);
             }
         }
 
