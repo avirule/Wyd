@@ -1,11 +1,11 @@
 #region
 
-using Threading;
+using Environment.Terrain;
 using UnityEngine;
 
 #endregion
 
-namespace Environment.Terrain.Generation
+namespace Threading.Generation
 {
     public class ChunkGenerator : ThreadedProcess
     {
@@ -34,6 +34,11 @@ namespace Environment.Terrain.Generation
                 {
                     for (int z = 0; z < _Size.z; z++)
                     {
+                        if (FlagAbort)
+                        {
+                            return;
+                        }
+                        
                         int index = x + (Chunk.Size.x * (y + (Chunk.Size.y * z)));
 
                         float noiseHeight = _NoiseMap[x][z];

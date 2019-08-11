@@ -1,8 +1,10 @@
 ﻿#region
 
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
+using Controllers.Game;
 using Environment.Terrain;
 using UnityEngine;
 using UnityEngine.Profiling;
@@ -16,8 +18,10 @@ namespace Controllers.UI
     {
         private double _DeltaTimeAverage;
         private List<double> _DeltaTimes;
-
-
+        
+        public static readonly ConcurrentQueue<float> ChunkBuildTimes = new ConcurrentQueue<float>();
+        public static readonly ConcurrentQueue<float> ChunkMeshTimes = new ConcurrentQueue<float>();
+        
         public Text FrameRateText;
 
         public int MaximumFrameRateCaching;
@@ -68,12 +72,27 @@ namespace Controllers.UI
         {
             string vSyncStatus = QualitySettings.vSyncCount == 0 ? "Disabled" : "Enabled";
 
-            float sumLoadTimes = Chunk.ChunkBuildTimes.Sum() + Chunk.ChunkMeshTimes.Sum();
+
+            
+            float sumLoadTimes = ChunkBuildTimes.Sum() + ChunkMeshTimes.Sum();
             float averageLoadTime =
-                Mathf.Floor(sumLoadTimes / (Chunk.ChunkBuildTimes.Count + Chunk.ChunkMeshTimes.Count));
+                Mathf.Floor(sumLoadTimes / (ChunkBuildTimes.Count + ChunkMeshTimes.Count));
 
             FrameRateText.text =
                 $"FPS: {_DeltaTimeAverage}\r\nVSync: {vSyncStatus}\r\nChunk Load Time: {averageLoadTime}ms";
+        }
+
+        private void CullChunkLoadQueue()
+        {
+            while (ChunkMeshTimes.Count > GameController.SettingsController.MaximumChunkLoadTimeCaching)
+            {
+                ChunkMeshTimes.TryDequeue(out float _);
+            }
+            
+            while (ChunkMeshTimes.Count > GameController.SettingsController.MaximumChunkLoadTimeCaching)
+            {
+                ChunkMeshTimes.TryDequeue(out float _);
+            }
         }
 
         private void UpdateResourcesText()

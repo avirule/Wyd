@@ -13,12 +13,16 @@ namespace Controllers.Game
 {
     public class GameController : MonoBehaviour
     {
+        public static GameSettingsController SettingsController;
+        
         public BlockController BlockController;
         public TextureController TextureController;
         public WorldController WorldController;
+        public GameSettingsController GameSettingsController;
 
         private void Awake()
         {
+            SettingsController = GameSettingsController;
             ToggleCursorLocked(true);
             QualitySettings.vSyncCount = 0;
         }

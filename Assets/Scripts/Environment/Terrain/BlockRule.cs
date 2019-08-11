@@ -13,17 +13,17 @@ namespace Environment.Terrain
         ushort Id { get; }
         string BlockName { get; }
         bool Transparent { get; }
-        RuleEvaluation RuleEvaluation { get; }
 
         bool ReadUVsRule(ushort blockId, Vector3Int position, Direction direction, out string spriteName);
     }
 
     public struct BlockRule : IBlockRule
     {
+        private RuleEvaluation RuleEvaluation { get; }
+
         public ushort Id { get; }
         public string BlockName { get; }
         public bool Transparent { get; }
-        public RuleEvaluation RuleEvaluation { get; }
 
         public BlockRule(ushort id, string blockName, bool transparent, RuleEvaluation ruleEvaluation)
         {

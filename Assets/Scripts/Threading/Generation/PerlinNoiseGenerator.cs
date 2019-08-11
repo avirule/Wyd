@@ -1,13 +1,14 @@
 #region
 
-using Threading;
+using Environment.Terrain.Generation;
+using Environment.Terrain.Generation.Noise.Perlin;
 using UnityEngine;
 
 #endregion
 
 // ReSharper disable MemberCanBePrivate.Global
 
-namespace Environment.Terrain.Generation.Noise.Perlin
+namespace Threading.Generation
 {
     public class PerlinNoiseGenerator : ThreadedProcess
     {

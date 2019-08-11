@@ -24,7 +24,7 @@ namespace Controllers.UI
         private static void PlayGame()
         {
             SceneManager.UnloadSceneAsync("MainMenu", UnloadSceneOptions.UnloadAllEmbeddedSceneObjects);
-            SceneManager.LoadScene("Game", LoadSceneMode.Single);
+            SceneManager.LoadSceneAsync("Game", LoadSceneMode.Single);
         }
     }
 }

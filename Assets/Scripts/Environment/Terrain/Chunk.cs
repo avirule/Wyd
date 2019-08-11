@@ -2,14 +2,15 @@
 
 using System;
 using System.Collections;
-using System.Collections.Generic;
 using System.Diagnostics;
 using Controllers.Game;
+using Controllers.UI;
 using Controllers.World;
 using Environment.Terrain.Generation;
 using Logging;
 using NLog;
 using Static;
+using Threading.Generation;
 using UnityEngine;
 
 #endregion
@@ -18,21 +19,20 @@ namespace Environment.Terrain
 {
     public class Chunk : MonoBehaviour
     {
-        public static Vector3Int Size = new Vector3Int(8, 32, 8);
-        public static readonly List<float> ChunkBuildTimes = new List<float>();
-        public static readonly List<float> ChunkMeshTimes = new List<float>();
+        public static Vector3Int Size = new Vector3Int(16, 16, 16);
 
         private BlockController _BlockController;
         private WorldController _WorldController;
-        private ChunkController _ChunkController;
+        private Mesh _Mesh;
 
         public Block[] Blocks;
-        public bool Destroyed;
+        public bool Deactivated;
         public bool Generated;
         public bool Generating;
         public bool Meshed;
         public bool Meshing;
         public bool PendingMeshUpdate;
+        public bool PendingMeshAssigment;
         public MeshFilter MeshFilter;
         public MeshRenderer MeshRenderer;
         public MeshCollider MeshCollider;
@@ -45,7 +45,6 @@ namespace Environment.Terrain
 
             transform.parent = worldControllerObject.transform;
             _WorldController = worldControllerObject.GetComponent<WorldController>();
-            _ChunkController = worldControllerObject.GetComponent<ChunkController>();
             _BlockController = GameObject.FindWithTag("GameController").GetComponent<BlockController>();
         }
 
@@ -56,9 +55,9 @@ namespace Environment.Terrain
             Generated = false;
             Generating = true;
 
-            yield return new WaitUntil(() => _WorldController.NoiseMap.Ready || Destroyed);
+            yield return new WaitUntil(() => _WorldController.NoiseMap.Ready || Deactivated);
 
-            if (Destroyed)
+            if (Deactivated)
             {
                 Generating = false;
                 yield break;
@@ -89,9 +88,9 @@ namespace Environment.Terrain
             ChunkGenerator chunkGenerator = new ChunkGenerator(noiseMap, Size);
             chunkGenerator.Start();
 
-            yield return new WaitUntil(() => chunkGenerator.Update() || Destroyed);
+            yield return new WaitUntil(() => chunkGenerator.Update() || Deactivated);
 
-            if (Destroyed || !Generating)
+            if (Deactivated || !Generating)
             {
                 chunkGenerator.Abort();
                 Generating = false;
@@ -104,12 +103,7 @@ namespace Environment.Terrain
             Generated = true;
 
             stopwatch.Stop();
-            ChunkBuildTimes.Add(stopwatch.ElapsedMilliseconds);
-
-            if (ChunkMeshTimes.Count > _ChunkController.MaximumChunkLoadTimeCaching)
-            {
-                ChunkMeshTimes.RemoveRange(0, ChunkBuildTimes.Count - _ChunkController.MaximumChunkLoadTimeCaching);
-            }
+            DiagnosticsController.ChunkBuildTimes.Enqueue(stopwatch.ElapsedMilliseconds);
         }
 
         public IEnumerator GenerateMesh()
@@ -121,15 +115,15 @@ namespace Environment.Terrain
 
             Stopwatch stopwatch = Stopwatch.StartNew();
 
-            Meshed = false;
+            Meshed = PendingMeshAssigment = false;
             Meshing = true;
 
             MeshGenerator meshGenerator = new MeshGenerator(_WorldController, _BlockController, Position, Blocks);
             meshGenerator.Start();
 
-            yield return new WaitUntil(() => meshGenerator.Update() || Destroyed);
+            yield return new WaitUntil(() => meshGenerator.Update() || Deactivated);
 
-            if (Destroyed)
+            if (Deactivated)
             {
                 meshGenerator.Abort();
                 Meshing = false;
@@ -137,20 +131,14 @@ namespace Environment.Terrain
                 yield break;
             }
 
-            MeshFilter.mesh = meshGenerator.GetMesh();
-            MeshCollider.sharedMesh = MeshFilter.sharedMesh;
+            _Mesh = meshGenerator.GetMesh();
 
             Meshing = PendingMeshUpdate = false;
-            Meshed = true;
+            Meshed = PendingMeshAssigment = true;
 
             stopwatch.Stop();
 
-            ChunkMeshTimes.Add(stopwatch.ElapsedMilliseconds);
-
-            if (ChunkMeshTimes.Count > _ChunkController.MaximumChunkLoadTimeCaching)
-            {
-                ChunkMeshTimes.RemoveRange(0, ChunkMeshTimes.Count - _ChunkController.MaximumChunkLoadTimeCaching);
-            }
+            DiagnosticsController.ChunkMeshTimes.Enqueue(stopwatch.ElapsedMilliseconds);
         }
 
         public void Initialise(Vector3 position = default)
@@ -158,18 +146,30 @@ namespace Environment.Terrain
             transform.position = position;
             Position = position.ToInt();
             PendingMeshUpdate = true;
-            Generated = Generating = Meshed = Meshing = Destroyed = false;
+            Generated = Generating = Meshed = Meshing = Deactivated = false;
             gameObject.SetActive(true);
         }
 
         public void Destroy()
         {
-            Destroyed = true;
+            Deactivated = true;
             transform.position = new Vector3(0f, 0f, 0f);
             Position = new Vector3Int(0, 0, 0);
+            _Mesh.Clear();
             MeshFilter.mesh.Clear();
             MeshCollider.sharedMesh.Clear();
             gameObject.SetActive(false);
+        }
+
+        public void AssignMesh()
+        {
+            if (!Meshed)
+            {
+                return;
+            }
+
+            MeshFilter.mesh = _Mesh;
+            MeshCollider.sharedMesh = MeshFilter.sharedMesh;
         }
 
         public void Tick()

@@ -27,6 +27,7 @@
             <e p="Game" t="Include">
               <e p="BlockController.cs" t="Include" />
               <e p="GameController.cs" t="Include" />
+              <e p="GameSettingsController.cs" t="Include" />
               <e p="TextureController.cs" t="Include" />
             </e>
             <e p="UI" t="Include">
@@ -47,8 +48,6 @@
               <e p="BlockRule.cs" t="Include" />
               <e p="Chunk.cs" t="Include" />
               <e p="Generation" t="Include">
-                <e p="ChunkGenerator.cs" t="Include" />
-                <e p="MeshGenerator.cs" t="Include" />
                 <e p="Noise" t="Include">
                   <e p="NoiseMap.cs" t="Include" />
                   <e p="OpenSimplex" t="Include">
@@ -56,9 +55,7 @@
                     <e p="OpenSimplexNoiseGenerator.cs" t="Include" />
                   </e>
                   <e p="Perlin" t="Include">
-                    <e p="ChunkedPerlinNoiseGenerator.cs" t="Include" />
                     <e p="PerlinNoise.cs" t="Include" />
-                    <e p="PerlinNoiseGenerator.cs" t="Include" />
                   </e>
                 </e>
                 <e p="WorldGenerationSettings.cs" t="Include" />
@@ -79,6 +76,12 @@
             <e p="StaticRandom.cs" t="Include" />
           </e>
           <e p="Threading" t="Include">
+            <e p="Generation" t="Include">
+              <e p="ChunkedPerlinNoiseGenerator.cs" t="Include" />
+              <e p="ChunkGenerator.cs" t="Include" />
+              <e p="MeshGenerator.cs" t="Include" />
+              <e p="PerlinNoiseGenerator.cs" t="Include" />
+            </e>
             <e p="ThreadedProcess.cs" t="Include" />
           </e>
         </e>

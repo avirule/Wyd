@@ -6,6 +6,7 @@ using Environment.Terrain.Generation;
 using Environment.Terrain.Generation.Noise;
 using Environment.Terrain.Generation.Noise.Perlin;
 using Static;
+using Threading.Generation;
 using UnityEngine;
 using UnityEngine.Rendering;
 
@@ -30,6 +31,7 @@ namespace Controllers.World
 
         private void Awake()
         {
+            Chunk.Size = WorldGenerationSettings.ChunkSize;
             ChunkLoaderSnapDistance = Chunk.Size.x * 2;
             _ChunkLoaderCurrentChunk = new Vector3Int(0, 0, 0);
             CheckChunkLoaderChangedChunk();

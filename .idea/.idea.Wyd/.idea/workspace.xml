@@ -1,11 +1,38 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
   <component name="AnalysisUIOptions">
+    <option name="SCOPE_TYPE" value="3" />
     <option name="CUSTOM_SCOPE_NAME" value="All Places" />
   </component>
   <component name="ChangeListManager">
     <list default="true" id="c75ae2de-3a89-4228-87f5-5925302b6d96" name="Default Changelist" comment="">
+      <change afterPath="$PROJECT_DIR$/Assets/Scripts/Controllers/Game/GameSettingsController.cs" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Assets/Scripts/Controllers/Game/GameSettingsController.cs.meta" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Assets/Scripts/Threading/Generation.meta" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/.idea.Wyd/.idea/contentModel.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/.idea.Wyd/.idea/contentModel.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/.idea.Wyd/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/.idea.Wyd/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Assets/Resources/Environment/Terrain/Chunk.prefab" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/Resources/Environment/Terrain/Chunk.prefab" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Assets/Resources/UI/EscapeMenu.prefab" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/Resources/UI/EscapeMenu.prefab" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Assets/Scenes/Game.unity" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/Scenes/Game.unity" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Assets/Scenes/MainMenu.unity" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/Scenes/MainMenu.unity" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Assets/Scripts/Controllers/Game/GameController.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/Scripts/Controllers/Game/GameController.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Assets/Scripts/Controllers/UI/DiagnosticsController.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/Scripts/Controllers/UI/DiagnosticsController.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Assets/Scripts/Controllers/UI/EscapeMenuController.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/Scripts/Controllers/UI/EscapeMenuController.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Assets/Scripts/Controllers/UI/MainMenuController.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/Scripts/Controllers/UI/MainMenuController.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Assets/Scripts/Controllers/World/ChunkController.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/Scripts/Controllers/World/ChunkController.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Assets/Scripts/Controllers/World/WorldController.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/Scripts/Controllers/World/WorldController.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Assets/Scripts/Environment/Terrain/BlockRule.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/Scripts/Environment/Terrain/BlockRule.cs" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/Assets/Scripts/Environment/Terrain/Chunk.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/Scripts/Environment/Terrain/Chunk.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Assets/Scripts/Environment/Terrain/Generation/ChunkGenerator.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/Scripts/Threading/Generation/ChunkGenerator.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Assets/Scripts/Environment/Terrain/Generation/ChunkGenerator.cs.meta" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/Scripts/Threading/Generation/ChunkGenerator.cs.meta" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Assets/Scripts/Environment/Terrain/Generation/MeshGenerator.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/Scripts/Threading/Generation/MeshGenerator.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Assets/Scripts/Environment/Terrain/Generation/MeshGenerator.cs.meta" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/Scripts/Threading/Generation/MeshGenerator.cs.meta" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Assets/Scripts/Environment/Terrain/Generation/Noise/Perlin/ChunkedPerlinNoiseGenerator.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/Scripts/Threading/Generation/ChunkedPerlinNoiseGenerator.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Assets/Scripts/Environment/Terrain/Generation/Noise/Perlin/ChunkedPerlinNoiseGenerator.cs.meta" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/Scripts/Threading/Generation/ChunkedPerlinNoiseGenerator.cs.meta" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Assets/Scripts/Environment/Terrain/Generation/Noise/Perlin/PerlinNoiseGenerator.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/Scripts/Threading/Generation/PerlinNoiseGenerator.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Assets/Scripts/Environment/Terrain/Generation/Noise/Perlin/PerlinNoiseGenerator.cs.meta" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/Scripts/Threading/Generation/PerlinNoiseGenerator.cs.meta" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Assets/Scripts/Environment/Terrain/Generation/WorldGenerationSettings.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/Scripts/Environment/Terrain/Generation/WorldGenerationSettings.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Assets/Scripts/Threading/ThreadedProcess.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/Scripts/Threading/ThreadedProcess.cs" afterDir="false" />
     </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
     <option name="SHOW_DIALOG" value="false" />
@@ -27,6 +54,7 @@
     <setting file="file://$PROJECT_DIR$/Assets/Scripts/Environment/Direction.cs" root0="FORCE_HIGHLIGHTING" />
     <setting file="file://$PROJECT_DIR$/Assets/Scripts/Environment/Terrain/Block.cs" root0="FORCE_HIGHLIGHTING" />
     <setting file="file://$PROJECT_DIR$/Assets/Resources/UI/Diagnostics.prefab" root0="FORCE_HIGHLIGHTING" />
+    <setting file="file://$PROJECT_DIR$/Assets/Scripts/Controllers/Game/GameSettingsController.cs" root0="FORCE_HIGHLIGHTING" />
     <setting file="file://$PROJECT_DIR$/Assets/Scripts/Environment/Terrain/Chunk.cs" root0="FORCE_HIGHLIGHTING" />
     <setting file="file://$APPLICATION_CONFIG_DIR$/resharper-host/DecompilerCache/decompiler/7D971063-3068-4ADD-86D0-80ECF65BFE69/1e/9a3cfa7b/GenericEqualityComparer`1.cs" root0="SKIP_HIGHLIGHTING" />
     <setting file="file://$PROJECT_DIR$/Assets/Scripts/Environment/Terrain/BlockRule.cs" root0="FORCE_HIGHLIGHTING" />
@@ -35,14 +63,15 @@
     <setting file="file://$PROJECT_DIR$/Assets/Scripts/Static/Mathv.cs" root0="FORCE_HIGHLIGHTING" />
     <setting file="file://$APPLICATION_CONFIG_DIR$/resharper-host/DecompilerCache/decompiler/2094A731-351D-475D-BA68-F5920DE30ED8/5f/bdc2317d/Vector3Int.cs" root0="SKIP_HIGHLIGHTING" />
     <setting file="file://$PROJECT_DIR$/Assets/Scripts/Static/StaticMethods.cs" root0="FORCE_HIGHLIGHTING" />
+    <setting file="file://$PROJECT_DIR$/Assets/Resources/Environment/Terrain/Chunk.prefab" root0="FORCE_HIGHLIGHTING" />
     <setting file="file://$PROJECT_DIR$/Assets/Scripts/Static/StaticRandom.cs" root0="FORCE_HIGHLIGHTING" />
     <setting file="file://$APPLICATION_CONFIG_DIR$/resharper-host/DecompilerCache/decompiler/2094A731-351D-475D-BA68-F5920DE30ED8/d8/31c80e43/BoundsInt.cs" root0="SKIP_HIGHLIGHTING" />
     <setting file="file://$PROJECT_DIR$/Assets/Scripts/Static/StaticMath.cs" root0="FORCE_HIGHLIGHTING" />
-    <setting file="file://$PROJECT_DIR$/Assets/Scripts/Environment/Terrain/Generation/MeshGenerator.cs" root0="FORCE_HIGHLIGHTING" />
+    <setting file="file://$PROJECT_DIR$/Assets/Scripts/Threading/Generation/MeshGenerator.cs" root0="FORCE_HIGHLIGHTING" />
     <setting file="file://$PROJECT_DIR$/Assets/Scripts/Logging/EventLog.cs" root0="FORCE_HIGHLIGHTING" />
     <setting file="file://$APPLICATION_CONFIG_DIR$/resharper-host/DecompilerCache/decompiler/2094A731-351D-475D-BA68-F5920DE30ED8/15/ea514908/Transform.cs" root0="SKIP_HIGHLIGHTING" />
     <setting file="file://$PROJECT_DIR$/Assets/Scripts/Controllers/World/WorldController.cs" root0="FORCE_HIGHLIGHTING" />
-    <setting file="file://$PROJECT_DIR$/Assets/Scripts/Environment/Terrain/Generation/ChunkGenerator.cs" root0="FORCE_HIGHLIGHTING" />
+    <setting file="file://$PROJECT_DIR$/Assets/Scripts/Threading/Generation/ChunkGenerator.cs" root0="FORCE_HIGHLIGHTING" />
     <setting file="file://$PROJECT_DIR$/Assets/Scripts/Environment/Terrain/Generation/WorldGenerationSettings.cs" root0="FORCE_HIGHLIGHTING" />
     <setting file="file://$APPLICATION_CONFIG_DIR$/resharper-host/DecompilerCache/decompiler/2094A731-351D-475D-BA68-F5920DE30ED8/b6/1b57f6f1/Vector3.cs" root0="SKIP_HIGHLIGHTING" />
     <setting file="file://$PROJECT_DIR$/Assets/Scripts/Environment/Terrain/Generation/Noise/NoiseMap.cs" root0="FORCE_HIGHLIGHTING" />
@@ -51,8 +80,8 @@
     <setting file="file://$APPLICATION_CONFIG_DIR$/resharper-host/DecompilerCache/decompiler/7D971063-3068-4ADD-86D0-80ECF65BFE69/83/952de8bc/Dictionary`2.cs" root0="SKIP_HIGHLIGHTING" />
     <setting file="file://$PROJECT_DIR$/Assets/Scripts/Threading/ThreadedProcess.cs" root0="FORCE_HIGHLIGHTING" />
     <setting file="file://$PROJECT_DIR$/Assets/Scripts/Environment/Terrain/Generation/Noise/Perlin/PerlinNoise.cs" root0="FORCE_HIGHLIGHTING" />
-    <setting file="file://$PROJECT_DIR$/Assets/Scripts/Environment/Terrain/Generation/Noise/Perlin/PerlinNoiseGenerator.cs" root0="FORCE_HIGHLIGHTING" />
-    <setting file="file://$PROJECT_DIR$/Assets/Scripts/Environment/Terrain/Generation/Noise/Perlin/ChunkedPerlinNoiseGenerator.cs" root0="FORCE_HIGHLIGHTING" />
+    <setting file="file://$PROJECT_DIR$/Assets/Scripts/Threading/Generation/PerlinNoiseGenerator.cs" root0="FORCE_HIGHLIGHTING" />
+    <setting file="file://$PROJECT_DIR$/Assets/Scripts/Threading/Generation/ChunkedPerlinNoiseGenerator.cs" root0="FORCE_HIGHLIGHTING" />
     <setting file="file://$PROJECT_DIR$/Assets/Scripts/Environment/Terrain/Generation/Noise/OpenSimplex/OpenSimplexNoiseGenerator.cs" root0="FORCE_HIGHLIGHTING" />
     <setting file="file://$PROJECT_DIR$/Assets/Scripts/Environment/Terrain/Generation/Noise/OpenSimplex/OpenSimplex.cs" root0="FORCE_HIGHLIGHTING" />
     <setting file="file://$APPLICATION_CONFIG_DIR$/resharper-host/DecompilerCache/decompiler/21A478FD-38D2-4B2E-B941-D30E3F05E552/5a/4956fb78/Target.cs" root0="SKIP_HIGHLIGHTING" />
@@ -66,12 +95,6 @@
   <component name="IdeDocumentHistory">
     <option name="CHANGED_PATHS">
       <list>
-        <option value="$PROJECT_DIR$/Assets/Scripts/Entities/Player.cs" />
-        <option value="$PROJECT_DIR$/Assets/Scripts/Environment/Terrain/Generation/WorldSeed.cs" />
-        <option value="$PROJECT_DIR$/Assets/DotProd.cs" />
-        <option value="$PROJECT_DIR$/Assets/Scripts/Static/StaticExtensions.cs" />
-        <option value="$PROJECT_DIR$/Assets/Scripts/Controllers/CameraController.cs" />
-        <option value="$PROJECT_DIR$/Assets/Scripts/Static/StaticMath.cs" />
         <option value="$PROJECT_DIR$/Assets/Scripts/Static/EventLog.cs" />
         <option value="$PROJECT_DIR$/Assets/Scripts/Logging/EventLog.cs" />
         <option value="$PROJECT_DIR$/Assets/Scripts/Controllers/TextureController.cs" />
@@ -87,7 +110,6 @@
         <option value="$PROJECT_DIR$/Assets/Scripts/Controllers/UI/UIMenuInputWatcherController.cs" />
         <option value="$PROJECT_DIR$/Assets/Scripts/Controllers/Entity/CameraController.cs" />
         <option value="$PROJECT_DIR$/Assets/Scripts/Controllers/Entity/PlayerController.cs" />
-        <option value="$PROJECT_DIR$/Assets/Scripts/Controllers/UI/EscapeMenuController.cs" />
         <option value="$PROJECT_DIR$/Assets/Scripts/Environment/Terrain/Generation/CombinedMeshGenerator.cs" />
         <option value="$PROJECT_DIR$/Assets/Scripts/Environment/Direction.cs" />
         <option value="$PROJECT_DIR$/Assets/Scripts/Environment/Terrain/Block.cs" />
@@ -96,27 +118,34 @@
         <option value="$PROJECT_DIR$/Assets/Scripts/Logging/Targets/UnityDebuggerTarget.cs" />
         <option value="$PROJECT_DIR$/Assets/Scripts/Environment/Terrain/Generation/ChunkGenerator.cs" />
         <option value="$PROJECT_DIR$/Assets/Scripts/Environment/Terrain/Generation/Noise/Perlin/PerlinNoise.cs" />
-        <option value="$PROJECT_DIR$/Assets/Scripts/Environment/Terrain/Generation/WorldGenerationSettings.cs" />
         <option value="$PROJECT_DIR$/Assets/Scripts/Static/Mathv.cs" />
         <option value="$PROJECT_DIR$/Assets/Scripts/Environment/Terrain/Generation/Noise/Perlin/ChunkedPerlinNoiseGenerator.cs" />
         <option value="$PROJECT_DIR$/Assets/Scripts/Environment/Terrain/Generation/Noise/OpenSimplex/OpenSimplexNoiseGenerator.cs" />
-        <option value="$PROJECT_DIR$/Assets/Scripts/Environment/Terrain/Generation/MeshGenerator.cs" />
         <option value="$PROJECT_DIR$/Assets/Scripts/Threading/AwaitCompletionProcessor.cs" />
         <option value="$PROJECT_DIR$/Assets/Scripts/Threading/AwaitCompletionCoProcessor.cs" />
         <option value="$PROJECT_DIR$/Assets/Scripts/Threading/AwaitCompletion.cs" />
         <option value="$PROJECT_DIR$/Assets/Scripts/Threading/AwaitCompletionConsumer.cs" />
         <option value="$PROJECT_DIR$/Assets/Scripts/Environment/Terrain/Generation/Noise/OpenSimplex/OpenSimplex.cs" />
         <option value="$PROJECT_DIR$/Assets/Scripts/Environment/Terrain/Generation/Noise/NoiseMap.cs" />
-        <option value="$PROJECT_DIR$/Assets/Scripts/Controllers/UI/MainMenuController.cs" />
-        <option value="$PROJECT_DIR$/Assets/Scripts/Controllers/UI/DiagnosticsController.cs" />
         <option value="$PROJECT_DIR$/Assets/Scripts/Static/StaticMethods.cs" />
         <option value="$PROJECT_DIR$/Assets/Scripts/Controllers/UI/UIInputWatcherController.cs" />
-        <option value="$PROJECT_DIR$/Assets/Scripts/Controllers/Game/GameController.cs" />
-        <option value="$PROJECT_DIR$/Assets/Scripts/Environment/Terrain/BlockRule.cs" />
         <option value="$PROJECT_DIR$/Assets/Scripts/Controllers/Game/BlockController.cs" />
-        <option value="$PROJECT_DIR$/Assets/Scripts/Controllers/World/WorldController.cs" />
+        <option value="$PROJECT_DIR$/Assets/Scripts/Environment/Terrain/BlockRule.cs" />
+        <option value="$PROJECT_DIR$/Assets/Scripts/Controllers/UI/MainMenuController.cs" />
+        <option value="$PROJECT_DIR$/Assets/Scripts/Controllers/UI/EscapeMenuController.cs" />
+        <option value="$PROJECT_DIR$/Assets/Scripts/Environment/Terrain/Generation/WorldGenerationSettings.cs" />
+        <option value="$PROJECT_DIR$/Assets/Scripts/Controllers/Game/GameSettings.cs" />
+        <option value="$PROJECT_DIR$/Assets/Scripts/Controllers/Game/GameSettingsController.cs" />
+        <option value="$PROJECT_DIR$/Assets/Scripts/Controllers/Game/GameController.cs" />
+        <option value="$PROJECT_DIR$/Assets/Scripts/Controllers/UI/DiagnosticsController.cs" />
         <option value="$PROJECT_DIR$/Assets/Scripts/Controllers/World/ChunkController.cs" />
+        <option value="$PROJECT_DIR$/Assets/Scripts/Environment/Terrain/Generation/MeshGenerator.cs" />
+        <option value="$PROJECT_DIR$/Assets/Scripts/Controllers/World/WorldController.cs" />
+        <option value="$PROJECT_DIR$/Assets/Scripts/Threading/Generation/PerlinNoiseGenerator.cs" />
+        <option value="$PROJECT_DIR$/Assets/Scripts/Threading/Generation/ChunkGenerator.cs" />
+        <option value="$PROJECT_DIR$/Assets/Scripts/Threading/Generation/ChunkedPerlinNoiseGenerator.cs" />
         <option value="$PROJECT_DIR$/Assets/Scripts/Environment/Terrain/Chunk.cs" />
+        <option value="$PROJECT_DIR$/Assets/Scripts/Threading/ThreadedProcess.cs" />
       </list>
     </option>
   </component>
@@ -213,7 +242,7 @@
       <workItem from="1565455392183" duration="17745000" />
       <workItem from="1565474659744" duration="11098000" />
       <workItem from="1565514620607" duration="7006000" />
-      <workItem from="1565521735260" duration="2374000" />
+      <workItem from="1565521735260" duration="7753000" />
     </task>
     <servers />
   </component>

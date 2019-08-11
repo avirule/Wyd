@@ -4,6 +4,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
+using Controllers.Game;
 using Environment.Terrain;
 using Static;
 using UnityEngine;
@@ -14,12 +15,11 @@ namespace Controllers.World
 {
     public sealed class ChunkController : MonoBehaviour
     {
-        private Stopwatch _BuildChunkQueueStopwatch;
+        private Stopwatch _WorldTickLimiter;
+        private Stopwatch _BuildChunkWorldTickLimiter;
         private Chunk _ChunkObject;
-        private List<Chunk> _DestroyedChunks;
+        private List<Chunk> _DeactivatedChunks;
 
-        public int MaximumChunkCache;
-        public int MaximumChunkLoadTimeCaching;
         public bool BuildingChunkArea;
         public List<Chunk> Chunks;
         public Queue<Vector3Int> BuildChunkQueue;
@@ -29,8 +29,9 @@ namespace Controllers.World
         private void Awake()
         {
             _ChunkObject = Resources.Load<Chunk>(@"Environment\Terrain\Chunk");
-            _DestroyedChunks = new List<Chunk>();
-            _BuildChunkQueueStopwatch = new Stopwatch();
+            _DeactivatedChunks = new List<Chunk>();
+            _WorldTickLimiter = new Stopwatch();
+            _BuildChunkWorldTickLimiter = new Stopwatch();
             Chunks = new List<Chunk>();
             BuildChunkQueue = new Queue<Vector3Int>();
             BuildingChunkArea = false;
@@ -38,6 +39,8 @@ namespace Controllers.World
 
         public void Tick(BoundsInt bounds)
         {
+            _WorldTickLimiter.Restart();
+            
             if (BuildChunkQueue.Count > 0)
             {
                 StartCoroutine(ProcessBuildChunkQueue());
@@ -49,9 +52,29 @@ namespace Controllers.World
                 BeginGeneratingMissingChunkMeshes();
             }
 
-            if (_DestroyedChunks.Count > MaximumChunkCache)
+            if (_DeactivatedChunks.Count > GameController.SettingsController.MaximumChunkCache)
             {
-                _DestroyedChunks.RemoveRange(0, _DestroyedChunks.Count - MaximumChunkCache);
+                CullDeactivatedChunks();
+            }
+
+            if (Chunks.Any(chunk => chunk.PendingMeshAssigment))
+            {
+                AssignMeshes();
+            }
+
+            _WorldTickLimiter.Stop();
+        }
+
+        private void AssignMeshes()
+        {
+            foreach (Chunk chunk in Chunks.Where(chunk => chunk.PendingMeshAssigment))
+            {
+                chunk.AssignMesh();
+
+                if (_WorldTickLimiter.Elapsed.TotalSeconds >= WorldController.WORLD_TICK_RATE)
+                {
+                    break;
+                }
             }
         }
 
@@ -69,8 +92,13 @@ namespace Controllers.World
                     continue;
                 }
 
-                _DestroyedChunks.Add(Chunks[i]);
+                _DeactivatedChunks.Add(Chunks[i]);
                 DestroyChunk(Chunks[i]);
+
+                if (_WorldTickLimiter.Elapsed.TotalSeconds > WorldController.WORLD_TICK_RATE)
+                {
+                    break;
+                }
             }
         }
 
@@ -85,12 +113,32 @@ namespace Controllers.World
         {
             foreach (Chunk chunk in Chunks)
             {
-                if (chunk.Destroyed || !chunk.PendingMeshUpdate || (!chunk.Meshed && chunk.Meshing))
+                if (chunk.Deactivated || !chunk.PendingMeshUpdate || (!chunk.Meshed && chunk.Meshing))
                 {
                     continue;
                 }
 
                 StartCoroutine(chunk.GenerateMesh());
+                
+                if (_WorldTickLimiter.Elapsed.TotalSeconds > WorldController.WORLD_TICK_RATE)
+                {
+                    break;
+                }
+            }
+        }
+
+        private void CullDeactivatedChunks()
+        {
+            while (_DeactivatedChunks.Count > GameController.SettingsController.MaximumChunkCache)
+            {
+                Chunk chunk = _DeactivatedChunks.First();
+                Destroy(chunk);
+                _DeactivatedChunks.Remove(chunk);
+
+                if (_WorldTickLimiter.Elapsed.TotalSeconds > WorldController.WORLD_TICK_RATE)
+                {
+                    break;
+                }
             }
         }
 
@@ -103,24 +151,22 @@ namespace Controllers.World
         {
             BuildingChunkArea = true;
 
-            float totalElapsed = 0f;
+            _BuildChunkWorldTickLimiter.Restart();
 
             while (BuildChunkQueue.Count > 0)
             {
-                _BuildChunkQueueStopwatch.Restart();
+                _BuildChunkWorldTickLimiter.Restart();
 
                 Vector3Int pos = BuildChunkQueue.Dequeue();
 
-                if (!CheckChunkExistsAtPosition(pos) || GetChunkAtPosition(pos).Destroyed)
+                if (!CheckChunkExistsAtPosition(pos) || GetChunkAtPosition(pos).Deactivated)
                 {
                     CreateChunk(pos);
                 }
 
-                _BuildChunkQueueStopwatch.Stop();
-                totalElapsed += (float) _BuildChunkQueueStopwatch.Elapsed.TotalSeconds;
-
-                if (totalElapsed >= WorldController.WORLD_TICK_RATE)
+                if (_BuildChunkWorldTickLimiter.Elapsed.TotalSeconds >= WorldController.WORLD_TICK_RATE)
                 {
+                    _BuildChunkWorldTickLimiter.Stop();
                     yield return null;
                 }
             }
@@ -132,15 +178,16 @@ namespace Controllers.World
         {
             Chunk chunkAtPosition = GetChunkAtPosition(position);
 
-            if ((chunkAtPosition != default) && !chunkAtPosition.Destroyed)
+            if ((chunkAtPosition != default) && !chunkAtPosition.Deactivated)
             {
                 return;
             }
 
-            Chunk chunk = _DestroyedChunks.FirstOrDefault() ?? Instantiate(_ChunkObject, position, Quaternion.identity);
+            Chunk chunk = _DeactivatedChunks.FirstOrDefault() ??
+                          Instantiate(_ChunkObject, position, Quaternion.identity);
             chunk.Initialise(position);
 
-            _DestroyedChunks.Remove(chunk);
+            _DeactivatedChunks.Remove(chunk);
             Chunks.Add(chunk);
 
             StartCoroutine(chunk.GenerateBlocks());

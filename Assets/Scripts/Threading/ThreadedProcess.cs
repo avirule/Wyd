@@ -10,13 +10,12 @@ namespace Threading
     {
         protected readonly object Handle;
         protected bool Done;
-        protected Thread Thread;
+        public bool FlagAbort;
 
         public ThreadedProcess()
         {
-            Done = false;
+            Done = FlagAbort = false;
             Handle = new object();
-            Thread = null;
         }
 
         public bool IsDone
@@ -43,13 +42,7 @@ namespace Threading
 
         public virtual void Start()
         {
-            Thread = new Thread(Run);
-            Thread.Start();
-        }
-
-        public virtual void Abort()
-        {
-            Thread.Abort();
+            ThreadPool.QueueUserWorkItem(state => Run());
         }
 
         protected virtual void ThreadFunction()
@@ -60,6 +53,11 @@ namespace Threading
         {
         }
 
+        public virtual void Abort()
+        {
+            FlagAbort = true;
+        }
+        
         public virtual bool Update()
         {
             if (!IsDone)
@@ -76,7 +74,7 @@ namespace Threading
         {
             ThreadFunction();
 
-            IsDone = true;
+            IsDone = !FlagAbort;
         }
     }
 }

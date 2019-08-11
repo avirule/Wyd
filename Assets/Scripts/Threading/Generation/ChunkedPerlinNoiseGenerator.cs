@@ -1,10 +1,11 @@
 #region
 
+using Environment.Terrain.Generation;
 using UnityEngine;
 
 #endregion
 
-namespace Environment.Terrain.Generation.Noise.Perlin
+namespace Threading.Generation
 {
     public class ChunkedPerlinNoiseGenerator : PerlinNoiseGenerator
     {
@@ -33,6 +34,11 @@ namespace Environment.Terrain.Generation.Noise.Perlin
 
                 for (int chunkZ = 0; chunkZ < SizeInChunks.z; chunkZ++)
                 {
+                    if (FlagAbort)
+                    {
+                        return;
+                    }
+                    
                     int chunkXValue = chunkX * ChunkSize.x;
                     int chunkZValue = chunkZ * ChunkSize.z;
 

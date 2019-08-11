@@ -1,16 +1,16 @@
 #region
 
 using System.Collections.Generic;
-using System.Threading;
 using Controllers.Game;
 using Controllers.World;
-using Threading;
+using Environment;
+using Environment.Terrain;
 using UnityEngine;
 using UnityEngine.Rendering;
 
 #endregion
 
-namespace Environment.Terrain.Generation
+namespace Threading.Generation
 {
     public class MeshGenerator : ThreadedProcess
     {
@@ -38,12 +38,6 @@ namespace Environment.Terrain.Generation
             _Blocks = blocks;
         }
 
-        public override void Start()
-        {
-            Thread = new Thread(Run);
-            Thread.Start();
-        }
-
         protected override void ThreadFunction()
         {
             for (int x = 0; x < Chunk.Size.x; x++)
@@ -52,6 +46,11 @@ namespace Environment.Terrain.Generation
                 {
                     for (int z = 0; z < Chunk.Size.z; z++)
                     {
+                        if (FlagAbort)
+                        {
+                            return;
+                        }
+                        
                         int index = x + (Chunk.Size.x * (y + (Chunk.Size.y * z)));
 
                         if (_Blocks[index].Id == BlockController.BLOCK_EMPTY_ID)

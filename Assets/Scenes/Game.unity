@@ -198,6 +198,7 @@ GameObject:
   - component: {fileID: 69703340}
   - component: {fileID: 69703342}
   - component: {fileID: 69703343}
+  - component: {fileID: 69703344}
   m_Layer: 0
   m_Name: GameController
   m_TagString: GameController
@@ -220,6 +221,7 @@ MonoBehaviour:
   BlockController: {fileID: 69703343}
   TextureController: {fileID: 69703342}
   WorldController: {fileID: 1461272635}
+  GameSettingsController: {fileID: 69703344}
 --- !u!4 &69703341
 Transform:
   m_ObjectHideFlags: 0
@@ -260,6 +262,20 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   TextureController: {fileID: 69703342}
+--- !u!114 &69703344
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 69703339}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c2bfbe7e71c143e0ad0d7d1269cef501, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  MaximumChunkCache: 20
+  MaximumChunkLoadTimeCaching: 60
 --- !u!1 &705507993
 GameObject:
   m_ObjectHideFlags: 0
@@ -508,6 +524,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 6bacbf482bf844eaa875579526459c24, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  ChunkSize: {x: 8, y: 32, z: 8}
   Lacunarity: 2
   Octaves: 16
   Persistence: 0.5
@@ -564,7 +581,7 @@ MonoBehaviour:
   Grounded: 0
   GroundedMask:
     serializedVersion: 2
-    m_Bits: 768
+    m_Bits: 256
   JumpForce: 10
   Rigidbody: {fileID: 2134891959}
   RotationSensitivity: 40
