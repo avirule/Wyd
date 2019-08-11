@@ -6,6 +6,8 @@ using System.Diagnostics;
 using System.Linq;
 using Controllers.Game;
 using Environment.Terrain;
+using Logging;
+using NLog;
 using Static;
 using UnityEngine;
 
@@ -18,7 +20,7 @@ namespace Controllers.World
         private Stopwatch _WorldTickLimiter;
         private Stopwatch _BuildChunkWorldTickLimiter;
         private Chunk _ChunkObject;
-        private List<Chunk> _DeactivatedChunks;
+        private List<Chunk> _CachedChunks;
 
         public bool BuildingChunkArea;
         public List<Chunk> Chunks;
@@ -29,7 +31,7 @@ namespace Controllers.World
         private void Awake()
         {
             _ChunkObject = Resources.Load<Chunk>(@"Environment\Terrain\Chunk");
-            _DeactivatedChunks = new List<Chunk>();
+            _CachedChunks = new List<Chunk>();
             _WorldTickLimiter = new Stopwatch();
             _BuildChunkWorldTickLimiter = new Stopwatch();
             Chunks = new List<Chunk>();
@@ -52,9 +54,9 @@ namespace Controllers.World
                 BeginGeneratingMissingChunkMeshes();
             }
 
-            if (_DeactivatedChunks.Count > GameController.SettingsController.MaximumChunkCache)
+            if (_CachedChunks.Count > GameController.SettingsController.MaximumChunkCache)
             {
-                CullDeactivatedChunks();
+                CullCachedChunks();
             }
 
             if (Chunks.Any(chunk => chunk.PendingMeshAssigment))
@@ -92,7 +94,7 @@ namespace Controllers.World
                     continue;
                 }
 
-                _DeactivatedChunks.Add(Chunks[i]);
+                _CachedChunks.Add(Chunks[i]);
                 DestroyChunk(Chunks[i]);
 
                 if (_WorldTickLimiter.Elapsed.TotalSeconds > WorldController.WORLD_TICK_RATE)
@@ -105,7 +107,7 @@ namespace Controllers.World
         private void DestroyChunk(Chunk chunk)
         {
             AssignNeighborsPendingUpdate(chunk.Position);
-            chunk.Destroy();
+            chunk.Deactivate();
             Chunks.Remove(chunk);
         }
 
@@ -127,18 +129,28 @@ namespace Controllers.World
             }
         }
 
-        private void CullDeactivatedChunks()
+        private void CullCachedChunks()
         {
-            while (_DeactivatedChunks.Count > GameController.SettingsController.MaximumChunkCache)
+            // controller will cull chunks down to half the maximum when idle
+            while (_CachedChunks.Count > GameController.SettingsController.MaximumChunkCache / 2)
             {
-                Chunk chunk = _DeactivatedChunks.First();
+                Chunk chunk = _CachedChunks.First();
+                _CachedChunks.Remove(chunk);
                 Destroy(chunk);
-                _DeactivatedChunks.Remove(chunk);
 
-                if (_WorldTickLimiter.Elapsed.TotalSeconds > WorldController.WORLD_TICK_RATE)
+                // continue culling if the amount of cached chunks is greater than the maximum
+                if (_WorldTickLimiter.Elapsed.TotalSeconds < WorldController.WORLD_TICK_RATE)
                 {
-                    break;
+                    continue;
                 }
+
+                if (_CachedChunks.Count > GameController.SettingsController.MaximumChunkCache)
+                {
+                    EventLog.Logger.Log(LogLevel.Warn, $"Controller has cached too many chunks. Ignoring tick rate cancellation and continuing.");
+                    continue;
+                }
+                    
+                break;
             }
         }
 
@@ -183,11 +195,11 @@ namespace Controllers.World
                 return;
             }
 
-            Chunk chunk = _DeactivatedChunks.FirstOrDefault() ??
+            Chunk chunk = _CachedChunks.FirstOrDefault() ??
                           Instantiate(_ChunkObject, position, Quaternion.identity);
-            chunk.Initialise(position);
+            chunk.Activate(position);
 
-            _DeactivatedChunks.Remove(chunk);
+            _CachedChunks.Remove(chunk);
             Chunks.Add(chunk);
 
             StartCoroutine(chunk.GenerateBlocks());
@@ -214,7 +226,7 @@ namespace Controllers.World
             {
                 Chunk chunkAtPosition = GetChunkAtPosition(position + new Vector3Int(0, 0, z * Chunk.Size.z));
 
-                if (chunkAtPosition == default)
+                if (chunkAtPosition == default || chunkAtPosition.PendingMeshUpdate)
                 {
                     continue;
                 }

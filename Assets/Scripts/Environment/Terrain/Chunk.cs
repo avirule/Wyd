@@ -141,7 +141,7 @@ namespace Environment.Terrain
             DiagnosticsController.ChunkMeshTimes.Enqueue(stopwatch.ElapsedMilliseconds);
         }
 
-        public void Initialise(Vector3 position = default)
+        public void Activate(Vector3 position = default)
         {
             transform.position = position;
             Position = position.ToInt();
@@ -150,7 +150,7 @@ namespace Environment.Terrain
             gameObject.SetActive(true);
         }
 
-        public void Destroy()
+        public void Deactivate()
         {
             Deactivated = true;
             transform.position = new Vector3(0f, 0f, 0f);

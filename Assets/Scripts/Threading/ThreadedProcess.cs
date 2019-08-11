@@ -74,7 +74,7 @@ namespace Threading
         {
             ThreadFunction();
 
-            IsDone = !FlagAbort;
+            IsDone = true;
         }
     }
 }
