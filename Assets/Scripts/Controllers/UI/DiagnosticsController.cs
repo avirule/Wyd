@@ -34,15 +34,19 @@ namespace Controllers.UI
             gameObject.SetActive(Debug.isDebugBuild);
         }
 
+        public void Update()
+        {
+            UpdateDeltaTimes();
+        }
+
         // Update is called once per frame
-        private void Update()
+        private void FixedUpdate()
         {
             if (!gameObject.activeSelf)
             {
                 return;
             }
 
-            UpdateDeltaTimes();
             UpdateFramesText();
             UpdateResourcesText();
         }

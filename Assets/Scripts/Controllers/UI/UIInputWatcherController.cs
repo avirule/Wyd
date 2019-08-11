@@ -1,5 +1,6 @@
 ﻿#region
 
+using Controllers.Game;
 using UnityEngine;
 
 #endregion
@@ -58,7 +59,7 @@ namespace Controllers.UI
 
             _EscapeKeyPressed = true;
             EscapeMenu.SetActive(!EscapeMenu.activeSelf);
-            Cursor.lockState = EscapeMenu.activeSelf ? CursorLockMode.None : CursorLockMode.Locked;
+            GameController.ToggleCursorLocked(!EscapeMenu.activeSelf);
         }
     }
 }

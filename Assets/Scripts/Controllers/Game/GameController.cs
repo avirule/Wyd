@@ -19,7 +19,7 @@ namespace Controllers.Game
 
         private void Awake()
         {
-            Cursor.lockState = CursorLockMode.Locked;
+            ToggleCursorLocked(true);
             QualitySettings.vSyncCount = 0;
         }
 
@@ -89,6 +89,20 @@ namespace Controllers.Game
             BlockController.RegisterBlockRules(2, "Dirt", true, false, (position, direction) => "Dirt");
             BlockController.RegisterBlockRules(3, "Stone", true, false, (position, direction) => "Stone");
             BlockController.RegisterBlockRules(4, "Glass", true, true, (position, direction) => "Glass");
+        }
+
+        public static void ToggleCursorLocked(bool value)
+        {
+            if (value)
+            {
+                Cursor.lockState = CursorLockMode.Locked;
+                Cursor.visible = false;
+            }
+            else
+            {
+                Cursor.lockState = CursorLockMode.None;
+                Cursor.visible = true;
+            }
         }
     }
 }
