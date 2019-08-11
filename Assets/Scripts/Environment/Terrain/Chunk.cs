@@ -6,7 +6,6 @@ using System.Diagnostics;
 using Controllers.Game;
 using Controllers.UI;
 using Controllers.World;
-using Environment.Terrain.Generation;
 using Logging;
 using NLog;
 using Static;
@@ -23,6 +22,8 @@ namespace Environment.Terrain
 
         private BlockController _BlockController;
         private WorldController _WorldController;
+        private Stopwatch _BuildTimer;
+        private Stopwatch _MeshTimer;
         private Mesh _Mesh;
 
         public Block[] Blocks;
@@ -46,11 +47,13 @@ namespace Environment.Terrain
             transform.parent = worldControllerObject.transform;
             _WorldController = worldControllerObject.GetComponent<WorldController>();
             _BlockController = GameObject.FindWithTag("GameController").GetComponent<BlockController>();
+            _BuildTimer = new Stopwatch();
+            _MeshTimer = new Stopwatch();
         }
 
         public IEnumerator GenerateBlocks()
         {
-            Stopwatch stopwatch = Stopwatch.StartNew();
+            _BuildTimer.Restart();
 
             Generated = false;
             Generating = true;
@@ -60,6 +63,7 @@ namespace Environment.Terrain
             if (Deactivated)
             {
                 Generating = false;
+                _BuildTimer.Stop();
                 yield break;
             }
 
@@ -74,6 +78,7 @@ namespace Environment.Terrain
             catch (Exception)
             {
                 Generating = false;
+                _BuildTimer.Stop();
                 yield break;
             }
 
@@ -82,6 +87,7 @@ namespace Environment.Terrain
                 EventLog.Logger.Log(LogLevel.Error,
                     $"Failed to generate chunk at position ({Position.x}, {Position.z}): failed to get noise map.");
                 Generating = false;
+                _BuildTimer.Stop();
                 yield break;
             }
 
@@ -94,6 +100,7 @@ namespace Environment.Terrain
             {
                 chunkGenerator.Abort();
                 Generating = false;
+                _BuildTimer.Stop();
                 yield break;
             }
 
@@ -102,8 +109,8 @@ namespace Environment.Terrain
             Generating = false;
             Generated = true;
 
-            stopwatch.Stop();
-            DiagnosticsController.ChunkBuildTimes.Enqueue(stopwatch.Elapsed.TotalMilliseconds);
+            _BuildTimer.Stop();
+            DiagnosticsController.ChunkBuildTimes.Enqueue(_BuildTimer.Elapsed.TotalMilliseconds);
         }
 
         public IEnumerator GenerateMesh()
@@ -113,7 +120,7 @@ namespace Environment.Terrain
                 yield break;
             }
 
-            Stopwatch stopwatch = Stopwatch.StartNew();
+            _MeshTimer.Restart();
 
             Meshed = PendingMeshAssigment = false;
             Meshing = true;
@@ -127,7 +134,7 @@ namespace Environment.Terrain
             {
                 meshGenerator.Abort();
                 Meshing = false;
-
+                _MeshTimer.Stop();
                 yield break;
             }
 
@@ -136,9 +143,8 @@ namespace Environment.Terrain
             Meshing = PendingMeshUpdate = false;
             Meshed = PendingMeshAssigment = true;
 
-            stopwatch.Stop();
-
-            DiagnosticsController.ChunkMeshTimes.Enqueue(stopwatch.Elapsed.TotalMilliseconds);
+            _MeshTimer.Stop();
+            DiagnosticsController.ChunkMeshTimes.Enqueue(_MeshTimer.Elapsed.TotalMilliseconds);
         }
 
         public void Activate(Vector3 position = default)
@@ -153,11 +159,12 @@ namespace Environment.Terrain
         public void Deactivate()
         {
             Deactivated = true;
-            transform.position = new Vector3(0f, 0f, 0f);
-            Position = new Vector3Int(0, 0, 0);
-            _Mesh.Clear();
-            MeshFilter.mesh.Clear();
-            MeshCollider.sharedMesh.Clear();
+
+            if (_Mesh != default)
+            {
+                _Mesh.Clear();
+            }
+            
             gameObject.SetActive(false);
         }
 

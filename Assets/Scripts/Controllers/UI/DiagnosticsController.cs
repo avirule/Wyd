@@ -3,12 +3,14 @@
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using Controllers.Game;
-using Environment.Terrain;
+using Controllers.World;
 using UnityEngine;
 using UnityEngine.Profiling;
 using UnityEngine.UI;
+using Debug = UnityEngine.Debug;
 
 #endregion
 
@@ -16,19 +18,21 @@ namespace Controllers.UI
 {
     public class DiagnosticsController : MonoBehaviour
     {
+        private const double _LOCAL_FRAME_INTERVAL = 1d / 15d;
+        private Stopwatch _LocalFrameStopwatch;
         private double _DeltaTimeAverage;
         private List<double> _DeltaTimes;
-        
+
         public static readonly ConcurrentQueue<double> ChunkBuildTimes = new ConcurrentQueue<double>();
         public static readonly ConcurrentQueue<double> ChunkMeshTimes = new ConcurrentQueue<double>();
-        
-        public Text FrameRateText;
 
-        public int MaximumFrameRateCaching;
+        public ChunkController ChunkController;
+        public Text FrameRateText;
         public Text ResourcesText;
 
         private void Awake()
         {
+            _LocalFrameStopwatch = new Stopwatch();
             _DeltaTimes = new List<double>();
         }
 
@@ -36,17 +40,21 @@ namespace Controllers.UI
         private void Start()
         {
             gameObject.SetActive(Debug.isDebugBuild);
+            _LocalFrameStopwatch.Start();
         }
 
         public void Update()
         {
+            if (_LocalFrameStopwatch.Elapsed.TotalSeconds < _LOCAL_FRAME_INTERVAL)
+            {
+                return;
+            }
+            
+            _LocalFrameStopwatch.Restart();
+            
             UpdateDeltaTimes();
             CullChunkLoadQueue();
-        }
-
-        // Update is called once per frame
-        private void FixedUpdate()
-        {
+            
             if (!gameObject.activeSelf)
             {
                 return;
@@ -61,33 +69,36 @@ namespace Controllers.UI
         {
             _DeltaTimes.Add(1d / Time.deltaTime);
 
-            if (_DeltaTimes.Count > MaximumFrameRateCaching)
+            if (_DeltaTimes.Count > GameController.SettingsController.MaximumFrameRateCacheSize)
             {
-                _DeltaTimes.RemoveRange(0, _DeltaTimes.Count - MaximumFrameRateCaching);
+                _DeltaTimes.RemoveRange(0, _DeltaTimes.Count - GameController.SettingsController.MaximumFrameRateCacheSize);
             }
 
-            _DeltaTimeAverage = Math.Round(_DeltaTimes.Average(), 5);
+            _DeltaTimeAverage = Math.Round(_DeltaTimes.Average(), 4);
         }
 
         private void UpdateFramesText()
         {
             string vSyncStatus = QualitySettings.vSyncCount == 0 ? "Disabled" : "Enabled";
-            
+
             double sumLoadTimes = ChunkBuildTimes.Sum() + ChunkMeshTimes.Sum();
             double averageLoadTime = Math.Round(sumLoadTimes / (ChunkBuildTimes.Count + ChunkMeshTimes.Count));
 
             FrameRateText.text =
-                $"FPS: {_DeltaTimeAverage}\r\nVSync: {vSyncStatus}\r\nChunk Load Time: {averageLoadTime}ms";
+                $"FPS: {_DeltaTimeAverage}\r\n" +
+                $"VSync: {vSyncStatus}\r\n" +
+                $"Chunk Load Time: {averageLoadTime}ms\r\n" +
+                $"Chunks Cached: {ChunkController.CurrentCacheSize}";
         }
 
         private void CullChunkLoadQueue()
         {
-            while (ChunkMeshTimes.Count > GameController.SettingsController.MaximumChunkLoadTimeCaching)
+            while (ChunkMeshTimes.Count > GameController.SettingsController.MaximumChunkLoadTimeCacheSize)
             {
                 ChunkMeshTimes.TryDequeue(out double _);
             }
-            
-            while (ChunkMeshTimes.Count > GameController.SettingsController.MaximumChunkLoadTimeCaching)
+
+            while (ChunkMeshTimes.Count > GameController.SettingsController.MaximumChunkLoadTimeCacheSize)
             {
                 ChunkMeshTimes.TryDequeue(out double _);
             }

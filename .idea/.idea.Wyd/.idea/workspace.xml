@@ -6,16 +6,21 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="c75ae2de-3a89-4228-87f5-5925302b6d96" name="Default Changelist" comment="">
-      <change afterPath="$PROJECT_DIR$/Assets/Scripts/Threading/Generation/ChunkBuilder.cs" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/.idea.Wyd/.idea/contentModel.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/.idea.Wyd/.idea/contentModel.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/.idea.Wyd/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/.idea.Wyd/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Assets/Resources/Environment/Terrain/Chunk.prefab" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/Resources/Environment/Terrain/Chunk.prefab" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Assets/Resources/UI/Diagnostics.prefab" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/Resources/UI/Diagnostics.prefab" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Assets/Scenes/Game.unity" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/Scenes/Game.unity" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Assets/Scenes/MainMenu.unity" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/Scenes/MainMenu.unity" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Assets/Scripts/Controllers/Game/GameSettingsController.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/Scripts/Controllers/Game/GameSettingsController.cs" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/Assets/Scripts/Controllers/UI/DiagnosticsController.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/Scripts/Controllers/UI/DiagnosticsController.cs" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/Assets/Scripts/Controllers/World/ChunkController.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/Scripts/Controllers/World/ChunkController.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Assets/Scripts/Controllers/World/WorldController.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/Scripts/Controllers/World/WorldController.cs" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/Assets/Scripts/Environment/Terrain/Chunk.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/Scripts/Environment/Terrain/Chunk.cs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Assets/Scripts/Threading/Generation/ChunkGenerator.cs" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Assets/Scripts/Threading/Generation/ChunkGenerator.cs.meta" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/Scripts/Threading/Generation/ChunkBuilder.cs.meta" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Assets/Scripts/Threading/Generation/ChunkedPerlinNoiseGenerator.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/Scripts/Threading/Generation/ChunkedPerlinNoiseGenerator.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Assets/Scripts/Environment/Terrain/Generation/Noise/Perlin/PerlinNoise.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/Scripts/Environment/Terrain/Generation/Noise/Perlin/PerlinNoise.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Assets/Scripts/Threading/Generation/ChunkBuilder.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/Scripts/Threading/Generation/ChunkBuilder.cs" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/Assets/Scripts/Threading/Generation/MeshGenerator.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/Scripts/Threading/Generation/MeshGenerator.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Assets/Scripts/Threading/Generation/PerlinNoiseGenerator.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/Scripts/Threading/Generation/PerlinNoiseGenerator.cs" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/Assets/Scripts/Threading/ThreadedProcess.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/Scripts/Threading/ThreadedProcess.cs" afterDir="false" />
     </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
@@ -76,6 +81,7 @@
     <setting file="file://$PROJECT_DIR$/Assets/Scripts/Controllers/UI/DiagnosticsController.cs" root0="FORCE_HIGHLIGHTING" />
     <setting file="file://$PROJECT_DIR$/Assets/Scripts/Controllers/UI/EscapeMenuController.cs" root0="FORCE_HIGHLIGHTING" />
     <setting file="file://$PROJECT_DIR$/Assets/Scripts/Controllers/UI/UIInputWatcherController.cs" root0="FORCE_HIGHLIGHTING" />
+    <setting file="file://$USER_HOME$/.Rider2019.1/config/resharper-host/DecompilerCache/decompiler/7D971063-3068-4ADD-86D0-80ECF65BFE69/95/e065c2c7/ThrowHelper.cs" root0="SKIP_HIGHLIGHTING" />
     <setting file="file://$PROJECT_DIR$/Assets/Scripts/Controllers/Game/TextureController.cs" root0="FORCE_HIGHLIGHTING" />
   </component>
   <component name="IdeDocumentHistory">
@@ -99,7 +105,6 @@
         <option value="$PROJECT_DIR$/Assets/Scripts/Controllers/World/ChunkManager.cs" />
         <option value="$PROJECT_DIR$/Assets/Scripts/Logging/Targets/UnityDebuggerTarget.cs" />
         <option value="$PROJECT_DIR$/Assets/Scripts/Environment/Terrain/Generation/ChunkGenerator.cs" />
-        <option value="$PROJECT_DIR$/Assets/Scripts/Environment/Terrain/Generation/Noise/Perlin/PerlinNoise.cs" />
         <option value="$PROJECT_DIR$/Assets/Scripts/Static/Mathv.cs" />
         <option value="$PROJECT_DIR$/Assets/Scripts/Environment/Terrain/Generation/Noise/Perlin/ChunkedPerlinNoiseGenerator.cs" />
         <option value="$PROJECT_DIR$/Assets/Scripts/Environment/Terrain/Generation/Noise/OpenSimplex/OpenSimplexNoiseGenerator.cs" />
@@ -117,21 +122,22 @@
         <option value="$PROJECT_DIR$/Assets/Scripts/Controllers/UI/EscapeMenuController.cs" />
         <option value="$PROJECT_DIR$/Assets/Scripts/Environment/Terrain/Generation/WorldGenerationSettings.cs" />
         <option value="$PROJECT_DIR$/Assets/Scripts/Controllers/Game/GameSettings.cs" />
-        <option value="$PROJECT_DIR$/Assets/Scripts/Controllers/Game/GameSettingsController.cs" />
         <option value="$PROJECT_DIR$/Assets/Scripts/Controllers/Game/GameController.cs" />
         <option value="$PROJECT_DIR$/Assets/Scripts/Environment/Terrain/Generation/MeshGenerator.cs" />
-        <option value="$PROJECT_DIR$/Assets/Scripts/Controllers/World/WorldController.cs" />
-        <option value="$PROJECT_DIR$/Assets/Scripts/Threading/Generation/PerlinNoiseGenerator.cs" />
         <option value="$PROJECT_DIR$/Assets/Scripts/Threading/Generation/ChunkedPerlinNoiseGenerator.cs" />
         <option value="$PROJECT_DIR$/Assets/Scripts/Threading/Generation/ChunkProcessor.cs" />
-        <option value="$PROJECT_DIR$/Assets/Scripts/Threading/ThreadedProcess.cs" />
         <option value="$PROJECT_DIR$/Assets/Scripts/Threading/Generation/ChunkGenerator.cs" />
         <option value="$PROJECT_DIR$/Assets/Scripts/Threading/Generation/InfiniteThreadedProcess.cs" />
         <option value="$PROJECT_DIR$/Assets/Scripts/Threading/Generation/MeshGenerator.cs" />
+        <option value="$PROJECT_DIR$/Assets/Scripts/Threading/ThreadedProcess.cs" />
+        <option value="$PROJECT_DIR$/Assets/Scripts/Controllers/World/WorldController.cs" />
+        <option value="$PROJECT_DIR$/Assets/Scripts/Threading/Generation/PerlinNoiseGenerator.cs" />
+        <option value="$PROJECT_DIR$/Assets/Scripts/Environment/Terrain/Generation/Noise/Perlin/PerlinNoise.cs" />
         <option value="$PROJECT_DIR$/Assets/Scripts/Threading/Generation/ChunkBuilder.cs" />
-        <option value="$PROJECT_DIR$/Assets/Scripts/Controllers/World/ChunkController.cs" />
-        <option value="$PROJECT_DIR$/Assets/Scripts/Environment/Terrain/Chunk.cs" />
+        <option value="$PROJECT_DIR$/Assets/Scripts/Controllers/Game/GameSettingsController.cs" />
         <option value="$PROJECT_DIR$/Assets/Scripts/Controllers/UI/DiagnosticsController.cs" />
+        <option value="$PROJECT_DIR$/Assets/Scripts/Environment/Terrain/Chunk.cs" />
+        <option value="$PROJECT_DIR$/Assets/Scripts/Controllers/World/ChunkController.cs" />
       </list>
     </option>
   </component>
@@ -228,7 +234,8 @@
       <workItem from="1565455392183" duration="17745000" />
       <workItem from="1565474659744" duration="11098000" />
       <workItem from="1565514620607" duration="7006000" />
-      <workItem from="1565521735260" duration="14003000" />
+      <workItem from="1565521735260" duration="17031000" />
+      <workItem from="1565543111971" duration="5126000" />
     </task>
     <servers />
   </component>
@@ -311,6 +318,8 @@
     <state x="446" y="102" width="644" height="660" key="find.popup/1920.1080" />
     <state x="425" y="187" key="run.anything.popup" />
     <state x="425" y="187" key="run.anything.popup/1920.1080" />
+    <state x="431" y="145" width="672" height="680" key="search.everywhere.popup" />
+    <state x="431" y="145" width="672" height="680" key="search.everywhere.popup/1920.1080" />
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>

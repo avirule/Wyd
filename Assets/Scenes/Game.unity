@@ -274,7 +274,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: c2bfbe7e71c143e0ad0d7d1269cef501, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  MaximumChunkCache: 20
+  MaximumChunkCache: 30
   MaximumChunkLoadTimeCaching: 60
 --- !u!1 &705507993
 GameObject:
@@ -524,7 +524,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 6bacbf482bf844eaa875579526459c24, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  ChunkSize: {x: 8, y: 32, z: 8}
+  ChunkSize: {x: 8, y: 128, z: 8}
   Lacunarity: 2
   Octaves: 16
   Persistence: 0.5
@@ -653,7 +653,7 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 2134891953}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 40, z: 0}
+  m_LocalPosition: {x: 0, y: 140, z: 0}
   m_LocalScale: {x: 1, y: 2, z: 1}
   m_Children:
   - {fileID: 963194228}
@@ -747,6 +747,11 @@ PrefabInstance:
         type: 3}
       propertyPath: m_OnClick.m_PersistentCalls.m_Calls.Array.size
       value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 5871095947529393988, guid: d0388db060e4f0d42bfe824d3e9d586f,
+        type: 3}
+      propertyPath: m_IsActive
+      value: 1
       objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: d0388db060e4f0d42bfe824d3e9d586f, type: 3}

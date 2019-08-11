@@ -1,6 +1,5 @@
 #region
 
-using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -10,7 +9,6 @@ using Environment.Terrain;
 using Logging;
 using NLog;
 using Static;
-using Threading.Generation;
 using UnityEngine;
 
 #endregion
@@ -24,6 +22,7 @@ namespace Controllers.World
         private Chunk _ChunkObject;
         private List<Chunk> _CachedChunks;
 
+        public int CurrentCacheSize => _CachedChunks.Count;
         public bool BuildingChunkArea;
         public List<Chunk> Chunks;
         public Queue<Vector3Int> BuildChunkQueue;
@@ -36,7 +35,7 @@ namespace Controllers.World
             _CachedChunks = new List<Chunk>();
             _WorldTickLimiter = new Stopwatch();
             _BuildChunkWorldTickLimiter = new Stopwatch();
-            
+
             Chunks = new List<Chunk>();
             BuildChunkQueue = new Queue<Vector3Int>();
             BuildingChunkArea = false;
@@ -58,7 +57,7 @@ namespace Controllers.World
             }
 
             // cull chunks down to half the maximum when idle
-            if (_CachedChunks.Count > (GameController.SettingsController.MaximumChunkCache / 2))
+            if (_CachedChunks.Count > (GameController.SettingsController.MaximumChunkCacheSize / 2))
             {
                 CullCachedChunks();
             }
@@ -68,19 +67,34 @@ namespace Controllers.World
                 AssignMeshes();
             }
 
+            TickChunks();
+
             _WorldTickLimiter.Stop();
         }
 
         private void AssignMeshes()
         {
-            foreach (Chunk chunk in Chunks.Where(chunk => chunk.PendingMeshAssigment))
+            foreach (Chunk chunk in Chunks)
             {
+                if (!chunk.PendingMeshAssigment)
+                {
+                    continue;
+                }
+                
                 chunk.AssignMesh();
 
                 if (_WorldTickLimiter.Elapsed.TotalSeconds >= WorldController.WORLD_TICK_RATE)
                 {
                     break;
                 }
+            }
+        }
+
+        private void TickChunks()
+        {
+            foreach (Chunk chunk in Chunks)
+            {
+                chunk.Tick();
             }
         }
 
@@ -125,7 +139,7 @@ namespace Controllers.World
                 }
 
                 StartCoroutine(chunk.GenerateMesh());
-                
+
                 if (_WorldTickLimiter.Elapsed.TotalSeconds > WorldController.WORLD_TICK_RATE)
                 {
                     break;
@@ -135,8 +149,10 @@ namespace Controllers.World
 
         private void CullCachedChunks()
         {
+            bool hasIgnoredCancellation = false;
+            
             // controller will cull chunks down to half the maximum when idle
-            while (_CachedChunks.Count > (GameController.SettingsController.MaximumChunkCache / 2))
+            while (_CachedChunks.Count > (GameController.SettingsController.MaximumChunkCacheSize / 2))
             {
                 Chunk chunk = _CachedChunks.First();
                 _CachedChunks.Remove(chunk);
@@ -148,10 +164,16 @@ namespace Controllers.World
                     continue;
                 }
 
-                if (_CachedChunks.Count > GameController.SettingsController.MaximumChunkCache)
+                if (_CachedChunks.Count > GameController.SettingsController.MaximumChunkCacheSize)
                 {
-                    EventLog.Logger.Log(LogLevel.Warn,
-                        "Controller has cached too many chunks. Ignoring tick rate cancellation and continuing.");
+                    // stops spam
+                    if (!hasIgnoredCancellation)
+                    {
+                        EventLog.Logger.Log(LogLevel.Warn,
+                            "Controller has cached too many chunks. Ignoring tick rate cancellation and continuing.");
+                        hasIgnoredCancellation = true;
+                    }
+
                     continue;
                 }
 

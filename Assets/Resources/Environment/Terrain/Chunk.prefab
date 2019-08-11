@@ -9,8 +9,8 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 2133818191605063449}
-  - component: {fileID: 2133818191605063448}
   - component: {fileID: 9170613462872033006}
+  - component: {fileID: 6378085758781315392}
   - component: {fileID: -6824970583116161446}
   - component: {fileID: 2133818191605063653}
   m_Layer: 8
@@ -18,7 +18,7 @@ GameObject:
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
-  m_StaticEditorFlags: 1
+  m_StaticEditorFlags: 0
   m_IsActive: 1
 --- !u!4 &2133818191605063449
 Transform:
@@ -34,7 +34,15 @@ Transform:
   m_Father: {fileID: 0}
   m_RootOrder: 0
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!64 &2133818191605063448
+--- !u!33 &9170613462872033006
+MeshFilter:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2133818191605063652}
+  m_Mesh: {fileID: 0}
+--- !u!64 &6378085758781315392
 MeshCollider:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -47,14 +55,6 @@ MeshCollider:
   serializedVersion: 3
   m_Convex: 0
   m_CookingOptions: -1
-  m_Mesh: {fileID: 0}
---- !u!33 &9170613462872033006
-MeshFilter:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 2133818191605063652}
   m_Mesh: {fileID: 0}
 --- !u!23 &-6824970583116161446
 MeshRenderer:
@@ -114,5 +114,5 @@ MonoBehaviour:
   PendingMeshAssigment: 0
   MeshFilter: {fileID: 9170613462872033006}
   MeshRenderer: {fileID: -6824970583116161446}
-  MeshCollider: {fileID: 2133818191605063448}
+  MeshCollider: {fileID: 0}
   Position: {x: 0, y: 0, z: 0}

@@ -41,7 +41,7 @@ namespace Threading.Generation
 
         protected override void ThreadFunction()
         {
-            Map = PerlinNoise.GenerateMap(Offset, Seed, Size, Octaves, Scale, Persistence, Lacunarity);
+            Map = PerlinNoise.GenerateMap(Offset, Seed, Size, Octaves, Scale, Persistence, Lacunarity, true);
         }
     }
 }

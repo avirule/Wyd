@@ -57,7 +57,7 @@ namespace Threading
         {
             Die = true;
         }
-        
+
         public virtual bool Update()
         {
             if (!IsDone)

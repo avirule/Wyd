@@ -1,7 +1,6 @@
 #region
 
 using UnityEngine;
-using Random = System.Random;
 
 #endregion
 
@@ -17,6 +16,10 @@ namespace Environment.Terrain.Generation.Noise.Perlin
                 generationSettings.Persistence, generationSettings.Lacunarity);
         }
 
+
+        private static float maxNoiseHeight = 3;
+        private static float minNoiseHeight = -3;
+
         /// <summary>
         ///     Generates a perlin noise map
         /// </summary>
@@ -28,31 +31,19 @@ namespace Environment.Terrain.Generation.Noise.Perlin
         /// <param name="persistence">Value between 0 and 1</param>
         /// <param name="lacunarity">Value grater than 1</param>
         /// <returns></returns>
-        public static float[][] GenerateMap(Vector3Int offset, WorldSeed seed, Vector3Int size, int octaves,
-            float scale, float persistence, float lacunarity)
+        public static float[][] GenerateMap(Vector3 offset, WorldSeed seed, Vector3 size, int octaves,
+            float scale, float persistence, float lacunarity, bool normalise = false)
         {
             if (scale <= 0)
             {
                 scale = 0.0001f;
             }
 
-            float[][] noiseHeights = new float[size.x][];
-            float maxNoiseHeight = float.MinValue;
-            float minNoiseHeight = float.MaxValue;
-            Random pseudoRandom = new Random(seed);
-            Vector3[] octaveOffsets = new Vector3[octaves];
-
-            for (int o = 0; o < octaves; o++)
-            {
-                float offsetX = pseudoRandom.Next(0, 257) + offset.x;
-                float offsetZ = pseudoRandom.Next(0, 257) + offset.z;
-
-                octaveOffsets[o] = new Vector3(offsetX, 0, offsetZ);
-            }
+            float[][] noiseHeights = new float[Mathf.CeilToInt(size.x)][];
 
             for (int x = 0; x < size.x; x++)
             {
-                noiseHeights[x] = new float[size.z];
+                noiseHeights[x] = new float[Mathf.CeilToInt(size.z)];
 
                 for (int z = 0; z < size.z; z++)
                 {
@@ -62,8 +53,8 @@ namespace Environment.Terrain.Generation.Noise.Perlin
 
                     for (int o = 0; o < octaves; o++)
                     {
-                        float sampleX = ((x + octaveOffsets[o].x) / scale) * frequency;
-                        float sampleZ = ((z + octaveOffsets[o].z) / scale) * frequency;
+                        float sampleX = ((offset.x + x) / seed.Normalized) / (scale) * frequency;
+                        float sampleZ = ((offset.z + z) / seed.Normalized) / (scale) * frequency;
 
                         float perlinValue = Mathf.PerlinNoise(sampleX, sampleZ);
                         noiseHeight += perlinValue * amplitude;
@@ -72,24 +63,18 @@ namespace Environment.Terrain.Generation.Noise.Perlin
                         frequency *= lacunarity;
                     }
 
-                    if (noiseHeight > maxNoiseHeight)
-                    {
-                        maxNoiseHeight = noiseHeight;
-                    }
-                    else if (noiseHeight < minNoiseHeight)
-                    {
-                        minNoiseHeight = noiseHeight;
-                    }
-
                     noiseHeights[x][z] = noiseHeight;
                 }
             }
 
-            for (int x = 0; x < noiseHeights.Length; x++)
+            if (normalise)
             {
-                for (int z = 0; z < noiseHeights[0].Length; z++)
+                for (int x = 0; x < noiseHeights.Length; x++)
                 {
-                    noiseHeights[x][z] = Mathf.InverseLerp(minNoiseHeight, maxNoiseHeight, noiseHeights[x][z]);
+                    for (int z = 0; z < noiseHeights[0].Length; z++)
+                    {
+                        noiseHeights[x][z] = Mathf.InverseLerp(minNoiseHeight, maxNoiseHeight, noiseHeights[x][z]);
+                    }
                 }
             }
 

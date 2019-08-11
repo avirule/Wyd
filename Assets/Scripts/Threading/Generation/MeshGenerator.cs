@@ -50,7 +50,7 @@ namespace Threading.Generation
                         {
                             return;
                         }
-                        
+
                         int index = x + (Chunk.Size.x * (y + (Chunk.Size.y * z)));
 
                         if (_Blocks[index].Id == BlockController.BLOCK_EMPTY_ID)

@@ -38,12 +38,12 @@ namespace Threading.Generation
                         {
                             return;
                         }
-                        
+
                         int index = x + (Chunk.Size.x * (y + (Chunk.Size.y * z)));
 
                         float noiseHeight = _NoiseMap[x][z];
 
-                        int perlinValue = Mathf.FloorToInt(noiseHeight * _Size.y);
+                        int perlinValue = Mathf.RoundToInt(noiseHeight * _Size.y);
 
                         if (y > perlinValue)
                         {
