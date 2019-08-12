@@ -18,10 +18,11 @@ namespace Controllers.World
 {
     public sealed class ChunkController : MonoBehaviour
     {
+        private WorldController _WorldController;
         private Stopwatch _WorldTickLimiter;
         private Stopwatch _BuildChunkWorldTickLimiter;
         private Chunk _ChunkObject;
-        private List<Chunk> _CachedChunks;
+        private Queue<Chunk> _CachedChunks;
         private bool _ProcessingChunkQueue;
 
         public List<Chunk> Chunks;
@@ -32,8 +33,9 @@ namespace Controllers.World
 
         private void Awake()
         {
+            _WorldController = GameObject.FindWithTag("WorldController").GetComponent<WorldController>();
             _ChunkObject = Resources.Load<Chunk>(@"Environment\Terrain\Chunk");
-            _CachedChunks = new List<Chunk>();
+            _CachedChunks = new Queue<Chunk>();
             _WorldTickLimiter = new Stopwatch();
             _BuildChunkWorldTickLimiter = new Stopwatch();
             _ProcessingChunkQueue = false;
@@ -44,24 +46,19 @@ namespace Controllers.World
 
         private void Update()
         {
-            foreach (Chunk chunk in Chunks)
-            {
-                chunk.Tick();
-            }
-        }
-
-        public void Tick(BoundsInt bounds)
-        {
             _WorldTickLimiter.Restart();
 
             if ((BuildChunkQueue.Count > 0) && !_ProcessingChunkQueue)
             {
                 StartCoroutine(ProcessBuildChunkQueue());
             }
+        }
 
-            if (AllChunksGenerated)
+        private void LateUpdate()
+        {
+            if (AllChunksGenerated && AllChunksMeshed)
             {
-                DeactivateOutOfBoundsChunks(bounds);
+                DeactivateOutOfBoundsChunks();
             }
 
             // cull chunks down to half the maximum when idle
@@ -73,21 +70,109 @@ namespace Controllers.World
             _WorldTickLimiter.Stop();
         }
 
-        #region CHUNK DESTROYING
+        #region CHUNK BUILDING
 
-        private void DeactivateOutOfBoundsChunks(BoundsInt bounds)
+        public IEnumerator ProcessBuildChunkQueue()
         {
-            int initialCount = Chunks.Count;
+            _ProcessingChunkQueue = true;
+            _BuildChunkWorldTickLimiter.Reset();
 
-            for (int i = initialCount - 1; i >= 0; i--)
+            while (BuildChunkQueue.Count > 0)
             {
-                if (Mathv.ContainsVector3Int(bounds, Chunks[i].Position))
+                _BuildChunkWorldTickLimiter.Start();
+
+                Vector3Int position = BuildChunkQueue.Dequeue();
+
+                if (CheckChunkExistsAtPosition(position))
+                {
+                    continue;
+                }
+
+                Chunk chunk;
+
+                if (_CachedChunks.Count > 0)
+                {
+                    chunk = _CachedChunks.Dequeue();
+                    chunk.Activate(position);
+                }
+                else
+                {
+                    chunk = Instantiate(_ChunkObject, position, Quaternion.identity, transform);
+                }
+
+                Chunks.Add(chunk);
+
+                // ensures that neighbours update their meshes to cull newly out of sight faces
+                FlagNeighborsPendingUpdate(chunk.Position);
+
+                if (_BuildChunkWorldTickLimiter.Elapsed.TotalSeconds > WorldController.WorldTickRate)
+                {
+                    _BuildChunkWorldTickLimiter.Reset();
+                    yield return null;
+                }
+            }
+
+            _ProcessingChunkQueue = false;
+        }
+
+        private void FlagNeighborsPendingUpdate(Vector3Int position)
+        {
+            for (int x = -1; x <= 1; x++)
+            {
+                if (x == 0)
+                {
+                    continue;
+                }
+
+                Vector3Int modifiedPosition = position + new Vector3Int(x * Chunk.Size.x, 0, 0);
+                Chunk chunkAtPosition = GetChunkAtPosition(modifiedPosition);
+
+                if ((chunkAtPosition == default) || chunkAtPosition.PendingMeshUpdate)
+                {
+                    continue;
+                }
+
+                chunkAtPosition.PendingMeshUpdate = true;
+            }
+
+            for (int z = -1; z <= 1; z++)
+            {
+                if (z == 0)
+                {
+                    continue;
+                }
+
+                Vector3Int modifiedPosition = position + new Vector3Int(0, 0, z * Chunk.Size.z);
+                Chunk chunkAtPosition = GetChunkAtPosition(modifiedPosition);
+
+                if ((chunkAtPosition == default) || chunkAtPosition.PendingMeshUpdate)
+                {
+                    continue;
+                }
+
+                chunkAtPosition.PendingMeshUpdate = true;
+            }
+        }
+
+        #endregion
+
+
+        #region CHUNK DISABLING
+
+        private void DeactivateOutOfBoundsChunks()
+        {
+            for (int i = Chunks.Count - 1; i >= 0; i--)
+            {
+                Vector3Int difference = (Chunks[i].Position - WorldController.ChunkLoaderCurrentChunk).Abs();
+
+                if ((difference.x <= ((_WorldController.WorldGenerationSettings.Radius + 1) * Chunk.Size.x)) &&
+                    (difference.z <= ((_WorldController.WorldGenerationSettings.Radius + 1) * Chunk.Size.z)))
                 {
                     continue;
                 }
 
                 DeactivateChunk(Chunks[i]);
-
+                
                 if (_WorldTickLimiter.Elapsed.TotalSeconds > WorldController.WorldTickRate)
                 {
                     break;
@@ -97,10 +182,10 @@ namespace Controllers.World
 
         private void DeactivateChunk(Chunk chunk)
         {
-            _CachedChunks.Add(chunk);
-            FlagNeighborsPendingUpdate(chunk.Position);
-            chunk.enabled = false;
+            _CachedChunks.Enqueue(chunk);
             Chunks.Remove(chunk);
+            FlagNeighborsPendingUpdate(chunk.Position);
+            chunk.Deactivate();
         }
 
         private void CullCachedChunks()
@@ -110,12 +195,11 @@ namespace Controllers.World
             // controller will cull chunks down to half the maximum when idle
             while (_CachedChunks.Count > (GameController.SettingsController.MaximumChunkCacheSize / 2))
             {
-                Chunk chunk = _CachedChunks.First();
-                _CachedChunks.Remove(chunk);
+                Chunk chunk = _CachedChunks.Dequeue();
                 Destroy(chunk);
 
                 // continue culling if the amount of cached chunks is greater than the maximum
-                if (_WorldTickLimiter.Elapsed.TotalSeconds < WorldController.WorldTickRate)
+                if (_WorldTickLimiter.Elapsed.TotalSeconds <= WorldController.WorldTickRate)
                 {
                     continue;
                 }
@@ -140,105 +224,44 @@ namespace Controllers.World
         #endregion
 
 
-        #region CHUNK BUILDING
-
-        public IEnumerator ProcessBuildChunkQueue()
-        {
-            _ProcessingChunkQueue = true;
-            _BuildChunkWorldTickLimiter.Reset();
-
-            while (BuildChunkQueue.Count > 0)
-            {
-                _BuildChunkWorldTickLimiter.Start();
-
-                Vector3Int position = BuildChunkQueue.Dequeue();
-
-                if (!CheckChunkExistsAtPosition(position) || !GetChunkAtPosition(position).enabled)
-                {
-                    CreateChunk(position);
-                }
-
-                if (_BuildChunkWorldTickLimiter.Elapsed.TotalSeconds > WorldController.WorldTickRate)
-                {
-                    _BuildChunkWorldTickLimiter.Reset();
-                    yield return null;
-                }
-            }
-
-            _ProcessingChunkQueue = false;
-        }
-
-        private void CreateChunk(Vector3Int position)
-        {
-            Chunk chunkAtPosition = GetChunkAtPosition(position);
-
-            if ((chunkAtPosition != default) && !chunkAtPosition.enabled)
-            {
-                chunkAtPosition.enabled = true;
-                return;
-            }
-
-            Chunk chunk = _CachedChunks.FirstOrDefault();
-
-            if (chunk == default)
-            {
-                chunk = Instantiate(_ChunkObject, position, Quaternion.identity);
-            }
-            else
-            {
-                _CachedChunks.Remove(chunk);
-                chunk.transform.position = position;
-            }
-
-            Chunks.Add(chunk);
-            chunk.enabled = true;
-
-            // ensures that neighbours update their meshes to cull newly out of sight faces
-            FlagNeighborsPendingUpdate(chunk.Position);
-        }
-
-        private void FlagNeighborsPendingUpdate(Vector3Int position)
-        {
-            for (int x = -1; x <= 1; x++)
-            {
-                Vector3Int modifiedPosition = position + new Vector3Int(x * Chunk.Size.x, 0, 0);
-                Chunk chunkAtPosition = GetChunkAtPosition(modifiedPosition);
-
-                if ((chunkAtPosition == default) || chunkAtPosition.PendingMeshUpdate)
-                {
-                    continue;
-                }
-
-                chunkAtPosition.PendingMeshUpdate = true;
-            }
-
-            for (int z = -1; z <= 1; z++)
-            {
-                Vector3Int modifiedPosition = position + new Vector3Int(0, 0, z * Chunk.Size.z);
-                Chunk chunkAtPosition = GetChunkAtPosition(modifiedPosition);
-
-                if ((chunkAtPosition == default) || chunkAtPosition.PendingMeshUpdate)
-                {
-                    continue;
-                }
-
-                chunkAtPosition.PendingMeshUpdate = true;
-            }
-        }
-
-        #endregion
-
-
         #region MISC
 
         public bool CheckChunkExistsAtPosition(Vector3Int position)
         {
-            return Chunks.Any(chunk => chunk.Position == position);
+            // reverse for loop to avoid collection modified from thread errors
+            for (int i = Chunks.Count - 1; i >= 0; i--)
+            {
+                if (Chunks.Count <= i || Chunks[i] == default)
+                {
+                    continue;
+                }
+
+                if (Chunks[i].Position == position)
+                {
+                    return true;
+                }
+            }
+
+            return false;
         }
 
         public Chunk GetChunkAtPosition(Vector3Int position)
         {
-            return Chunks.FirstOrDefault(chunk => chunk.Position == position);
+            // reverse for loop to avoid collection modified from thread errors
+            for (int i = Chunks.Count - 1; i >= 0; i--)
+            {
+                if (Chunks.Count <= i || Chunks[i] == default)
+                {
+                    continue;
+                }
+
+                if (Chunks[i].Position == position)
+                {
+                    return Chunks[i];
+                }
+            }
+
+            return default;
         }
 
         public Block GetBlockAtPosition(Vector3Int position)

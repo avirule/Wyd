@@ -12,6 +12,7 @@ using Static;
 using Threading.Generation;
 using UnityEngine;
 using UnityEngine.Rendering;
+using Debug = UnityEngine.Debug;
 
 #endregion
 
@@ -26,6 +27,19 @@ namespace Environment.Terrain
         private Stopwatch _BuildTimer;
         private Stopwatch _MeshTimer;
         private Mesh _Mesh;
+        
+        public Block[] Blocks;
+        public bool Generated;
+        public bool Generating;
+        public bool Meshed;
+        public bool Meshing;
+        public bool PendingMeshUpdate;
+        public bool PendingMeshAssigment;
+        public MeshFilter MeshFilter;
+        public MeshRenderer MeshRenderer;
+        public MeshCollider MeshCollider;
+        public Vector3Int Position;
+        
         private bool _DrawShadows;
 
         public bool DrawShadows
@@ -60,51 +74,18 @@ namespace Environment.Terrain
             }
         }
 
-        public Block[] Blocks;
-        public bool Generated;
-        public bool Generating;
-        public bool Meshed;
-        public bool Meshing;
-        public bool PendingMeshUpdate;
-        public bool PendingMeshAssigment;
-        public MeshFilter MeshFilter;
-        public MeshRenderer MeshRenderer;
-        public MeshCollider MeshCollider;
-        public Vector3Int Position;
+        public bool Active => gameObject.activeSelf;
 
         private void Awake()
         {
-            GameObject worldControllerObject = GameObject.FindWithTag("WorldController");
-
-            transform.parent = worldControllerObject.transform;
-            _WorldController = worldControllerObject.GetComponent<WorldController>();
+            _WorldController = GameObject.FindWithTag("WorldController").GetComponent<WorldController>();
             _BlockController = GameObject.FindWithTag("GameController").GetComponent<BlockController>();
             _BuildTimer = new Stopwatch();
             _MeshTimer = new Stopwatch();
-        }
 
-        private void OnEnable()
-        {
-            // Ensure the position is set BEFORE enabling previously disabled chunks
             Position = transform.position.ToInt();
-            Generated = Generating = Meshed = Meshing = false;
+            Generated = Generating = Meshed = Meshing = PendingMeshAssigment = false;
             PendingMeshUpdate = true;
-            gameObject.SetActive(true);
-        }
-
-        private void OnDisable()
-        {
-            if (_Mesh != default)
-            {
-                _Mesh.Clear();
-            }
-
-            if (MeshFilter.mesh != default)
-            {
-                MeshFilter.mesh.Clear();
-            }
-
-            gameObject.SetActive(false);
         }
 
         private void Update()
@@ -135,7 +116,7 @@ namespace Environment.Terrain
                 StartCoroutine(GenerateMesh());
             }
 
-            if (ExpensiveMeshing && PendingMeshAssigment)
+            if (ExpensiveMeshing && PendingMeshAssigment && Meshed)
             {
                 AssignMesh();
             }
@@ -148,9 +129,9 @@ namespace Environment.Terrain
             Generated = false;
             Generating = true;
 
-            yield return new WaitUntil(() => _WorldController.NoiseMap.Ready || !enabled);
+            yield return new WaitUntil(() => _WorldController.NoiseMap.Ready || !Active);
 
-            if (!enabled)
+            if (!Active)
             {
                 Generating = false;
                 _BuildTimer.Stop();
@@ -184,9 +165,9 @@ namespace Environment.Terrain
             ChunkBuilder chunkGenerator = new ChunkBuilder(noiseMap, Size);
             chunkGenerator.Start();
 
-            yield return new WaitUntil(() => chunkGenerator.Update() || !enabled);
+            yield return new WaitUntil(() => chunkGenerator.Update() || !Active);
 
-            if (!enabled)
+            if (!Active)
             {
                 chunkGenerator.Abort();
                 Generating = false;
@@ -218,9 +199,9 @@ namespace Environment.Terrain
             MeshGenerator meshGenerator = new MeshGenerator(_WorldController, _BlockController, Position, Blocks);
             meshGenerator.Start();
 
-            yield return new WaitUntil(() => meshGenerator.Update() || !enabled);
+            yield return new WaitUntil(() => meshGenerator.Update() || !Active);
 
-            if (!enabled)
+            if (!Active)
             {
                 meshGenerator.Abort();
                 Meshing = false;
@@ -237,6 +218,33 @@ namespace Environment.Terrain
             DiagnosticsController.ChunkMeshTimes.Enqueue(_MeshTimer.Elapsed.TotalMilliseconds);
         }
 
+        public void Activate(Vector3Int position = default)
+        {
+            transform.position = position;
+            Position = position;
+            PendingMeshUpdate = true;
+            gameObject.SetActive(true);
+        }
+
+        public void Deactivate()
+        {
+            if (_Mesh != default)
+            {
+                _Mesh.Clear();
+            }
+
+            if (MeshFilter.mesh != default)
+            {
+                MeshFilter.mesh.Clear();
+            }
+
+            gameObject.SetActive(false);
+        }
+        
+        public void Tick()
+        {
+        }
+        
         private void AssignMesh()
         {
             if (!Generated || !Meshed)
@@ -246,10 +254,7 @@ namespace Environment.Terrain
 
             MeshFilter.mesh = _Mesh;
             MeshCollider.sharedMesh = MeshFilter.sharedMesh;
-        }
-
-        public void Tick()
-        {
+            PendingMeshAssigment = false;
         }
 
         private void CheckSettingsAndSet()

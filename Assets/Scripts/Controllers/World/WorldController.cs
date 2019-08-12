@@ -22,8 +22,6 @@ namespace Controllers.World
         public static float WorldTickRate;
         public static int ChunkLoaderSnapDistance;
 
-        private Vector3Int _LastChunkLoadPosition;
-
         public ChunkController ChunkController;
         public Transform ChunkLoader;
         public NoiseMap NoiseMap;
@@ -48,7 +46,6 @@ namespace Controllers.World
         private void Update()
         {
             CheckChunkLoaderChangedChunk();
-            CheckMeshingAndTick();
         }
         
 
@@ -94,21 +91,11 @@ namespace Controllers.World
             }
 
             ChunkLoaderCurrentChunk = chunkPosition;
-
-            Vector3Int absDifference = (ChunkLoaderCurrentChunk - _LastChunkLoadPosition).Abs();
-
-            if ((absDifference.x < ChunkLoaderSnapDistance) && (absDifference.z <= ChunkLoaderSnapDistance))
-            {
-                return;
-            }
-
             UpdateChunkLoadArea();
         }
 
         private void UpdateChunkLoadArea()
         {
-            _LastChunkLoadPosition = ChunkLoaderCurrentChunk;
-
             StartCoroutine(GenerateNoiseMap(ChunkLoaderCurrentChunk));
 
             EnqueueBuildChunkArea(ChunkLoaderCurrentChunk, WorldGenerationSettings.Radius);
@@ -121,19 +108,11 @@ namespace Controllers.World
             {
                 for (int z = -radius; z < (radius + 1); z++)
                 {
-                    ChunkController.BuildChunkQueue.Enqueue(origin + Chunk.Size.Multiply(new Vector3Int(x, 0, z)));
+                    Vector3Int position = origin + Chunk.Size.Multiply(new Vector3Int(x, 0, z));
+                    
+                    ChunkController.BuildChunkQueue.Enqueue(position);
                 }
             }
-        }
-        
-        private void CheckMeshingAndTick()
-        {
-            if (!NoiseMap.Ready)
-            {
-                return;
-            }
-
-            ChunkController.Tick(NoiseMap.Bounds);
         }
 
         #endregion
