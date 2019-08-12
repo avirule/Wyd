@@ -111,6 +111,7 @@ namespace Controllers.World
             }
 
             _ChunkLoaderCurrentChunk = chunkPosition;
+            ChunkController.ChunkLoaderChangedPosition(_ChunkLoaderCurrentChunk);
 
             Vector3Int absDifference = (_ChunkLoaderCurrentChunk - _LastChunkLoadPosition).Abs();
 
@@ -130,22 +131,6 @@ namespace Controllers.World
             StartCoroutine(GenerateNoiseMap(_ChunkLoaderCurrentChunk));
 
             EnqueueBuildChunkArea(_ChunkLoaderCurrentChunk, WorldGenerationSettings.Radius);
-
-            foreach (Chunk chunk in ChunkController.Chunks)
-            {
-                Vector3Int difference = (chunk.Position - _ChunkLoaderCurrentChunk).Abs();
-
-                if ((difference.x > (ShadowRadius * Chunk.Size.x)) || (difference.z > (ShadowRadius * Chunk.Size.z)))
-                {
-                    chunk.MeshRenderer.shadowCastingMode = ShadowCastingMode.Off;
-                    chunk.MeshRenderer.receiveShadows = false;
-                }
-                else
-                {
-                    chunk.MeshRenderer.shadowCastingMode = ShadowCastingMode.On;
-                    chunk.MeshRenderer.receiveShadows = true;
-                }
-            }
         }
 
         private void CheckMeshingAndTick()

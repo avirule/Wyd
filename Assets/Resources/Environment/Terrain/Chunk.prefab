@@ -114,5 +114,5 @@ MonoBehaviour:
   PendingMeshAssigment: 0
   MeshFilter: {fileID: 9170613462872033006}
   MeshRenderer: {fileID: -6824970583116161446}
-  MeshCollider: {fileID: 0}
+  MeshCollider: {fileID: 6378085758781315392}
   Position: {x: 0, y: 0, z: 0}

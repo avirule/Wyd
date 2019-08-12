@@ -1,5 +1,6 @@
 #region
 
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -10,6 +11,7 @@ using Logging;
 using NLog;
 using Static;
 using UnityEngine;
+using UnityEngine.Rendering;
 
 #endregion
 
@@ -21,10 +23,11 @@ namespace Controllers.World
         private Stopwatch _BuildChunkWorldTickLimiter;
         private Chunk _ChunkObject;
         private List<Chunk> _CachedChunks;
+        private Vector3Int _ChunkLoaderCurrentChunk;
 
-        public int CurrentCacheSize => _CachedChunks.Count;
         public List<Chunk> Chunks;
         public Queue<Vector3Int> BuildChunkQueue;
+        public int CurrentCacheSize => _CachedChunks.Count;
         public bool AllChunksGenerated => Chunks.All(chunk => chunk.Generated);
         public bool AllChunksMeshed => Chunks.All(chunk => chunk.Meshed);
 
@@ -37,6 +40,14 @@ namespace Controllers.World
 
             Chunks = new List<Chunk>();
             BuildChunkQueue = new Queue<Vector3Int>();
+        }
+
+        private void Update()
+        {
+            foreach (Chunk chunk in Chunks)
+            {
+                chunk.Tick();
+            }
         }
 
         public void Tick(BoundsInt bounds)
@@ -65,20 +76,13 @@ namespace Controllers.World
                 AssignMeshes();
             }
 
-            TickChunks();
-
             _WorldTickLimiter.Stop();
         }
 
         private void AssignMeshes()
         {
-            foreach (Chunk chunk in Chunks)
+            foreach (Chunk chunk in Chunks.Where(chunk => chunk.PendingMeshAssigment))
             {
-                if (!chunk.PendingMeshAssigment)
-                {
-                    continue;
-                }
-
                 chunk.AssignMesh();
 
                 if (_WorldTickLimiter.Elapsed.TotalSeconds >= WorldController.WORLD_TICK_RATE)
@@ -88,15 +92,24 @@ namespace Controllers.World
             }
         }
 
-        private void TickChunks()
+
+        public void ChunkLoaderChangedPosition(Vector3Int newPosition)
         {
+            _ChunkLoaderCurrentChunk = newPosition;
+            
             foreach (Chunk chunk in Chunks)
             {
-                chunk.Tick();
+                Vector3Int difference = (chunk.Position - _ChunkLoaderCurrentChunk).Abs();
+
+                chunk.DrawShadows = CheckDrawShadows(difference);
             }
         }
 
-
+        private bool CheckDrawShadows(Vector3Int difference)
+        {
+            return (difference.x > (GameController.SettingsController.ShadowRadius * Chunk.Size.x)) || (difference.z > (GameController.SettingsController.ShadowRadius * Chunk.Size.z));
+        }
+        
         #region CHUNK DESTROYING
 
         private void DestroyOutOfBoundsChunks(BoundsInt bounds)

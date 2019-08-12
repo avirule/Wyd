@@ -11,6 +11,7 @@ using NLog;
 using Static;
 using Threading.Generation;
 using UnityEngine;
+using UnityEngine.Rendering;
 
 #endregion
 
@@ -25,6 +26,21 @@ namespace Environment.Terrain
         private Stopwatch _BuildTimer;
         private Stopwatch _MeshTimer;
         private Mesh _Mesh;
+        private bool _DrawShadows;
+        public bool DrawShadows
+        {
+            get => _DrawShadows;
+            set
+            {
+                if (_DrawShadows == value)
+                {
+                    return;
+                }
+
+                _DrawShadows = value;
+                UpdateDrawShadows();
+            }
+        }
 
         public Block[] Blocks;
         public bool Deactivated;
@@ -177,6 +193,21 @@ namespace Environment.Terrain
 
             MeshFilter.mesh = _Mesh;
             MeshCollider.sharedMesh = MeshFilter.sharedMesh;
+        }
+
+        private void UpdateDrawShadows()
+        {
+            if (DrawShadows)
+            {
+                MeshRenderer.shadowCastingMode = ShadowCastingMode.Off;
+                MeshRenderer.receiveShadows = false;
+            }
+            else
+            {
+                MeshRenderer.shadowCastingMode = ShadowCastingMode.On;
+                MeshRenderer.receiveShadows = true;
+            }
+
         }
 
         public void Tick()
