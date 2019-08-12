@@ -87,6 +87,7 @@ namespace Environment.Terrain
 
         private void OnEnable()
         {
+            // Ensure the position is set BEFORE enabling previously disabled chunks
             Position = transform.position.ToInt();
             Generated = Generating = Meshed = Meshing = false;
             PendingMeshUpdate = true;
@@ -127,11 +128,11 @@ namespace Environment.Terrain
 
         private void GenerationCheckAndStart()
         {
-            if (!Generated)
+            if (!Generated && !Generating)
             {
                 StartCoroutine(GenerateBlocks());
             }
-            else if (PendingMeshUpdate && !Meshing)
+            else if (Generated && PendingMeshUpdate && !Meshing)
             {
                 StartCoroutine(GenerateMesh());
             }
