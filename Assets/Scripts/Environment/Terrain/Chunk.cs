@@ -10,7 +10,6 @@ using Logging;
 using NLog;
 using Static;
 using Threading.Generation;
-using UnityEditor.VersionControl;
 using UnityEngine;
 using UnityEngine.Rendering;
 
@@ -73,7 +72,6 @@ namespace Environment.Terrain
         public MeshCollider MeshCollider;
         public Vector3Int Position;
 
-
         private void Awake()
         {
             GameObject worldControllerObject = GameObject.FindWithTag("WorldController");
@@ -103,7 +101,7 @@ namespace Environment.Terrain
 
             if (MeshFilter.mesh != default)
             {
-             MeshFilter.mesh.Clear();   
+                MeshFilter.mesh.Clear();
             }
 
             gameObject.SetActive(false);
@@ -113,7 +111,7 @@ namespace Environment.Terrain
         {
             GenerationCheckAndStart();
 
-            CheckSettings();
+            CheckSettingsAndSet();
 
             Tick();
         }
@@ -132,9 +130,14 @@ namespace Environment.Terrain
             {
                 StartCoroutine(GenerateBlocks());
             }
-            else if (Generated && PendingMeshUpdate && !Meshing)
+            else if (_WorldController.ChunkController.AllChunksGenerated && PendingMeshUpdate && !Meshing)
             {
                 StartCoroutine(GenerateMesh());
+            }
+
+            if (ExpensiveMeshing && PendingMeshAssigment)
+            {
+                AssignMesh();
             }
         }
 
@@ -183,7 +186,7 @@ namespace Environment.Terrain
 
             yield return new WaitUntil(() => chunkGenerator.Update() || !enabled);
 
-            if (!enabled || !Generating)
+            if (!enabled)
             {
                 chunkGenerator.Abort();
                 Generating = false;
@@ -234,24 +237,6 @@ namespace Environment.Terrain
             DiagnosticsController.ChunkMeshTimes.Enqueue(_MeshTimer.Elapsed.TotalMilliseconds);
         }
 
-        private void UpdateDrawShadows()
-        {
-            MeshRenderer.receiveShadows = DrawShadows;
-            MeshRenderer.shadowCastingMode = DrawShadows ? ShadowCastingMode.On : ShadowCastingMode.Off;
-        }
-
-        private void UpdateExpensiveMeshing()
-        {
-            MeshRenderer.enabled = ExpensiveMeshing;
-            MeshCollider.enabled = ExpensiveMeshing;
-
-            // automatically assign mesh if none are assigned
-            if (ExpensiveMeshing && PendingMeshAssigment)
-            {
-                AssignMesh();
-            }
-        }
-
         private void AssignMesh()
         {
             if (!Generated || !Meshed)
@@ -267,7 +252,7 @@ namespace Environment.Terrain
         {
         }
 
-        private void CheckSettings()
+        private void CheckSettingsAndSet()
         {
             Vector3Int difference = (Position - WorldController.ChunkLoaderCurrentChunk).Abs();
 
@@ -275,16 +260,28 @@ namespace Environment.Terrain
             ExpensiveMeshing = CheckExpensiveMeshing(difference);
         }
 
+        private void UpdateDrawShadows()
+        {
+            MeshRenderer.receiveShadows = DrawShadows;
+            MeshRenderer.shadowCastingMode = DrawShadows ? ShadowCastingMode.On : ShadowCastingMode.Off;
+        }
+
+        private void UpdateExpensiveMeshing()
+        {
+            MeshRenderer.enabled = ExpensiveMeshing;
+            MeshCollider.enabled = ExpensiveMeshing;
+        }
+
         private static bool CheckDrawShadows(Vector3Int difference)
         {
-            return (difference.x > (GameController.SettingsController.ShadowRadius * Size.x)) ||
-                   (difference.z > (GameController.SettingsController.ShadowRadius * Size.z));
+            return (difference.x <= (GameController.SettingsController.ShadowRadius * Size.x)) &&
+                   (difference.z <= (GameController.SettingsController.ShadowRadius * Size.z));
         }
 
         private static bool CheckExpensiveMeshing(Vector3Int difference)
         {
-            return (difference.x > (GameController.SettingsController.ShadowRadius * Size.x)) ||
-                   (difference.z > (GameController.SettingsController.ShadowRadius * Size.z));
+            return (difference.x <= (GameController.SettingsController.ExpensiveMeshingRadius * Size.x)) &&
+                   (difference.z <= (GameController.SettingsController.ExpensiveMeshingRadius * Size.z));
         }
     }
 }

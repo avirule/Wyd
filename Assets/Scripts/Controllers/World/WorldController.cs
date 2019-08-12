@@ -7,7 +7,6 @@ using Environment.Terrain.Generation.Noise;
 using Static;
 using Threading.Generation;
 using UnityEngine;
-using UnityEngine.Rendering;
 
 #endregion
 
@@ -19,20 +18,20 @@ namespace Controllers.World
         ///     This is referenced OFTEN in SYNCHRONOUS CONTEXT. DO NOT USE IN ASYNCHRONOUS CONTEXTS.
         /// </summary>
         public static Vector3Int ChunkLoaderCurrentChunk;
-        public const float WORLD_TICK_RATE = 1f / 90f;
+
+        public static float WorldTickRate;
         public static int ChunkLoaderSnapDistance;
 
         private Vector3Int _LastChunkLoadPosition;
-        private bool _RegenerateNoise;
 
         public ChunkController ChunkController;
         public Transform ChunkLoader;
         public NoiseMap NoiseMap;
         public WorldGenerationSettings WorldGenerationSettings;
-        public int ShadowRadius;
 
         private void Awake()
         {
+            WorldTickRate = Time.maximumDeltaTime;
             ChunkLoaderCurrentChunk = default;
             Chunk.Size = WorldGenerationSettings.ChunkSize;
             ChunkLoaderSnapDistance = Chunk.Size.x * 2;
@@ -51,23 +50,10 @@ namespace Controllers.World
             CheckChunkLoaderChangedChunk();
             CheckMeshingAndTick();
         }
-
-
-        public void EnqueueBuildChunkArea(Vector3Int origin, int radius)
-        {
-            // +1 to include player's chunk
-            for (int x = -radius; x < (radius + 1); x++)
-            {
-                for (int z = -radius; z < (radius + 1); z++)
-                {
-                    ChunkController.BuildChunkQueue.Enqueue(origin + Chunk.Size.Multiply(new Vector3Int(x, 0, z)));
-                }
-            }
-        }
+        
 
         private IEnumerator GenerateNoiseMap(Vector3Int offset)
         {
-            _RegenerateNoise = false;
             // over-generate noise map size to avoid array index overflows
             NoiseMap = new NoiseMap(null, ChunkLoaderCurrentChunk,
                 new Vector3Int((WorldGenerationSettings.Diameter + 1) * Chunk.Size.x, 0,
@@ -77,13 +63,7 @@ namespace Controllers.World
                 new PerlinNoiseGenerator(offset, NoiseMap.Bounds.size, WorldGenerationSettings);
             perlinNoiseGenerator.Start();
 
-            yield return new WaitUntil(() => perlinNoiseGenerator.Update() || _RegenerateNoise);
-
-            if (_RegenerateNoise)
-            {
-                perlinNoiseGenerator.Abort();
-                yield break;
-            }
+            yield return new WaitUntil(() => perlinNoiseGenerator.Update());
 
             NoiseMap.Map = perlinNoiseGenerator.Map;
             NoiseMap.Ready = true;
@@ -117,7 +97,7 @@ namespace Controllers.World
 
             Vector3Int absDifference = (ChunkLoaderCurrentChunk - _LastChunkLoadPosition).Abs();
 
-            if ((absDifference.x < ChunkLoaderSnapDistance) && (absDifference.z < ChunkLoaderSnapDistance))
+            if ((absDifference.x < ChunkLoaderSnapDistance) && (absDifference.z <= ChunkLoaderSnapDistance))
             {
                 return;
             }
@@ -129,12 +109,23 @@ namespace Controllers.World
         {
             _LastChunkLoadPosition = ChunkLoaderCurrentChunk;
 
-            _RegenerateNoise = true;
             StartCoroutine(GenerateNoiseMap(ChunkLoaderCurrentChunk));
 
             EnqueueBuildChunkArea(ChunkLoaderCurrentChunk, WorldGenerationSettings.Radius);
         }
 
+        public void EnqueueBuildChunkArea(Vector3Int origin, int radius)
+        {
+            // +1 to include player's chunk
+            for (int x = -radius; x < (radius + 1); x++)
+            {
+                for (int z = -radius; z < (radius + 1); z++)
+                {
+                    ChunkController.BuildChunkQueue.Enqueue(origin + Chunk.Size.Multiply(new Vector3Int(x, 0, z)));
+                }
+            }
+        }
+        
         private void CheckMeshingAndTick()
         {
             if (!NoiseMap.Ready)
