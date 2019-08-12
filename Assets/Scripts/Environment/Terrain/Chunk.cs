@@ -10,6 +10,7 @@ using Logging;
 using NLog;
 using Static;
 using Threading.Generation;
+using UnityEditor.VersionControl;
 using UnityEngine;
 using UnityEngine.Rendering;
 
@@ -27,6 +28,7 @@ namespace Environment.Terrain
         private Stopwatch _MeshTimer;
         private Mesh _Mesh;
         private bool _DrawShadows;
+
         public bool DrawShadows
         {
             get => _DrawShadows;
@@ -42,8 +44,24 @@ namespace Environment.Terrain
             }
         }
 
+        private bool _ExpensiveMeshing;
+
+        public bool ExpensiveMeshing
+        {
+            get => _ExpensiveMeshing;
+            set
+            {
+                if (_ExpensiveMeshing == value)
+                {
+                    return;
+                }
+
+                _ExpensiveMeshing = value;
+                UpdateExpensiveMeshing();
+            }
+        }
+
         public Block[] Blocks;
-        public bool Deactivated;
         public bool Generated;
         public bool Generating;
         public bool Meshed;
@@ -67,16 +85,68 @@ namespace Environment.Terrain
             _MeshTimer = new Stopwatch();
         }
 
-        public IEnumerator GenerateBlocks()
+        private void OnEnable()
+        {
+            Position = transform.position.ToInt();
+            Generated = Generating = Meshed = Meshing = false;
+            PendingMeshUpdate = true;
+            gameObject.SetActive(true);
+        }
+
+        private void OnDisable()
+        {
+            if (_Mesh != default)
+            {
+                _Mesh.Clear();
+            }
+
+            if (MeshFilter.mesh != default)
+            {
+             MeshFilter.mesh.Clear();   
+            }
+
+            gameObject.SetActive(false);
+        }
+
+        private void Update()
+        {
+            GenerationCheckAndStart();
+
+            CheckSettings();
+
+            Tick();
+        }
+
+        private void LateUpdate()
+        {
+            if (!ExpensiveMeshing)
+            {
+                Graphics.DrawMesh(_Mesh, transform.localToWorldMatrix, MeshRenderer.material, 0);
+            }
+        }
+
+        private void GenerationCheckAndStart()
+        {
+            if (!Generated)
+            {
+                StartCoroutine(GenerateBlocks());
+            }
+            else if (PendingMeshUpdate && !Meshing)
+            {
+                StartCoroutine(GenerateMesh());
+            }
+        }
+
+        private IEnumerator GenerateBlocks()
         {
             _BuildTimer.Restart();
 
             Generated = false;
             Generating = true;
 
-            yield return new WaitUntil(() => _WorldController.NoiseMap.Ready || Deactivated);
+            yield return new WaitUntil(() => _WorldController.NoiseMap.Ready || !enabled);
 
-            if (Deactivated)
+            if (!enabled)
             {
                 Generating = false;
                 _BuildTimer.Stop();
@@ -110,9 +180,9 @@ namespace Environment.Terrain
             ChunkBuilder chunkGenerator = new ChunkBuilder(noiseMap, Size);
             chunkGenerator.Start();
 
-            yield return new WaitUntil(() => chunkGenerator.Update() || Deactivated);
+            yield return new WaitUntil(() => chunkGenerator.Update() || !enabled);
 
-            if (Deactivated || !Generating)
+            if (!enabled || !Generating)
             {
                 chunkGenerator.Abort();
                 Generating = false;
@@ -129,7 +199,7 @@ namespace Environment.Terrain
             DiagnosticsController.ChunkBuildTimes.Enqueue(_BuildTimer.Elapsed.TotalMilliseconds);
         }
 
-        public IEnumerator GenerateMesh()
+        private IEnumerator GenerateMesh()
         {
             if (!Generated)
             {
@@ -144,9 +214,9 @@ namespace Environment.Terrain
             MeshGenerator meshGenerator = new MeshGenerator(_WorldController, _BlockController, Position, Blocks);
             meshGenerator.Start();
 
-            yield return new WaitUntil(() => meshGenerator.Update() || Deactivated);
+            yield return new WaitUntil(() => meshGenerator.Update() || !enabled);
 
-            if (Deactivated)
+            if (!enabled)
             {
                 meshGenerator.Abort();
                 Meshing = false;
@@ -163,30 +233,27 @@ namespace Environment.Terrain
             DiagnosticsController.ChunkMeshTimes.Enqueue(_MeshTimer.Elapsed.TotalMilliseconds);
         }
 
-        public void Activate(Vector3 position = default)
+        private void UpdateDrawShadows()
         {
-            transform.position = position;
-            Position = position.ToInt();
-            PendingMeshUpdate = true;
-            Generated = Generating = Meshed = Meshing = Deactivated = false;
-            gameObject.SetActive(true);
+            MeshRenderer.receiveShadows = DrawShadows;
+            MeshRenderer.shadowCastingMode = DrawShadows ? ShadowCastingMode.On : ShadowCastingMode.Off;
         }
 
-        public void Deactivate()
+        private void UpdateExpensiveMeshing()
         {
-            Deactivated = true;
+            MeshRenderer.enabled = ExpensiveMeshing;
+            MeshCollider.enabled = ExpensiveMeshing;
 
-            if (_Mesh != default)
+            // automatically assign mesh if none are assigned
+            if (ExpensiveMeshing && PendingMeshAssigment)
             {
-                _Mesh.Clear();
+                AssignMesh();
             }
-
-            gameObject.SetActive(false);
         }
 
-        public void AssignMesh()
+        private void AssignMesh()
         {
-            if (!Meshed)
+            if (!Generated || !Meshed)
             {
                 return;
             }
@@ -195,23 +262,28 @@ namespace Environment.Terrain
             MeshCollider.sharedMesh = MeshFilter.sharedMesh;
         }
 
-        private void UpdateDrawShadows()
-        {
-            if (DrawShadows)
-            {
-                MeshRenderer.shadowCastingMode = ShadowCastingMode.Off;
-                MeshRenderer.receiveShadows = false;
-            }
-            else
-            {
-                MeshRenderer.shadowCastingMode = ShadowCastingMode.On;
-                MeshRenderer.receiveShadows = true;
-            }
-
-        }
-
         public void Tick()
         {
+        }
+
+        private void CheckSettings()
+        {
+            Vector3Int difference = (Position - WorldController.ChunkLoaderCurrentChunk).Abs();
+
+            DrawShadows = CheckDrawShadows(difference);
+            ExpensiveMeshing = CheckExpensiveMeshing(difference);
+        }
+
+        private static bool CheckDrawShadows(Vector3Int difference)
+        {
+            return (difference.x > (GameController.SettingsController.ShadowRadius * Size.x)) ||
+                   (difference.z > (GameController.SettingsController.ShadowRadius * Size.z));
+        }
+
+        private static bool CheckExpensiveMeshing(Vector3Int difference)
+        {
+            return (difference.x > (GameController.SettingsController.ShadowRadius * Size.x)) ||
+                   (difference.z > (GameController.SettingsController.ShadowRadius * Size.z));
         }
     }
 }

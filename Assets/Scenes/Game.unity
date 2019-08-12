@@ -277,6 +277,8 @@ MonoBehaviour:
   MaximumChunkCacheSize: 30
   MaximumChunkLoadTimeCacheSize: 60
   MaximumFrameRateCacheSize: 60
+  ShadowRadius: 4
+  ExpensiveMeshingRadius: 0
 --- !u!1 &705507993
 GameObject:
   m_ObjectHideFlags: 0

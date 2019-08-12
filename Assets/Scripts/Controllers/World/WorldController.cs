@@ -15,10 +15,13 @@ namespace Controllers.World
 {
     public class WorldController : MonoBehaviour
     {
+        /// <summary>
+        ///     This is referenced OFTEN in SYNCHRONOUS CONTEXT. DO NOT USE IN ASYNCHRONOUS CONTEXTS.
+        /// </summary>
+        public static Vector3Int ChunkLoaderCurrentChunk;
         public const float WORLD_TICK_RATE = 1f / 90f;
         public static int ChunkLoaderSnapDistance;
 
-        private Vector3Int _ChunkLoaderCurrentChunk;
         private Vector3Int _LastChunkLoadPosition;
         private bool _RegenerateNoise;
 
@@ -30,17 +33,17 @@ namespace Controllers.World
 
         private void Awake()
         {
+            ChunkLoaderCurrentChunk = default;
             Chunk.Size = WorldGenerationSettings.ChunkSize;
             ChunkLoaderSnapDistance = Chunk.Size.x * 2;
-            _ChunkLoaderCurrentChunk = new Vector3Int(0, 0, 0);
             CheckChunkLoaderChangedChunk();
         }
 
         private void Start()
         {
-            StartCoroutine(GenerateNoiseMap(_ChunkLoaderCurrentChunk));
+            StartCoroutine(GenerateNoiseMap(ChunkLoaderCurrentChunk));
 
-            EnqueueBuildChunkArea(_ChunkLoaderCurrentChunk, WorldGenerationSettings.Radius);
+            EnqueueBuildChunkArea(ChunkLoaderCurrentChunk, WorldGenerationSettings.Radius);
         }
 
         private void Update()
@@ -66,7 +69,7 @@ namespace Controllers.World
         {
             _RegenerateNoise = false;
             // over-generate noise map size to avoid array index overflows
-            NoiseMap = new NoiseMap(null, _ChunkLoaderCurrentChunk,
+            NoiseMap = new NoiseMap(null, ChunkLoaderCurrentChunk,
                 new Vector3Int((WorldGenerationSettings.Diameter + 1) * Chunk.Size.x, 0,
                     (WorldGenerationSettings.Diameter + 1) * Chunk.Size.z));
 
@@ -105,15 +108,14 @@ namespace Controllers.World
                 GetWorldChunkOriginFromGlobalPosition(ChunkLoader.transform.position).ToInt();
             chunkPosition.y = 0;
 
-            if (chunkPosition == _ChunkLoaderCurrentChunk)
+            if (chunkPosition == ChunkLoaderCurrentChunk)
             {
                 return;
             }
 
-            _ChunkLoaderCurrentChunk = chunkPosition;
-            ChunkController.ChunkLoaderChangedPosition(_ChunkLoaderCurrentChunk);
+            ChunkLoaderCurrentChunk = chunkPosition;
 
-            Vector3Int absDifference = (_ChunkLoaderCurrentChunk - _LastChunkLoadPosition).Abs();
+            Vector3Int absDifference = (ChunkLoaderCurrentChunk - _LastChunkLoadPosition).Abs();
 
             if ((absDifference.x < ChunkLoaderSnapDistance) && (absDifference.z < ChunkLoaderSnapDistance))
             {
@@ -125,12 +127,12 @@ namespace Controllers.World
 
         private void UpdateChunkLoadArea()
         {
-            _LastChunkLoadPosition = _ChunkLoaderCurrentChunk;
+            _LastChunkLoadPosition = ChunkLoaderCurrentChunk;
 
             _RegenerateNoise = true;
-            StartCoroutine(GenerateNoiseMap(_ChunkLoaderCurrentChunk));
+            StartCoroutine(GenerateNoiseMap(ChunkLoaderCurrentChunk));
 
-            EnqueueBuildChunkArea(_ChunkLoaderCurrentChunk, WorldGenerationSettings.Radius);
+            EnqueueBuildChunkArea(ChunkLoaderCurrentChunk, WorldGenerationSettings.Radius);
         }
 
         private void CheckMeshingAndTick()

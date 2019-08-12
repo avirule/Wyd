@@ -1,6 +1,5 @@
 #region
 
-using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -11,7 +10,6 @@ using Logging;
 using NLog;
 using Static;
 using UnityEngine;
-using UnityEngine.Rendering;
 
 #endregion
 
@@ -23,7 +21,6 @@ namespace Controllers.World
         private Stopwatch _BuildChunkWorldTickLimiter;
         private Chunk _ChunkObject;
         private List<Chunk> _CachedChunks;
-        private Vector3Int _ChunkLoaderCurrentChunk;
 
         public List<Chunk> Chunks;
         public Queue<Vector3Int> BuildChunkQueue;
@@ -61,8 +58,7 @@ namespace Controllers.World
 
             if (AllChunksGenerated)
             {
-                DestroyOutOfBoundsChunks(bounds);
-                BeginGeneratingMissingChunkMeshes();
+                DeactivateOutOfBoundsChunks(bounds);
             }
 
             // cull chunks down to half the maximum when idle
@@ -71,48 +67,12 @@ namespace Controllers.World
                 CullCachedChunks();
             }
 
-            if (Chunks.Any(chunk => chunk.PendingMeshAssigment))
-            {
-                AssignMeshes();
-            }
-
             _WorldTickLimiter.Stop();
         }
 
-        private void AssignMeshes()
-        {
-            foreach (Chunk chunk in Chunks.Where(chunk => chunk.PendingMeshAssigment))
-            {
-                chunk.AssignMesh();
-
-                if (_WorldTickLimiter.Elapsed.TotalSeconds >= WorldController.WORLD_TICK_RATE)
-                {
-                    break;
-                }
-            }
-        }
-
-
-        public void ChunkLoaderChangedPosition(Vector3Int newPosition)
-        {
-            _ChunkLoaderCurrentChunk = newPosition;
-            
-            foreach (Chunk chunk in Chunks)
-            {
-                Vector3Int difference = (chunk.Position - _ChunkLoaderCurrentChunk).Abs();
-
-                chunk.DrawShadows = CheckDrawShadows(difference);
-            }
-        }
-
-        private bool CheckDrawShadows(Vector3Int difference)
-        {
-            return (difference.x > (GameController.SettingsController.ShadowRadius * Chunk.Size.x)) || (difference.z > (GameController.SettingsController.ShadowRadius * Chunk.Size.z));
-        }
-        
         #region CHUNK DESTROYING
 
-        private void DestroyOutOfBoundsChunks(BoundsInt bounds)
+        private void DeactivateOutOfBoundsChunks(BoundsInt bounds)
         {
             int initialCount = Chunks.Count;
 
@@ -123,8 +83,7 @@ namespace Controllers.World
                     continue;
                 }
 
-                _CachedChunks.Add(Chunks[i]);
-                DestroyChunk(Chunks[i]);
+                DeactivateChunk(Chunks[i]);
 
                 if (_WorldTickLimiter.Elapsed.TotalSeconds > WorldController.WORLD_TICK_RATE)
                 {
@@ -133,29 +92,12 @@ namespace Controllers.World
             }
         }
 
-        private void DestroyChunk(Chunk chunk)
+        private void DeactivateChunk(Chunk chunk)
         {
+            _CachedChunks.Add(chunk);
             AssignNeighborsPendingUpdate(chunk.Position);
-            chunk.Deactivate();
+            chunk.enabled = false;
             Chunks.Remove(chunk);
-        }
-
-        private void BeginGeneratingMissingChunkMeshes()
-        {
-            foreach (Chunk chunk in Chunks)
-            {
-                if (chunk.Deactivated || !chunk.PendingMeshUpdate || (!chunk.Meshed && chunk.Meshing))
-                {
-                    continue;
-                }
-
-                StartCoroutine(chunk.GenerateMesh());
-
-                if (_WorldTickLimiter.Elapsed.TotalSeconds > WorldController.WORLD_TICK_RATE)
-                {
-                    break;
-                }
-            }
         }
 
         private void CullCachedChunks()
@@ -205,11 +147,11 @@ namespace Controllers.World
             {
                 _BuildChunkWorldTickLimiter.Restart();
 
-                Vector3Int pos = BuildChunkQueue.Dequeue();
+                Vector3Int position = BuildChunkQueue.Dequeue();
 
-                if (!CheckChunkExistsAtPosition(pos) || GetChunkAtPosition(pos).Deactivated)
+                if (!CheckChunkExistsAtPosition(position) || !GetChunkAtPosition(position).enabled )
                 {
-                    CreateChunk(pos);
+                    CreateChunk(position);
                 }
 
                 if (_BuildChunkWorldTickLimiter.Elapsed.TotalSeconds >= WorldController.WORLD_TICK_RATE)
@@ -224,7 +166,7 @@ namespace Controllers.World
         {
             Chunk chunkAtPosition = GetChunkAtPosition(position);
 
-            if ((chunkAtPosition != default) && !chunkAtPosition.Deactivated)
+            if ((chunkAtPosition != default) && chunkAtPosition.enabled)
             {
                 return;
             }
@@ -240,9 +182,9 @@ namespace Controllers.World
                 _CachedChunks.Remove(chunk);
             }
 
-            chunk.Activate(position);
+            chunk.transform.position = position;
+            chunk.enabled = true;
             Chunks.Add(chunk);
-            StartCoroutine(chunk.GenerateBlocks());
 
             // ensures that neighbours update their meshes to cull newly out of sight faces
             AssignNeighborsPendingUpdate(chunk.Position);
@@ -296,7 +238,7 @@ namespace Controllers.World
 
             Chunk chunk = GetChunkAtPosition(chunkPosition);
 
-            if (chunk == null)
+            if (chunk == null || !chunk.Generated)
             {
                 return default;
             }

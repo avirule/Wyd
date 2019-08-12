@@ -12,5 +12,6 @@ namespace Controllers.Game
         public int MaximumChunkLoadTimeCacheSize;
         public int MaximumFrameRateCacheSize;
         public int ShadowRadius;
+        public int ExpensiveMeshingRadius;
     }
 }
