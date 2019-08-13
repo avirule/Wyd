@@ -1,12 +1,11 @@
 #region
 
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using Controllers.Game;
 using Environment.Terrain;
-using Logging;
-using NLog;
 using Static;
 using UnityEngine;
 
@@ -17,7 +16,7 @@ namespace Controllers.World
     public sealed class ChunkController : MonoBehaviour
     {
         private WorldController _WorldController;
-        private Stopwatch _WorldTickLimiter;
+        private Stopwatch _FrameTimeLimiter;
         private Chunk _ChunkObject;
         private Queue<Chunk> _CachedChunks;
         private bool _ProcessingChunkQueue;
@@ -33,7 +32,7 @@ namespace Controllers.World
             _WorldController = GameObject.FindWithTag("WorldController").GetComponent<WorldController>();
             _ChunkObject = Resources.Load<Chunk>(@"Environment\Terrain\Chunk");
             _CachedChunks = new Queue<Chunk>();
-            _WorldTickLimiter = new Stopwatch();
+            _FrameTimeLimiter = new Stopwatch();
             _ProcessingChunkQueue = false;
 
             Chunks = new List<Chunk>();
@@ -42,7 +41,7 @@ namespace Controllers.World
 
         public void Update()
         {
-            _WorldTickLimiter.Restart();
+            _FrameTimeLimiter.Restart();
 
             if ((BuildChunkQueue.Count > 0) && !_ProcessingChunkQueue)
             {
@@ -60,7 +59,7 @@ namespace Controllers.World
                 CullCachedChunks();
             }
 
-            _WorldTickLimiter.Stop();
+            _FrameTimeLimiter.Stop();
         }
 
         #region CHUNK BUILDING
@@ -95,7 +94,7 @@ namespace Controllers.World
                 // ensures that neighbours update their meshes to cull newly out of sight faces
                 FlagNeighborsPendingUpdate(chunk.Position);
 
-                if (_WorldTickLimiter.Elapsed.TotalSeconds > GameController.SettingsController.MaximumInternalFrameTime)
+                if (_FrameTimeLimiter.Elapsed.TotalSeconds > GameController.SettingsController.MaximumInternalFrameTime)
                 {
                     break;
                 }
@@ -162,7 +161,7 @@ namespace Controllers.World
 
                 DeactivateChunk(Chunks[i]);
 
-                if (_WorldTickLimiter.Elapsed.TotalSeconds > GameController.SettingsController.MaximumInternalFrameTime)
+                if (_FrameTimeLimiter.Elapsed.TotalSeconds > GameController.SettingsController.MaximumInternalFrameTime)
                 {
                     break;
                 }
@@ -179,8 +178,6 @@ namespace Controllers.World
 
         private void CullCachedChunks()
         {
-            bool hasIgnoredCancellation = false;
-
             // controller will cull chunks down to half the maximum when idle
             while (_CachedChunks.Count > (GameController.SettingsController.MaximumChunkCacheSize / 2))
             {
@@ -188,26 +185,11 @@ namespace Controllers.World
                 Destroy(chunk.gameObject);
 
                 // continue culling if the amount of cached chunks is greater than the maximum
-                if (_WorldTickLimiter.Elapsed.TotalSeconds <=
-                    GameController.SettingsController.MaximumInternalFrameTime)
+                if (_FrameTimeLimiter.Elapsed.TotalSeconds > GameController.SettingsController.MaximumInternalFrameTime &&
+                    GameController.SettingsController.CacheCullingAggression == CacheCullingAggression.Passive)
                 {
-                    continue;
+                    return;
                 }
-
-                if (_CachedChunks.Count > GameController.SettingsController.MaximumChunkCacheSize)
-                {
-                    // stops spam
-                    if (!hasIgnoredCancellation)
-                    {
-                        EventLog.Logger.Log(LogLevel.Warn,
-                            "Controller has cached too many chunks. Ignoring tick rate cancellation and continuing.");
-                        hasIgnoredCancellation = true;
-                    }
-
-                    continue;
-                }
-
-                break;
             }
         }
 
