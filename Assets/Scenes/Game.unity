@@ -277,8 +277,8 @@ MonoBehaviour:
   MaximumChunkCacheSize: 120
   MaximumChunkLoadTimeCacheSize: 60
   MaximumFrameRateCacheSize: 60
-  ShadowRadius: 4
-  ExpensiveMeshingRadius: 3
+  ShadowRadius: 1
+  ExpensiveMeshingRadius: 1
 --- !u!1 &705507993
 GameObject:
   m_ObjectHideFlags: 0
@@ -497,9 +497,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 0468092b4dbf446bb494bab4364c5e45, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  WorldGenerationSettings: {fileID: 1461272637}
   ChunkController: {fileID: 1461272641}
   ChunkLoader: {fileID: 963194228}
-  WorldGenerationSettings: {fileID: 1461272637}
+  ChunkLoaderCurrentChunk: {x: 0, y: 0, z: 0}
 --- !u!4 &1461272636
 Transform:
   m_ObjectHideFlags: 0
@@ -526,11 +527,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 6bacbf482bf844eaa875579526459c24, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  ChunkSize: {x: 8, y: 128, z: 8}
+  ChunkSize: {x: 32, y: 128, z: 32}
   Lacunarity: 2
   Octaves: 16
   Persistence: 0.5
-  Radius: 10
+  Radius: 2
   Scale: 128
   SeedString: genericseed
 --- !u!114 &1461272641

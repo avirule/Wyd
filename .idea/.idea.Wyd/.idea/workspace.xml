@@ -1,15 +1,22 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
   <component name="AnalysisUIOptions">
-    <option name="SCOPE_TYPE" value="3" />
     <option name="CUSTOM_SCOPE_NAME" value="All Places" />
   </component>
   <component name="ChangeListManager">
     <list default="true" id="c75ae2de-3a89-4228-87f5-5925302b6d96" name="Default Changelist" comment="">
-      <change afterPath="$PROJECT_DIR$/Assets/Scenes/Debug.unity" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/Assets/Scenes/Debug.unity.meta" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Assets/Resources/Sounds.meta" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Assets/Resources/Sounds/Tracks.meta" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Assets/Resources/Sounds/Tracks/Erik Satie - Gymnopédie No. 1.mp3" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Assets/Resources/Sounds/Tracks/Erik Satie - Gymnopédie No. 1.mp3.meta" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Assets/Scripts/Audio.meta" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Assets/Scripts/Audio/AudioFade.cs" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Assets/Scripts/Audio/AudioFade.cs.meta" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/.idea.Wyd/.idea/contentModel.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/.idea.Wyd/.idea/contentModel.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/.idea.Wyd/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/.idea.Wyd/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/Assets/Scenes/Game.unity" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/Scenes/Game.unity" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Assets/Scenes/MainMenu.unity" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/Scenes/MainMenu.unity" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Assets/Scripts/Controllers/Game/GameSettingsController.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/Scripts/Controllers/Game/GameSettingsController.cs" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/Assets/Scripts/Controllers/World/ChunkController.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/Scripts/Controllers/World/ChunkController.cs" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/Assets/Scripts/Controllers/World/WorldController.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/Scripts/Controllers/World/WorldController.cs" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/Assets/Scripts/Environment/Terrain/Chunk.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/Scripts/Environment/Terrain/Chunk.cs" afterDir="false" />
@@ -28,6 +35,7 @@
   </component>
   <component name="HighlightingSettingsPerFile">
     <setting file="file://$PROJECT_DIR$/Assets/Scripts/Controllers/Game/GameController.cs" root0="FORCE_HIGHLIGHTING" />
+    <setting file="file://$PROJECT_DIR$/Assets/Scripts/Audio/AudioFade.cs" root0="FORCE_HIGHLIGHTING" />
     <setting file="file://$PROJECT_DIR$/Assets/Scripts/Controllers/Game/BlockController.cs" root0="FORCE_HIGHLIGHTING" />
     <setting file="file://$PROJECT_DIR$/Assets/Scripts/Controllers/Entity/PlayerController.cs" root0="FORCE_HIGHLIGHTING" />
     <setting file="file://$PROJECT_DIR$/Assets/Scripts/Controllers/Entity/CameraController.cs" root0="FORCE_HIGHLIGHTING" />
@@ -80,7 +88,6 @@
   <component name="IdeDocumentHistory">
     <option name="CHANGED_PATHS">
       <list>
-        <option value="$PROJECT_DIR$/Assets/Scripts/Environment/Terrain/Generation/Noise/Perlin/PerlinNoiseGenerator.cs" />
         <option value="$PROJECT_DIR$/Assets/Scripts/Controllers/BlockController.cs" />
         <option value="$PROJECT_DIR$/Assets/Scripts/Controllers/GameController.cs" />
         <option value="$PROJECT_DIR$/Assets/Scripts/Environment/MeshBuilder.cs" />
@@ -126,11 +133,12 @@
         <option value="$PROJECT_DIR$/Assets/Scripts/Environment/Terrain/Generation/Noise/OpenSimplex/OpenSimplex.cs" />
         <option value="$PROJECT_DIR$/Assets/Scripts/Threading/ThreadedProcess.cs" />
         <option value="$PROJECT_DIR$/Assets/Scripts/Environment/Terrain/BlockRule.cs" />
-        <option value="$PROJECT_DIR$/Assets/Scripts/Controllers/Game/GameSettingsController.cs" />
         <option value="$PROJECT_DIR$/Assets/scri.cs" />
+        <option value="$PROJECT_DIR$/Assets/Scripts/Audio/AudioFade.cs" />
+        <option value="$PROJECT_DIR$/Assets/Scripts/Environment/Terrain/Chunk.cs" />
+        <option value="$PROJECT_DIR$/Assets/Scripts/Controllers/Game/GameSettingsController.cs" />
         <option value="$PROJECT_DIR$/Assets/Scripts/Controllers/World/WorldController.cs" />
         <option value="$PROJECT_DIR$/Assets/Scripts/Controllers/World/ChunkController.cs" />
-        <option value="$PROJECT_DIR$/Assets/Scripts/Environment/Terrain/Chunk.cs" />
       </list>
     </option>
   </component>
@@ -178,10 +186,10 @@
       <option name="userSelectedPid" value="false" />
       <method v="2" />
     </configuration>
-    <configuration name="Attach to Unity Editor" type="UNITY_DEBUG_RUN_CONFIGURATION" factoryName="Unity Debug" show_console_on_std_err="false" show_console_on_std_out="false" port="50000" address="localhost" pid="20068">
+    <configuration name="Attach to Unity Editor" type="UNITY_DEBUG_RUN_CONFIGURATION" factoryName="Unity Debug" show_console_on_std_err="false" show_console_on_std_out="false" port="50000" address="localhost" pid="227644">
       <option name="allowRunningInParallel" value="false" />
       <option name="listenPortForConnections" value="false" />
-      <option name="pid" value="20068" />
+      <option name="pid" value="227644" />
       <option name="userSelectedPid" value="false" />
       <method v="2" />
     </configuration>
@@ -230,6 +238,7 @@
       <workItem from="1565521735260" duration="17031000" />
       <workItem from="1565543111971" duration="5862000" />
       <workItem from="1565610117365" duration="23810000" />
+      <workItem from="1565685005274" duration="3865000" />
     </task>
     <servers />
   </component>
@@ -266,38 +275,38 @@
     <state x="516" y="258" key="ANALYSIS_DLG_com.jetbrains.rider.actions.impl.cleanup.RiderCodeCleanupAction$actionPerformed$dlg$1/1920.1080" />
     <state width="1324" height="436" key="DebuggerActiveHint" />
     <state width="1324" height="436" key="DebuggerActiveHint/1920.1080" />
-    <state width="1493" height="261" key="GridCell.Tab.0.bottom" />
-    <state width="1493" height="261" key="GridCell.Tab.0.bottom/1920.1080" />
-    <state width="1493" height="261" key="GridCell.Tab.0.center" />
-    <state width="1493" height="261" key="GridCell.Tab.0.center/1920.1080" />
-    <state width="1493" height="261" key="GridCell.Tab.0.left" />
-    <state width="1493" height="261" key="GridCell.Tab.0.left/1920.1080" />
-    <state width="1493" height="261" key="GridCell.Tab.0.right" />
-    <state width="1493" height="261" key="GridCell.Tab.0.right/1920.1080" />
-    <state width="1493" height="261" key="GridCell.Tab.1.bottom" />
-    <state width="1493" height="261" key="GridCell.Tab.1.bottom/1920.1080" />
-    <state width="1493" height="261" key="GridCell.Tab.1.center" />
-    <state width="1493" height="261" key="GridCell.Tab.1.center/1920.1080" />
-    <state width="1493" height="261" key="GridCell.Tab.1.left" />
-    <state width="1493" height="261" key="GridCell.Tab.1.left/1920.1080" />
-    <state width="1493" height="261" key="GridCell.Tab.1.right" />
-    <state width="1493" height="261" key="GridCell.Tab.1.right/1920.1080" />
-    <state width="1493" height="261" key="GridCell.Tab.2.bottom" />
-    <state width="1493" height="261" key="GridCell.Tab.2.bottom/1920.1080" />
-    <state width="1493" height="261" key="GridCell.Tab.2.center" />
-    <state width="1493" height="261" key="GridCell.Tab.2.center/1920.1080" />
-    <state width="1493" height="261" key="GridCell.Tab.2.left" />
-    <state width="1493" height="261" key="GridCell.Tab.2.left/1920.1080" />
-    <state width="1493" height="261" key="GridCell.Tab.2.right" />
-    <state width="1493" height="261" key="GridCell.Tab.2.right/1920.1080" />
-    <state width="1493" height="261" key="GridCell.Tab.3.bottom" />
-    <state width="1493" height="261" key="GridCell.Tab.3.bottom/1920.1080" />
-    <state width="1493" height="261" key="GridCell.Tab.3.center" />
-    <state width="1493" height="261" key="GridCell.Tab.3.center/1920.1080" />
-    <state width="1493" height="261" key="GridCell.Tab.3.left" />
-    <state width="1493" height="261" key="GridCell.Tab.3.left/1920.1080" />
-    <state width="1493" height="261" key="GridCell.Tab.3.right" />
-    <state width="1493" height="261" key="GridCell.Tab.3.right/1920.1080" />
+    <state width="1493" height="260" key="GridCell.Tab.0.bottom" />
+    <state width="1493" height="260" key="GridCell.Tab.0.bottom/1920.1080" />
+    <state width="1493" height="260" key="GridCell.Tab.0.center" />
+    <state width="1493" height="260" key="GridCell.Tab.0.center/1920.1080" />
+    <state width="1493" height="260" key="GridCell.Tab.0.left" />
+    <state width="1493" height="260" key="GridCell.Tab.0.left/1920.1080" />
+    <state width="1493" height="260" key="GridCell.Tab.0.right" />
+    <state width="1493" height="260" key="GridCell.Tab.0.right/1920.1080" />
+    <state width="1493" height="260" key="GridCell.Tab.1.bottom" />
+    <state width="1493" height="260" key="GridCell.Tab.1.bottom/1920.1080" />
+    <state width="1493" height="260" key="GridCell.Tab.1.center" />
+    <state width="1493" height="260" key="GridCell.Tab.1.center/1920.1080" />
+    <state width="1493" height="260" key="GridCell.Tab.1.left" />
+    <state width="1493" height="260" key="GridCell.Tab.1.left/1920.1080" />
+    <state width="1493" height="260" key="GridCell.Tab.1.right" />
+    <state width="1493" height="260" key="GridCell.Tab.1.right/1920.1080" />
+    <state width="1493" height="260" key="GridCell.Tab.2.bottom" />
+    <state width="1493" height="260" key="GridCell.Tab.2.bottom/1920.1080" />
+    <state width="1493" height="260" key="GridCell.Tab.2.center" />
+    <state width="1493" height="260" key="GridCell.Tab.2.center/1920.1080" />
+    <state width="1493" height="260" key="GridCell.Tab.2.left" />
+    <state width="1493" height="260" key="GridCell.Tab.2.left/1920.1080" />
+    <state width="1493" height="260" key="GridCell.Tab.2.right" />
+    <state width="1493" height="260" key="GridCell.Tab.2.right/1920.1080" />
+    <state width="1493" height="260" key="GridCell.Tab.3.bottom" />
+    <state width="1493" height="260" key="GridCell.Tab.3.bottom/1920.1080" />
+    <state width="1493" height="260" key="GridCell.Tab.3.center" />
+    <state width="1493" height="260" key="GridCell.Tab.3.center/1920.1080" />
+    <state width="1493" height="260" key="GridCell.Tab.3.left" />
+    <state width="1493" height="260" key="GridCell.Tab.3.left/1920.1080" />
+    <state width="1493" height="260" key="GridCell.Tab.3.right" />
+    <state width="1493" height="260" key="GridCell.Tab.3.right/1920.1080" />
     <state width="1493" height="261" key="GridCell.Tab.4.bottom" />
     <state width="1493" height="261" key="GridCell.Tab.4.bottom/1920.1080" />
     <state width="1493" height="261" key="GridCell.Tab.4.center" />

@@ -12,7 +12,6 @@ using Static;
 using Threading.Generation;
 using UnityEngine;
 using UnityEngine.Rendering;
-using Debug = UnityEngine.Debug;
 
 #endregion
 
@@ -26,8 +25,8 @@ namespace Environment.Terrain
         private WorldController _WorldController;
         private Stopwatch _BuildTimer;
         private Stopwatch _MeshTimer;
-        private Mesh _Mesh;
-        
+
+        public Mesh Mesh;
         public Block[] Blocks;
         public bool Generated;
         public bool Generating;
@@ -39,7 +38,7 @@ namespace Environment.Terrain
         public MeshRenderer MeshRenderer;
         public MeshCollider MeshCollider;
         public Vector3Int Position;
-        
+
         private bool _DrawShadows;
 
         public bool DrawShadows
@@ -101,7 +100,7 @@ namespace Environment.Terrain
         {
             if (!ExpensiveMeshing)
             {
-                Graphics.DrawMesh(_Mesh, transform.localToWorldMatrix, MeshRenderer.material, 0);
+                Graphics.DrawMesh(Mesh, transform.localToWorldMatrix, MeshRenderer.material, 0);
             }
         }
 
@@ -209,7 +208,7 @@ namespace Environment.Terrain
                 yield break;
             }
 
-            _Mesh = meshGenerator.GetMesh();
+            Mesh = meshGenerator.GetMesh();
 
             Meshing = PendingMeshUpdate = false;
             Meshed = PendingMeshAssigment = true;
@@ -228,9 +227,9 @@ namespace Environment.Terrain
 
         public void Deactivate()
         {
-            if (_Mesh != default)
+            if (Mesh != default)
             {
-                _Mesh.Clear();
+                Mesh.Clear();
             }
 
             if (MeshFilter.mesh != default)
@@ -240,11 +239,11 @@ namespace Environment.Terrain
 
             gameObject.SetActive(false);
         }
-        
+
         public void Tick()
         {
         }
-        
+
         private void AssignMesh()
         {
             if (!Generated || !Meshed)
@@ -252,14 +251,14 @@ namespace Environment.Terrain
                 return;
             }
 
-            MeshFilter.mesh = _Mesh;
+            MeshFilter.mesh = Mesh;
             MeshCollider.sharedMesh = MeshFilter.sharedMesh;
             PendingMeshAssigment = false;
         }
 
         private void CheckSettingsAndSet()
         {
-            Vector3Int difference = (Position - WorldController.ChunkLoaderCurrentChunk).Abs();
+            Vector3Int difference = (Position - _WorldController.ChunkLoaderCurrentChunk).Abs();
 
             DrawShadows = CheckDrawShadows(difference);
             ExpensiveMeshing = CheckExpensiveMeshing(difference);
@@ -277,10 +276,11 @@ namespace Environment.Terrain
             MeshCollider.enabled = ExpensiveMeshing;
         }
 
-        private static bool CheckDrawShadows(Vector3Int difference)
+        private bool CheckDrawShadows(Vector3Int difference)
         {
-            return (difference.x <= (GameController.SettingsController.ShadowRadius * Size.x)) &&
-                   (difference.z <= (GameController.SettingsController.ShadowRadius * Size.z));
+            return (Position == _WorldController.ChunkLoaderCurrentChunk) ||
+                   ((difference.x <= (GameController.SettingsController.ShadowRadius * Size.x)) &&
+                    (difference.z <= (GameController.SettingsController.ShadowRadius * Size.z)));
         }
 
         private static bool CheckExpensiveMeshing(Vector3Int difference)

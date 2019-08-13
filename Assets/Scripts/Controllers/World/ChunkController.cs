@@ -10,6 +10,7 @@ using Logging;
 using NLog;
 using Static;
 using UnityEngine;
+using UnityEngine.Rendering;
 using Debug = UnityEngine.Debug;
 
 #endregion
@@ -24,8 +25,8 @@ namespace Controllers.World
         private Chunk _ChunkObject;
         private Queue<Chunk> _CachedChunks;
         private bool _ProcessingChunkQueue;
-
-        public List<Chunk> Chunks;
+        
+        public List<Chunk> Chunks;    
         public Queue<Vector3Int> BuildChunkQueue;
         public int CurrentCacheSize => _CachedChunks.Count;
         public bool AllChunksGenerated => Chunks.All(chunk => chunk.Generated);
@@ -105,7 +106,7 @@ namespace Controllers.World
                 // ensures that neighbours update their meshes to cull newly out of sight faces
                 FlagNeighborsPendingUpdate(chunk.Position);
 
-                if (_BuildChunkWorldTickLimiter.Elapsed.TotalSeconds > WorldController.WorldTickRate)
+                if (_BuildChunkWorldTickLimiter.Elapsed.TotalSeconds > GameController.SettingsController.MaximumInternalFrameTime)
                 {
                     _BuildChunkWorldTickLimiter.Reset();
                     yield return null;
@@ -163,7 +164,7 @@ namespace Controllers.World
         {
             for (int i = Chunks.Count - 1; i >= 0; i--)
             {
-                Vector3Int difference = (Chunks[i].Position - WorldController.ChunkLoaderCurrentChunk).Abs();
+                Vector3Int difference = (Chunks[i].Position - _WorldController.ChunkLoaderCurrentChunk).Abs();
 
                 if ((difference.x <= ((_WorldController.WorldGenerationSettings.Radius + 1) * Chunk.Size.x)) &&
                     (difference.z <= ((_WorldController.WorldGenerationSettings.Radius + 1) * Chunk.Size.z)))
@@ -173,7 +174,7 @@ namespace Controllers.World
 
                 DeactivateChunk(Chunks[i]);
                 
-                if (_WorldTickLimiter.Elapsed.TotalSeconds > WorldController.WorldTickRate)
+                if (_WorldTickLimiter.Elapsed.TotalSeconds > GameController.SettingsController.MaximumInternalFrameTime)
                 {
                     break;
                 }
@@ -196,10 +197,10 @@ namespace Controllers.World
             while (_CachedChunks.Count > (GameController.SettingsController.MaximumChunkCacheSize / 2))
             {
                 Chunk chunk = _CachedChunks.Dequeue();
-                Destroy(chunk);
+                Destroy(chunk.gameObject);
 
                 // continue culling if the amount of cached chunks is greater than the maximum
-                if (_WorldTickLimiter.Elapsed.TotalSeconds <= WorldController.WorldTickRate)
+                if (_WorldTickLimiter.Elapsed.TotalSeconds <= GameController.SettingsController.MaximumInternalFrameTime)
                 {
                     continue;
                 }

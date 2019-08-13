@@ -17,22 +17,20 @@ namespace Controllers.World
         /// <summary>
         ///     This is referenced OFTEN in SYNCHRONOUS CONTEXT. DO NOT USE IN ASYNCHRONOUS CONTEXTS.
         /// </summary>
-        public static Vector3Int ChunkLoaderCurrentChunk;
-
         public static float WorldTickRate;
-        public static int ChunkLoaderSnapDistance;
 
-        public ChunkController ChunkController;
-        public Transform ChunkLoader;
-        public NoiseMap NoiseMap;
+        public float TicksPerSecond;
         public WorldGenerationSettings WorldGenerationSettings;
+        public ChunkController ChunkController;
+        public NoiseMap NoiseMap;
+        public Transform ChunkLoader;
+        public Vector3Int ChunkLoaderCurrentChunk;
 
         private void Awake()
         {
-            WorldTickRate = Time.maximumDeltaTime;
+            WorldTickRate = 1f / TicksPerSecond;
             ChunkLoaderCurrentChunk = default;
             Chunk.Size = WorldGenerationSettings.ChunkSize;
-            ChunkLoaderSnapDistance = Chunk.Size.x * 2;
             CheckChunkLoaderChangedChunk();
         }
 
@@ -47,7 +45,7 @@ namespace Controllers.World
         {
             CheckChunkLoaderChangedChunk();
         }
-        
+
 
         private IEnumerator GenerateNoiseMap(Vector3Int offset)
         {
@@ -109,7 +107,7 @@ namespace Controllers.World
                 for (int z = -radius; z < (radius + 1); z++)
                 {
                     Vector3Int position = origin + Chunk.Size.Multiply(new Vector3Int(x, 0, z));
-                    
+
                     ChunkController.BuildChunkQueue.Enqueue(position);
                 }
             }
