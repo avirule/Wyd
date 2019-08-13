@@ -18,9 +18,10 @@ namespace Static
         {
             Application.Quit(errorCode);
 
-#if UNITY_EDITOR
-            EditorApplication.isPlaying = false;
-#endif
+            if (Application.isEditor)
+            {
+                EditorApplication.ExitPlaymode();
+            }
         }
     }
 }

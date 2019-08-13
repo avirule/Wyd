@@ -3,6 +3,8 @@
 using System;
 using Environment.Terrain;
 using Environment.Terrain.Generation;
+using Logging;
+using NLog;
 using Noise;
 using Static;
 using UnityEngine;
@@ -29,6 +31,13 @@ namespace Controllers.World
 
         private void Awake()
         {
+            if (TicksPerSecond < 1)
+            {
+                EventLog.Logger.Log(LogLevel.Error, "World tick rate cannot be set to less than 1tick/s. Exiting game.");
+                StaticMethods.ApplicationClose();
+                return;
+            }
+            
             WorldTickRate = TimeSpan.FromSeconds(1d / TicksPerSecond);
 
             ChunkLoaderCurrentChunk = default;
