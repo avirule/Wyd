@@ -260,7 +260,12 @@ namespace Environment.Terrain
             }
 
             MeshFilter.mesh = Mesh;
-            MeshCollider.sharedMesh = MeshFilter.sharedMesh;
+
+            if (MeshCollider != default)
+            {
+                MeshCollider.sharedMesh = MeshFilter.sharedMesh;
+            }
+
             PendingMeshAssigment = false;
         }
 
@@ -280,8 +285,15 @@ namespace Environment.Terrain
 
         private void UpdateExpensiveMeshing()
         {
-            MeshRenderer.enabled = ExpensiveMeshing;
-            MeshCollider.enabled = ExpensiveMeshing;
+            if (MeshRenderer != default)
+            {
+                MeshRenderer.enabled = ExpensiveMeshing;
+            }
+
+            if (MeshCollider != default)
+            {
+                MeshCollider.enabled = ExpensiveMeshing;
+            }
         }
 
         private bool CheckDrawShadows(Vector3Int difference)

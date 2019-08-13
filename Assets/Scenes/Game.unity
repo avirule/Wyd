@@ -498,7 +498,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 0468092b4dbf446bb494bab4364c5e45, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  TicksPerSecond: 0
+  TicksPerSecond: 15
   WorldGenerationSettings: {fileID: 1461272637}
   ChunkController: {fileID: 1461272641}
   ChunkLoader: {fileID: 963194228}

@@ -51,24 +51,13 @@ namespace Controllers.Game
             }
 
             if (!_Blocks.ContainsKey(blockId))
-            {
-                if (!addNewBlock)
-                {
-                    EventLog.Logger.Log(LogLevel.Error,
-                        $"Failed to add block rule: specified block id `{blockId}` does not exist.");
-
-                    return false;
-                }
-
-                EventLog.Logger.Log(LogLevel.Warn,
-                    $"AddNewBlock flag set, adding block `{blockName}` with id `{blockId}` and continuing...");
-
+            { 
                 _Blocks.Add(blockId, new BlockRule(blockId, blockName, isTransparent, uvsRule));
                 _BlockNameIds.Add(blockName, blockId);
             }
 
             EventLog.Logger.Log(LogLevel.Info,
-                $"Successfully added rule evaluation for block `{blockName}` with id `{blockId}`.");
+                $"Successfully added block `{blockName}` with id `{blockId}`.");
 
             return true;
         }

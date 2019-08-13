@@ -105,7 +105,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: da7f38601b0f4d2f91db1e916ea65fc0, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  Deactivated: 0
+  Mesh: {fileID: 0}
   Generated: 0
   Generating: 0
   Meshed: 0
