@@ -33,20 +33,21 @@ namespace Controllers.World
         {
             if (TicksPerSecond < 1)
             {
-                EventLog.Logger.Log(LogLevel.Error, "World tick rate cannot be set to less than 1tick/s. Exiting game.");
+                EventLog.Logger.Log(LogLevel.Error,
+                    "World tick rate cannot be set to less than 1tick/s. Exiting game.");
                 StaticMethods.ApplicationClose();
                 return;
             }
-            
+
             WorldTickRate = TimeSpan.FromSeconds(1d / TicksPerSecond);
 
             ChunkLoaderCurrentChunk = default;
             Chunk.Size = WorldGenerationSettings.ChunkSize;
-            
+
             NoiseMap = new NoiseMap(null, ChunkLoaderCurrentChunk,
                 new Vector3Int((WorldGenerationSettings.Diameter + 1) * Chunk.Size.x, 0,
                     (WorldGenerationSettings.Diameter + 1) * Chunk.Size.z));
-            
+
             CheckChunkLoaderChangedChunk();
         }
 

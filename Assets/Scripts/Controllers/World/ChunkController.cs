@@ -1,6 +1,5 @@
 #region
 
-using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
@@ -185,8 +184,9 @@ namespace Controllers.World
                 Destroy(chunk.gameObject);
 
                 // continue culling if the amount of cached chunks is greater than the maximum
-                if (_FrameTimeLimiter.Elapsed.TotalSeconds > GameController.SettingsController.MaximumInternalFrameTime &&
-                    GameController.SettingsController.CacheCullingAggression == CacheCullingAggression.Passive)
+                if ((_FrameTimeLimiter.Elapsed.TotalSeconds >
+                     GameController.SettingsController.MaximumInternalFrameTime) &&
+                    (GameController.SettingsController.CacheCullingAggression == CacheCullingAggression.Passive))
                 {
                     return;
                 }

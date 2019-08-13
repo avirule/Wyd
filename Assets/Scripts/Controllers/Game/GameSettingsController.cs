@@ -14,13 +14,14 @@ namespace Controllers.Game
         ///     the maximum
         /// </summary>
         Active,
+
         /// <summary>
         ///     Passive culling will only cull chunks when
         ///     given enough processing time to do so.
         /// </summary>
         Passive
     }
-    
+
     public class GameSettingsController : MonoBehaviour
     {
         public int MaximumChunkCacheSize;

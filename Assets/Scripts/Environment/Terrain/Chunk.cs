@@ -247,7 +247,7 @@ namespace Environment.Terrain
             {
                 return;
             }
-            
+
             CheckSettingsAndSet();
             GenerationCheckAndStart();
         }

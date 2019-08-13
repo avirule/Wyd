@@ -51,7 +51,7 @@ namespace Controllers.Game
             }
 
             if (!_Blocks.ContainsKey(blockId))
-            { 
+            {
                 _Blocks.Add(blockId, new BlockRule(blockId, blockName, isTransparent, uvsRule));
                 _BlockNameIds.Add(blockName, blockId);
             }
@@ -107,7 +107,8 @@ namespace Controllers.Game
         {
             if (!_BlockNameIds.ContainsKey(blockName))
             {
-                EventLog.Logger.Log(LogLevel.Warn, $"Failed to return block id for block `{blockName}`: block does not exist.");
+                EventLog.Logger.Log(LogLevel.Warn,
+                    $"Failed to return block id for block `{blockName}`: block does not exist.");
             }
 
             return _BlockNameIds[blockName];

@@ -15,7 +15,8 @@ namespace Audio
 
     public static class AudioFade
     {
-        public static IEnumerator FadeIn(AudioSource audioSource, float fadeTime, float initialVolume = 0f, float maxVolume = 1f)
+        public static IEnumerator FadeIn(AudioSource audioSource, float fadeTime, float initialVolume = 0f,
+            float maxVolume = 1f)
         {
             audioSource.volume = initialVolume;
 

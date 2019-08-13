@@ -1,7 +1,10 @@
-﻿using System;
+﻿#region
+
 using System.Collections;
 using Audio;
 using UnityEngine;
+
+#endregion
 
 namespace Controllers.Audio
 {
@@ -10,15 +13,15 @@ namespace Controllers.Audio
         MainMenu,
         GameWorld
     }
-    
+
     public class TrackController : MonoBehaviour
     {
         private bool _ReplayTimerActive;
-        
+
         public AudioSource AudioSource;
         public TrackControllerDomain Domain;
         public float SecondsUntilReplay;
-        
+
         // Start is called before the first frame update
         private void Start()
         {
@@ -30,7 +33,7 @@ namespace Controllers.Audio
 
         private void Update()
         {
-            if (!_ReplayTimerActive && !AudioSource.isPlaying && SecondsUntilReplay != -1f)
+            if (!_ReplayTimerActive && !AudioSource.isPlaying && (SecondsUntilReplay != -1f))
             {
                 StartCoroutine(SimpleCounter());
             }
@@ -42,7 +45,7 @@ namespace Controllers.Audio
             {
                 yield break;
             }
-            
+
             _ReplayTimerActive = true;
             float secondsPassed = 0f;
 
@@ -51,7 +54,7 @@ namespace Controllers.Audio
                 secondsPassed += Time.deltaTime;
                 yield return null;
             }
-            
+
             _ReplayTimerActive = false;
             AudioSource.Play();
         }

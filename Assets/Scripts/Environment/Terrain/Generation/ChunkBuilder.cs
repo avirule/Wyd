@@ -1,7 +1,5 @@
 #region
 
-using System;
-using System.Collections.Generic;
 using Controllers.Game;
 using Threading;
 using UnityEngine;
