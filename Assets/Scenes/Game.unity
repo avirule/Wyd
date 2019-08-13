@@ -274,7 +274,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: c2bfbe7e71c143e0ad0d7d1269cef501, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  MaximumChunkCacheSize: 120
+  MaximumChunkCacheSize: 30
+  CacheCullingAggression: 0
   MaximumChunkLoadTimeCacheSize: 60
   MaximumFrameRateCacheSize: 60
   ShadowRadius: 1
@@ -529,7 +530,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 6bacbf482bf844eaa875579526459c24, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  ChunkSize: {x: 16, y: 256, z: 16}
+  ChunkSize: {x: 32, y: 128, z: 32}
   Lacunarity: 2
   Octaves: 16
   Persistence: 0.5

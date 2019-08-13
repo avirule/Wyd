@@ -59,9 +59,9 @@ namespace Environment.Terrain.Generation
 
                         Vector3Int globalPosition = _Position + new Vector3Int(x, y, z);
 
-                        if (((z == (Chunk.Size.z - 1)) && !_WorldController
-                                 .GetBlockAtPosition(globalPosition + new Vector3Int(0, 0, 1)).Opaque) ||
-                            ((z < (Chunk.Size.z - 1)) && !_Blocks[index + (Chunk.Size.x * Chunk.Size.y)].Opaque))
+                        if (((z == (Chunk.Size.z - 1)) && _WorldController
+                                 .GetBlockAtPosition(globalPosition + new Vector3Int(0, 0, 1)).Transparent) ||
+                            ((z < (Chunk.Size.z - 1)) && _Blocks[index + (Chunk.Size.x * Chunk.Size.y)].Transparent))
                         {
                             _Blocks[index].SetFace(Direction.North, true);
 
@@ -100,8 +100,8 @@ namespace Environment.Terrain.Generation
                         }
 
                         if (((x == (Chunk.Size.x - 1)) &&
-                             !_WorldController.GetBlockAtPosition(globalPosition + Vector3Int.right).Opaque) ||
-                            ((x < (Chunk.Size.x - 1)) && !_Blocks[index + 1].Opaque))
+                             _WorldController.GetBlockAtPosition(globalPosition + Vector3Int.right).Transparent) ||
+                            ((x < (Chunk.Size.x - 1)) && _Blocks[index + 1].Transparent))
                         {
                             _Blocks[index].SetFace(Direction.East, true);
 
@@ -139,9 +139,9 @@ namespace Environment.Terrain.Generation
                             });
                         }
 
-                        if (((z == 0) && !_WorldController.GetBlockAtPosition(globalPosition + new Vector3Int(0, 0, -1))
-                                 .Opaque) ||
-                            ((z > 0) && !_Blocks[index - (Chunk.Size.x * Chunk.Size.y)].Opaque))
+                        if (((z == 0) && _WorldController.GetBlockAtPosition(globalPosition + new Vector3Int(0, 0, -1))
+                                 .Transparent) ||
+                            ((z > 0) && _Blocks[index - (Chunk.Size.x * Chunk.Size.y)].Transparent))
                         {
                             _Blocks[index].SetFace(Direction.South, true);
 
@@ -179,9 +179,9 @@ namespace Environment.Terrain.Generation
                             });
                         }
 
-                        if (((x == 0) && !_WorldController.GetBlockAtPosition(globalPosition + Vector3Int.left)
-                                 .Opaque) ||
-                            ((x > 0) && !_Blocks[index - 1].Opaque))
+                        if (((x == 0) && _WorldController.GetBlockAtPosition(globalPosition + Vector3Int.left)
+                                 .Transparent) ||
+                            ((x > 0) && _Blocks[index - 1].Transparent))
                         {
                             _Blocks[index].SetFace(Direction.West, true);
 
@@ -220,8 +220,8 @@ namespace Environment.Terrain.Generation
                         }
 
                         if (((y == (Chunk.Size.y - 1)) &&
-                             !_WorldController.GetBlockAtPosition(globalPosition + Vector3Int.up).Opaque) ||
-                            ((y < (Chunk.Size.y - 1)) && !_Blocks[index + Chunk.Size.x].Opaque))
+                             _WorldController.GetBlockAtPosition(globalPosition + Vector3Int.up).Transparent) ||
+                            ((y < (Chunk.Size.y - 1)) && _Blocks[index + Chunk.Size.x].Transparent))
                         {
                             _Blocks[index].SetFace(Direction.Up, true);
 
@@ -259,9 +259,9 @@ namespace Environment.Terrain.Generation
                             });
                         }
 
-                        if (((y == 0) && !_WorldController.GetBlockAtPosition(globalPosition + Vector3Int.down)
-                                 .Opaque) ||
-                            ((y > 0) && !_Blocks[index - Chunk.Size.x].Opaque))
+                        if (((y == 0) && _WorldController.GetBlockAtPosition(globalPosition + Vector3Int.down)
+                                 .Transparent) ||
+                            ((y > 0) && _Blocks[index - Chunk.Size.x].Transparent))
                         {
                             _Blocks[index].SetFace(Direction.Down, true);
 

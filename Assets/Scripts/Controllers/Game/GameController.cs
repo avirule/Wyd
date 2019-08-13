@@ -50,7 +50,7 @@ namespace Controllers.Game
                 Vector3Int positionAbove = position + Vector3Int.up;
                 Block blockAbove = WorldController.GetBlockAtPosition(positionAbove);
 
-                if (blockAbove.Opaque)
+                if (blockAbove.Transparent)
                 {
                     return "Dirt";
                 }

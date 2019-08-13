@@ -22,10 +22,13 @@ namespace Environment.Terrain
             set => Bits[IdSection] = (short) value;
         }
 
-        public bool Opaque
+        /// <summary>
+        ///     Determines whether the block is opaque.
+        /// </summary>
+        public bool Transparent
         {
-            get => Bits[TransparencySection] == 1;
-            set => Bits[TransparencySection] = value ? 1 : 0;
+            get => Bits[TransparencySection] == 0;
+            set => Bits[TransparencySection] = value ? 0 : 1;
         }
 
         private static BlockController blockController;
@@ -68,7 +71,7 @@ namespace Environment.Terrain
                 [Faces[5]] = faces & (byte) Direction.Down
             };
 
-            Opaque = !blockController.IsBlockDefaultTransparent(Id);
+            Transparent = blockController.IsBlockDefaultTransparent(Id);
         }
 
         public bool HasAnyFace()
