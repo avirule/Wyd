@@ -51,16 +51,8 @@
               <e p="BlockRule.cs" t="Include" />
               <e p="Chunk.cs" t="Include" />
               <e p="Generation" t="Include">
-                <e p="Noise" t="Include">
-                  <e p="NoiseMap.cs" t="Include" />
-                  <e p="OpenSimplex" t="Include">
-                    <e p="OpenSimplex.cs" t="Include" />
-                    <e p="OpenSimplexNoiseGenerator.cs" t="Include" />
-                  </e>
-                  <e p="Perlin" t="Include">
-                    <e p="PerlinNoise.cs" t="Include" />
-                  </e>
-                </e>
+                <e p="ChunkBuilder.cs" t="Include" />
+                <e p="MeshGenerator.cs" t="Include" />
                 <e p="WorldGenerationSettings.cs" t="Include" />
                 <e p="WorldSeed.cs" t="Include" />
               </e>
@@ -72,6 +64,18 @@
               <e p="UnityDebuggerTarget.cs" t="Include" />
             </e>
           </e>
+          <e p="Noise" t="Include">
+            <e p="NoiseMap.cs" t="Include" />
+            <e p="OpenSimplex" t="Include">
+              <e p="OpenSimplex.cs" t="Include" />
+              <e p="OpenSimplexNoiseGenerator.cs" t="Include" />
+            </e>
+            <e p="Perlin" t="Include">
+              <e p="ChunkedPerlinNoiseGenerator.cs" t="Include" />
+              <e p="PerlinNoise.cs" t="Include" />
+              <e p="PerlinNoiseGenerator.cs" t="Include" />
+            </e>
+          </e>
           <e p="Static" t="Include">
             <e p="Mathv.cs" t="Include" />
             <e p="StaticMath.cs" t="Include" />
@@ -79,12 +83,6 @@
             <e p="StaticRandom.cs" t="Include" />
           </e>
           <e p="Threading" t="Include">
-            <e p="Generation" t="Include">
-              <e p="ChunkBuilder.cs" t="Include" />
-              <e p="ChunkedPerlinNoiseGenerator.cs" t="Include" />
-              <e p="MeshGenerator.cs" t="Include" />
-              <e p="PerlinNoiseGenerator.cs" t="Include" />
-            </e>
             <e p="ThreadedProcess.cs" t="Include" />
           </e>
         </e>

@@ -1,7 +1,9 @@
-﻿using System;
+﻿#region
+
 using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
+
+#endregion
 
 namespace Audio
 {
@@ -19,7 +21,7 @@ namespace Audio
         public float MaxVolume;
         public float FadeTime;
         public FadeType FadeType;
-        
+
         private void Awake()
         {
             _AudioSource = GetComponent<AudioSource>();

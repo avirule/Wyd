@@ -5,7 +5,7 @@ using System.Runtime.CompilerServices;
 
 #endregion
 
-namespace Environment.Terrain.Generation.Noise.OpenSimplex
+namespace Noise.OpenSimplex
 {
     public class OpenSimplexNoise
     {

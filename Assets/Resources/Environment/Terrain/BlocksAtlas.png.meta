@@ -4,7 +4,7 @@ TextureImporter:
   internalIDToNameTable:
   - first:
       213: 7896306450000886469
-    second: Grass_Side
+    second: GrassSide
   - first:
       213: -7129077596067031731
     second: Grass
@@ -20,6 +20,15 @@ TextureImporter:
   - first:
       213: -6496027776070713111
     second: Glass
+  - first:
+      213: 3991693152041427042
+    second: CoalOre
+  - first:
+      213: 3283071777906387301
+    second: DiamondOre
+  - first:
+      213: 5618026609613044863
+    second: GoldOre
   externalObjects: {}
   serializedVersion: 10
   mipmaps:
@@ -102,7 +111,7 @@ TextureImporter:
     serializedVersion: 2
     sprites:
     - serializedVersion: 2
-      name: Grass_Side
+      name: GrassSide
       rect:
         serializedVersion: 2
         x: 0
@@ -189,8 +198,8 @@ TextureImporter:
       name: Glass
       rect:
         serializedVersion: 2
-        x: 24
-        y: 0
+        x: 8
+        y: 8
         width: 8
         height: 8
       alignment: 0
@@ -202,6 +211,69 @@ TextureImporter:
       bones: []
       spriteID: a8d7501772a2e37438d37262774dbe43
       internalID: -6496027776070713111
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: CoalOre
+      rect:
+        serializedVersion: 2
+        x: 16
+        y: 8
+        width: 8
+        height: 8
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: f6c4b952969dec241925c73dd3e2c7bf
+      internalID: 3991693152041427042
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: DiamondOre
+      rect:
+        serializedVersion: 2
+        x: 24
+        y: 8
+        width: 8
+        height: 8
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 6514f9ab35845934c9a940b72a7dbc11
+      internalID: 3283071777906387301
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: GoldOre
+      rect:
+        serializedVersion: 2
+        x: 24
+        y: 0
+        width: 8
+        height: 8
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: d185c7782cecc1f4b8d6bd2abf06d5b8
+      internalID: 5618026609613044863
       vertices: []
       indices: 
       edges: []

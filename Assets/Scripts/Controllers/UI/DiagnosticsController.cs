@@ -18,7 +18,7 @@ namespace Controllers.UI
 {
     public class DiagnosticsController : MonoBehaviour
     {
-        private const double _LOCAL_FRAME_INTERVAL = 1d / 15d;
+        private const double _LOCAL_FRAME_INTERVAL = 1f / 15f;
         private Stopwatch _LocalFrameStopwatch;
         private double _DeltaTimeAverage;
         private List<double> _DeltaTimes;

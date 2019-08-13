@@ -1,11 +1,10 @@
 #region
 
-using System.Collections;
+using System;
 using Environment.Terrain;
 using Environment.Terrain.Generation;
-using Environment.Terrain.Generation.Noise;
+using Noise;
 using Static;
-using Threading.Generation;
 using UnityEngine;
 
 #endregion
@@ -17,7 +16,9 @@ namespace Controllers.World
         /// <summary>
         ///     This is referenced OFTEN in SYNCHRONOUS CONTEXT. DO NOT USE IN ASYNCHRONOUS CONTEXTS.
         /// </summary>
-        public static float WorldTickRate;
+        public static TimeSpan WorldTickRate;
+
+        public static long InitialTick;
 
         public float TicksPerSecond;
         public WorldGenerationSettings WorldGenerationSettings;
@@ -28,15 +29,23 @@ namespace Controllers.World
 
         private void Awake()
         {
-            WorldTickRate = 1f / TicksPerSecond;
+            WorldTickRate = TimeSpan.FromSeconds(1d / TicksPerSecond);
+
             ChunkLoaderCurrentChunk = default;
             Chunk.Size = WorldGenerationSettings.ChunkSize;
+            
+            NoiseMap = new NoiseMap(null, ChunkLoaderCurrentChunk,
+                new Vector3Int((WorldGenerationSettings.Diameter + 1) * Chunk.Size.x, 0,
+                    (WorldGenerationSettings.Diameter + 1) * Chunk.Size.z));
+            
             CheckChunkLoaderChangedChunk();
         }
 
         private void Start()
         {
-            StartCoroutine(GenerateNoiseMap(ChunkLoaderCurrentChunk));
+            InitialTick = DateTime.Now.Ticks;
+
+            NoiseMap.Generate(ChunkLoaderCurrentChunk, NoiseMap.Bounds.size, WorldGenerationSettings);
 
             EnqueueBuildChunkArea(ChunkLoaderCurrentChunk, WorldGenerationSettings.Radius);
         }
@@ -44,24 +53,6 @@ namespace Controllers.World
         private void Update()
         {
             CheckChunkLoaderChangedChunk();
-        }
-
-
-        private IEnumerator GenerateNoiseMap(Vector3Int offset)
-        {
-            // over-generate noise map size to avoid array index overflows
-            NoiseMap = new NoiseMap(null, ChunkLoaderCurrentChunk,
-                new Vector3Int((WorldGenerationSettings.Diameter + 1) * Chunk.Size.x, 0,
-                    (WorldGenerationSettings.Diameter + 1) * Chunk.Size.z));
-
-            PerlinNoiseGenerator perlinNoiseGenerator =
-                new PerlinNoiseGenerator(offset, NoiseMap.Bounds.size, WorldGenerationSettings);
-            perlinNoiseGenerator.Start();
-
-            yield return new WaitUntil(() => perlinNoiseGenerator.Update());
-
-            NoiseMap.Map = perlinNoiseGenerator.Map;
-            NoiseMap.Ready = true;
         }
 
         public static Vector3 GetWorldChunkOriginFromGlobalPosition(Vector3 globalPosition)
@@ -94,7 +85,8 @@ namespace Controllers.World
 
         private void UpdateChunkLoadArea()
         {
-            StartCoroutine(GenerateNoiseMap(ChunkLoaderCurrentChunk));
+            NoiseMap.Generate(ChunkLoaderCurrentChunk, NoiseMap.Bounds.size, WorldGenerationSettings);
+
 
             EnqueueBuildChunkArea(ChunkLoaderCurrentChunk, WorldGenerationSettings.Radius);
         }

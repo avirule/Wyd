@@ -5,7 +5,7 @@ using UnityEngine;
 
 #endregion
 
-namespace Environment.Terrain.Generation.Noise.OpenSimplex
+namespace Noise.OpenSimplex
 {
     public class OpenSimplexNoiseGenerator : ThreadedProcess
     {

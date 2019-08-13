@@ -1,10 +1,11 @@
 #region
 
+using Environment.Terrain.Generation;
 using UnityEngine;
 
 #endregion
 
-namespace Environment.Terrain.Generation.Noise.Perlin
+namespace Noise.Perlin
 {
     public static class PerlinNoise
     {
@@ -17,8 +18,8 @@ namespace Environment.Terrain.Generation.Noise.Perlin
         }
 
 
-        private static float maxNoiseHeight = 3;
-        private static float minNoiseHeight = -3;
+        private const float _MAX_NOISE_HEIGHT = 3;
+        private const float _MIN_NOISE_HEIGHT = -3;
 
         /// <summary>
         ///     Generates a perlin noise map
@@ -74,7 +75,8 @@ namespace Environment.Terrain.Generation.Noise.Perlin
                 {
                     for (int z = 0; z < noiseHeights[0].Length; z++)
                     {
-                        noiseHeights[x][z] = Mathf.InverseLerp(minNoiseHeight, maxNoiseHeight, noiseHeights[x][z]);
+                        noiseHeights[x][z] =
+                            Mathf.InverseLerp(_MIN_NOISE_HEIGHT, _MAX_NOISE_HEIGHT, noiseHeights[x][z]);
                     }
                 }
             }

@@ -6,10 +6,10 @@ using System.Diagnostics;
 using Controllers.Game;
 using Controllers.UI;
 using Controllers.World;
+using Environment.Terrain.Generation;
 using Logging;
 using NLog;
 using Static;
-using Threading.Generation;
 using UnityEngine;
 using UnityEngine.Rendering;
 
@@ -21,10 +21,12 @@ namespace Environment.Terrain
     {
         public static Vector3Int Size = new Vector3Int(16, 16, 16);
 
-        private BlockController _BlockController;
         private WorldController _WorldController;
+        private ChunkController _ChunkController;
+        private BlockController _BlockController;
         private Stopwatch _BuildTimer;
         private Stopwatch _MeshTimer;
+        private uint _WorldUpdateSubscriberIndex;
 
         public Mesh Mesh;
         public Block[] Blocks;
@@ -77,7 +79,10 @@ namespace Environment.Terrain
 
         private void Awake()
         {
-            _WorldController = GameObject.FindWithTag("WorldController").GetComponent<WorldController>();
+            GameObject worldController = GameObject.FindWithTag("WorldController");
+            _WorldController = worldController.GetComponent<WorldController>();
+            _ChunkController = worldController.GetComponent<ChunkController>();
+
             _BlockController = GameObject.FindWithTag("GameController").GetComponent<BlockController>();
             _BuildTimer = new Stopwatch();
             _MeshTimer = new Stopwatch();
@@ -85,18 +90,14 @@ namespace Environment.Terrain
             Position = transform.position.ToInt();
             Generated = Generating = Meshed = Meshing = PendingMeshAssigment = false;
             PendingMeshUpdate = true;
+
+            double waitTime = TimeSpan
+                .FromTicks((DateTime.Now.Ticks - WorldController.InitialTick) % WorldController.WorldTickRate.Ticks)
+                .TotalSeconds;
+            InvokeRepeating(nameof(Tick), (float) waitTime, (float) WorldController.WorldTickRate.TotalSeconds);
         }
 
-        private void Update()
-        {
-            GenerationCheckAndStart();
-
-            CheckSettingsAndSet();
-
-            Tick();
-        }
-
-        private void LateUpdate()
+        public void LateUpdate()
         {
             if (!ExpensiveMeshing)
             {
@@ -161,7 +162,7 @@ namespace Environment.Terrain
                 yield break;
             }
 
-            ChunkBuilder chunkGenerator = new ChunkBuilder(noiseMap, Size);
+            ChunkBuilder chunkGenerator = new ChunkBuilder(_BlockController, noiseMap, Size);
             chunkGenerator.Start();
 
             yield return new WaitUntil(() => chunkGenerator.Update() || !Active);
@@ -240,8 +241,15 @@ namespace Environment.Terrain
             gameObject.SetActive(false);
         }
 
-        public void Tick()
+        private void Tick()
         {
+            if (!Active)
+            {
+                return;
+            }
+            
+            CheckSettingsAndSet();
+            GenerationCheckAndStart();
         }
 
         private void AssignMesh()

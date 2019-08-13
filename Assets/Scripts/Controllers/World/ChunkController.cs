@@ -1,6 +1,5 @@
 #region
 
-using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
@@ -10,8 +9,6 @@ using Logging;
 using NLog;
 using Static;
 using UnityEngine;
-using UnityEngine.Rendering;
-using Debug = UnityEngine.Debug;
 
 #endregion
 
@@ -21,12 +18,11 @@ namespace Controllers.World
     {
         private WorldController _WorldController;
         private Stopwatch _WorldTickLimiter;
-        private Stopwatch _BuildChunkWorldTickLimiter;
         private Chunk _ChunkObject;
         private Queue<Chunk> _CachedChunks;
         private bool _ProcessingChunkQueue;
-        
-        public List<Chunk> Chunks;    
+
+        public List<Chunk> Chunks;
         public Queue<Vector3Int> BuildChunkQueue;
         public int CurrentCacheSize => _CachedChunks.Count;
         public bool AllChunksGenerated => Chunks.All(chunk => chunk.Generated);
@@ -38,25 +34,21 @@ namespace Controllers.World
             _ChunkObject = Resources.Load<Chunk>(@"Environment\Terrain\Chunk");
             _CachedChunks = new Queue<Chunk>();
             _WorldTickLimiter = new Stopwatch();
-            _BuildChunkWorldTickLimiter = new Stopwatch();
             _ProcessingChunkQueue = false;
 
             Chunks = new List<Chunk>();
             BuildChunkQueue = new Queue<Vector3Int>();
         }
 
-        private void Update()
+        public void Update()
         {
             _WorldTickLimiter.Restart();
 
             if ((BuildChunkQueue.Count > 0) && !_ProcessingChunkQueue)
             {
-                StartCoroutine(ProcessBuildChunkQueue());
+                ProcessBuildChunkQueue();
             }
-        }
 
-        private void LateUpdate()
-        {
             if (AllChunksGenerated && AllChunksMeshed)
             {
                 DeactivateOutOfBoundsChunks();
@@ -73,15 +65,12 @@ namespace Controllers.World
 
         #region CHUNK BUILDING
 
-        public IEnumerator ProcessBuildChunkQueue()
+        public void ProcessBuildChunkQueue()
         {
             _ProcessingChunkQueue = true;
-            _BuildChunkWorldTickLimiter.Reset();
 
             while (BuildChunkQueue.Count > 0)
             {
-                _BuildChunkWorldTickLimiter.Start();
-
                 Vector3Int position = BuildChunkQueue.Dequeue();
 
                 if (CheckChunkExistsAtPosition(position))
@@ -106,10 +95,9 @@ namespace Controllers.World
                 // ensures that neighbours update their meshes to cull newly out of sight faces
                 FlagNeighborsPendingUpdate(chunk.Position);
 
-                if (_BuildChunkWorldTickLimiter.Elapsed.TotalSeconds > GameController.SettingsController.MaximumInternalFrameTime)
+                if (_WorldTickLimiter.Elapsed.TotalSeconds > GameController.SettingsController.MaximumInternalFrameTime)
                 {
-                    _BuildChunkWorldTickLimiter.Reset();
-                    yield return null;
+                    break;
                 }
             }
 
@@ -128,7 +116,7 @@ namespace Controllers.World
                 Vector3Int modifiedPosition = position + new Vector3Int(x * Chunk.Size.x, 0, 0);
                 Chunk chunkAtPosition = GetChunkAtPosition(modifiedPosition);
 
-                if ((chunkAtPosition == default) || chunkAtPosition.PendingMeshUpdate)
+                if ((chunkAtPosition == default) || chunkAtPosition.PendingMeshUpdate || !chunkAtPosition.Active)
                 {
                     continue;
                 }
@@ -146,7 +134,7 @@ namespace Controllers.World
                 Vector3Int modifiedPosition = position + new Vector3Int(0, 0, z * Chunk.Size.z);
                 Chunk chunkAtPosition = GetChunkAtPosition(modifiedPosition);
 
-                if ((chunkAtPosition == default) || chunkAtPosition.PendingMeshUpdate)
+                if ((chunkAtPosition == default) || chunkAtPosition.PendingMeshUpdate || !chunkAtPosition.Active)
                 {
                     continue;
                 }
@@ -173,7 +161,7 @@ namespace Controllers.World
                 }
 
                 DeactivateChunk(Chunks[i]);
-                
+
                 if (_WorldTickLimiter.Elapsed.TotalSeconds > GameController.SettingsController.MaximumInternalFrameTime)
                 {
                     break;
@@ -200,7 +188,8 @@ namespace Controllers.World
                 Destroy(chunk.gameObject);
 
                 // continue culling if the amount of cached chunks is greater than the maximum
-                if (_WorldTickLimiter.Elapsed.TotalSeconds <= GameController.SettingsController.MaximumInternalFrameTime)
+                if (_WorldTickLimiter.Elapsed.TotalSeconds <=
+                    GameController.SettingsController.MaximumInternalFrameTime)
                 {
                     continue;
                 }
@@ -232,7 +221,7 @@ namespace Controllers.World
             // reverse for loop to avoid collection modified from thread errors
             for (int i = Chunks.Count - 1; i >= 0; i--)
             {
-                if (Chunks.Count <= i || Chunks[i] == default)
+                if ((Chunks.Count <= i) || (Chunks[i] == default))
                 {
                     continue;
                 }
@@ -251,7 +240,7 @@ namespace Controllers.World
             // reverse for loop to avoid collection modified from thread errors
             for (int i = Chunks.Count - 1; i >= 0; i--)
             {
-                if (Chunks.Count <= i || Chunks[i] == default)
+                if ((Chunks.Count <= i) || (Chunks[i] == default))
                 {
                     continue;
                 }

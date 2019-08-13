@@ -45,7 +45,7 @@ namespace Controllers.Game
 
         private void RegisterDefaultBlocks()
         {
-            BlockController.RegisterBlockRules(1, "Grass", true, false, (position, direction) =>
+            BlockController.RegisterBlockRules("Grass", true, false, (position, direction) =>
             {
                 Vector3Int positionAbove = position + Vector3Int.up;
                 Block blockAbove = WorldController.GetBlockAtPosition(positionAbove);
@@ -81,7 +81,7 @@ namespace Controllers.Game
                     case Direction.East:
                     case Direction.South:
                     case Direction.West:
-                        return "Grass_Side";
+                        return "GrassSide";
                     case Direction.Up:
                         return "Grass";
                     case Direction.Down:
@@ -90,9 +90,12 @@ namespace Controllers.Game
                         throw new ArgumentOutOfRangeException(nameof(direction), direction, null);
                 }
             });
-            BlockController.RegisterBlockRules(2, "Dirt", true, false, (position, direction) => "Dirt");
-            BlockController.RegisterBlockRules(3, "Stone", true, false, (position, direction) => "Stone");
-            BlockController.RegisterBlockRules(4, "Glass", true, true, (position, direction) => "Glass");
+            BlockController.RegisterBlockRules("Dirt", true, false);
+            BlockController.RegisterBlockRules("Stone", true, false);
+            BlockController.RegisterBlockRules("Glass", true, true);
+            BlockController.RegisterBlockRules("CoalOre", true, false);
+            BlockController.RegisterBlockRules("GoldOre", true, false);
+            BlockController.RegisterBlockRules("DiamondOre", true, false);
         }
 
         public static void ToggleCursorLocked(bool value)

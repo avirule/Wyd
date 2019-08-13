@@ -19,18 +19,18 @@ namespace Environment.Terrain
 
     public struct BlockRule : IBlockRule
     {
-        private RuleEvaluation RuleEvaluation { get; }
+        private RuleEvaluation UVsRule { get; }
 
         public ushort Id { get; }
         public string BlockName { get; }
         public bool Transparent { get; }
 
-        public BlockRule(ushort id, string blockName, bool transparent, RuleEvaluation ruleEvaluation)
+        public BlockRule(ushort id, string blockName, bool transparent, RuleEvaluation uvsRule)
         {
             Id = id;
             BlockName = blockName;
             Transparent = transparent;
-            RuleEvaluation = ruleEvaluation ?? ((position, direction) => string.Empty);
+            UVsRule = uvsRule ?? ((position, direction) => string.Empty);
         }
 
         public bool ReadUVsRule(ushort blockId, Vector3Int position, Direction direction, out string spriteName)
@@ -43,7 +43,7 @@ namespace Environment.Terrain
                 return false;
             }
 
-            spriteName = RuleEvaluation(position, direction);
+            spriteName = UVsRule(position, direction);
             return true;
         }
     }

@@ -5,7 +5,7 @@ using UnityEngine;
 
 #endregion
 
-namespace Threading.Generation
+namespace Noise.Perlin
 {
     public class ChunkedPerlinNoiseGenerator : PerlinNoiseGenerator
     {

@@ -1,13 +1,15 @@
 #region
 
+using Environment.Terrain.Generation;
 using Logging;
 using NLog;
+using Noise.Perlin;
 using Static;
 using UnityEngine;
 
 #endregion
 
-namespace Environment.Terrain.Generation.Noise
+namespace Noise
 {
     public class NoiseMap
     {
@@ -21,6 +23,21 @@ namespace Environment.Terrain.Generation.Noise
             Bounds = new BoundsInt(center - new Vector3Int(size.x / 2, 0, size.z / 2), size);
 
             Ready = false;
+        }
+
+        public void Generate(Vector3Int offset, Vector3Int size, WorldGenerationSettings worldGenerationSettings)
+        {
+            Ready = false;
+
+            ChangeCenter(offset, size);
+            Map = PerlinNoise.GenerateMap(offset, size, worldGenerationSettings);
+
+            Ready = true;
+        }
+
+        private void ChangeCenter(Vector3Int center, Vector3Int size)
+        {
+            Bounds = new BoundsInt(center - new Vector3Int(size.x / 2, 0, size.z / 2), size);
         }
 
         public float[][] GetSection(Vector3Int position, Vector3Int size)
