@@ -13,36 +13,28 @@ namespace Audio
         FadeOut
     }
 
-    public class AudioFade : MonoBehaviour
+    public static class AudioFade
     {
-        private AudioSource _AudioSource;
-
-        public float InitialVolume;
-        public float MaxVolume;
-        public float FadeTime;
-        public FadeType FadeType;
-
-        private void Awake()
+        public static IEnumerator FadeIn(AudioSource audioSource, float fadeTime, float initialVolume = 0f, float maxVolume = 1f)
         {
-            _AudioSource = GetComponent<AudioSource>();
-            _AudioSource.volume = InitialVolume;
-        }
+            audioSource.volume = initialVolume;
 
-        // Update is called once per frame
-        private void Start()
-        {
-            if (FadeType == FadeType.FadeIn)
+            while (audioSource.volume < maxVolume)
             {
-                StartCoroutine(FadeIn());
+                Mathf.Clamp01(audioSource.volume += 1f * Time.deltaTime * fadeTime);
+
+                yield return null;
             }
         }
 
-        private IEnumerator FadeIn()
+        public static IEnumerator FadeOut(AudioSource audioSource, float fadeTime, float initialVolume = 1f,
+            float minimumVolume = 0f)
         {
-            while (_AudioSource.volume < MaxVolume)
-            {
-                Mathf.Clamp01(_AudioSource.volume += 1f * Time.deltaTime * FadeTime);
+            audioSource.volume = initialVolume;
 
+            while (audioSource.volume > minimumVolume)
+            {
+                Mathf.Clamp01(audioSource.volume -= 1f * Time.deltaTime * fadeTime);
                 yield return null;
             }
         }

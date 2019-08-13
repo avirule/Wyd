@@ -575,7 +575,7 @@ GameObject:
   - component: {fileID: 1990124333}
   - component: {fileID: 1990124335}
   m_Layer: 0
-  m_Name: ThemeMusic
+  m_Name: MainMenuMusic
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -700,13 +700,12 @@ MonoBehaviour:
   m_GameObject: {fileID: 1990124332}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: d94836d024e46e74bbf47116e4c24299, type: 3}
+  m_Script: {fileID: 11500000, guid: 33ae5b61e7eac134ea828d68080e6bb6, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  InitialVolume: 0.1
-  MaxVolume: 1
-  FadeTime: 0.15
-  FadeType: 0
+  AudioSource: {fileID: 1990124333}
+  Domain: 0
+  SecondsUntilReplay: 120
 --- !u!1001 &2013449180
 PrefabInstance:
   m_ObjectHideFlags: 0
