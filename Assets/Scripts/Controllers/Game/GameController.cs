@@ -16,7 +16,6 @@ namespace Controllers.Game
     public class GameController : MonoBehaviour
     {
         public static GameController Current;
-        public static OptionsController Options;
 
         private void Awake()
         {
@@ -36,16 +35,13 @@ namespace Controllers.Game
 
         private void Start()
         {
+            TextureController.Current.Initialise();
             RegisterDefaultBlocks();
         }
 
         private void OnApplicationQuit()
         {
             LogManager.Shutdown();
-        }
-
-        private void Initialise()
-        {
         }
 
         private void RegisterDefaultBlocks()

@@ -291,14 +291,14 @@ namespace Environment.Terrain
         private bool CheckDrawShadows(Vector3Int difference)
         {
             return (Position == WorldController.Current.ChunkLoaderCurrentChunk) ||
-                   ((difference.x <= (GameController.Options.ShadowRadius * Size.x)) &&
-                    (difference.z <= (GameController.Options.ShadowRadius * Size.z)));
+                   ((difference.x <= (OptionsController.Current.ShadowRadius * Size.x)) &&
+                    (difference.z <= (OptionsController.Current.ShadowRadius * Size.z)));
         }
 
         private static bool CheckExpensiveMeshing(Vector3Int difference)
         {
-            return (difference.x <= (GameController.Options.ExpensiveMeshingRadius * Size.x)) &&
-                   (difference.z <= (GameController.Options.ExpensiveMeshingRadius * Size.z));
+            return (difference.x <= (OptionsController.Current.ExpensiveMeshingRadius * Size.x)) &&
+                   (difference.z <= (OptionsController.Current.ExpensiveMeshingRadius * Size.z));
         }
     }
 }

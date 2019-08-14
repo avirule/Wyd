@@ -1,5 +1,7 @@
 #region
 
+using System;
+using UnityEditor.PackageManager;
 using UnityEngine;
 
 #endregion
@@ -24,6 +26,8 @@ namespace Controllers.Game
 
     public class OptionsController : MonoBehaviour
     {
+        public static OptionsController Current;
+
         public int MaximumChunkCacheSize;
         public CacheCullingAggression CacheCullingAggression;
         public int MaximumChunkLoadTimeCacheSize;
@@ -31,5 +35,17 @@ namespace Controllers.Game
         public int ShadowRadius;
         public int ExpensiveMeshingRadius;
         public float MaximumInternalFrameTime;
+
+        private void Awake()
+        {
+            if (Current != default && Current != this)
+            {
+                Destroy(gameObject);
+            }
+            else
+            {
+                Current = this;
+            }
+        }
     }
 }

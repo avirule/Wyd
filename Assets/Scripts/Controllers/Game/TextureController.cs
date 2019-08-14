@@ -34,6 +34,8 @@ namespace Controllers.Game
         public void Initialise()
         {
             ProcessSprites();
+            
+            Initialised = true;
         }
 
         private void ProcessSprites()

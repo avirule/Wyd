@@ -62,7 +62,7 @@ namespace Controllers.World
             }
 
             // cull chunks down to half the maximum when idle
-            if (_CachedChunks.Count > (GameController.Options.MaximumChunkCacheSize / 2))
+            if (_CachedChunks.Count > (OptionsController.Current.MaximumChunkCacheSize / 2))
             {
                 CullCachedChunks();
             }
@@ -102,7 +102,7 @@ namespace Controllers.World
                 // ensures that neighbours update their meshes to cull newly out of sight faces
                 FlagNeighborsPendingUpdate(chunk.Position);
 
-                if (_FrameTimeLimiter.Elapsed.TotalSeconds > GameController.Options.MaximumInternalFrameTime)
+                if (_FrameTimeLimiter.Elapsed.TotalSeconds > OptionsController.Current.MaximumInternalFrameTime)
                 {
                     break;
                 }
@@ -169,7 +169,7 @@ namespace Controllers.World
 
                 DeactivateChunk(Chunks[i]);
 
-                if (_FrameTimeLimiter.Elapsed.TotalSeconds > GameController.Options.MaximumInternalFrameTime)
+                if (_FrameTimeLimiter.Elapsed.TotalSeconds > OptionsController.Current.MaximumInternalFrameTime)
                 {
                     break;
                 }
@@ -187,15 +187,15 @@ namespace Controllers.World
         private void CullCachedChunks()
         {
             // controller will cull chunks down to half the maximum when idle
-            while (_CachedChunks.Count > (GameController.Options.MaximumChunkCacheSize / 2))
+            while (_CachedChunks.Count > (OptionsController.Current.MaximumChunkCacheSize / 2))
             {
                 Chunk chunk = _CachedChunks.Dequeue();
                 Destroy(chunk.gameObject);
 
                 // continue culling if the amount of cached chunks is greater than the maximum
                 if ((_FrameTimeLimiter.Elapsed.TotalSeconds >
-                     GameController.Options.MaximumInternalFrameTime) &&
-                    (GameController.Options.CacheCullingAggression == CacheCullingAggression.Passive))
+                     OptionsController.Current.MaximumInternalFrameTime) &&
+                    (OptionsController.Current.CacheCullingAggression == CacheCullingAggression.Passive))
                 {
                     return;
                 }

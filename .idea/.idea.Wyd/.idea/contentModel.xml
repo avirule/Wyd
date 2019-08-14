@@ -440,14 +440,6 @@
               <e p="PerlinNoiseGenerator.cs" t="Include" />
             </e>
           </e>
-          <e p="Plugins" t="Include">
-            <e p="Blocks" t="Include">
-              <e p="BlockRegistrar.cs" t="Include" />
-              <e p="IBlockRegistrar.cs" t="Include" />
-              <e p="IBlockRegistry.cs" t="Include" />
-            </e>
-            <e p="IPlugin.cs" t="Include" />
-          </e>
           <e p="Static" t="Include">
             <e p="Mathv.cs" t="Include" />
             <e p="StaticMath.cs" t="Include" />
