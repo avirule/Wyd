@@ -33,11 +33,6 @@ namespace Controllers.Game
 
         public void Initialise()
         {
-            if (Initialised)
-            {
-                return;
-            }
-
             ProcessSprites();
         }
 

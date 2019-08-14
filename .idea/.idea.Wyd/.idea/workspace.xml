@@ -6,44 +6,19 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="c75ae2de-3a89-4228-87f5-5925302b6d96" name="Default Changelist" comment="">
-      <change afterPath="$PROJECT_DIR$/Assets/Resources/Controllers.meta" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/Assets/Resources/Controllers/GameController.prefab" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/Assets/Resources/Controllers/GameController.prefab.meta" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/Assets/Resources/UI/Components/ExitButton.prefab" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/Assets/Resources/UI/Components/ExitButton.prefab.meta" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/Assets/Resources/UI/Components/OptionsButton.prefab" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/Assets/Resources/UI/Components/OptionsButton.prefab.meta" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/Assets/Resources/UI/Components/QuitMainMenuButton.prefab" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/Assets/Resources/UI/Components/QuitMainMenuButton.prefab.meta" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/Assets/Scripts/Controllers/UI/Components.meta" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/Assets/Scripts/Controllers/UI/Components/ExitButtonController.cs" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/Assets/Scripts/Controllers/UI/Components/ExitButtonController.cs.meta" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/Assets/Scripts/Controllers/UI/Components/OptionsButtonController.cs" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/Assets/Scripts/Controllers/UI/Components/OptionsButtonController.cs.meta" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/Assets/Scripts/Controllers/UI/Components/QuitMainMenuButtonController.cs" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/Assets/Scripts/Controllers/UI/Components/QuitMainMenuButtonController.cs.meta" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Assets/Scripts/Environment/Terrain/IBlockRegistry.cs" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Assets/Scripts/Environment/Terrain/IBlockRegistry.cs.meta" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/.idea.Wyd/.idea/contentModel.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/.idea.Wyd/.idea/contentModel.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/.idea.Wyd/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/.idea.Wyd/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Assets/Resources/UI/Diagnostics.prefab" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/Resources/UI/Diagnostics.prefab" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Assets/Resources/UI/EscapeMenu.prefab" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/Resources/UI/EscapeMenu.prefab" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Assets/Resources/UI/GameUI.prefab" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/Resources/UI/GameUI.prefab" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Assets/Scenes/Game.unity" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/Scenes/Game.unity" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Assets/Scenes/MainMenu.unity" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/Scenes/MainMenu.unity" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Assets/Resources/Controllers/GameController.prefab" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/Resources/Controllers/GameController.prefab" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/Assets/Scripts/Controllers/Game/BlockController.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/Scripts/Controllers/Game/BlockController.cs" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/Assets/Scripts/Controllers/Game/GameController.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/Scripts/Controllers/Game/GameController.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Assets/Scripts/Controllers/Game/GameSettingsController.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/Scripts/Controllers/Game/OptionsController.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Assets/Scripts/Controllers/Game/GameSettingsController.cs.meta" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/Scripts/Controllers/Game/OptionsController.cs.meta" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/Assets/Scripts/Controllers/Game/TextureController.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/Scripts/Controllers/Game/TextureController.cs" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/Assets/Scripts/Controllers/UI/DiagnosticsController.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/Scripts/Controllers/UI/DiagnosticsController.cs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Assets/Scripts/Controllers/UI/EscapeMenuController.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/Scripts/Controllers/UI/EscapeMenuController.cs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Assets/Scripts/Controllers/UI/MainMenuController.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/Scripts/Controllers/UI/MainMenuController.cs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Assets/Scripts/Controllers/UI/UIInputWatcherController.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/Scripts/Controllers/UI/UIInputWatcherController.cs" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/Assets/Scripts/Controllers/World/ChunkController.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/Scripts/Controllers/World/ChunkController.cs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Assets/Scripts/Controllers/World/WorldController.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/Scripts/Controllers/World/WorldController.cs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Assets/Scripts/Environment/Terrain/Block.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/Scripts/Environment/Terrain/Block.cs" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/Assets/Scripts/Environment/Terrain/Chunk.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/Scripts/Environment/Terrain/Chunk.cs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Assets/Scripts/Environment/Terrain/Generation/ChunkBuilder.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/Scripts/Environment/Terrain/Generation/ChunkBuilder.cs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Assets/Scripts/Environment/Terrain/Generation/MeshGenerator.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/Scripts/Environment/Terrain/Generation/MeshGenerator.cs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Assets/Scripts/Static/StaticMethods.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/Scripts/Static/StaticMethods.cs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/ProjectSettings/ProjectSettings.asset" beforeDir="false" afterPath="$PROJECT_DIR$/ProjectSettings/ProjectSettings.asset" afterDir="false" />
     </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
     <option name="SHOW_DIALOG" value="false" />
@@ -70,6 +45,7 @@
     <setting file="file://$APPLICATION_CONFIG_DIR$/resharper-host/DecompilerCache/decompiler/7D971063-3068-4ADD-86D0-80ECF65BFE69/8f/7b5560f3/ConcurrentQueue`1.cs" root0="SKIP_HIGHLIGHTING" />
     <setting file="file://$APPLICATION_CONFIG_DIR$/resharper-host/DecompilerCache/decompiler/7D971063-3068-4ADD-86D0-80ECF65BFE69/e3/4e660b74/Int32.cs" root0="SKIP_HIGHLIGHTING" />
     <setting file="file://$PROJECT_DIR$/Assets/Scripts/Environment/Terrain/Generation/WorldSeed.cs" root0="FORCE_HIGHLIGHTING" />
+    <setting file="file://$PROJECT_DIR$/Assets/Scripts/Environment/Terrain/IBlockRegistry.cs" root0="FORCE_HIGHLIGHTING" />
     <setting file="file://$APPLICATION_CONFIG_DIR$/resharper-host/DecompilerCache/decompiler/2094A731-351D-475D-BA68-F5920DE30ED8/5f/bdc2317d/Vector3Int.cs" root0="SKIP_HIGHLIGHTING" />
     <setting file="file://$APPLICATION_CONFIG_DIR$/resharper-host/DecompilerCache/decompiler/2094A731-351D-475D-BA68-F5920DE30ED8/d8/31c80e43/BoundsInt.cs" root0="SKIP_HIGHLIGHTING" />
     <setting file="file://$PROJECT_DIR$/Assets/Scripts/Environment/Terrain/Generation/MeshGenerator.cs" root0="FORCE_HIGHLIGHTING" />
@@ -95,7 +71,7 @@
     <setting file="file://$APPLICATION_CONFIG_DIR$/resharper-host/DecompilerCache/decompiler/59819BE1-42C3-4115-ADE6-88F6962021F1/92/c52675e0/CollectionAssert.cs" root0="SKIP_HIGHLIGHTING" />
     <setting file="file://$PROJECT_DIR$/Assets/Scripts/Environment/Terrain/Block.cs" root0="FORCE_HIGHLIGHTING" />
     <setting file="file://$PROJECT_DIR$/Assets/Resources/UI/Diagnostics.prefab" root0="FORCE_HIGHLIGHTING" />
-    <setting file="file://$PROJECT_DIR$/Assets/Scripts/Controllers/Game/GameSettingsController.cs" root0="FORCE_HIGHLIGHTING" />
+    <setting file="file://$PROJECT_DIR$/Assets/Scripts/Controllers/Game/OptionsController.cs" root0="FORCE_HIGHLIGHTING" />
     <setting file="file://$APPLICATION_CONFIG_DIR$/resharper-host/DecompilerCache/decompiler/2094A731-351D-475D-BA68-F5920DE30ED8/86/087d8d95/Behaviour.cs" root0="SKIP_HIGHLIGHTING" />
     <setting file="file://$PROJECT_DIR$/Assets/Scripts/Static/Mathv.cs" root0="FORCE_HIGHLIGHTING" />
     <setting file="file://$PROJECT_DIR$/Assets/Scripts/Static/StaticMethods.cs" root0="FORCE_HIGHLIGHTING" />
@@ -119,9 +95,6 @@
   <component name="IdeDocumentHistory">
     <option name="CHANGED_PATHS">
       <list>
-        <option value="$PROJECT_DIR$/Assets/Scripts/Controllers/WorldController.cs" />
-        <option value="$PROJECT_DIR$/Assets/Scripts/Controllers/World/ChunkManager.cs" />
-        <option value="$PROJECT_DIR$/Assets/Scripts/Logging/Targets/UnityDebuggerTarget.cs" />
         <option value="$PROJECT_DIR$/Assets/Scripts/Environment/Terrain/Generation/ChunkGenerator.cs" />
         <option value="$PROJECT_DIR$/Assets/Scripts/Static/Mathv.cs" />
         <option value="$PROJECT_DIR$/Assets/Scripts/Environment/Terrain/Generation/Noise/Perlin/ChunkedPerlinNoiseGenerator.cs" />
@@ -164,12 +137,15 @@
         <option value="$PROJECT_DIR$/Assets/Scripts/Environment/Terrain/Generation/MeshGenerator.cs" />
         <option value="$PROJECT_DIR$/Assets/Scripts/Environment/Terrain/Generation/ChunkBuilder.cs" />
         <option value="$PROJECT_DIR$/Assets/Scripts/Environment/Terrain/Block.cs" />
-        <option value="$PROJECT_DIR$/Assets/Scripts/Controllers/Game/TextureController.cs" />
-        <option value="$PROJECT_DIR$/Assets/Scripts/Controllers/Game/GameController.cs" />
-        <option value="$PROJECT_DIR$/Assets/Scripts/Controllers/Game/BlockController.cs" />
         <option value="$PROJECT_DIR$/Assets/Scripts/Controllers/World/WorldController.cs" />
         <option value="$PROJECT_DIR$/Assets/Scripts/Environment/Terrain/Chunk.cs" />
         <option value="$PROJECT_DIR$/Assets/Scripts/Controllers/World/ChunkController.cs" />
+        <option value="$PROJECT_DIR$/Assets/Scripts/Controllers/Game/TextureController.cs" />
+        <option value="$PROJECT_DIR$/Assets/Scripts/Controllers/Game/BlockController.cs" />
+        <option value="$PROJECT_DIR$/Packages/Core.cs" />
+        <option value="$PROJECT_DIR$/WydCore/Class1.cs" />
+        <option value="$PROJECT_DIR$/Assets/Scripts/Controllers/Game/GameController.cs" />
+        <option value="$PROJECT_DIR$/Assets/Scripts/Environment/Terrain/IBlockRegistry.cs" />
       </list>
     </option>
   </component>
@@ -192,6 +168,7 @@
     <property name="Rider.DefaultBreakpoints.AreToggled" value="true" />
     <property name="Rider.ProjectViewActivator.IsNotFirstRun" value="true" />
     <property name="WebServerToolWindowFactoryState" value="false" />
+    <property name="last_opened_file_path" value="$PROJECT_DIR$/WydCore/WydCore.csproj" />
     <property name="nodejs_interpreter_path.stuck_in_default_project" value="undefined stuck path" />
     <property name="nodejs_npm_path_reset_for_default_project" value="true" />
     <property name="nodejs_package_manager_path" value="npm" />
@@ -272,7 +249,7 @@
       <workItem from="1565685005274" duration="13519000" />
       <workItem from="1565725152659" duration="938000" />
       <workItem from="1565757845783" duration="1210000" />
-      <workItem from="1565812988812" duration="4257000" />
+      <workItem from="1565812988812" duration="6076000" />
     </task>
     <servers />
   </component>
@@ -309,6 +286,8 @@
     <state x="516" y="258" key="ANALYSIS_DLG_com.jetbrains.rider.actions.impl.cleanup.RiderCodeCleanupAction$actionPerformed$dlg$1/1920.1080" />
     <state width="1324" height="436" key="DebuggerActiveHint" />
     <state width="1324" height="436" key="DebuggerActiveHint/1920.1080" />
+    <state x="548" y="166" key="FileChooserDialogImpl" />
+    <state x="548" y="166" key="FileChooserDialogImpl/1920.1080" />
     <state width="1493" height="274" key="GridCell.Tab.0.bottom" />
     <state width="1493" height="274" key="GridCell.Tab.0.bottom/1920.1080" />
     <state width="1493" height="274" key="GridCell.Tab.0.center" />
@@ -349,6 +328,10 @@
     <state width="1493" height="261" key="GridCell.Tab.4.left/1920.1080" />
     <state width="1493" height="261" key="GridCell.Tab.4.right" />
     <state width="1493" height="261" key="GridCell.Tab.4.right/1920.1080" />
+    <state x="361" y="163" key="Rider.ProjectTemplateDialog.Size" />
+    <state x="361" y="163" key="Rider.ProjectTemplateDialog.Size/1920.1080" />
+    <state x="601" y="113" key="RiderGenerateDialog" />
+    <state x="601" y="113" key="RiderGenerateDialog/1920.1080" />
     <state x="262" y="54" key="SettingsEditor" />
     <state x="262" y="54" key="SettingsEditor/1920.1080" />
     <state width="776" height="420" key="XDebugger.FullValuePopup" />

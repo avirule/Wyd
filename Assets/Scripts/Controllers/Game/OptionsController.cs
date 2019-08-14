@@ -22,7 +22,7 @@ namespace Controllers.Game
         Passive
     }
 
-    public class GameSettingsController : MonoBehaviour
+    public class OptionsController : MonoBehaviour
     {
         public int MaximumChunkCacheSize;
         public CacheCullingAggression CacheCullingAggression;

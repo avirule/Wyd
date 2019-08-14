@@ -1,6 +1,7 @@
 #region
 
 using System;
+using System.Threading.Tasks;
 using Controllers.World;
 using Environment;
 using Environment.Terrain;
@@ -16,11 +17,7 @@ namespace Controllers.Game
     public class GameController : MonoBehaviour
     {
         public static GameController Current;
-        public static GameSettingsController SettingsController;
-
-        public BlockController BlockController;
-        public TextureController TextureController;
-        public GameSettingsController GameSettingsController;
+        public static OptionsController Options;
 
         private void Awake()
         {
@@ -34,15 +31,13 @@ namespace Controllers.Game
             }
          
             DontDestroyOnLoad(this);
-            SettingsController = GameSettingsController;
             ToggleCursorLocked(true);
             QualitySettings.vSyncCount = 0;
         }
 
         private void Start()
         {
-            TextureController.Initialise();
-            Initialise();
+            RegisterDefaultBlocks();
         }
 
         private void OnApplicationQuit()
@@ -52,12 +47,11 @@ namespace Controllers.Game
 
         private void Initialise()
         {
-            RegisterDefaultBlocks();
         }
 
         private void RegisterDefaultBlocks()
         {
-            BlockController.RegisterBlockRules("Grass", true, false, (position, direction) =>
+            BlockController.Current.RegisterBlockRules("Grass", false, (position, direction) =>
             {
                 Vector3Int positionAbove = position + Vector3Int.up;
                 Block blockAbove = WorldController.Current.GetBlockAtPosition(positionAbove);
@@ -102,12 +96,12 @@ namespace Controllers.Game
                         throw new ArgumentOutOfRangeException(nameof(direction), direction, null);
                 }
             });
-            BlockController.RegisterBlockRules("Dirt", true, false);
-            BlockController.RegisterBlockRules("Stone", true, false);
-            BlockController.RegisterBlockRules("Glass", true, true);
-            BlockController.RegisterBlockRules("CoalOre", true, false);
-            BlockController.RegisterBlockRules("GoldOre", true, false);
-            BlockController.RegisterBlockRules("DiamondOre", true, false);
+            BlockController.Current.RegisterBlockRules("Dirt", true);
+            BlockController.Current.RegisterBlockRules("Stone", true);
+            BlockController.Current.RegisterBlockRules("Glass", true);
+            BlockController.Current.RegisterBlockRules("CoalOre", true);
+            BlockController.Current.RegisterBlockRules("GoldOre", true);
+            BlockController.Current.RegisterBlockRules("DiamondOre", true);
         }
 
         public void ToggleCursorLocked(bool value)

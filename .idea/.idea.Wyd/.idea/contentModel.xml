@@ -33,7 +33,7 @@
             <e p="Game" t="Include">
               <e p="BlockController.cs" t="Include" />
               <e p="GameController.cs" t="Include" />
-              <e p="GameSettingsController.cs" t="Include" />
+              <e p="OptionsController.cs" t="Include" />
               <e p="TextureController.cs" t="Include" />
             </e>
             <e p="UI" t="Include">
@@ -82,6 +82,12 @@
               <e p="ChunkedPerlinNoiseGenerator.cs" t="Include" />
               <e p="PerlinNoise.cs" t="Include" />
               <e p="PerlinNoiseGenerator.cs" t="Include" />
+            </e>
+          </e>
+          <e p="Plugins" t="Include">
+            <e p="Blocks" t="Include">
+              <e p="IBlockRegistrar.cs" t="Include" />
+              <e p="IBlockRegistry.cs" t="Include" />
             </e>
           </e>
           <e p="Static" t="Include">

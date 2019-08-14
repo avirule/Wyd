@@ -48,7 +48,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   BlockController: {fileID: 7333379184776353555}
   TextureController: {fileID: 7333379184776353554}
-  GameSettingsController: {fileID: 7333379184776353548}
+  OptionsController: {fileID: 7333379184776353548}
 --- !u!114 &7333379184776353554
 MonoBehaviour:
   m_ObjectHideFlags: 0

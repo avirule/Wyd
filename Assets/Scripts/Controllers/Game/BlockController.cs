@@ -40,8 +40,7 @@ namespace Controllers.Game
             _Blocks = new Dictionary<ushort, IBlockRule>();
         }
 
-        public bool RegisterBlockRules(string blockName, bool addNewBlock, bool isTransparent,
-            RuleEvaluation uvsRule = default)
+        public bool RegisterBlockRules(string blockName, bool isTransparent, RuleEvaluation uvsRule = default)
         {
             ushort blockId = 0;
 
