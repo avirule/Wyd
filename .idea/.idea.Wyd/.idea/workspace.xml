@@ -1,18 +1,34 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
   <component name="AnalysisUIOptions">
+    <option name="SCOPE_TYPE" value="3" />
     <option name="CUSTOM_SCOPE_NAME" value="All Places" />
   </component>
   <component name="ChangeListManager">
     <list default="true" id="c75ae2de-3a89-4228-87f5-5925302b6d96" name="Default Changelist" comment="">
+      <change afterPath="$PROJECT_DIR$/Assets/Packages/sharpconfig.3.2.8.meta" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Assets/Packages/sharpconfig.3.2.8/.signature.p7s" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Assets/Packages/sharpconfig.3.2.8/lib.meta" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Assets/Packages/sharpconfig.3.2.8/lib/net20.meta" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Assets/Packages/sharpconfig.3.2.8/lib/net20/SharpConfig.dll" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Assets/Packages/sharpconfig.3.2.8/lib/net20/SharpConfig.dll.meta" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Assets/Packages/sharpconfig.3.2.8/lib/net20/SharpConfig.xml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Assets/Packages/sharpconfig.3.2.8/lib/net20/SharpConfig.xml.meta" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Assets/Packages/sharpconfig.3.2.8/sharpconfig.3.2.8.nupkg" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Assets/Packages/sharpconfig.3.2.8/sharpconfig.3.2.8.nupkg.meta" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/.idea.Wyd/.idea/contentModel.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/.idea.Wyd/.idea/contentModel.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/.idea.Wyd/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/.idea.Wyd/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Assets/Scripts/Controllers/Game/BlockController.cs.meta" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/Scripts/Controllers/Game/BlockController.cs.meta" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/Assets/Scripts/Controllers/Game/GameController.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/Scripts/Controllers/Game/GameController.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Assets/Scripts/Controllers/Game/GameController.cs.meta" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/Scripts/Controllers/Game/GameController.cs.meta" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/Assets/Scripts/Controllers/Game/OptionsController.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/Scripts/Controllers/Game/OptionsController.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Assets/Scripts/Controllers/Game/OptionsController.cs.meta" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/Scripts/Controllers/Game/OptionsController.cs.meta" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/Assets/Scripts/Controllers/Game/TextureController.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/Scripts/Controllers/Game/TextureController.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Assets/Scripts/Controllers/Game/TextureController.cs.meta" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/Scripts/Controllers/Game/TextureController.cs.meta" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/Assets/Scripts/Controllers/UI/DiagnosticsController.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/Scripts/Controllers/UI/DiagnosticsController.cs" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/Assets/Scripts/Controllers/World/ChunkController.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/Scripts/Controllers/World/ChunkController.cs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Assets/Scripts/Environment/Terrain/Chunk.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/Scripts/Environment/Terrain/Chunk.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Assets/packages.config" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/packages.config" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/ProjectSettings/ProjectSettings.asset" beforeDir="false" afterPath="$PROJECT_DIR$/ProjectSettings/ProjectSettings.asset" afterDir="false" />
     </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
     <option name="SHOW_DIALOG" value="false" />
@@ -50,6 +66,7 @@
     <setting file="file://$PROJECT_DIR$/Assets/Scripts/Noise/NoiseMap.cs" root0="FORCE_HIGHLIGHTING" />
     <setting file="file://$PROJECT_DIR$/Assets/Scripts/Controllers/World/ChunkController.cs" root0="FORCE_HIGHLIGHTING" />
     <setting file="file://$APPLICATION_CONFIG_DIR$/resharper-host/DecompilerCache/decompiler/7D971063-3068-4ADD-86D0-80ECF65BFE69/83/952de8bc/Dictionary`2.cs" root0="SKIP_HIGHLIGHTING" />
+    <setting file="file://$PROJECT_DIR$/Assets/packages.config" root0="FORCE_HIGHLIGHTING" />
     <setting file="file://$PROJECT_DIR$/Assets/Scripts/Noise/Perlin/PerlinNoise.cs" root0="FORCE_HIGHLIGHTING" />
     <setting file="file://$PROJECT_DIR$/Assets/Scripts/Noise/Perlin/PerlinNoiseGenerator.cs" root0="FORCE_HIGHLIGHTING" />
     <setting file="file://$PROJECT_DIR$/Assets/Scripts/Noise/Perlin/ChunkedPerlinNoiseGenerator.cs" root0="FORCE_HIGHLIGHTING" />
@@ -135,10 +152,10 @@
         <option value="$PROJECT_DIR$/Assets/Scripts/Plugins/Blocks/IBlockRegistrar.cs" />
         <option value="$PROJECT_DIR$/Assets/Scripts/Plugins/Blocks/BlockRegistrar.cs" />
         <option value="$PROJECT_DIR$/Assets/Scripts/Plugins/IPlugin.cs" />
-        <option value="$PROJECT_DIR$/Assets/Scripts/Controllers/Game/TextureController.cs" />
-        <option value="$PROJECT_DIR$/Assets/Scripts/Controllers/Game/GameController.cs" />
-        <option value="$PROJECT_DIR$/Assets/Scripts/Controllers/Game/OptionsController.cs" />
         <option value="$PROJECT_DIR$/Assets/Scripts/Controllers/World/ChunkController.cs" />
+        <option value="$PROJECT_DIR$/Assets/Scripts/Controllers/Game/GameController.cs" />
+        <option value="$PROJECT_DIR$/Assets/Scripts/Controllers/Game/TextureController.cs" />
+        <option value="$PROJECT_DIR$/Assets/Scripts/Controllers/Game/OptionsController.cs" />
       </list>
     </option>
   </component>
@@ -243,6 +260,7 @@
       <workItem from="1565725152659" duration="938000" />
       <workItem from="1565757845783" duration="1210000" />
       <workItem from="1565812988812" duration="8068000" />
+      <workItem from="1565822424192" duration="3147000" />
     </task>
     <servers />
   </component>

@@ -102,7 +102,7 @@ namespace Controllers.World
                 // ensures that neighbours update their meshes to cull newly out of sight faces
                 FlagNeighborsPendingUpdate(chunk.Position);
 
-                if (_FrameTimeLimiter.Elapsed.TotalSeconds > OptionsController.Current.MaximumInternalFrameTime)
+                if (_FrameTimeLimiter.Elapsed.TotalSeconds > OptionsController.Current.MaximumInternalFrames)
                 {
                     break;
                 }
@@ -169,7 +169,7 @@ namespace Controllers.World
 
                 DeactivateChunk(Chunks[i]);
 
-                if (_FrameTimeLimiter.Elapsed.TotalSeconds > OptionsController.Current.MaximumInternalFrameTime)
+                if (_FrameTimeLimiter.Elapsed.TotalSeconds > OptionsController.Current.MaximumInternalFrames)
                 {
                     break;
                 }
@@ -194,8 +194,8 @@ namespace Controllers.World
 
                 // continue culling if the amount of cached chunks is greater than the maximum
                 if ((_FrameTimeLimiter.Elapsed.TotalSeconds >
-                     OptionsController.Current.MaximumInternalFrameTime) &&
-                    (OptionsController.Current.CacheCullingAggression == CacheCullingAggression.Passive))
+                     OptionsController.Current.MaximumInternalFrames) &&
+                    (OptionsController.Current.ChunkCacheCullingAggression == CacheCullingAggression.Passive))
                 {
                     return;
                 }

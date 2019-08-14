@@ -70,10 +70,10 @@ namespace Controllers.UI
         {
             _DeltaTimes.Add(1d / Time.deltaTime);
 
-            if (_DeltaTimes.Count > OptionsController.Current.MaximumFrameRateCacheSize)
+            if (_DeltaTimes.Count > OptionsController.Current.MaximumFrameRateBufferSize)
             {
                 _DeltaTimes.RemoveRange(0,
-                    _DeltaTimes.Count - OptionsController.Current.MaximumFrameRateCacheSize);
+                    _DeltaTimes.Count - OptionsController.Current.MaximumFrameRateBufferSize);
             }
 
             _DeltaTimeAverage = Math.Round(_DeltaTimes.Average(), 4);
@@ -95,12 +95,12 @@ namespace Controllers.UI
 
         private void CullChunkLoadQueue()
         {
-            while (ChunkMeshTimes.Count > OptionsController.Current.MaximumChunkLoadTimeCacheSize)
+            while (ChunkMeshTimes.Count > OptionsController.Current.MaximumChunkLoadTimeBufferSize)
             {
                 ChunkMeshTimes.TryDequeue(out double _);
             }
 
-            while (ChunkMeshTimes.Count > OptionsController.Current.MaximumChunkLoadTimeCacheSize)
+            while (ChunkMeshTimes.Count > OptionsController.Current.MaximumChunkLoadTimeBufferSize)
             {
                 ChunkMeshTimes.TryDequeue(out double _);
             }

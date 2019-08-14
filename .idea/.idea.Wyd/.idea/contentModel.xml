@@ -18,6 +18,13 @@
               </e>
             </e>
           </e>
+          <e p="sharpconfig.3.2.8" t="Include">
+            <e p="lib" t="Include">
+              <e p="net20" t="Include">
+                <e p="SharpConfig.xml" t="Include" />
+              </e>
+            </e>
+          </e>
         </e>
         <e p="Plugins" t="Include">
           <e p="MoonSharp" t="Include">

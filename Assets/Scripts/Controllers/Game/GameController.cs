@@ -35,7 +35,6 @@ namespace Controllers.Game
 
         private void Start()
         {
-            TextureController.Current.Initialise();
             RegisterDefaultBlocks();
         }
 

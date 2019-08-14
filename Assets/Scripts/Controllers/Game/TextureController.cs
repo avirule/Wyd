@@ -1,5 +1,6 @@
 #region
 
+using System;
 using System.Collections.Generic;
 using Logging;
 using NLog;
@@ -13,7 +14,6 @@ namespace Controllers.Game
     {
         public static TextureController Current;
 
-        public bool Initialised;
         public Dictionary<string, Vector2[]> Sprites;
 
         private void Awake()
@@ -27,15 +27,12 @@ namespace Controllers.Game
                 Current = this;
             }
 
-            Initialised = false;
             Sprites = new Dictionary<string, Vector2[]>();
         }
 
-        public void Initialise()
+        private void Start()
         {
             ProcessSprites();
-            
-            Initialised = true;
         }
 
         private void ProcessSprites()
