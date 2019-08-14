@@ -1,7 +1,6 @@
 ﻿#region
 
 using Controllers.Game;
-using Static;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;

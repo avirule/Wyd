@@ -1,4 +1,8 @@
+#region
+
 using Environment.Terrain;
+
+#endregion
 
 namespace Plugins.Blocks
 {
@@ -7,7 +11,7 @@ namespace Plugins.Blocks
         public string BlockName { get; }
         public bool IsTransparent { get; }
         public RuleEvaluation UVs { get; }
-        
+
         public BlockRegistrar(string blockName, bool isTransparent, RuleEvaluation uVs)
         {
             BlockName = blockName;

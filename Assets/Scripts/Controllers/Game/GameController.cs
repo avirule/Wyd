@@ -1,7 +1,6 @@
 #region
 
 using System;
-using System.Threading.Tasks;
 using Controllers.World;
 using Environment;
 using Environment.Terrain;
@@ -21,7 +20,7 @@ namespace Controllers.Game
 
         private void Awake()
         {
-            if (Current != null && Current != this)
+            if ((Current != null) && (Current != this))
             {
                 Destroy(gameObject);
             }
@@ -29,7 +28,7 @@ namespace Controllers.Game
             {
                 Current = this;
             }
-         
+
             DontDestroyOnLoad(this);
             ToggleCursorLocked(true);
             QualitySettings.vSyncCount = 0;
@@ -117,12 +116,12 @@ namespace Controllers.Game
                 Cursor.visible = true;
             }
         }
-        
+
         public void QuitToMainMenu()
         {
             SceneManager.LoadSceneAsync("MainMenu", LoadSceneMode.Single);
         }
-        
+
         public void ApplicationClose(int exitCode = -1)
         {
             Application.Quit(exitCode);

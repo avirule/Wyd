@@ -17,7 +17,7 @@ namespace Controllers.World
     public class WorldController : MonoBehaviour
     {
         public static WorldController Current;
-        
+
         /// <summary>
         ///     This is referenced OFTEN in SYNCHRONOUS CONTEXT. DO NOT USE IN ASYNCHRONOUS CONTEXTS.
         /// </summary>
@@ -34,7 +34,7 @@ namespace Controllers.World
 
         private void Awake()
         {
-            if (Current != null && Current != this)
+            if ((Current != null) && (Current != this))
             {
                 Destroy(gameObject);
             }
@@ -42,7 +42,7 @@ namespace Controllers.World
             {
                 Current = this;
             }
-            
+
             if (TicksPerSecond < 1)
             {
                 EventLog.Logger.Log(LogLevel.Error,

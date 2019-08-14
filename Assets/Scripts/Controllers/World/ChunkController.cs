@@ -15,7 +15,7 @@ namespace Controllers.World
     public sealed class ChunkController : MonoBehaviour
     {
         public static ChunkController Current;
-        
+
         private Stopwatch _FrameTimeLimiter;
         private Chunk _ChunkObject;
         private Queue<Chunk> _CachedChunks;
@@ -29,7 +29,7 @@ namespace Controllers.World
 
         private void Awake()
         {
-            if (Current != null && Current != this)
+            if ((Current != null) && (Current != this))
             {
                 Destroy(gameObject);
             }
@@ -37,7 +37,7 @@ namespace Controllers.World
             {
                 Current = this;
             }
-            
+
             _ChunkObject = Resources.Load<Chunk>(@"Environment\Terrain\Chunk");
             _CachedChunks = new Queue<Chunk>();
             _FrameTimeLimiter = new Stopwatch();

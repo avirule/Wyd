@@ -86,6 +86,7 @@
           </e>
           <e p="Plugins" t="Include">
             <e p="Blocks" t="Include">
+              <e p="BlockRegistrar.cs" t="Include" />
               <e p="IBlockRegistrar.cs" t="Include" />
               <e p="IBlockRegistry.cs" t="Include" />
             </e>
