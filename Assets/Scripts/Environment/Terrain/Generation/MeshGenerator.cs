@@ -13,22 +13,16 @@ namespace Environment.Terrain.Generation
 {
     public class MeshGenerator : ThreadedProcess
     {
-        private readonly BlockController _BlockController;
         private readonly Block[] _Blocks;
         private readonly Vector3Int _Position;
-
         private readonly List<int> _Triangles;
         private readonly List<Vector2> _UVs;
         private readonly List<Vector3> _Vertices;
-
-        private readonly WorldController _WorldController;
         private bool _IsVisible;
 
-        public MeshGenerator(WorldController worldController, BlockController blockController, Vector3Int position,
+        public MeshGenerator(Vector3Int position,
             Block[] blocks)
         {
-            _WorldController = worldController;
-            _BlockController = blockController;
             _Triangles = new List<int>();
             _UVs = new List<Vector2>();
             _Vertices = new List<Vector3>();
@@ -59,7 +53,7 @@ namespace Environment.Terrain.Generation
 
                         Vector3Int globalPosition = _Position + new Vector3Int(x, y, z);
 
-                        if (((z == (Chunk.Size.z - 1)) && _WorldController
+                        if (((z == (Chunk.Size.z - 1)) && WorldController.Current
                                  .GetBlockAtPosition(globalPosition + new Vector3Int(0, 0, 1)).Transparent) ||
                             ((z < (Chunk.Size.z - 1)) && _Blocks[index + (Chunk.Size.x * Chunk.Size.y)].Transparent))
                         {
@@ -73,7 +67,7 @@ namespace Environment.Terrain.Generation
                                 new Vector3(x + 1, y + 1, z + 1)
                             });
 
-                            if (_BlockController.GetBlockSpriteUVs(_Blocks[index].Id, globalPosition, Direction.North,
+                            if (BlockController.Current.GetBlockSpriteUVs(_Blocks[index].Id, globalPosition, Direction.North,
                                 out Vector2[] uvs))
                             {
                                 _UVs.AddRange(new[]
@@ -100,7 +94,7 @@ namespace Environment.Terrain.Generation
                         }
 
                         if (((x == (Chunk.Size.x - 1)) &&
-                             _WorldController.GetBlockAtPosition(globalPosition + Vector3Int.right).Transparent) ||
+                             WorldController.Current.GetBlockAtPosition(globalPosition + Vector3Int.right).Transparent) ||
                             ((x < (Chunk.Size.x - 1)) && _Blocks[index + 1].Transparent))
                         {
                             _Blocks[index].SetFace(Direction.East, true);
@@ -113,7 +107,7 @@ namespace Environment.Terrain.Generation
                                 new Vector3(x + 1, y + 1, z + 1)
                             });
 
-                            if (_BlockController.GetBlockSpriteUVs(_Blocks[index].Id, globalPosition, Direction.East,
+                            if (BlockController.Current.GetBlockSpriteUVs(_Blocks[index].Id, globalPosition, Direction.East,
                                 out Vector2[] uvs))
                             {
                                 _UVs.AddRange(new[]
@@ -139,7 +133,7 @@ namespace Environment.Terrain.Generation
                             });
                         }
 
-                        if (((z == 0) && _WorldController.GetBlockAtPosition(globalPosition + new Vector3Int(0, 0, -1))
+                        if (((z == 0) && WorldController.Current.GetBlockAtPosition(globalPosition + new Vector3Int(0, 0, -1))
                                  .Transparent) ||
                             ((z > 0) && _Blocks[index - (Chunk.Size.x * Chunk.Size.y)].Transparent))
                         {
@@ -153,7 +147,7 @@ namespace Environment.Terrain.Generation
                                 new Vector3(x + 1, y + 1, z)
                             });
 
-                            if (_BlockController.GetBlockSpriteUVs(_Blocks[index].Id, globalPosition, Direction.South,
+                            if (BlockController.Current.GetBlockSpriteUVs(_Blocks[index].Id, globalPosition, Direction.South,
                                 out Vector2[] uvs))
                             {
                                 _UVs.AddRange(new[]
@@ -179,7 +173,7 @@ namespace Environment.Terrain.Generation
                             });
                         }
 
-                        if (((x == 0) && _WorldController.GetBlockAtPosition(globalPosition + Vector3Int.left)
+                        if (((x == 0) && WorldController.Current.GetBlockAtPosition(globalPosition + Vector3Int.left)
                                  .Transparent) ||
                             ((x > 0) && _Blocks[index - 1].Transparent))
                         {
@@ -193,7 +187,7 @@ namespace Environment.Terrain.Generation
                                 new Vector3(x, y + 1, z + 1)
                             });
 
-                            if (_BlockController.GetBlockSpriteUVs(_Blocks[index].Id, globalPosition, Direction.West,
+                            if (BlockController.Current.GetBlockSpriteUVs(_Blocks[index].Id, globalPosition, Direction.West,
                                 out Vector2[] uvs))
                             {
                                 _UVs.AddRange(new[]
@@ -220,7 +214,7 @@ namespace Environment.Terrain.Generation
                         }
 
                         if (((y == (Chunk.Size.y - 1)) &&
-                             _WorldController.GetBlockAtPosition(globalPosition + Vector3Int.up).Transparent) ||
+                             WorldController.Current.GetBlockAtPosition(globalPosition + Vector3Int.up).Transparent) ||
                             ((y < (Chunk.Size.y - 1)) && _Blocks[index + Chunk.Size.x].Transparent))
                         {
                             _Blocks[index].SetFace(Direction.Up, true);
@@ -233,7 +227,7 @@ namespace Environment.Terrain.Generation
                                 new Vector3(x + 1, y + 1, z + 1)
                             });
 
-                            if (_BlockController.GetBlockSpriteUVs(_Blocks[index].Id, globalPosition, Direction.Up,
+                            if (BlockController.Current.GetBlockSpriteUVs(_Blocks[index].Id, globalPosition, Direction.Up,
                                 out Vector2[] uvs))
                             {
                                 _UVs.AddRange(new[]
@@ -259,7 +253,7 @@ namespace Environment.Terrain.Generation
                             });
                         }
 
-                        if (((y == 0) && _WorldController.GetBlockAtPosition(globalPosition + Vector3Int.down)
+                        if (((y == 0) && WorldController.Current.GetBlockAtPosition(globalPosition + Vector3Int.down)
                                  .Transparent) ||
                             ((y > 0) && _Blocks[index - Chunk.Size.x].Transparent))
                         {
@@ -273,7 +267,7 @@ namespace Environment.Terrain.Generation
                                 new Vector3(x + 1, y, z + 1)
                             });
 
-                            if (_BlockController.GetBlockSpriteUVs(_Blocks[index].Id, globalPosition, Direction.Down,
+                            if (BlockController.Current.GetBlockSpriteUVs(_Blocks[index].Id, globalPosition, Direction.Down,
                                 out Vector2[] uvs))
                             {
                                 _UVs.AddRange(new[]

@@ -1,6 +1,7 @@
 #region
 
 using System;
+using Controllers.Game;
 using Environment.Terrain;
 using Environment.Terrain.Generation;
 using Logging;
@@ -15,6 +16,8 @@ namespace Controllers.World
 {
     public class WorldController : MonoBehaviour
     {
+        public static WorldController Current;
+        
         /// <summary>
         ///     This is referenced OFTEN in SYNCHRONOUS CONTEXT. DO NOT USE IN ASYNCHRONOUS CONTEXTS.
         /// </summary>
@@ -31,11 +34,20 @@ namespace Controllers.World
 
         private void Awake()
         {
+            if (Current != null && Current != this)
+            {
+                Destroy(gameObject);
+            }
+            else
+            {
+                Current = this;
+            }
+            
             if (TicksPerSecond < 1)
             {
                 EventLog.Logger.Log(LogLevel.Error,
                     "World tick rate cannot be set to less than 1tick/s. Exiting game.");
-                StaticMethods.ApplicationClose();
+                GameController.Current.ApplicationClose();
                 return;
             }
 

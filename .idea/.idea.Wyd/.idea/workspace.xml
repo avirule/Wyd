@@ -1,14 +1,48 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
   <component name="AnalysisUIOptions">
+    <option name="SCOPE_TYPE" value="3" />
     <option name="CUSTOM_SCOPE_NAME" value="All Places" />
   </component>
   <component name="ChangeListManager">
     <list default="true" id="c75ae2de-3a89-4228-87f5-5925302b6d96" name="Default Changelist" comment="">
-      <change beforePath="$PROJECT_DIR$/.idea/.idea.Wyd/.idea/indexLayout.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/.idea.Wyd/.idea/indexLayout.xml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Assets/Resources/Controllers.meta" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Assets/Resources/Controllers/GameController.prefab" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Assets/Resources/Controllers/GameController.prefab.meta" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Assets/Resources/UI/Components/ExitButton.prefab" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Assets/Resources/UI/Components/ExitButton.prefab.meta" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Assets/Resources/UI/Components/OptionsButton.prefab" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Assets/Resources/UI/Components/OptionsButton.prefab.meta" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Assets/Resources/UI/Components/QuitMainMenuButton.prefab" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Assets/Resources/UI/Components/QuitMainMenuButton.prefab.meta" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Assets/Scripts/Controllers/UI/Components.meta" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Assets/Scripts/Controllers/UI/Components/ExitButtonController.cs" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Assets/Scripts/Controllers/UI/Components/ExitButtonController.cs.meta" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Assets/Scripts/Controllers/UI/Components/OptionsButtonController.cs" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Assets/Scripts/Controllers/UI/Components/OptionsButtonController.cs.meta" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Assets/Scripts/Controllers/UI/Components/QuitMainMenuButtonController.cs" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Assets/Scripts/Controllers/UI/Components/QuitMainMenuButtonController.cs.meta" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/.idea.Wyd/.idea/contentModel.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/.idea.Wyd/.idea/contentModel.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/.idea.Wyd/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/.idea.Wyd/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Assets/Resources/UI/Diagnostics.prefab" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/Resources/UI/Diagnostics.prefab" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Assets/Resources/UI/EscapeMenu.prefab" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/Resources/UI/EscapeMenu.prefab" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Assets/Resources/UI/GameUI.prefab" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/Resources/UI/GameUI.prefab" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Assets/Scenes/Game.unity" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/Scenes/Game.unity" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/Assets/Scenes/MainMenu.unity" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/Scenes/MainMenu.unity" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Assets/Scripts/Controllers/Game/BlockController.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/Scripts/Controllers/Game/BlockController.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Assets/Scripts/Controllers/Game/GameController.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/Scripts/Controllers/Game/GameController.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Assets/Scripts/Controllers/Game/TextureController.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/Scripts/Controllers/Game/TextureController.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Assets/Scripts/Controllers/UI/DiagnosticsController.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/Scripts/Controllers/UI/DiagnosticsController.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Assets/Scripts/Controllers/UI/EscapeMenuController.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/Scripts/Controllers/UI/EscapeMenuController.cs" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/Assets/Scripts/Controllers/UI/MainMenuController.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/Scripts/Controllers/UI/MainMenuController.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Assets/Scripts/Controllers/UI/UIInputWatcherController.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/Scripts/Controllers/UI/UIInputWatcherController.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Assets/Scripts/Controllers/World/ChunkController.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/Scripts/Controllers/World/ChunkController.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Assets/Scripts/Controllers/World/WorldController.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/Scripts/Controllers/World/WorldController.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Assets/Scripts/Environment/Terrain/Block.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/Scripts/Environment/Terrain/Block.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Assets/Scripts/Environment/Terrain/Chunk.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/Scripts/Environment/Terrain/Chunk.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Assets/Scripts/Environment/Terrain/Generation/ChunkBuilder.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/Scripts/Environment/Terrain/Generation/ChunkBuilder.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Assets/Scripts/Environment/Terrain/Generation/MeshGenerator.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/Scripts/Environment/Terrain/Generation/MeshGenerator.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Assets/Scripts/Static/StaticMethods.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/Scripts/Static/StaticMethods.cs" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/ProjectSettings/ProjectSettings.asset" beforeDir="false" afterPath="$PROJECT_DIR$/ProjectSettings/ProjectSettings.asset" afterDir="false" />
     </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
@@ -50,6 +84,7 @@
     <setting file="file://$PROJECT_DIR$/Assets/Scripts/Noise/Perlin/PerlinNoise.cs" root0="FORCE_HIGHLIGHTING" />
     <setting file="file://$PROJECT_DIR$/Assets/Scripts/Noise/Perlin/PerlinNoiseGenerator.cs" root0="FORCE_HIGHLIGHTING" />
     <setting file="file://$PROJECT_DIR$/Assets/Scripts/Noise/Perlin/ChunkedPerlinNoiseGenerator.cs" root0="FORCE_HIGHLIGHTING" />
+    <setting file="file://$PROJECT_DIR$/Assets/Scripts/Controllers/UI/Components/ExitButtonController.cs" root0="FORCE_HIGHLIGHTING" />
     <setting file="file://$PROJECT_DIR$/Assets/Scripts/Noise/OpenSimplex/OpenSimplexNoiseGenerator.cs" root0="FORCE_HIGHLIGHTING" />
     <setting file="file://$PROJECT_DIR$/Assets/Scripts/Noise/OpenSimplex/OpenSimplex.cs" root0="FORCE_HIGHLIGHTING" />
     <setting file="file://$APPLICATION_CONFIG_DIR$/resharper-host/DecompilerCache/decompiler/21A478FD-38D2-4B2E-B941-D30E3F05E552/5a/4956fb78/Target.cs" root0="SKIP_HIGHLIGHTING" />
@@ -68,12 +103,14 @@
     <setting file="file://$PROJECT_DIR$/Assets/Scripts/Static/StaticRandom.cs" root0="FORCE_HIGHLIGHTING" />
     <setting file="file://$APPLICATION_CONFIG_DIR$/resharper-host/DecompilerCache/decompiler/0079A30F-96A0-4734-8857-E1CECC6C638A/66/195b74c5/LinkedList`1.cs" root0="SKIP_HIGHLIGHTING" />
     <setting file="file://$PROJECT_DIR$/Assets/Scripts/Static/StaticMath.cs" root0="FORCE_HIGHLIGHTING" />
+    <setting file="file://$PROJECT_DIR$/Assets/Scripts/Controllers/UI/Components/OptionsButtonController.cs" root0="FORCE_HIGHLIGHTING" />
     <setting file="file://$PROJECT_DIR$/Assets/Scripts/Logging/EventLog.cs" root0="FORCE_HIGHLIGHTING" />
     <setting file="file://$PROJECT_DIR$/Assets/Scripts/Logging/Targets/UnityDebuggerTarget.cs" root0="FORCE_HIGHLIGHTING" />
     <setting file="file://$PROJECT_DIR$/Assets/Scripts/Threading/ThreadedProcess.cs" root0="FORCE_HIGHLIGHTING" />
     <setting file="file://$PROJECT_DIR$/ProjectSettings/ProjectSettings.asset" root0="FORCE_HIGHLIGHTING" />
     <setting file="file://$PROJECT_DIR$/Assets/Scripts/Controllers/UI/MainMenuController.cs" root0="FORCE_HIGHLIGHTING" />
     <setting file="file://$PROJECT_DIR$/Assets/Scripts/Controllers/UI/DiagnosticsController.cs" root0="FORCE_HIGHLIGHTING" />
+    <setting file="file://$PROJECT_DIR$/Assets/Scripts/Controllers/UI/Components/QuitMainMenuButtonController.cs" root0="FORCE_HIGHLIGHTING" />
     <setting file="file://$PROJECT_DIR$/Assets/Scripts/Controllers/UI/EscapeMenuController.cs" root0="FORCE_HIGHLIGHTING" />
     <setting file="file://$PROJECT_DIR$/Assets/Scripts/Controllers/UI/UIInputWatcherController.cs" root0="FORCE_HIGHLIGHTING" />
     <setting file="file://$USER_HOME$/.Rider2019.1/config/resharper-host/DecompilerCache/decompiler/7D971063-3068-4ADD-86D0-80ECF65BFE69/95/e065c2c7/ThrowHelper.cs" root0="SKIP_HIGHLIGHTING" />
@@ -82,10 +119,6 @@
   <component name="IdeDocumentHistory">
     <option name="CHANGED_PATHS">
       <list>
-        <option value="$PROJECT_DIR$/Assets/Scripts/Controllers/Entity/CameraController.cs" />
-        <option value="$PROJECT_DIR$/Assets/Scripts/Controllers/Entity/PlayerController.cs" />
-        <option value="$PROJECT_DIR$/Assets/Scripts/Environment/Terrain/Generation/CombinedMeshGenerator.cs" />
-        <option value="$PROJECT_DIR$/Assets/Scripts/Environment/Direction.cs" />
         <option value="$PROJECT_DIR$/Assets/Scripts/Controllers/WorldController.cs" />
         <option value="$PROJECT_DIR$/Assets/Scripts/Controllers/World/ChunkManager.cs" />
         <option value="$PROJECT_DIR$/Assets/Scripts/Logging/Targets/UnityDebuggerTarget.cs" />
@@ -98,8 +131,6 @@
         <option value="$PROJECT_DIR$/Assets/Scripts/Threading/AwaitCompletion.cs" />
         <option value="$PROJECT_DIR$/Assets/Scripts/Threading/AwaitCompletionConsumer.cs" />
         <option value="$PROJECT_DIR$/Assets/Scripts/Environment/Terrain/Generation/Noise/NoiseMap.cs" />
-        <option value="$PROJECT_DIR$/Assets/Scripts/Controllers/UI/UIInputWatcherController.cs" />
-        <option value="$PROJECT_DIR$/Assets/Scripts/Controllers/UI/EscapeMenuController.cs" />
         <option value="$PROJECT_DIR$/Assets/Scripts/Environment/Terrain/Generation/WorldGenerationSettings.cs" />
         <option value="$PROJECT_DIR$/Assets/Scripts/Controllers/Game/GameSettings.cs" />
         <option value="$PROJECT_DIR$/Assets/Scripts/Threading/Generation/ChunkedPerlinNoiseGenerator.cs" />
@@ -114,25 +145,31 @@
         <option value="$PROJECT_DIR$/Assets/Scripts/Threading/ThreadedProcess.cs" />
         <option value="$PROJECT_DIR$/Assets/Scripts/Environment/Terrain/BlockRule.cs" />
         <option value="$PROJECT_DIR$/Assets/scri.cs" />
-        <option value="$PROJECT_DIR$/Assets/Scripts/Controllers/UI/DiagnosticsController.cs" />
         <option value="$PROJECT_DIR$/Assets/Scripts/Noise/OpenSimplex/OpenSimplex.cs" />
         <option value="$PROJECT_DIR$/Assets/Scripts/Noise/Perlin/PerlinNoiseGenerator.cs" />
         <option value="$PROJECT_DIR$/Assets/Scripts/Noise/Perlin/PerlinNoise.cs" />
         <option value="$PROJECT_DIR$/Assets/Scripts/Noise/NoiseMap.cs" />
         <option value="$PROJECT_DIR$/Assets/Scripts/Environment/IWorldUpdatable.cs" />
-        <option value="$PROJECT_DIR$/Assets/Scripts/Environment/Terrain/Generation/ChunkBuilder.cs" />
         <option value="$PROJECT_DIR$/Assets/Scripts/Controllers/Audio/TrackController.cs" />
         <option value="$PROJECT_DIR$/Assets/Scripts/Audio/AudioFade.cs" />
-        <option value="$PROJECT_DIR$/Assets/Scripts/Controllers/World/WorldController.cs" />
-        <option value="$PROJECT_DIR$/Assets/Scripts/Static/StaticMethods.cs" />
-        <option value="$PROJECT_DIR$/Assets/Scripts/Environment/Terrain/Chunk.cs" />
         <option value="$PROJECT_DIR$/Assets/Scripts/Controllers/Game/GameSettingsController.cs" />
-        <option value="$PROJECT_DIR$/Assets/Scripts/Controllers/World/ChunkController.cs" />
-        <option value="$PROJECT_DIR$/Assets/Scripts/Environment/Terrain/Generation/MeshGenerator.cs" />
-        <option value="$PROJECT_DIR$/Assets/Scripts/Controllers/Game/BlockController.cs" />
-        <option value="$PROJECT_DIR$/Assets/Scripts/Environment/Terrain/Block.cs" />
-        <option value="$PROJECT_DIR$/Assets/Scripts/Controllers/Game/GameController.cs" />
+        <option value="$PROJECT_DIR$/Assets/Scripts/Controllers/UI/EscapeMenuController.cs" />
+        <option value="$PROJECT_DIR$/Assets/Scripts/Static/StaticMethods.cs" />
+        <option value="$PROJECT_DIR$/Assets/Scripts/Controllers/UI/UIInputWatcherController.cs" />
+        <option value="$PROJECT_DIR$/Assets/Scripts/Controllers/UI/Components/ExitButtonController.cs" />
         <option value="$PROJECT_DIR$/Assets/Scripts/Controllers/UI/MainMenuController.cs" />
+        <option value="$PROJECT_DIR$/Assets/Scripts/Controllers/UI/DiagnosticsController.cs" />
+        <option value="$PROJECT_DIR$/Assets/Scripts/Controllers/UI/Components/QuitMainMenuButtonController.cs" />
+        <option value="$PROJECT_DIR$/Assets/Scripts/Controllers/UI/Components/OptionsButtonController.cs" />
+        <option value="$PROJECT_DIR$/Assets/Scripts/Environment/Terrain/Generation/MeshGenerator.cs" />
+        <option value="$PROJECT_DIR$/Assets/Scripts/Environment/Terrain/Generation/ChunkBuilder.cs" />
+        <option value="$PROJECT_DIR$/Assets/Scripts/Environment/Terrain/Block.cs" />
+        <option value="$PROJECT_DIR$/Assets/Scripts/Controllers/Game/TextureController.cs" />
+        <option value="$PROJECT_DIR$/Assets/Scripts/Controllers/Game/GameController.cs" />
+        <option value="$PROJECT_DIR$/Assets/Scripts/Controllers/Game/BlockController.cs" />
+        <option value="$PROJECT_DIR$/Assets/Scripts/Controllers/World/WorldController.cs" />
+        <option value="$PROJECT_DIR$/Assets/Scripts/Environment/Terrain/Chunk.cs" />
+        <option value="$PROJECT_DIR$/Assets/Scripts/Controllers/World/ChunkController.cs" />
       </list>
     </option>
   </component>
@@ -233,7 +270,9 @@
       <workItem from="1565543111971" duration="5862000" />
       <workItem from="1565610117365" duration="23810000" />
       <workItem from="1565685005274" duration="13519000" />
-      <workItem from="1565725152659" duration="661000" />
+      <workItem from="1565725152659" duration="938000" />
+      <workItem from="1565757845783" duration="1210000" />
+      <workItem from="1565812988812" duration="4257000" />
     </task>
     <servers />
   </component>
@@ -334,7 +373,7 @@
         </breakpoint>
         <line-breakpoint enabled="true" type="DotNet Breakpoints">
           <url>file://$PROJECT_DIR$/Assets/Scripts/Environment/Terrain/Block.cs</url>
-          <line>39</line>
+          <line>38</line>
           <properties documentPath="$PROJECT_DIR$/Assets/Scripts/Environment/Terrain/Block.cs" initialLine="42">
             <startOffsets>
               <option value="-1" />

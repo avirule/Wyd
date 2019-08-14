@@ -1,0 +1,96 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!1 &7333379184776353559
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 7333379184776353553}
+  - component: {fileID: 7333379184776353552}
+  - component: {fileID: 7333379184776353554}
+  - component: {fileID: 7333379184776353555}
+  - component: {fileID: 7333379184776353548}
+  m_Layer: 0
+  m_Name: GameController
+  m_TagString: GameController
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 4294967295
+  m_IsActive: 1
+--- !u!4 &7333379184776353553
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7333379184776353559}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_RootOrder: 0
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &7333379184776353552
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7333379184776353559}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 6016e8f3b9614a49a91c4518298a52df, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  BlockController: {fileID: 7333379184776353555}
+  TextureController: {fileID: 7333379184776353554}
+  GameSettingsController: {fileID: 7333379184776353548}
+--- !u!114 &7333379184776353554
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7333379184776353559}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 439b3c925ba14007a7bd1c8763a6493a, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  Initialised: 0
+--- !u!114 &7333379184776353555
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7333379184776353559}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 828e56b216524fefa0013029bed9ccf8, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  TextureController: {fileID: 7333379184776353554}
+--- !u!114 &7333379184776353548
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7333379184776353559}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c2bfbe7e71c143e0ad0d7d1269cef501, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  MaximumChunkCacheSize: 30
+  CacheCullingAggression: 0
+  MaximumChunkLoadTimeCacheSize: 60
+  MaximumFrameRateCacheSize: 60
+  ShadowRadius: 1
+  ExpensiveMeshingRadius: 1
+  MaximumInternalFrameTime: 0

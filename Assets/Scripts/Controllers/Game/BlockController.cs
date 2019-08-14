@@ -17,6 +17,8 @@ namespace Controllers.Game
     {
         public const ushort BLOCK_EMPTY_ID = 0;
 
+        public static BlockController Current;
+        
         private Dictionary<string, ushort> _BlockNameIds;
         private Dictionary<ushort, IBlockRule> _Blocks;
         public TextureController TextureController;
@@ -25,9 +27,17 @@ namespace Controllers.Game
 
         private void Awake()
         {
+            if (Current != null && Current != this)
+            {
+                Destroy(gameObject);
+            }
+            else
+            {
+                Current = this;
+            }
+            
             _BlockNameIds = new Dictionary<string, ushort>();
             _Blocks = new Dictionary<ushort, IBlockRule>();
-            Block.AssignBlockController(this);
         }
 
         public bool RegisterBlockRules(string blockName, bool addNewBlock, bool isTransparent,

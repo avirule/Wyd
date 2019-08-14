@@ -37,6 +37,11 @@
               <e p="TextureController.cs" t="Include" />
             </e>
             <e p="UI" t="Include">
+              <e p="Components" t="Include">
+                <e p="ExitButtonController.cs" t="Include" />
+                <e p="OptionsButtonController.cs" t="Include" />
+                <e p="QuitMainMenuButtonController.cs" t="Include" />
+              </e>
               <e p="DiagnosticsController.cs" t="Include" />
               <e p="EscapeMenuController.cs" t="Include" />
               <e p="MainMenuController.cs" t="Include" />

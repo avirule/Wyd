@@ -1,5 +1,6 @@
 ﻿#region
 
+using Controllers.Game;
 using Static;
 using UnityEngine;
 using UnityEngine.SceneManagement;
@@ -12,21 +13,18 @@ namespace Controllers.UI
     public class MainMenuController : MonoBehaviour
     {
         public Text VersionText;
-        public Button ExitButton;
-        public Button PlayButton;
 
         // Start is called before the first frame update
         private void Start()
         {
-            VersionText.text = $"v{Application.version}";
-            ExitButton.onClick.AddListener(() => StaticMethods.ApplicationClose());
-            PlayButton.onClick.AddListener(PlayGame);
+            GameController.Current.ToggleCursorLocked(false);
+            VersionText.text = Application.version;
         }
 
-        private static void PlayGame()
+        public void PlayGame()
         {
-            SceneManager.UnloadSceneAsync("MainMenu", UnloadSceneOptions.UnloadAllEmbeddedSceneObjects);
             SceneManager.LoadSceneAsync("Game", LoadSceneMode.Single);
+            GameController.Current.ToggleCursorLocked(true);
         }
     }
 }

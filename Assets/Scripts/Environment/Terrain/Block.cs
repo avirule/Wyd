@@ -31,7 +31,6 @@ namespace Environment.Terrain
             set => Bits[TransparencySection] = value ? 0 : 1;
         }
 
-        private static BlockController blockController;
         public static readonly BitVector32.Section IdSection;
         public static readonly BitVector32.Section TransparencySection;
         public static readonly BitVector32.Section[] Faces;
@@ -53,11 +52,6 @@ namespace Environment.Terrain
             Faces[5] = BitVector32.CreateSection(1, Faces[4]);
         }
 
-        public static void AssignBlockController(BlockController blockController)
-        {
-            Block.blockController = blockController;
-        }
-
         public Block(ushort id, byte faces = byte.MinValue)
         {
             Bits = new BitVector32(0)
@@ -71,7 +65,7 @@ namespace Environment.Terrain
                 [Faces[5]] = faces & (byte) Direction.Down
             };
 
-            Transparent = blockController.IsBlockDefaultTransparent(Id);
+            Transparent = BlockController.Current.IsBlockDefaultTransparent(Id);
         }
 
         public bool HasAnyFace()

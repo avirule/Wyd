@@ -10,19 +10,17 @@ namespace Environment.Terrain.Generation
 {
     public class ChunkBuilder : ThreadedProcess
     {
-        private readonly BlockController _BlockController;
         private readonly float[][] _NoiseMap;
         private readonly Vector3Int _Size;
         public Block[] Blocks;
 
-        public ChunkBuilder(BlockController blockController, float[][] noiseMap, Vector3Int size)
+        public ChunkBuilder(float[][] noiseMap, Vector3Int size)
         {
             if (noiseMap == null)
             {
                 return;
             }
 
-            _BlockController = blockController;
             _NoiseMap = noiseMap;
             _Size = size;
         }
@@ -55,15 +53,15 @@ namespace Environment.Terrain.Generation
 
                         if ((y == perlinValue) || (y == (Chunk.Size.y - 1)))
                         {
-                            Blocks[index] = new Block(_BlockController.GetBlockId("Grass"));
+                            Blocks[index] = new Block(BlockController.Current.GetBlockId("Grass"));
                         }
                         else if ((y < perlinValue) && (y > (perlinValue - 5)))
                         {
-                            Blocks[index] = new Block(_BlockController.GetBlockId("Dirt"));
+                            Blocks[index] = new Block(BlockController.Current.GetBlockId("Dirt"));
                         }
                         else if (y <= (perlinValue - 5))
                         {
-                            Blocks[index] = new Block(_BlockController.GetBlockId("Stone"));
+                            Blocks[index] = new Block(BlockController.Current.GetBlockId("Stone"));
                         }
                     }
                 }

@@ -14,7 +14,8 @@ namespace Controllers.World
 {
     public sealed class ChunkController : MonoBehaviour
     {
-        private WorldController _WorldController;
+        public static ChunkController Current;
+        
         private Stopwatch _FrameTimeLimiter;
         private Chunk _ChunkObject;
         private Queue<Chunk> _CachedChunks;
@@ -28,7 +29,15 @@ namespace Controllers.World
 
         private void Awake()
         {
-            _WorldController = GameObject.FindWithTag("WorldController").GetComponent<WorldController>();
+            if (Current != null && Current != this)
+            {
+                Destroy(gameObject);
+            }
+            else
+            {
+                Current = this;
+            }
+            
             _ChunkObject = Resources.Load<Chunk>(@"Environment\Terrain\Chunk");
             _CachedChunks = new Queue<Chunk>();
             _FrameTimeLimiter = new Stopwatch();
@@ -150,10 +159,10 @@ namespace Controllers.World
         {
             for (int i = Chunks.Count - 1; i >= 0; i--)
             {
-                Vector3Int difference = (Chunks[i].Position - _WorldController.ChunkLoaderCurrentChunk).Abs();
+                Vector3Int difference = (Chunks[i].Position - WorldController.Current.ChunkLoaderCurrentChunk).Abs();
 
-                if ((difference.x <= ((_WorldController.WorldGenerationSettings.Radius + 1) * Chunk.Size.x)) &&
-                    (difference.z <= ((_WorldController.WorldGenerationSettings.Radius + 1) * Chunk.Size.z)))
+                if ((difference.x <= ((WorldController.Current.WorldGenerationSettings.Radius + 1) * Chunk.Size.x)) &&
+                    (difference.z <= ((WorldController.Current.WorldGenerationSettings.Radius + 1) * Chunk.Size.z)))
                 {
                     continue;
                 }

@@ -21,9 +21,6 @@ namespace Environment.Terrain
     {
         public static Vector3Int Size = new Vector3Int(16, 16, 16);
 
-        private WorldController _WorldController;
-        private ChunkController _ChunkController;
-        private BlockController _BlockController;
         private Stopwatch _BuildTimer;
         private Stopwatch _MeshTimer;
         private uint _WorldUpdateSubscriberIndex;
@@ -79,11 +76,6 @@ namespace Environment.Terrain
 
         private void Awake()
         {
-            GameObject worldController = GameObject.FindWithTag("WorldController");
-            _WorldController = worldController.GetComponent<WorldController>();
-            _ChunkController = worldController.GetComponent<ChunkController>();
-
-            _BlockController = GameObject.FindWithTag("GameController").GetComponent<BlockController>();
             _BuildTimer = new Stopwatch();
             _MeshTimer = new Stopwatch();
 
@@ -111,7 +103,7 @@ namespace Environment.Terrain
             {
                 StartCoroutine(GenerateBlocks());
             }
-            else if (_WorldController.ChunkController.AllChunksGenerated && PendingMeshUpdate && !Meshing)
+            else if (ChunkController.Current.AllChunksGenerated && PendingMeshUpdate && !Meshing)
             {
                 StartCoroutine(GenerateMesh());
             }
@@ -129,7 +121,7 @@ namespace Environment.Terrain
             Generated = false;
             Generating = true;
 
-            yield return new WaitUntil(() => _WorldController.NoiseMap.Ready || !Active);
+            yield return new WaitUntil(() => WorldController.Current.NoiseMap.Ready || !Active);
 
             if (!Active)
             {
@@ -144,7 +136,7 @@ namespace Environment.Terrain
             {
                 // todo fix retrieval of noise values without errors when player is moving extremely fast
 
-                noiseMap = _WorldController.NoiseMap.GetSection(Position, Size);
+                noiseMap = WorldController.Current.NoiseMap.GetSection(Position, Size);
             }
             catch (Exception)
             {
@@ -162,7 +154,7 @@ namespace Environment.Terrain
                 yield break;
             }
 
-            ChunkBuilder chunkGenerator = new ChunkBuilder(_BlockController, noiseMap, Size);
+            ChunkBuilder chunkGenerator = new ChunkBuilder(noiseMap, Size);
             chunkGenerator.Start();
 
             yield return new WaitUntil(() => chunkGenerator.Update() || !Active);
@@ -196,7 +188,7 @@ namespace Environment.Terrain
             Meshed = PendingMeshAssigment = false;
             Meshing = true;
 
-            MeshGenerator meshGenerator = new MeshGenerator(_WorldController, _BlockController, Position, Blocks);
+            MeshGenerator meshGenerator = new MeshGenerator(Position, Blocks);
             meshGenerator.Start();
 
             yield return new WaitUntil(() => meshGenerator.Update() || !Active);
@@ -271,7 +263,7 @@ namespace Environment.Terrain
 
         private void CheckSettingsAndSet()
         {
-            Vector3Int difference = (Position - _WorldController.ChunkLoaderCurrentChunk).Abs();
+            Vector3Int difference = (Position - WorldController.Current.ChunkLoaderCurrentChunk).Abs();
 
             DrawShadows = CheckDrawShadows(difference);
             ExpensiveMeshing = CheckExpensiveMeshing(difference);
@@ -298,7 +290,7 @@ namespace Environment.Terrain
 
         private bool CheckDrawShadows(Vector3Int difference)
         {
-            return (Position == _WorldController.ChunkLoaderCurrentChunk) ||
+            return (Position == WorldController.Current.ChunkLoaderCurrentChunk) ||
                    ((difference.x <= (GameController.SettingsController.ShadowRadius * Size.x)) &&
                     (difference.z <= (GameController.SettingsController.ShadowRadius * Size.z)));
         }

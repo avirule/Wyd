@@ -5,7 +5,9 @@ using Controllers.World;
 using Environment;
 using Environment.Terrain;
 using NLog;
+using UnityEditor;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 
 #endregion
 
@@ -13,15 +15,25 @@ namespace Controllers.Game
 {
     public class GameController : MonoBehaviour
     {
+        public static GameController Current;
         public static GameSettingsController SettingsController;
 
         public BlockController BlockController;
         public TextureController TextureController;
-        public WorldController WorldController;
         public GameSettingsController GameSettingsController;
 
         private void Awake()
         {
+            if (Current != null && Current != this)
+            {
+                Destroy(gameObject);
+            }
+            else
+            {
+                Current = this;
+            }
+         
+            DontDestroyOnLoad(this);
             SettingsController = GameSettingsController;
             ToggleCursorLocked(true);
             QualitySettings.vSyncCount = 0;
@@ -48,7 +60,7 @@ namespace Controllers.Game
             BlockController.RegisterBlockRules("Grass", true, false, (position, direction) =>
             {
                 Vector3Int positionAbove = position + Vector3Int.up;
-                Block blockAbove = WorldController.GetBlockAtPosition(positionAbove);
+                Block blockAbove = WorldController.Current.GetBlockAtPosition(positionAbove);
 
                 if (!blockAbove.Transparent)
                 {
@@ -98,7 +110,7 @@ namespace Controllers.Game
             BlockController.RegisterBlockRules("DiamondOre", true, false);
         }
 
-        public static void ToggleCursorLocked(bool value)
+        public void ToggleCursorLocked(bool value)
         {
             if (value)
             {
@@ -110,6 +122,20 @@ namespace Controllers.Game
                 Cursor.lockState = CursorLockMode.None;
                 Cursor.visible = true;
             }
+        }
+        
+        public void QuitToMainMenu()
+        {
+            SceneManager.LoadSceneAsync("MainMenu", LoadSceneMode.Single);
+        }
+        
+        public void ApplicationClose(int exitCode = -1)
+        {
+            Application.Quit(exitCode);
+
+#if UNITY_EDITOR
+            EditorApplication.ExitPlaymode();
+#endif
         }
     }
 }

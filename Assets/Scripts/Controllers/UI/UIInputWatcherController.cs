@@ -59,7 +59,7 @@ namespace Controllers.UI
 
             _EscapeKeyPressed = true;
             EscapeMenu.SetActive(!EscapeMenu.activeSelf);
-            GameController.ToggleCursorLocked(!EscapeMenu.activeSelf);
+            GameController.Current.ToggleCursorLocked(!EscapeMenu.activeSelf);
         }
     }
 }

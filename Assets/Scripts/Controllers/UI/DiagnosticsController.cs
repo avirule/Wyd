@@ -26,12 +26,13 @@ namespace Controllers.UI
         public static readonly ConcurrentQueue<double> ChunkBuildTimes = new ConcurrentQueue<double>();
         public static readonly ConcurrentQueue<double> ChunkMeshTimes = new ConcurrentQueue<double>();
 
-        public ChunkController ChunkController;
         public Text FrameRateText;
         public Text ResourcesText;
+        public Text VersionText;
 
         private void Awake()
         {
+            VersionText.text = Application.version;
             _LocalFrameStopwatch = new Stopwatch();
             _DeltaTimes = new List<double>();
         }
@@ -89,7 +90,7 @@ namespace Controllers.UI
                 $"FPS: {_DeltaTimeAverage}\r\n" +
                 $"VSync: {vSyncStatus}\r\n" +
                 $"Chunk Load Time: {averageLoadTime}ms\r\n" +
-                $"Chunks Cached: {ChunkController.CurrentCacheSize}";
+                $"Chunks Cached: {ChunkController.Current.CurrentCacheSize}";
         }
 
         private void CullChunkLoadQueue()

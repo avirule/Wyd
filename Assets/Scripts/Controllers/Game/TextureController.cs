@@ -11,11 +11,22 @@ namespace Controllers.Game
 {
     public class TextureController : MonoBehaviour
     {
+        public static TextureController Current;
+        
         public bool Initialised;
         public Dictionary<string, Vector2[]> Sprites;
 
         private void Awake()
         {
+            if (Current != null && Current != this)
+            {
+                Destroy(gameObject);
+            }
+            else
+            {
+                Current = this;
+            }
+            
             Initialised = false;
             Sprites = new Dictionary<string, Vector2[]>();
         }
