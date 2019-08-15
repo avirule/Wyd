@@ -1,6 +1,7 @@
 #region
 
 using System;
+using Controllers.Entity;
 using Controllers.Game;
 using Environment.Terrain;
 using Environment.Terrain.Generation;
@@ -30,8 +31,6 @@ namespace Controllers.World
         public WorldGenerationSettings WorldGenerationSettings;
         public ChunkController ChunkController;
         public NoiseMap NoiseMap;
-        public Transform ChunkLoader;
-        public Vector3Int ChunkLoaderCurrentChunk;
 
         private void Awake()
         {
@@ -39,7 +38,7 @@ namespace Controllers.World
             {
                 SceneManager.LoadSceneAsync("Scenes/MainMenu", LoadSceneMode.Single);
             }
-            
+
             if ((Current != null) && (Current != this))
             {
                 Destroy(gameObject);
@@ -59,28 +58,18 @@ namespace Controllers.World
 
             WorldTickRate = TimeSpan.FromSeconds(1d / TicksPerSecond);
 
-            ChunkLoaderCurrentChunk = default;
             Chunk.Size = WorldGenerationSettings.ChunkSize;
 
-            NoiseMap = new NoiseMap(null, ChunkLoaderCurrentChunk,
+            NoiseMap = new NoiseMap(null, Vector3Int.zero,
                 new Vector3Int((WorldGenerationSettings.Diameter + 1) * Chunk.Size.x, 0,
                     (WorldGenerationSettings.Diameter + 1) * Chunk.Size.z));
 
-            CheckChunkLoaderChangedChunk();
+            InitialTick = DateTime.Now.Ticks;
         }
 
         private void Start()
         {
-            InitialTick = DateTime.Now.Ticks;
-
-            NoiseMap.Generate(ChunkLoaderCurrentChunk, NoiseMap.Bounds.size, WorldGenerationSettings);
-
-            EnqueueBuildChunkArea(ChunkLoaderCurrentChunk, WorldGenerationSettings.Radius);
-        }
-
-        private void Update()
-        {
-            CheckChunkLoaderChangedChunk();
+            PlayerController.Current.ChunkChanged += UpdateChunkLoadArea;
         }
 
         public static Vector3 GetWorldChunkOriginFromGlobalPosition(Vector3 globalPosition)
@@ -96,27 +85,10 @@ namespace Controllers.World
 
         #region ON UPDATE()
 
-        private void CheckChunkLoaderChangedChunk()
+        private void UpdateChunkLoadArea(object sender, Vector3Int chunkPosition)
         {
-            Vector3Int chunkPosition =
-                GetWorldChunkOriginFromGlobalPosition(ChunkLoader.transform.position).ToInt();
-            chunkPosition.y = 0;
-
-            if (chunkPosition == ChunkLoaderCurrentChunk)
-            {
-                return;
-            }
-
-            ChunkLoaderCurrentChunk = chunkPosition;
-            UpdateChunkLoadArea();
-        }
-
-        private void UpdateChunkLoadArea()
-        {
-            NoiseMap.Generate(ChunkLoaderCurrentChunk, NoiseMap.Bounds.size, WorldGenerationSettings);
-
-
-            EnqueueBuildChunkArea(ChunkLoaderCurrentChunk, WorldGenerationSettings.Radius);
+            NoiseMap.Generate(chunkPosition, NoiseMap.Bounds.size, WorldGenerationSettings);
+            EnqueueBuildChunkArea(chunkPosition, WorldGenerationSettings.Radius);
         }
 
         public void EnqueueBuildChunkArea(Vector3Int origin, int radius)

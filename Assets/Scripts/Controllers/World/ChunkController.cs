@@ -3,6 +3,7 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
+using Controllers.Entity;
 using Controllers.Game;
 using Environment.Terrain;
 using Static;
@@ -20,7 +21,7 @@ namespace Controllers.World
         private Chunk _ChunkObject;
         private List<Chunk> _Chunks;
         private Queue<Chunk> _CachedChunks;
-        private bool _ProcessingChunkQueue;
+        private Queue<Chunk> _DeactivationQueue;
 
         public Queue<Vector3Int> BuildChunkQueue;
         public int ActiveChunksCount => _Chunks.Count;
@@ -41,31 +42,36 @@ namespace Controllers.World
 
             _ChunkObject = Resources.Load<Chunk>(@"Environment\Terrain\Chunk");
             _CachedChunks = new Queue<Chunk>();
+            _DeactivationQueue = new Queue<Chunk>();
             _FrameTimeLimiter = new Stopwatch();
-            _ProcessingChunkQueue = false;
 
             _Chunks = new List<Chunk>();
             BuildChunkQueue = new Queue<Vector3Int>();
         }
 
-        public void Update()
+        private void Start()
+        {
+            PlayerController.Current.ChunkChanged += MarkOutOfBoundsChunksForDeactivation;
+        }
+
+        private void Update()
         {
             _FrameTimeLimiter.Restart();
 
-            if ((BuildChunkQueue.Count > 0) && !_ProcessingChunkQueue)
+            if (BuildChunkQueue.Count > 0)
             {
                 ProcessBuildChunkQueue();
             }
 
-            if (AllChunksGenerated && AllChunksMeshed)
+            if (_DeactivationQueue.Count > 0)
             {
-                DeactivateOutOfBoundsChunks();
+                ProcessDeactivationQueue();
             }
 
             // if maximum chunk cache size is not zero...
             // cull chunks down to half the maximum when idle
-            if (OptionsController.Current.MaximumChunkCacheSize != 0 &&
-                _CachedChunks.Count > (OptionsController.Current.MaximumChunkCacheSize / 2))
+            if ((OptionsController.Current.MaximumChunkCacheSize != 0) &&
+                (_CachedChunks.Count > (OptionsController.Current.MaximumChunkCacheSize / 2)))
             {
                 CullCachedChunks();
             }
@@ -77,8 +83,6 @@ namespace Controllers.World
 
         public void ProcessBuildChunkQueue()
         {
-            _ProcessingChunkQueue = true;
-
             while (BuildChunkQueue.Count > 0)
             {
                 Vector3Int position = BuildChunkQueue.Dequeue();
@@ -110,8 +114,6 @@ namespace Controllers.World
                     break;
                 }
             }
-
-            _ProcessingChunkQueue = false;
         }
 
         private void FlagNeighborsPendingUpdate(Vector3Int position)
@@ -158,11 +160,11 @@ namespace Controllers.World
 
         #region CHUNK DISABLING
 
-        private void DeactivateOutOfBoundsChunks()
+        private void MarkOutOfBoundsChunksForDeactivation(object sender, Vector3Int chunkPosition)
         {
             for (int i = _Chunks.Count - 1; i >= 0; i--)
             {
-                Vector3Int difference = (_Chunks[i].Position - WorldController.Current.ChunkLoaderCurrentChunk).Abs();
+                Vector3Int difference = (_Chunks[i].Position - chunkPosition).Abs();
 
                 if ((difference.x <= ((WorldController.Current.WorldGenerationSettings.Radius + 1) * Chunk.Size.x)) &&
                     (difference.z <= ((WorldController.Current.WorldGenerationSettings.Radius + 1) * Chunk.Size.z)))
@@ -170,7 +172,16 @@ namespace Controllers.World
                     continue;
                 }
 
-                DeactivateChunk(_Chunks[i]);
+                _DeactivationQueue.Enqueue(_Chunks[i]);
+            }
+        }
+
+        private void ProcessDeactivationQueue()
+        {
+            while (_DeactivationQueue.Count > 0)
+            {
+                Chunk chunk = _DeactivationQueue.Dequeue();
+                DeactivateChunk(chunk);
 
                 if (_FrameTimeLimiter.Elapsed.TotalSeconds > OptionsController.Current.MaximumInternalFrames)
                 {
@@ -193,7 +204,7 @@ namespace Controllers.World
             {
                 return;
             }
-            
+
             // controller will cull chunks down to half the maximum when idle
             while (_CachedChunks.Count > (OptionsController.Current.MaximumChunkCacheSize / 2))
             {

@@ -13,7 +13,7 @@ namespace Controllers.UI
 
         public GameObject Main;
         public GameObject Options;
-        
+
         // Start is called before the first frame update
         private void Awake()
         {
@@ -49,7 +49,7 @@ namespace Controllers.UI
             {
                 Options.SetActive(false);
             }
-            
+
             Main.SetActive(active);
             GameController.Current.ToggleCursorLocked(active);
         }

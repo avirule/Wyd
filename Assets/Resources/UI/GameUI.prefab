@@ -70,7 +70,7 @@ MonoBehaviour:
   m_GameObject: {fileID: 384408034823394520}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 1980459831, guid: f70555f144d8491a825f0804e09c671c, type: 3}
+  m_Script: {fileID: 11500000, guid: 0cd44c1031e13a943bb63640046fad76, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
   m_UiScaleMode: 0
@@ -148,7 +148,7 @@ MonoBehaviour:
   m_GameObject: {fileID: 3127105617228323759}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: -765806418, guid: f70555f144d8491a825f0804e09c671c, type: 3}
+  m_Script: {fileID: 11500000, guid: fe87c0e1cc204ed48ad3b37840f39efc, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
   m_Material: {fileID: 0}
@@ -168,6 +168,7 @@ MonoBehaviour:
   m_FillClockwise: 1
   m_FillOrigin: 0
   m_UseSpriteMesh: 0
+  m_PixelsPerUnitMultiplier: 1
 --- !u!114 &2509961867365088975
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -236,7 +237,7 @@ MonoBehaviour:
   m_GameObject: {fileID: 4568406703446453032}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 708705254, guid: f70555f144d8491a825f0804e09c671c, type: 3}
+  m_Script: {fileID: 11500000, guid: 5f7201a12d95ffc409449d95f23cf332, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
   m_Material: {fileID: 0}
@@ -260,7 +261,15 @@ MonoBehaviour:
     m_HorizontalOverflow: 1
     m_VerticalOverflow: 1
     m_LineSpacing: 1
-  m_Text: "FPS:\nVSync:\nChunk Load Time:\nChunks Active: \nChunks Cached:"
+  m_Text: 'FPS: 00.00000
+
+    VSync Level: 0
+
+    Chunk Load Time: 000MS
+
+    Chunks Active: 0
+
+    Chunks Cached: 0'
 --- !u!1 &5137558126767423091
 GameObject:
   m_ObjectHideFlags: 0
@@ -367,7 +376,7 @@ MonoBehaviour:
   m_GameObject: {fileID: 5789812305445034089}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 708705254, guid: f70555f144d8491a825f0804e09c671c, type: 3}
+  m_Script: {fileID: 11500000, guid: 5f7201a12d95ffc409449d95f23cf332, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
   m_Material: {fileID: 0}
@@ -391,9 +400,7 @@ MonoBehaviour:
     m_HorizontalOverflow: 1
     m_VerticalOverflow: 1
     m_LineSpacing: 0
-  m_Text: 'Version
-
-'
+  m_Text: v00.00.00
 --- !u!1 &5871095945959836435
 GameObject:
   m_ObjectHideFlags: 0
@@ -451,7 +458,7 @@ MonoBehaviour:
   m_GameObject: {fileID: 5871095945959836435}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: -765806418, guid: f70555f144d8491a825f0804e09c671c, type: 3}
+  m_Script: {fileID: 11500000, guid: fe87c0e1cc204ed48ad3b37840f39efc, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
   m_Material: {fileID: 0}
@@ -471,6 +478,7 @@ MonoBehaviour:
   m_FillClockwise: 1
   m_FillOrigin: 0
   m_UseSpriteMesh: 0
+  m_PixelsPerUnitMultiplier: 1
 --- !u!1 &5871095946503887655
 GameObject:
   m_ObjectHideFlags: 0
@@ -577,7 +585,7 @@ MonoBehaviour:
   m_GameObject: {fileID: 7517448289493700260}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 708705254, guid: f70555f144d8491a825f0804e09c671c, type: 3}
+  m_Script: {fileID: 11500000, guid: 5f7201a12d95ffc409449d95f23cf332, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
   m_Material: {fileID: 0}
@@ -659,7 +667,7 @@ MonoBehaviour:
   m_GameObject: {fileID: 8736107845531850188}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: -765806418, guid: f70555f144d8491a825f0804e09c671c, type: 3}
+  m_Script: {fileID: 11500000, guid: fe87c0e1cc204ed48ad3b37840f39efc, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
   m_Material: {fileID: 0}
@@ -679,6 +687,7 @@ MonoBehaviour:
   m_FillClockwise: 1
   m_FillOrigin: 0
   m_UseSpriteMesh: 0
+  m_PixelsPerUnitMultiplier: 1
 --- !u!1001 &898079341452368474
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -971,16 +980,6 @@ PrefabInstance:
   m_Modification:
     m_TransformParent: {fileID: 6879122047112719914}
     m_Modifications:
-    - target: {fileID: 7808511833332856057, guid: cb9769d8e16028046a4d9027b565d1b7,
-        type: 3}
-      propertyPath: m_Name
-      value: VSyncButton
-      objectReference: {fileID: 0}
-    - target: {fileID: 7808511833332856057, guid: cb9769d8e16028046a4d9027b565d1b7,
-        type: 3}
-      propertyPath: m_StaticEditorFlags
-      value: 4294967295
-      objectReference: {fileID: 0}
     - target: {fileID: 1098373615655184720, guid: cb9769d8e16028046a4d9027b565d1b7,
         type: 3}
       propertyPath: m_LocalPosition.x
@@ -1085,6 +1084,16 @@ PrefabInstance:
         type: 3}
       propertyPath: m_Pivot.y
       value: 0.5
+      objectReference: {fileID: 0}
+    - target: {fileID: 7808511833332856057, guid: cb9769d8e16028046a4d9027b565d1b7,
+        type: 3}
+      propertyPath: m_Name
+      value: VSyncButton
+      objectReference: {fileID: 0}
+    - target: {fileID: 7808511833332856057, guid: cb9769d8e16028046a4d9027b565d1b7,
+        type: 3}
+      propertyPath: m_StaticEditorFlags
+      value: 4294967295
       objectReference: {fileID: 0}
     - target: {fileID: 1272963684432215465, guid: cb9769d8e16028046a4d9027b565d1b7,
         type: 3}
@@ -1106,16 +1115,6 @@ PrefabInstance:
   m_Modification:
     m_TransformParent: {fileID: 5871095945959836432}
     m_Modifications:
-    - target: {fileID: 3980670016248479640, guid: b56babbc0bf686f4c9d02360481bb3f4,
-        type: 3}
-      propertyPath: m_Name
-      value: QuitMainMenuButton
-      objectReference: {fileID: 0}
-    - target: {fileID: 3980670016248479640, guid: b56babbc0bf686f4c9d02360481bb3f4,
-        type: 3}
-      propertyPath: m_StaticEditorFlags
-      value: 4294967295
-      objectReference: {fileID: 0}
     - target: {fileID: 6079141059709706801, guid: b56babbc0bf686f4c9d02360481bb3f4,
         type: 3}
       propertyPath: m_LocalPosition.x
@@ -1220,6 +1219,16 @@ PrefabInstance:
         type: 3}
       propertyPath: m_Pivot.y
       value: 0.5
+      objectReference: {fileID: 0}
+    - target: {fileID: 3980670016248479640, guid: b56babbc0bf686f4c9d02360481bb3f4,
+        type: 3}
+      propertyPath: m_Name
+      value: QuitMainMenuButton
+      objectReference: {fileID: 0}
+    - target: {fileID: 3980670016248479640, guid: b56babbc0bf686f4c9d02360481bb3f4,
+        type: 3}
+      propertyPath: m_StaticEditorFlags
+      value: 4294967295
       objectReference: {fileID: 0}
     - target: {fileID: 5388908625302992584, guid: b56babbc0bf686f4c9d02360481bb3f4,
         type: 3}

@@ -40,11 +40,13 @@ namespace Controllers.Game
         public int MaximumChunkLoadTimeBufferSize;
         public int MaximumFrameRateBufferSize;
         public int MaximumInternalFrames;
+
         public int VSyncLevel
         {
             get => QualitySettings.vSyncCount;
             set => QualitySettings.vSyncCount = value;
         }
+
         public int ShadowDistance;
         public int ExpensiveMeshingDistance;
 
@@ -99,6 +101,7 @@ namespace Controllers.Game
                 EventLog.Logger.Log(LogLevel.Warn, $"Error loading setting {nameof(VSyncLevel)}.");
                 vSyncLevel = 0;
             }
+
             VSyncLevel = vSyncLevel;
 
             if (!GetSetting("Graphics", nameof(ShadowDistance), out ShadowDistance) ||
@@ -118,7 +121,7 @@ namespace Controllers.Game
                 ExpensiveMeshingDistance = 1;
             }
 
-            
+
             // Chunking
             if (!GetSetting("Chunking", nameof(MaximumChunkCacheSize), out MaximumChunkCacheSize) ||
                 (MaximumChunkCacheSize < 0) ||

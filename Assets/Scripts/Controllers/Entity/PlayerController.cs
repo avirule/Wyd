@@ -1,7 +1,10 @@
 #region
 
+using System;
+using Controllers.World;
 using Logging;
 using NLog;
+using Static;
 using UnityEngine;
 
 #endregion
@@ -10,6 +13,8 @@ namespace Controllers.Entity
 {
     public class PlayerController : MonoBehaviour
     {
+        public static PlayerController Current;
+
         private Vector3 _Movement;
         public bool Grounded;
         public LayerMask GroundedMask;
@@ -19,11 +24,30 @@ namespace Controllers.Entity
         public float RotationSensitivity;
         public Transform RotationTransform;
         public float TravelSpeed;
+        public Vector3Int CurrentChunk;
+
+        public event EventHandler<Vector3Int> ChunkChanged;
+
+        private void Awake()
+        {
+            if ((Current != default) && (Current != this))
+            {
+                Destroy(gameObject);
+            }
+            else
+            {
+                Current = this;
+            }
+
+            CurrentChunk = new Vector3Int(int.MaxValue, int.MaxValue, int.MaxValue);
+        }
 
         private void FixedUpdate()
         {
             CalculateRotation();
             CalculateMovement();
+            
+            CheckChangedChunk();
         }
 
         private void Update()
@@ -76,6 +100,21 @@ namespace Controllers.Entity
                 (Grounded ? TravelSpeed : TravelSpeed * 0.5f) * Time.fixedDeltaTime * _Movement;
 
             Rigidbody.MovePosition(Rigidbody.position + transform.TransformDirection(modifiedMovement));
+        }
+
+        private void CheckChangedChunk()
+        {
+            Vector3Int chunkPosition =
+                WorldController.GetWorldChunkOriginFromGlobalPosition(transform.position).ToInt();
+            chunkPosition.y = 0;
+
+            if (chunkPosition == CurrentChunk)
+            {
+                return;
+            }
+
+            CurrentChunk = chunkPosition;
+            ChunkChanged?.Invoke(this, CurrentChunk);
         }
     }
 }

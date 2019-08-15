@@ -3,6 +3,7 @@
 using System;
 using System.Collections;
 using System.Diagnostics;
+using Controllers.Entity;
 using Controllers.Game;
 using Controllers.UI.Diagnostics;
 using Controllers.World;
@@ -89,28 +90,16 @@ namespace Environment.Terrain
             InvokeRepeating(nameof(Tick), (float) waitTime, (float) WorldController.WorldTickRate.TotalSeconds);
         }
 
-        public void LateUpdate()
+        private void Start()
+        {
+            PlayerController.Current.ChunkChanged += CheckUpdateInternalSettings;
+        }
+
+        private void LateUpdate()
         {
             if (!ExpensiveMeshing)
             {
                 Graphics.DrawMesh(Mesh, transform.localToWorldMatrix, MeshRenderer.material, 0);
-            }
-        }
-
-        private void GenerationCheckAndStart()
-        {
-            if (!Generated && !Generating)
-            {
-                StartCoroutine(GenerateBlocks());
-            }
-            else if (ChunkController.Current.AllChunksGenerated && PendingMeshUpdate && !Meshing)
-            {
-                StartCoroutine(GenerateMesh());
-            }
-
-            if (ExpensiveMeshing && PendingMeshAssigment && Meshed)
-            {
-                AssignMesh();
             }
         }
 
@@ -240,8 +229,24 @@ namespace Environment.Terrain
                 return;
             }
 
-            CheckSettingsAndSet();
             GenerationCheckAndStart();
+        }
+
+        private void GenerationCheckAndStart()
+        {
+            if (!Generated && !Generating)
+            {
+                StartCoroutine(GenerateBlocks());
+            }
+            else if (ChunkController.Current.AllChunksGenerated && PendingMeshUpdate && !Meshing)
+            {
+                StartCoroutine(GenerateMesh());
+            }
+
+            if (ExpensiveMeshing && PendingMeshAssigment && Meshed)
+            {
+                AssignMesh();
+            }
         }
 
         private void AssignMesh()
@@ -261,12 +266,20 @@ namespace Environment.Terrain
             PendingMeshAssigment = false;
         }
 
-        private void CheckSettingsAndSet()
+        private void CheckUpdateInternalSettings(object sender, Vector3Int chunkPosition)
         {
-            Vector3Int difference = (Position - WorldController.Current.ChunkLoaderCurrentChunk).Abs();
+            // chunk player is in should always be expensive / shadowed
+            if (Position == chunkPosition)
+            {
+                DrawShadows = ExpensiveMeshing = true;
+            }
+            else
+            {
+                Vector3Int difference = (Position - chunkPosition).Abs();
 
-            DrawShadows = CheckDrawShadows(difference);
-            ExpensiveMeshing = CheckExpensiveMeshing(difference);
+                DrawShadows = CheckDrawShadows(difference);
+                ExpensiveMeshing = CheckExpensiveMeshing(difference);
+            }
         }
 
         private void UpdateDrawShadows()
@@ -288,18 +301,16 @@ namespace Environment.Terrain
             }
         }
 
-        private bool CheckDrawShadows(Vector3Int difference)
+        private static bool CheckDrawShadows(Vector3Int difference)
         {
             return (OptionsController.Current.ShadowDistance == 0) ||
-                   (Position == WorldController.Current.ChunkLoaderCurrentChunk) ||
                    ((difference.x <= (OptionsController.Current.ShadowDistance * Size.x)) &&
                     (difference.z <= (OptionsController.Current.ShadowDistance * Size.z)));
         }
 
-        private bool CheckExpensiveMeshing(Vector3Int difference)
+        private static bool CheckExpensiveMeshing(Vector3Int difference)
         {
             return (OptionsController.Current.ExpensiveMeshingDistance == 0) ||
-                   (Position == WorldController.Current.ChunkLoaderCurrentChunk) ||
                    ((difference.x <= (OptionsController.Current.ExpensiveMeshingDistance * Size.x)) &&
                     (difference.z <= (OptionsController.Current.ExpensiveMeshingDistance * Size.z)));
         }
