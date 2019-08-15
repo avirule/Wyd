@@ -401,14 +401,21 @@
             </e>
             <e p="UI" t="Include">
               <e p="Components" t="Include">
-                <e p="ExitButtonController.cs" t="Include" />
-                <e p="OptionsButtonController.cs" t="Include" />
-                <e p="QuitMainMenuButtonController.cs" t="Include" />
+                <e p="Button" t="Include">
+                  <e p="ExitButtonController.cs" t="Include" />
+                  <e p="OptionsButtonController.cs" t="Include" />
+                  <e p="QuitMainMenuButtonController.cs" t="Include" />
+                  <e p="VSyncLevelButtonController.cs" t="Include" />
+                </e>
               </e>
-              <e p="DiagnosticsController.cs" t="Include" />
+              <e p="Diagnostics" t="Include">
+                <e p="DiagnosticsController.cs" t="Include" />
+                <e p="DiagnosticsPanelController.cs" t="Include" />
+              </e>
               <e p="EscapeMenuController.cs" t="Include" />
+              <e p="GameUIController.cs" t="Include" />
               <e p="MainMenuController.cs" t="Include" />
-              <e p="UIInputWatcherController.cs" t="Include" />
+              <e p="OptionsMenuController.cs" t="Include" />
             </e>
             <e p="World" t="Include">
               <e p="ChunkController.cs" t="Include" />

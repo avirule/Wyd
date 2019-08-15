@@ -1,14 +1,13 @@
 #region
 
 using UnityEngine;
-using UnityEngine.UI;
 
 #endregion
 
-namespace Controllers.UI.Components
+namespace Controllers.UI.Components.Button
 {
     public class OptionsButtonController : MonoBehaviour
     {
-        public Button OptionsButton;
+        public UnityEngine.UI.Button OptionsButton;
     }
 }

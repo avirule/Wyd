@@ -4,7 +4,7 @@ using System;
 using System.Collections;
 using System.Diagnostics;
 using Controllers.Game;
-using Controllers.UI;
+using Controllers.UI.Diagnostics;
 using Controllers.World;
 using Environment.Terrain.Generation;
 using Logging;
@@ -173,7 +173,7 @@ namespace Environment.Terrain
             Generated = true;
 
             _BuildTimer.Stop();
-            DiagnosticsController.ChunkBuildTimes.Enqueue(_BuildTimer.Elapsed.TotalMilliseconds);
+            DiagnosticsPanelController.ChunkBuildTimes.Enqueue(_BuildTimer.Elapsed.TotalMilliseconds);
         }
 
         private IEnumerator GenerateMesh()
@@ -207,7 +207,7 @@ namespace Environment.Terrain
             Meshed = PendingMeshAssigment = true;
 
             _MeshTimer.Stop();
-            DiagnosticsController.ChunkMeshTimes.Enqueue(_MeshTimer.Elapsed.TotalMilliseconds);
+            DiagnosticsPanelController.ChunkMeshTimes.Enqueue(_MeshTimer.Elapsed.TotalMilliseconds);
         }
 
         public void Activate(Vector3Int position = default)
@@ -290,15 +290,18 @@ namespace Environment.Terrain
 
         private bool CheckDrawShadows(Vector3Int difference)
         {
-            return (Position == WorldController.Current.ChunkLoaderCurrentChunk) ||
-                   ((difference.x <= (OptionsController.Current.ShadowRadius * Size.x)) &&
-                    (difference.z <= (OptionsController.Current.ShadowRadius * Size.z)));
+            return (OptionsController.Current.ShadowDistance == 0) ||
+                   (Position == WorldController.Current.ChunkLoaderCurrentChunk) ||
+                   ((difference.x <= (OptionsController.Current.ShadowDistance * Size.x)) &&
+                    (difference.z <= (OptionsController.Current.ShadowDistance * Size.z)));
         }
 
-        private static bool CheckExpensiveMeshing(Vector3Int difference)
+        private bool CheckExpensiveMeshing(Vector3Int difference)
         {
-            return (difference.x <= (OptionsController.Current.ExpensiveMeshingRadius * Size.x)) &&
-                   (difference.z <= (OptionsController.Current.ExpensiveMeshingRadius * Size.z));
+            return (OptionsController.Current.ExpensiveMeshingDistance == 0) ||
+                   (Position == WorldController.Current.ChunkLoaderCurrentChunk) ||
+                   ((difference.x <= (OptionsController.Current.ExpensiveMeshingDistance * Size.x)) &&
+                    (difference.z <= (OptionsController.Current.ExpensiveMeshingDistance * Size.z)));
         }
     }
 }

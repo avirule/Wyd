@@ -18,14 +18,15 @@ namespace Controllers.World
 
         private Stopwatch _FrameTimeLimiter;
         private Chunk _ChunkObject;
+        private List<Chunk> _Chunks;
         private Queue<Chunk> _CachedChunks;
         private bool _ProcessingChunkQueue;
 
-        public List<Chunk> Chunks;
         public Queue<Vector3Int> BuildChunkQueue;
-        public int CurrentCacheSize => _CachedChunks.Count;
-        public bool AllChunksGenerated => Chunks.All(chunk => chunk.Generated);
-        public bool AllChunksMeshed => Chunks.All(chunk => chunk.Meshed);
+        public int ActiveChunksCount => _Chunks.Count;
+        public int CachedChunksCount => _CachedChunks.Count;
+        public bool AllChunksGenerated => _Chunks.All(chunk => chunk.Generated);
+        public bool AllChunksMeshed => _Chunks.All(chunk => chunk.Meshed);
 
         private void Awake()
         {
@@ -43,7 +44,7 @@ namespace Controllers.World
             _FrameTimeLimiter = new Stopwatch();
             _ProcessingChunkQueue = false;
 
-            Chunks = new List<Chunk>();
+            _Chunks = new List<Chunk>();
             BuildChunkQueue = new Queue<Vector3Int>();
         }
 
@@ -61,8 +62,10 @@ namespace Controllers.World
                 DeactivateOutOfBoundsChunks();
             }
 
+            // if maximum chunk cache size is not zero...
             // cull chunks down to half the maximum when idle
-            if (_CachedChunks.Count > (OptionsController.Current.MaximumChunkCacheSize / 2))
+            if (OptionsController.Current.MaximumChunkCacheSize != 0 &&
+                _CachedChunks.Count > (OptionsController.Current.MaximumChunkCacheSize / 2))
             {
                 CullCachedChunks();
             }
@@ -97,7 +100,7 @@ namespace Controllers.World
                     chunk = Instantiate(_ChunkObject, position, Quaternion.identity, transform);
                 }
 
-                Chunks.Add(chunk);
+                _Chunks.Add(chunk);
 
                 // ensures that neighbours update their meshes to cull newly out of sight faces
                 FlagNeighborsPendingUpdate(chunk.Position);
@@ -157,9 +160,9 @@ namespace Controllers.World
 
         private void DeactivateOutOfBoundsChunks()
         {
-            for (int i = Chunks.Count - 1; i >= 0; i--)
+            for (int i = _Chunks.Count - 1; i >= 0; i--)
             {
-                Vector3Int difference = (Chunks[i].Position - WorldController.Current.ChunkLoaderCurrentChunk).Abs();
+                Vector3Int difference = (_Chunks[i].Position - WorldController.Current.ChunkLoaderCurrentChunk).Abs();
 
                 if ((difference.x <= ((WorldController.Current.WorldGenerationSettings.Radius + 1) * Chunk.Size.x)) &&
                     (difference.z <= ((WorldController.Current.WorldGenerationSettings.Radius + 1) * Chunk.Size.z)))
@@ -167,7 +170,7 @@ namespace Controllers.World
                     continue;
                 }
 
-                DeactivateChunk(Chunks[i]);
+                DeactivateChunk(_Chunks[i]);
 
                 if (_FrameTimeLimiter.Elapsed.TotalSeconds > OptionsController.Current.MaximumInternalFrames)
                 {
@@ -179,13 +182,18 @@ namespace Controllers.World
         private void DeactivateChunk(Chunk chunk)
         {
             _CachedChunks.Enqueue(chunk);
-            Chunks.Remove(chunk);
+            _Chunks.Remove(chunk);
             FlagNeighborsPendingUpdate(chunk.Position);
             chunk.Deactivate();
         }
 
         private void CullCachedChunks()
         {
+            if (OptionsController.Current.MaximumChunkCacheSize == 0)
+            {
+                return;
+            }
+            
             // controller will cull chunks down to half the maximum when idle
             while (_CachedChunks.Count > (OptionsController.Current.MaximumChunkCacheSize / 2))
             {
@@ -210,14 +218,14 @@ namespace Controllers.World
         public bool CheckChunkExistsAtPosition(Vector3Int position)
         {
             // reverse for loop to avoid collection modified from thread errors
-            for (int i = Chunks.Count - 1; i >= 0; i--)
+            for (int i = _Chunks.Count - 1; i >= 0; i--)
             {
-                if ((Chunks.Count <= i) || (Chunks[i] == default))
+                if ((_Chunks.Count <= i) || (_Chunks[i] == default))
                 {
                     continue;
                 }
 
-                if (Chunks[i].Position == position)
+                if (_Chunks[i].Position == position)
                 {
                     return true;
                 }
@@ -229,16 +237,16 @@ namespace Controllers.World
         public Chunk GetChunkAtPosition(Vector3Int position)
         {
             // reverse for loop to avoid collection modified from thread errors
-            for (int i = Chunks.Count - 1; i >= 0; i--)
+            for (int i = _Chunks.Count - 1; i >= 0; i--)
             {
-                if ((Chunks.Count <= i) || (Chunks[i] == default))
+                if ((_Chunks.Count <= i) || (_Chunks[i] == default))
                 {
                     continue;
                 }
 
-                if (Chunks[i].Position == position)
+                if (_Chunks[i].Position == position)
                 {
-                    return Chunks[i];
+                    return _Chunks[i];
                 }
             }
 

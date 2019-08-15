@@ -2,15 +2,14 @@
 
 using Controllers.Game;
 using UnityEngine;
-using UnityEngine.UI;
 
 #endregion
 
-namespace Controllers.UI.Components
+namespace Controllers.UI.Components.Button
 {
     public class QuitMainMenuButtonController : MonoBehaviour
     {
-        public Button QuitMainMenuButton;
+        public UnityEngine.UI.Button QuitMainMenuButton;
 
         private void Start()
         {

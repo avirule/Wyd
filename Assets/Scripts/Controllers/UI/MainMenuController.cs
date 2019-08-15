@@ -22,7 +22,7 @@ namespace Controllers.UI
 
         public void PlayGame()
         {
-            SceneManager.LoadSceneAsync("Game", LoadSceneMode.Single);
+            SceneManager.LoadSceneAsync("Scenes/Game", LoadSceneMode.Single);
             GameController.Current.ToggleCursorLocked(true);
         }
     }

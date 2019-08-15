@@ -114,10 +114,10 @@ namespace Controllers.Game
 
         public void QuitToMainMenu()
         {
-            SceneManager.LoadSceneAsync("MainMenu", LoadSceneMode.Single);
+            SceneManager.LoadSceneAsync("Scenes/MainMenu", LoadSceneMode.Single);
         }
 
-        public void ApplicationClose(int exitCode = -1)
+        public static void ApplicationClose(int exitCode = -1)
         {
             Application.Quit(exitCode);
 

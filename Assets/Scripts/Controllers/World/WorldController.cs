@@ -9,6 +9,7 @@ using NLog;
 using Noise;
 using Static;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 
 #endregion
 
@@ -34,6 +35,11 @@ namespace Controllers.World
 
         private void Awake()
         {
+            if (GameController.Current == default)
+            {
+                SceneManager.LoadSceneAsync("Scenes/MainMenu", LoadSceneMode.Single);
+            }
+            
             if ((Current != null) && (Current != this))
             {
                 Destroy(gameObject);
@@ -47,7 +53,7 @@ namespace Controllers.World
             {
                 EventLog.Logger.Log(LogLevel.Error,
                     "World tick rate cannot be set to less than 1tick/s. Exiting game.");
-                GameController.Current.ApplicationClose();
+                GameController.ApplicationClose();
                 return;
             }
 
