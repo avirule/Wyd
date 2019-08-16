@@ -6,12 +6,6 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="c75ae2de-3a89-4228-87f5-5925302b6d96" name="Default Changelist" comment="">
-      <change beforePath="$PROJECT_DIR$/.idea/.idea.Wyd/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/.idea.Wyd/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Assets/Resources/UI/GameUI.prefab" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/Resources/UI/GameUI.prefab" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Assets/Scenes/Game.unity" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/Scenes/Game.unity" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Assets/Scripts/Controllers/Entity/PlayerController.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/Scripts/Controllers/Entity/PlayerController.cs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Assets/Scripts/Controllers/UI/Diagnostics/DiagnosticsController.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/Scripts/Controllers/UI/Diagnostics/DiagnosticsController.cs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Assets/Scripts/Controllers/UI/EscapeMenuController.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/Scripts/Controllers/UI/EscapeMenuController.cs" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/Assets/Scripts/Controllers/World/WorldController.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/Scripts/Controllers/World/WorldController.cs" afterDir="false" />
     </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
@@ -127,7 +121,6 @@
         <option value="$PROJECT_DIR$/Assets/Scripts/Plugins/IPlugin.cs" />
         <option value="$PROJECT_DIR$/Assets/Scripts/Controllers/Game/TextureController.cs" />
         <option value="$PROJECT_DIR$/Assets/Scripts/Controllers/UI/Components/Button/ExitButtonController.cs" />
-        <option value="$PROJECT_DIR$/Assets/Scripts/Controllers/UI/Components/Button/VSyncLevelButtonController.cs" />
         <option value="$PROJECT_DIR$/Assets/Scripts/Controllers/UI/OptionsMenuController.cs" />
         <option value="$PROJECT_DIR$/Assets/Scripts/Controllers/UI/UIInputWatcherController.cs" />
         <option value="$PROJECT_DIR$/Assets/Scripts/Controllers/UI/DiagnosticsUpdateController.cs" />
@@ -140,9 +133,10 @@
         <option value="$PROJECT_DIR$/Assets/Scripts/Environment/Terrain/Chunk.cs" />
         <option value="$PROJECT_DIR$/Assets/Scripts/Controllers/World/ChunkController.cs" />
         <option value="$PROJECT_DIR$/Assets/Scripts/Controllers/Entity/PlayerController.cs" />
-        <option value="$PROJECT_DIR$/Assets/Scripts/Controllers/World/WorldController.cs" />
         <option value="$PROJECT_DIR$/Assets/Scripts/Controllers/UI/Diagnostics/DiagnosticsController.cs" />
         <option value="$PROJECT_DIR$/Assets/Scripts/Controllers/UI/EscapeMenuController.cs" />
+        <option value="$PROJECT_DIR$/Assets/Scripts/Controllers/UI/Components/Button/VSyncLevelButtonController.cs" />
+        <option value="$PROJECT_DIR$/Assets/Scripts/Controllers/World/WorldController.cs" />
       </list>
     </option>
   </component>
@@ -253,7 +247,7 @@
       <workItem from="1565895066160" duration="820000" />
       <workItem from="1565896033478" duration="2101000" />
       <workItem from="1565910581386" duration="593000" />
-      <workItem from="1565969538518" duration="1824000" />
+      <workItem from="1565969538518" duration="2098000" />
     </task>
     <servers />
   </component>
