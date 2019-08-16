@@ -1,7 +1,9 @@
 ﻿#region
 
+using System;
 using Controllers.Game;
 using UnityEngine;
+using UnityEngine.UI;
 
 #endregion
 
@@ -10,9 +12,11 @@ namespace Controllers.UI
     public class EscapeMenuController : MonoBehaviour
     {
         private bool _EscapeKeyPressed;
-
+        private bool _CursorUnlocked;
+        
         public GameObject Main;
         public GameObject Options;
+        public Button OptionsButton;
 
         // Start is called before the first frame update
         private void Awake()
@@ -21,9 +25,19 @@ namespace Controllers.UI
             Options.SetActive(false);
         }
 
+        private void Start()
+        {
+            OptionsButton.onClick.AddListener(() => SetOptionsActive(true));
+        }
+
         private void Update()
         {
             CheckPressedEscapeKey();
+
+            if (_CursorUnlocked && !Main.activeSelf && !Options.activeSelf)
+            {
+                GameController.Current.ToggleCursorLocked(true);
+            }
         }
 
         private void CheckPressedEscapeKey()
@@ -47,11 +61,28 @@ namespace Controllers.UI
         {
             if (active)
             {
-                Options.SetActive(false);
+                SetOptionsActive(false);
+                ToggleCursorUnlocked();
             }
 
             Main.SetActive(active);
-            GameController.Current.ToggleCursorLocked(active);
+        }
+
+        private void SetOptionsActive(bool active)
+        {
+            if (active)
+            {
+                SetMainActive(false);
+                ToggleCursorUnlocked();
+            }
+            
+            Options.SetActive(active);
+        }
+
+        private void ToggleCursorUnlocked()
+        {
+            _CursorUnlocked = true;
+            GameController.Current.ToggleCursorLocked(false);
         }
     }
 }

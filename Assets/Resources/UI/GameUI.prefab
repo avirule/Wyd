@@ -11,7 +11,7 @@ GameObject:
   - component: {fileID: 1409498390005132418}
   - component: {fileID: 8969361118355646090}
   - component: {fileID: 1175234375364707427}
-  - component: {fileID: 112749164370573436}
+  - component: {fileID: 7047154635064319261}
   m_Layer: 0
   m_Name: GameUI
   m_TagString: Untagged
@@ -30,8 +30,8 @@ RectTransform:
   m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children:
-  - {fileID: 5871095946503887659}
   - {fileID: 110549563669053941}
+  - {fileID: 5871095946503887659}
   m_Father: {fileID: 0}
   m_RootOrder: 0
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
@@ -83,14 +83,23 @@ MonoBehaviour:
   m_FallbackScreenDPI: 96
   m_DefaultSpriteDPI: 96
   m_DynamicPixelsPerUnit: 1
---- !u!222 &112749164370573436
-CanvasRenderer:
+--- !u!114 &7047154635064319261
+MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 384408034823394520}
-  m_CullTransparentMesh: 0
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: dc42784cf147c0c48a680349fa168899, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  m_IgnoreReversedGraphics: 1
+  m_BlockingObjects: 0
+  m_BlockingMask:
+    serializedVersion: 2
+    m_Bits: 4294967295
 --- !u!1 &3127105617228323759
 GameObject:
   m_ObjectHideFlags: 0
@@ -124,7 +133,7 @@ RectTransform:
   - {fileID: 302184187862637046}
   - {fileID: 1432420428858667840}
   m_Father: {fileID: 110549563669053941}
-  m_RootOrder: 0
+  m_RootOrder: 1
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 1}
   m_AnchorMax: {x: 0, y: 1}
@@ -298,10 +307,10 @@ RectTransform:
   m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children:
-  - {fileID: 1063228627988341067}
   - {fileID: 5835457664269435657}
+  - {fileID: 1063228627988341067}
   m_Father: {fileID: 1409498390005132418}
-  m_RootOrder: 1
+  m_RootOrder: 0
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
   m_AnchorMax: {x: 1, y: 1}
@@ -352,7 +361,7 @@ RectTransform:
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children: []
   m_Father: {fileID: 110549563669053941}
-  m_RootOrder: 1
+  m_RootOrder: 0
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 1, y: 0}
   m_AnchorMax: {x: 1, y: 0}
@@ -426,7 +435,7 @@ RectTransform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 5871095945959836435}
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children:
@@ -434,7 +443,7 @@ RectTransform:
   - {fileID: 4523491562347427853}
   - {fileID: 2566207747027755450}
   m_Father: {fileID: 5871095946503887659}
-  m_RootOrder: 0
+  m_RootOrder: 1
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
   m_AnchorMax: {x: 1, y: 1}
@@ -507,10 +516,10 @@ RectTransform:
   m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children:
-  - {fileID: 5871095945959836432}
   - {fileID: 6879122047112719914}
+  - {fileID: 5871095945959836432}
   m_Father: {fileID: 1409498390005132418}
-  m_RootOrder: 0
+  m_RootOrder: 1
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
   m_AnchorMax: {x: 1, y: 1}
@@ -643,7 +652,7 @@ RectTransform:
   m_Children:
   - {fileID: 3999989723503157914}
   m_Father: {fileID: 5871095946503887659}
-  m_RootOrder: 1
+  m_RootOrder: 0
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
   m_AnchorMax: {x: 1, y: 1}
@@ -980,6 +989,16 @@ PrefabInstance:
   m_Modification:
     m_TransformParent: {fileID: 6879122047112719914}
     m_Modifications:
+    - target: {fileID: 7808511833332856057, guid: cb9769d8e16028046a4d9027b565d1b7,
+        type: 3}
+      propertyPath: m_Name
+      value: VSyncButton
+      objectReference: {fileID: 0}
+    - target: {fileID: 7808511833332856057, guid: cb9769d8e16028046a4d9027b565d1b7,
+        type: 3}
+      propertyPath: m_StaticEditorFlags
+      value: 4294967295
+      objectReference: {fileID: 0}
     - target: {fileID: 1098373615655184720, guid: cb9769d8e16028046a4d9027b565d1b7,
         type: 3}
       propertyPath: m_LocalPosition.x
@@ -1084,16 +1103,6 @@ PrefabInstance:
         type: 3}
       propertyPath: m_Pivot.y
       value: 0.5
-      objectReference: {fileID: 0}
-    - target: {fileID: 7808511833332856057, guid: cb9769d8e16028046a4d9027b565d1b7,
-        type: 3}
-      propertyPath: m_Name
-      value: VSyncButton
-      objectReference: {fileID: 0}
-    - target: {fileID: 7808511833332856057, guid: cb9769d8e16028046a4d9027b565d1b7,
-        type: 3}
-      propertyPath: m_StaticEditorFlags
-      value: 4294967295
       objectReference: {fileID: 0}
     - target: {fileID: 1272963684432215465, guid: cb9769d8e16028046a4d9027b565d1b7,
         type: 3}
@@ -1115,6 +1124,16 @@ PrefabInstance:
   m_Modification:
     m_TransformParent: {fileID: 5871095945959836432}
     m_Modifications:
+    - target: {fileID: 3980670016248479640, guid: b56babbc0bf686f4c9d02360481bb3f4,
+        type: 3}
+      propertyPath: m_Name
+      value: QuitMainMenuButton
+      objectReference: {fileID: 0}
+    - target: {fileID: 3980670016248479640, guid: b56babbc0bf686f4c9d02360481bb3f4,
+        type: 3}
+      propertyPath: m_StaticEditorFlags
+      value: 4294967295
+      objectReference: {fileID: 0}
     - target: {fileID: 6079141059709706801, guid: b56babbc0bf686f4c9d02360481bb3f4,
         type: 3}
       propertyPath: m_LocalPosition.x
@@ -1219,16 +1238,6 @@ PrefabInstance:
         type: 3}
       propertyPath: m_Pivot.y
       value: 0.5
-      objectReference: {fileID: 0}
-    - target: {fileID: 3980670016248479640, guid: b56babbc0bf686f4c9d02360481bb3f4,
-        type: 3}
-      propertyPath: m_Name
-      value: QuitMainMenuButton
-      objectReference: {fileID: 0}
-    - target: {fileID: 3980670016248479640, guid: b56babbc0bf686f4c9d02360481bb3f4,
-        type: 3}
-      propertyPath: m_StaticEditorFlags
-      value: 4294967295
       objectReference: {fileID: 0}
     - target: {fileID: 5388908625302992584, guid: b56babbc0bf686f4c9d02360481bb3f4,
         type: 3}

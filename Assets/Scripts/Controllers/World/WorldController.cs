@@ -88,7 +88,7 @@ namespace Controllers.World
         private void UpdateChunkLoadArea(object sender, Vector3Int chunkPosition)
         {
             NoiseMap.Generate(chunkPosition, NoiseMap.Bounds.size, WorldGenerationSettings);
-            EnqueueBuildChunkArea(chunkPosition, WorldGenerationSettings.Radius);
+            //EnqueueBuildChunkArea(chunkPosition, WorldGenerationSettings.Radius);
         }
 
         public void EnqueueBuildChunkArea(Vector3Int origin, int radius)
@@ -98,7 +98,7 @@ namespace Controllers.World
             {
                 for (int z = -radius; z < (radius + 1); z++)
                 {
-                    Vector3Int position = origin + Chunk.Size.Multiply(new Vector3Int(x, 0, z));
+                    Vector3Int position = origin + new Vector3Int(x, 0, z).Multiply(Chunk.Size);
 
                     ChunkController.BuildChunkQueue.Enqueue(position);
                 }

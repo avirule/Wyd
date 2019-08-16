@@ -39,6 +39,7 @@ namespace Controllers.UI.Diagnostics
 
             _DiagnosticKeyPressed = true;
             DiagnosticPanel.SetActive(!DiagnosticPanel.activeSelf);
+            VersionText.enabled = DiagnosticPanel.activeSelf;
         }
     }
 }

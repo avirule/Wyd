@@ -30,7 +30,7 @@ namespace Controllers.UI.Components.Button
                 OptionsController.Current.VSyncLevel++;
             }
 
-            VSyncLevelButtonText.text = OptionsController.Current.VSyncLevel.ToString();
+            VSyncLevelButtonText.text = $"VSync Level: {OptionsController.Current.VSyncLevel.ToString()}";
         }
     }
 }

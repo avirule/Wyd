@@ -39,7 +39,7 @@ namespace Controllers.Entity
                 Current = this;
             }
 
-            CurrentChunk = new Vector3Int(int.MaxValue, int.MaxValue, int.MaxValue);
+            CurrentChunk = new Vector3Int(int.MaxValue, 0, int.MaxValue);
         }
 
         private void FixedUpdate()
