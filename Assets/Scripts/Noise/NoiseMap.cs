@@ -40,7 +40,7 @@ namespace Noise
             Bounds = new BoundsInt(center - new Vector3Int(size.x / 2, 0, size.z / 2), size);
         }
 
-        public float[][] GetSection(Vector3Int position, Vector3Int size)
+        public float[] GetSection(Vector3Int position, Vector3Int size)
         {
             if (!Mathv.ContainsVector3Int(Bounds, position))
             {
@@ -50,16 +50,17 @@ namespace Noise
             }
 
             Vector3Int indexes = position - Bounds.min;
-            float[][] noiseMap = new float[size.x][];
 
-            for (int x = 0; x < noiseMap.Length; x++)
+            int length = size.x * size.z;
+            
+            float[] noiseMap = new float[length];
+
+            for (int i = 0; i < length; i++)
             {
-                noiseMap[x] = new float[size.z];
-
-                for (int z = 0; z < noiseMap[0].Length; z++)
-                {
-                    noiseMap[x][z] = Map[indexes.x + x][indexes.z + z];
-                }
+                int z = i % size.z;
+                int x = i / (size.y * size.z);
+                
+                    noiseMap[i] = Map[indexes.x + x][indexes.z + z];
             }
 
             return noiseMap;

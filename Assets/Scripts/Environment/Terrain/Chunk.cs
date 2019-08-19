@@ -1,7 +1,6 @@
 #region
 
 using System;
-using System.Collections;
 using System.Diagnostics;
 using Controllers.Entity;
 using Controllers.Game;
@@ -11,6 +10,8 @@ using Environment.Terrain.Generation;
 using Logging;
 using NLog;
 using Static;
+using Unity.Collections;
+using Unity.Jobs;
 using UnityEngine;
 using UnityEngine.Rendering;
 
@@ -24,14 +25,18 @@ namespace Environment.Terrain
 
         private Stopwatch _BuildTimer;
         private Stopwatch _MeshTimer;
-        private uint _WorldUpdateSubscriberIndex;
+        private ChunkBuilderJob _ChunkBuilderJob;
+        private ChunkGeneratorJob _ChunkGeneratorJob;
+        private JobHandle _BuilderJobHandle;
+        private JobHandle _GeneratorJobHandle;
+        private int NonAirBlocksCount;
 
         public Mesh Mesh;
         public Block[] Blocks;
+        public bool Built;
+        public bool Building;
         public bool Generated;
         public bool Generating;
-        public bool Meshed;
-        public bool Meshing;
         public bool PendingMeshUpdate;
         public bool PendingMeshAssigment;
         public MeshFilter MeshFilter;
@@ -80,9 +85,11 @@ namespace Environment.Terrain
             _BuildTimer = new Stopwatch();
             _MeshTimer = new Stopwatch();
 
+            Blocks = new Block[Size.x * Size.y * Size.z];
             Position = transform.position.ToInt();
-            Generated = Generating = Meshed = Meshing = PendingMeshAssigment = false;
+            Built = Building = Generated = Generating = PendingMeshAssigment = false;
             PendingMeshUpdate = true;
+            NonAirBlocksCount = 0;
 
             double waitTime = TimeSpan
                 .FromTicks((DateTime.Now.Ticks - WorldController.InitialTick) % WorldController.WorldTickRate.Ticks)
@@ -103,23 +110,14 @@ namespace Environment.Terrain
             }
         }
 
-        private IEnumerator GenerateBlocks()
+        private (ChunkBuilderJob, JobHandle) Build()
         {
             _BuildTimer.Restart();
 
-            Generated = false;
-            Generating = true;
+            Built = false;
+            Building = true;
 
-            yield return new WaitUntil(() => WorldController.Current.NoiseMap.Ready || !Active);
-
-            if (!Active)
-            {
-                Generating = false;
-                _BuildTimer.Stop();
-                yield break;
-            }
-
-            float[][] noiseMap;
+            float[] noiseMap;
 
             try
             {
@@ -129,74 +127,39 @@ namespace Environment.Terrain
             }
             catch (Exception)
             {
-                Generating = false;
+                Building = false;
                 _BuildTimer.Stop();
-                yield break;
+                return default;
             }
 
             if (noiseMap == null)
             {
                 EventLog.Logger.Log(LogLevel.Error,
                     $"Failed to generate chunk at position ({Position.x}, {Position.z}): failed to get noise map.");
-                Generating = false;
+                Building = false;
                 _BuildTimer.Stop();
-                yield break;
+                return default;
             }
 
-            ChunkBuilder chunkGenerator = new ChunkBuilder(noiseMap, Size);
-            chunkGenerator.Start();
-
-            yield return new WaitUntil(() => chunkGenerator.Update() || !Active);
-
-            if (!Active)
-            {
-                chunkGenerator.Abort();
-                Generating = false;
-                _BuildTimer.Stop();
-                yield break;
-            }
-
-            Blocks = chunkGenerator.Blocks;
-
-            Generating = false;
-            Generated = true;
-
-            _BuildTimer.Stop();
-            DiagnosticsPanelController.ChunkBuildTimes.Enqueue(_BuildTimer.Elapsed.TotalMilliseconds);
+            ChunkBuilderJob chunkBuilderJob = new ChunkBuilderJob(Blocks, noiseMap);
+            return (chunkBuilderJob, chunkBuilderJob.Schedule(chunkBuilderJob.Blocks.Length, 250));
         }
 
-        private IEnumerator GenerateMesh()
+        private (ChunkGeneratorJob, JobHandle) Generate()
         {
-            if (!Generated)
+            if (!Built)
             {
-                yield break;
+                return default;
             }
 
             _MeshTimer.Restart();
 
-            Meshed = PendingMeshAssigment = false;
-            Meshing = true;
+            Generated = PendingMeshAssigment = false;
+            Generating = true;
 
-            MeshGenerator meshGenerator = new MeshGenerator(Position, Blocks);
-            meshGenerator.Start();
 
-            yield return new WaitUntil(() => meshGenerator.Update() || !Active);
-
-            if (!Active)
-            {
-                meshGenerator.Abort();
-                Meshing = false;
-                _MeshTimer.Stop();
-                yield break;
-            }
-
-            Mesh = meshGenerator.GetMesh();
-
-            Meshing = PendingMeshUpdate = false;
-            Meshed = PendingMeshAssigment = true;
-
-            _MeshTimer.Stop();
-            DiagnosticsPanelController.ChunkMeshTimes.Enqueue(_MeshTimer.Elapsed.TotalMilliseconds);
+            ChunkGeneratorJob chunkGeneratorJob = new ChunkGeneratorJob(Position, Blocks);
+            return (chunkGeneratorJob, chunkGeneratorJob.Schedule(Blocks.Length, 250));
         }
 
         public void Activate(Vector3Int position = default)
@@ -234,16 +197,52 @@ namespace Environment.Terrain
 
         private void GenerationCheckAndStart()
         {
-            if (!Generated && !Generating)
+            if (!Built)
             {
-                StartCoroutine(GenerateBlocks());
-            }
-            else if (ChunkController.Current.AllChunksGenerated && PendingMeshUpdate && !Meshing)
-            {
-                StartCoroutine(GenerateMesh());
+                if (Building)
+                {
+                    _BuilderJobHandle.Complete();
+
+                    Building = false;
+                    Built = true;
+
+                    NonAirBlocksCount = _ChunkBuilderJob.NonAirBlocksCount;
+                    _ChunkBuilderJob.Blocks.CopyTo(Blocks);
+                    _ChunkBuilderJob.Blocks.Dispose();
+
+                    _BuildTimer.Stop();
+                    DiagnosticsPanelController.ChunkBuildTimes.Enqueue(_BuildTimer.Elapsed.TotalMilliseconds);
+                }
+                else
+                {
+                    (_ChunkBuilderJob, _BuilderJobHandle) = Build();
+                }
             }
 
-            if (ExpensiveMeshing && PendingMeshAssigment && Meshed)
+            if (ChunkController.Current.AllChunksBuilt && PendingMeshUpdate)
+            {
+                if (Generating)
+                {
+                    if (_GeneratorJobHandle.IsCompleted)
+                    {
+                        _GeneratorJobHandle.Complete();
+
+                        Generating = PendingMeshUpdate = false;
+                        Generated = PendingMeshAssigment = true;
+
+                        Mesh = _ChunkGeneratorJob.GetMesh();
+
+                        _MeshTimer.Stop();
+                        DiagnosticsPanelController.ChunkMeshTimes.Enqueue(_MeshTimer.Elapsed.TotalMilliseconds);
+                    }
+                }
+                else
+                {
+                   (_ChunkGeneratorJob, _GeneratorJobHandle) = Generate();
+                }
+            }
+
+            if (ExpensiveMeshing && PendingMeshAssigment && Generated)
             {
                 AssignMesh();
             }
@@ -251,7 +250,7 @@ namespace Environment.Terrain
 
         private void AssignMesh()
         {
-            if (!Generated || !Meshed)
+            if (!Built || !Generated)
             {
                 return;
             }

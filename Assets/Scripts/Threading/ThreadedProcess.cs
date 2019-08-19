@@ -8,14 +8,15 @@ namespace Threading
 {
     public class ThreadedProcess
     {
+        protected readonly Thread Thread;
         protected readonly object Handle;
         protected bool Done;
-        public bool Die;
 
         protected ThreadedProcess()
         {
-            Done = Die = false;
+            Thread = new Thread(Run);
             Handle = new object();
+            Done = false;
         }
 
         public bool IsDone
@@ -42,7 +43,7 @@ namespace Threading
 
         public virtual void Start()
         {
-            ThreadPool.QueueUserWorkItem(state => Run());
+            Thread.Start();
         }
 
         protected virtual void ThreadFunction()
@@ -55,7 +56,9 @@ namespace Threading
 
         public virtual void Abort()
         {
-            Die = true;
+            Thread.Abort();
+
+            IsDone = true;
         }
 
         public virtual bool Update()
@@ -70,7 +73,7 @@ namespace Threading
             return true;
         }
 
-        public void Run()
+        protected void Run()
         {
             ThreadFunction();
 

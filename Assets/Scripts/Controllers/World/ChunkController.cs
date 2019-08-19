@@ -26,8 +26,8 @@ namespace Controllers.World
         public Queue<Vector3Int> BuildChunkQueue;
         public int ActiveChunksCount => _Chunks.Count;
         public int CachedChunksCount => _CachedChunks.Count;
-        public bool AllChunksGenerated => _Chunks.All(chunk => chunk.Generated);
-        public bool AllChunksMeshed => _Chunks.All(chunk => chunk.Meshed);
+        public bool AllChunksBuilt => _Chunks.All(chunk => chunk.Built);
+        public bool AllChunksMeshed => _Chunks.All(chunk => chunk.Generated);
 
         private void Awake()
         {
@@ -270,7 +270,7 @@ namespace Controllers.World
 
             Chunk chunk = GetChunkAtPosition(chunkPosition);
 
-            if ((chunk == null) || !chunk.Generated)
+            if ((chunk == null) || !chunk.Built)
             {
                 return default;
             }
