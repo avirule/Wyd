@@ -1,6 +1,5 @@
 ﻿#region
 
-using System;
 using Controllers.Game;
 using UnityEngine;
 using UnityEngine.UI;
@@ -13,7 +12,7 @@ namespace Controllers.UI
     {
         private bool _EscapeKeyPressed;
         private bool _CursorUnlocked;
-        
+
         public GameObject Main;
         public GameObject Options;
         public Button OptionsButton;
@@ -75,7 +74,7 @@ namespace Controllers.UI
                 SetMainActive(false);
                 ToggleCursorUnlocked();
             }
-            
+
             Options.SetActive(active);
         }
 

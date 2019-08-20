@@ -18,7 +18,8 @@ namespace Logging.Targets
             Layout = "(${logger}) : ${message}";
         }
 
-        [RequiredParameter] public string Host { get; set; }
+        [RequiredParameter]
+        public string Host { get; set; }
 
         protected override void Write(LogEventInfo logEvent)
         {

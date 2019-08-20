@@ -73,8 +73,6 @@
               <e p="BlockRule.cs" t="Include" />
               <e p="Chunk.cs" t="Include" />
               <e p="Generation" t="Include">
-                <e p="ChunkBuilderJob.cs" t="Include" />
-                <e p="ChunkGeneratorJob.cs" t="Include" />
                 <e p="WorldGenerationSettings.cs" t="Include" />
                 <e p="WorldSeed.cs" t="Include" />
               </e>
@@ -104,7 +102,15 @@
             <e p="StaticRandom.cs" t="Include" />
           </e>
           <e p="Threading" t="Include">
+            <e p="ChunkMeshingThreadedItem.cs" t="Include" />
+            <e p="Jobs" t="Include">
+              <e p="ChunkBuilderJob.cs" t="Include" />
+              <e p="NativeContainers" t="Include">
+                <e p="NativeElement.cs" t="Include" />
+              </e>
+            </e>
             <e p="ThreadedProcess.cs" t="Include" />
+            <e p="ThreadedQueue.cs" t="Include" />
           </e>
         </e>
       </e>

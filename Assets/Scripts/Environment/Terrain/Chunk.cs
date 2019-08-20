@@ -6,10 +6,11 @@ using Controllers.Entity;
 using Controllers.Game;
 using Controllers.UI.Diagnostics;
 using Controllers.World;
-using Environment.Terrain.Generation;
 using Logging;
 using NLog;
 using Static;
+using Threading;
+using Threading.Jobs;
 using Unity.Collections;
 using Unity.Jobs;
 using UnityEngine;
@@ -21,14 +22,12 @@ namespace Environment.Terrain
 {
     public class Chunk : MonoBehaviour
     {
+        private static ThreadedQueue _meshingQueue = new ThreadedQueue(500);
         public static readonly Vector3Int Size = new Vector3Int(32, 128, 32);
 
         private Stopwatch _BuildTimer;
         private Stopwatch _MeshTimer;
-        private ChunkBuilderJob _ChunkBuilderJob;
-        private ChunkGeneratorJob _ChunkGeneratorJob;
-        private JobHandle _BuilderJobHandle;
-        private JobHandle _GeneratorJobHandle;
+        private object _MeshingIdentity;
 
         public Mesh Mesh;
         public Block[] Blocks;
@@ -81,6 +80,12 @@ namespace Environment.Terrain
 
         private void Awake()
         {
+            if (!_meshingQueue.Running)
+            {
+                _meshingQueue = new ThreadedQueue(500);
+                _meshingQueue.Start();
+            }
+
             _BuildTimer = new Stopwatch();
             _MeshTimer = new Stopwatch();
 
@@ -107,7 +112,15 @@ namespace Environment.Terrain
             }
         }
 
-        private (ChunkBuilderJob, JobHandle) Build()
+        /// <summary>
+        ///     Deallocate and destroy ALL NativeCollection / disposable objects
+        /// </summary>
+        private void OnApplicationQuit()
+        {
+            _meshingQueue.Dispose();
+        }
+
+        private void Build()
         {
             _BuildTimer.Restart();
 
@@ -126,7 +139,7 @@ namespace Environment.Terrain
             {
                 Building = false;
                 _BuildTimer.Stop();
-                return default;
+                return;
             }
 
             if (noiseMap == null)
@@ -135,20 +148,31 @@ namespace Environment.Terrain
                     $"Failed to generate chunk at position ({Position.x}, {Position.z}): failed to get noise map.");
                 Building = false;
                 _BuildTimer.Stop();
-                return default;
+                return;
             }
 
+            NativeArray<Block> blocks = new NativeArray<Block>(Blocks, Allocator.TempJob);
             ChunkBuilderJob chunkBuilderJob = new ChunkBuilderJob
             {
-                Blocks = new NativeArray<Block>(Blocks, Allocator.Persistent),
-                NoiseMap = new NativeArray<float>(noiseMap, Allocator.Persistent),
-                NonAirBlocksCount = 0
+                Blocks = blocks,
+                NoiseMap = new NativeArray<float>(noiseMap, Allocator.Persistent)
             };
-            
-            return (chunkBuilderJob, chunkBuilderJob.Schedule(chunkBuilderJob.Blocks.Length, 250));
+            JobHandle builderJobHandle =
+                chunkBuilderJob.Schedule(Blocks.Length, Blocks.Length / System.Environment.ProcessorCount);
+
+            builderJobHandle.Complete();
+
+            Building = false;
+            Built = true;
+
+            blocks.CopyTo(Blocks);
+            blocks.Dispose();
+
+            _BuildTimer.Stop();
+            DiagnosticsPanelController.ChunkBuildTimes.Enqueue(_BuildTimer.Elapsed.TotalMilliseconds);
         }
 
-        private (ChunkGeneratorJob, JobHandle) Generate()
+        private object Generate()
         {
             if (!Built)
             {
@@ -160,16 +184,7 @@ namespace Environment.Terrain
             Generated = PendingMeshAssigment = false;
             Generating = true;
 
-            ChunkGeneratorJob chunkGeneratorJob = new ChunkGeneratorJob
-            {
-                Position = Position,
-                Blocks = new NativeArray<Block>(Blocks, Allocator.Persistent),
-                UVs = new NativeList<Vector2>(ushort.MaxValue, Allocator.Persistent),
-                Vertices = new NativeList<Vector3>(ushort.MaxValue, Allocator.Persistent),
-                Triangles = new NativeList<int>((int) (ushort.MaxValue * 1.5), Allocator.Persistent)
-            };
-            
-            return (chunkGeneratorJob, chunkGeneratorJob.Schedule(Blocks.Length, 250));
+            return _meshingQueue.AddThreadedItem(new ChunkMeshingThreadedItem(Position, Blocks));
         }
 
         public void Activate(Vector3Int position = default)
@@ -207,44 +222,29 @@ namespace Environment.Terrain
 
         private void GenerationCheckAndStart()
         {
-            if (!Built)
+            if (!Built && !Building)
             {
-                if (Building)
-                {
-                    _BuilderJobHandle.Complete();
-
-                    Building = false;
-                    Built = true;
-
-                    _ChunkBuilderJob.Blocks.CopyTo(Blocks);
-                    _ChunkBuilderJob.Blocks.Dispose();
-
-                    _BuildTimer.Stop();
-                    DiagnosticsPanelController.ChunkBuildTimes.Enqueue(_BuildTimer.Elapsed.TotalMilliseconds);
-                }
-                else
-                {
-                    (_ChunkBuilderJob, _BuilderJobHandle) = Build();
-                }
+                Build();
             }
 
             if (ChunkController.Current.AllChunksBuilt && PendingMeshUpdate)
             {
                 if (Generating)
                 {
-                    _GeneratorJobHandle.Complete();
+                    if (_meshingQueue.TryGetFinishedItem(_MeshingIdentity, out ThreadedItem threadedItem))
+                    {
+                        Generating = PendingMeshUpdate = false;
+                        Generated = PendingMeshAssigment = true;
 
-                    Generating = PendingMeshUpdate = false;
-                    Generated = PendingMeshAssigment = true;
+                        Mesh = ((ChunkMeshingThreadedItem) threadedItem).GetMesh();
 
-                    Mesh = _ChunkGeneratorJob.GetMesh();
-
-                    _MeshTimer.Stop();
-                    DiagnosticsPanelController.ChunkMeshTimes.Enqueue(_MeshTimer.Elapsed.TotalMilliseconds);
+                        _MeshTimer.Stop();
+                        DiagnosticsPanelController.ChunkMeshTimes.Enqueue(_MeshTimer.Elapsed.TotalMilliseconds);
+                    }
                 }
                 else
                 {
-                    (_ChunkGeneratorJob, _GeneratorJobHandle) = Generate();
+                    _MeshingIdentity = Generate();
                 }
             }
 

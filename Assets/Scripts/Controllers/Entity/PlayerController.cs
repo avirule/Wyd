@@ -46,7 +46,7 @@ namespace Controllers.Entity
         {
             CalculateRotation();
             CalculateMovement();
-            
+
             CheckChangedChunk();
         }
 

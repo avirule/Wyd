@@ -1,22 +1,23 @@
 #region
 
-using System.Threading;
+using System;
 using Controllers.Game;
+using Environment.Terrain;
 using Unity.Collections;
 using Unity.Jobs;
 using UnityEngine;
 
 #endregion
 
-namespace Environment.Terrain.Generation
+namespace Threading.Jobs
 {
     public struct ChunkBuilderJob : IJobParallelFor
     {
         [ReadOnly]
         [DeallocateOnJobCompletion]
         public NativeArray<float> NoiseMap;
+
         public NativeArray<Block> Blocks;
-        public int NonAirBlocksCount;
 
         public void Execute(int index)
         {
@@ -25,7 +26,7 @@ namespace Environment.Terrain.Generation
 
             if (index != 0)
             {
-                y = (index / Chunk.Size.z) * Chunk.Size.y;
+                y = (index / Chunk.Size.x) % Chunk.Size.y;
                 noiseIndex = index % Chunk.Size.y;
             }
 
@@ -50,8 +51,19 @@ namespace Environment.Terrain.Generation
             {
                 Blocks[index] = new Block(BlockController.Current.GetBlockId("Stone"));
             }
+        }
 
-            Interlocked.Increment(ref NonAirBlocksCount);
+        public void Deallocate()
+        {
+            try
+            {
+                NoiseMap.Dispose();
+                Blocks.Dispose();
+            }
+            catch (InvalidOperationException)
+            {
+                // native array already deallocated
+            }
         }
     }
 }
