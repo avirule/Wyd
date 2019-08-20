@@ -2,7 +2,6 @@
 
 using System.Threading;
 using Controllers.Game;
-using Unity.Burst;
 using Unity.Collections;
 using Unity.Jobs;
 using UnityEngine;
@@ -11,22 +10,13 @@ using UnityEngine;
 
 namespace Environment.Terrain.Generation
 {
-    [BurstCompile]
     public struct ChunkBuilderJob : IJobParallelFor
     {
         [ReadOnly]
         [DeallocateOnJobCompletion]
         public NativeArray<float> NoiseMap;
         public NativeArray<Block> Blocks;
-        // todo implement safe alternative for blocks with more than 6 individual faces
         public int NonAirBlocksCount;
-
-        public ChunkBuilderJob(Block[] blocks, float[] noiseMap)
-        {
-            NoiseMap = new NativeArray<float>(noiseMap, Allocator.Persistent);
-            Blocks = new NativeArray<Block>(blocks, Allocator.Persistent);
-            NonAirBlocksCount = 0;
-        }
 
         public void Execute(int index)
         {

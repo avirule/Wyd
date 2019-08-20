@@ -21,7 +21,7 @@ namespace Environment.Terrain
 {
     public class Chunk : MonoBehaviour
     {
-        public static Vector3Int Size = new Vector3Int(16, 16, 16);
+        public static readonly Vector3Int Size = new Vector3Int(32, 128, 32);
 
         private Stopwatch _BuildTimer;
         private Stopwatch _MeshTimer;
@@ -29,7 +29,6 @@ namespace Environment.Terrain
         private ChunkGeneratorJob _ChunkGeneratorJob;
         private JobHandle _BuilderJobHandle;
         private JobHandle _GeneratorJobHandle;
-        private int NonAirBlocksCount;
 
         public Mesh Mesh;
         public Block[] Blocks;
@@ -89,8 +88,6 @@ namespace Environment.Terrain
             Position = transform.position.ToInt();
             Built = Building = Generated = Generating = PendingMeshAssigment = false;
             PendingMeshUpdate = true;
-            NonAirBlocksCount = 0;
-
             double waitTime = TimeSpan
                 .FromTicks((DateTime.Now.Ticks - WorldController.InitialTick) % WorldController.WorldTickRate.Ticks)
                 .TotalSeconds;
@@ -141,7 +138,13 @@ namespace Environment.Terrain
                 return default;
             }
 
-            ChunkBuilderJob chunkBuilderJob = new ChunkBuilderJob(Blocks, noiseMap);
+            ChunkBuilderJob chunkBuilderJob = new ChunkBuilderJob
+            {
+                Blocks = new NativeArray<Block>(Blocks, Allocator.Persistent),
+                NoiseMap = new NativeArray<float>(noiseMap, Allocator.Persistent),
+                NonAirBlocksCount = 0
+            };
+            
             return (chunkBuilderJob, chunkBuilderJob.Schedule(chunkBuilderJob.Blocks.Length, 250));
         }
 
@@ -157,8 +160,15 @@ namespace Environment.Terrain
             Generated = PendingMeshAssigment = false;
             Generating = true;
 
-
-            ChunkGeneratorJob chunkGeneratorJob = new ChunkGeneratorJob(Position, Blocks);
+            ChunkGeneratorJob chunkGeneratorJob = new ChunkGeneratorJob
+            {
+                Position = Position,
+                Blocks = new NativeArray<Block>(Blocks, Allocator.Persistent),
+                UVs = new NativeList<Vector2>(ushort.MaxValue, Allocator.Persistent),
+                Vertices = new NativeList<Vector3>(ushort.MaxValue, Allocator.Persistent),
+                Triangles = new NativeList<int>((int) (ushort.MaxValue * 1.5), Allocator.Persistent)
+            };
+            
             return (chunkGeneratorJob, chunkGeneratorJob.Schedule(Blocks.Length, 250));
         }
 
@@ -206,7 +216,6 @@ namespace Environment.Terrain
                     Building = false;
                     Built = true;
 
-                    NonAirBlocksCount = _ChunkBuilderJob.NonAirBlocksCount;
                     _ChunkBuilderJob.Blocks.CopyTo(Blocks);
                     _ChunkBuilderJob.Blocks.Dispose();
 
@@ -223,22 +232,19 @@ namespace Environment.Terrain
             {
                 if (Generating)
                 {
-                    if (_GeneratorJobHandle.IsCompleted)
-                    {
-                        _GeneratorJobHandle.Complete();
+                    _GeneratorJobHandle.Complete();
 
-                        Generating = PendingMeshUpdate = false;
-                        Generated = PendingMeshAssigment = true;
+                    Generating = PendingMeshUpdate = false;
+                    Generated = PendingMeshAssigment = true;
 
-                        Mesh = _ChunkGeneratorJob.GetMesh();
+                    Mesh = _ChunkGeneratorJob.GetMesh();
 
-                        _MeshTimer.Stop();
-                        DiagnosticsPanelController.ChunkMeshTimes.Enqueue(_MeshTimer.Elapsed.TotalMilliseconds);
-                    }
+                    _MeshTimer.Stop();
+                    DiagnosticsPanelController.ChunkMeshTimes.Enqueue(_MeshTimer.Elapsed.TotalMilliseconds);
                 }
                 else
                 {
-                   (_ChunkGeneratorJob, _GeneratorJobHandle) = Generate();
+                    (_ChunkGeneratorJob, _GeneratorJobHandle) = Generate();
                 }
             }
 

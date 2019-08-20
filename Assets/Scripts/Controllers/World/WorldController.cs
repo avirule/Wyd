@@ -58,8 +58,6 @@ namespace Controllers.World
 
             WorldTickRate = TimeSpan.FromSeconds(1d / TicksPerSecond);
 
-            Chunk.Size = WorldGenerationSettings.ChunkSize;
-
             NoiseMap = new NoiseMap(null, Vector3Int.zero,
                 new Vector3Int((WorldGenerationSettings.Diameter + 1) * Chunk.Size.x, 0,
                     (WorldGenerationSettings.Diameter + 1) * Chunk.Size.z));

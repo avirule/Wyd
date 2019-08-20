@@ -1409,7 +1409,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 6bacbf482bf844eaa875579526459c24, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  ChunkSize: {x: 32, y: 128, z: 32}
+  ChunkSize: {x: 32, y: 128, z: 8}
   Lacunarity: 2
   Octaves: 16
   Persistence: 0.5
