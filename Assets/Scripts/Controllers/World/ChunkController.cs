@@ -264,15 +264,15 @@ namespace Controllers.World
             return default;
         }
 
-        public Block GetBlockAtPosition(Vector3Int position)
+        public bool TryGetBlockAtPosition(Vector3Int position, out Block block)
         {
             Vector3Int chunkPosition = WorldController.GetWorldChunkOriginFromGlobalPosition(position).ToInt();
 
             Chunk chunk = GetChunkAtPosition(chunkPosition);
 
-            if ((chunk == null) || !chunk.Built)
+            if ((chunk == default) || !chunk.Built)
             {
-                return default;
+                return false;
             }
 
             Vector3Int localPosition = (position - chunkPosition).Abs();
@@ -281,12 +281,12 @@ namespace Controllers.World
 
             if (chunk.Blocks.Length <= localPosition1d)
             {
-                return default;
+                return false;
             }
 
-            Block block = chunk.Blocks[localPosition1d];
+            block = chunk.Blocks[localPosition1d];
 
-            return block;
+            return true;
         }
 
         #endregion

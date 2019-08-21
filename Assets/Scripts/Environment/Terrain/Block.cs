@@ -10,10 +10,6 @@ namespace Environment.Terrain
 {
     public struct Block
     {
-        #region STATIC
-
-        #endregion
-
         public BitVector32 Bits;
 
         public ushort Id

@@ -15,6 +15,7 @@ using Unity.Collections;
 using Unity.Jobs;
 using UnityEngine;
 using UnityEngine.Rendering;
+using Debug = UnityEngine.Debug;
 
 #endregion
 
@@ -23,7 +24,7 @@ namespace Environment.Terrain
     public class Chunk : MonoBehaviour
     {
         private static ThreadedQueue _meshingQueue = new ThreadedQueue(500);
-        public static readonly Vector3Int Size = new Vector3Int(32, 128, 32);
+        public static readonly Vector3Int Size = new Vector3Int(8, 64, 16);
 
         private Stopwatch _BuildTimer;
         private Stopwatch _MeshTimer;
@@ -117,7 +118,7 @@ namespace Environment.Terrain
         /// </summary>
         private void OnApplicationQuit()
         {
-            _meshingQueue.Dispose();
+            _meshingQueue.Abort();
         }
 
         private void Build()
@@ -151,11 +152,10 @@ namespace Environment.Terrain
                 return;
             }
 
-            NativeArray<Block> blocks = new NativeArray<Block>(Blocks, Allocator.TempJob);
             ChunkBuilderJob chunkBuilderJob = new ChunkBuilderJob
             {
-                Blocks = blocks,
-                NoiseMap = new NativeArray<float>(noiseMap, Allocator.Persistent)
+                Blocks = new NativeArray<Block>(Blocks, Allocator.TempJob),
+                NoiseMap = new NativeArray<float>(noiseMap, Allocator.TempJob)
             };
             JobHandle builderJobHandle =
                 chunkBuilderJob.Schedule(Blocks.Length, Blocks.Length / System.Environment.ProcessorCount);
@@ -165,8 +165,8 @@ namespace Environment.Terrain
             Building = false;
             Built = true;
 
-            blocks.CopyTo(Blocks);
-            blocks.Dispose();
+            chunkBuilderJob.Blocks.CopyTo(Blocks);
+            chunkBuilderJob.Blocks.Dispose();
 
             _BuildTimer.Stop();
             DiagnosticsPanelController.ChunkBuildTimes.Enqueue(_BuildTimer.Elapsed.TotalMilliseconds);
@@ -237,7 +237,7 @@ namespace Environment.Terrain
                         Generated = PendingMeshAssigment = true;
 
                         Mesh = ((ChunkMeshingThreadedItem) threadedItem).GetMesh();
-
+                        
                         _MeshTimer.Stop();
                         DiagnosticsPanelController.ChunkMeshTimes.Enqueue(_MeshTimer.Elapsed.TotalMilliseconds);
                     }

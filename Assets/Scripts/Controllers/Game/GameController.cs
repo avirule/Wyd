@@ -48,9 +48,8 @@ namespace Controllers.Game
             BlockController.Current.RegisterBlockRules("Grass", false, (position, direction) =>
             {
                 Vector3Int positionAbove = position + Vector3Int.up;
-                Block blockAbove = WorldController.Current.GetBlockAtPosition(positionAbove);
 
-                if (!blockAbove.Transparent)
+                if (WorldController.Current.TryGetBlockAtPosition(positionAbove, out Block blockAbove) && !blockAbove.Transparent)
                 {
                     return "Dirt";
                 }

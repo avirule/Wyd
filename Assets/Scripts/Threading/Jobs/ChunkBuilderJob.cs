@@ -21,19 +21,43 @@ namespace Threading.Jobs
 
         public void Execute(int index)
         {
-            int y = 0;
-            int noiseIndex = 0;
+            GenerateStripedSingleLayer(index);
+            //GenerateNormal(index);
+        }
 
-            if (index != 0)
+        private void GenerateStripedSingleLayer(int index)
+        {
+            int x = index % Chunk.Size.x;
+            int y = (index / Chunk.Size.x) % Chunk.Size.y;
+            int z = index / (Chunk.Size.x * Chunk.Size.y);
+
+            if (y != 0)
             {
-                y = (index / Chunk.Size.x) % Chunk.Size.y;
-                noiseIndex = index % Chunk.Size.y;
+                return;
             }
+
+            if (x % 2 == 0)
+            {
+                Blocks[index] = new Block(BlockController.Current.GetBlockId("Stone"));
+            }
+            else
+            {
+                Blocks[index] = new Block(BlockController.Current.GetBlockId("Dirt"));
+            }
+        }
+
+        private void GenerateNormal(int index)
+        {
+            int x = index % Chunk.Size.x;
+            int y = (index / Chunk.Size.x) % Chunk.Size.y;
+            int z = index / (Chunk.Size.x * Chunk.Size.y);
+            
+            int noiseIndex = x + (Chunk.Size.x * z);
 
             float noiseHeight = NoiseMap[noiseIndex];
 
             int perlinValue = Mathf.RoundToInt(noiseHeight * Chunk.Size.y);
-
+            
             if (y > perlinValue)
             {
                 return;
@@ -50,19 +74,6 @@ namespace Threading.Jobs
             else if (y <= (perlinValue - 5))
             {
                 Blocks[index] = new Block(BlockController.Current.GetBlockId("Stone"));
-            }
-        }
-
-        public void Deallocate()
-        {
-            try
-            {
-                NoiseMap.Dispose();
-                Blocks.Dispose();
-            }
-            catch (InvalidOperationException)
-            {
-                // native array already deallocated
             }
         }
     }

@@ -4,6 +4,7 @@ using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Threading;
+using UnityEngine;
 
 #endregion
 
@@ -17,6 +18,7 @@ namespace Threading
         private readonly CancellationTokenSource _AbortTokenSource;
         private CancellationToken _AbortToken;
 
+        public bool Disposed { get; private set; }
         public bool Running { get; private set; }
 
         public int MillisecondWaitTimeout;
@@ -50,8 +52,21 @@ namespace Threading
         {
             while (!_AbortToken.IsCancellationRequested)
             {
-                if ((_ProcessQueue == default) ||
-                    !_ProcessQueue.TryTake(out ThreadedItem threadedItem, MillisecondWaitTimeout, _AbortToken))
+                ThreadedItem threadedItem = default;
+
+                try
+                {
+                    if (!_ProcessQueue.TryTake(out threadedItem, MillisecondWaitTimeout, _AbortToken))
+                    {
+                        continue;
+                    }
+                }
+                catch (OperationCanceledException)
+                {
+                    // abort has been called
+                }
+
+                if (threadedItem == default)
                 {
                     continue;
                 }
@@ -59,6 +74,8 @@ namespace Threading
                 threadedItem.Execute();
                 _FinishedItems.Add(threadedItem);
             }
+            
+            Dispose();
         }
 
         /// <summary>
@@ -85,6 +102,7 @@ namespace Threading
             for (int i = _FinishedItems.Count - 1; i >= 0; i--)
             {
                 if ((i >= _FinishedItems.Count) ||
+                    (_FinishedItems[i] == default) ||
                     (_FinishedItems[i].Identity != identity) ||
                     !_FinishedItems[i].IsDone)
                 {
@@ -102,7 +120,13 @@ namespace Threading
 
         public void Dispose()
         {
+            if (Disposed)
+            {
+                return;
+            }
+
             _ProcessQueue?.Dispose();
+            Disposed = true;
         }
     }
 

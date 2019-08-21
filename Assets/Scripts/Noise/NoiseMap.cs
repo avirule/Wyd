@@ -51,16 +51,14 @@ namespace Noise
 
             Vector3Int indexes = position - Bounds.min;
 
-            int length = size.x * size.z;
+            float[] noiseMap = new float[size.x * size.z];
 
-            float[] noiseMap = new float[length];
-
-            for (int i = 0; i < length; i++)
+            for (int index = 0; index < noiseMap.Length; index++)
             {
-                int z = i % size.z;
-                int x = i / (size.y * size.z);
+                int x = index / (size.y * size.z);
+                int z = index % size.z;
 
-                noiseMap[i] = Map[indexes.x + x][indexes.z + z];
+                noiseMap[index] = Map[indexes.x + x][indexes.z + z];
             }
 
             return noiseMap;

@@ -75,9 +75,9 @@ namespace Controllers.World
             return globalPosition.Divide(Chunk.Size).Floor().Multiply(Chunk.Size);
         }
 
-        public Block GetBlockAtPosition(Vector3Int position)
+        public bool TryGetBlockAtPosition(Vector3Int position, out Block block)
         {
-            return ChunkController.GetBlockAtPosition(position);
+            return ChunkController.TryGetBlockAtPosition(position, out block);
         }
 
 
