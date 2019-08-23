@@ -18,6 +18,7 @@ namespace Controllers.UI.Components.Text
         private void Awake()
         {
             _DebugLogText = GetComponent<TextMeshProUGUI>();
+            _DebugLogText.richText = true;
             _DebugLogText.text = string.Empty;
 
             CheckSetDebugEventsLogged();
@@ -27,11 +28,15 @@ namespace Controllers.UI.Components.Text
 
         private void CheckSetDebugEventsLogged()
         {
-            if (InGameDebugLogTarget.DebugEntries.Count > 0)
+            if (InGameDebugLogTarget.DebugEntries == default || InGameDebugLogTarget.DebugEntries.Count <= 0)
             {
-                // .ToList() to capture copy of list in case of threaded access
-                _DebugLogText.text = string.Join("\r\n",
-                    InGameDebugLogTarget.DebugEntries.ToList().Select(logEvent => logEvent.Message));
+                return;
+            }
+
+            // .ToList() to capture copy of list in case of threaded access
+            foreach (LogEventInfo logEventInfo in InGameDebugLogTarget.DebugEntries.Skip(InGameDebugLogTarget.DebugEntries.Count - 30))
+            {
+                OnEventLogged(this, logEventInfo);
             }
         }
 

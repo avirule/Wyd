@@ -118,9 +118,26 @@ namespace Controllers.Game
             {
                 EventLog.Logger.Log(LogLevel.Warn,
                     $"Failed to return block id for block `{blockName}`: block does not exist.");
+                return 0;
             }
 
             return _BlockNameIds[blockName];
+        }
+
+        public string GetBlockName(ushort blockId)
+        {
+            if (blockId == BLOCK_EMPTY_ID)
+            {
+                return "Air";
+            }
+
+            if (!_Blocks.Keys.Contains(blockId))
+            {
+                EventLog.Logger.Log(LogLevel.Warn, $"Failed to return block name for block id `{blockId}`: block does not exist.");
+                return "Null";
+            }
+
+            return _Blocks[blockId].BlockName;
         }
     }
 }
