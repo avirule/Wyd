@@ -4,7 +4,6 @@ using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Threading;
-using UnityEngine;
 
 #endregion
 
@@ -74,7 +73,7 @@ namespace Threading
                 threadedItem.Execute();
                 _FinishedItems.Add(threadedItem);
             }
-            
+
             Dispose();
         }
 

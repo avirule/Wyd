@@ -1,5 +1,6 @@
 #region
 
+using System;
 using UnityEngine;
 
 #endregion
@@ -102,6 +103,20 @@ namespace Static
             a.z *= b.z;
 
             return a;
+        }
+
+        public static (int, int, int) GetVector3IntIndex(int index, Vector3Int maxSize)
+        {
+            int xQuotient = Math.DivRem(index, maxSize.x, out int x);
+            int zQuotient = Math.DivRem(xQuotient, maxSize.z, out int z);
+            int y = zQuotient % maxSize.y;
+
+            return (x, y, z);
+        }
+
+        public static int To1D(this Vector3Int a, Vector3Int maxSize)
+        {
+            return a.x + (maxSize.x * (a.z + (maxSize.z * a.y)));
         }
 
         #endregion

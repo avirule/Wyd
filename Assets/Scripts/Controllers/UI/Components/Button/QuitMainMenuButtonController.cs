@@ -9,11 +9,12 @@ namespace Controllers.UI.Components.Button
 {
     public class QuitMainMenuButtonController : MonoBehaviour
     {
-        public UnityEngine.UI.Button QuitMainMenuButton;
+        private UnityEngine.UI.Button _QuitMainMenuButton;
 
-        private void Start()
+        private void Awake()
         {
-            QuitMainMenuButton.onClick.AddListener(() => GameController.Current.QuitToMainMenu());
+            _QuitMainMenuButton = GetComponent<UnityEngine.UI.Button>();
+            _QuitMainMenuButton.onClick.AddListener(() => GameController.Current.QuitToMainMenu());
         }
     }
 }

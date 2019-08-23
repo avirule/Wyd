@@ -1,7 +1,7 @@
 #region
 
+using TMPro;
 using UnityEngine;
-using UnityEngine.UI;
 
 #endregion
 
@@ -12,11 +12,10 @@ namespace Controllers.UI.Diagnostics
         private bool _DiagnosticKeyPressed;
 
         public GameObject DiagnosticPanel;
-        public Text VersionText;
+        public TextMeshProUGUI VersionText;
 
         private void Start()
         {
-            VersionText.text = Application.version;
         }
 
         private void Update()

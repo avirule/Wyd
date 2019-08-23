@@ -1,6 +1,5 @@
 #region
 
-using System.Collections.Generic;
 using Logging.Targets;
 using NLog;
 using NLog.Config;
@@ -14,8 +13,6 @@ namespace Logging
 {
     public static class EventLog
     {
-        private static MemoryTarget memoryTarget;
-
         public static readonly Logger Logger;
 
         static EventLog()
@@ -24,13 +21,11 @@ namespace Logging
             Logger = LogManager.GetCurrentClassLogger();
         }
 
-        public static IList<string> Logs => memoryTarget.Logs;
-
         private static void ConfigureLogger()
         {
             LoggingConfiguration config = new LoggingConfiguration();
             ConsoleTarget consoleTarget = new ConsoleTarget("logConsole");
-            memoryTarget = new MemoryTarget();
+            InGameDebugLogTarget inGameDebugLogTarget = new InGameDebugLogTarget();
 
             if (Debug.isDebugBuild)
             {
@@ -42,7 +37,7 @@ namespace Logging
             }
 
             config.AddRule(LogLevel.Info, LogLevel.Fatal, consoleTarget);
-            config.AddRule(LogLevel.Info, LogLevel.Fatal, memoryTarget);
+            config.AddRule(LogLevel.Info, LogLevel.Fatal, inGameDebugLogTarget);
 
             LogManager.Configuration = config;
         }

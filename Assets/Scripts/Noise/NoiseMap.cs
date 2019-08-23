@@ -55,8 +55,7 @@ namespace Noise
 
             for (int index = 0; index < noiseMap.Length; index++)
             {
-                int x = index / (size.y * size.z);
-                int z = index % size.z;
+                (int x, int y, int z) = Mathv.GetVector3IntIndex(index, size);
 
                 noiseMap[index] = Map[indexes.x + x][indexes.z + z];
             }

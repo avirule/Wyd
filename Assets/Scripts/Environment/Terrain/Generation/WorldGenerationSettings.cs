@@ -20,6 +20,7 @@ namespace Environment.Terrain.Generation
 
         private void Awake()
         {
+            Chunk.Size = ChunkSize;
             Seed = new WorldSeed(SeedString);
         }
     }

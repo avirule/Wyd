@@ -27,7 +27,7 @@ namespace Controllers.World
         public int ActiveChunksCount => _Chunks.Count;
         public int CachedChunksCount => _CachedChunks.Count;
         public bool AllChunksBuilt => _Chunks.All(chunk => chunk.Built);
-        public bool AllChunksMeshed => _Chunks.All(chunk => chunk.Generated);
+        public bool AllChunksMeshed => _Chunks.All(chunk => chunk.Meshed);
 
         private void Awake()
         {
@@ -245,6 +245,7 @@ namespace Controllers.World
             return false;
         }
 
+        // todo this function needs to be made thread-safe
         public Chunk GetChunkAtPosition(Vector3Int position)
         {
             // reverse for loop to avoid collection modified from thread errors
@@ -264,7 +265,7 @@ namespace Controllers.World
             return default;
         }
 
-        public bool TryGetBlockAtPosition(Vector3Int position, out Block block)
+        public Block GetBlockAtPosition(Vector3Int position)
         {
             Vector3Int chunkPosition = WorldController.GetWorldChunkOriginFromGlobalPosition(position).ToInt();
 
@@ -272,21 +273,19 @@ namespace Controllers.World
 
             if ((chunk == default) || !chunk.Built)
             {
-                return false;
+                return default;
             }
 
             Vector3Int localPosition = (position - chunkPosition).Abs();
-            int localPosition1d =
-                localPosition.x + (Chunk.Size.x * (localPosition.y + (Chunk.Size.y * localPosition.z)));
+            int localPosition1d = localPosition.To1D(Chunk.Size);
 
             if (chunk.Blocks.Length <= localPosition1d)
             {
-                return false;
+                return default;
             }
 
-            block = chunk.Blocks[localPosition1d];
-
-            return true;
+            Block block = chunk.Blocks[localPosition1d];
+            return block;
         }
 
         #endregion

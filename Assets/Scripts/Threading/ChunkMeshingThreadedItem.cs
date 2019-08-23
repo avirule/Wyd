@@ -5,10 +5,9 @@ using Controllers.Game;
 using Controllers.World;
 using Environment;
 using Environment.Terrain;
+using Static;
 using UnityEngine;
 using UnityEngine.Rendering;
-
-// ReSharper disable InlineOutVariableDeclaration
 
 #endregion
 
@@ -38,9 +37,7 @@ namespace Threading
         {
             for (int index = 0; index < _Blocks.Length; index++)
             {
-                int x = index % Chunk.Size.x;
-                int y = (index / Chunk.Size.x) % Chunk.Size.y;
-                int z = index / (Chunk.Size.x * Chunk.Size.y);
+                (int x, int y, int z) = Mathv.GetVector3IntIndex(index, Chunk.Size);
 
                 if (_Blocks[index].Id == BlockController.BLOCK_EMPTY_ID)
                 {
@@ -48,12 +45,11 @@ namespace Threading
                 }
 
                 Vector3Int globalPosition = _Position + new Vector3Int(x, y, z);
-                Block block = default;
 
                 if (((z == (Chunk.Size.z - 1)) &&
-                     WorldController.Current.TryGetBlockAtPosition(globalPosition + new Vector3Int(0, 0, 1),
-                         out block) && block.Transparent) ||
-                    ((z < (Chunk.Size.z - 1)) && _Blocks[index + (Chunk.Size.x * Chunk.Size.y)].Transparent))
+                     WorldController.Current.GetBlockAtPosition(globalPosition + new Vector3Int(0, 0, 1))
+                         .Transparent) ||
+                    ((z < (Chunk.Size.z - 1)) && _Blocks[index + Chunk.Size.x].Transparent))
                 {
                     _Blocks[index].SetFace(Direction.North, true);
 
@@ -91,8 +87,7 @@ namespace Threading
                 }
 
                 if (((x == (Chunk.Size.x - 1)) &&
-                     WorldController.Current.TryGetBlockAtPosition(globalPosition + Vector3Int.right, out block) &&
-                     block.Transparent) ||
+                     WorldController.Current.GetBlockAtPosition(globalPosition + Vector3Int.right).Transparent) ||
                     ((x < (Chunk.Size.x - 1)) && _Blocks[index + 1].Transparent))
                 {
                     _Blocks[index].SetFace(Direction.East, true);
@@ -131,9 +126,9 @@ namespace Threading
                 }
 
                 if (((z == 0) &&
-                     WorldController.Current.TryGetBlockAtPosition(globalPosition + new Vector3Int(0, 0, -1),
-                         out block) && block.Transparent) ||
-                    ((z > 0) && _Blocks[index - (Chunk.Size.x * Chunk.Size.y)].Transparent))
+                     WorldController.Current.GetBlockAtPosition(globalPosition + new Vector3Int(0, 0, -1))
+                         .Transparent) ||
+                    ((z > 0) && _Blocks[index - Chunk.Size.x].Transparent))
                 {
                     _Blocks[index].SetFace(Direction.South, true);
 
@@ -170,8 +165,8 @@ namespace Threading
                     }
                 }
 
-                if (((x == 0) && WorldController.Current.TryGetBlockAtPosition(globalPosition + Vector3Int.left,
-                         out block) && block.Transparent) ||
+                if (((x == 0) && WorldController.Current.GetBlockAtPosition(globalPosition + Vector3Int.left)
+                         .Transparent) ||
                     ((x > 0) && _Blocks[index - 1].Transparent))
                 {
                     _Blocks[index].SetFace(Direction.West, true);
@@ -210,9 +205,8 @@ namespace Threading
                 }
 
                 if (((y == (Chunk.Size.y - 1)) &&
-                     WorldController.Current.TryGetBlockAtPosition(globalPosition + Vector3Int.up, out block) &&
-                     block.Transparent) ||
-                    ((y < (Chunk.Size.y - 1)) && _Blocks[index + Chunk.Size.x].Transparent))
+                     WorldController.Current.GetBlockAtPosition(globalPosition + Vector3Int.up).Transparent) ||
+                    ((y < (Chunk.Size.y - 1)) && _Blocks[index + (Chunk.Size.x * Chunk.Size.z)].Transparent))
                 {
                     _Blocks[index].SetFace(Direction.Up, true);
 
@@ -249,9 +243,9 @@ namespace Threading
                     }
                 }
 
-                if (((y == 0) && WorldController.Current.TryGetBlockAtPosition(globalPosition + Vector3Int.down,
-                         out block) && block.Transparent) ||
-                    ((y > 0) && _Blocks[index - Chunk.Size.x].Transparent))
+                if (((y == 0) && WorldController.Current.GetBlockAtPosition(globalPosition + Vector3Int.down)
+                         .Transparent) ||
+                    ((y > 0) && _Blocks[index - (Chunk.Size.x * Chunk.Size.z)].Transparent))
                 {
                     _Blocks[index].SetFace(Direction.Down, true);
 

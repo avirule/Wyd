@@ -1,8 +1,8 @@
 #region
 
-using System;
 using Controllers.Game;
 using Environment.Terrain;
+using Static;
 using Unity.Collections;
 using Unity.Jobs;
 using UnityEngine;
@@ -21,22 +21,64 @@ namespace Threading.Jobs
 
         public void Execute(int index)
         {
-            GenerateStripedSingleLayer(index);
+            GenerateRaisedStripe(index);
+            //GenerateFlat(index);
+            //GenerateStripedSingleLayer(index);
             //GenerateNormal(index);
+        }
+
+        private void GenerateRaisedStripe(int index)
+        {
+            (int x, int y, int z) = Mathv.GetVector3IntIndex(index, Chunk.Size);
+
+            int halfSize = Chunk.Size.y / 2;
+
+            if (y > halfSize)
+            {
+                return;
+            }
+
+            if (((y == halfSize) && ((x % 2) == 0)) || ((y == (halfSize - 1)) && ((x % 2) != 0)))
+            {
+                Blocks[index] = new Block(BlockController.Current.GetBlockId("Grass"));
+            }
+            else if (y != halfSize)
+            {
+                Blocks[index] = new Block(BlockController.Current.GetBlockId("Stone"));
+            }
+        }
+
+        private void GenerateFlat(int index)
+        {
+            (int x, int y, int z) = Mathv.GetVector3IntIndex(index, Chunk.Size);
+
+            int halfSize = Chunk.Size.y / 2;
+
+            if (y > halfSize)
+            {
+                return;
+            }
+
+            if (y == halfSize)
+            {
+                Blocks[index] = new Block(BlockController.Current.GetBlockId("Grass"));
+            }
+            else
+            {
+                Blocks[index] = new Block(BlockController.Current.GetBlockId("Stone"));
+            }
         }
 
         private void GenerateStripedSingleLayer(int index)
         {
-            int x = index % Chunk.Size.x;
-            int y = (index / Chunk.Size.x) % Chunk.Size.y;
-            int z = index / (Chunk.Size.x * Chunk.Size.y);
+            (int x, int y, int z) = Mathv.GetVector3IntIndex(index, Chunk.Size);
 
             if (y != 0)
             {
                 return;
             }
 
-            if (x % 2 == 0)
+            if ((x % 2) == 0)
             {
                 Blocks[index] = new Block(BlockController.Current.GetBlockId("Stone"));
             }
@@ -48,16 +90,14 @@ namespace Threading.Jobs
 
         private void GenerateNormal(int index)
         {
-            int x = index % Chunk.Size.x;
-            int y = (index / Chunk.Size.x) % Chunk.Size.y;
-            int z = index / (Chunk.Size.x * Chunk.Size.y);
-            
+            (int x, int y, int z) = Mathv.GetVector3IntIndex(index, Chunk.Size);
+
             int noiseIndex = x + (Chunk.Size.x * z);
 
             float noiseHeight = NoiseMap[noiseIndex];
 
             int perlinValue = Mathf.RoundToInt(noiseHeight * Chunk.Size.y);
-            
+
             if (y > perlinValue)
             {
                 return;

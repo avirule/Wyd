@@ -20,12 +20,12 @@ namespace Controllers.World
     {
         public static WorldController Current;
 
+        public long InitialTick;
+
         /// <summary>
         ///     This is referenced OFTEN in SYNCHRONOUS CONTEXT. DO NOT USE IN ASYNCHRONOUS CONTEXTS.
         /// </summary>
-        public static TimeSpan WorldTickRate;
-
-        public static long InitialTick;
+        public TimeSpan WorldTickRate;
 
         public float TicksPerSecond;
         public WorldGenerationSettings WorldGenerationSettings;
@@ -75,9 +75,9 @@ namespace Controllers.World
             return globalPosition.Divide(Chunk.Size).Floor().Multiply(Chunk.Size);
         }
 
-        public bool TryGetBlockAtPosition(Vector3Int position, out Block block)
+        public Block GetBlockAtPosition(Vector3Int position)
         {
-            return ChunkController.TryGetBlockAtPosition(position, out block);
+            return ChunkController.GetBlockAtPosition(position);
         }
 
 

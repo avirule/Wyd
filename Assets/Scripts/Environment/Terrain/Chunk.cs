@@ -15,7 +15,6 @@ using Unity.Collections;
 using Unity.Jobs;
 using UnityEngine;
 using UnityEngine.Rendering;
-using Debug = UnityEngine.Debug;
 
 #endregion
 
@@ -24,7 +23,7 @@ namespace Environment.Terrain
     public class Chunk : MonoBehaviour
     {
         private static ThreadedQueue _meshingQueue = new ThreadedQueue(500);
-        public static readonly Vector3Int Size = new Vector3Int(8, 64, 16);
+        public static Vector3Int Size = new Vector3Int(8, 64, 16);
 
         private Stopwatch _BuildTimer;
         private Stopwatch _MeshTimer;
@@ -34,8 +33,8 @@ namespace Environment.Terrain
         public Block[] Blocks;
         public bool Built;
         public bool Building;
-        public bool Generated;
-        public bool Generating;
+        public bool Meshed;
+        public bool Meshing;
         public bool PendingMeshUpdate;
         public bool PendingMeshAssigment;
         public MeshFilter MeshFilter;
@@ -92,12 +91,13 @@ namespace Environment.Terrain
 
             Blocks = new Block[Size.x * Size.y * Size.z];
             Position = transform.position.ToInt();
-            Built = Building = Generated = Generating = PendingMeshAssigment = false;
+            Built = Building = Meshed = Meshing = PendingMeshAssigment = false;
             PendingMeshUpdate = true;
             double waitTime = TimeSpan
-                .FromTicks((DateTime.Now.Ticks - WorldController.InitialTick) % WorldController.WorldTickRate.Ticks)
+                .FromTicks((DateTime.Now.Ticks - WorldController.Current.InitialTick) %
+                           WorldController.Current.WorldTickRate.Ticks)
                 .TotalSeconds;
-            InvokeRepeating(nameof(Tick), (float) waitTime, (float) WorldController.WorldTickRate.TotalSeconds);
+            InvokeRepeating(nameof(Tick), (float) waitTime, (float) WorldController.Current.WorldTickRate.TotalSeconds);
         }
 
         private void Start()
@@ -172,7 +172,7 @@ namespace Environment.Terrain
             DiagnosticsPanelController.ChunkBuildTimes.Enqueue(_BuildTimer.Elapsed.TotalMilliseconds);
         }
 
-        private object Generate()
+        private object BeginGenerateMesh()
         {
             if (!Built)
             {
@@ -181,8 +181,8 @@ namespace Environment.Terrain
 
             _MeshTimer.Restart();
 
-            Generated = PendingMeshAssigment = false;
-            Generating = true;
+            Meshed = PendingMeshAssigment = false;
+            Meshing = true;
 
             return _meshingQueue.AddThreadedItem(new ChunkMeshingThreadedItem(Position, Blocks));
         }
@@ -229,26 +229,26 @@ namespace Environment.Terrain
 
             if (ChunkController.Current.AllChunksBuilt && PendingMeshUpdate)
             {
-                if (Generating)
+                if (Meshing)
                 {
                     if (_meshingQueue.TryGetFinishedItem(_MeshingIdentity, out ThreadedItem threadedItem))
                     {
-                        Generating = PendingMeshUpdate = false;
-                        Generated = PendingMeshAssigment = true;
+                        Meshing = PendingMeshUpdate = false;
+                        Meshed = PendingMeshAssigment = true;
 
                         Mesh = ((ChunkMeshingThreadedItem) threadedItem).GetMesh();
-                        
+
                         _MeshTimer.Stop();
                         DiagnosticsPanelController.ChunkMeshTimes.Enqueue(_MeshTimer.Elapsed.TotalMilliseconds);
                     }
                 }
                 else
                 {
-                    _MeshingIdentity = Generate();
+                    _MeshingIdentity = BeginGenerateMesh();
                 }
             }
 
-            if (ExpensiveMeshing && PendingMeshAssigment && Generated)
+            if (ExpensiveMeshing && PendingMeshAssigment && Meshed)
             {
                 AssignMesh();
             }
@@ -256,7 +256,7 @@ namespace Environment.Terrain
 
         private void AssignMesh()
         {
-            if (!Built || !Generated)
+            if (!Built || !Meshed)
             {
                 return;
             }

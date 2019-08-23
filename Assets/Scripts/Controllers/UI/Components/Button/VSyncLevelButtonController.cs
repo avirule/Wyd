@@ -2,7 +2,6 @@
 
 using Controllers.Game;
 using UnityEngine;
-using UnityEngine.UI;
 
 #endregion
 
@@ -10,18 +9,17 @@ namespace Controllers.UI.Components.Button
 {
     public class VSyncLevelButtonController : MonoBehaviour
     {
-        public UnityEngine.UI.Button VSyncLevelButton;
-        public Text VSyncLevelButtonText;
+        private UnityEngine.UI.Button _VSyncLevelButton;
 
-        // Start is called before the first frame update
-        private void Start()
+        private void Awake()
         {
-            VSyncLevelButton.onClick.AddListener(ScrollVSyncLevel);
+            _VSyncLevelButton = GetComponent<UnityEngine.UI.Button>();
+            _VSyncLevelButton.onClick.AddListener(ScrollVSyncLevel);
         }
 
         private void ScrollVSyncLevel()
         {
-            if (OptionsController.Current.VSyncLevel >= 4)
+            if (OptionsController.Current.VSyncLevel == 4)
             {
                 OptionsController.Current.VSyncLevel = 0;
             }
@@ -29,8 +27,6 @@ namespace Controllers.UI.Components.Button
             {
                 OptionsController.Current.VSyncLevel++;
             }
-
-            VSyncLevelButtonText.text = $"VSync Level: {OptionsController.Current.VSyncLevel.ToString()}";
         }
     }
 }

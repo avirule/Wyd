@@ -48,8 +48,9 @@ namespace Controllers.Game
             BlockController.Current.RegisterBlockRules("Grass", false, (position, direction) =>
             {
                 Vector3Int positionAbove = position + Vector3Int.up;
+                Block block = WorldController.Current.GetBlockAtPosition(positionAbove);
 
-                if (WorldController.Current.TryGetBlockAtPosition(positionAbove, out Block blockAbove) && !blockAbove.Transparent)
+                if (!block.Transparent)
                 {
                     return "Dirt";
                 }
@@ -89,12 +90,12 @@ namespace Controllers.Game
                         throw new ArgumentOutOfRangeException(nameof(direction), direction, null);
                 }
             });
-            BlockController.Current.RegisterBlockRules("Dirt", true);
-            BlockController.Current.RegisterBlockRules("Stone", true);
+            BlockController.Current.RegisterBlockRules("Dirt", false);
+            BlockController.Current.RegisterBlockRules("Stone", false);
             BlockController.Current.RegisterBlockRules("Glass", true);
-            BlockController.Current.RegisterBlockRules("CoalOre", true);
-            BlockController.Current.RegisterBlockRules("GoldOre", true);
-            BlockController.Current.RegisterBlockRules("DiamondOre", true);
+            BlockController.Current.RegisterBlockRules("CoalOre", false);
+            BlockController.Current.RegisterBlockRules("GoldOre", false);
+            BlockController.Current.RegisterBlockRules("DiamondOre", false);
         }
 
         public void ToggleCursorLocked(bool value)

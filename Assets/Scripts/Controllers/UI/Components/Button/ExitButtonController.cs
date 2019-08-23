@@ -9,11 +9,12 @@ namespace Controllers.UI.Components.Button
 {
     public class ExitButtonController : MonoBehaviour
     {
-        public UnityEngine.UI.Button ExitButton;
+        private UnityEngine.UI.Button _ExitButton;
 
-        private void Start()
+        private void Awake()
         {
-            ExitButton.onClick.AddListener(() => GameController.ApplicationClose(0));
+            _ExitButton = GetComponent<UnityEngine.UI.Button>();
+            _ExitButton.onClick.AddListener(() => GameController.ApplicationClose(0));
         }
     }
 }
