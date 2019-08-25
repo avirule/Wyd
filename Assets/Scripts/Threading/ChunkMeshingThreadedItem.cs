@@ -26,6 +26,7 @@ namespace Threading
         /// </summary>
         /// <param name="position"><see cref="UnityEngine.Vector3Int" /> position of chunk being meshed.</param>
         /// <param name="blocks">Pre-initialized and built <see cref="T:Block[]" /> to iterate through.</param>
+        /// <seealso cref="Threading.ChunkBuildingThreadedItem"/>
         public ChunkMeshingThreadedItem(Vector3Int position, Block[] blocks)
         {
             _Position = position;

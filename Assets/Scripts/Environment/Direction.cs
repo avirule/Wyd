@@ -1,26 +1,27 @@
 namespace Environment
 {
+    /// <summary>
+    ///     6-way cardinal directions in byte values.
+    /// </summary>
     public enum Direction : byte
     {
-        None = 0,
+        /// <summary>
+        ///     Positive on Z axis
+        /// </summary>
+        North = 0,
 
         /// <summary>
         ///     Positive on X axis
         /// </summary>
-        North = 1,
-
-        /// <summary>
-        ///     Positive on Z axis
-        /// </summary>
         East = 2,
 
         /// <summary>
-        ///     Negative on X axis
+        ///     Negative on Z axis
         /// </summary>
         South = 4,
 
         /// <summary>
-        ///     Negative on Z axis
+        ///     Negative on X axis
         /// </summary>
         West = 8,
 

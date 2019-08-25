@@ -12,10 +12,19 @@ namespace Threading
         private readonly Stopwatch _ExecutionTimer;
         protected bool Done;
 
+        /// <summary>
+        ///     Total elapsed time of execution in milliseconds.
+        /// </summary>
         public long ExecutionTime => _ExecutionTimer.ElapsedMilliseconds;
 
+        /// <summary>
+        ///     Identity of <see cref="Threading.ThreadedItem" />.
+        /// </summary>
         public object Identity { get; internal set; }
 
+        /// <summary>
+        ///     Instantiates a new instance of the <see cref="Threading.ThreadedItem" /> class.
+        /// </summary>
         public ThreadedItem()
         {
             _Handle = new object();
@@ -23,6 +32,9 @@ namespace Threading
             Done = false;
         }
 
+        /// <summary>
+        ///     Thread-safe determination of execution status.
+        /// </summary>
         public bool IsDone
         {
             get
@@ -45,6 +57,9 @@ namespace Threading
             }
         }
 
+        /// <summary>
+        ///     Begins executing the <see cref="Threading.ThreadedItem" />
+        /// </summary>
         public virtual void Execute()
         {
             _ExecutionTimer.Reset();

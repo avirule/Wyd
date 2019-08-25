@@ -79,8 +79,6 @@ namespace Environment.Terrain
         {
             switch (direction)
             {
-                case Direction.None:
-                    return false;
                 case Direction.North:
                     return Bits[Faces[0]] == 1;
                 case Direction.East:
@@ -102,8 +100,6 @@ namespace Environment.Terrain
         {
             switch (direction)
             {
-                case Direction.None:
-                    return;
                 case Direction.North:
                     Bits[Faces[0]] = value ? 1 : 0;
                     break;

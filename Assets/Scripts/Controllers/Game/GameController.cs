@@ -57,8 +57,6 @@ namespace Controllers.Game
 
                 switch (direction)
                 {
-                    case Direction.None:
-                        return string.Empty;
                     // todo decide on whether to use this ??
 //                    case Direction.North:
 //                        string northCheck = worldController.GetBlockAtPosition(position + new Vector3Int(0, -1, 1));
