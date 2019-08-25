@@ -13,9 +13,6 @@ using UnityEngine.Rendering;
 
 namespace Threading
 {
-    /// <summary>
-    ///     ChunkGeneratorJob expects its NativeArrays to be sized to sufficiently sized
-    /// </summary>
     public class ChunkMeshingThreadedItem : ThreadedItem
     {
         private readonly Vector3Int _Position;
