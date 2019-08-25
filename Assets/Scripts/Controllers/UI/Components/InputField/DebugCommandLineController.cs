@@ -70,12 +70,15 @@ namespace Controllers.UI.Components.InputField
 
                             Block block = WorldController.Current.GetBlockAtPosition(new Vector3Int(x, y, z));
 
-                            string blockName = block.Id == BlockController.BLOCK_EMPTY_ID ? "Air" : BlockController.Current.GetBlockName(block.Id);
-                            
+                            string blockName = block.Id == BlockController.BLOCK_EMPTY_ID
+                                ? "Air"
+                                : BlockController.Current.GetBlockName(block.Id);
+
                             EventLog.Logger.Log(LogLevel.Info,
                                 $"Request for block at position ({x}, {y}, {z}) returned `{blockName}`.");
                         }
                     }
+
                     break;
             }
         }

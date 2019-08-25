@@ -36,11 +36,10 @@ namespace Threading
             {
                 if (_Blocks[index].Id == BlockController.BLOCK_EMPTY_ID)
                 {
-                    return;
+                    continue;
                 }
 
                 (int x, int y, int z) = Mathv.GetVector3IntIndex(index, Chunk.Size);
-
                 Vector3Int globalPosition = _Position + new Vector3Int(x, y, z);
 
                 if (((z == (Chunk.Size.z - 1)) &&
@@ -240,15 +239,6 @@ namespace Threading
                     }
                 }
 
-                if (y == 32)
-                {
-                    if (z == 3)
-                    {
-                        Block block = WorldController.Current.GetBlockAtPosition(globalPosition + Vector3Int.down);
-                        Block block2 = _Blocks[index - (Chunk.Size.x * Chunk.Size.z)];
-                    }
-                }
-                
                 if (((y == 0) && WorldController.Current.GetBlockAtPosition(globalPosition + Vector3Int.down)
                          .Transparent) ||
                     ((y > 0) && _Blocks[index - (Chunk.Size.x * Chunk.Size.z)].Transparent))

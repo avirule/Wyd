@@ -1,7 +1,6 @@
 #region
 
 using System;
-using System.Diagnostics;
 using Controllers.Entity;
 using Controllers.Game;
 using Controllers.UI.Diagnostics;
@@ -10,9 +9,6 @@ using Logging;
 using NLog;
 using Static;
 using Threading;
-using Threading.Jobs;
-using Unity.Collections;
-using Unity.Jobs;
 using UnityEngine;
 using UnityEngine.Rendering;
 
@@ -22,11 +18,11 @@ namespace Environment.Terrain
 {
     public class Chunk : MonoBehaviour
     {
-        private static ThreadedQueue _meshingQueue = new ThreadedQueue(500);
-        public static Vector3Int Size = new Vector3Int(8, 64, 16);
+        private static readonly SingleThreadedQueue BuildingQueue = new SingleThreadedQueue(200);
+        private static readonly SingleThreadedQueue MeshingQueue = new SingleThreadedQueue(200);
+        public static readonly Vector3Int Size = new Vector3Int(32, 256, 32);
 
-        private Stopwatch _BuildTimer;
-        private Stopwatch _MeshTimer;
+        private object _BuildingIdentity;
         private object _MeshingIdentity;
 
         public Mesh Mesh;
@@ -80,14 +76,15 @@ namespace Environment.Terrain
 
         private void Awake()
         {
-            if (!_meshingQueue.Running)
+            if (!MeshingQueue.Running)
             {
-                _meshingQueue = new ThreadedQueue(500);
-                _meshingQueue.Start();
+                MeshingQueue.Start();
             }
 
-            _BuildTimer = new Stopwatch();
-            _MeshTimer = new Stopwatch();
+            if (!BuildingQueue.Running)
+            {
+                BuildingQueue.Start();
+            }
 
             Blocks = new Block[Size.x * Size.y * Size.z];
             Position = transform.position.ToInt();
@@ -118,13 +115,11 @@ namespace Environment.Terrain
         /// </summary>
         private void OnApplicationQuit()
         {
-            _meshingQueue.Abort();
+            MeshingQueue.Abort();
         }
 
-        private void Build()
+        private object BeginBuildChunk()
         {
-            _BuildTimer.Restart();
-
             Built = false;
             Building = true;
 
@@ -139,37 +134,18 @@ namespace Environment.Terrain
             catch (Exception)
             {
                 Building = false;
-                _BuildTimer.Stop();
-                return;
+                return default;
             }
 
-            if (noiseMap == null)
+            if (noiseMap == default)
             {
                 EventLog.Logger.Log(LogLevel.Error,
                     $"Failed to generate chunk at position ({Position.x}, {Position.z}): failed to get noise map.");
                 Building = false;
-                _BuildTimer.Stop();
-                return;
+                return default;
             }
 
-            ChunkBuilderJob chunkBuilderJob = new ChunkBuilderJob
-            {
-                Blocks = new NativeArray<Block>(Blocks, Allocator.TempJob),
-                NoiseMap = new NativeArray<float>(noiseMap, Allocator.TempJob)
-            };
-            JobHandle builderJobHandle =
-                chunkBuilderJob.Schedule(Blocks.Length, Blocks.Length / System.Environment.ProcessorCount);
-
-            builderJobHandle.Complete();
-
-            Building = false;
-            Built = true;
-
-            chunkBuilderJob.Blocks.CopyTo(Blocks);
-            chunkBuilderJob.Blocks.Dispose();
-
-            _BuildTimer.Stop();
-            DiagnosticsPanelController.ChunkBuildTimes.Enqueue(_BuildTimer.Elapsed.TotalMilliseconds);
+            return BuildingQueue.AddThreadedItem(new ChunkBuildingThreadedItem(ref Blocks, noiseMap));
         }
 
         private object BeginGenerateMesh()
@@ -179,12 +155,10 @@ namespace Environment.Terrain
                 return default;
             }
 
-            _MeshTimer.Restart();
-
             Meshed = PendingMeshAssigment = false;
             Meshing = true;
 
-            return _meshingQueue.AddThreadedItem(new ChunkMeshingThreadedItem(Position, Blocks));
+            return MeshingQueue.AddThreadedItem(new ChunkMeshingThreadedItem(Position, Blocks));
         }
 
         public void Activate(Vector3Int position = default)
@@ -222,24 +196,36 @@ namespace Environment.Terrain
 
         private void GenerationCheckAndStart()
         {
-            if (!Built && !Building)
+            if (!Built)
             {
-                Build();
+                if (Building)
+                {
+                    if (BuildingQueue.TryGetFinishedItem(_BuildingIdentity, out ThreadedItem threadedItem))
+                    {
+                        Building = false;
+                        Built = PendingMeshUpdate = true;
+
+                        DiagnosticsPanelController.ChunkBuildTimes.Enqueue(threadedItem.ExecutionTime);
+                    }
+                }
+                else
+                {
+                    _BuildingIdentity = BeginBuildChunk();
+                }
             }
 
-            if (ChunkController.Current.AllChunksBuilt && PendingMeshUpdate)
+            if (ChunkController.Current.AllChunksBuilt && (PendingMeshUpdate || !Meshed))
             {
                 if (Meshing)
                 {
-                    if (_meshingQueue.TryGetFinishedItem(_MeshingIdentity, out ThreadedItem threadedItem))
+                    if (MeshingQueue.TryGetFinishedItem(_MeshingIdentity, out ThreadedItem threadedItem))
                     {
                         Meshing = PendingMeshUpdate = false;
                         Meshed = PendingMeshAssigment = true;
 
                         Mesh = ((ChunkMeshingThreadedItem) threadedItem).GetMesh();
 
-                        _MeshTimer.Stop();
-                        DiagnosticsPanelController.ChunkMeshTimes.Enqueue(_MeshTimer.Elapsed.TotalMilliseconds);
+                        DiagnosticsPanelController.ChunkMeshTimes.Enqueue(threadedItem.ExecutionTime);
                     }
                 }
                 else

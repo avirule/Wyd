@@ -28,13 +28,14 @@ namespace Controllers.UI.Components.Text
 
         private void CheckSetDebugEventsLogged()
         {
-            if (InGameDebugLogTarget.DebugEntries == default || InGameDebugLogTarget.DebugEntries.Count <= 0)
+            if ((InGameDebugLogTarget.DebugEntries == default) || (InGameDebugLogTarget.DebugEntries.Count <= 0))
             {
                 return;
             }
 
             // .ToList() to capture copy of list in case of threaded access
-            foreach (LogEventInfo logEventInfo in InGameDebugLogTarget.DebugEntries.Skip(InGameDebugLogTarget.DebugEntries.Count - 30))
+            foreach (LogEventInfo logEventInfo in InGameDebugLogTarget.DebugEntries.Skip(
+                InGameDebugLogTarget.DebugEntries.Count - 30))
             {
                 OnEventLogged(this, logEventInfo);
             }

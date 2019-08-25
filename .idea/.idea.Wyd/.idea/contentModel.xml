@@ -112,15 +112,11 @@
             <e p="StaticRandom.cs" t="Include" />
           </e>
           <e p="Threading" t="Include">
+            <e p="ChunkBuildingThreadedItem.cs" t="Include" />
             <e p="ChunkMeshingThreadedItem.cs" t="Include" />
-            <e p="Jobs" t="Include">
-              <e p="ChunkBuilderJob.cs" t="Include" />
-              <e p="NativeContainers" t="Include">
-                <e p="NativeElement.cs" t="Include" />
-              </e>
-            </e>
+            <e p="SingleThreadedQueue.cs" t="Include" />
+            <e p="ThreadedItem.cs" t="Include" />
             <e p="ThreadedProcess.cs" t="Include" />
-            <e p="ThreadedQueue.cs" t="Include" />
           </e>
         </e>
         <e p="TextMesh Pro" t="Include">

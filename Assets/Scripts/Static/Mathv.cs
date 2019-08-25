@@ -1,9 +1,7 @@
 #region
 
 using System;
-using System.Numerics;
 using UnityEngine;
-using Vector3 = UnityEngine.Vector3;
 
 #endregion
 
@@ -114,21 +112,20 @@ namespace Static
 
         public static (int, int, int) GetVector3IntIndex(int index, Vector3Int size3d)
         {
-            if (index >= size3d.Product())    
-            {
-                return (0, 0, 0);
-            }
-
             int xQuotient = Math.DivRem(index, size3d.x, out int x);
             int zQuotient = Math.DivRem(xQuotient, size3d.z, out int z);
             int y = zQuotient % size3d.y;
 
+            if ((y == 32) && (z == 3))
+            {
+            }
+
             return (x, y, z);
         }
 
-        public static int To1D(this Vector3Int a, Vector3Int maxSize)
+        public static int To1D(this Vector3Int a, Vector3Int size3d)
         {
-            return a.x + (maxSize.x * (a.z + (maxSize.z * a.y)));
+            return a.x + (a.z * size3d.x) + (a.y * size3d.x * size3d.z);
         }
 
         #endregion

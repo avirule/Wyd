@@ -9,7 +9,7 @@ using System.Threading;
 
 namespace Threading
 {
-    public class ThreadedQueue : IDisposable
+    public class SingleThreadedQueue : IDisposable
     {
         private readonly Thread _ProcessingThread;
         private readonly BlockingCollection<ThreadedItem> _ProcessQueue;
@@ -22,7 +22,7 @@ namespace Threading
 
         public int MillisecondWaitTimeout;
 
-        public ThreadedQueue(int millisecondWaitTimeout)
+        public SingleThreadedQueue(int millisecondWaitTimeout)
         {
             MillisecondWaitTimeout = millisecondWaitTimeout;
             _ProcessingThread = new Thread(ProcessThreadedItems);
@@ -59,18 +59,19 @@ namespace Threading
                     {
                         continue;
                     }
+
+                    if (threadedItem == default)
+                    {
+                        continue;
+                    }
+
+                    threadedItem.Execute();
                 }
                 catch (OperationCanceledException)
                 {
-                    // abort has been called
+                    return;
                 }
 
-                if (threadedItem == default)
-                {
-                    continue;
-                }
-
-                threadedItem.Execute();
                 _FinishedItems.Add(threadedItem);
             }
 
@@ -126,53 +127,6 @@ namespace Threading
 
             _ProcessQueue?.Dispose();
             Disposed = true;
-        }
-    }
-
-    public abstract class ThreadedItem
-    {
-        private readonly object _Handle;
-        protected bool Done;
-
-        public object Identity { get; internal set; }
-
-        public ThreadedItem()
-        {
-            _Handle = new object();
-            Done = false;
-        }
-
-        public bool IsDone
-        {
-            get
-            {
-                bool tmp;
-
-                lock (_Handle)
-                {
-                    tmp = Done;
-                }
-
-                return tmp;
-            }
-            protected set
-            {
-                lock (_Handle)
-                {
-                    Done = value;
-                }
-            }
-        }
-
-        public virtual void Execute()
-        {
-            Process();
-
-            IsDone = true;
-        }
-
-        protected virtual void Process()
-        {
         }
     }
 }

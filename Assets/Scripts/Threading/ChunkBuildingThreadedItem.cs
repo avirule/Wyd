@@ -3,29 +3,33 @@
 using Controllers.Game;
 using Environment.Terrain;
 using Static;
-using Unity.Collections;
-using Unity.Jobs;
 using UnityEngine;
 
 #endregion
 
-namespace Threading.Jobs
+namespace Threading
 {
-    public struct ChunkBuilderJob : IJobParallelFor
+    public class ChunkBuildingThreadedItem : ThreadedItem
     {
-        [ReadOnly]
-        [DeallocateOnJobCompletion]
-        public NativeArray<float> NoiseMap;
+        public readonly float[] NoiseMap;
+        public readonly Block[] Blocks;
 
-        public NativeArray<Block> Blocks;
-
-        public void Execute(int index)
+        public ChunkBuildingThreadedItem(ref Block[] blocks, float[] noiseMap)
         {
-            //GenerateCheckerBoard(index);
-            GenerateRaisedStripes(index);
-            //GenerateFlat(index);
-            //GenerateFlatStriped(index);
-            //GenerateNormal(index);
+            Blocks = blocks;
+            NoiseMap = noiseMap;
+        }
+
+        protected override void Process()
+        {
+            for (int index = 0; index < Blocks.Length; index++)
+            {
+                //GenerateCheckerBoard(index);
+                //GenerateRaisedStripes(index);
+                //GenerateFlat(index);
+                //GenerateFlatStriped(index);
+                GenerateNormal(index);
+            }
         }
 
         private void GenerateCheckerBoard(int index)
@@ -37,32 +41,30 @@ namespace Threading.Jobs
                 return;
             }
 
-            if (x % 2 == 0)
+            if ((x % 2) == 0)
             {
-                if (z % 2 == 0)
+                if ((z % 2) == 0)
                 {
                     Blocks[index] = new Block(BlockController.Current.GetBlockId("Stone"));
                 }
                 else
                 {
                     Blocks[index] = new Block(BlockController.Current.GetBlockId("Dirt"));
-
                 }
             }
             else
             {
-                if (z % 2 == 0)
+                if ((z % 2) == 0)
                 {
                     Blocks[index] = new Block(BlockController.Current.GetBlockId("Dirt"));
                 }
                 else
                 {
                     Blocks[index] = new Block(BlockController.Current.GetBlockId("Stone"));
-
                 }
             }
         }
-        
+
         private void GenerateRaisedStripes(int index)
         {
             (int x, int y, int z) = Mathv.GetVector3IntIndex(index, Chunk.Size);
@@ -78,7 +80,7 @@ namespace Threading.Jobs
             {
                 Blocks[index] = new Block(BlockController.Current.GetBlockId("Grass"));
             }
-            else if (y != halfSize)
+            else if (y < halfSize)
             {
                 Blocks[index] = new Block(BlockController.Current.GetBlockId("Stone"));
             }

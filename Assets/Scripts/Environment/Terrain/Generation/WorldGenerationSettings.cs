@@ -8,7 +8,6 @@ namespace Environment.Terrain.Generation
 {
     public class WorldGenerationSettings : MonoBehaviour
     {
-        public Vector3Int ChunkSize;
         public float Lacunarity;
         public int Octaves;
         public float Persistence;
@@ -20,7 +19,6 @@ namespace Environment.Terrain.Generation
 
         private void Awake()
         {
-            Chunk.Size = ChunkSize;
             Seed = new WorldSeed(SeedString);
         }
     }

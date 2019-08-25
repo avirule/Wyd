@@ -133,7 +133,8 @@ namespace Controllers.Game
 
             if (!_Blocks.Keys.Contains(blockId))
             {
-                EventLog.Logger.Log(LogLevel.Warn, $"Failed to return block name for block id `{blockId}`: block does not exist.");
+                EventLog.Logger.Log(LogLevel.Warn,
+                    $"Failed to return block name for block id `{blockId}`: block does not exist.");
                 return "Null";
             }
 

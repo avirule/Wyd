@@ -29,7 +29,7 @@ namespace Controllers.Game
 
     public class OptionsController : MonoBehaviour
     {
-        private static string configPath;
+        private static string _configPath;
 
         public static OptionsController Current;
 
@@ -40,6 +40,7 @@ namespace Controllers.Game
         public int MaximumChunkLoadTimeBufferSize;
         public int MaximumFrameRateBufferSize;
         public int MaximumInternalFrames;
+        public float MaximumInternalFrameTime;
 
         public int VSyncLevel
         {
@@ -61,7 +62,7 @@ namespace Controllers.Game
                 Current = this;
             }
 
-            configPath = $@"{Application.persistentDataPath}\config.ini";
+            _configPath = $@"{Application.persistentDataPath}\config.ini";
         }
 
         private void Start()
@@ -71,9 +72,9 @@ namespace Controllers.Game
 
         private void LoadConfig()
         {
-            _Configuration = !File.Exists(configPath)
+            _Configuration = !File.Exists(_configPath)
                 ? InitialiseDefaultConfig()
-                : Configuration.LoadFromFile(configPath);
+                : Configuration.LoadFromFile(_configPath);
 
             // Graphics
             if (!GetSetting("Graphics", nameof(MaximumInternalFrames), out MaximumInternalFrames) ||
@@ -84,6 +85,8 @@ namespace Controllers.Game
                     $"Error loading setting {nameof(MaximumInternalFrames)}.");
                 MaximumInternalFrames = 15;
             }
+
+            MaximumInternalFrameTime = 1f / MaximumInternalFrames;
 
             if (!GetSetting("Graphics", nameof(MaximumFrameRateBufferSize), out MaximumFrameRateBufferSize) ||
                 (MaximumFrameRateBufferSize < 0) ||
@@ -202,9 +205,9 @@ namespace Controllers.Game
 
             EventLog.Logger.Log(LogLevel.Info, "Default configuration initialized. Saving...");
 
-            _Configuration.SaveToFile(configPath);
+            _Configuration.SaveToFile(_configPath);
 
-            EventLog.Logger.Log(LogLevel.Info, $"Configuration file saved at: {configPath}");
+            EventLog.Logger.Log(LogLevel.Info, $"Configuration file saved at: {_configPath}");
 
             return _Configuration;
         }

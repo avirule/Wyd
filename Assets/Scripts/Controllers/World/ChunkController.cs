@@ -19,15 +19,15 @@ namespace Controllers.World
 
         private Stopwatch _FrameTimeLimiter;
         private Chunk _ChunkObject;
-        private List<Chunk> _Chunks;
+        private Dictionary<Vector3Int, Chunk> _Chunks;
         private Queue<Chunk> _CachedChunks;
         private Queue<Chunk> _DeactivationQueue;
 
         public Queue<Vector3Int> BuildChunkQueue;
         public int ActiveChunksCount => _Chunks.Count;
         public int CachedChunksCount => _CachedChunks.Count;
-        public bool AllChunksBuilt => _Chunks.All(chunk => chunk.Built);
-        public bool AllChunksMeshed => _Chunks.All(chunk => chunk.Meshed);
+        public bool AllChunksBuilt => _Chunks.Values.All(chunk => chunk.Built);
+        public bool AllChunksMeshed => _Chunks.Values.All(chunk => chunk.Meshed);
 
         private void Awake()
         {
@@ -45,7 +45,7 @@ namespace Controllers.World
             _DeactivationQueue = new Queue<Chunk>();
             _FrameTimeLimiter = new Stopwatch();
 
-            _Chunks = new List<Chunk>();
+            _Chunks = new Dictionary<Vector3Int, Chunk>();
             BuildChunkQueue = new Queue<Vector3Int>();
         }
 
@@ -56,6 +56,14 @@ namespace Controllers.World
 
         private void Update()
         {
+            if (Input.GetKey(KeyCode.R))
+            {
+                foreach (Chunk chunk in _Chunks.Values)
+                {
+                    chunk.PendingMeshUpdate = true;
+                }
+            }
+
             _FrameTimeLimiter.Restart();
 
             if (BuildChunkQueue.Count > 0)
@@ -77,6 +85,21 @@ namespace Controllers.World
             }
 
             _FrameTimeLimiter.Stop();
+        }
+
+        private void AddChunk(Chunk chunk)
+        {
+            _Chunks.Add(chunk.Position, chunk);
+        }
+
+        private void RemoveChunk(Chunk chunk)
+        {
+            if (!_Chunks.ContainsKey(chunk.Position))
+            {
+                return;
+            }
+
+            _Chunks.Remove(chunk.Position);
         }
 
         #region CHUNK BUILDING
@@ -104,12 +127,12 @@ namespace Controllers.World
                     chunk = Instantiate(_ChunkObject, position, Quaternion.identity, transform);
                 }
 
-                _Chunks.Add(chunk);
+                AddChunk(chunk);
 
                 // ensures that neighbours update their meshes to cull newly out of sight faces
                 FlagNeighborsPendingUpdate(chunk.Position);
 
-                if (_FrameTimeLimiter.Elapsed.TotalSeconds > OptionsController.Current.MaximumInternalFrames)
+                if (_FrameTimeLimiter.Elapsed.TotalSeconds > OptionsController.Current.MaximumInternalFrameTime)
                 {
                     break;
                 }
@@ -162,9 +185,9 @@ namespace Controllers.World
 
         private void MarkOutOfBoundsChunksForDeactivation(object sender, Vector3Int chunkPosition)
         {
-            for (int i = _Chunks.Count - 1; i >= 0; i--)
+            foreach (Chunk chunk in _Chunks.Values)
             {
-                Vector3Int difference = (_Chunks[i].Position - chunkPosition).Abs();
+                Vector3Int difference = (chunk.Position - chunkPosition).Abs();
 
                 if ((difference.x <= ((WorldController.Current.WorldGenerationSettings.Radius + 1) * Chunk.Size.x)) &&
                     (difference.z <= ((WorldController.Current.WorldGenerationSettings.Radius + 1) * Chunk.Size.z)))
@@ -172,7 +195,7 @@ namespace Controllers.World
                     continue;
                 }
 
-                _DeactivationQueue.Enqueue(_Chunks[i]);
+                _DeactivationQueue.Enqueue(chunk);
             }
         }
 
@@ -183,7 +206,7 @@ namespace Controllers.World
                 Chunk chunk = _DeactivationQueue.Dequeue();
                 DeactivateChunk(chunk);
 
-                if (_FrameTimeLimiter.Elapsed.TotalSeconds > OptionsController.Current.MaximumInternalFrames)
+                if (_FrameTimeLimiter.Elapsed.TotalSeconds > OptionsController.Current.MaximumInternalFrameTime)
                 {
                     break;
                 }
@@ -193,7 +216,7 @@ namespace Controllers.World
         private void DeactivateChunk(Chunk chunk)
         {
             _CachedChunks.Enqueue(chunk);
-            _Chunks.Remove(chunk);
+            RemoveChunk(chunk);
             FlagNeighborsPendingUpdate(chunk.Position);
             chunk.Deactivate();
         }
@@ -213,7 +236,7 @@ namespace Controllers.World
 
                 // continue culling if the amount of cached chunks is greater than the maximum
                 if ((_FrameTimeLimiter.Elapsed.TotalSeconds >
-                     OptionsController.Current.MaximumInternalFrames) &&
+                     OptionsController.Current.MaximumInternalFrameTime) &&
                     (OptionsController.Current.ChunkCacheCullingAggression == CacheCullingAggression.Passive))
                 {
                     return;
@@ -228,41 +251,13 @@ namespace Controllers.World
 
         public bool CheckChunkExistsAtPosition(Vector3Int position)
         {
-            // reverse for loop to avoid collection modified from thread errors
-            for (int i = _Chunks.Count - 1; i >= 0; i--)
-            {
-                if ((_Chunks.Count <= i) || (_Chunks[i] == default))
-                {
-                    continue;
-                }
-
-                if (_Chunks[i].Position == position)
-                {
-                    return true;
-                }
-            }
-
-            return false;
+            return _Chunks.ContainsKey(position);
         }
 
         // todo this function needs to be made thread-safe
         public Chunk GetChunkAtPosition(Vector3Int position)
         {
-            // reverse for loop to avoid collection modified from thread errors
-            for (int i = _Chunks.Count - 1; i >= 0; i--)
-            {
-                if ((_Chunks.Count <= i) || (_Chunks[i] == default))
-                {
-                    continue;
-                }
-
-                if (_Chunks[i].Position == position)
-                {
-                    return _Chunks[i];
-                }
-            }
-
-            return default;
+            return _Chunks.ContainsKey(position) ? _Chunks[position] : default;
         }
 
         public Block GetBlockAtPosition(Vector3Int position)
