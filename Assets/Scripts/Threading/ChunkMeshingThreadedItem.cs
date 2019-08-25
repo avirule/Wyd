@@ -37,12 +37,12 @@ namespace Threading
         {
             for (int index = 0; index < _Blocks.Length; index++)
             {
-                (int x, int y, int z) = Mathv.GetVector3IntIndex(index, Chunk.Size);
-
                 if (_Blocks[index].Id == BlockController.BLOCK_EMPTY_ID)
                 {
                     return;
                 }
+
+                (int x, int y, int z) = Mathv.GetVector3IntIndex(index, Chunk.Size);
 
                 Vector3Int globalPosition = _Position + new Vector3Int(x, y, z);
 

@@ -6,12 +6,7 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="c75ae2de-3a89-4228-87f5-5925302b6d96" name="Default Changelist" comment="">
-      <change beforePath="$PROJECT_DIR$/.idea/.idea.Wyd/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/.idea.Wyd/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Assets/Scenes/Game.unity" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/Scenes/Game.unity" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Assets/Scripts/Controllers/Game/BlockController.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/Scripts/Controllers/Game/BlockController.cs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Assets/Scripts/Static/Mathv.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/Scripts/Static/Mathv.cs" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/Assets/Scripts/Threading/ChunkMeshingThreadedItem.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/Scripts/Threading/ChunkMeshingThreadedItem.cs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Assets/Scripts/Threading/Jobs/ChunkBuilderJob.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/Scripts/Threading/Jobs/ChunkBuilderJob.cs" afterDir="false" />
     </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
     <option name="SHOW_DIALOG" value="false" />
@@ -154,12 +149,12 @@
         <option value="$PROJECT_DIR$/Assets/Scripts/Logging/Targets/InGameDebugLogTarget.cs" />
         <option value="$PROJECT_DIR$/Assets/Scripts/Logging/EventLog.cs" />
         <option value="$PROJECT_DIR$/Assets/Scripts/Controllers/UI/Components/Text/DebugLogTextController.cs" />
-        <option value="$PROJECT_DIR$/Assets/Scripts/Threading/ChunkMeshingThreadedItem.cs" />
         <option value="$PROJECT_DIR$/Library/PackageCache/com.unity.textmeshpro@2.0.1/Scripts/Runtime/TMP_InputField.cs" />
         <option value="$PROJECT_DIR$/Assets/Scripts/Controllers/Game/BlockController.cs" />
         <option value="$PROJECT_DIR$/Assets/Scripts/Controllers/UI/Components/InputField/DebugCommandLineController.cs" />
         <option value="$PROJECT_DIR$/Assets/Scripts/Threading/Jobs/ChunkBuilderJob.cs" />
         <option value="$PROJECT_DIR$/Assets/Scripts/Static/Mathv.cs" />
+        <option value="$PROJECT_DIR$/Assets/Scripts/Threading/ChunkMeshingThreadedItem.cs" />
       </list>
     </option>
   </component>
@@ -284,7 +279,7 @@
       <workItem from="1566561563373" duration="7550000" />
       <workItem from="1566668586396" duration="3586000" />
       <workItem from="1566672309178" duration="1802000" />
-      <workItem from="1566761166552" duration="367000" />
+      <workItem from="1566761166552" duration="625000" />
     </task>
     <servers />
   </component>
