@@ -9,13 +9,13 @@ using System.Threading;
 
 namespace Threading
 {
-    public class SingleThreadedQueue : IDisposable
+    public class SingleThreadedQueue : IThreadedQueue
     {
-        private readonly Thread _ProcessingThread;
-        private readonly BlockingCollection<ThreadedItem> _ProcessQueue;
-        private readonly List<ThreadedItem> _FinishedItems;
-        private readonly CancellationTokenSource _AbortTokenSource;
-        private CancellationToken _AbortToken;
+        protected readonly Thread ProcessingThread;
+        protected readonly BlockingCollection<ThreadedItem> ProcessQueue;
+        protected readonly ConcurrentDictionary<object, ThreadedItem> ProcessedItems;
+        protected readonly CancellationTokenSource AbortTokenSource;
+        protected CancellationToken AbortToken;
 
         public bool Disposed { get; private set; }
         public bool Running { get; private set; }
@@ -25,37 +25,35 @@ namespace Threading
         public SingleThreadedQueue(int millisecondWaitTimeout)
         {
             MillisecondWaitTimeout = millisecondWaitTimeout;
-            _ProcessingThread = new Thread(ProcessThreadedItems);
-            _ProcessQueue = new BlockingCollection<ThreadedItem>();
-            _FinishedItems = new List<ThreadedItem>();
-            _AbortTokenSource = new CancellationTokenSource();
-            _AbortToken = _AbortTokenSource.Token;
+            ProcessingThread = new Thread(ProcessThreadedItems);
+            ProcessQueue = new BlockingCollection<ThreadedItem>();
+            ProcessedItems = new ConcurrentDictionary<object, ThreadedItem>();
+            AbortTokenSource = new CancellationTokenSource();
+            AbortToken = AbortTokenSource.Token;
 
             Running = false;
         }
 
-        public void Start()
+        public virtual void Start()
         {
-            _ProcessingThread.Start();
+            ProcessingThread.Start();
             Running = true;
         }
 
-        public void Abort()
+        public virtual void Abort()
         {
-            _AbortTokenSource.Cancel();
+            AbortTokenSource.Cancel();
             MillisecondWaitTimeout = 0;
             Running = false;
         }
 
-        private void ProcessThreadedItems()
+        protected virtual void ProcessThreadedItems()
         {
-            while (!_AbortToken.IsCancellationRequested)
+            while (!AbortToken.IsCancellationRequested)
             {
-                ThreadedItem threadedItem = default;
-
                 try
                 {
-                    if (!_ProcessQueue.TryTake(out threadedItem, MillisecondWaitTimeout, _AbortToken))
+                    if (!ProcessQueue.TryTake(out ThreadedItem threadedItem, MillisecondWaitTimeout, AbortToken))
                     {
                         continue;
                     }
@@ -65,17 +63,22 @@ namespace Threading
                         continue;
                     }
 
-                    threadedItem.Execute();
+                    ProcessThreadedItem(threadedItem);
                 }
                 catch (OperationCanceledException)
                 {
                     return;
                 }
-
-                _FinishedItems.Add(threadedItem);
             }
 
             Dispose();
+        }
+
+        protected virtual void ProcessThreadedItem(ThreadedItem threadedItem)
+        {
+            threadedItem.Execute();
+            
+            ProcessedItems.TryAdd(threadedItem.Identity, threadedItem);
         }
 
         /// <summary>
@@ -83,7 +86,7 @@ namespace Threading
         /// </summary>
         /// <param name="threadedItem"></param>
         /// <returns>unique object identity</returns>
-        public object AddThreadedItem(ThreadedItem threadedItem)
+        public virtual object AddThreadedItem(ThreadedItem threadedItem)
         {
             if (!Running)
             {
@@ -92,30 +95,21 @@ namespace Threading
 
             string guid = Guid.NewGuid().ToString();
             threadedItem.Identity = guid;
-            _ProcessQueue.Add(threadedItem, _AbortToken);
+            ProcessQueue.Add(threadedItem, AbortToken);
 
             return guid;
         }
 
-        public bool TryGetFinishedItem(object identity, out ThreadedItem threadedItem)
+        public virtual bool TryGetFinishedItem(object identity, out ThreadedItem threadedItem)
         {
-            for (int i = _FinishedItems.Count - 1; i >= 0; i--)
+            if (!ProcessedItems.ContainsKey(identity))
             {
-                if ((i >= _FinishedItems.Count) ||
-                    (_FinishedItems[i] == default) ||
-                    (_FinishedItems[i].Identity != identity) ||
-                    !_FinishedItems[i].IsDone)
-                {
-                    continue;
-                }
-
-                threadedItem = _FinishedItems[i];
-                _FinishedItems.RemoveAt(i);
-                return true;
+                threadedItem = default;
+                return false;
             }
 
-            threadedItem = default;
-            return false;
+            ProcessedItems.TryRemove(identity, out threadedItem);
+            return true;
         }
 
         public void Dispose()
@@ -125,7 +119,7 @@ namespace Threading
                 return;
             }
 
-            _ProcessQueue?.Dispose();
+            ProcessQueue?.Dispose();
             Disposed = true;
         }
     }

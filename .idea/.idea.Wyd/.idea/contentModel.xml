@@ -114,6 +114,8 @@
           <e p="Threading" t="Include">
             <e p="ChunkBuildingThreadedItem.cs" t="Include" />
             <e p="ChunkMeshingThreadedItem.cs" t="Include" />
+            <e p="IThreadedQueue.cs" t="Include" />
+            <e p="MultiThreadedQueue.cs" t="Include" />
             <e p="SingleThreadedQueue.cs" t="Include" />
             <e p="ThreadedItem.cs" t="Include" />
             <e p="ThreadedProcess.cs" t="Include" />

@@ -18,8 +18,8 @@ namespace Environment.Terrain
 {
     public class Chunk : MonoBehaviour
     {
-        private static readonly SingleThreadedQueue BuildingQueue = new SingleThreadedQueue(200);
-        private static readonly SingleThreadedQueue MeshingQueue = new SingleThreadedQueue(200);
+        private static readonly MultiThreadedQueue BuildingQueue = new MultiThreadedQueue(200);
+        private static readonly MultiThreadedQueue MeshingQueue = new MultiThreadedQueue(200);
         public static readonly Vector3Int Size = new Vector3Int(32, 256, 32);
 
         private object _BuildingIdentity;
