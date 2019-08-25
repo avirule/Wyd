@@ -10,7 +10,15 @@ namespace Static
     public static class Mathv
     {
         #region Vector3
-        
+
+        /// <summary>
+        ///     Casts all <see cref="System.Single" /> of given <see cref="UnityEngine.Vector3" /> to <see cref="System.Int32" />.
+        /// </summary>
+        /// <param name="a">Given <see cref="UnityEngine.Vector3" />.</param>
+        /// <returns>
+        ///     <see cref="UnityEngine.Vector3Int" /> of <see cref="System.Int32" /> casted values from given
+        ///     <see cref="UnityEngine.Vector3" />.
+        /// </returns>
         public static Vector3Int ToInt(this Vector3 a)
         {
             return new Vector3Int((int) a.x, (int) a.y, (int) a.z);
