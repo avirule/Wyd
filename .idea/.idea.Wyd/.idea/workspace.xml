@@ -6,23 +6,8 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="c75ae2de-3a89-4228-87f5-5925302b6d96" name="Default Changelist" comment="">
-      <change beforePath="$PROJECT_DIR$/.idea/.idea.Wyd/.idea/contentModel.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/.idea.Wyd/.idea/contentModel.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/.idea.Wyd/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/.idea.Wyd/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Assets/Scripts/Environment/Terrain/Chunk.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/Scripts/Environment/Terrain/Chunk.cs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Assets/Scripts/Noise/OpenSimplex/OpenSimplexNoiseGenerator.cs" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Assets/Scripts/Noise/OpenSimplex/OpenSimplexNoiseGenerator.cs.meta" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Assets/Scripts/Noise/Perlin/PerlinNoise.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/Scripts/Noise/Perlin/PerlinNoise.cs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Assets/Scripts/Noise/Perlin/PerlinNoiseGenerator.cs" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Assets/Scripts/Noise/Perlin/PerlinNoiseGenerator.cs.meta" beforeDir="false" />
       <change beforePath="$PROJECT_DIR$/Assets/Scripts/Static/Mathv.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/Scripts/Static/Mathv.cs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Assets/Scripts/Threading/ChunkBuildingThreadedItem.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/Scripts/Threading/ChunkBuildingThreadedItem.cs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Assets/Scripts/Threading/ChunkMeshingThreadedItem.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/Scripts/Threading/ChunkMeshingThreadedItem.cs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Assets/Scripts/Threading/IThreadedQueue.cs" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Assets/Scripts/Threading/IThreadedQueue.cs.meta" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Assets/Scripts/Threading/MultiThreadedQueue.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/Scripts/Threading/MultiThreadedQueue.cs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Assets/Scripts/Threading/SingleThreadedQueue.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/Scripts/Threading/SingleThreadedQueue.cs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Assets/Scripts/Threading/ThreadedProcess.cs" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Assets/Scripts/Threading/ThreadedProcess.cs.meta" beforeDir="false" />
     </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
     <option name="SHOW_DIALOG" value="false" />
@@ -297,7 +282,7 @@
       <workItem from="1566561563373" duration="7550000" />
       <workItem from="1566668586396" duration="3586000" />
       <workItem from="1566672309178" duration="1802000" />
-      <workItem from="1566761166552" duration="12737000" />
+      <workItem from="1566761166552" duration="13662000" />
     </task>
     <servers />
   </component>
