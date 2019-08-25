@@ -243,6 +243,15 @@ namespace Threading
                     }
                 }
 
+                if (y == 32)
+                {
+                    if (z == 3)
+                    {
+                        Block block = WorldController.Current.GetBlockAtPosition(globalPosition + Vector3Int.down);
+                        Block block2 = _Blocks[index - (Chunk.Size.x * Chunk.Size.z)];
+                    }
+                }
+                
                 if (((y == 0) && WorldController.Current.GetBlockAtPosition(globalPosition + Vector3Int.down)
                          .Transparent) ||
                     ((y > 0) && _Blocks[index - (Chunk.Size.x * Chunk.Size.z)].Transparent))

@@ -65,7 +65,7 @@ namespace Controllers.Game
                 _BlockNameIds.Add(blockName, blockId);
             }
 
-            EventLog.Logger.Log(LogLevel.Warn,
+            EventLog.Logger.Log(LogLevel.Info,
                 $"Successfully added block `{blockName}` with id `{blockId}`.");
 
             return true;

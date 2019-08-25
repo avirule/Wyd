@@ -21,13 +21,49 @@ namespace Threading.Jobs
 
         public void Execute(int index)
         {
-            GenerateRaisedStripe(index);
+            //GenerateCheckerBoard(index);
+            GenerateRaisedStripes(index);
             //GenerateFlat(index);
-            //GenerateStripedSingleLayer(index);
+            //GenerateFlatStriped(index);
             //GenerateNormal(index);
         }
 
-        private void GenerateRaisedStripe(int index)
+        private void GenerateCheckerBoard(int index)
+        {
+            (int x, int y, int z) = Mathv.GetVector3IntIndex(index, Chunk.Size);
+
+            if (y != 0)
+            {
+                return;
+            }
+
+            if (x % 2 == 0)
+            {
+                if (z % 2 == 0)
+                {
+                    Blocks[index] = new Block(BlockController.Current.GetBlockId("Stone"));
+                }
+                else
+                {
+                    Blocks[index] = new Block(BlockController.Current.GetBlockId("Dirt"));
+
+                }
+            }
+            else
+            {
+                if (z % 2 == 0)
+                {
+                    Blocks[index] = new Block(BlockController.Current.GetBlockId("Dirt"));
+                }
+                else
+                {
+                    Blocks[index] = new Block(BlockController.Current.GetBlockId("Stone"));
+
+                }
+            }
+        }
+        
+        private void GenerateRaisedStripes(int index)
         {
             (int x, int y, int z) = Mathv.GetVector3IntIndex(index, Chunk.Size);
 
@@ -69,7 +105,7 @@ namespace Threading.Jobs
             }
         }
 
-        private void GenerateStripedSingleLayer(int index)
+        private void GenerateFlatStriped(int index)
         {
             (int x, int y, int z) = Mathv.GetVector3IntIndex(index, Chunk.Size);
 
