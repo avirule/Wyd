@@ -21,6 +21,11 @@ namespace Threading
         private readonly List<Vector3> _Vertices;
         private readonly List<Vector2> _UVs;
 
+        /// <summary>
+        ///     Initialises a new instance of the <see cref="Threading.ChunkMeshingThreadedItem" /> class.
+        /// </summary>
+        /// <param name="position"><see cref="UnityEngine.Vector3Int" /> position of chunk being meshed.</param>
+        /// <param name="blocks">Pre-initialized and built <see cref="T:Block[]" /> to iterate through.</param>
         public ChunkMeshingThreadedItem(Vector3Int position, Block[] blocks)
         {
             _Position = position;
@@ -280,14 +285,22 @@ namespace Threading
             }
         }
 
-        public Mesh GetMesh()
+        /// <summary>
+        ///     Applies and returns processed <see cref="UnityEngine.Mesh" />.
+        /// </summary>
+        /// <param name="mesh">Given <see cref="UnityEngine.Mesh" /> to apply processed data to.</param>
+        /// <returns>Processed <see cref="UnityEngine.Mesh" />.</returns>
+        public Mesh GetMesh(ref Mesh mesh)
         {
-            Mesh mesh = new Mesh();
-
             if ((_Vertices.Count == 0) ||
                 (_Triangles.Count == 0))
             {
                 return mesh;
+            }
+
+            if (mesh == default)
+            {
+                mesh = new Mesh();
             }
 
             if (_Vertices.Count > 65000)

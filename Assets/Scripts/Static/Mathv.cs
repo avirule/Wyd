@@ -37,6 +37,11 @@ namespace Static
                    (point.z <= bounds.max.z);
         }
 
+        /// <summary>
+        ///     Returns absolute value of given <see cref="UnityEngine.Vector3Int"/>.
+        /// </summary>
+        /// <param name="a">Given <see cref="UnityEngine.Vector3Int"/>.</param>
+        /// <returns>Absolute value of given <see cref="UnityEngine.Vector3Int"/>.</returns>
         public static Vector3 Abs(this Vector3 a)
         {
             a.x = Mathf.Abs(a.x);
@@ -46,6 +51,12 @@ namespace Static
             return a;
         }
 
+        /// <summary>
+        ///     Multiplies two <see cref="UnityEngine.Vector3Int"/>.
+        /// </summary>
+        /// <param name="a">Given <see cref="UnityEngine.Vector3Int"/>.</param>
+        /// <param name="b"><see cref="UnityEngine.Vector3Int"/> to multiply with.</param>
+        /// <returns>Product of the two <see cref="UnityEngine.Vector3Int"/>.</returns>
         public static Vector3 Multiply(this Vector3 a, Vector3 b)
         {
             a.x *= b.x;
@@ -55,6 +66,12 @@ namespace Static
             return a;
         }
 
+        /// <summary>
+        ///     Returns quotient of two <see cref="UnityEngine.Vector3Int"/>.
+        /// </summary>
+        /// <param name="a">Given <see cref="UnityEngine.Vector3Int"/>.</param>
+        /// <param name="b"><see cref="UnityEngine.Vector3Int"/> to divide with.</param>
+        /// <returns>Quotient of the two <see cref="UnityEngine.Vector3Int"/>.</returns>
         public static Vector3 Divide(this Vector3 a, Vector3 b)
         {
             a.x /= b.x;
@@ -64,6 +81,12 @@ namespace Static
             return a;
         }
 
+        /// <summary>
+        ///     Returns <see cref="UnityEngine.Vector3Int"/> of division remainders.
+        /// </summary>
+        /// <param name="a">Given <see cref="UnityEngine.Vector3Int"/>.</param>
+        /// <param name="mod"><see cref="UnityEngine.Vector3Int"/> to use as mod.</param>
+        /// <returns><see cref="UnityEngine.Vector3Int"/> of division remainders.</returns>
         public static Vector3 Mod(this Vector3 a, Vector3 mod)
         {
             a.x %= mod.x;

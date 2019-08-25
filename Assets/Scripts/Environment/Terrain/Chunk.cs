@@ -110,11 +110,10 @@ namespace Environment.Terrain
             }
         }
 
-        /// <summary>
-        ///     Deallocate and destroy ALL NativeCollection / disposable objects
-        /// </summary>
         private void OnApplicationQuit()
         {
+            // Deallocate and destroy ALL NativeCollection / disposable objects
+            BuildingQueue.Abort();
             MeshingQueue.Abort();
         }
 
@@ -223,7 +222,7 @@ namespace Environment.Terrain
                         Meshing = PendingMeshUpdate = false;
                         Meshed = PendingMeshAssigment = true;
 
-                        Mesh = ((ChunkMeshingThreadedItem) threadedItem).GetMesh();
+                        ((ChunkMeshingThreadedItem) threadedItem).GetMesh(ref Mesh);
 
                         DiagnosticsPanelController.ChunkMeshTimes.Enqueue(threadedItem.ExecutionTime);
                     }

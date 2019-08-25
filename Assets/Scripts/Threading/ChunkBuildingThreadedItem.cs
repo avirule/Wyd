@@ -11,18 +11,23 @@ namespace Threading
 {
     public class ChunkBuildingThreadedItem : ThreadedItem
     {
-        public readonly float[] NoiseMap;
-        public readonly Block[] Blocks;
+        private readonly float[] _NoiseMap;
+        private readonly Block[] _Blocks;
 
+        /// <summary>
+        ///     Initialises a new instance of the <see cref="Threading.ChunkBuildingThreadedItem" /> class.
+        /// </summary>
+        /// <param name="blocks">Pre-initialized <see cref="T:Block[]" /> of blocks to iterate through.</param>
+        /// <param name="noiseMap">Pre-initialized <see cref="T:float[][]" /> of noise values.</param>
         public ChunkBuildingThreadedItem(ref Block[] blocks, float[] noiseMap)
         {
-            Blocks = blocks;
-            NoiseMap = noiseMap;
+            _Blocks = blocks;
+            _NoiseMap = noiseMap;
         }
 
         protected override void Process()
         {
-            for (int index = 0; index < Blocks.Length; index++)
+            for (int index = 0; index < _Blocks.Length; index++)
             {
                 //GenerateCheckerBoard(index);
                 //GenerateRaisedStripes(index);
@@ -45,22 +50,22 @@ namespace Threading
             {
                 if ((z % 2) == 0)
                 {
-                    Blocks[index] = new Block(BlockController.Current.GetBlockId("Stone"));
+                    _Blocks[index] = new Block(BlockController.Current.GetBlockId("Stone"));
                 }
                 else
                 {
-                    Blocks[index] = new Block(BlockController.Current.GetBlockId("Dirt"));
+                    _Blocks[index] = new Block(BlockController.Current.GetBlockId("Dirt"));
                 }
             }
             else
             {
                 if ((z % 2) == 0)
                 {
-                    Blocks[index] = new Block(BlockController.Current.GetBlockId("Dirt"));
+                    _Blocks[index] = new Block(BlockController.Current.GetBlockId("Dirt"));
                 }
                 else
                 {
-                    Blocks[index] = new Block(BlockController.Current.GetBlockId("Stone"));
+                    _Blocks[index] = new Block(BlockController.Current.GetBlockId("Stone"));
                 }
             }
         }
@@ -78,11 +83,11 @@ namespace Threading
 
             if (((y == halfSize) && ((x % 2) == 0)) || ((y == (halfSize - 1)) && ((x % 2) != 0)))
             {
-                Blocks[index] = new Block(BlockController.Current.GetBlockId("Grass"));
+                _Blocks[index] = new Block(BlockController.Current.GetBlockId("Grass"));
             }
             else if (y < halfSize)
             {
-                Blocks[index] = new Block(BlockController.Current.GetBlockId("Stone"));
+                _Blocks[index] = new Block(BlockController.Current.GetBlockId("Stone"));
             }
         }
 
@@ -99,11 +104,11 @@ namespace Threading
 
             if (y == halfSize)
             {
-                Blocks[index] = new Block(BlockController.Current.GetBlockId("Grass"));
+                _Blocks[index] = new Block(BlockController.Current.GetBlockId("Grass"));
             }
             else
             {
-                Blocks[index] = new Block(BlockController.Current.GetBlockId("Stone"));
+                _Blocks[index] = new Block(BlockController.Current.GetBlockId("Stone"));
             }
         }
 
@@ -118,11 +123,11 @@ namespace Threading
 
             if ((x % 2) == 0)
             {
-                Blocks[index] = new Block(BlockController.Current.GetBlockId("Stone"));
+                _Blocks[index] = new Block(BlockController.Current.GetBlockId("Stone"));
             }
             else
             {
-                Blocks[index] = new Block(BlockController.Current.GetBlockId("Dirt"));
+                _Blocks[index] = new Block(BlockController.Current.GetBlockId("Dirt"));
             }
         }
 
@@ -132,7 +137,7 @@ namespace Threading
 
             int noiseIndex = x + (Chunk.Size.x * z);
 
-            float noiseHeight = NoiseMap[noiseIndex];
+            float noiseHeight = _NoiseMap[noiseIndex];
 
             int perlinValue = Mathf.RoundToInt(noiseHeight * Chunk.Size.y);
 
@@ -143,15 +148,15 @@ namespace Threading
 
             if ((y == perlinValue) || (y == (Chunk.Size.y - 1)))
             {
-                Blocks[index] = new Block(BlockController.Current.GetBlockId("Grass"));
+                _Blocks[index] = new Block(BlockController.Current.GetBlockId("Grass"));
             }
             else if ((y < perlinValue) && (y > (perlinValue - 5)))
             {
-                Blocks[index] = new Block(BlockController.Current.GetBlockId("Dirt"));
+                _Blocks[index] = new Block(BlockController.Current.GetBlockId("Dirt"));
             }
             else if (y <= (perlinValue - 5))
             {
-                Blocks[index] = new Block(BlockController.Current.GetBlockId("Stone"));
+                _Blocks[index] = new Block(BlockController.Current.GetBlockId("Stone"));
             }
         }
     }

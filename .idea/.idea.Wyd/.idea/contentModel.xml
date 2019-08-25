@@ -98,11 +98,9 @@
             <e p="NoiseMap.cs" t="Include" />
             <e p="OpenSimplex" t="Include">
               <e p="OpenSimplex.cs" t="Include" />
-              <e p="OpenSimplexNoiseGenerator.cs" t="Include" />
             </e>
             <e p="Perlin" t="Include">
               <e p="PerlinNoise.cs" t="Include" />
-              <e p="PerlinNoiseGenerator.cs" t="Include" />
             </e>
           </e>
           <e p="Static" t="Include">
@@ -114,11 +112,9 @@
           <e p="Threading" t="Include">
             <e p="ChunkBuildingThreadedItem.cs" t="Include" />
             <e p="ChunkMeshingThreadedItem.cs" t="Include" />
-            <e p="IThreadedQueue.cs" t="Include" />
             <e p="MultiThreadedQueue.cs" t="Include" />
             <e p="SingleThreadedQueue.cs" t="Include" />
             <e p="ThreadedItem.cs" t="Include" />
-            <e p="ThreadedProcess.cs" t="Include" />
           </e>
         </e>
         <e p="TextMesh Pro" t="Include">

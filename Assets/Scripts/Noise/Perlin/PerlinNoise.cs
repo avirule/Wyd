@@ -32,7 +32,7 @@ namespace Noise.Perlin
         /// <param name="persistence">Value between 0 and 1</param>
         /// <param name="lacunarity">Value grater than 1</param>
         /// <param name="normalize"></param>
-        /// <returns></returns>
+        /// <returns>2D jagged array representing XZ noise values.</returns>
         public static float[][] GenerateMap(Vector3 offset, WorldSeed seed, Vector3 size, int octaves,
             float scale, float persistence, float lacunarity, bool normalize = false)
         {
