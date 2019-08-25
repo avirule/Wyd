@@ -105,9 +105,7 @@
           </e>
           <e p="Static" t="Include">
             <e p="Mathv.cs" t="Include" />
-            <e p="StaticMath.cs" t="Include" />
             <e p="StaticMethods.cs" t="Include" />
-            <e p="StaticRandom.cs" t="Include" />
           </e>
           <e p="Threading" t="Include">
             <e p="ChunkBuildingThreadedItem.cs" t="Include" />

@@ -10,6 +10,11 @@ namespace Static
     public static class Mathv
     {
         #region Vector3
+        
+        public static Vector3Int ToInt(this Vector3 a)
+        {
+            return new Vector3Int((int) a.x, (int) a.y, (int) a.z);
+        }
 
         public static bool GreaterThanVector3(Vector3 a, Vector3 b)
         {
