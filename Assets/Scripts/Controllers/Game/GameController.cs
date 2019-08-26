@@ -2,8 +2,8 @@
 
 using System;
 using Controllers.World;
-using Environment;
-using Environment.Terrain;
+using Game;
+using Game.Terrain;
 using NLog;
 using UnityEditor;
 using UnityEngine;
@@ -74,7 +74,7 @@ namespace Controllers.Game
 //                        string westCheck = worldController.GetBlockAtPosition(position + new Vector3Int(-1, -1, 0));
 //
 //                        return westCheck.Equals("Grass") ? "Grass" : "Grass_Side";
-                    
+
                     case Direction.North:
                     case Direction.East:
                     case Direction.South:

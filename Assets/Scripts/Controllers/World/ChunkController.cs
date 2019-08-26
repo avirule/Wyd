@@ -5,7 +5,7 @@ using System.Diagnostics;
 using System.Linq;
 using Controllers.Entity;
 using Controllers.Game;
-using Environment.Terrain;
+using Game.Terrain;
 using Static;
 using UnityEngine;
 
@@ -26,8 +26,8 @@ namespace Controllers.World
         public Queue<Vector3Int> BuildChunkQueue;
         public int ActiveChunksCount => _Chunks.Count;
         public int CachedChunksCount => _CachedChunks.Count;
-        public bool AllChunksBuilt => _Chunks.Values.All(chunk => chunk.Built);
-        public bool AllChunksMeshed => _Chunks.Values.All(chunk => chunk.Meshed);
+        public bool AllChunksBuilt => _Chunks.All(kvp => kvp.Value.Built);
+        public bool AllChunksMeshed => _Chunks.All(kvp => kvp.Value.Meshed);
 
         private void Awake()
         {
@@ -40,7 +40,7 @@ namespace Controllers.World
                 Current = this;
             }
 
-            _ChunkObject = Resources.Load<Chunk>(@"Environment\Terrain\Chunk");
+            _ChunkObject = Resources.Load<Chunk>(@"Terrain\Chunk");
             _CachedChunks = new Queue<Chunk>();
             _DeactivationQueue = new Queue<Chunk>();
             _FrameTimeLimiter = new Stopwatch();
@@ -58,9 +58,9 @@ namespace Controllers.World
         {
             if (Input.GetKey(KeyCode.R))
             {
-                foreach (Chunk chunk in _Chunks.Values)
+                foreach (KeyValuePair<Vector3Int, Chunk> kvp in _Chunks)
                 {
-                    chunk.PendingMeshUpdate = true;
+                    kvp.Value.PendingMeshUpdate = true;
                 }
             }
 
@@ -185,9 +185,9 @@ namespace Controllers.World
 
         private void MarkOutOfBoundsChunksForDeactivation(object sender, Vector3Int chunkPosition)
         {
-            foreach (Chunk chunk in _Chunks.Values)
+            foreach (KeyValuePair<Vector3Int, Chunk> kvp in _Chunks)
             {
-                Vector3Int difference = (chunk.Position - chunkPosition).Abs();
+                Vector3Int difference = (kvp.Value.Position - chunkPosition).Abs();
 
                 if ((difference.x <= ((WorldController.Current.WorldGenerationSettings.Radius + 1) * Chunk.Size.x)) &&
                     (difference.z <= ((WorldController.Current.WorldGenerationSettings.Radius + 1) * Chunk.Size.z)))
@@ -195,7 +195,7 @@ namespace Controllers.World
                     continue;
                 }
 
-                _DeactivationQueue.Enqueue(chunk);
+                _DeactivationQueue.Enqueue(kvp.Value);
             }
         }
 

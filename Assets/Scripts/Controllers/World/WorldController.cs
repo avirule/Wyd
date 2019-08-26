@@ -1,10 +1,14 @@
 #region
 
 using System;
+using System.Collections.Generic;
+using System.Threading;
 using Controllers.Entity;
 using Controllers.Game;
-using Environment.Terrain;
-using Environment.Terrain.Generation;
+using Game;
+using Game.Entity;
+using Game.Terrain;
+using Game.Terrain.Generation;
 using Logging;
 using NLog;
 using Noise;
@@ -20,13 +24,11 @@ namespace Controllers.World
     {
         public static WorldController Current;
 
+        private GameObject _EntityToken;
+        private List<GameObject> _EntityTokens;
+
         public long InitialTick;
-
-        /// <summary>
-        ///     This is referenced OFTEN in SYNCHRONOUS CONTEXT. DO NOT USE IN ASYNCHRONOUS CONTEXTS.
-        /// </summary>
         public TimeSpan WorldTickRate;
-
         public float TicksPerSecond;
         public WorldGenerationSettings WorldGenerationSettings;
         public ChunkController ChunkController;
@@ -56,12 +58,16 @@ namespace Controllers.World
                 return;
             }
 
+            _EntityToken = Resources.Load<GameObject>(@"Entities\EntityToken");
+            
             WorldTickRate = TimeSpan.FromSeconds(1d / TicksPerSecond);
 
             NoiseMap = new NoiseMap(null, Vector3Int.zero,
                 new Vector3Int((WorldGenerationSettings.Diameter + 1) * Chunk.Size.x, 0,
                     (WorldGenerationSettings.Diameter + 1) * Chunk.Size.z));
 
+            _EntityTokens = new List<GameObject>();
+            
             InitialTick = DateTime.Now.Ticks;
         }
 
@@ -69,7 +75,7 @@ namespace Controllers.World
         {
             PlayerController.Current.ChunkChanged += UpdateChunkLoadArea;
         }
-
+        
         public static Vector3 GetWorldChunkOriginFromGlobalPosition(Vector3 globalPosition)
         {
             return globalPosition.Divide(Chunk.Size).Floor().Multiply(Chunk.Size);
@@ -81,7 +87,21 @@ namespace Controllers.World
         }
 
 
-        #region ON UPDATE()
+        #region ENTITY MANAGMENT
+
+        public void RegisterEntity(Transform parent)
+        {
+            GameObject entityToken = Instantiate(_EntityToken, transform);
+            entityToken.GetComponent<EntityTransformToken>().ParentEntityTransform = parent;
+            
+            _EntityTokens.Add(entityToken);
+        }
+
+        #endregion
+        
+        
+        
+        #region ON EVENT
 
         private void UpdateChunkLoadArea(object sender, Vector3Int chunkPosition)
         {

@@ -42,6 +42,11 @@ namespace Controllers.Entity
             CurrentChunk = new Vector3Int(int.MaxValue, 0, int.MaxValue);
         }
 
+        private void Start()
+        {
+            WorldController.Current.RegisterEntity(transform);
+        }
+
         private void FixedUpdate()
         {
             CalculateRotation();

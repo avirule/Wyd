@@ -6,7 +6,7 @@ using Controllers.Game;
 
 #endregion
 
-namespace Environment.Terrain
+namespace Game.Terrain
 {
     public struct Block
     {

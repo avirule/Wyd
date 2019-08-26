@@ -1,4 +1,4 @@
-namespace Environment
+namespace Game
 {
     /// <summary>
     ///     6-way cardinal directions in byte values.

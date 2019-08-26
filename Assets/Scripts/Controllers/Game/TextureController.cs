@@ -36,7 +36,7 @@ namespace Controllers.Game
 
         private void ProcessSprites()
         {
-            Sprite[] terrainSprites = Resources.LoadAll<Sprite>(@"Environment\Terrain\");
+            Sprite[] terrainSprites = Resources.LoadAll<Sprite>(@"Terrain\");
 
             foreach (Sprite sprite in terrainSprites)
             {

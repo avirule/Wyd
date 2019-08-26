@@ -4,7 +4,7 @@ using UnityEngine;
 
 #endregion
 
-namespace Environment.Terrain.Generation
+namespace Game.Terrain.Generation
 {
     public class WorldGenerationSettings : MonoBehaviour
     {

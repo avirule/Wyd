@@ -75,8 +75,11 @@
               <e p="WorldController.cs" t="Include" />
             </e>
           </e>
-          <e p="Environment" t="Include">
+          <e p="Game" t="Include">
             <e p="Direction.cs" t="Include" />
+            <e p="Entity" t="Include">
+              <e p="EntityTransformToken.cs" t="Include" />
+            </e>
             <e p="Terrain" t="Include">
               <e p="Block.cs" t="Include" />
               <e p="BlockRule.cs" t="Include" />

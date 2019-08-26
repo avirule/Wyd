@@ -1,6 +1,6 @@
 #region
 
-using Environment.Terrain.Generation;
+using Game.Terrain.Generation;
 using UnityEngine;
 
 #endregion

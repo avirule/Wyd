@@ -1,6 +1,6 @@
 #region
 
-using Environment.Terrain.Generation;
+using Game.Terrain.Generation;
 using Logging;
 using NLog;
 using Noise.Perlin;
@@ -20,9 +20,9 @@ namespace Noise
         /// <summary>
         ///     Initialises a new instance of the <see cref="Noise.NoiseMap" /> class.
         /// </summary>
-        /// <param name="map"><see cref="T:float[][]"/> map of noise heights.</param>
-        /// <param name="center"><see cref="UnityEngine.Vector3Int"/> center position of the map.</param>
-        /// <param name="size"><see cref="UnityEngine.Vector3Int"/> size of the section, using X and Z.</param>
+        /// <param name="map"><see cref="T:float[][]" /> map of noise heights.</param>
+        /// <param name="center"><see cref="UnityEngine.Vector3Int" /> center position of the map.</param>
+        /// <param name="size"><see cref="UnityEngine.Vector3Int" /> size of the section, using X and Z.</param>
         public NoiseMap(float[][] map, Vector3Int center, Vector3Int size)
         {
             Map = map;
@@ -34,9 +34,9 @@ namespace Noise
         /// <summary>
         ///     Generates or regenerates a noise map and adjusts map bounds.
         /// </summary>
-        /// <param name="offset"><see cref="UnityEngine.Vector3Int"/> center offset from (X0, Z0).</param>
-        /// <param name="size"><see cref="UnityEngine.Vector3Int"/> size of noise map using X and Z values.</param>
-        /// <param name="worldGenerationSettings"><see cref="Environment.Terrain.Generation.WorldGenerationSettings"/> to use.</param>
+        /// <param name="offset"><see cref="UnityEngine.Vector3Int" /> center offset from (X0, Z0).</param>
+        /// <param name="size"><see cref="UnityEngine.Vector3Int" /> size of noise map using X and Z values.</param>
+        /// <param name="worldGenerationSettings"><see cref="WorldGenerationSettings" /> to use.</param>
         public void Generate(Vector3Int offset, Vector3Int size, WorldGenerationSettings worldGenerationSettings)
         {
             Ready = false;
@@ -53,11 +53,14 @@ namespace Noise
         }
 
         /// <summary>
-        ///     Get a <see cref="T:float[][]"/> section of the current noise map.
+        ///     Get a <see cref="T:float[][]" /> section of the current noise map.
         /// </summary>
-        /// <param name="position"><see cref="UnityEngine.Vector3Int"/> center of the section.</param>
-        /// <param name="size"><see cref="UnityEngine.Vector3Int"/> size of the section, using X and Z.</param>
-        /// <returns><see cref="T:float[][]"/> section of the current noise map, centered around given <see cref="UnityEngine.Vector3Int"/> position.</returns>
+        /// <param name="position"><see cref="UnityEngine.Vector3Int" /> center of the section.</param>
+        /// <param name="size"><see cref="UnityEngine.Vector3Int" /> size of the section, using X and Z.</param>
+        /// <returns>
+        ///     <see cref="T:float[][]" /> section of the current noise map, centered around given
+        ///     <see cref="UnityEngine.Vector3Int" /> position.
+        /// </returns>
         public float[] GetSection(Vector3Int position, Vector3Int size)
         {
             if (!Mathv.ContainsVector3Int(Bounds, position))

@@ -34,6 +34,8 @@ namespace Threading
         /// </param>
         public SingleThreadedQueue(int millisecondWaitTimeout)
         {
+            // todo add variable that decides whether to use single-threaded or multi-threaded execution
+            
             MillisecondWaitTimeout = millisecondWaitTimeout;
             ProcessingThread = new Thread(ProcessThreadedItems);
             ProcessQueue = new BlockingCollection<ThreadedItem>();

@@ -1,7 +1,7 @@
 #region
 
 using Controllers.Game;
-using Environment.Terrain;
+using Game.Terrain;
 using Static;
 using UnityEngine;
 
@@ -19,7 +19,7 @@ namespace Threading
         /// </summary>
         /// <param name="blocks">Pre-initialized <see cref="T:Block[]" /> of blocks to iterate through.</param>
         /// <param name="noiseMap">Pre-initialized <see cref="T:float[][]" /> of noise values.</param>
-        /// <seealso cref="Threading.ChunkMeshingThreadedItem"/>
+        /// <seealso cref="Threading.ChunkMeshingThreadedItem" />
         public ChunkBuildingThreadedItem(ref Block[] blocks, float[] noiseMap)
         {
             _Blocks = blocks;

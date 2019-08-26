@@ -4,7 +4,7 @@ using UnityEngine;
 
 #endregion
 
-namespace Environment.Terrain
+namespace Game.Terrain
 {
     public delegate string RuleEvaluation(Vector3Int position, Direction direction);
 

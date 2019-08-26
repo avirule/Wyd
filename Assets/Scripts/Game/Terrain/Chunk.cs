@@ -14,16 +14,18 @@ using UnityEngine.Rendering;
 
 #endregion
 
-namespace Environment.Terrain
+namespace Game.Terrain
 {
     public class Chunk : MonoBehaviour
     {
         private static readonly MultiThreadedQueue BuildingQueue = new MultiThreadedQueue(200);
         private static readonly MultiThreadedQueue MeshingQueue = new MultiThreadedQueue(200);
-        public static readonly Vector3Int Size = new Vector3Int(8, 32, 8);
+        public static readonly Vector3Int Size = new Vector3Int(16, 256, 16);
 
         private object _BuildingIdentity;
         private object _MeshingIdentity;
+        private Camera _MainCamera;
+        private Matrix4x4 _WorldMatrix;
 
         public Mesh Mesh;
         public Block[] Blocks;
@@ -32,45 +34,10 @@ namespace Environment.Terrain
         public bool Meshed;
         public bool Meshing;
         public bool PendingMeshUpdate;
-        public bool PendingMeshAssigment;
-        public MeshFilter MeshFilter;
-        public MeshRenderer MeshRenderer;
-        public MeshCollider MeshCollider;
+        public Material BlocksMaterial;
         public Vector3Int Position;
 
-        private bool _DrawShadows;
-
-        public bool DrawShadows
-        {
-            get => _DrawShadows;
-            set
-            {
-                if (_DrawShadows == value)
-                {
-                    return;
-                }
-
-                _DrawShadows = value;
-                UpdateDrawShadows();
-            }
-        }
-
-        private bool _ExpensiveMeshing;
-
-        public bool ExpensiveMeshing
-        {
-            get => _ExpensiveMeshing;
-            set
-            {
-                if (_ExpensiveMeshing == value)
-                {
-                    return;
-                }
-
-                _ExpensiveMeshing = value;
-                UpdateExpensiveMeshing();
-            }
-        }
+        public bool DrawShadows;
 
         public bool Active => gameObject.activeSelf;
 
@@ -86,9 +53,12 @@ namespace Environment.Terrain
                 BuildingQueue.Start();
             }
 
+            _MainCamera = Camera.main;
+            _WorldMatrix = transform.localToWorldMatrix;
+
             Blocks = new Block[Size.x * Size.y * Size.z];
             Position = transform.position.ToInt();
-            Built = Building = Meshed = Meshing = PendingMeshAssigment = false;
+            Built = Building = Meshed = Meshing = false;
             PendingMeshUpdate = true;
             double waitTime = TimeSpan
                 .FromTicks((DateTime.Now.Ticks - WorldController.Current.InitialTick) %
@@ -104,10 +74,12 @@ namespace Environment.Terrain
 
         private void LateUpdate()
         {
-            if (!ExpensiveMeshing)
+            if (!Built || !Meshed || Meshing)
             {
-                Graphics.DrawMesh(Mesh, transform.localToWorldMatrix, MeshRenderer.material, 0);
+                return;
             }
+            
+            Graphics.DrawMesh(Mesh, _WorldMatrix, BlocksMaterial, 0, _MainCamera, 0, null, ShadowCastingMode.On, DrawShadows);
         }
 
         private void OnApplicationQuit()
@@ -154,7 +126,7 @@ namespace Environment.Terrain
                 return default;
             }
 
-            Meshed = PendingMeshAssigment = false;
+            Meshed = PendingMeshUpdate = false;
             Meshing = true;
 
             return MeshingQueue.AddThreadedItem(new ChunkMeshingThreadedItem(Position, Blocks));
@@ -163,6 +135,7 @@ namespace Environment.Terrain
         public void Activate(Vector3Int position = default)
         {
             transform.position = position;
+            _WorldMatrix = transform.localToWorldMatrix;
             Position = position;
             PendingMeshUpdate = true;
             gameObject.SetActive(true);
@@ -173,11 +146,6 @@ namespace Environment.Terrain
             if (Mesh != default)
             {
                 Mesh.Clear();
-            }
-
-            if (MeshFilter.mesh != default)
-            {
-                MeshFilter.mesh.Clear();
             }
 
             gameObject.SetActive(false);
@@ -195,65 +163,38 @@ namespace Environment.Terrain
 
         private void GenerationCheckAndStart()
         {
-            if (!Built)
+            if (Building)
             {
-                if (Building)
+                if (BuildingQueue.TryGetFinishedItem(_BuildingIdentity, out ThreadedItem threadedItem))
                 {
-                    if (BuildingQueue.TryGetFinishedItem(_BuildingIdentity, out ThreadedItem threadedItem))
-                    {
-                        Building = false;
-                        Built = PendingMeshUpdate = true;
+                    Building = false;
+                    Built = PendingMeshUpdate = true;
 
-                        DiagnosticsPanelController.ChunkBuildTimes.Enqueue(threadedItem.ExecutionTime);
-                    }
-                }
-                else
-                {
-                    _BuildingIdentity = BeginBuildChunk();
+                    DiagnosticsPanelController.ChunkBuildTimes.Enqueue(threadedItem.ExecutionTime);
                 }
             }
-
-            if (ChunkController.Current.AllChunksBuilt && (PendingMeshUpdate || !Meshed))
+            else if (!Built && !Building)
             {
-                if (Meshing)
-                {
-                    if (MeshingQueue.TryGetFinishedItem(_MeshingIdentity, out ThreadedItem threadedItem))
-                    {
-                        Meshing = PendingMeshUpdate = false;
-                        Meshed = PendingMeshAssigment = true;
+                _BuildingIdentity = BeginBuildChunk();
+            }
 
-                        ((ChunkMeshingThreadedItem) threadedItem).GetMesh(ref Mesh);
-
-                        DiagnosticsPanelController.ChunkMeshTimes.Enqueue(threadedItem.ExecutionTime);
-                    }
-                }
-                else
+            if (Meshing)
+            {
+                if (MeshingQueue.TryGetFinishedItem(_MeshingIdentity, out ThreadedItem threadedItem))
                 {
-                    _MeshingIdentity = BeginGenerateMesh();
+                    Meshing = false;
+                    Meshed = true;
+
+                    ((ChunkMeshingThreadedItem) threadedItem).GetMesh(ref Mesh);
+
+                    DiagnosticsPanelController.ChunkMeshTimes.Enqueue(threadedItem.ExecutionTime);
                 }
             }
-
-            if (ExpensiveMeshing && PendingMeshAssigment && Meshed)
+            else if ((PendingMeshUpdate || !Meshed) && ChunkController.Current.AllChunksBuilt)
             {
-                AssignMesh();
-            }
-        }
-
-        private void AssignMesh()
-        {
-            if (!Built || !Meshed)
-            {
-                return;
+                _MeshingIdentity = BeginGenerateMesh();
             }
 
-            MeshFilter.mesh = Mesh;
-
-            if (MeshCollider != default)
-            {
-                MeshCollider.sharedMesh = MeshFilter.sharedMesh;
-            }
-
-            PendingMeshAssigment = false;
         }
 
         private void CheckUpdateInternalSettings(object sender, Vector3Int chunkPosition)
@@ -261,33 +202,13 @@ namespace Environment.Terrain
             // chunk player is in should always be expensive / shadowed
             if (Position == chunkPosition)
             {
-                DrawShadows = ExpensiveMeshing = true;
+                DrawShadows = true;
             }
             else
             {
                 Vector3Int difference = (Position - chunkPosition).Abs();
 
                 DrawShadows = CheckDrawShadows(difference);
-                ExpensiveMeshing = CheckExpensiveMeshing(difference);
-            }
-        }
-
-        private void UpdateDrawShadows()
-        {
-            MeshRenderer.receiveShadows = DrawShadows;
-            MeshRenderer.shadowCastingMode = DrawShadows ? ShadowCastingMode.On : ShadowCastingMode.Off;
-        }
-
-        private void UpdateExpensiveMeshing()
-        {
-            if (MeshRenderer != default)
-            {
-                MeshRenderer.enabled = ExpensiveMeshing;
-            }
-
-            if (MeshCollider != default)
-            {
-                MeshCollider.enabled = ExpensiveMeshing;
             }
         }
 
@@ -296,13 +217,6 @@ namespace Environment.Terrain
             return (OptionsController.Current.ShadowDistance == 0) ||
                    ((difference.x <= (OptionsController.Current.ShadowDistance * Size.x)) &&
                     (difference.z <= (OptionsController.Current.ShadowDistance * Size.z)));
-        }
-
-        private static bool CheckExpensiveMeshing(Vector3Int difference)
-        {
-            return (OptionsController.Current.ExpensiveMeshingDistance == 0) ||
-                   ((difference.x <= (OptionsController.Current.ExpensiveMeshingDistance * Size.x)) &&
-                    (difference.z <= (OptionsController.Current.ExpensiveMeshingDistance * Size.z)));
         }
     }
 }

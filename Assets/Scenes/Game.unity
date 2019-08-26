@@ -842,8 +842,8 @@ RectTransform:
   m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children:
-  - {fileID: 1533226759}
   - {fileID: 1587796637}
+  - {fileID: 1533226759}
   m_Father: {fileID: 1072965580}
   m_RootOrder: 1
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
@@ -2218,6 +2218,24 @@ RectTransform:
   m_AnchoredPosition: {x: 0, y: 0}
   m_SizeDelta: {x: 0, y: 0}
   m_Pivot: {x: 0, y: 0}
+--- !u!1 &1106197718 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 4875240116026537858, guid: cb9769d8e16028046a4d9027b565d1b7,
+    type: 3}
+  m_PrefabInstance: {fileID: 844596955}
+  m_PrefabAsset: {fileID: 0}
+--- !u!114 &1106197720
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1106197718}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 888d0c398f8c4eecabad8e31322fa9d4, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
 --- !u!1 &1213066525 stripped
 GameObject:
   m_CorrespondingSourceObject: {fileID: 204954971320578263, guid: 522502ab0fcea204c846d784c30e0957,
@@ -2668,7 +2686,7 @@ GameObject:
   m_TagString: WorldController
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
-  m_StaticEditorFlags: 4294967295
+  m_StaticEditorFlags: 0
   m_IsActive: 1
 --- !u!114 &1461272635
 MonoBehaviour:
@@ -2715,7 +2733,7 @@ MonoBehaviour:
   Lacunarity: 2
   Octaves: 16
   Persistence: 0.5
-  Radius: 1
+  Radius: 2
   Scale: 512
   SeedString: genericseed
 --- !u!114 &1461272641
@@ -2761,7 +2779,7 @@ RectTransform:
   m_Children:
   - {fileID: 950791510}
   m_Father: {fileID: 565965943}
-  m_RootOrder: 0
+  m_RootOrder: 1
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
   m_AnchorMax: {x: 1, y: 1}
@@ -2839,7 +2857,7 @@ RectTransform:
   - {fileID: 462984197}
   - {fileID: 1708095225}
   m_Father: {fileID: 565965943}
-  m_RootOrder: 1
+  m_RootOrder: 0
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
   m_AnchorMax: {x: 1, y: 1}
@@ -3557,7 +3575,7 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 2134891953}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 35, z: 0}
+  m_LocalPosition: {x: 0, y: 260, z: 0}
   m_LocalScale: {x: 1, y: 2, z: 1}
   m_Children:
   - {fileID: 963194228}

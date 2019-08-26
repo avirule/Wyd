@@ -2,7 +2,7 @@
 
 using Controllers.Game;
 using Controllers.World;
-using Environment.Terrain;
+using Game.Terrain;
 using Logging;
 using NLog;
 using TMPro;

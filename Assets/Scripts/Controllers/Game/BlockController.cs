@@ -3,8 +3,8 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using Environment;
-using Environment.Terrain;
+using Game;
+using Game.Terrain;
 using Logging;
 using NLog;
 using UnityEngine;
@@ -22,8 +22,6 @@ namespace Controllers.Game
         private Dictionary<string, ushort> _BlockNameIds;
         private Dictionary<ushort, IBlockRule> _Blocks;
         public TextureController TextureController;
-
-        public Dictionary<ushort, IBlockRule>.KeyCollection RegisteredBlocks => _Blocks.Keys;
 
         private void Awake()
         {
@@ -46,7 +44,7 @@ namespace Controllers.Game
 
             try
             {
-                blockId = RegisteredBlocks.Count == 0 ? (ushort) 1 : Convert.ToUInt16(RegisteredBlocks.Max() + 1);
+                blockId = _Blocks.Count == 0 ? (ushort) 1 : Convert.ToUInt16(_Blocks.Max(kvp => kvp.Key) + 1);
             }
             catch (OverflowException)
             {
@@ -131,7 +129,7 @@ namespace Controllers.Game
                 return "Air";
             }
 
-            if (!_Blocks.Keys.Contains(blockId))
+            if (!_Blocks.ContainsKey(blockId))
             {
                 EventLog.Logger.Log(LogLevel.Warn,
                     $"Failed to return block name for block id `{blockId}`: block does not exist.");

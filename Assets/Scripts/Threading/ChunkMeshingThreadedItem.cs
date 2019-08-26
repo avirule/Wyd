@@ -3,8 +3,8 @@
 using System.Collections.Generic;
 using Controllers.Game;
 using Controllers.World;
-using Environment;
-using Environment.Terrain;
+using Game;
+using Game.Terrain;
 using Static;
 using UnityEngine;
 using UnityEngine.Rendering;
