@@ -6,15 +6,15 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="c75ae2de-3a89-4228-87f5-5925302b6d96" name="Default Changelist" comment="">
-      <change beforePath="$PROJECT_DIR$/.idea/.idea.Wyd/.idea/contentModel.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/.idea.Wyd/.idea/contentModel.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/.idea.Wyd/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/.idea.Wyd/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Assets/Scenes/Game.unity" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/Scenes/Game.unity" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/Assets/Scripts/Controllers/Game/GameController.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/Scripts/Controllers/Game/GameController.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Assets/Scripts/Controllers/Game/OptionsController.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/Scripts/Controllers/Game/OptionsController.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Assets/Scripts/Controllers/UI/Components/Text/FPSTextController.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/Scripts/Controllers/UI/Components/Text/FPSTextController.cs" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/Assets/Scripts/Environment/Direction.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/Scripts/Environment/Direction.cs" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/Assets/Scripts/Environment/Terrain/Block.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/Scripts/Environment/Terrain/Block.cs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Assets/Scripts/Noise/NoiseMap.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/Scripts/Noise/NoiseMap.cs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Assets/Scripts/Threading/ChunkBuildingThreadedItem.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/Scripts/Threading/ChunkBuildingThreadedItem.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Assets/Scripts/Environment/Terrain/Chunk.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/Scripts/Environment/Terrain/Chunk.cs" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/Assets/Scripts/Threading/ChunkMeshingThreadedItem.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/Scripts/Threading/ChunkMeshingThreadedItem.cs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Assets/Scripts/Threading/ThreadedItem.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/Scripts/Threading/ThreadedItem.cs" afterDir="false" />
     </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
     <option name="SHOW_DIALOG" value="false" />
@@ -133,7 +133,6 @@
         <option value="$PROJECT_DIR$/Assets/Scripts/Controllers/UI/Components/Button/VSyncLevelButtonController.cs" />
         <option value="$PROJECT_DIR$/Assets/Scripts/Controllers/UI/Components/Button/ExitButtonController.cs" />
         <option value="$PROJECT_DIR$/Assets/Scripts/Controllers/UI/Components/Button/QuitMainMenuButtonController.cs" />
-        <option value="$PROJECT_DIR$/Assets/Scripts/Controllers/UI/Components/Text/FPSTextController.cs" />
         <option value="$PROJECT_DIR$/Assets/Scripts/Controllers/UI/Components/Text/DebugLogText.cs" />
         <option value="$PROJECT_DIR$/Assets/Scripts/Logging/Targets/InGameDebugLogTarget.cs" />
         <option value="$PROJECT_DIR$/Assets/Scripts/Logging/EventLog.cs" />
@@ -141,7 +140,6 @@
         <option value="$PROJECT_DIR$/Assets/Scripts/Controllers/Game/BlockController.cs" />
         <option value="$PROJECT_DIR$/Library/PackageCache/com.unity.textmeshpro@2.0.1/Scripts/Runtime/TMP_InputField.cs" />
         <option value="$PROJECT_DIR$/Assets/Scripts/Controllers/UI/Components/InputField/DebugCommandLineController.cs" />
-        <option value="$PROJECT_DIR$/Assets/Scripts/Controllers/Game/OptionsController.cs" />
         <option value="$PROJECT_DIR$/Assets/Scripts/Threading/ThreadedQueue.cs" />
         <option value="$PROJECT_DIR$/Assets/Scripts/Environment/Terrain/Generation/WorldGenerationSettings.cs" />
         <option value="$PROJECT_DIR$/Assets/Scripts/Controllers/World/WorldController.cs" />
@@ -151,17 +149,19 @@
         <option value="$PROJECT_DIR$/Assets/Scripts/Threading/IThreadedQueue.cs" />
         <option value="$PROJECT_DIR$/Assets/Scripts/Threading/SingleThreadedQueue.cs" />
         <option value="$PROJECT_DIR$/Assets/Scripts/Threading/MultiThreadedQueue.cs" />
-        <option value="$PROJECT_DIR$/Assets/Scripts/Environment/Terrain/Chunk.cs" />
         <option value="$PROJECT_DIR$/Assets/Scripts/Static/StaticMath.cs" />
         <option value="$PROJECT_DIR$/Assets/Scripts/Static/StaticMethods.cs" />
         <option value="$PROJECT_DIR$/Assets/Scripts/Static/Mathv.cs" />
         <option value="$PROJECT_DIR$/Assets/Scripts/Noise/NoiseMap.cs" />
-        <option value="$PROJECT_DIR$/Assets/Scripts/Threading/ChunkMeshingThreadedItem.cs" />
         <option value="$PROJECT_DIR$/Assets/Scripts/Threading/ChunkBuildingThreadedItem.cs" />
         <option value="$PROJECT_DIR$/Assets/Scripts/Threading/ThreadedItem.cs" />
-        <option value="$PROJECT_DIR$/Assets/Scripts/Environment/Direction.cs" />
-        <option value="$PROJECT_DIR$/Assets/Scripts/Environment/Terrain/Block.cs" />
+        <option value="$PROJECT_DIR$/Assets/Scripts/Environment/Terrain/Chunk.cs" />
         <option value="$PROJECT_DIR$/Assets/Scripts/Controllers/Game/GameController.cs" />
+        <option value="$PROJECT_DIR$/Assets/Scripts/Environment/Terrain/Block.cs" />
+        <option value="$PROJECT_DIR$/Assets/Scripts/Threading/ChunkMeshingThreadedItem.cs" />
+        <option value="$PROJECT_DIR$/Assets/Scripts/Controllers/Game/OptionsController.cs" />
+        <option value="$PROJECT_DIR$/Assets/Scripts/Controllers/UI/Components/Text/FPSTextController.cs" />
+        <option value="$PROJECT_DIR$/Assets/Scripts/Environment/Direction.cs" />
       </list>
     </option>
   </component>
@@ -286,7 +286,7 @@
       <workItem from="1566561563373" duration="7550000" />
       <workItem from="1566668586396" duration="3586000" />
       <workItem from="1566672309178" duration="1802000" />
-      <workItem from="1566761166552" duration="14940000" />
+      <workItem from="1566761166552" duration="17301000" />
     </task>
     <servers />
   </component>

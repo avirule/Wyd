@@ -8,31 +8,31 @@ namespace Environment
         /// <summary>
         ///     Positive on Z axis
         /// </summary>
-        North = 0,
+        North = 0b00000001,
 
         /// <summary>
         ///     Positive on X axis
         /// </summary>
-        East = 2,
+        East = 0b00000010,
 
         /// <summary>
         ///     Negative on Z axis
         /// </summary>
-        South = 4,
+        South = 0b00000100,
 
         /// <summary>
         ///     Negative on X axis
         /// </summary>
-        West = 8,
+        West = 0b00001000,
 
         /// <summary>
         ///     Positive on Y axis
         /// </summary>
-        Up = 16,
+        Up = 0b00010000,
 
         /// <summary>
         ///     Negative on Y axis
         /// </summary>
-        Down = 32
+        Down = 0b00100000
     }
 }

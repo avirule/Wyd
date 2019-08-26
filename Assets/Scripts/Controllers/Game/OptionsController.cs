@@ -193,7 +193,7 @@ namespace Controllers.Game
             _Configuration["Chunking"][nameof(MaximumChunkCacheSize)].IntValue = 30;
 
             _Configuration["Chunking"][nameof(ChunkCacheCullingAggression)].PreComment =
-                "Active culling keeps the total cache size below maximum, passive lets it grow until there's time to cull it.";
+                "Active culling keeps the total cache size below maximum, passive lets it grow until there's free frame time to cull it.";
             _Configuration["Chunking"][nameof(ChunkCacheCullingAggression)].Comment =
                 "0 = Passive, 1 = Active";
             _Configuration["Chunking"][nameof(ChunkCacheCullingAggression)].IntValue = 1;

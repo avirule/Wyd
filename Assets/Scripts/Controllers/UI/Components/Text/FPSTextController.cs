@@ -15,15 +15,14 @@ namespace Controllers.UI.Components.Text
 {
     public class FPSTextController : MonoBehaviour
     {
-        private const double _LOCAL_FRAME_INTERVAL = 1f / 15f;
         private Stopwatch _LocalFrameStopwatch;
-        private List<double> _DeltaTimes;
+        private List<float> _DeltaTimes;
         private TextMeshProUGUI _FPSText;
 
         private void Awake()
         {
             _LocalFrameStopwatch = new Stopwatch();
-            _DeltaTimes = new List<double>();
+            _DeltaTimes = new List<float>();
             _FPSText = GetComponent<TextMeshProUGUI>();
         }
 
@@ -34,11 +33,6 @@ namespace Controllers.UI.Components.Text
 
         private void Update()
         {
-            if (_LocalFrameStopwatch.Elapsed.TotalSeconds < WorldController.Current.WorldTickRate.TotalSeconds)
-            {
-                return;
-            }
-
             _LocalFrameStopwatch.Restart();
 
             UpdateDeltaTimes();
@@ -51,14 +45,14 @@ namespace Controllers.UI.Components.Text
                 return;
             }
 
-            double averageDelaTime = Math.Round(_DeltaTimes.Average(), 4);
+            double averageDelaTime = Math.Round(1f / _DeltaTimes.Average(), 4);
 
             _FPSText.text = $"FPS: {averageDelaTime}";
         }
 
         private void UpdateDeltaTimes()
         {
-            _DeltaTimes.Add(1d / Time.deltaTime);
+            _DeltaTimes.Add(Time.deltaTime);
 
             if (_DeltaTimes.Count > OptionsController.Current.MaximumFrameRateBufferSize)
             {

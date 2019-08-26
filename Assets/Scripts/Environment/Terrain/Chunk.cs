@@ -20,7 +20,7 @@ namespace Environment.Terrain
     {
         private static readonly MultiThreadedQueue BuildingQueue = new MultiThreadedQueue(200);
         private static readonly MultiThreadedQueue MeshingQueue = new MultiThreadedQueue(200);
-        public static readonly Vector3Int Size = new Vector3Int(32, 256, 32);
+        public static readonly Vector3Int Size = new Vector3Int(8, 32, 8);
 
         private object _BuildingIdentity;
         private object _MeshingIdentity;
