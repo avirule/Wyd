@@ -50,6 +50,11 @@ namespace Game.Terrain
 
         public Block(ushort id, byte faces = byte.MinValue)
         {
+            Initialise(id, faces);
+        }
+
+        public void Initialise(ushort id, byte faces = byte.MinValue)
+        {
             Bits = new BitVector32(0)
             {
                 [IdSection] = id,
@@ -63,7 +68,7 @@ namespace Game.Terrain
 
             Transparent = BlockController.Current.IsBlockDefaultTransparent(Id);
         }
-
+        
         public bool HasAnyFace()
         {
             if (Id == BlockController.BLOCK_EMPTY_ID)

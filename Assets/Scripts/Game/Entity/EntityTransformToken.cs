@@ -56,10 +56,10 @@ namespace Game.Entity
                 return;
             }
 
-            CurrentPosition = parentPositionInt32;
-            (Vector3[] vertices, int[] triangles) = CalculateLocalMeshData();
-            _MeshFilter.mesh = ProvideNewMeshData(vertices, triangles);
-            _MeshCollider.sharedMesh = _MeshFilter.mesh;
+//            CurrentPosition = parentPositionInt32;
+//            (Vector3[] vertices, int[] triangles) = CalculateLocalMeshData();
+//            _MeshFilter.mesh = ProvideNewMeshData(vertices, triangles);
+//            _MeshCollider.sharedMesh = _MeshFilter.mesh;
         }
 
         public (Vector3[], int[]) CalculateLocalMeshData()
@@ -75,7 +75,7 @@ namespace Game.Entity
                     {
                         Vector3 globalPosition = ParentEntityTransform.position + new Vector3(x, y, z);
 
-                        Block block = WorldController.Current.GetBlockAtPosition(globalPosition.ToInt());
+                        Block block = new Block(); WorldController.Current.GetBlockAtPosition(globalPosition.ToInt());
 
                         if (block.Id == BlockController.BLOCK_EMPTY_ID)
                         {

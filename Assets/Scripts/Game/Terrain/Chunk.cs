@@ -35,7 +35,7 @@ namespace Game.Terrain
         private Matrix4x4 _WorldMatrix;
 
         public Mesh Mesh;
-        public Block[] Blocks;
+        public ushort[] Blocks;
         public bool Built;
         public bool Building;
         public bool Meshed;
@@ -59,7 +59,7 @@ namespace Game.Terrain
             _MainCamera = Camera.main;
             _WorldMatrix = transform.localToWorldMatrix;
 
-            Blocks = new Block[Size.x * Size.y * Size.z];
+            Blocks = new ushort[Size.x * Size.y * Size.z];
             Position = transform.position.ToInt();
             Built = Building = Meshed = Meshing = false;
             PendingMeshUpdate = true;

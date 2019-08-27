@@ -12,7 +12,7 @@ namespace Threading
     public class ChunkBuildingThreadedItem : ThreadedItem
     {
         private readonly float[] _NoiseMap;
-        private readonly Block[] _Blocks;
+        private readonly ushort[] _Blocks;
 
         /// <summary>
         ///     Initialises a new instance of the <see cref="Threading.ChunkBuildingThreadedItem" /> class.
@@ -20,7 +20,7 @@ namespace Threading
         /// <param name="blocks">Pre-initialized <see cref="T:Block[]" /> of blocks to iterate through.</param>
         /// <param name="noiseMap">Pre-initialized <see cref="T:float[][]" /> of noise values.</param>
         /// <seealso cref="Threading.ChunkMeshingThreadedItem" />
-        public ChunkBuildingThreadedItem(ref Block[] blocks, float[] noiseMap)
+        public ChunkBuildingThreadedItem(ref ushort[] blocks, float[] noiseMap)
         {
             _Blocks = blocks;
             _NoiseMap = noiseMap;
@@ -51,22 +51,22 @@ namespace Threading
             {
                 if ((z % 2) == 0)
                 {
-                    _Blocks[index] = new Block(BlockController.Current.GetBlockId("Stone"));
+                    _Blocks[index] = BlockController.Current.GetBlockId("Stone");
                 }
                 else
                 {
-                    _Blocks[index] = new Block(BlockController.Current.GetBlockId("Dirt"));
+                    _Blocks[index] = BlockController.Current.GetBlockId("Dirt");
                 }
             }
             else
             {
                 if ((z % 2) == 0)
                 {
-                    _Blocks[index] = new Block(BlockController.Current.GetBlockId("Dirt"));
+                    _Blocks[index] = BlockController.Current.GetBlockId("Dirt");
                 }
                 else
                 {
-                    _Blocks[index] = new Block(BlockController.Current.GetBlockId("Stone"));
+                    _Blocks[index] = BlockController.Current.GetBlockId("Stone");
                 }
             }
         }
@@ -84,11 +84,11 @@ namespace Threading
 
             if (((y == halfSize) && ((x % 2) == 0)) || ((y == (halfSize - 1)) && ((x % 2) != 0)))
             {
-                _Blocks[index] = new Block(BlockController.Current.GetBlockId("Grass"));
+                _Blocks[index] = BlockController.Current.GetBlockId("Grass");
             }
             else if (y < halfSize)
             {
-                _Blocks[index] = new Block(BlockController.Current.GetBlockId("Stone"));
+                _Blocks[index] = BlockController.Current.GetBlockId("Stone");
             }
         }
 
@@ -105,11 +105,11 @@ namespace Threading
 
             if (y == halfSize)
             {
-                _Blocks[index] = new Block(BlockController.Current.GetBlockId("Grass"));
+                _Blocks[index] = BlockController.Current.GetBlockId("Grass");
             }
             else
             {
-                _Blocks[index] = new Block(BlockController.Current.GetBlockId("Stone"));
+                _Blocks[index] = BlockController.Current.GetBlockId("Stone");
             }
         }
 
@@ -124,11 +124,11 @@ namespace Threading
 
             if ((x % 2) == 0)
             {
-                _Blocks[index] = new Block(BlockController.Current.GetBlockId("Stone"));
+                _Blocks[index] = BlockController.Current.GetBlockId("Stone");
             }
             else
             {
-                _Blocks[index] = new Block(BlockController.Current.GetBlockId("Dirt"));
+                _Blocks[index] = BlockController.Current.GetBlockId("Dirt");
             }
         }
 
@@ -149,15 +149,15 @@ namespace Threading
 
             if ((y == perlinValue) || (y == (Chunk.Size.y - 1)))
             {
-                _Blocks[index] = new Block(BlockController.Current.GetBlockId("Grass"));
+                _Blocks[index] = BlockController.Current.GetBlockId("Grass");
             }
             else if ((y < perlinValue) && (y > (perlinValue - 5)))
             {
-                _Blocks[index] = new Block(BlockController.Current.GetBlockId("Dirt"));
+                _Blocks[index] = BlockController.Current.GetBlockId("Dirt");
             }
             else if (y <= (perlinValue - 5))
             {
-                _Blocks[index] = new Block(BlockController.Current.GetBlockId("Stone"));
+                _Blocks[index] = BlockController.Current.GetBlockId("Stone");
             }
         }
     }

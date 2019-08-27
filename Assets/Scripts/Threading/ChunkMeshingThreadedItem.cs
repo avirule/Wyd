@@ -16,7 +16,7 @@ namespace Threading
     public class ChunkMeshingThreadedItem : ThreadedItem
     {
         private readonly Vector3Int _Position;
-        private readonly Block[] _Blocks;
+        private readonly ushort[] _Blocks;
         private readonly List<int> _Triangles;
         private readonly List<Vector3> _Vertices;
         private readonly List<Vector2> _UVs;
@@ -27,7 +27,7 @@ namespace Threading
         /// <param name="position"><see cref="UnityEngine.Vector3Int" /> position of chunk being meshed.</param>
         /// <param name="blocks">Pre-initialized and built <see cref="T:Block[]" /> to iterate through.</param>
         /// <seealso cref="Threading.ChunkBuildingThreadedItem" />
-        public ChunkMeshingThreadedItem(Vector3Int position, Block[] blocks)
+        public ChunkMeshingThreadedItem(Vector3Int position, ushort[] blocks)
         {
             _Position = position;
             _Blocks = blocks;
@@ -40,7 +40,7 @@ namespace Threading
         {
             for (int index = 0; index < _Blocks.Length; index++)
             {
-                if (_Blocks[index].Id == BlockController.BLOCK_EMPTY_ID)
+                if (_Blocks[index] == BlockController.BLOCK_EMPTY_ID)
                 {
                     continue;
                 }
@@ -49,12 +49,9 @@ namespace Threading
                 Vector3Int globalPosition = _Position + new Vector3Int(x, y, z);
 
                 if (((z == (Chunk.Size.z - 1)) &&
-                     WorldController.Current.GetBlockAtPosition(globalPosition + new Vector3Int(0, 0, 1))
-                         .Transparent) ||
-                    ((z < (Chunk.Size.z - 1)) && _Blocks[index + Chunk.Size.x].Transparent))
+                     BlockController.Current.IsBlockTransparent(WorldController.Current.GetBlockAtPosition(globalPosition + new Vector3Int(0, 0, 1)))) ||
+                    ((z < (Chunk.Size.z - 1)) && BlockController.Current.IsBlockTransparent(_Blocks[index + Chunk.Size.x])))
                 {
-                    _Blocks[index].SetFace(Direction.North, true);
-
                     _Triangles.AddRange(new[]
                     {
                         _Vertices.Count + 0,
@@ -74,7 +71,7 @@ namespace Threading
                         new Vector3(x + 1, y + 1, z + 1)
                     });
 
-                    if (BlockController.Current.GetBlockSpriteUVs(_Blocks[index].Id, globalPosition,
+                    if (BlockController.Current.GetBlockSpriteUVs(_Blocks[index], globalPosition,
                         Direction.North,
                         out Vector2[] uvs))
                     {
@@ -89,11 +86,9 @@ namespace Threading
                 }
 
                 if (((x == (Chunk.Size.x - 1)) &&
-                     WorldController.Current.GetBlockAtPosition(globalPosition + Vector3Int.right).Transparent) ||
-                    ((x < (Chunk.Size.x - 1)) && _Blocks[index + 1].Transparent))
+                     BlockController.Current.IsBlockTransparent(WorldController.Current.GetBlockAtPosition(globalPosition + Vector3Int.right))) ||
+                    ((x < (Chunk.Size.x - 1)) && BlockController.Current.IsBlockTransparent(_Blocks[index + 1])))
                 {
-                    _Blocks[index].SetFace(Direction.East, true);
-
                     _Triangles.AddRange(new[]
                     {
                         _Vertices.Count + 0,
@@ -113,7 +108,7 @@ namespace Threading
                         new Vector3(x + 1, y + 1, z + 1)
                     });
 
-                    if (BlockController.Current.GetBlockSpriteUVs(_Blocks[index].Id, globalPosition,
+                    if (BlockController.Current.GetBlockSpriteUVs(_Blocks[index], globalPosition,
                         Direction.East,
                         out Vector2[] uvs))
                     {
@@ -128,12 +123,9 @@ namespace Threading
                 }
 
                 if (((z == 0) &&
-                     WorldController.Current.GetBlockAtPosition(globalPosition + new Vector3Int(0, 0, -1))
-                         .Transparent) ||
-                    ((z > 0) && _Blocks[index - Chunk.Size.x].Transparent))
+                     BlockController.Current.IsBlockTransparent(WorldController.Current.GetBlockAtPosition(globalPosition + new Vector3Int(0, 0, -1)))) ||
+                    ((z > 0) && BlockController.Current.IsBlockTransparent(_Blocks[index - Chunk.Size.x])))
                 {
-                    _Blocks[index].SetFace(Direction.South, true);
-
                     _Triangles.AddRange(new[]
                     {
                         _Vertices.Count + 0,
@@ -153,7 +145,7 @@ namespace Threading
                         new Vector3(x + 1, y + 1, z)
                     });
 
-                    if (BlockController.Current.GetBlockSpriteUVs(_Blocks[index].Id, globalPosition,
+                    if (BlockController.Current.GetBlockSpriteUVs(_Blocks[index], globalPosition,
                         Direction.South,
                         out Vector2[] uvs))
                     {
@@ -167,12 +159,9 @@ namespace Threading
                     }
                 }
 
-                if (((x == 0) && WorldController.Current.GetBlockAtPosition(globalPosition + Vector3Int.left)
-                         .Transparent) ||
-                    ((x > 0) && _Blocks[index - 1].Transparent))
+                if (((x == 0) && BlockController.Current.IsBlockTransparent(WorldController.Current.GetBlockAtPosition(globalPosition + Vector3Int.left))) ||
+                    ((x > 0) && BlockController.Current.IsBlockTransparent(_Blocks[index - 1])))
                 {
-                    _Blocks[index].SetFace(Direction.West, true);
-
                     _Triangles.AddRange(new[]
                     {
                         _Vertices.Count + 0,
@@ -192,7 +181,7 @@ namespace Threading
                         new Vector3(x, y + 1, z + 1)
                     });
 
-                    if (BlockController.Current.GetBlockSpriteUVs(_Blocks[index].Id, globalPosition,
+                    if (BlockController.Current.GetBlockSpriteUVs(_Blocks[index], globalPosition,
                         Direction.West,
                         out Vector2[] uvs))
                     {
@@ -207,11 +196,9 @@ namespace Threading
                 }
 
                 if (((y == (Chunk.Size.y - 1)) &&
-                     WorldController.Current.GetBlockAtPosition(globalPosition + Vector3Int.up).Transparent) ||
-                    ((y < (Chunk.Size.y - 1)) && _Blocks[index + (Chunk.Size.x * Chunk.Size.z)].Transparent))
+                     BlockController.Current.IsBlockTransparent(WorldController.Current.GetBlockAtPosition(globalPosition + Vector3Int.up))) ||
+                    ((y < (Chunk.Size.y - 1)) && BlockController.Current.IsBlockTransparent(_Blocks[index + (Chunk.Size.x * Chunk.Size.z)])))
                 {
-                    _Blocks[index].SetFace(Direction.Up, true);
-
                     _Triangles.AddRange(new[]
                     {
                         _Vertices.Count + 0,
@@ -231,7 +218,7 @@ namespace Threading
                         new Vector3(x + 1, y + 1, z + 1)
                     });
 
-                    if (BlockController.Current.GetBlockSpriteUVs(_Blocks[index].Id, globalPosition,
+                    if (BlockController.Current.GetBlockSpriteUVs(_Blocks[index], globalPosition,
                         Direction.Up,
                         out Vector2[] uvs))
                     {
@@ -245,12 +232,9 @@ namespace Threading
                     }
                 }
 
-                if (((y == 0) && WorldController.Current.GetBlockAtPosition(globalPosition + Vector3Int.down)
-                         .Transparent) ||
-                    ((y > 0) && _Blocks[index - (Chunk.Size.x * Chunk.Size.z)].Transparent))
+                if (((y == 0) && BlockController.Current.IsBlockTransparent(WorldController.Current.GetBlockAtPosition(globalPosition + Vector3Int.down))) ||
+                    ((y > 0) && BlockController.Current.IsBlockTransparent(_Blocks[index - (Chunk.Size.x * Chunk.Size.z)])))
                 {
-                    _Blocks[index].SetFace(Direction.Down, true);
-
                     _Triangles.AddRange(new[]
                     {
                         _Vertices.Count + 0,
@@ -270,7 +254,7 @@ namespace Threading
                         new Vector3(x + 1, y, z + 1)
                     });
 
-                    if (BlockController.Current.GetBlockSpriteUVs(_Blocks[index].Id, globalPosition,
+                    if (BlockController.Current.GetBlockSpriteUVs(_Blocks[index], globalPosition,
                         Direction.Down,
                         out Vector2[] uvs))
                     {

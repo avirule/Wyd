@@ -138,5 +138,10 @@ namespace Controllers.Game
 
             return _Blocks[blockId].BlockName;
         }
+
+        public bool IsBlockTransparent(ushort id)
+        {
+            return !_Blocks.ContainsKey(id) || _Blocks[id].Transparent;
+        }
     }
 }
