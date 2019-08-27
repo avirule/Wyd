@@ -25,12 +25,25 @@ namespace Noise
         /// <param name="size"><see cref="UnityEngine.Vector3Int" /> size of the section, using X and Z.</param>
         public NoiseMap(float[][] map, Vector3Int center, Vector3Int size)
         {
-            Map = map;
             Bounds = new BoundsInt(center - new Vector3Int(size.x / 2, 0, size.z / 2), size);
-
+            InitMap(map);
+            
             Ready = false;
         }
 
+        private void InitMap(float[][] map)
+        {
+            Map = map ?? new float[Bounds.size.x][];
+
+            if (map == default)
+            {
+                for (int x = 0; x < Bounds.size.x; x++)
+                {
+                    Map[x] = new float[Bounds.size.z];
+                }
+            }
+        }
+        
         /// <summary>
         ///     Generates or regenerates a noise map and adjusts map bounds.
         /// </summary>
@@ -42,7 +55,7 @@ namespace Noise
             Ready = false;
 
             ChangeCenter(offset, size);
-            Map = PerlinNoise.GenerateMap(offset, size, worldGenerationSettings);
+            PerlinNoise.GenerateMap(ref Map, offset, worldGenerationSettings);
 
             Ready = true;
         }

@@ -17,6 +17,7 @@ namespace Game.Entity
         private MeshCollider _MeshCollider;
 
         private Vector3Int _CurrentPosition;
+
         private Vector3Int CurrentPosition
         {
             get => _CurrentPosition;
@@ -26,12 +27,12 @@ namespace Game.Entity
                 {
                     return;
                 }
-                
+
                 _CurrentPosition = value;
                 transform.position = value;
             }
         }
-        
+
         public Transform ParentEntityTransform;
 
         private void Awake()
@@ -49,7 +50,7 @@ namespace Game.Entity
             }
 
             Vector3Int parentPositionInt32 = ParentEntityTransform.position.ToInt();
-            
+
             if (parentPositionInt32 == CurrentPosition)
             {
                 return;

@@ -12,6 +12,7 @@ GameObject:
   - component: {fileID: 7333379184776353552}
   - component: {fileID: 7333379184776353554}
   - component: {fileID: 7333379184776353555}
+  - component: {fileID: 6712973419219175376}
   - component: {fileID: 7333379184776353548}
   m_Layer: 0
   m_Name: GameController
@@ -46,9 +47,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 6016e8f3b9614a49a91c4518298a52df, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  BlockController: {fileID: 7333379184776353555}
-  TextureController: {fileID: 7333379184776353554}
-  OptionsController: {fileID: 7333379184776353548}
 --- !u!114 &7333379184776353554
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -61,7 +59,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 439b3c925ba14007a7bd1c8763a6493a, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  Initialised: 0
 --- !u!114 &7333379184776353555
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -75,6 +72,18 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   TextureController: {fileID: 7333379184776353554}
+--- !u!114 &6712973419219175376
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7333379184776353559}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 6bb1b77da96c4e34b677b3d9c3e8db7e, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
 --- !u!114 &7333379184776353548
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -88,9 +97,10 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   MaximumChunkCacheSize: 30
-  CacheCullingAggression: 0
-  MaximumChunkLoadTimeCacheSize: 60
-  MaximumFrameRateCacheSize: 60
-  ShadowRadius: 1
-  ExpensiveMeshingRadius: 1
+  ChunkCacheCullingAggression: 0
+  MaximumChunkLoadTimeBufferSize: 0
+  MaximumFrameRateBufferSize: 0
+  MinimumInternalFrames: 0
   MaximumInternalFrameTime: 0
+  ShadowDistance: 0
+  ExpensiveMeshingDistance: 0

@@ -2,13 +2,14 @@
 
 using System;
 using System.Collections.Concurrent;
+using System.Collections.Generic;
 using System.Threading;
 
 #endregion
 
 namespace Threading
 {
-    public class SingleThreadedQueue
+    public class ThreadedQueue
     {
         private bool _Disposed;
 
@@ -19,24 +20,50 @@ namespace Threading
         protected CancellationToken AbortToken;
 
         /// <summary>
+        ///     Determines whether the <see cref="Threading.ThreadedQueue" /> executes <see cref="Threading.ThreadedItem" /> on the
+        ///     internal thread, or uses <see cref="System.Threading.ThreadPool" />.
+        /// </summary>
+        public bool MultiThreadedExecution;
+
+        /// <summary>
         ///     Whether or not the internal thread has been started.
         /// </summary>
         public bool Running { get; private set; }
 
+        /// <summary>
+        ///     Time in milliseconds to wait between attempts to process an item in internal
+        ///     queue.
+        /// </summary>
         public int MillisecondWaitTimeout;
 
         /// <summary>
-        ///     Initializes a new instance of <see cref="Threading.SingleThreadedQueue" /> class.
+        ///     Maximum lifetime in milliseconds that a threaded item can live after finishing execution.
+        /// </summary>
+        public int MaximumFinishedThreadedItemLifetime;
+
+        /// <summary>
+        ///     Initializes a new instance of <see cref="Threading.ThreadedQueue" /> class.
         /// </summary>
         /// <param name="millisecondWaitTimeout">
         ///     Time in milliseconds to wait between attempts to process an item in internal
         ///     queue.
         /// </param>
-        public SingleThreadedQueue(int millisecondWaitTimeout)
+        /// <param name="maximumFinishedThreadedItemLifetime">
+        ///     Maximum lifetime in milliseconds that a threaded item can live after finishing execution.
+        /// </param>
+        /// <param name="multiThreadedExecution">
+        ///     Determines whether the <see cref="Threading.ThreadedQueue" /> executes <see cref="Threading.ThreadedItem" /> on the
+        ///     internal thread, or uses <see cref="System.Threading.ThreadPool" />.
+        /// </param>
+        public ThreadedQueue(int millisecondWaitTimeout, int maximumFinishedThreadedItemLifetime,
+            bool multiThreadedExecution = false)
         {
             // todo add variable that decides whether to use single-threaded or multi-threaded execution
-            
+
             MillisecondWaitTimeout = millisecondWaitTimeout;
+            MaximumFinishedThreadedItemLifetime = maximumFinishedThreadedItemLifetime;
+            MultiThreadedExecution = multiThreadedExecution;
+
             ProcessingThread = new Thread(ProcessThreadedItems);
             ProcessQueue = new BlockingCollection<ThreadedItem>();
             ProcessedItems = new ConcurrentDictionary<object, ThreadedItem>();
@@ -60,6 +87,11 @@ namespace Threading
         /// </summary>
         public virtual void Abort()
         {
+            if (!Running && AbortToken.IsCancellationRequested)
+            {
+                return;
+            }
+
             AbortTokenSource.Cancel();
             MillisecondWaitTimeout = 0;
             Running = false;
@@ -74,22 +106,29 @@ namespace Threading
             {
                 try
                 {
-                    if (!ProcessQueue.TryTake(out ThreadedItem threadedItem, MillisecondWaitTimeout, AbortToken))
+                    if (ProcessQueue.TryTake(out ThreadedItem threadedItem, MillisecondWaitTimeout, AbortToken) &&
+                        (threadedItem != default))
                     {
-                        continue;
+                        ProcessThreadedItem(threadedItem);
                     }
 
-                    if (threadedItem == default)
+                    foreach (KeyValuePair<object, ThreadedItem> kvp in ProcessedItems)
                     {
-                        continue;
+                        // todo possibly cache the value of the DateTime to compare against
+                        if (kvp.Value.IsDone &&
+                            (kvp.Value.ExecutionFinishTime.AddMilliseconds(MaximumFinishedThreadedItemLifetime) <
+                             DateTime.Now))
+                        {
+                            ProcessedItems.TryRemove(kvp.Key, out ThreadedItem _);
+                        }
                     }
-
-                    ProcessThreadedItem(threadedItem);
                 }
                 catch (OperationCanceledException)
                 {
                     return;
                 }
+
+                // removed processed item that have lived for too long
             }
 
             Dispose();
@@ -102,7 +141,14 @@ namespace Threading
         /// <param name="threadedItem"><see cref="Threading.ThreadedItem" /> to be processed.</param>
         protected virtual void ProcessThreadedItem(ThreadedItem threadedItem)
         {
-            threadedItem.Execute();
+            if (MultiThreadedExecution)
+            {
+                ThreadPool.QueueUserWorkItem(state => threadedItem.Execute());
+            }
+            else
+            {
+                threadedItem.Execute();
+            }
 
             ProcessedItems.TryAdd(threadedItem.Identity, threadedItem);
         }
@@ -127,20 +173,22 @@ namespace Threading
         }
 
         /// <summary>
-        ///     Tries to get a <see cref="Threading.ThreadedItem" /> from the internal processed list.
+        ///     Tries to get a finished <see cref="Threading.ThreadedItem" /> from the internal processed list.
         ///     If successful, the <see cref="Threading.ThreadedItem" /> is removed from the internal list as well.
         /// </summary>
         /// <param name="identity">
         ///     <see cref="System.Object" /> representing identity of desired
         ///     <see cref="Threading.ThreadedItem" />.
         /// </param>
-        /// <param name="threadedItem"><see cref="Threading.ThreadedItem" /> found.</param>
+        /// <param name="threadedItem"><see cref="Threading.ThreadedItem" /> found done.</param>
         /// <returns>
-        ///     <see langword="true" /> if <see cref="Threading.ThreadedItem" /> exists; otherwise, <see langword="false" />.
+        ///     <see langword="true" /> if <see cref="Threading.ThreadedItem" /> exists and is done executing; otherwise,
+        ///     <see langword="false" />.
         /// </returns>
         public virtual bool TryGetFinishedItem(object identity, out ThreadedItem threadedItem)
         {
-            if (!ProcessedItems.ContainsKey(identity))
+            if (!ProcessedItems.ContainsKey(identity) ||
+                !ProcessedItems[identity].IsDone)
             {
                 threadedItem = default;
                 return false;
@@ -151,7 +199,7 @@ namespace Threading
         }
 
         /// <summary>
-        ///     Disposes of <see cref="Threading.SingleThreadedQueue" /> instance.
+        ///     Disposes of <see cref="ThreadedQueue" /> instance.
         /// </summary>
         public void Dispose()
         {

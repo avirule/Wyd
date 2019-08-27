@@ -79,6 +79,7 @@
             <e p="Direction.cs" t="Include" />
             <e p="Entity" t="Include">
               <e p="EntityTransformToken.cs" t="Include" />
+              <e p="IEntityChunkChangedSubscriber.cs" t="Include" />
             </e>
             <e p="Terrain" t="Include">
               <e p="Block.cs" t="Include" />
@@ -112,9 +113,8 @@
           <e p="Threading" t="Include">
             <e p="ChunkBuildingThreadedItem.cs" t="Include" />
             <e p="ChunkMeshingThreadedItem.cs" t="Include" />
-            <e p="MultiThreadedQueue.cs" t="Include" />
-            <e p="SingleThreadedQueue.cs" t="Include" />
             <e p="ThreadedItem.cs" t="Include" />
+            <e p="ThreadedQueue.cs" t="Include" />
           </e>
         </e>
         <e p="TextMesh Pro" t="Include">

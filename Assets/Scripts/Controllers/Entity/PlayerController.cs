@@ -1,7 +1,9 @@
 #region
 
 using System;
+using System.Collections.Generic;
 using Controllers.World;
+using Game.Entity;
 using Logging;
 using NLog;
 using Static;
@@ -16,6 +18,8 @@ namespace Controllers.Entity
         public static PlayerController Current;
 
         private Vector3 _Movement;
+        private List<IEntityChunkChangedSubscriber> _EntityChangedChunkSubscribers;
+        
         public bool Grounded;
         public LayerMask GroundedMask;
 
@@ -25,8 +29,6 @@ namespace Controllers.Entity
         public Transform RotationTransform;
         public float TravelSpeed;
         public Vector3Int CurrentChunk;
-
-        public event EventHandler<Vector3Int> ChunkChanged;
 
         private void Awake()
         {
@@ -39,6 +41,8 @@ namespace Controllers.Entity
                 Current = this;
             }
 
+            _EntityChangedChunkSubscribers = new List<IEntityChunkChangedSubscriber>();
+            
             CurrentChunk = new Vector3Int(int.MaxValue, 0, int.MaxValue);
         }
 
@@ -71,6 +75,29 @@ namespace Controllers.Entity
                 }
             }
         }
+        
+        private void CheckChangedChunk()
+        {
+            Vector3Int chunkPosition =
+                WorldController.GetWorldChunkOriginFromGlobalPosition(transform.position).ToInt();
+            chunkPosition.y = 0;
+
+            if (chunkPosition == CurrentChunk)
+            {
+                return;
+            }
+
+            CurrentChunk = chunkPosition;
+            FlagChangedChunk();
+        }
+
+        public void RegisterEntityChangedSubscriber(IEntityChunkChangedSubscriber subscriber)
+        {
+            _EntityChangedChunkSubscribers.Add(subscriber);
+        }
+
+        
+        #region MOVEMENT
 
         private void UpdateMovement()
         {
@@ -101,25 +128,24 @@ namespace Controllers.Entity
                 return;
             }
 
-            Vector3 modifiedMovement =
-                (Grounded ? TravelSpeed : TravelSpeed * 0.5f) * Time.fixedDeltaTime * _Movement;
+            Vector3 modifiedMovement = (Grounded ? 0f : 0.5f) * TravelSpeed * Time.fixedDeltaTime * _Movement;
 
             Rigidbody.MovePosition(Rigidbody.position + transform.TransformDirection(modifiedMovement));
         }
 
-        private void CheckChangedChunk()
+        #endregion
+        
+
+        #region EVENTS
+
+        private void FlagChangedChunk()
         {
-            Vector3Int chunkPosition =
-                WorldController.GetWorldChunkOriginFromGlobalPosition(transform.position).ToInt();
-            chunkPosition.y = 0;
-
-            if (chunkPosition == CurrentChunk)
+            foreach (IEntityChunkChangedSubscriber subscriber in _EntityChangedChunkSubscribers)
             {
-                return;
+                subscriber.EntityChangedChunk = true;
             }
-
-            CurrentChunk = chunkPosition;
-            ChunkChanged?.Invoke(this, CurrentChunk);
         }
+
+        #endregion
     }
 }

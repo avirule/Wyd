@@ -47,10 +47,13 @@ namespace Controllers.UI.Diagnostics
 
         private void UpdateFramesText()
         {
-            double sumLoadTimes = ChunkBuildTimes.Sum() + ChunkMeshTimes.Sum();
-            double averageLoadTime = Math.Round(sumLoadTimes / (ChunkBuildTimes.Count + ChunkMeshTimes.Count));
+            double avgBuildTime = ChunkBuildTimes.Count > 0 ? ChunkBuildTimes.Average() : 0d;
+            double avgMeshTime = ChunkMeshTimes.Count > 0 ? ChunkMeshTimes.Average() : 0d;
+            
+            double buildTime = Math.Round(avgBuildTime, 0);
+            double meshTime = Math.Round(avgMeshTime, 0);
 
-            ChunkLoadTime.text = $"Chunk Load Time: {averageLoadTime}ms";
+            ChunkLoadTime.text = $"Chunk Load Time: (b{buildTime}ms, m{meshTime}ms)";
             ChunksActive.text = $"Chunks Active: {ChunkController.Current.ActiveChunksCount}";
             ChunksCached.text = $"Chunks Cached: {ChunkController.Current.CachedChunksCount}";
         }

@@ -2,10 +2,8 @@
 
 using System;
 using System.Collections.Generic;
-using System.Threading;
 using Controllers.Entity;
 using Controllers.Game;
-using Game;
 using Game.Entity;
 using Game.Terrain;
 using Game.Terrain.Generation;
@@ -20,7 +18,7 @@ using UnityEngine.SceneManagement;
 
 namespace Controllers.World
 {
-    public class WorldController : MonoBehaviour
+    public class WorldController : MonoBehaviour, IEntityChunkChangedSubscriber
     {
         public static WorldController Current;
 
@@ -33,6 +31,8 @@ namespace Controllers.World
         public WorldGenerationSettings WorldGenerationSettings;
         public ChunkController ChunkController;
         public NoiseMap NoiseMap;
+        
+        public bool EntityChangedChunk { get; set; }
 
         private void Awake()
         {
@@ -59,7 +59,7 @@ namespace Controllers.World
             }
 
             _EntityToken = Resources.Load<GameObject>(@"Entities\EntityToken");
-            
+
             WorldTickRate = TimeSpan.FromSeconds(1d / TicksPerSecond);
 
             NoiseMap = new NoiseMap(null, Vector3Int.zero,
@@ -67,15 +67,25 @@ namespace Controllers.World
                     (WorldGenerationSettings.Diameter + 1) * Chunk.Size.z));
 
             _EntityTokens = new List<GameObject>();
-            
+
             InitialTick = DateTime.Now.Ticks;
         }
 
         private void Start()
         {
-            PlayerController.Current.ChunkChanged += UpdateChunkLoadArea;
+            PlayerController.Current.RegisterEntityChangedSubscriber(this);
         }
-        
+
+        private void Update()
+        {
+            if (EntityChangedChunk)
+            {
+                UpdateChunkLoadArea(PlayerController.Current.CurrentChunk);
+
+                EntityChangedChunk = false;
+            }
+        }
+
         public static Vector3 GetWorldChunkOriginFromGlobalPosition(Vector3 globalPosition)
         {
             return globalPosition.Divide(Chunk.Size).Floor().Multiply(Chunk.Size);
@@ -93,17 +103,16 @@ namespace Controllers.World
         {
             GameObject entityToken = Instantiate(_EntityToken, transform);
             entityToken.GetComponent<EntityTransformToken>().ParentEntityTransform = parent;
-            
+
             _EntityTokens.Add(entityToken);
         }
 
         #endregion
-        
-        
-        
+
+
         #region ON EVENT
 
-        private void UpdateChunkLoadArea(object sender, Vector3Int chunkPosition)
+        private void UpdateChunkLoadArea(Vector3Int chunkPosition)
         {
             NoiseMap.Generate(chunkPosition, NoiseMap.Bounds.size, WorldGenerationSettings);
             EnqueueBuildChunkArea(chunkPosition, WorldGenerationSettings.Radius);

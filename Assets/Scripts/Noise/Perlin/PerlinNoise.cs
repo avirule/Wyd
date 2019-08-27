@@ -9,10 +9,9 @@ namespace Noise.Perlin
 {
     public static class PerlinNoise
     {
-        public static float[][] GenerateMap(Vector3Int offset, Vector3Int size,
-            WorldGenerationSettings generationSettings)
+        public static float[][] GenerateMap(ref float[][] noiseMap, Vector3Int offset, WorldGenerationSettings generationSettings)
         {
-            return GenerateMap(offset, generationSettings.Seed, size, generationSettings.Octaves,
+            return GenerateMap(ref noiseMap, offset, generationSettings.Seed, generationSettings.Octaves,
                 generationSettings.Scale,
                 generationSettings.Persistence, generationSettings.Lacunarity);
         }
@@ -24,6 +23,7 @@ namespace Noise.Perlin
         /// <summary>
         ///     Generates a perlin noise map
         /// </summary>
+        /// <param name="noiseMap"></param>
         /// <param name="offset">Offset position of map's x/z coords</param>
         /// <param name="seed"></param>
         /// <param name="size"></param>
@@ -33,7 +33,7 @@ namespace Noise.Perlin
         /// <param name="lacunarity">Value grater than 1</param>
         /// <param name="normalize"></param>
         /// <returns>2D jagged array representing XZ noise values.</returns>
-        public static float[][] GenerateMap(Vector3 offset, WorldSeed seed, Vector3 size, int octaves,
+        public static float[][] GenerateMap(ref float[][] noiseMap, Vector3 offset, WorldSeed seed, int octaves,
             float scale, float persistence, float lacunarity, bool normalize = false)
         {
             if (scale <= 0)
@@ -41,13 +41,9 @@ namespace Noise.Perlin
                 scale = 0.0001f;
             }
 
-            float[][] noiseHeights = new float[Mathf.CeilToInt(size.x)][];
-
-            for (int x = 0; x < size.x; x++)
+            for (int x = 0; x < noiseMap.Length; x++)
             {
-                noiseHeights[x] = new float[Mathf.CeilToInt(size.z)];
-
-                for (int z = 0; z < size.z; z++)
+                for (int z = 0; z < noiseMap[0].Length; z++)
                 {
                     float amplitude = 1;
                     float frequency = 1;
@@ -65,23 +61,23 @@ namespace Noise.Perlin
                         frequency *= lacunarity;
                     }
 
-                    noiseHeights[x][z] = noiseHeight;
+                    noiseMap[x][z] = noiseHeight;
                 }
             }
 
             if (normalize)
             {
-                for (int x = 0; x < noiseHeights.Length; x++)
+                for (int x = 0; x < noiseMap.Length; x++)
                 {
-                    for (int z = 0; z < noiseHeights[0].Length; z++)
+                    for (int z = 0; z < noiseMap[0].Length; z++)
                     {
-                        noiseHeights[x][z] =
-                            Mathf.InverseLerp(_MIN_NOISE_HEIGHT, _MAX_NOISE_HEIGHT, noiseHeights[x][z]);
+                        noiseMap[x][z] =
+                            Mathf.InverseLerp(_MIN_NOISE_HEIGHT, _MAX_NOISE_HEIGHT, noiseMap[x][z]);
                     }
                 }
             }
 
-            return noiseHeights;
+            return noiseMap;
         }
     }
 }

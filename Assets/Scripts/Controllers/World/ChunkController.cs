@@ -1,10 +1,12 @@
 #region
 
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using Controllers.Entity;
 using Controllers.Game;
+using Game.Entity;
 using Game.Terrain;
 using Static;
 using UnityEngine;
@@ -13,7 +15,7 @@ using UnityEngine;
 
 namespace Controllers.World
 {
-    public sealed class ChunkController : MonoBehaviour
+    public sealed class ChunkController : MonoBehaviour, IEntityChunkChangedSubscriber
     {
         public static ChunkController Current;
 
@@ -28,6 +30,8 @@ namespace Controllers.World
         public int CachedChunksCount => _CachedChunks.Count;
         public bool AllChunksBuilt => _Chunks.All(kvp => kvp.Value.Built);
         public bool AllChunksMeshed => _Chunks.All(kvp => kvp.Value.Meshed);
+        
+        public bool EntityChangedChunk { get; set; }
 
         private void Awake()
         {
@@ -51,21 +55,20 @@ namespace Controllers.World
 
         private void Start()
         {
-            PlayerController.Current.ChunkChanged += MarkOutOfBoundsChunksForDeactivation;
+            PlayerController.Current.RegisterEntityChangedSubscriber(this);
         }
 
         private void Update()
         {
-            if (Input.GetKey(KeyCode.R))
-            {
-                foreach (KeyValuePair<Vector3Int, Chunk> kvp in _Chunks)
-                {
-                    kvp.Value.PendingMeshUpdate = true;
-                }
-            }
-
             _FrameTimeLimiter.Restart();
 
+            if (EntityChangedChunk)
+            {
+                MarkOutOfBoundsChunksForDeactivation(PlayerController.Current.CurrentChunk);
+
+                EntityChangedChunk = false;
+            }
+            
             if (BuildChunkQueue.Count > 0)
             {
                 ProcessBuildChunkQueue();
@@ -75,9 +78,8 @@ namespace Controllers.World
             {
                 ProcessDeactivationQueue();
             }
-
-            // if maximum chunk cache size is not zero...
-            // cull chunks down to half the maximum when idle
+            
+            // if maximum chunk cache size is not zero then cull chunks down to half the maximum when idle
             if ((OptionsController.Current.MaximumChunkCacheSize != 0) &&
                 (_CachedChunks.Count > (OptionsController.Current.MaximumChunkCacheSize / 2)))
             {
@@ -183,7 +185,7 @@ namespace Controllers.World
 
         #region CHUNK DISABLING
 
-        private void MarkOutOfBoundsChunksForDeactivation(object sender, Vector3Int chunkPosition)
+        private void MarkOutOfBoundsChunksForDeactivation(Vector3Int chunkPosition)
         {
             foreach (KeyValuePair<Vector3Int, Chunk> kvp in _Chunks)
             {
@@ -196,6 +198,11 @@ namespace Controllers.World
                 }
 
                 _DeactivationQueue.Enqueue(kvp.Value);
+
+                if (_FrameTimeLimiter.Elapsed.TotalSeconds > OptionsController.Current.MaximumInternalFrameTime)
+                {
+                    break;
+                }
             }
         }
 
@@ -239,7 +246,7 @@ namespace Controllers.World
                      OptionsController.Current.MaximumInternalFrameTime) &&
                     (OptionsController.Current.ChunkCacheCullingAggression == CacheCullingAggression.Passive))
                 {
-                    return;
+                    break;
                 }
             }
         }
@@ -257,7 +264,9 @@ namespace Controllers.World
         // todo this function needs to be made thread-safe
         public Chunk GetChunkAtPosition(Vector3Int position)
         {
-            return _Chunks.ContainsKey(position) ? _Chunks[position] : default;
+            bool trySuccess = _Chunks.TryGetValue(position, out Chunk chunk);
+            
+            return trySuccess ? chunk : default;
         }
 
         public Block GetBlockAtPosition(Vector3Int position)

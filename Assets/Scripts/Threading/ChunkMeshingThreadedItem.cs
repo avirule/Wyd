@@ -299,7 +299,15 @@ namespace Threading
                 return mesh;
             }
 
-            mesh = new Mesh();
+
+            if (mesh == default)
+            {
+                mesh = new Mesh();
+            }
+            else
+            {
+                mesh.Clear();
+            }
 
             if (_Vertices.Count > 65000)
             {

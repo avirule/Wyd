@@ -2,6 +2,7 @@
 
 using System;
 using System.IO;
+using Game.Terrain;
 using Logging;
 using NLog;
 using SharpConfig;
@@ -35,11 +36,12 @@ namespace Controllers.Game
 
         private Configuration _Configuration;
 
+        public ChunkThreadingMode ChunkThreadingMode;
         public int MaximumChunkCacheSize;
         public CacheCullingAggression ChunkCacheCullingAggression;
         public int MaximumChunkLoadTimeBufferSize;
         public int MaximumFrameRateBufferSize;
-        public int MaximumInternalFrames;
+        public int MinimumInternalFrames;
         public float MaximumInternalFrameTime;
 
         public int VSyncLevel
@@ -77,16 +79,16 @@ namespace Controllers.Game
                 : Configuration.LoadFromFile(_configPath);
 
             // Graphics
-            if (!GetSetting("Graphics", nameof(MaximumInternalFrames), out MaximumInternalFrames) ||
-                (MaximumInternalFrames < 0) ||
-                (MaximumInternalFrames > 300))
+            if (!GetSetting("Graphics", nameof(MinimumInternalFrames), out MinimumInternalFrames) ||
+                (MinimumInternalFrames < 0) ||
+                (MinimumInternalFrames > 300))
             {
                 EventLog.Logger.Log(LogLevel.Warn,
-                    $"Error loading setting {nameof(MaximumInternalFrames)}.");
-                MaximumInternalFrames = 15;
+                    $"Error loading setting {nameof(MinimumInternalFrames)}.");
+                MinimumInternalFrames = 15;
             }
 
-            MaximumInternalFrameTime = 1f / MaximumInternalFrames;
+            MaximumInternalFrameTime = 1f / MinimumInternalFrames;
 
             if (!GetSetting("Graphics", nameof(MaximumFrameRateBufferSize), out MaximumFrameRateBufferSize) ||
                 (MaximumFrameRateBufferSize < 0) ||
@@ -126,6 +128,12 @@ namespace Controllers.Game
 
 
             // Chunking
+            if (!GetSetting("Chunking", nameof(ChunkThreadingMode), out ChunkThreadingMode))
+            {
+                EventLog.Logger.Log(LogLevel.Warn, $"Error loading setting {nameof(ChunkThreadingMode)}.");
+                ChunkThreadingMode = ChunkThreadingMode.Variable;
+            }
+
             if (!GetSetting("Chunking", nameof(MaximumChunkCacheSize), out MaximumChunkCacheSize) ||
                 (MaximumChunkCacheSize < 0) ||
                 (MaximumChunkCacheSize > 625))
@@ -161,11 +169,11 @@ namespace Controllers.Game
             _Configuration = new Configuration();
 
             // Graphics
-            _Configuration["Graphics"][nameof(MaximumInternalFrames)].PreComment =
+            _Configuration["Graphics"][nameof(MinimumInternalFrames)].PreComment =
                 "Maximum number of frames internal systems will allow to lapse during updates.";
-            _Configuration["Graphics"][nameof(MaximumInternalFrames)].Comment =
+            _Configuration["Graphics"][nameof(MinimumInternalFrames)].Comment =
                 "Higher values decrease overall CPU stress (min 15, max 150).";
-            _Configuration["Graphics"][nameof(MaximumInternalFrames)].IntValue = 30;
+            _Configuration["Graphics"][nameof(MinimumInternalFrames)].IntValue = 30;
 
             _Configuration["Graphics"][nameof(MaximumFrameRateBufferSize)].PreComment =
                 "Maximum size of buffer for reporting average frame rate.";
@@ -188,6 +196,11 @@ namespace Controllers.Game
             _Configuration["Graphics"][nameof(ExpensiveMeshingDistance)].IntValue = 1;
 
             // Chunking
+            _Configuration["Chunking"][nameof(ChunkThreadingMode)].PreComment =
+                "Determines whether the threading mode the game will use when generating chunk data and meshes.";
+            _Configuration["Chunking"][nameof(ChunkThreadingMode)].Comment = "(0 = single, 1 = multi, 2 = variable)";
+            _Configuration["Chunking"][nameof(ChunkThreadingMode)].IntValue = 2;
+
             _Configuration["Chunking"][nameof(MaximumChunkCacheSize)].PreComment =
                 "Lower values are harder on the CPU, higher values use more RAM.";
             _Configuration["Chunking"][nameof(MaximumChunkCacheSize)].IntValue = 30;

@@ -1,5 +1,6 @@
 #region
 
+using System;
 using System.Diagnostics;
 
 #endregion
@@ -15,7 +16,12 @@ namespace Threading
         /// <summary>
         ///     Total elapsed time of execution in milliseconds.
         /// </summary>
-        public long ExecutionTime => _ExecutionTimer.ElapsedMilliseconds;
+        public TimeSpan ExecutionTime => _ExecutionTimer.Elapsed;
+
+        /// <summary>
+        ///     Time at which execution finished.
+        /// </summary>
+        public DateTime ExecutionFinishTime { get; private set; }
 
         /// <summary>
         ///     Identity of <see cref="Threading.ThreadedItem" />.
@@ -30,6 +36,7 @@ namespace Threading
             _Handle = new object();
             _ExecutionTimer = new Stopwatch();
             Done = false;
+            ExecutionFinishTime = DateTime.MaxValue;
         }
 
         /// <summary>
@@ -68,6 +75,7 @@ namespace Threading
             Process();
 
             _ExecutionTimer.Stop();
+            ExecutionFinishTime = DateTime.Now;
 
             IsDone = true;
         }

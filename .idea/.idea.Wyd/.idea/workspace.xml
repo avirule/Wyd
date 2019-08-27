@@ -1,73 +1,31 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
   <component name="AnalysisUIOptions">
-    <option name="SCOPE_TYPE" value="3" />
     <option name="CUSTOM_SCOPE_NAME" value="All Changed Files" />
   </component>
   <component name="ChangeListManager">
     <list default="true" id="c75ae2de-3a89-4228-87f5-5925302b6d96" name="Default Changelist" comment="">
-      <change afterPath="$PROJECT_DIR$/Assets/Resources/Controllers.meta" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/Assets/Resources/Controllers/GameController.prefab" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/Assets/Resources/Controllers/GameController.prefab.meta" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/Assets/Resources/Entities.meta" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/Assets/Resources/Entities/EntityToken.prefab" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/Assets/Resources/Entities/EntityToken.prefab.meta" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/Assets/Resources/Terrain.meta" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/Assets/Resources/Terrain/BlocksAtlas.aseprite" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/Assets/Resources/Terrain/BlocksAtlas.aseprite.meta" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/Assets/Resources/Terrain/BlocksAtlas.png" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/Assets/Resources/Terrain/BlocksAtlas.png.meta" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/Assets/Resources/Terrain/BlocksMaterial.mat" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/Assets/Resources/Terrain/BlocksMaterial.mat.meta" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/Assets/Resources/Terrain/Chunk.prefab" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/Assets/Resources/Terrain/Chunk.prefab.meta" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/Assets/Scripts/Game/Entity.meta" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/Assets/Scripts/Game/Entity/EntityTransformToken.cs" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/Assets/Scripts/Game/Entity/EntityTransformToken.cs.meta" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Assets/Scripts/Game/Entity/IEntityChunkChangedSubscriber.cs" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Assets/Scripts/Game/Entity/IEntityChunkChangedSubscriber.cs.meta" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/.idea.Wyd/.idea/contentModel.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/.idea.Wyd/.idea/contentModel.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/.idea.Wyd/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/.idea.Wyd/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Assets/Resources/Environment.meta" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Assets/Resources/Environment/Controllers.meta" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Assets/Resources/Environment/Controllers/GameController.prefab" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Assets/Resources/Environment/Controllers/GameController.prefab.meta" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Assets/Resources/Environment/Terrain.meta" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Assets/Resources/Environment/Terrain/BlocksAtlas.aseprite" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Assets/Resources/Environment/Terrain/BlocksAtlas.aseprite.meta" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Assets/Resources/Environment/Terrain/BlocksAtlas.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Assets/Resources/Environment/Terrain/BlocksAtlas.png.meta" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Assets/Resources/Environment/Terrain/BlocksMaterial.mat" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Assets/Resources/Environment/Terrain/BlocksMaterial.mat.meta" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Assets/Resources/Environment/Terrain/Chunk.prefab" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Assets/Resources/Environment/Terrain/Chunk.prefab.meta" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Assets/Resources/Controllers/GameController.prefab" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/Resources/Controllers/GameController.prefab" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/Assets/Scenes/Game.unity" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/Scenes/Game.unity" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/Assets/Scripts/Controllers/Entity/PlayerController.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/Scripts/Controllers/Entity/PlayerController.cs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Assets/Scripts/Controllers/Game/BlockController.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/Scripts/Controllers/Game/BlockController.cs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Assets/Scripts/Controllers/Game/GameController.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/Scripts/Controllers/Game/GameController.cs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Assets/Scripts/Controllers/Game/TextureController.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/Scripts/Controllers/Game/TextureController.cs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Assets/Scripts/Controllers/UI/Components/InputField/DebugCommandLineController.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/Scripts/Controllers/UI/Components/InputField/DebugCommandLineController.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Assets/Scripts/Controllers/Game/OptionsController.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/Scripts/Controllers/Game/OptionsController.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Assets/Scripts/Controllers/UI/Diagnostics/DiagnosticsPanelController.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/Scripts/Controllers/UI/Diagnostics/DiagnosticsPanelController.cs" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/Assets/Scripts/Controllers/World/ChunkController.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/Scripts/Controllers/World/ChunkController.cs" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/Assets/Scripts/Controllers/World/WorldController.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/Scripts/Controllers/World/WorldController.cs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Assets/Scripts/Environment.meta" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/Scripts/Game.meta" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Assets/Scripts/Environment/Direction.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/Scripts/Game/Direction.cs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Assets/Scripts/Environment/Direction.cs.meta" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/Scripts/Game/Direction.cs.meta" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Assets/Scripts/Environment/Terrain.meta" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/Scripts/Game/Terrain.meta" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Assets/Scripts/Environment/Terrain/Block.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/Scripts/Game/Terrain/Block.cs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Assets/Scripts/Environment/Terrain/Block.cs.meta" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/Scripts/Game/Terrain/Block.cs.meta" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Assets/Scripts/Environment/Terrain/BlockRule.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/Scripts/Game/Terrain/BlockRule.cs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Assets/Scripts/Environment/Terrain/BlockRule.cs.meta" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/Scripts/Game/Terrain/BlockRule.cs.meta" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Assets/Scripts/Environment/Terrain/Chunk.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/Scripts/Game/Terrain/Chunk.cs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Assets/Scripts/Environment/Terrain/Chunk.cs.meta" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/Scripts/Game/Terrain/Chunk.cs.meta" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Assets/Scripts/Environment/Terrain/Generation.meta" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/Scripts/Game/Terrain/Generation.meta" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Assets/Scripts/Environment/Terrain/Generation/WorldGenerationSettings.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/Scripts/Game/Terrain/Generation/WorldGenerationSettings.cs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Assets/Scripts/Environment/Terrain/Generation/WorldGenerationSettings.cs.meta" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/Scripts/Game/Terrain/Generation/WorldGenerationSettings.cs.meta" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Assets/Scripts/Environment/Terrain/Generation/WorldSeed.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/Scripts/Game/Terrain/Generation/WorldSeed.cs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Assets/Scripts/Environment/Terrain/Generation/WorldSeed.cs.meta" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/Scripts/Game/Terrain/Generation/WorldSeed.cs.meta" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Assets/Scripts/Game/Entity/EntityTransformToken.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/Scripts/Game/Entity/EntityTransformToken.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Assets/Scripts/Game/Terrain/Chunk.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/Scripts/Game/Terrain/Chunk.cs" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/Assets/Scripts/Noise/NoiseMap.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/Scripts/Noise/NoiseMap.cs" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/Assets/Scripts/Noise/Perlin/PerlinNoise.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/Scripts/Noise/Perlin/PerlinNoise.cs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Assets/Scripts/Threading/ChunkBuildingThreadedItem.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/Scripts/Threading/ChunkBuildingThreadedItem.cs" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/Assets/Scripts/Threading/ChunkMeshingThreadedItem.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/Scripts/Threading/ChunkMeshingThreadedItem.cs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Assets/Scripts/Threading/SingleThreadedQueue.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/Scripts/Threading/SingleThreadedQueue.cs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/ProjectSettings/ProjectSettings.asset" beforeDir="false" afterPath="$PROJECT_DIR$/ProjectSettings/ProjectSettings.asset" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Assets/Scripts/Threading/MultiThreadedQueue.cs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Assets/Scripts/Threading/MultiThreadedQueue.cs.meta" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Assets/Scripts/Threading/SingleThreadedQueue.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/Scripts/Threading/ThreadedQueue.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Assets/Scripts/Threading/SingleThreadedQueue.cs.meta" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/Scripts/Threading/ThreadedQueue.cs.meta" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Assets/Scripts/Threading/ThreadedItem.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/Scripts/Threading/ThreadedItem.cs" afterDir="false" />
     </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
     <option name="SHOW_DIALOG" value="false" />
@@ -90,7 +48,6 @@
     <setting file="file://$PROJECT_DIR$/Assets/TextMesh Pro/Resources/Shaders/TMP_SDF-Mobile Overlay.shader" root0="FORCE_HIGHLIGHTING" />
     <setting file="file://$PROJECT_DIR$/Assets/Scripts/Game/Direction.cs" root0="FORCE_HIGHLIGHTING" />
     <setting file="file://$APPLICATION_CONFIG_DIR$/resharper-host/DecompilerCache/decompiler/3F37B2CA-7BC0-4094-93C9-29A81891A481/c1/e30a8b29/Vector3Int.cs" root0="SKIP_HIGHLIGHTING" />
-    <setting file="file://$PROJECT_DIR$/Assets/Scripts/Threading/MultiThreadedQueue.cs" root0="FORCE_HIGHLIGHTING" />
     <setting file="file://$PROJECT_DIR$/Assets/Scripts/Game/Terrain/Chunk.cs" root0="FORCE_HIGHLIGHTING" />
     <setting file="file://$APPLICATION_CONFIG_DIR$/resharper-host/DecompilerCache/decompiler/7D971063-3068-4ADD-86D0-80ECF65BFE69/1e/9a3cfa7b/GenericEqualityComparer`1.cs" root0="SKIP_HIGHLIGHTING" />
     <setting file="file://$PROJECT_DIR$/Assets/Scripts/Game/Terrain/BlockRule.cs" root0="FORCE_HIGHLIGHTING" />
@@ -121,6 +78,7 @@
     <setting file="file://$APPLICATION_CONFIG_DIR$/resharper-host/DecompilerCache/decompiler/7D971063-3068-4ADD-86D0-80ECF65BFE69/95/e065c2c7/ThrowHelper.cs" root0="SKIP_HIGHLIGHTING" />
     <setting file="file://$APPLICATION_CONFIG_DIR$/resharper-host/DecompilerCache/decompiler/A8ED2508-5085-4B43-9CED-C18931A314FE/0f/755c4eb6/String.cs" root0="SKIP_HIGHLIGHTING" />
     <setting file="file://$APPLICATION_CONFIG_DIR$/resharper-host/DecompilerCache/decompiler/3F37B2CA-7BC0-4094-93C9-29A81891A481/6c/a75b7056/Mathf.cs" root0="SKIP_HIGHLIGHTING" />
+    <setting file="file://$PROJECT_DIR$/Assets/Scripts/Game/Entity/IEntityChunkChangedSubscriber.cs" root0="FORCE_HIGHLIGHTING" />
     <setting file="file://$APPLICATION_CONFIG_DIR$/resharper-host/DecompilerCache/decompiler/7D971063-3068-4ADD-86D0-80ECF65BFE69/28/b0fa0ed1/List`1.cs" root0="SKIP_HIGHLIGHTING" />
     <setting file="file://$APPLICATION_CONFIG_DIR$/resharper-host/DecompilerCache/decompiler/A8ED2508-5085-4B43-9CED-C18931A314FE/e5/7a06ed5f/Task.cs" root0="SKIP_HIGHLIGHTING" />
     <setting file="file://$PROJECT_DIR$/Assets/Scripts/Controllers/UI/Components/Text/VSyncLevelTextController.cs" root0="FORCE_HIGHLIGHTING" />
@@ -145,7 +103,7 @@
     <setting file="file://$PROJECT_DIR$/Assets/Scripts/Controllers/UI/Components/InputField/DebugCommandLineController.cs" root0="FORCE_HIGHLIGHTING" />
     <setting file="file://$PROJECT_DIR$/Assets/Scripts/Logging/EventLog.cs" root0="FORCE_HIGHLIGHTING" />
     <setting file="file://$PROJECT_DIR$/Assets/Scripts/Logging/Targets/UnityDebuggerTarget.cs" root0="FORCE_HIGHLIGHTING" />
-    <setting file="file://$PROJECT_DIR$/Assets/Scripts/Threading/SingleThreadedQueue.cs" root0="FORCE_HIGHLIGHTING" />
+    <setting file="file://$PROJECT_DIR$/Assets/Scripts/Threading/ThreadedQueue.cs" root0="FORCE_HIGHLIGHTING" />
     <setting file="file://$PROJECT_DIR$/Assets/Scripts/Logging/Targets/InGameDebugLogTarget.cs" root0="FORCE_HIGHLIGHTING" />
     <setting file="file://$PROJECT_DIR$/ProjectSettings/ProjectSettings.asset" root0="FORCE_HIGHLIGHTING" />
     <setting file="file://$APPLICATION_CONFIG_DIR$/resharper-host/DecompilerCache/decompiler/3F37B2CA-7BC0-4094-93C9-29A81891A481/5c/405b5893/UnsafeUtility.cs" root0="SKIP_HIGHLIGHTING" />
@@ -164,10 +122,6 @@
   <component name="IdeDocumentHistory">
     <option name="CHANGED_PATHS">
       <list>
-        <option value="$PROJECT_DIR$/Assets/Scripts/Environment/Terrain/Generation/MeshGenerator.cs" />
-        <option value="$PROJECT_DIR$/Assets/Scripts/Threading/ThreadedProcess.cs" />
-        <option value="$PROJECT_DIR$/Assets/Scripts/Environment/Terrain/Generation/ChunkBuilder.cs" />
-        <option value="$PROJECT_DIR$/Assets/Scripts/Threading/Jobs/NativeContainers/NativeElement.cs" />
         <option value="$PROJECT_DIR$/Assets/Scripts/Environment/Terrain/Generation/ChunkBuilderJob.cs" />
         <option value="$PROJECT_DIR$/Assets/Scripts/Environment/Terrain/Generation/ChunkGeneratorJob.cs" />
         <option value="$PROJECT_DIR$/Assets/Scripts/Environment/Terrain/Generation/ChunkMeshingThreadedItem.cs" />
@@ -175,7 +129,6 @@
         <option value="$PROJECT_DIR$/Assets/Scripts/Controllers/UI/Diagnostics/DiagnosticsController.cs" />
         <option value="$PROJECT_DIR$/Assets/Scripts/Controllers/UI/MainMenuController.cs" />
         <option value="$PROJECT_DIR$/Assets/Scripts/Controllers/UI/Components/Text/VersionTextController.cs" />
-        <option value="$PROJECT_DIR$/Assets/Scripts/Controllers/UI/Diagnostics/DiagnosticsPanelController.cs" />
         <option value="$PROJECT_DIR$/Assets/Scripts/Controllers/UI/Components/Text/VSyncLevelTextController.cs" />
         <option value="$PROJECT_DIR$/Assets/Scripts/Controllers/UI/Components/Button/VSyncLevelButtonController.cs" />
         <option value="$PROJECT_DIR$/Assets/Scripts/Controllers/UI/Components/Button/ExitButtonController.cs" />
@@ -186,35 +139,40 @@
         <option value="$PROJECT_DIR$/Assets/Scripts/Controllers/UI/Components/Text/DebugLogTextController.cs" />
         <option value="$PROJECT_DIR$/Library/PackageCache/com.unity.textmeshpro@2.0.1/Scripts/Runtime/TMP_InputField.cs" />
         <option value="$PROJECT_DIR$/Assets/Scripts/Controllers/UI/Components/InputField/DebugCommandLineController.cs" />
-        <option value="$PROJECT_DIR$/Assets/Scripts/Threading/ThreadedQueue.cs" />
         <option value="$PROJECT_DIR$/Assets/Scripts/Environment/Terrain/Generation/WorldGenerationSettings.cs" />
         <option value="$PROJECT_DIR$/Assets/Scripts/Threading/Jobs/ChunkBuilderJob.cs" />
-        <option value="$PROJECT_DIR$/Assets/Scripts/Noise/Perlin/PerlinNoise.cs" />
         <option value="$PROJECT_DIR$/Assets/Scripts/Threading/IThreadedQueue.cs" />
         <option value="$PROJECT_DIR$/Assets/Scripts/Threading/MultiThreadedQueue.cs" />
         <option value="$PROJECT_DIR$/Assets/Scripts/Static/StaticMath.cs" />
         <option value="$PROJECT_DIR$/Assets/Scripts/Static/StaticMethods.cs" />
         <option value="$PROJECT_DIR$/Assets/Scripts/Static/Mathv.cs" />
-        <option value="$PROJECT_DIR$/Assets/Scripts/Noise/NoiseMap.cs" />
         <option value="$PROJECT_DIR$/Assets/Scripts/Threading/ChunkBuildingThreadedItem.cs" />
-        <option value="$PROJECT_DIR$/Assets/Scripts/Threading/ThreadedItem.cs" />
         <option value="$PROJECT_DIR$/Assets/Scripts/Environment/Terrain/Chunk.cs" />
         <option value="$PROJECT_DIR$/Assets/Scripts/Controllers/Game/GameController.cs" />
         <option value="$PROJECT_DIR$/Assets/Scripts/Environment/Terrain/Block.cs" />
-        <option value="$PROJECT_DIR$/Assets/Scripts/Threading/ChunkMeshingThreadedItem.cs" />
-        <option value="$PROJECT_DIR$/Assets/Scripts/Controllers/Game/OptionsController.cs" />
         <option value="$PROJECT_DIR$/Assets/Scripts/Controllers/UI/Components/Text/FPSTextController.cs" />
         <option value="$PROJECT_DIR$/Assets/Scripts/Environment/Direction.cs" />
         <option value="$PROJECT_DIR$/Assets/Scripts/Controllers/Entity/EntityController.cs" />
         <option value="$PROJECT_DIR$/Assets/Scripts/Game/Direction.cs" />
         <option value="$PROJECT_DIR$/Assets/Scripts/Controllers/Game/TextureController.cs" />
-        <option value="$PROJECT_DIR$/Assets/Scripts/Controllers/Entity/PlayerController.cs" />
-        <option value="$PROJECT_DIR$/Assets/Scripts/Controllers/World/ChunkController.cs" />
         <option value="$PROJECT_DIR$/Assets/Scripts/Controllers/Game/BlockController.cs" />
-        <option value="$PROJECT_DIR$/Assets/Scripts/Controllers/World/WorldController.cs" />
         <option value="$PROJECT_DIR$/Assets/Scripts/Game/Entity/EntityTransformToken.cs" />
-        <option value="$PROJECT_DIR$/Assets/Scripts/Game/Terrain/Chunk.cs" />
         <option value="$PROJECT_DIR$/Assets/Scripts/Threading/SingleThreadedQueue.cs" />
+        <option value="$PROJECT_DIR$/Assets/Scripts/Threading/ThreadedItem.cs" />
+        <option value="$PROJECT_DIR$/Assets/Scripts/Threading/ThreadedQueue.cs" />
+        <option value="$PROJECT_DIR$/Assets/Scripts/Game/Updates/OptimumUpdateSubscriber.cs" />
+        <option value="$PROJECT_DIR$/Assets/Scripts/Game/Updates/IOptimumUpdateSubscriber.cs" />
+        <option value="$PROJECT_DIR$/Assets/Scripts/Controllers/Game/OptionsController.cs" />
+        <option value="$PROJECT_DIR$/Assets/Scripts/Threading/ChunkMeshingThreadedItem.cs" />
+        <option value="$PROJECT_DIR$/Assets/Scripts/Game/Entity/IEntityChunkChangedSubscriber.cs" />
+        <option value="$PROJECT_DIR$/Assets/Scripts/Controllers/Game/OptimumUpdateController.cs" />
+        <option value="$PROJECT_DIR$/Assets/Scripts/Controllers/Entity/PlayerController.cs" />
+        <option value="$PROJECT_DIR$/Assets/Scripts/Controllers/World/WorldController.cs" />
+        <option value="$PROJECT_DIR$/Assets/Scripts/Noise/Perlin/PerlinNoise.cs" />
+        <option value="$PROJECT_DIR$/Assets/Scripts/Noise/NoiseMap.cs" />
+        <option value="$PROJECT_DIR$/Assets/Scripts/Controllers/World/ChunkController.cs" />
+        <option value="$PROJECT_DIR$/Assets/Scripts/Controllers/UI/Diagnostics/DiagnosticsPanelController.cs" />
+        <option value="$PROJECT_DIR$/Assets/Scripts/Game/Terrain/Chunk.cs" />
       </list>
     </option>
   </component>
@@ -340,7 +298,9 @@
       <workItem from="1566668586396" duration="3586000" />
       <workItem from="1566672309178" duration="1802000" />
       <workItem from="1566761166552" duration="17598000" />
-      <workItem from="1566811307694" duration="9919000" />
+      <workItem from="1566811307694" duration="10101000" />
+      <workItem from="1566878504822" duration="526000" />
+      <workItem from="1566879197895" duration="14339000" />
     </task>
     <servers />
   </component>
@@ -449,13 +409,13 @@
         </breakpoint>
         <line-breakpoint enabled="true" type="DotNet Breakpoints">
           <url>file://$PROJECT_DIR$/Assets/Scripts/Controllers/World/ChunkController.cs</url>
-          <line>278</line>
+          <line>287</line>
           <properties documentPath="$PROJECT_DIR$/Assets/Scripts/Controllers/World/ChunkController.cs" initialLine="283">
             <startOffsets>
-              <option value="8496" />
+              <option value="8807" />
             </startOffsets>
             <endOffsets>
-              <option value="8511" />
+              <option value="8822" />
             </endOffsets>
           </properties>
           <option name="timeStamp" value="10" />

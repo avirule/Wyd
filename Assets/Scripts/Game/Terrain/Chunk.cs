@@ -5,6 +5,7 @@ using Controllers.Entity;
 using Controllers.Game;
 using Controllers.UI.Diagnostics;
 using Controllers.World;
+using Game.Entity;
 using Logging;
 using NLog;
 using Static;
@@ -16,10 +17,16 @@ using UnityEngine.Rendering;
 
 namespace Game.Terrain
 {
-    public class Chunk : MonoBehaviour
+    public enum ChunkThreadingMode
     {
-        private static readonly MultiThreadedQueue BuildingQueue = new MultiThreadedQueue(200);
-        private static readonly MultiThreadedQueue MeshingQueue = new MultiThreadedQueue(200);
+        Single = 0,
+        Multi = 1,
+        Variable = 2
+    }
+
+    public class Chunk : MonoBehaviour, IEntityChunkChangedSubscriber
+    {
+        private static readonly ThreadedQueue ThreadedExecutionQueue = new ThreadedQueue(200, 4000);
         public static readonly Vector3Int Size = new Vector3Int(16, 256, 16);
 
         private object _BuildingIdentity;
@@ -36,21 +43,17 @@ namespace Game.Terrain
         public bool PendingMeshUpdate;
         public Material BlocksMaterial;
         public Vector3Int Position;
-
         public bool DrawShadows;
 
         public bool Active => gameObject.activeSelf;
 
+        public bool EntityChangedChunk { get; set; }
+        
         private void Awake()
         {
-            if (!MeshingQueue.Running)
+            if (!ThreadedExecutionQueue.Running)
             {
-                MeshingQueue.Start();
-            }
-
-            if (!BuildingQueue.Running)
-            {
-                BuildingQueue.Start();
+                ThreadedExecutionQueue.Start();
             }
 
             _MainCamera = Camera.main;
@@ -60,16 +63,37 @@ namespace Game.Terrain
             Position = transform.position.ToInt();
             Built = Building = Meshed = Meshing = false;
             PendingMeshUpdate = true;
-            double waitTime = TimeSpan
-                .FromTicks((DateTime.Now.Ticks - WorldController.Current.InitialTick) %
-                           WorldController.Current.WorldTickRate.Ticks)
-                .TotalSeconds;
-            InvokeRepeating(nameof(Tick), (float) waitTime, (float) WorldController.Current.WorldTickRate.TotalSeconds);
+            
+            // todo implement chunk ticks
+//            double waitTime = TimeSpan
+//                .FromTicks((DateTime.Now.Ticks - WorldController.Current.InitialTick) %
+//                           WorldController.Current.WorldTickRate.Ticks)
+//                .TotalSeconds;
+//            InvokeRepeating(nameof(Tick), (float) waitTime, (float) WorldController.Current.WorldTickRate.TotalSeconds);
         }
 
         private void Start()
         {
-            PlayerController.Current.ChunkChanged += CheckUpdateInternalSettings;
+            ThreadedExecutionQueue.MultiThreadedExecution =
+                OptionsController.Current.ChunkThreadingMode != ChunkThreadingMode.Single;
+
+            PlayerController.Current.RegisterEntityChangedSubscriber(this);
+        }
+
+        private void Update()
+        {
+            CheckModifyThreadedExecutionQueueThreadingMode();
+            
+            if (EntityChangedChunk)
+            {
+                CheckUpdateInternalSettings(PlayerController.Current.CurrentChunk);
+            }
+            
+            if (Active)
+            {
+                GenerationCheckAndStart();
+            }
+
         }
 
         private void LateUpdate()
@@ -78,17 +102,37 @@ namespace Game.Terrain
             {
                 return;
             }
-            
-            Graphics.DrawMesh(Mesh, _WorldMatrix, BlocksMaterial, 0, _MainCamera, 0, null, ShadowCastingMode.On, DrawShadows);
+
+            Graphics.DrawMesh(Mesh, _WorldMatrix, BlocksMaterial, 0, _MainCamera, 0, null, ShadowCastingMode.Off,
+                false);
         }
 
         private void OnApplicationQuit()
         {
             // Deallocate and destroy ALL NativeCollection / disposable objects
-            BuildingQueue.Abort();
-            MeshingQueue.Abort();
+            ThreadedExecutionQueue.Abort();
         }
 
+        private static void CheckModifyThreadedExecutionQueueThreadingMode()
+        {
+            // todo something where this isn't local const. Relative to max internal frame time maybe?
+            const float fps60 = 1f / 60f;
+
+            if (OptionsController.Current.ChunkThreadingMode != ChunkThreadingMode.Variable)
+            {
+                return;
+            }
+
+            if (ThreadedExecutionQueue.MultiThreadedExecution && (Time.deltaTime > fps60))
+            {
+                ThreadedExecutionQueue.MultiThreadedExecution = false;
+            }
+            else if (!ThreadedExecutionQueue.MultiThreadedExecution && (Time.deltaTime <= fps60))
+            {
+                ThreadedExecutionQueue.MultiThreadedExecution = true;
+            }
+        }
+        
         private object BeginBuildChunk()
         {
             Built = false;
@@ -116,7 +160,7 @@ namespace Game.Terrain
                 return default;
             }
 
-            return BuildingQueue.AddThreadedItem(new ChunkBuildingThreadedItem(ref Blocks, noiseMap));
+            return ThreadedExecutionQueue.AddThreadedItem(new ChunkBuildingThreadedItem(ref Blocks, noiseMap));
         }
 
         private object BeginGenerateMesh()
@@ -129,14 +173,16 @@ namespace Game.Terrain
             Meshed = PendingMeshUpdate = false;
             Meshing = true;
 
-            return MeshingQueue.AddThreadedItem(new ChunkMeshingThreadedItem(Position, Blocks));
+            return ThreadedExecutionQueue.AddThreadedItem(new ChunkMeshingThreadedItem(Position, Blocks));
         }
 
         public void Activate(Vector3Int position = default)
         {
-            transform.position = position;
-            _WorldMatrix = transform.localToWorldMatrix;
+            Transform self = transform;
+            self.position = position;
+            _WorldMatrix = self.localToWorldMatrix;
             Position = position;
+            Built = Building = Meshed = Meshing = false;
             PendingMeshUpdate = true;
             gameObject.SetActive(true);
         }
@@ -151,26 +197,16 @@ namespace Game.Terrain
             gameObject.SetActive(false);
         }
 
-        private void Tick()
-        {
-            if (!Active)
-            {
-                return;
-            }
-
-            GenerationCheckAndStart();
-        }
-
         private void GenerationCheckAndStart()
         {
             if (Building)
             {
-                if (BuildingQueue.TryGetFinishedItem(_BuildingIdentity, out ThreadedItem threadedItem))
+                if (ThreadedExecutionQueue.TryGetFinishedItem(_BuildingIdentity, out ThreadedItem threadedItem))
                 {
                     Building = false;
                     Built = PendingMeshUpdate = true;
 
-                    DiagnosticsPanelController.ChunkBuildTimes.Enqueue(threadedItem.ExecutionTime);
+                    DiagnosticsPanelController.ChunkBuildTimes.Enqueue(threadedItem.ExecutionTime.TotalMilliseconds);
                 }
             }
             else if (!Built && !Building)
@@ -180,24 +216,23 @@ namespace Game.Terrain
 
             if (Meshing)
             {
-                if (MeshingQueue.TryGetFinishedItem(_MeshingIdentity, out ThreadedItem threadedItem))
+                if (ThreadedExecutionQueue.TryGetFinishedItem(_MeshingIdentity, out ThreadedItem threadedItem))
                 {
                     Meshing = false;
                     Meshed = true;
 
                     ((ChunkMeshingThreadedItem) threadedItem).GetMesh(ref Mesh);
 
-                    DiagnosticsPanelController.ChunkMeshTimes.Enqueue(threadedItem.ExecutionTime);
+                    DiagnosticsPanelController.ChunkMeshTimes.Enqueue(threadedItem.ExecutionTime.TotalMilliseconds);
                 }
             }
             else if ((PendingMeshUpdate || !Meshed) && ChunkController.Current.AllChunksBuilt)
             {
                 _MeshingIdentity = BeginGenerateMesh();
             }
-
         }
 
-        private void CheckUpdateInternalSettings(object sender, Vector3Int chunkPosition)
+        private void CheckUpdateInternalSettings(Vector3Int chunkPosition)
         {
             // chunk player is in should always be expensive / shadowed
             if (Position == chunkPosition)
