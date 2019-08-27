@@ -27,7 +27,7 @@ namespace Noise
         {
             Bounds = new BoundsInt(center - new Vector3Int(size.x / 2, 0, size.z / 2), size);
             InitMap(map);
-            
+
             Ready = false;
         }
 
@@ -43,7 +43,7 @@ namespace Noise
                 }
             }
         }
-        
+
         /// <summary>
         ///     Generates or regenerates a noise map and adjusts map bounds.
         /// </summary>

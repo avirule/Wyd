@@ -1,6 +1,5 @@
 #region
 
-using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
@@ -30,7 +29,7 @@ namespace Controllers.World
         public int CachedChunksCount => _CachedChunks.Count;
         public bool AllChunksBuilt => _Chunks.All(kvp => kvp.Value.Built);
         public bool AllChunksMeshed => _Chunks.All(kvp => kvp.Value.Meshed);
-        
+
         public bool EntityChangedChunk { get; set; }
 
         private void Awake()
@@ -44,7 +43,7 @@ namespace Controllers.World
                 Current = this;
             }
 
-            _ChunkObject = Resources.Load<Chunk>(@"Terrain\Chunk");
+            _ChunkObject = Resources.Load<Chunk>(@"Prefabs\Chunk");
             _CachedChunks = new Queue<Chunk>();
             _DeactivationQueue = new Queue<Chunk>();
             _FrameTimeLimiter = new Stopwatch();
@@ -68,7 +67,7 @@ namespace Controllers.World
 
                 EntityChangedChunk = false;
             }
-            
+
             if (BuildChunkQueue.Count > 0)
             {
                 ProcessBuildChunkQueue();
@@ -78,7 +77,7 @@ namespace Controllers.World
             {
                 ProcessDeactivationQueue();
             }
-            
+
             // if maximum chunk cache size is not zero then cull chunks down to half the maximum when idle
             if ((OptionsController.Current.MaximumChunkCacheSize != 0) &&
                 (_CachedChunks.Count > (OptionsController.Current.MaximumChunkCacheSize / 2)))
@@ -265,7 +264,7 @@ namespace Controllers.World
         public Chunk GetChunkAtPosition(Vector3Int position)
         {
             bool trySuccess = _Chunks.TryGetValue(position, out Chunk chunk);
-            
+
             return trySuccess ? chunk : default;
         }
 

@@ -25,6 +25,16 @@
             </e>
           </e>
         </e>
+        <e p="Resources" t="Include">
+          <e p="Graphics" t="Include">
+            <e p="Shaders" t="Include">
+              <e p="StandardArray.shader" t="Include" />
+              <e p="UnityStandardCoreArray.cginc" t="Include" />
+              <e p="UnityStandardCoreForwardArray.cginc" t="Include" />
+              <e p="UnityStandardInputArray.cginc" t="Include" />
+            </e>
+          </e>
+        </e>
         <e p="Scripts" t="Include">
           <e p="Audio" t="Include">
             <e p="AudioFade.cs" t="Include" />

@@ -5,13 +5,165 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="c75ae2de-3a89-4228-87f5-5925302b6d96" name="Default Changelist" comment="">
+      <change afterPath="$PROJECT_DIR$/Assets/Resources/Graphics.meta" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Assets/Resources/Graphics/Fonts.meta" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Assets/Resources/Graphics/Fonts/Thaleah_PixelFont.meta" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Assets/Resources/Graphics/Fonts/Thaleah_PixelFont/ThaleahFat SDF.asset" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Assets/Resources/Graphics/Fonts/Thaleah_PixelFont/ThaleahFat SDF.asset.meta" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Assets/Resources/Graphics/Fonts/Thaleah_PixelFont/ThaleahFat.fontsettings" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Assets/Resources/Graphics/Fonts/Thaleah_PixelFont/ThaleahFat.fontsettings.meta" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Assets/Resources/Graphics/Fonts/Thaleah_PixelFont/ThaleahFat.mat" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Assets/Resources/Graphics/Fonts/Thaleah_PixelFont/ThaleahFat.mat.meta" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Assets/Resources/Graphics/Fonts/Thaleah_PixelFont/ThaleahFat.png" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Assets/Resources/Graphics/Fonts/Thaleah_PixelFont/ThaleahFat.png.meta" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Assets/Resources/Graphics/Fonts/Thaleah_PixelFont/ThaleahFat_TTF.ttf" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Assets/Resources/Graphics/Fonts/Thaleah_PixelFont/ThaleahFat_TTF.ttf.meta" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Assets/Resources/Graphics/Shaders.meta" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Assets/Resources/Graphics/Shaders/StandardArray.shader" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Assets/Resources/Graphics/Shaders/StandardArray.shader.meta" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Assets/Resources/Graphics/Shaders/UnityStandardCoreArray.cginc" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Assets/Resources/Graphics/Shaders/UnityStandardCoreArray.cginc.meta" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Assets/Resources/Graphics/Shaders/UnityStandardCoreForwardArray.cginc" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Assets/Resources/Graphics/Shaders/UnityStandardCoreForwardArray.cginc.meta" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Assets/Resources/Graphics/Shaders/UnityStandardInputArray.cginc" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Assets/Resources/Graphics/Shaders/UnityStandardInputArray.cginc.meta" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Assets/Resources/Graphics/Textures.meta" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Assets/Resources/Graphics/Textures/Blocks.meta" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Assets/Resources/Graphics/Textures/Blocks/BlocksAtlas.aseprite" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Assets/Resources/Graphics/Textures/Blocks/BlocksAtlas.aseprite.meta" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Assets/Resources/Graphics/Textures/Blocks/CoalOre.png" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Assets/Resources/Graphics/Textures/Blocks/CoalOre.png.meta" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Assets/Resources/Graphics/Textures/Blocks/CopperOre.png" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Assets/Resources/Graphics/Textures/Blocks/CopperOre.png.meta" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Assets/Resources/Graphics/Textures/Blocks/DiamondOre.png" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Assets/Resources/Graphics/Textures/Blocks/DiamondOre.png.meta" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Assets/Resources/Graphics/Textures/Blocks/Dirt.png" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Assets/Resources/Graphics/Textures/Blocks/Dirt.png.meta" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Assets/Resources/Graphics/Textures/Blocks/DirtCoarse.png" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Assets/Resources/Graphics/Textures/Blocks/DirtCoarse.png.meta" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Assets/Resources/Graphics/Textures/Blocks/Glass.png" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Assets/Resources/Graphics/Textures/Blocks/Glass.png.meta" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Assets/Resources/Graphics/Textures/Blocks/GoldOre.png" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Assets/Resources/Graphics/Textures/Blocks/GoldOre.png.meta" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Assets/Resources/Graphics/Textures/Blocks/Grass.png" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Assets/Resources/Graphics/Textures/Blocks/Grass.png.meta" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Assets/Resources/Graphics/Textures/Blocks/GrassSide.png" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Assets/Resources/Graphics/Textures/Blocks/GrassSide.png.meta" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Assets/Resources/Graphics/Textures/Blocks/Gravel.png" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Assets/Resources/Graphics/Textures/Blocks/Gravel.png.meta" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Assets/Resources/Graphics/Textures/Blocks/IronOre.png" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Assets/Resources/Graphics/Textures/Blocks/IronOre.png.meta" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Assets/Resources/Graphics/Textures/Blocks/OakLeaf.png" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Assets/Resources/Graphics/Textures/Blocks/OakLeaf.png.meta" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Assets/Resources/Graphics/Textures/Blocks/OakLeafApples.png" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Assets/Resources/Graphics/Textures/Blocks/OakLeafApples.png.meta" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Assets/Resources/Graphics/Textures/Blocks/OakLog.png" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Assets/Resources/Graphics/Textures/Blocks/OakLog.png.meta" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Assets/Resources/Graphics/Textures/Blocks/OakLogInner.png" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Assets/Resources/Graphics/Textures/Blocks/OakLogInner.png.meta" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Assets/Resources/Graphics/Textures/Blocks/OakPlanks.png" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Assets/Resources/Graphics/Textures/Blocks/OakPlanks.png.meta" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Assets/Resources/Graphics/Textures/Blocks/Sand.png" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Assets/Resources/Graphics/Textures/Blocks/Sand.png.meta" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Assets/Resources/Graphics/Textures/Blocks/SilverOre.png" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Assets/Resources/Graphics/Textures/Blocks/SilverOre.png.meta" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Assets/Resources/Graphics/Textures/Blocks/Snow.png" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Assets/Resources/Graphics/Textures/Blocks/Snow.png.meta" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Assets/Resources/Graphics/Textures/Blocks/SnowSide.png" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Assets/Resources/Graphics/Textures/Blocks/SnowSide.png.meta" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Assets/Resources/Graphics/Textures/Blocks/Stone.png" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Assets/Resources/Graphics/Textures/Blocks/Stone.png.meta" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Assets/Resources/Graphics/Textures/Blocks/TungstenOre.png" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Assets/Resources/Graphics/Textures/Blocks/TungstenOre.png.meta" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Assets/Resources/Materials.meta" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Assets/Resources/Materials/BlocksMaterial.mat" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Assets/Resources/Materials/BlocksMaterial.mat.meta" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Assets/Resources/Prefabs.meta" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Assets/Resources/Prefabs/Chunk.prefab" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Assets/Resources/Prefabs/Chunk.prefab.meta" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Assets/Resources/Prefabs/EntityToken.prefab" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Assets/Resources/Prefabs/EntityToken.prefab.meta" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Assets/Resources/Prefabs/GameController.prefab" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Assets/Resources/Prefabs/GameController.prefab.meta" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Assets/Resources/Prefabs/UI.meta" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Assets/Resources/Prefabs/UI/Components.meta" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Assets/Resources/Prefabs/UI/Components/Buttons.meta" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Assets/Resources/Prefabs/UI/Components/Buttons/DefaultButton.prefab" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Assets/Resources/Prefabs/UI/Components/Buttons/DefaultButton.prefab.meta" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Assets/Resources/Prefabs/UI/Components/Buttons/ExitButton.prefab" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Assets/Resources/Prefabs/UI/Components/Buttons/ExitButton.prefab.meta" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Assets/Resources/Prefabs/UI/Components/Buttons/OptionsButton.prefab" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Assets/Resources/Prefabs/UI/Components/Buttons/OptionsButton.prefab.meta" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Assets/Resources/Prefabs/UI/Components/Buttons/QuitMainMenuButton.prefab" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Assets/Resources/Prefabs/UI/Components/Buttons/QuitMainMenuButton.prefab.meta" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Assets/Resources/Prefabs/UI/Components/Buttons/VSyncButton.prefab" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Assets/Resources/Prefabs/UI/Components/Buttons/VSyncButton.prefab.meta" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Assets/Resources/Prefabs/UI/Components/Text.meta" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Assets/Resources/Prefabs/UI/Components/Text/DiagnosticText.prefab" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Assets/Resources/Prefabs/UI/Components/Text/DiagnosticText.prefab.meta" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Assets/Resources/Prefabs/UI/GameUI.prefab" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Assets/Resources/Prefabs/UI/GameUI.prefab.meta" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/.idea.Wyd/.idea/contentModel.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/.idea.Wyd/.idea/contentModel.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/.idea.Wyd/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/.idea.Wyd/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Assets/Resources/Controllers.meta" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Assets/Resources/Controllers/GameController.prefab" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Assets/Resources/Controllers/GameController.prefab.meta" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Assets/Resources/Entities.meta" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Assets/Resources/Entities/EntityToken.prefab" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Assets/Resources/Entities/EntityToken.prefab.meta" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Assets/Resources/Fonts.meta" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Assets/Resources/Fonts/Thaleah_PixelFont.meta" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Assets/Resources/Fonts/Thaleah_PixelFont/ThaleahFat SDF.asset" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Assets/Resources/Fonts/Thaleah_PixelFont/ThaleahFat SDF.asset.meta" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Assets/Resources/Fonts/Thaleah_PixelFont/ThaleahFat.fontsettings" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Assets/Resources/Fonts/Thaleah_PixelFont/ThaleahFat.fontsettings.meta" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Assets/Resources/Fonts/Thaleah_PixelFont/ThaleahFat.mat" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Assets/Resources/Fonts/Thaleah_PixelFont/ThaleahFat.mat.meta" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Assets/Resources/Fonts/Thaleah_PixelFont/ThaleahFat.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Assets/Resources/Fonts/Thaleah_PixelFont/ThaleahFat.png.meta" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Assets/Resources/Fonts/Thaleah_PixelFont/ThaleahFat_TTF.ttf" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Assets/Resources/Fonts/Thaleah_PixelFont/ThaleahFat_TTF.ttf.meta" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Assets/Resources/Terrain.meta" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Assets/Resources/Terrain/BlocksAtlas.aseprite" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Assets/Resources/Terrain/BlocksAtlas.aseprite.meta" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Assets/Resources/Terrain/BlocksAtlas.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Assets/Resources/Terrain/BlocksAtlas.png.meta" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Assets/Resources/Terrain/BlocksMaterial.mat" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Assets/Resources/Terrain/BlocksMaterial.mat.meta" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Assets/Resources/Terrain/Chunk.prefab" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Assets/Resources/Terrain/Chunk.prefab.meta" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Assets/Resources/UI.meta" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Assets/Resources/UI/Components.meta" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Assets/Resources/UI/Components/Buttons.meta" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Assets/Resources/UI/Components/Buttons/DefaultButton.prefab" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Assets/Resources/UI/Components/Buttons/DefaultButton.prefab.meta" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Assets/Resources/UI/Components/Buttons/ExitButton.prefab" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Assets/Resources/UI/Components/Buttons/ExitButton.prefab.meta" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Assets/Resources/UI/Components/Buttons/OptionsButton.prefab" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Assets/Resources/UI/Components/Buttons/OptionsButton.prefab.meta" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Assets/Resources/UI/Components/Buttons/QuitMainMenuButton.prefab" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Assets/Resources/UI/Components/Buttons/QuitMainMenuButton.prefab.meta" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Assets/Resources/UI/Components/Buttons/VSyncButton.prefab" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Assets/Resources/UI/Components/Buttons/VSyncButton.prefab.meta" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Assets/Resources/UI/Components/Text.meta" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Assets/Resources/UI/Components/Text/DiagnosticText.prefab" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Assets/Resources/UI/Components/Text/DiagnosticText.prefab.meta" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Assets/Resources/UI/GameUI.prefab" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Assets/Resources/UI/GameUI.prefab.meta" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Assets/Scripts/Controllers/Entity/PlayerController.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/Scripts/Controllers/Entity/PlayerController.cs" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/Assets/Scripts/Controllers/Game/BlockController.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/Scripts/Controllers/Game/BlockController.cs" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/Assets/Scripts/Controllers/Game/GameController.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/Scripts/Controllers/Game/GameController.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Assets/Scripts/Controllers/Game/TextureController.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/Scripts/Controllers/Game/TextureController.cs" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/Assets/Scripts/Controllers/UI/Components/InputField/DebugCommandLineController.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/Scripts/Controllers/UI/Components/InputField/DebugCommandLineController.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Assets/Scripts/Controllers/UI/Diagnostics/DiagnosticsPanelController.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/Scripts/Controllers/UI/Diagnostics/DiagnosticsPanelController.cs" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/Assets/Scripts/Controllers/World/ChunkController.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/Scripts/Controllers/World/ChunkController.cs" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/Assets/Scripts/Controllers/World/WorldController.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/Scripts/Controllers/World/WorldController.cs" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/Assets/Scripts/Game/Entity/EntityTransformToken.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/Scripts/Game/Entity/EntityTransformToken.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Assets/Scripts/Game/Terrain/Block.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/Scripts/Game/Terrain/Block.cs" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/Assets/Scripts/Game/Terrain/Chunk.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/Scripts/Game/Terrain/Chunk.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Assets/Scripts/Game/Terrain/Generation/WorldSeed.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/Scripts/Game/Terrain/Generation/WorldSeed.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Assets/Scripts/Noise/NoiseMap.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/Scripts/Noise/NoiseMap.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Assets/Scripts/Noise/Perlin/PerlinNoise.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/Scripts/Noise/Perlin/PerlinNoise.cs" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/Assets/Scripts/Threading/ChunkBuildingThreadedItem.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/Scripts/Threading/ChunkBuildingThreadedItem.cs" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/Assets/Scripts/Threading/ChunkMeshingThreadedItem.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/Scripts/Threading/ChunkMeshingThreadedItem.cs" afterDir="false" />
     </list>
@@ -35,6 +187,7 @@
     <setting file="file://$PROJECT_DIR$/Assets/Scripts/Controllers/Entity/CameraController.cs" root0="FORCE_HIGHLIGHTING" />
     <setting file="file://$PROJECT_DIR$/Assets/TextMesh Pro/Resources/Shaders/TMP_SDF-Mobile Overlay.shader" root0="FORCE_HIGHLIGHTING" />
     <setting file="file://$PROJECT_DIR$/Assets/Scripts/Game/Direction.cs" root0="FORCE_HIGHLIGHTING" />
+    <setting file="file://$PROJECT_DIR$/Assets/Resources/Graphics/Shaders/UnityStandardCoreArray.cginc" root0="FORCE_HIGHLIGHTING" />
     <setting file="file://$APPLICATION_CONFIG_DIR$/resharper-host/DecompilerCache/decompiler/3F37B2CA-7BC0-4094-93C9-29A81891A481/c1/e30a8b29/Vector3Int.cs" root0="SKIP_HIGHLIGHTING" />
     <setting file="file://$PROJECT_DIR$/Assets/Scripts/Game/Terrain/Chunk.cs" root0="FORCE_HIGHLIGHTING" />
     <setting file="file://$APPLICATION_CONFIG_DIR$/resharper-host/DecompilerCache/decompiler/7D971063-3068-4ADD-86D0-80ECF65BFE69/1e/9a3cfa7b/GenericEqualityComparer`1.cs" root0="SKIP_HIGHLIGHTING" />
@@ -96,6 +249,7 @@
     <setting file="file://$PROJECT_DIR$/ProjectSettings/ProjectSettings.asset" root0="FORCE_HIGHLIGHTING" />
     <setting file="file://$APPLICATION_CONFIG_DIR$/resharper-host/DecompilerCache/decompiler/3F37B2CA-7BC0-4094-93C9-29A81891A481/5c/405b5893/UnsafeUtility.cs" root0="SKIP_HIGHLIGHTING" />
     <setting file="file://$APPLICATION_CONFIG_DIR$/resharper-host/DecompilerCache/decompiler/3F37B2CA-7BC0-4094-93C9-29A81891A481/8a/5fba61e5/NativeArray`1.cs" root0="SKIP_HIGHLIGHTING" />
+    <setting file="file://$PROJECT_DIR$/Library/PackageCache/com.unity.textmeshpro@2.0.1/Scripts/Runtime/TMPro_UGUI_Private.cs" root0="SKIP_HIGHLIGHTING" />
     <setting file="file://$PROJECT_DIR$/Assets/Scripts/Controllers/UI/MainMenuController.cs" root0="FORCE_HIGHLIGHTING" />
     <setting file="file://$PROJECT_DIR$/Assets/Scripts/Controllers/UI/Diagnostics/DiagnosticsPanelController.cs" root0="FORCE_HIGHLIGHTING" />
     <setting file="file://$PROJECT_DIR$/Assets/Scripts/Threading/ChunkMeshingThreadedItem.cs" root0="FORCE_HIGHLIGHTING" />
@@ -110,13 +264,6 @@
   <component name="IdeDocumentHistory">
     <option name="CHANGED_PATHS">
       <list>
-        <option value="$PROJECT_DIR$/Assets/Scripts/Environment/Terrain/Generation/ChunkBuilderJob.cs" />
-        <option value="$PROJECT_DIR$/Assets/Scripts/Environment/Terrain/Generation/ChunkGeneratorJob.cs" />
-        <option value="$PROJECT_DIR$/Assets/Scripts/Environment/Terrain/Generation/ChunkMeshingThreadedItem.cs" />
-        <option value="$PROJECT_DIR$/Assets/Scripts/Controllers/UI/Components/Text/FPSController.cs" />
-        <option value="$PROJECT_DIR$/Assets/Scripts/Controllers/UI/Diagnostics/DiagnosticsController.cs" />
-        <option value="$PROJECT_DIR$/Assets/Scripts/Controllers/UI/MainMenuController.cs" />
-        <option value="$PROJECT_DIR$/Assets/Scripts/Controllers/UI/Components/Text/VersionTextController.cs" />
         <option value="$PROJECT_DIR$/Assets/Scripts/Controllers/UI/Components/Text/VSyncLevelTextController.cs" />
         <option value="$PROJECT_DIR$/Assets/Scripts/Controllers/UI/Components/Button/VSyncLevelButtonController.cs" />
         <option value="$PROJECT_DIR$/Assets/Scripts/Controllers/UI/Components/Button/ExitButtonController.cs" />
@@ -139,7 +286,6 @@
         <option value="$PROJECT_DIR$/Assets/Scripts/Environment/Direction.cs" />
         <option value="$PROJECT_DIR$/Assets/Scripts/Controllers/Entity/EntityController.cs" />
         <option value="$PROJECT_DIR$/Assets/Scripts/Game/Direction.cs" />
-        <option value="$PROJECT_DIR$/Assets/Scripts/Controllers/Game/TextureController.cs" />
         <option value="$PROJECT_DIR$/Assets/Scripts/Threading/SingleThreadedQueue.cs" />
         <option value="$PROJECT_DIR$/Assets/Scripts/Threading/ThreadedItem.cs" />
         <option value="$PROJECT_DIR$/Assets/Scripts/Threading/ThreadedQueue.cs" />
@@ -149,18 +295,26 @@
         <option value="$PROJECT_DIR$/Assets/Scripts/Game/Entity/IEntityChunkChangedSubscriber.cs" />
         <option value="$PROJECT_DIR$/Assets/Scripts/Controllers/Game/OptimumUpdateController.cs" />
         <option value="$PROJECT_DIR$/Assets/Scripts/Controllers/Entity/PlayerController.cs" />
-        <option value="$PROJECT_DIR$/Assets/Scripts/Noise/Perlin/PerlinNoise.cs" />
         <option value="$PROJECT_DIR$/Assets/Scripts/Noise/NoiseMap.cs" />
         <option value="$PROJECT_DIR$/Assets/Scripts/Controllers/UI/Diagnostics/DiagnosticsPanelController.cs" />
-        <option value="$PROJECT_DIR$/Assets/Scripts/Game/Terrain/Chunk.cs" />
-        <option value="$PROJECT_DIR$/Assets/Scripts/Threading/ChunkBuildingThreadedItem.cs" />
-        <option value="$PROJECT_DIR$/Assets/Scripts/Controllers/Game/BlockController.cs" />
-        <option value="$PROJECT_DIR$/Assets/Scripts/Controllers/World/ChunkController.cs" />
-        <option value="$PROJECT_DIR$/Assets/Scripts/Controllers/World/WorldController.cs" />
         <option value="$PROJECT_DIR$/Assets/Scripts/Game/Entity/EntityTransformToken.cs" />
-        <option value="$PROJECT_DIR$/Assets/Scripts/Threading/ChunkMeshingThreadedItem.cs" />
         <option value="$PROJECT_DIR$/Assets/Scripts/Controllers/Game/GameController.cs" />
         <option value="$PROJECT_DIR$/Assets/Scripts/Controllers/UI/Components/InputField/DebugCommandLineController.cs" />
+        <option value="$PROJECT_DIR$/Assets/Scripts/Noise/Perlin/PerlinNoise.cs" />
+        <option value="$PROJECT_DIR$/Assets/Scripts/Game/Terrain/Generation/WorldSeed.cs" />
+        <option value="$PROJECT_DIR$/Assets/Resources/Graphics/TerrainShader.shader" />
+        <option value="$PROJECT_DIR$/Assets/Resources/Terrain/TerrainShader.shader" />
+        <option value="$PROJECT_DIR$/Assets/Resources/Graphics/StandardArray.shader" />
+        <option value="$PROJECT_DIR$/Assets/Resources/Graphics/UnityStandardCoreForwardArray.cginc" />
+        <option value="$PROJECT_DIR$/Assets/Resources/Graphics/UnityStandardInputArray.cginc" />
+        <option value="$PROJECT_DIR$/Assets/Resources/Graphics/UnityStandardCoreArray.cginc" />
+        <option value="$PROJECT_DIR$/Assets/Scripts/Game/Terrain/Chunk.cs" />
+        <option value="$PROJECT_DIR$/Assets/Scripts/Controllers/Game/BlockController.cs" />
+        <option value="$PROJECT_DIR$/Assets/Scripts/Threading/ChunkMeshingThreadedItem.cs" />
+        <option value="$PROJECT_DIR$/Assets/Scripts/Controllers/World/ChunkController.cs" />
+        <option value="$PROJECT_DIR$/Assets/Scripts/Controllers/World/WorldController.cs" />
+        <option value="$PROJECT_DIR$/Assets/Scripts/Controllers/Game/TextureController.cs" />
+        <option value="$PROJECT_DIR$/Assets/Scripts/Threading/ChunkBuildingThreadedItem.cs" />
       </list>
     </option>
   </component>
@@ -379,8 +533,8 @@
     <state width="776" height="420" key="XDebugger.FullValuePopup/1920.1080" />
     <state x="567" y="93" key="com.intellij.openapi.editor.actions.MultiplePasteAction$ClipboardContentChooser" />
     <state x="567" y="93" key="com.intellij.openapi.editor.actions.MultiplePasteAction$ClipboardContentChooser/1920.1080" />
-    <state x="446" y="102" width="668" height="660" key="find.popup" />
-    <state x="446" y="102" width="668" height="660" key="find.popup/1920.1080" />
+    <state x="618" y="204" width="668" height="660" key="find.popup" />
+    <state x="618" y="204" width="668" height="660" key="find.popup/1920.1080" />
     <state x="425" y="187" key="run.anything.popup" />
     <state x="425" y="187" key="run.anything.popup/1920.1080" />
     <state x="431" y="145" width="672" height="680" key="search.everywhere.popup" />
@@ -397,13 +551,13 @@
         </breakpoint>
         <line-breakpoint enabled="true" type="DotNet Breakpoints">
           <url>file://$PROJECT_DIR$/Assets/Scripts/Controllers/World/ChunkController.cs</url>
-          <line>287</line>
+          <line>286</line>
           <properties documentPath="$PROJECT_DIR$/Assets/Scripts/Controllers/World/ChunkController.cs" initialLine="283">
             <startOffsets>
-              <option value="8812" />
+              <option value="8754" />
             </startOffsets>
             <endOffsets>
-              <option value="8819" />
+              <option value="8761" />
             </endOffsets>
           </properties>
           <option name="timeStamp" value="10" />

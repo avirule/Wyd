@@ -31,7 +31,7 @@ namespace Controllers.World
         public WorldGenerationSettings WorldGenerationSettings;
         public ChunkController ChunkController;
         public NoiseMap NoiseMap;
-        
+
         public bool EntityChangedChunk { get; set; }
 
         private void Awake()
@@ -58,7 +58,7 @@ namespace Controllers.World
                 return;
             }
 
-            _EntityToken = Resources.Load<GameObject>(@"Entities\EntityToken");
+            _EntityToken = Resources.Load<GameObject>(@"Prefabs\EntityToken");
 
             WorldTickRate = TimeSpan.FromSeconds(1d / TicksPerSecond);
 

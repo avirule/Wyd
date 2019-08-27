@@ -68,7 +68,7 @@ namespace Game.Terrain
 
             Transparent = BlockController.Current.IsBlockDefaultTransparent(Id);
         }
-        
+
         public bool HasAnyFace()
         {
             if (Id == BlockController.BLOCK_EMPTY_ID)

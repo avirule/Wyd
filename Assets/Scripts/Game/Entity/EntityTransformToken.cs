@@ -53,7 +53,6 @@ namespace Game.Entity
 
             if (parentPositionInt32 == CurrentPosition)
             {
-                return;
             }
 
 //            CurrentPosition = parentPositionInt32;
@@ -75,7 +74,8 @@ namespace Game.Entity
                     {
                         Vector3 globalPosition = ParentEntityTransform.position + new Vector3(x, y, z);
 
-                        Block block = new Block(); WorldController.Current.GetBlockAtPosition(globalPosition.ToInt());
+                        Block block = new Block();
+                        WorldController.Current.GetBlockAtPosition(globalPosition.ToInt());
 
                         if (block.Id == BlockController.BLOCK_EMPTY_ID)
                         {

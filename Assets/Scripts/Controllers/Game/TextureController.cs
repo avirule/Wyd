@@ -11,9 +11,12 @@ namespace Controllers.Game
 {
     public class TextureController : MonoBehaviour
     {
+        public static readonly int MainTex = Shader.PropertyToID("_MainTex");
+
         public static TextureController Current;
 
-        public Dictionary<string, Vector2[]> Sprites;
+        public Texture2DArray TerrainTexture;
+        public Dictionary<string, int> TextureIDs;
 
         private void Awake()
         {
@@ -26,37 +29,35 @@ namespace Controllers.Game
                 Current = this;
             }
 
-            Sprites = new Dictionary<string, Vector2[]>();
+            TextureIDs = new Dictionary<string, int>();
         }
 
         private void Start()
         {
-            ProcessSprites();
+            ProcessTextures();
         }
 
-        private void ProcessSprites()
+        private void ProcessTextures()
         {
-            Sprite[] terrainSprites = Resources.LoadAll<Sprite>(@"Terrain\");
+            Texture2D[] terrainTextures = Resources.LoadAll<Texture2D>(@"Graphics\Textures\Blocks\");
 
-            foreach (Sprite sprite in terrainSprites)
+            TerrainTexture = new Texture2DArray(terrainTextures[0].width, terrainTextures[0].height,
+                terrainTextures.Length,
+                TextureFormat.RGBA32, true, false)
             {
-                float xMinNormalized = sprite.rect.xMin / sprite.texture.width;
-                float xMaxNormalized = sprite.rect.xMax / sprite.texture.width;
-                float yMinNormalized = sprite.rect.yMin / sprite.texture.height;
-                float yMaxNormalized = sprite.rect.yMax / sprite.texture.height;
+                filterMode = FilterMode.Point,
+                wrapMode = TextureWrapMode.Repeat
+            };
 
-                Vector2[] uvs =
-                {
-                    new Vector2(xMinNormalized, yMinNormalized),
-                    new Vector2(xMaxNormalized, yMinNormalized),
-                    new Vector2(xMinNormalized, yMaxNormalized),
-                    new Vector2(xMaxNormalized, yMaxNormalized)
-                };
+            for (int i = 0; i < TerrainTexture.depth; i++)
+            {
+                TerrainTexture.SetPixels(terrainTextures[i].GetPixels(0), i, 0);
+                TextureIDs.Add(terrainTextures[i].name.ToLowerInvariant(), i);
 
-                Sprites.Add(sprite.name, uvs);
-
-                EventLog.Logger.Log(LogLevel.Info, $"Sprite processed: {sprite.name}");
+                EventLog.Logger.Log(LogLevel.Info, $"Texture processed: {terrainTextures[i].name}");
             }
+
+            TerrainTexture.Apply();
         }
     }
 }

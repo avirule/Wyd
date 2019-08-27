@@ -40,6 +40,7 @@ namespace Controllers.Game
 
         public bool RegisterBlockRules(string blockName, bool isTransparent, RuleEvaluation uvsRule = default)
         {
+            blockName = blockName.ToLowerInvariant();
             ushort blockId = 0;
 
             try
@@ -69,7 +70,7 @@ namespace Controllers.Game
             return true;
         }
 
-        public bool GetBlockSpriteUVs(ushort blockId, Vector3Int position, Direction direction, out Vector2[] uvs)
+        public bool GetBlockSpriteUVs(ushort blockId, Vector3Int position, Direction direction, out Vector3[] uvs)
         {
             uvs = null;
 
@@ -82,14 +83,30 @@ namespace Controllers.Game
 
             _Blocks[blockId].ReadUVsRule(blockId, position, direction, out string spriteName);
 
-            if (!TextureController.Sprites.ContainsKey(spriteName))
+            if (!TextureController.TextureIDs.ContainsKey(spriteName))
             {
                 EventLog.Logger.Log(LogLevel.Error,
                     $"Failed to return block sprite UVs for direction `{direction}` of block with id `{blockId}`: sprite does not exist for block.");
                 return false;
             }
 
-            uvs = TextureController.Sprites[spriteName];
+            int textureId = TextureController.TextureIDs[spriteName];
+
+            if (textureId == -1)
+            {
+                EventLog.Logger.Log(LogLevel.Error,
+                    $"Failed to return block sprite UVs for direction `{direction}` of block with id `{blockId}`: sprite does not exist for block.");
+                return false;
+            }
+
+            uvs = new[]
+            {
+                new Vector3(0, 0, textureId),
+                new Vector3(1, 0, textureId),
+                new Vector3(0, 1, textureId),
+                new Vector3(1, 1, textureId)
+            };
+
             return true;
         }
 
@@ -112,6 +129,8 @@ namespace Controllers.Game
 
         public ushort GetBlockId(string blockName)
         {
+            blockName = blockName.ToLowerInvariant();
+
             if (!_BlockNameIds.ContainsKey(blockName))
             {
                 EventLog.Logger.Log(LogLevel.Warn,

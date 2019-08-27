@@ -18,7 +18,7 @@ namespace Game.Terrain.Generation
         private readonly byte[] _SeedBytes;
 
         public readonly float Normalized;
-        public readonly int SeedValue;
+        public readonly long SeedValue;
 
         public WorldSeed(string baseSeed)
         {
@@ -30,11 +30,11 @@ namespace Game.Terrain.Generation
             _SeedBytes = new byte[randomSeedBytes];
             new Random(randomSeedBytes).NextBytes(_SeedBytes);
 
-            SeedValue = BitConverter.ToInt32(_SeedBytes, 0);
-            Normalized = Mathf.InverseLerp(int.MinValue, int.MaxValue, SeedValue);
+            SeedValue = BitConverter.ToInt64(_SeedBytes, 0);
+            Normalized = Mathf.InverseLerp(long.MinValue, int.MaxValue, SeedValue);
         }
 
-        public static implicit operator int(WorldSeed seed)
+        public static implicit operator long(WorldSeed seed)
         {
             return seed.SeedValue;
         }

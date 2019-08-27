@@ -44,11 +44,12 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   Mesh: {fileID: 0}
+  Blocks: 
   Built: 0
   Building: 0
   Meshed: 0
   Meshing: 0
   PendingMeshUpdate: 0
-  BlocksMaterial: {fileID: 2100000, guid: 7a70b44b137a7f14ea9fe317526a5d97, type: 2}
+  TerrainMaterial: {fileID: 2100000, guid: 7a70b44b137a7f14ea9fe317526a5d97, type: 2}
   Position: {x: 0, y: 0, z: 0}
   DrawShadows: 0

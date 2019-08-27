@@ -1,6 +1,5 @@
 #region
 
-using System;
 using System.Collections.Generic;
 using Controllers.World;
 using Game.Entity;
@@ -19,7 +18,7 @@ namespace Controllers.Entity
 
         private Vector3 _Movement;
         private List<IEntityChunkChangedSubscriber> _EntityChangedChunkSubscribers;
-        
+
         public bool Grounded;
         public LayerMask GroundedMask;
 
@@ -42,7 +41,7 @@ namespace Controllers.Entity
             }
 
             _EntityChangedChunkSubscribers = new List<IEntityChunkChangedSubscriber>();
-            
+
             CurrentChunk = new Vector3Int(int.MaxValue, 0, int.MaxValue);
         }
 
@@ -75,7 +74,7 @@ namespace Controllers.Entity
                 }
             }
         }
-        
+
         private void CheckChangedChunk()
         {
             Vector3Int chunkPosition =
@@ -96,7 +95,7 @@ namespace Controllers.Entity
             _EntityChangedChunkSubscribers.Add(subscriber);
         }
 
-        
+
         #region MOVEMENT
 
         private void UpdateMovement()
@@ -134,7 +133,7 @@ namespace Controllers.Entity
         }
 
         #endregion
-        
+
 
         #region EVENTS
 

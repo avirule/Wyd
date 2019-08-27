@@ -9,7 +9,8 @@ namespace Noise.Perlin
 {
     public static class PerlinNoise
     {
-        public static float[][] GenerateMap(ref float[][] noiseMap, Vector3Int offset, WorldGenerationSettings generationSettings)
+        public static float[][] GenerateMap(ref float[][] noiseMap, Vector3Int offset,
+            WorldGenerationSettings generationSettings)
         {
             return GenerateMap(ref noiseMap, offset, generationSettings.Seed, generationSettings.Octaves,
                 generationSettings.Scale,

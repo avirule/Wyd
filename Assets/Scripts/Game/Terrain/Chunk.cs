@@ -34,21 +34,26 @@ namespace Game.Terrain
         private Camera _MainCamera;
         private Matrix4x4 _WorldMatrix;
 
+        [Header("Generation")]
         public Mesh Mesh;
+
         public ushort[] Blocks;
         public bool Built;
         public bool Building;
         public bool Meshed;
         public bool Meshing;
         public bool PendingMeshUpdate;
-        public Material BlocksMaterial;
         public Vector3Int Position;
+
+        [Header("Graphics")]
+        public Material TerrainMaterial;
+
         public bool DrawShadows;
 
         public bool Active => gameObject.activeSelf;
 
         public bool EntityChangedChunk { get; set; }
-        
+
         private void Awake()
         {
             if (!ThreadedExecutionQueue.Running)
@@ -63,7 +68,9 @@ namespace Game.Terrain
             Position = transform.position.ToInt();
             Built = Building = Meshed = Meshing = false;
             PendingMeshUpdate = true;
-            
+
+            TerrainMaterial.SetTexture(TextureController.MainTex, TextureController.Current.TerrainTexture);
+
             // todo implement chunk ticks
 //            double waitTime = TimeSpan
 //                .FromTicks((DateTime.Now.Ticks - WorldController.Current.InitialTick) %
@@ -83,17 +90,16 @@ namespace Game.Terrain
         private void Update()
         {
             CheckModifyThreadedExecutionQueueThreadingMode();
-            
+
             if (EntityChangedChunk)
             {
                 CheckUpdateInternalSettings(PlayerController.Current.CurrentChunk);
             }
-            
+
             if (Active)
             {
                 GenerationCheckAndStart();
             }
-
         }
 
         private void LateUpdate()
@@ -103,7 +109,7 @@ namespace Game.Terrain
                 return;
             }
 
-            Graphics.DrawMesh(Mesh, _WorldMatrix, BlocksMaterial, 0, _MainCamera, 0, null, ShadowCastingMode.Off,
+            Graphics.DrawMesh(Mesh, _WorldMatrix, TerrainMaterial, 0, _MainCamera, 0, null, ShadowCastingMode.Off,
                 false);
         }
 
@@ -132,7 +138,7 @@ namespace Game.Terrain
                 ThreadedExecutionQueue.MultiThreadedExecution = true;
             }
         }
-        
+
         private object BeginBuildChunk()
         {
             Built = false;
@@ -160,7 +166,8 @@ namespace Game.Terrain
                 return default;
             }
 
-            return ThreadedExecutionQueue.AddThreadedItem(new ChunkBuildingThreadedItem(ref Blocks, noiseMap));
+            return ThreadedExecutionQueue.AddThreadedItem(new ChunkBuildingThreadedItem(ref Position, ref Blocks,
+                noiseMap));
         }
 
         private object BeginGenerateMesh()

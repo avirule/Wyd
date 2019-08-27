@@ -49,7 +49,7 @@ namespace Controllers.UI.Diagnostics
         {
             double avgBuildTime = ChunkBuildTimes.Count > 0 ? ChunkBuildTimes.Average() : 0d;
             double avgMeshTime = ChunkMeshTimes.Count > 0 ? ChunkMeshTimes.Average() : 0d;
-            
+
             double buildTime = Math.Round(avgBuildTime, 0);
             double meshTime = Math.Round(avgMeshTime, 0);
 
