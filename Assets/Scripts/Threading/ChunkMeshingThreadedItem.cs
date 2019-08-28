@@ -74,8 +74,7 @@ namespace Threading
                     });
 
                     if (BlockController.Current.GetBlockSpriteUVs(_Blocks[index], globalPosition,
-                        Direction.North,
-                        out Vector3[] uvs))
+                        Direction.North, new Vector3(1f, 0f, 1f), out Vector3[] uvs))
                     {
                         _UVs.AddRange(new[]
                         {
@@ -112,8 +111,7 @@ namespace Threading
                     });
 
                     if (BlockController.Current.GetBlockSpriteUVs(_Blocks[index], globalPosition,
-                        Direction.East,
-                        out Vector3[] uvs))
+                        Direction.East, new Vector3(1f, 0f, 1f), out Vector3[] uvs))
                     {
                         _UVs.AddRange(new[]
                         {
@@ -150,8 +148,7 @@ namespace Threading
                     });
 
                     if (BlockController.Current.GetBlockSpriteUVs(_Blocks[index], globalPosition,
-                        Direction.South,
-                        out Vector3[] uvs))
+                        Direction.South, new Vector3(1f, 0f, 1f), out Vector3[] uvs))
                     {
                         _UVs.AddRange(new[]
                         {
@@ -187,8 +184,7 @@ namespace Threading
                     });
 
                     if (BlockController.Current.GetBlockSpriteUVs(_Blocks[index], globalPosition,
-                        Direction.West,
-                        out Vector3[] uvs))
+                        Direction.West, new Vector3(1f, 0f, 1f), out Vector3[] uvs))
                     {
                         _UVs.AddRange(new[]
                         {
@@ -226,8 +222,7 @@ namespace Threading
                     });
 
                     if (BlockController.Current.GetBlockSpriteUVs(_Blocks[index], globalPosition,
-                        Direction.Up,
-                        out Vector3[] uvs))
+                        Direction.Up, new Vector3(1f, 0f, 1f), out Vector3[] uvs))
                     {
                         _UVs.AddRange(new[]
                         {
@@ -264,8 +259,7 @@ namespace Threading
                     });
 
                     if (BlockController.Current.GetBlockSpriteUVs(_Blocks[index], globalPosition,
-                        Direction.Down,
-                        out Vector3[] uvs))
+                        Direction.Down, new Vector3(1f, 0f, 1f), out Vector3[] uvs))
                     {
                         _UVs.AddRange(new[]
                         {
@@ -284,7 +278,7 @@ namespace Threading
         /// </summary>
         /// <param name="mesh">Given <see cref="UnityEngine.Mesh" /> to apply processed data to.</param>
         /// <returns>Processed <see cref="UnityEngine.Mesh" />.</returns>
-        public Mesh GetMesh(ref Mesh mesh)
+        public Mesh GetMesh(Mesh mesh)
         {
             if ((_Vertices.Count == 0) ||
                 (_Triangles.Count == 0))

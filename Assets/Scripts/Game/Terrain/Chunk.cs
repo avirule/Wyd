@@ -33,10 +33,9 @@ namespace Game.Terrain
         private object _MeshingIdentity;
         private Camera _MainCamera;
         private Matrix4x4 _WorldMatrix;
-
-        [Header("Generation")]
-        public Mesh Mesh;
-
+        
+        public MeshFilter MeshFilter;
+        public MeshRenderer MeshRenderer;
         public ushort[] Blocks;
         public bool Built;
         public bool Building;
@@ -46,8 +45,6 @@ namespace Game.Terrain
         public Vector3Int Position;
 
         [Header("Graphics")]
-        public Material TerrainMaterial;
-
         public bool DrawShadows;
 
         public bool Active => gameObject.activeSelf;
@@ -69,7 +66,7 @@ namespace Game.Terrain
             Built = Building = Meshed = Meshing = false;
             PendingMeshUpdate = true;
 
-            TerrainMaterial.SetTexture(TextureController.MainTex, TextureController.Current.TerrainTexture);
+            MeshRenderer.material.SetTexture(TextureController.MainTex, TextureController.Current.TerrainTexture);
 
             // todo implement chunk ticks
 //            double waitTime = TimeSpan
@@ -100,17 +97,6 @@ namespace Game.Terrain
             {
                 GenerationCheckAndStart();
             }
-        }
-
-        private void LateUpdate()
-        {
-            if (!Built || !Meshed || Meshing)
-            {
-                return;
-            }
-
-            Graphics.DrawMesh(Mesh, _WorldMatrix, TerrainMaterial, 0, _MainCamera, 0, null, ShadowCastingMode.Off,
-                false);
         }
 
         private void OnApplicationQuit()
@@ -196,9 +182,9 @@ namespace Game.Terrain
 
         public void Deactivate()
         {
-            if (Mesh != default)
+            if (MeshFilter.mesh != default)
             {
-                Mesh.Clear();
+                MeshFilter.mesh.Clear();
             }
 
             gameObject.SetActive(false);
@@ -228,7 +214,7 @@ namespace Game.Terrain
                     Meshing = false;
                     Meshed = true;
 
-                    ((ChunkMeshingThreadedItem) threadedItem).GetMesh(ref Mesh);
+                    MeshFilter.mesh = ((ChunkMeshingThreadedItem) threadedItem).GetMesh(MeshFilter.mesh);
 
                     DiagnosticsPanelController.ChunkMeshTimes.Enqueue(threadedItem.ExecutionTime.TotalMilliseconds);
                 }

@@ -70,7 +70,7 @@ namespace Controllers.Game
             return true;
         }
 
-        public bool GetBlockSpriteUVs(ushort blockId, Vector3Int position, Direction direction, out Vector3[] uvs)
+        public bool GetBlockSpriteUVs(ushort blockId, Vector3Int position, Direction direction, Vector3 size2d, out Vector3[] uvs)
         {
             uvs = null;
 
@@ -81,30 +81,21 @@ namespace Controllers.Game
                 return false;
             }
 
-            _Blocks[blockId].ReadUVsRule(blockId, position, direction, out string spriteName);
+            _Blocks[blockId].ReadUVsRule(blockId, position, direction, out string textureName);
 
-            if (!TextureController.TextureIDs.ContainsKey(spriteName))
+            if (!TextureController.TryGetTextureId(textureName, out int textureId))
             {
                 EventLog.Logger.Log(LogLevel.Error,
-                    $"Failed to return block sprite UVs for direction `{direction}` of block with id `{blockId}`: sprite does not exist for block.");
-                return false;
-            }
-
-            int textureId = TextureController.TextureIDs[spriteName];
-
-            if (textureId == -1)
-            {
-                EventLog.Logger.Log(LogLevel.Error,
-                    $"Failed to return block sprite UVs for direction `{direction}` of block with id `{blockId}`: sprite does not exist for block.");
+                    $"Failed to return block sprite UVs for direction `{direction}` of block with id `{blockId}`: texture does not exist for block.");
                 return false;
             }
 
             uvs = new[]
             {
                 new Vector3(0, 0, textureId),
-                new Vector3(1, 0, textureId),
-                new Vector3(0, 1, textureId),
-                new Vector3(1, 1, textureId)
+                new Vector3(size2d.x, 0, textureId),
+                new Vector3(0, size2d.y, textureId),
+                new Vector3(0, 0, textureId)
             };
 
             return true;

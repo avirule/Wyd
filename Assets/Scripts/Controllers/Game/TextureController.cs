@@ -1,8 +1,11 @@
 #region
 
 using System.Collections.Generic;
+using Graphics;
 using Logging;
 using NLog;
+using UnityEditor.Tilemaps;
+using UnityEditor.U2D;
 using UnityEngine;
 
 #endregion
@@ -15,8 +18,8 @@ namespace Controllers.Game
 
         public static TextureController Current;
 
-        public Texture2DArray TerrainTexture;
-        public Dictionary<string, int> TextureIDs;
+        public Texture2DArray TerrainTexture { get; private set; }
+        private Dictionary<string, int> _TextureIDs;
 
         private void Awake()
         {
@@ -29,21 +32,20 @@ namespace Controllers.Game
                 Current = this;
             }
 
-            TextureIDs = new Dictionary<string, int>();
+            _TextureIDs = new Dictionary<string, int>();
         }
 
         private void Start()
         {
-            ProcessTextures();
+            ProcessSprites();
         }
 
-        private void ProcessTextures()
+        private void ProcessSprites()
         {
-            Texture2D[] terrainTextures = Resources.LoadAll<Texture2D>(@"Graphics\Textures\Blocks\");
+            Sprite[] sprites = Resources.LoadAll<Sprite>(@"Graphics\Textures\Blocks\");
 
-            TerrainTexture = new Texture2DArray(terrainTextures[0].width, terrainTextures[0].height,
-                terrainTextures.Length,
-                TextureFormat.RGBA32, true, false)
+            TerrainTexture = new Texture2DArray((int) sprites[0].rect.width, (int) sprites[0].rect.height,
+                sprites.Length, TextureFormat.RGBA32, true, false)
             {
                 filterMode = FilterMode.Point,
                 wrapMode = TextureWrapMode.Repeat
@@ -51,13 +53,28 @@ namespace Controllers.Game
 
             for (int i = 0; i < TerrainTexture.depth; i++)
             {
-                TerrainTexture.SetPixels(terrainTextures[i].GetPixels(0), i, 0);
-                TextureIDs.Add(terrainTextures[i].name.ToLowerInvariant(), i);
+                Color[] spritePixels = sprites[i].GetPixels();
+                TerrainTexture.SetPixels(spritePixels, i, 0);
+                _TextureIDs.Add(sprites[i].name.ToLowerInvariant(), i);
+                
+                EventLog.Logger.Log(LogLevel.Info, $"Texture processed: {sprites[i].name}");
+            }
+            
+            TerrainTexture.Apply();
+        }
 
-                EventLog.Logger.Log(LogLevel.Info, $"Texture processed: {terrainTextures[i].name}");
+        public bool TryGetTextureId(string textureName, out int textureId)
+        {
+            textureName = textureName.ToLowerInvariant();
+            textureId = -1;
+            
+            if (!_TextureIDs.ContainsKey(textureName))
+            {
+                return false;
             }
 
-            TerrainTexture.Apply();
+            textureId = _TextureIDs[textureName];
+            return true;
         }
     }
 }

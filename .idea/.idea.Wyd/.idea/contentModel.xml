@@ -28,10 +28,7 @@
         <e p="Resources" t="Include">
           <e p="Graphics" t="Include">
             <e p="Shaders" t="Include">
-              <e p="StandardArray.shader" t="Include" />
-              <e p="UnityStandardCoreArray.cginc" t="Include" />
-              <e p="UnityStandardCoreForwardArray.cginc" t="Include" />
-              <e p="UnityStandardInputArray.cginc" t="Include" />
+              <e p="StandardTerrain.shader" t="Include" />
             </e>
           </e>
         </e>
@@ -100,6 +97,9 @@
                 <e p="WorldSeed.cs" t="Include" />
               </e>
             </e>
+          </e>
+          <e p="Graphics" t="Include">
+            <e p="SpriteExtensions.cs" t="Include" />
           </e>
           <e p="Logging" t="Include">
             <e p="EventLog.cs" t="Include" />

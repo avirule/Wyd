@@ -179,7 +179,7 @@ namespace Threading
 
             if (noiseValue >= 0.2d)
             {
-                _Blocks[index] = BlockController.Current.GetBlockId("Stone");
+                _Blocks[index] = BlockController.Current.GetBlockId("Grass");
             }
         }
     }
