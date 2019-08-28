@@ -70,7 +70,8 @@ namespace Controllers.Game
             return true;
         }
 
-        public bool GetBlockSpriteUVs(ushort blockId, Vector3Int position, Direction direction, Vector3 size2d, out Vector3[] uvs)
+        public bool GetBlockSpriteUVs(ushort blockId, Vector3Int position, Direction direction, Vector3 size2d,
+            out Vector3[] uvs)
         {
             uvs = null;
 
@@ -94,8 +95,8 @@ namespace Controllers.Game
             {
                 new Vector3(0, 0, textureId),
                 new Vector3(size2d.x, 0, textureId),
-                new Vector3(0, size2d.y, textureId),
-                new Vector3(0, 0, textureId)
+                new Vector3(0, size2d.z, textureId),
+                new Vector3(size2d.x, size2d.z, textureId)
             };
 
             return true;

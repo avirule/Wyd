@@ -12,6 +12,6 @@ namespace Graphics
             int height = Mathf.FloorToInt(sprite.rect.height);
             
             return sprite.texture.GetPixels(x, y, width, height);
-        }   
+        }
     }
 }

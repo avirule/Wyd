@@ -4,8 +4,6 @@ using System.Collections.Generic;
 using Graphics;
 using Logging;
 using NLog;
-using UnityEditor.Tilemaps;
-using UnityEditor.U2D;
 using UnityEngine;
 
 #endregion
@@ -56,10 +54,10 @@ namespace Controllers.Game
                 Color[] spritePixels = sprites[i].GetPixels();
                 TerrainTexture.SetPixels(spritePixels, i, 0);
                 _TextureIDs.Add(sprites[i].name.ToLowerInvariant(), i);
-                
+
                 EventLog.Logger.Log(LogLevel.Info, $"Texture processed: {sprites[i].name}");
             }
-            
+
             TerrainTexture.Apply();
         }
 
@@ -67,7 +65,7 @@ namespace Controllers.Game
         {
             textureName = textureName.ToLowerInvariant();
             textureId = -1;
-            
+
             if (!_TextureIDs.ContainsKey(textureName))
             {
                 return false;

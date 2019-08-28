@@ -11,7 +11,6 @@ using NLog;
 using Static;
 using Threading;
 using UnityEngine;
-using UnityEngine.Rendering;
 
 #endregion
 
@@ -33,7 +32,7 @@ namespace Game.Terrain
         private object _MeshingIdentity;
         private Camera _MainCamera;
         private Matrix4x4 _WorldMatrix;
-        
+
         public MeshFilter MeshFilter;
         public MeshRenderer MeshRenderer;
         public ushort[] Blocks;
