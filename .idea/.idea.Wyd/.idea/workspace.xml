@@ -4,74 +4,7 @@
     <option name="CUSTOM_SCOPE_NAME" value="All Changed Files" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="c75ae2de-3a89-4228-87f5-5925302b6d96" name="Default Changelist" comment="">
-      <change afterPath="$PROJECT_DIR$/Assets/Resources/Graphics/Shaders/StandardTerrain.shader" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/Assets/Resources/Graphics/Textures/Blocks/BlocksAtlas.png" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/Assets/Resources/Graphics/Textures/Blocks/BlocksAtlas.png.meta" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/Assets/Scripts/Graphics.meta" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/Assets/Scripts/Graphics/SpriteExtensions.cs" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/Assets/Scripts/Graphics/SpriteExtensions.cs.meta" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/.idea.Wyd/.idea/contentModel.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/.idea.Wyd/.idea/contentModel.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/.idea.Wyd/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/.idea.Wyd/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Assets/Resources/Graphics/Shaders/StandardArray.shader" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Assets/Resources/Graphics/Shaders/StandardArray.shader.meta" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Assets/Resources/Graphics/Shaders/UnityStandardCoreArray.cginc" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Assets/Resources/Graphics/Shaders/UnityStandardCoreArray.cginc.meta" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Assets/Resources/Graphics/Shaders/UnityStandardCoreForwardArray.cginc" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Assets/Resources/Graphics/Shaders/UnityStandardCoreForwardArray.cginc.meta" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Assets/Resources/Graphics/Shaders/UnityStandardInputArray.cginc" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Assets/Resources/Graphics/Shaders/UnityStandardInputArray.cginc.meta" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Assets/Resources/Graphics/Textures/Blocks/CoalOre.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Assets/Resources/Graphics/Textures/Blocks/CoalOre.png.meta" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Assets/Resources/Graphics/Textures/Blocks/CopperOre.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Assets/Resources/Graphics/Textures/Blocks/CopperOre.png.meta" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Assets/Resources/Graphics/Textures/Blocks/DiamondOre.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Assets/Resources/Graphics/Textures/Blocks/DiamondOre.png.meta" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Assets/Resources/Graphics/Textures/Blocks/Dirt.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Assets/Resources/Graphics/Textures/Blocks/Dirt.png.meta" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Assets/Resources/Graphics/Textures/Blocks/DirtCoarse.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Assets/Resources/Graphics/Textures/Blocks/DirtCoarse.png.meta" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Assets/Resources/Graphics/Textures/Blocks/Glass.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Assets/Resources/Graphics/Textures/Blocks/Glass.png.meta" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Assets/Resources/Graphics/Textures/Blocks/GoldOre.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Assets/Resources/Graphics/Textures/Blocks/GoldOre.png.meta" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Assets/Resources/Graphics/Textures/Blocks/Grass.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Assets/Resources/Graphics/Textures/Blocks/Grass.png.meta" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Assets/Resources/Graphics/Textures/Blocks/GrassSide.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Assets/Resources/Graphics/Textures/Blocks/GrassSide.png.meta" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Assets/Resources/Graphics/Textures/Blocks/Gravel.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Assets/Resources/Graphics/Textures/Blocks/Gravel.png.meta" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Assets/Resources/Graphics/Textures/Blocks/IronOre.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Assets/Resources/Graphics/Textures/Blocks/IronOre.png.meta" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Assets/Resources/Graphics/Textures/Blocks/OakLeaf.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Assets/Resources/Graphics/Textures/Blocks/OakLeaf.png.meta" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Assets/Resources/Graphics/Textures/Blocks/OakLeafApples.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Assets/Resources/Graphics/Textures/Blocks/OakLeafApples.png.meta" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Assets/Resources/Graphics/Textures/Blocks/OakLog.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Assets/Resources/Graphics/Textures/Blocks/OakLog.png.meta" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Assets/Resources/Graphics/Textures/Blocks/OakLogInner.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Assets/Resources/Graphics/Textures/Blocks/OakLogInner.png.meta" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Assets/Resources/Graphics/Textures/Blocks/OakPlanks.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Assets/Resources/Graphics/Textures/Blocks/OakPlanks.png.meta" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Assets/Resources/Graphics/Textures/Blocks/Sand.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Assets/Resources/Graphics/Textures/Blocks/Sand.png.meta" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Assets/Resources/Graphics/Textures/Blocks/SilverOre.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Assets/Resources/Graphics/Textures/Blocks/SilverOre.png.meta" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Assets/Resources/Graphics/Textures/Blocks/Snow.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Assets/Resources/Graphics/Textures/Blocks/Snow.png.meta" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Assets/Resources/Graphics/Textures/Blocks/SnowSide.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Assets/Resources/Graphics/Textures/Blocks/SnowSide.png.meta" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Assets/Resources/Graphics/Textures/Blocks/Stone.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Assets/Resources/Graphics/Textures/Blocks/Stone.png.meta" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Assets/Resources/Graphics/Textures/Blocks/TungstenOre.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Assets/Resources/Graphics/Textures/Blocks/TungstenOre.png.meta" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Assets/Resources/Prefabs/Chunk.prefab" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/Resources/Prefabs/Chunk.prefab" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Assets/Scripts/Controllers/Game/BlockController.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/Scripts/Controllers/Game/BlockController.cs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Assets/Scripts/Controllers/Game/TextureController.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/Scripts/Controllers/Game/TextureController.cs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Assets/Scripts/Game/Terrain/Chunk.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/Scripts/Game/Terrain/Chunk.cs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Assets/Scripts/Threading/ChunkBuildingThreadedItem.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/Scripts/Threading/ChunkBuildingThreadedItem.cs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Assets/Scripts/Threading/ChunkMeshingThreadedItem.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/Scripts/Threading/ChunkMeshingThreadedItem.cs" afterDir="false" />
-    </list>
+    <list default="true" id="c75ae2de-3a89-4228-87f5-5925302b6d96" name="Default Changelist" comment="" />
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -114,8 +47,8 @@
     <setting file="file://$APPLICATION_CONFIG_DIR$/resharper-host/DecompilerCache/decompiler/7D971063-3068-4ADD-86D0-80ECF65BFE69/83/952de8bc/Dictionary`2.cs" root0="SKIP_HIGHLIGHTING" />
     <setting file="file://$PROJECT_DIR$/Assets/packages.config" root0="FORCE_HIGHLIGHTING" />
     <setting file="file://$APPLICATION_CONFIG_DIR$/resharper-host/DecompilerCache/decompiler/0079A30F-96A0-4734-8857-E1CECC6C638A/32/87caa024/BlockingCollection`1.cs" root0="SKIP_HIGHLIGHTING" />
+    <setting file="file://$PROJECT_DIR$/Assets/Scripts/Graphics/SpriteExtensions.cs" root0="SKIP_HIGHLIGHTING" />
     <setting file="file://$PROJECT_DIR$/Assets/Scripts/Noise/Perlin/PerlinNoise.cs" root0="FORCE_HIGHLIGHTING" />
-    <setting file="file://$PROJECT_DIR$/Assets/Scripts/Graphics/SpriteExtensions.cs" root0="FORCE_HIGHLIGHTING" />
     <setting file="file://$PROJECT_DIR$/Assets/Scripts/Controllers/UI/Components/Button/ExitButtonController.cs" root0="FORCE_HIGHLIGHTING" />
     <setting file="file://$PROJECT_DIR$/Assets/Scripts/Controllers/UI/Components/Text/FPSTextController.cs" root0="FORCE_HIGHLIGHTING" />
     <setting file="file://$APPLICATION_CONFIG_DIR$/resharper-host/DecompilerCache/decompiler/A8ED2508-5085-4B43-9CED-C18931A314FE/82/ecac7a1f/StringBuilder.cs" root0="SKIP_HIGHLIGHTING" />
@@ -142,7 +75,6 @@
     <setting file="file://$PROJECT_DIR$/Assets/Scripts/Controllers/UI/Components/Text/VersionTextController.cs" root0="FORCE_HIGHLIGHTING" />
     <setting file="file://$PROJECT_DIR$/Assets/Scripts/Controllers/Game/OptionsController.cs" root0="FORCE_HIGHLIGHTING" />
     <setting file="file://$APPLICATION_CONFIG_DIR$/resharper-host/DecompilerCache/decompiler/2094A731-351D-475D-BA68-F5920DE30ED8/86/087d8d95/Behaviour.cs" root0="SKIP_HIGHLIGHTING" />
-    <setting file="file://$PROJECT_DIR$/Assets/Resources/Graphics/Shaders/StandardTerrain.shader" root0="FORCE_HIGHLIGHTING" />
     <setting file="file://$PROJECT_DIR$/Assets/Scripts/Static/Mathv.cs" root0="FORCE_HIGHLIGHTING" />
     <setting file="file://$PROJECT_DIR$/Assets/Scripts/Controllers/UI/OptionsMenuController.cs" root0="FORCE_HIGHLIGHTING" />
     <setting file="file://$APPLICATION_CONFIG_DIR$/resharper-host/DecompilerCache/decompiler/3F37B2CA-7BC0-4094-93C9-29A81891A481/e0/57868b5c/IJobParallelForExtensions.cs" root0="SKIP_HIGHLIGHTING" />
@@ -153,6 +85,7 @@
     <setting file="file://$PROJECT_DIR$/Assets/Scripts/Logging/Targets/UnityDebuggerTarget.cs" root0="FORCE_HIGHLIGHTING" />
     <setting file="file://$PROJECT_DIR$/Assets/Scripts/Threading/ThreadedQueue.cs" root0="FORCE_HIGHLIGHTING" />
     <setting file="file://$PROJECT_DIR$/Assets/Scripts/Logging/Targets/InGameDebugLogTarget.cs" root0="FORCE_HIGHLIGHTING" />
+    <setting file="file://$PROJECT_DIR$/Assets/Resources/Graphics/Shaders/StandardTerrain.shader" root0="FORCE_HIGHLIGHTING" />
     <setting file="file://$PROJECT_DIR$/ProjectSettings/ProjectSettings.asset" root0="FORCE_HIGHLIGHTING" />
     <setting file="file://$APPLICATION_CONFIG_DIR$/resharper-host/DecompilerCache/decompiler/3F37B2CA-7BC0-4094-93C9-29A81891A481/5c/405b5893/UnsafeUtility.cs" root0="SKIP_HIGHLIGHTING" />
     <setting file="file://$APPLICATION_CONFIG_DIR$/resharper-host/DecompilerCache/decompiler/3F37B2CA-7BC0-4094-93C9-29A81891A481/8a/5fba61e5/NativeArray`1.cs" root0="SKIP_HIGHLIGHTING" />
@@ -219,9 +152,9 @@
         <option value="$PROJECT_DIR$/Assets/Scripts/Controllers/Game/BlockController.cs" />
         <option value="$PROJECT_DIR$/Assets/Resources/Graphics/Shaders/StandardTerrain.shader" />
         <option value="$PROJECT_DIR$/Assets/Scripts/Game/Terrain/Chunk.cs" />
-        <option value="$PROJECT_DIR$/Assets/Scripts/Controllers/Game/TextureController.cs" />
         <option value="$PROJECT_DIR$/Assets/Scripts/Graphics/SpriteExtensions.cs" />
         <option value="$PROJECT_DIR$/Assets/Scripts/Threading/ChunkMeshingThreadedItem.cs" />
+        <option value="$PROJECT_DIR$/Assets/Scripts/Controllers/Game/TextureController.cs" />
       </list>
     </option>
   </component>
