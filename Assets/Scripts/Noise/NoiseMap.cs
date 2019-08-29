@@ -1,6 +1,6 @@
 #region
 
-using Game.Terrain.Generation;
+using Game.World;
 using Logging;
 using NLog;
 using Noise.Perlin;

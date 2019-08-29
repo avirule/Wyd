@@ -6,7 +6,7 @@ using System.Linq;
 using Controllers.Entity;
 using Controllers.Game;
 using Game.Entity;
-using Game.Terrain;
+using Game.World;
 using Static;
 using UnityEngine;
 

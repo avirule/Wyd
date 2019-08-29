@@ -14,7 +14,7 @@ using UnityEngine;
 
 #endregion
 
-namespace Game.Terrain
+namespace Game.World
 {
     public enum ChunkThreadingMode
     {

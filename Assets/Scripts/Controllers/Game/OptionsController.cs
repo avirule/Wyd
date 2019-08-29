@@ -2,7 +2,7 @@
 
 using System;
 using System.IO;
-using Game.Terrain;
+using Game.World;
 using Logging;
 using NLog;
 using SharpConfig;

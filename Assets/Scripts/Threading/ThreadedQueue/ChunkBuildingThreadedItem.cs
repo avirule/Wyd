@@ -2,7 +2,7 @@
 
 using Controllers.Game;
 using Controllers.World;
-using Game.Terrain;
+using Game.World;
 using Noise.OpenSimplex;
 using Static;
 using UnityEngine;

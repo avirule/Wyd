@@ -4,7 +4,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using Game;
-using Game.Terrain;
+using Game.World;
 using Logging;
 using NLog;
 using UnityEngine;
@@ -18,7 +18,7 @@ namespace Controllers.Game
         public const ushort BLOCK_EMPTY_ID = 0;
 
         public static BlockController Current;
-
+        
         private Dictionary<string, ushort> _BlockNameIds;
         private Dictionary<ushort, IBlockRule> _Blocks;
         public TextureController TextureController;
@@ -38,7 +38,7 @@ namespace Controllers.Game
             _Blocks = new Dictionary<ushort, IBlockRule>();
         }
 
-        public bool RegisterBlockRules(string blockName, bool isTransparent, RuleEvaluation uvsRule = default)
+        public int RegisterBlockRules(string blockName, bool isTransparent, RuleEvaluation<Vector3Int, Direction> uvsRule = default)
         {
             blockName = blockName.ToLowerInvariant();
             ushort blockId = 0;
@@ -67,7 +67,7 @@ namespace Controllers.Game
             EventLog.Logger.Log(LogLevel.Info,
                 $"Successfully added block `{blockName}` with id `{blockId}`.");
 
-            return true;
+            return blockId;
         }
 
         public bool GetBlockSpriteUVs(ushort blockId, Vector3Int position, Direction direction, Vector3 size2d,
