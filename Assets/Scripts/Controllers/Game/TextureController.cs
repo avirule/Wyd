@@ -1,7 +1,6 @@
 #region
 
 using System.Collections.Generic;
-using Graphics;
 using Logging;
 using NLog;
 using UnityEngine;
@@ -50,7 +49,7 @@ namespace Controllers.Game
 
             for (int i = 0; i < TerrainTexture.depth; i++)
             {
-                Color[] spritePixels = sprites[i].GetPixels();
+                Color[] spritePixels = GetPixels(sprites[i]);
                 TerrainTexture.SetPixels(spritePixels, i, 0);
                 _TextureIDs.Add(sprites[i].name.ToLowerInvariant(), i);
 
@@ -72,6 +71,16 @@ namespace Controllers.Game
 
             textureId = _TextureIDs[textureName];
             return true;
+        }
+
+        public static Color[] GetPixels(Sprite sprite)
+        {
+            int x = Mathf.FloorToInt(sprite.rect.x);
+            int y = Mathf.FloorToInt(sprite.rect.y);
+            int width = Mathf.FloorToInt(sprite.rect.width);
+            int height = Mathf.FloorToInt(sprite.rect.height);
+
+            return sprite.texture.GetPixels(x, y, width, height);
         }
     }
 }

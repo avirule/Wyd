@@ -21,11 +21,11 @@ namespace Threading.ThreadedQueue
         private readonly List<Vector3> _UVs;
 
         /// <summary>
-        ///     Initialises a new instance of the <see cref="Threading.ChunkMeshingThreadedItem" /> class.
+        ///     Initialises a new instance of the <see cref="Threading.ThreadedQueue.ChunkMeshingThreadedItem" /> class.
         /// </summary>
         /// <param name="position"><see cref="UnityEngine.Vector3Int" /> position of chunk being meshed.</param>
         /// <param name="blocks">Pre-initialized and built <see cref="T:Block[]" /> to iterate through.</param>
-        /// <seealso cref="Threading.ChunkBuildingThreadedItem" />
+        /// <seealso cref="Threading.ThreadedQueue.ChunkBuildingThreadedItem" />
         public ChunkMeshingThreadedItem(Vector3Int position, ushort[] blocks)
         {
             _Position = position;

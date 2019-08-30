@@ -41,8 +41,7 @@ namespace Game.World
         public bool PendingMeshUpdate;
         public Vector3Int Position;
 
-        [Header("Graphics")]
-        public bool DrawShadows;
+        [Header("Graphics")] public bool DrawShadows;
 
         public bool Active => gameObject.activeSelf;
 
