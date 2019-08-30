@@ -5,7 +5,7 @@ using System.Diagnostics;
 
 #endregion
 
-namespace Threading
+namespace Threading.ThreadedQueue
 {
     public abstract class ThreadedItem
     {
@@ -24,12 +24,12 @@ namespace Threading
         public DateTime ExecutionFinishTime { get; private set; }
 
         /// <summary>
-        ///     Identity of <see cref="Threading.ThreadedItem" />.
+        ///     Identity of <see cref="ThreadedItem" />.
         /// </summary>
         public object Identity { get; internal set; }
 
         /// <summary>
-        ///     Instantiates a new instance of the <see cref="Threading.ThreadedItem" /> class.
+        ///     Instantiates a new instance of the <see cref="ThreadedItem" /> class.
         /// </summary>
         public ThreadedItem()
         {
@@ -65,7 +65,7 @@ namespace Threading
         }
 
         /// <summary>
-        ///     Begins executing the <see cref="Threading.ThreadedItem" />
+        ///     Begins executing the <see cref="ThreadedItem" />
         /// </summary>
         public virtual void Execute()
         {

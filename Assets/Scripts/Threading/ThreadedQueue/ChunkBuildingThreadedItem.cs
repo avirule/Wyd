@@ -4,12 +4,11 @@ using Controllers.Game;
 using Controllers.World;
 using Game.World;
 using Noise.OpenSimplex;
-using Static;
 using UnityEngine;
 
 #endregion
 
-namespace Threading
+namespace Threading.ThreadedQueue
 {
     public class ChunkBuildingThreadedItem : ThreadedItem
     {

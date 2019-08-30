@@ -4,7 +4,6 @@ using Game.World;
 using Logging;
 using NLog;
 using Noise.Perlin;
-using Static;
 using UnityEngine;
 
 #endregion

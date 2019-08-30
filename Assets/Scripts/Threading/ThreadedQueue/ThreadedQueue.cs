@@ -7,7 +7,7 @@ using System.Threading;
 
 #endregion
 
-namespace Threading
+namespace Threading.ThreadedQueue
 {
     public class ThreadedQueue
     {
@@ -20,7 +20,7 @@ namespace Threading
         protected CancellationToken AbortToken;
 
         /// <summary>
-        ///     Determines whether the <see cref="Threading.ThreadedQueue" /> executes <see cref="Threading.ThreadedItem" /> on the
+        ///     Determines whether the <see cref="ThreadedQueue" /> executes <see cref="ThreadedItem" /> on the
         ///     internal thread, or uses <see cref="System.Threading.ThreadPool" />.
         /// </summary>
         public bool MultiThreadedExecution;
@@ -42,7 +42,7 @@ namespace Threading
         public int MaximumFinishedThreadedItemLifetime;
 
         /// <summary>
-        ///     Initializes a new instance of <see cref="Threading.ThreadedQueue" /> class.
+        ///     Initializes a new instance of <see cref="ThreadedQueue" /> class.
         /// </summary>
         /// <param name="millisecondWaitTimeout">
         ///     Time in milliseconds to wait between attempts to process an item in internal
@@ -52,7 +52,7 @@ namespace Threading
         ///     Maximum lifetime in milliseconds that a threaded item can live after finishing execution.
         /// </param>
         /// <param name="multiThreadedExecution">
-        ///     Determines whether the <see cref="Threading.ThreadedQueue" /> executes <see cref="Threading.ThreadedItem" /> on the
+        ///     Determines whether the <see cref="ThreadedQueue" /> executes <see cref="ThreadedItem" /> on the
         ///     internal thread, or uses <see cref="System.Threading.ThreadPool" />.
         /// </param>
         public ThreadedQueue(int millisecondWaitTimeout, int maximumFinishedThreadedItemLifetime,
@@ -98,7 +98,7 @@ namespace Threading
         }
 
         /// <summary>
-        ///     Begins internal loop for processing <see cref="Threading.ThreadedItem" />s from internal queue.
+        ///     Begins internal loop for processing <see cref="ThreadedItem" />s from internal queue.
         /// </summary>
         protected virtual void ProcessThreadedItems()
         {
@@ -135,10 +135,10 @@ namespace Threading
         }
 
         /// <summary>
-        ///     Internally processes specified <see cref="Threading.ThreadedItem" /> and adds it to the list of processed
-        ///     <see cref="Threading.ThreadedItem" />s.
+        ///     Internally processes specified <see cref="ThreadedItem" /> and adds it to the list of processed
+        ///     <see cref="ThreadedItem" />s.
         /// </summary>
-        /// <param name="threadedItem"><see cref="Threading.ThreadedItem" /> to be processed.</param>
+        /// <param name="threadedItem"><see cref="ThreadedItem" /> to be processed.</param>
         protected virtual void ProcessThreadedItem(ThreadedItem threadedItem)
         {
             if (MultiThreadedExecution)
@@ -154,9 +154,9 @@ namespace Threading
         }
 
         /// <summary>
-        ///     Adds specified <see cref="Threading.ThreadedItem" /> to internal queue and returns a unique identity.
+        ///     Adds specified <see cref="ThreadedItem" /> to internal queue and returns a unique identity.
         /// </summary>
-        /// <param name="threadedItem"><see cref="Threading.ThreadedItem" /> to be added.</param>
+        /// <param name="threadedItem"><see cref="ThreadedItem" /> to be added.</param>
         /// <returns>A unique <see cref="System.Object" /> identity.</returns>
         public virtual object AddThreadedItem(ThreadedItem threadedItem)
         {
@@ -173,16 +173,16 @@ namespace Threading
         }
 
         /// <summary>
-        ///     Tries to get a finished <see cref="Threading.ThreadedItem" /> from the internal processed list.
-        ///     If successful, the <see cref="Threading.ThreadedItem" /> is removed from the internal list as well.
+        ///     Tries to get a finished <see cref="ThreadedItem" /> from the internal processed list.
+        ///     If successful, the <see cref="ThreadedItem" /> is removed from the internal list as well.
         /// </summary>
         /// <param name="identity">
         ///     <see cref="System.Object" /> representing identity of desired
-        ///     <see cref="Threading.ThreadedItem" />.
+        ///     <see cref="ThreadedItem" />.
         /// </param>
-        /// <param name="threadedItem"><see cref="Threading.ThreadedItem" /> found done.</param>
+        /// <param name="threadedItem"><see cref="ThreadedItem" /> found done.</param>
         /// <returns>
-        ///     <see langword="true" /> if <see cref="Threading.ThreadedItem" /> exists and is done executing; otherwise,
+        ///     <see langword="true" /> if <see cref="ThreadedItem" /> exists and is done executing; otherwise,
         ///     <see langword="false" />.
         /// </returns>
         public virtual bool TryGetFinishedItem(object identity, out ThreadedItem threadedItem)

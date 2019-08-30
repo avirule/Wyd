@@ -19,8 +19,8 @@ namespace Controllers.Game
 
         public static BlockController Current;
         
-        private Dictionary<string, ushort> _BlockNameIds;
-        private Dictionary<ushort, IBlockRule> _Blocks;
+        public Dictionary<string, ushort> BlockNameIds;
+        public Dictionary<ushort, IBlockRule> Blocks;
         public TextureController TextureController;
 
         private void Awake()
@@ -34,8 +34,8 @@ namespace Controllers.Game
                 Current = this;
             }
 
-            _BlockNameIds = new Dictionary<string, ushort>();
-            _Blocks = new Dictionary<ushort, IBlockRule>();
+            BlockNameIds = new Dictionary<string, ushort>();
+            Blocks = new Dictionary<ushort, IBlockRule>();
         }
 
         public int RegisterBlockRules(string blockName, bool isTransparent, RuleEvaluation<Vector3Int, Direction> uvsRule = default)
@@ -45,7 +45,7 @@ namespace Controllers.Game
 
             try
             {
-                blockId = _Blocks.Count == 0 ? (ushort) 1 : Convert.ToUInt16(_Blocks.Max(kvp => kvp.Key) + 1);
+                blockId = Blocks.Count == 0 ? (ushort) 1 : Convert.ToUInt16(Blocks.Max(kvp => kvp.Key) + 1);
             }
             catch (OverflowException)
             {
@@ -58,10 +58,10 @@ namespace Controllers.Game
                 uvsRule = (position, direction) => blockName;
             }
 
-            if (!_Blocks.ContainsKey(blockId))
+            if (!Blocks.ContainsKey(blockId))
             {
-                _Blocks.Add(blockId, new BlockRule(blockId, blockName, isTransparent, uvsRule));
-                _BlockNameIds.Add(blockName, blockId);
+                Blocks.Add(blockId, new BlockRule(blockId, blockName, isTransparent, uvsRule));
+                BlockNameIds.Add(blockName, blockId);
             }
 
             EventLog.Logger.Log(LogLevel.Info,
@@ -75,14 +75,14 @@ namespace Controllers.Game
         {
             uvs = null;
 
-            if (!_Blocks.ContainsKey(blockId))
+            if (!Blocks.ContainsKey(blockId))
             {
                 EventLog.Logger.Log(LogLevel.Error,
                     $"Failed to return block sprite UVs for direction `{direction}` of block with id `{blockId}`: block id does not exist.");
                 return false;
             }
 
-            _Blocks[blockId].ReadUVsRule(blockId, position, direction, out string textureName);
+            Blocks[blockId].ReadUVsRule(blockId, position, direction, out string textureName);
 
             if (!TextureController.TryGetTextureId(textureName, out int textureId))
             {
@@ -109,28 +109,28 @@ namespace Controllers.Game
                 return true;
             }
 
-            if (!_Blocks.ContainsKey(blockId))
+            if (!Blocks.ContainsKey(blockId))
             {
                 EventLog.Logger.Log(LogLevel.Error,
                     $"Failed to return block rule for block with id `{blockId}`: block does not exist.");
                 return false;
             }
 
-            return _Blocks[blockId].Transparent;
+            return Blocks[blockId].Transparent;
         }
 
         public ushort GetBlockId(string blockName)
         {
             blockName = blockName.ToLowerInvariant();
 
-            if (!_BlockNameIds.ContainsKey(blockName))
+            if (!BlockNameIds.ContainsKey(blockName))
             {
                 EventLog.Logger.Log(LogLevel.Warn,
                     $"Failed to return block id for block `{blockName}`: block does not exist.");
                 return 0;
             }
 
-            return _BlockNameIds[blockName];
+            return BlockNameIds[blockName];
         }
 
         public string GetBlockName(ushort blockId)
@@ -140,19 +140,19 @@ namespace Controllers.Game
                 return "Air";
             }
 
-            if (!_Blocks.ContainsKey(blockId))
+            if (!Blocks.ContainsKey(blockId))
             {
                 EventLog.Logger.Log(LogLevel.Warn,
                     $"Failed to return block name for block id `{blockId}`: block does not exist.");
                 return "Null";
             }
 
-            return _Blocks[blockId].BlockName;
+            return Blocks[blockId].BlockName;
         }
 
         public bool IsBlockTransparent(ushort id)
         {
-            return !_Blocks.ContainsKey(id) || _Blocks[id].Transparent;
+            return !Blocks.ContainsKey(id) || Blocks[id].Transparent;
         }
     }
 }

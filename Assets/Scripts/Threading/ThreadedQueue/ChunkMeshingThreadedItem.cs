@@ -5,13 +5,12 @@ using Controllers.Game;
 using Controllers.World;
 using Game;
 using Game.World;
-using Static;
 using UnityEngine;
 using UnityEngine.Rendering;
 
 #endregion
 
-namespace Threading
+namespace Threading.ThreadedQueue
 {
     public class ChunkMeshingThreadedItem : ThreadedItem
     {
@@ -278,7 +277,7 @@ namespace Threading
         /// </summary>
         /// <param name="mesh">Given <see cref="UnityEngine.Mesh" /> to apply processed data to.</param>
         /// <returns>Processed <see cref="UnityEngine.Mesh" />.</returns>
-        public Mesh GetMesh(Mesh mesh)
+        public Mesh GetMesh(ref Mesh mesh)
         {
             if ((_Vertices.Count == 0) ||
                 (_Triangles.Count == 0))

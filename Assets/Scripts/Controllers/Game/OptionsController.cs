@@ -36,7 +36,7 @@ namespace Controllers.Game
 
         private Configuration _Configuration;
 
-        public ChunkThreadingMode ChunkThreadingMode;
+        public ThreadingMode ThreadingMode;
         public int MaximumChunkCacheSize;
         public CacheCullingAggression ChunkCacheCullingAggression;
         public int MaximumChunkLoadTimeBufferSize;
@@ -128,10 +128,10 @@ namespace Controllers.Game
 
 
             // Chunking
-            if (!GetSetting("Chunking", nameof(ChunkThreadingMode), out ChunkThreadingMode))
+            if (!GetSetting("Chunking", nameof(ThreadingMode), out ThreadingMode))
             {
-                EventLog.Logger.Log(LogLevel.Warn, $"Error loading setting {nameof(ChunkThreadingMode)}.");
-                ChunkThreadingMode = ChunkThreadingMode.Variable;
+                EventLog.Logger.Log(LogLevel.Warn, $"Error loading setting {nameof(ThreadingMode)}.");
+                ThreadingMode = ThreadingMode.Variable;
             }
 
             if (!GetSetting("Chunking", nameof(MaximumChunkCacheSize), out MaximumChunkCacheSize) ||
@@ -196,10 +196,10 @@ namespace Controllers.Game
             _Configuration["Graphics"][nameof(ExpensiveMeshingDistance)].IntValue = 1;
 
             // Chunking
-            _Configuration["Chunking"][nameof(ChunkThreadingMode)].PreComment =
+            _Configuration["Chunking"][nameof(ThreadingMode)].PreComment =
                 "Determines whether the threading mode the game will use when generating chunk data and meshes.";
-            _Configuration["Chunking"][nameof(ChunkThreadingMode)].Comment = "(0 = single, 1 = multi, 2 = variable)";
-            _Configuration["Chunking"][nameof(ChunkThreadingMode)].IntValue = 2;
+            _Configuration["Chunking"][nameof(ThreadingMode)].Comment = "(0 = single, 1 = multi, 2 = variable)";
+            _Configuration["Chunking"][nameof(ThreadingMode)].IntValue = 2;
 
             _Configuration["Chunking"][nameof(MaximumChunkCacheSize)].PreComment =
                 "Lower values are harder on the CPU, higher values use more RAM.";

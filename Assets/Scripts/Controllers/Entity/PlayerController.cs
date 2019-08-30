@@ -5,7 +5,6 @@ using Controllers.World;
 using Game.Entity;
 using Logging;
 using NLog;
-using Static;
 using UnityEngine;
 
 #endregion

@@ -9,7 +9,6 @@ using Game.World;
 using Logging;
 using NLog;
 using Noise;
-using Static;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 

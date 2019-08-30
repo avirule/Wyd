@@ -12,10 +12,9 @@ namespace Controllers.Game
 {
     public class TextureController : MonoBehaviour
     {
-        public static readonly int MainTex = Shader.PropertyToID("_MainTex");
-
         public static TextureController Current;
 
+        public readonly int MainTex = Shader.PropertyToID("_MainTex");
         public Texture2DArray TerrainTexture { get; private set; }
         private Dictionary<string, int> _TextureIDs;
 

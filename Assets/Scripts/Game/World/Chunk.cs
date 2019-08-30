@@ -8,15 +8,15 @@ using Controllers.World;
 using Game.Entity;
 using Logging;
 using NLog;
-using Static;
 using Threading;
+using Threading.ThreadedQueue;
 using UnityEngine;
 
 #endregion
 
 namespace Game.World
 {
-    public enum ChunkThreadingMode
+    public enum ThreadingMode
     {
         Single = 0,
         Multi = 1,
@@ -30,8 +30,7 @@ namespace Game.World
 
         private object _BuildingIdentity;
         private object _MeshingIdentity;
-        private Camera _MainCamera;
-        private Matrix4x4 _WorldMatrix;
+        private Mesh _Mesh;
 
         public MeshFilter MeshFilter;
         public MeshRenderer MeshRenderer;
@@ -57,15 +56,12 @@ namespace Game.World
                 ThreadedExecutionQueue.Start();
             }
 
-            _MainCamera = Camera.main;
-            _WorldMatrix = transform.localToWorldMatrix;
-
             Blocks = new ushort[Size.x * Size.y * Size.z];
             Position = transform.position.ToInt();
             Built = Building = Meshed = Meshing = false;
             PendingMeshUpdate = true;
 
-            MeshRenderer.material.SetTexture(TextureController.MainTex, TextureController.Current.TerrainTexture);
+            MeshRenderer.material.SetTexture(TextureController.Current.MainTex, TextureController.Current.TerrainTexture);
 
             // todo implement chunk ticks
 //            double waitTime = TimeSpan
@@ -78,14 +74,17 @@ namespace Game.World
         private void Start()
         {
             ThreadedExecutionQueue.MultiThreadedExecution =
-                OptionsController.Current.ChunkThreadingMode != ChunkThreadingMode.Single;
+                OptionsController.Current.ThreadingMode != ThreadingMode.Single;
 
             PlayerController.Current.RegisterEntityChangedSubscriber(this);
         }
 
         private void Update()
         {
-            CheckModifyThreadedExecutionQueueThreadingMode();
+            if (OptionsController.Current.ThreadingMode == ThreadingMode.Variable)
+            {
+                ModifyThreadedExecutionQueueThreadingMode();
+            }
 
             if (EntityChangedChunk)
             {
@@ -104,15 +103,32 @@ namespace Game.World
             ThreadedExecutionQueue.Abort();
         }
 
-        private static void CheckModifyThreadedExecutionQueueThreadingMode()
+        public void Activate(Vector3Int position = default)
+        {
+            Transform self = transform;
+            self.position = position;
+            Position = position;
+            Built = Building = Meshed = Meshing = false;
+            PendingMeshUpdate = true;
+            gameObject.SetActive(true);
+        }
+
+        public void Deactivate()
+        {
+            if (_Mesh != default)
+            {
+                _Mesh.Clear();
+            }
+
+            gameObject.SetActive(false);
+        }
+        
+        private static void ModifyThreadedExecutionQueueThreadingMode()
         {
             // todo something where this isn't local const. Relative to max internal frame time maybe?
             const float fps60 = 1f / 60f;
 
-            if (OptionsController.Current.ChunkThreadingMode != ChunkThreadingMode.Variable)
-            {
-                return;
-            }
+
 
             if (ThreadedExecutionQueue.MultiThreadedExecution && (Time.deltaTime > fps60))
             {
@@ -168,27 +184,6 @@ namespace Game.World
             return ThreadedExecutionQueue.AddThreadedItem(new ChunkMeshingThreadedItem(Position, Blocks));
         }
 
-        public void Activate(Vector3Int position = default)
-        {
-            Transform self = transform;
-            self.position = position;
-            _WorldMatrix = self.localToWorldMatrix;
-            Position = position;
-            Built = Building = Meshed = Meshing = false;
-            PendingMeshUpdate = true;
-            gameObject.SetActive(true);
-        }
-
-        public void Deactivate()
-        {
-            if (MeshFilter.mesh != default)
-            {
-                MeshFilter.mesh.Clear();
-            }
-
-            gameObject.SetActive(false);
-        }
-
         private void GenerationCheckAndStart()
         {
             if (Building)
@@ -213,7 +208,8 @@ namespace Game.World
                     Meshing = false;
                     Meshed = true;
 
-                    MeshFilter.mesh = ((ChunkMeshingThreadedItem) threadedItem).GetMesh(MeshFilter.mesh);
+                    ((ChunkMeshingThreadedItem) threadedItem).GetMesh(ref _Mesh);
+                    MeshFilter.mesh = _Mesh;
 
                     DiagnosticsPanelController.ChunkMeshTimes.Enqueue(threadedItem.ExecutionTime.TotalMilliseconds);
                 }

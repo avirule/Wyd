@@ -4,7 +4,6 @@ using System.Collections.Generic;
 using Controllers.Game;
 using Controllers.World;
 using Game.World;
-using Static;
 using UnityEngine;
 
 #endregion

@@ -17,16 +17,9 @@ namespace Controllers.UI.Components.Button
             _VSyncLevelButton.onClick.AddListener(ScrollVSyncLevel);
         }
 
-        private void ScrollVSyncLevel()
+        private static void ScrollVSyncLevel()
         {
-            if (OptionsController.Current.VSyncLevel == 4)
-            {
-                OptionsController.Current.VSyncLevel = 0;
-            }
-            else
-            {
-                OptionsController.Current.VSyncLevel++;
-            }
+            OptionsController.Current.VSyncLevel = (OptionsController.Current.VSyncLevel + 1) % 5;
         }
     }
 }
