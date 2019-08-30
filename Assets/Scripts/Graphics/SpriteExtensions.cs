@@ -1,4 +1,8 @@
+#region
+
 using UnityEngine;
+
+#endregion
 
 namespace Graphics
 {
@@ -10,7 +14,7 @@ namespace Graphics
             int y = Mathf.FloorToInt(sprite.rect.y);
             int width = Mathf.FloorToInt(sprite.rect.width);
             int height = Mathf.FloorToInt(sprite.rect.height);
-            
+
             return sprite.texture.GetPixels(x, y, width, height);
         }
     }

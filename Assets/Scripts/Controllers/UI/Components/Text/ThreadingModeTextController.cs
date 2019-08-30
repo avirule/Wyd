@@ -1,8 +1,11 @@
-using System;
+#region
+
 using Controllers.Game;
 using Game.World;
 using TMPro;
 using UnityEngine;
+
+#endregion
 
 namespace Controllers.UI.Components.Text
 {
@@ -30,7 +33,7 @@ namespace Controllers.UI.Components.Text
         {
             _LastThreadingMode = OptionsController.Current.ThreadingMode;
 
-            _ThreadingModeText.text = _LastThreadingMode.ToString();
+            _ThreadingModeText.text = $"Threading Mode: {_LastThreadingMode.ToString()}";
         }
     }
 }

@@ -60,6 +60,11 @@ namespace Controllers.World
         {
             _FrameTimeLimiter.Restart();
 
+            if (OptionsController.Current.ThreadingMode == ThreadingMode.Variable)
+            {
+                ModifyThreadedExecutionQueueThreadingMode();
+            }
+
             if (EntityChangedChunk)
             {
                 MarkOutOfBoundsChunksForDeactivation(PlayerController.Current.CurrentChunk);
@@ -100,6 +105,21 @@ namespace Controllers.World
             }
 
             _Chunks.Remove(chunk.Position);
+        }
+
+        private static void ModifyThreadedExecutionQueueThreadingMode()
+        {
+            // todo something where this isn't local const. Relative to max internal frame time maybe?
+            const float fps60 = 1f / 60f;
+
+            if (Chunk.ThreadedExecutionQueue.MultiThreadedExecution && (Time.deltaTime > fps60))
+            {
+                Chunk.ThreadedExecutionQueue.MultiThreadedExecution = false;
+            }
+            else if (!Chunk.ThreadedExecutionQueue.MultiThreadedExecution && (Time.deltaTime <= fps60))
+            {
+                Chunk.ThreadedExecutionQueue.MultiThreadedExecution = true;
+            }
         }
 
         #region CHUNK BUILDING

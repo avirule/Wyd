@@ -18,7 +18,7 @@ namespace Controllers.Game
         public const ushort BLOCK_EMPTY_ID = 0;
 
         public static BlockController Current;
-        
+
         public Dictionary<string, ushort> BlockNameIds;
         public Dictionary<ushort, IBlockRule> Blocks;
         public TextureController TextureController;
@@ -38,7 +38,8 @@ namespace Controllers.Game
             Blocks = new Dictionary<ushort, IBlockRule>();
         }
 
-        public int RegisterBlockRules(string blockName, bool isTransparent, RuleEvaluation<Vector3Int, Direction> uvsRule = default)
+        public int RegisterBlockRules(string blockName, bool isTransparent,
+            RuleEvaluation<Vector3Int, Direction> uvsRule = default)
         {
             blockName = blockName.ToLowerInvariant();
             ushort blockId = 0;

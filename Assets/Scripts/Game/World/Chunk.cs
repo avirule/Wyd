@@ -8,7 +8,6 @@ using Controllers.World;
 using Game.Entity;
 using Logging;
 using NLog;
-using Threading;
 using Threading.ThreadedQueue;
 using UnityEngine;
 
@@ -25,7 +24,7 @@ namespace Game.World
 
     public class Chunk : MonoBehaviour, IEntityChunkChangedSubscriber
     {
-        private static readonly ThreadedQueue ThreadedExecutionQueue = new ThreadedQueue(200, 4000);
+        public static readonly ThreadedQueue ThreadedExecutionQueue = new ThreadedQueue(200, 4000);
         public static readonly Vector3Int Size = new Vector3Int(16, 256, 16);
 
         private object _BuildingIdentity;
@@ -61,7 +60,8 @@ namespace Game.World
             Built = Building = Meshed = Meshing = false;
             PendingMeshUpdate = true;
 
-            MeshRenderer.material.SetTexture(TextureController.Current.MainTex, TextureController.Current.TerrainTexture);
+            MeshRenderer.material.SetTexture(TextureController.Current.MainTex,
+                TextureController.Current.TerrainTexture);
 
             // todo implement chunk ticks
 //            double waitTime = TimeSpan
@@ -81,11 +81,6 @@ namespace Game.World
 
         private void Update()
         {
-            if (OptionsController.Current.ThreadingMode == ThreadingMode.Variable)
-            {
-                ModifyThreadedExecutionQueueThreadingMode();
-            }
-
             if (EntityChangedChunk)
             {
                 CheckUpdateInternalSettings(PlayerController.Current.CurrentChunk);
@@ -122,23 +117,7 @@ namespace Game.World
 
             gameObject.SetActive(false);
         }
-        
-        private static void ModifyThreadedExecutionQueueThreadingMode()
-        {
-            // todo something where this isn't local const. Relative to max internal frame time maybe?
-            const float fps60 = 1f / 60f;
 
-
-
-            if (ThreadedExecutionQueue.MultiThreadedExecution && (Time.deltaTime > fps60))
-            {
-                ThreadedExecutionQueue.MultiThreadedExecution = false;
-            }
-            else if (!ThreadedExecutionQueue.MultiThreadedExecution && (Time.deltaTime <= fps60))
-            {
-                ThreadedExecutionQueue.MultiThreadedExecution = true;
-            }
-        }
 
         private object BeginBuildChunk()
         {
