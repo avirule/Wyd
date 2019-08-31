@@ -144,25 +144,23 @@ namespace Threading.ThreadedQueue
         {
             (int x, int y, int z) = Mathv.GetVector3IntIndex(index, Chunk.Size);
 
-            if (y < 4)
-            {
-                int val = _Rand.Next(0, 4);
+            int val = _Rand.Next(0, 4);
 
-                if (y <= val)
-                {
+            
+            if (y < 4 && y <= val)
+            {
                     _Blocks[index] = BlockController.Current.GetBlockId("Bedrock");
-                }
-
-                return;
             }
-
-            double noiseValue =
-                NoiseFunction.Evaluate((_Position.x + x) / 20d, (_Position.y + y) / 20d, (_Position.z + z) / 20d);
-            noiseValue /= y;
-
-            if (noiseValue >= 0.01d)
+            else
             {
-                _Blocks[index] = BlockController.Current.GetBlockId("Grass");
+                double noiseValue =
+                    NoiseFunction.Evaluate((_Position.x + x) / 20d, (_Position.y + y) / 20d, (_Position.z + z) / 20d);
+                noiseValue /= y;
+
+                if (noiseValue >= 0.01d)
+                {
+                    _Blocks[index] = BlockController.Current.GetBlockId("Grass");
+                }
             }
         }
     }

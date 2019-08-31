@@ -295,7 +295,7 @@ namespace Controllers.World
         {
             return globalPosition.Divide(Chunk.Size).Floor().Multiply(Chunk.Size);
         }
-        
+
         #endregion
     }
 }
