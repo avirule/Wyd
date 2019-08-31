@@ -14,7 +14,7 @@ namespace Threading.ThreadedQueue
     {
         private static readonly OpenSimplexNoise NoiseFunction =
             new OpenSimplexNoise(WorldController.Current.WorldGenerationSettings.Seed);
-        
+
         private readonly Vector3 _Position;
         private readonly ushort[] _Blocks;
 

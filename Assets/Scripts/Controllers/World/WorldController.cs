@@ -8,7 +8,6 @@ using Game.Entity;
 using Game.World;
 using Logging;
 using NLog;
-using Noise;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 

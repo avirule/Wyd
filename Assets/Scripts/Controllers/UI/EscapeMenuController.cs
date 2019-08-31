@@ -65,7 +65,7 @@ namespace Controllers.UI
                 SetOptionsActive(false);
                 ToggleCursorUnlocked();
             }
-            
+
             Backdrop.SetActive(active);
             Main.SetActive(active);
         }

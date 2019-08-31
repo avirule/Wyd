@@ -188,8 +188,8 @@ namespace Controllers.Game
                 "Determines whether the threading mode the game will use when generating chunk data and meshes.";
             _Configuration["General"][nameof(ThreadingMode)].Comment = "(0 = single, 1 = multi, 2 = variable)";
             _Configuration["General"][nameof(ThreadingMode)].IntValue = 2;
-            
-            
+
+
             // Graphics
             _Configuration["Graphics"][nameof(MinimumInternalFrames)].PreComment =
                 "Maximum number of frames internal systems will allow to lapse during updates.";
@@ -217,12 +217,12 @@ namespace Controllers.Game
             _Configuration["Graphics"][nameof(ExpensiveMeshingDistance)].Comment = "High values will cause lag.";
             _Configuration["Graphics"][nameof(ExpensiveMeshingDistance)].IntValue = 1;
 
-            
+
             // Chunking
             _Configuration["General"][nameof(PreInitializeChunkCache)].PreComment =
                 "Determines whether the chunk cache is pre-initialized to safe capacity.";
             _Configuration["General"][nameof(PreInitializeChunkCache)].BoolValue = true;
-            
+
             _Configuration["Chunking"][nameof(MaximumChunkCacheSize)].PreComment =
                 "Lower values are harder on the CPU, higher values use more RAM.";
             _Configuration["Chunking"][nameof(MaximumChunkCacheSize)].IntValue = 30;

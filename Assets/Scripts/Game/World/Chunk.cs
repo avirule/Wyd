@@ -137,7 +137,7 @@ namespace Game.World
 
             Meshed = PendingMeshUpdate = false;
             Meshing = true;
-            
+
             return ThreadedExecutionQueue.AddThreadedItem(new ChunkMeshingThreadedItem(Position, Blocks));
         }
 
@@ -149,7 +149,7 @@ namespace Game.World
                 {
                     Building = false;
                     Built = PendingMeshUpdate = true;
-                    
+
                     DiagnosticsPanelController.ChunkBuildTimes.Enqueue(threadedItem.ExecutionTime.TotalMilliseconds);
                 }
             }
@@ -164,7 +164,7 @@ namespace Game.World
                 {
                     Meshing = false;
                     Meshed = true;
-                    
+
                     ((ChunkMeshingThreadedItem) threadedItem).SetMesh(ref _Mesh);
                     MeshFilter.mesh = _Mesh;
 
