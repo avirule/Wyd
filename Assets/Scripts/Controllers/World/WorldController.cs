@@ -20,7 +20,7 @@ namespace Controllers.World
     {
         public static WorldController Current;
 
-        private GameObject _EntityToken;
+        private GameObject _CollisionToken;
         private List<CollisionToken> _EntityTokens;
         private Mesh _ColliderMesh;
         private bool _UpdateColliderMesh;
@@ -59,7 +59,7 @@ namespace Controllers.World
                 return;
             }
 
-            _EntityToken = Resources.Load<GameObject>(@"Prefabs/EntityToken");
+            _CollisionToken = Resources.Load<GameObject>($@"Prefabs/{nameof(CollisionToken)}");
 
             WorldTickRate = TimeSpan.FromSeconds(1d / TicksPerSecond);
 
@@ -116,7 +116,7 @@ namespace Controllers.World
 
         public void RegisterEntity(Transform parent, int radius = 2)
         {
-            GameObject entityToken = Instantiate(_EntityToken, transform);
+            GameObject entityToken = Instantiate(_CollisionToken, transform);
             CollisionToken collisionToken = entityToken.GetComponent<CollisionToken>();
             collisionToken.ParentEntityTransform = parent;
             collisionToken.Radius = radius;

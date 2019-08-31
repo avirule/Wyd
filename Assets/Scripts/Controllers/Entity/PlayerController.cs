@@ -1,5 +1,6 @@
 #region
 
+using System;
 using System.Collections.Generic;
 using Controllers.World;
 using Game.Entity;
@@ -128,7 +129,7 @@ namespace Controllers.Entity
                 return;
             }
 
-            Vector3 modifiedMovement = (Grounded ? 0f : 0.5f) * TravelSpeed * Time.fixedDeltaTime * _Movement;
+            Vector3 modifiedMovement = TravelSpeed * Time.fixedDeltaTime * _Movement;
 
             Rigidbody.MovePosition(Rigidbody.position + transform.TransformDirection(modifiedMovement));
         }
