@@ -22,9 +22,9 @@ namespace Game.World
     public class Chunk : MonoBehaviour, IEntityChunkChangedSubscriber
     {
         public static readonly ThreadedQueue ThreadedExecutionQueue = new ThreadedQueue(200, 4000);
-        public static readonly Vector3Int Size = new Vector3Int(16, 256, 16);
+        public static readonly Vector3Int Size = new Vector3Int(32, 256, 32);
 
-        private Transform _Transform;
+        private Vector3 _Position;
         private ushort[] _Blocks;
         private Mesh _Mesh;
         private object _BuildingIdentity;
@@ -42,10 +42,15 @@ namespace Game.World
 
         public bool Active => gameObject.activeSelf;
         public bool EntityChangedChunk { get; set; }
+
         public Vector3 Position
         {
-            get => _Transform.position;
-            set => _Transform.position = value;
+            get => _Position;
+            set
+            {
+                _Position = value;
+                transform.position = _Position;
+            }
         }
 
         private void Awake()
@@ -55,7 +60,7 @@ namespace Game.World
                 ThreadedExecutionQueue.Start();
             }
 
-            _Transform = transform;
+            _Position = transform.position;
             _Blocks = new ushort[Size.x * Size.y * Size.z];
             Built = Building = Meshed = Meshing = PendingMeshUpdate = false;
 
@@ -98,11 +103,9 @@ namespace Game.World
         }
 
         #region ACTIVATION STATE
-        
+
         public void Activate(Vector3 position = default)
         {
-            Transform self = transform;
-            self.position = position;
             Position = position;
             Built = Building = Meshed = Meshing = PendingMeshUpdate = false;
             gameObject.SetActive(true);
@@ -193,7 +196,7 @@ namespace Game.World
 
             return _Blocks[localPosition1d];
         }
-        
+
         private void CheckUpdateInternalSettings(Vector3Int chunkPosition)
         {
             // chunk player is in should always be expensive / shadowed

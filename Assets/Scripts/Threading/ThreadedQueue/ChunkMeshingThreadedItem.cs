@@ -40,7 +40,7 @@ namespace Threading.ThreadedQueue
         {
             for (int index = 0; index < _Blocks.Length; index++)
             {
-                if (_Blocks[index] == BlockController.BLOCK_EMPTY_ID)
+                if (_Blocks[index] == BlockController._BLOCK_EMPTY_ID)
                 {
                     continue;
                 }
@@ -88,7 +88,7 @@ namespace Threading.ThreadedQueue
 
                 if (((x == (Chunk.Size.x - 1)) &&
                      BlockController.Current.IsBlockTransparent(
-                         WorldController.Current.GetBlockAtPosition(globalPosition + Vector3Int.right))) ||
+                         WorldController.Current.GetBlockAtPosition(globalPosition + Vector3.right))) ||
                     ((x < (Chunk.Size.x - 1)) && BlockController.Current.IsBlockTransparent(_Blocks[index + 1])))
                 {
                     _Triangles.AddRange(new[]
@@ -161,7 +161,7 @@ namespace Threading.ThreadedQueue
                 }
 
                 if (((x == 0) && BlockController.Current.IsBlockTransparent(
-                         WorldController.Current.GetBlockAtPosition(globalPosition + Vector3Int.left))) ||
+                         WorldController.Current.GetBlockAtPosition(globalPosition + Vector3.left))) ||
                     ((x > 0) && BlockController.Current.IsBlockTransparent(_Blocks[index - 1])))
                 {
                     _Triangles.AddRange(new[]
@@ -198,7 +198,7 @@ namespace Threading.ThreadedQueue
 
                 if (((y == (Chunk.Size.y - 1)) &&
                      BlockController.Current.IsBlockTransparent(
-                         WorldController.Current.GetBlockAtPosition(globalPosition + Vector3Int.up))) ||
+                         WorldController.Current.GetBlockAtPosition(globalPosition + Vector3.up))) ||
                     ((y < (Chunk.Size.y - 1)) &&
                      BlockController.Current.IsBlockTransparent(_Blocks[index + (Chunk.Size.x * Chunk.Size.z)])))
                 {
@@ -235,7 +235,7 @@ namespace Threading.ThreadedQueue
                 }
 
                 if (((y == 0) && BlockController.Current.IsBlockTransparent(
-                         WorldController.Current.GetBlockAtPosition(globalPosition + Vector3Int.down))) ||
+                         WorldController.Current.GetBlockAtPosition(globalPosition + Vector3.down))) ||
                     ((y > 0) && BlockController.Current.IsBlockTransparent(
                          _Blocks[index - (Chunk.Size.x * Chunk.Size.z)])))
                 {
@@ -294,7 +294,7 @@ namespace Threading.ThreadedQueue
             {
                 mesh.Clear();
             }
-            
+
             if (_Vertices.Count > 65000)
             {
                 mesh.indexFormat = IndexFormat.UInt32;
@@ -304,8 +304,8 @@ namespace Threading.ThreadedQueue
             mesh.SetTriangles(_Triangles, 0);
             mesh.SetUVs(0, _UVs);
 
-            mesh.RecalculateTangents();
             mesh.RecalculateNormals();
+            mesh.RecalculateTangents();
             mesh.Optimize();
 
             return mesh;

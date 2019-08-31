@@ -1,10 +1,12 @@
 #region
 
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using Controllers.Entity;
 using Controllers.Game;
+using Game;
 using Game.Entity;
 using Game.World;
 using UnityEngine;
@@ -20,12 +22,12 @@ namespace Controllers.World
         private Stopwatch _FrameTimeLimiter;
         private Chunk _ChunkObject;
         private Dictionary<Vector3, Chunk> _Chunks;
-        private Queue<Chunk> _CachedChunks;
+        private ObjectCache<Chunk> _ChunkCache;
         private Queue<Chunk> _DeactivationQueue;
 
         public Queue<Vector3> BuildChunkQueue;
         public int ActiveChunksCount => _Chunks.Count;
-        public int CachedChunksCount => _CachedChunks.Count;
+        public int CachedChunksCount => _ChunkCache.Size;
         public bool AllChunksBuilt => _Chunks.All(kvp => kvp.Value.Built);
         public bool AllChunksMeshed => _Chunks.All(kvp => kvp.Value.Meshed);
 
@@ -42,17 +44,18 @@ namespace Controllers.World
                 Current = this;
             }
 
-            _ChunkObject = Resources.Load<Chunk>(@"Prefabs\Chunk");
-            _CachedChunks = new Queue<Chunk>();
+            _ChunkObject = Resources.Load<Chunk>(@"Prefabs/Chunk");
             _DeactivationQueue = new Queue<Chunk>();
             _FrameTimeLimiter = new Stopwatch();
-
             _Chunks = new Dictionary<Vector3, Chunk>();
             BuildChunkQueue = new Queue<Vector3>();
         }
 
         private void Start()
         {
+            _ChunkCache = new ObjectCache<Chunk>(DeactivateChunk, chunk => Destroy(chunk.gameObject),
+                OptionsController.Current.MaximumChunkCacheSize);
+
             PlayerController.Current.RegisterEntityChangedSubscriber(this);
 
             if (OptionsController.Current.PreInitializeChunkCache)
@@ -61,9 +64,8 @@ namespace Controllers.World
                 {
                     Chunk chunk = Instantiate(_ChunkObject, Vector3.zero, Quaternion.identity,
                         WorldController.Current.transform);
-                    chunk.Deactivate();
 
-                    _CachedChunks.Enqueue(chunk);
+                    _ChunkCache.CacheItem(ref chunk);
                 }
             }
         }
@@ -92,13 +94,6 @@ namespace Controllers.World
             if (_DeactivationQueue.Count > 0)
             {
                 ProcessDeactivationQueue();
-            }
-
-            // if maximum chunk cache size is not zero then cull chunks down to half the maximum when idle
-            if ((OptionsController.Current.MaximumChunkCacheSize != 0) &&
-                (_CachedChunks.Count > (OptionsController.Current.MaximumChunkCacheSize / 2)))
-            {
-                CullCachedChunks();
             }
 
             _FrameTimeLimiter.Stop();
@@ -147,19 +142,24 @@ namespace Controllers.World
                     continue;
                 }
 
-                Chunk chunk;
+                Chunk chunk = _ChunkCache.RetrieveItem();
 
-                if (_CachedChunks.Count > 0)
-                {
-                    chunk = _CachedChunks.Dequeue();
-                    chunk.Activate(position);
-                }
-                else
+                if (chunk == default)
                 {
                     chunk = Instantiate(_ChunkObject, position, Quaternion.identity, transform);
                 }
+                else
+                {
+                    chunk.Activate(position);
+                }
 
-                AddChunk(chunk);
+                try
+                {
+                    AddChunk(chunk);
+                }
+                catch (Exception)
+                {
+                }
 
                 // ensures that neighbours update their meshes to cull newly out of sight faces
                 FlagNeighborsPendingUpdate(chunk.Position);
@@ -250,35 +250,13 @@ namespace Controllers.World
             }
         }
 
-        private void DeactivateChunk(Chunk chunk)
+        private Chunk DeactivateChunk(Chunk chunk)
         {
-            _CachedChunks.Enqueue(chunk);
             RemoveChunk(chunk);
             FlagNeighborsPendingUpdate(chunk.Position);
             chunk.Deactivate();
-        }
 
-        private void CullCachedChunks()
-        {
-            if (OptionsController.Current.MaximumChunkCacheSize == 0)
-            {
-                return;
-            }
-
-            // controller will cull chunks down to half the maximum when idle
-            while (_CachedChunks.Count > (OptionsController.Current.MaximumChunkCacheSize / 2))
-            {
-                Chunk chunk = _CachedChunks.Dequeue();
-                Destroy(chunk.gameObject);
-
-                // continue culling if the amount of cached chunks is greater than the maximum
-                if ((_FrameTimeLimiter.Elapsed.TotalSeconds >
-                     OptionsController.Current.MaximumInternalFrameTime) &&
-                    (OptionsController.Current.ChunkCacheCullingAggression == CacheCullingAggression.Passive))
-                {
-                    break;
-                }
-            }
+            return chunk;
         }
 
         #endregion
@@ -301,7 +279,7 @@ namespace Controllers.World
 
         public ushort GetBlockAtPosition(Vector3 position)
         {
-            Vector3 chunkPosition = WorldController.GetWorldChunkOriginFromGlobalPosition(position).ToInt();
+            Vector3 chunkPosition = GetWorldChunkOriginFromGlobalPosition(position).ToInt();
 
             Chunk chunk = GetChunkAtPosition(chunkPosition);
 
@@ -313,6 +291,11 @@ namespace Controllers.World
             return chunk.GetBlockAtPosition(position);
         }
 
+        public static Vector3 GetWorldChunkOriginFromGlobalPosition(Vector3 globalPosition)
+        {
+            return globalPosition.Divide(Chunk.Size).Floor().Multiply(Chunk.Size);
+        }
+        
         #endregion
     }
 }

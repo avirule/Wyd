@@ -44,6 +44,7 @@ namespace Controllers.Game
 
         private void RegisterDefaultBlocks()
         {
+            BlockController.Current.RegisterBlockRules("Bedrock", false);
             BlockController.Current.RegisterBlockRules("Grass", false, (position, direction) =>
             {
                 Vector3 positionAbove = position + Vector3.up;

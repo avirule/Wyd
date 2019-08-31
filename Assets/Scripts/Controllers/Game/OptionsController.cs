@@ -70,7 +70,7 @@ namespace Controllers.Game
                 Current = this;
             }
 
-            _configPath = $@"{Application.persistentDataPath}\config.ini";
+            _configPath = $@"{Application.persistentDataPath}/config.ini";
         }
 
         private void Start()

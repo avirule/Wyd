@@ -143,7 +143,8 @@ namespace Threading.ThreadedQueue
         {
             if (MultiThreadedExecution)
             {
-                ThreadPool.QueueUserWorkItem(state => threadedItem.Execute());
+                Thread thread = new Thread(threadedItem.Execute);
+                thread.Start();
             }
             else
             {

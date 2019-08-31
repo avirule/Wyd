@@ -20,8 +20,12 @@ namespace Controllers.World
         public static WorldController Current;
 
         private GameObject _EntityToken;
-        private List<GameObject> _EntityTokens;
+        private List<EntityTransformToken> _EntityTokens;
+        private Mesh _ColliderMesh;
+        private bool _UpdateColliderMesh;
 
+        public MeshFilter MeshFilter;
+        public MeshCollider MeshCollider;
         public long InitialTick;
         public TimeSpan WorldTickRate;
         public float TicksPerSecond;
@@ -54,11 +58,13 @@ namespace Controllers.World
                 return;
             }
 
-            _EntityToken = Resources.Load<GameObject>(@"Prefabs\EntityToken");
+            _EntityToken = Resources.Load<GameObject>(@"Prefabs/EntityToken");
 
             WorldTickRate = TimeSpan.FromSeconds(1d / TicksPerSecond);
 
-            _EntityTokens = new List<GameObject>();
+            _EntityTokens = new List<EntityTransformToken>();
+            _ColliderMesh = new Mesh();
+            _UpdateColliderMesh = false;
 
             InitialTick = DateTime.Now.Ticks;
         }
@@ -76,11 +82,27 @@ namespace Controllers.World
 
                 EntityChangedChunk = false;
             }
-        }
 
-        public static Vector3 GetWorldChunkOriginFromGlobalPosition(Vector3 globalPosition)
-        {
-            return globalPosition.Divide(Chunk.Size).Floor().Multiply(Chunk.Size);
+            if (_UpdateColliderMesh)
+            {
+                List<CombineInstance> combines = new List<CombineInstance>();
+
+                foreach (EntityTransformToken entityTransformToken in _EntityTokens)
+                {
+                    CombineInstance combine = new CombineInstance
+                    {
+                        mesh = entityTransformToken.Mesh,
+                        transform = entityTransformToken.transform.localToWorldMatrix
+                    };
+
+                    combines.Add(combine);
+                }
+
+                _ColliderMesh.CombineMeshes(combines.ToArray(), true, true);
+                MeshFilter.mesh = _ColliderMesh;
+                MeshCollider.sharedMesh = MeshFilter.sharedMesh;
+                _UpdateColliderMesh = false;
+            }
         }
 
         public ushort GetBlockAtPosition(Vector3 position)
@@ -94,9 +116,16 @@ namespace Controllers.World
         public void RegisterEntity(Transform parent)
         {
             GameObject entityToken = Instantiate(_EntityToken, transform);
-            entityToken.GetComponent<EntityTransformToken>().ParentEntityTransform = parent;
+            EntityTransformToken entityTransformToken = entityToken.GetComponent<EntityTransformToken>();
+            entityTransformToken.ParentEntityTransform = parent;
+            entityTransformToken.UpdatedMesh += OnEntityChangedMesh;
 
-            _EntityTokens.Add(entityToken);
+            _EntityTokens.Add(entityTransformToken);
+        }
+
+        private void OnEntityChangedMesh(object sender, Mesh mesh)
+        {
+            _UpdateColliderMesh = true;
         }
 
         #endregion

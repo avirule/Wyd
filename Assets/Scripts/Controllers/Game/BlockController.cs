@@ -1,7 +1,7 @@
 #region
 
 using System;
-using System.Collections.Generic;
+using System.Collections.Concurrent;
 using System.Linq;
 using Game;
 using Game.World;
@@ -15,12 +15,12 @@ namespace Controllers.Game
 {
     public class BlockController : MonoBehaviour
     {
-        public const ushort BLOCK_EMPTY_ID = 0;
+        public const ushort _BLOCK_EMPTY_ID = 0;
 
         public static BlockController Current;
 
-        public Dictionary<string, ushort> BlockNameIds;
-        public Dictionary<ushort, IBlockRule> Blocks;
+        public ConcurrentDictionary<string, ushort> BlockNameIds;
+        public ConcurrentDictionary<ushort, IBlockRule> Blocks;
         public TextureController TextureController;
 
         private void Awake()
@@ -34,8 +34,8 @@ namespace Controllers.Game
                 Current = this;
             }
 
-            BlockNameIds = new Dictionary<string, ushort>();
-            Blocks = new Dictionary<ushort, IBlockRule>();
+            BlockNameIds = new ConcurrentDictionary<string, ushort>();
+            Blocks = new ConcurrentDictionary<ushort, IBlockRule>();
         }
 
         public int RegisterBlockRules(string blockName, bool isTransparent,
@@ -61,8 +61,8 @@ namespace Controllers.Game
 
             if (!Blocks.ContainsKey(blockId))
             {
-                Blocks.Add(blockId, new BlockRule(blockId, blockName, isTransparent, uvsRule));
-                BlockNameIds.Add(blockName, blockId);
+                Blocks.TryAdd(blockId, new BlockRule(blockId, blockName, isTransparent, uvsRule));
+                BlockNameIds.TryAdd(blockName, blockId);
             }
 
             EventLog.Logger.Log(LogLevel.Info,
@@ -136,7 +136,7 @@ namespace Controllers.Game
 
         public string GetBlockName(ushort blockId)
         {
-            if (blockId == BLOCK_EMPTY_ID)
+            if (blockId == _BLOCK_EMPTY_ID)
             {
                 return "Air";
             }

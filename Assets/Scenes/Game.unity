@@ -2543,6 +2543,8 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 1461272636}
+  - component: {fileID: 1461272639}
+  - component: {fileID: 1461272638}
   - component: {fileID: 1461272635}
   - component: {fileID: 1461272637}
   - component: {fileID: 1461272641}
@@ -2565,6 +2567,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 0468092b4dbf446bb494bab4364c5e45, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  MeshFilter: {fileID: 1461272639}
+  MeshCollider: {fileID: 1461272638}
   InitialTick: 0
   TicksPerSecond: 15
   WorldGenerationSettings: {fileID: 1461272637}
@@ -2601,6 +2605,28 @@ MonoBehaviour:
   Radius: 2
   Scale: 512
   SeedString: genericseed
+--- !u!64 &1461272638
+MeshCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1461272634}
+  m_Material: {fileID: 0}
+  m_IsTrigger: 0
+  m_Enabled: 1
+  serializedVersion: 3
+  m_Convex: 0
+  m_CookingOptions: -1
+  m_Mesh: {fileID: 0}
+--- !u!33 &1461272639
+MeshFilter:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1461272634}
+  m_Mesh: {fileID: 0}
 --- !u!114 &1461272641
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -3336,7 +3362,7 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 2134891953}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 5, z: 0}
+  m_LocalPosition: {x: 0, y: 7, z: 0}
   m_LocalScale: {x: 1, y: 2, z: 1}
   m_Children:
   - {fileID: 963194228}
@@ -3370,6 +3396,11 @@ PrefabInstance:
         type: 3}
       propertyPath: m_Name
       value: Options
+      objectReference: {fileID: 0}
+    - target: {fileID: 195899960916931893, guid: 21687c22802918641b587bb077f1189d,
+        type: 3}
+      propertyPath: m_Name
+      value: ThreadingModeButton
       objectReference: {fileID: 0}
     - target: {fileID: 307005373916456342, guid: 21687c22802918641b587bb077f1189d,
         type: 3}
@@ -3475,11 +3506,6 @@ PrefabInstance:
         type: 3}
       propertyPath: m_Pivot.y
       value: 0.5
-      objectReference: {fileID: 0}
-    - target: {fileID: 195899960916931893, guid: 21687c22802918641b587bb077f1189d,
-        type: 3}
-      propertyPath: m_Name
-      value: ThreadingModeButton
       objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 21687c22802918641b587bb077f1189d, type: 3}

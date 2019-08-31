@@ -38,7 +38,7 @@ namespace Controllers.Game
 
         private void ProcessSprites()
         {
-            Sprite[] sprites = Resources.LoadAll<Sprite>(@"Graphics\Textures\Blocks\");
+            Sprite[] sprites = Resources.LoadAll<Sprite>(@"Graphics/Textures/Blocks/");
 
             TerrainTexture = new Texture2DArray((int) sprites[0].rect.width, (int) sprites[0].rect.height,
                 sprites.Length, TextureFormat.RGBA32, true, false)

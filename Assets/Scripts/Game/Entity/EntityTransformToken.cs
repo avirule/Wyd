@@ -1,9 +1,9 @@
 #region
 
+using System;
 using System.Collections.Generic;
 using Controllers.Game;
 using Controllers.World;
-using Game.World;
 using UnityEngine;
 
 #endregion
@@ -12,32 +12,13 @@ namespace Game.Entity
 {
     public class EntityTransformToken : MonoBehaviour
     {
-        private MeshFilter _MeshFilter;
-        private MeshCollider _MeshCollider;
-
-        private Vector3Int _CurrentPosition;
-
-        private Vector3Int CurrentPosition
-        {
-            get => _CurrentPosition;
-            set
-            {
-                if (_CurrentPosition == value)
-                {
-                    return;
-                }
-
-                _CurrentPosition = value;
-                transform.position = value;
-            }
-        }
-
         public Transform ParentEntityTransform;
+        public Mesh Mesh;
+
+        public event EventHandler<Mesh> UpdatedMesh;
 
         private void Awake()
         {
-            _MeshFilter = GetComponent<MeshFilter>();
-            _MeshCollider = GetComponent<MeshCollider>();
             ParentEntityTransform = transform.parent;
         }
 
@@ -48,16 +29,17 @@ namespace Game.Entity
                 return;
             }
 
-            Vector3Int parentPositionInt32 = ParentEntityTransform.position.ToInt();
+            Vector3 difference = (transform.position - ParentEntityTransform.position).Abs();
 
-            if (parentPositionInt32 == CurrentPosition)
+            if (!Mathv.GreaterThanVector3(difference, Vector3.one))
             {
+                return;
             }
 
-//            CurrentPosition = parentPositionInt32;
-//            (Vector3[] vertices, int[] triangles) = CalculateLocalMeshData();
-//            _MeshFilter.mesh = ProvideNewMeshData(vertices, triangles);
-//            _MeshCollider.sharedMesh = _MeshFilter.mesh;
+            transform.position = ParentEntityTransform.position.Floor();
+            (Vector3[] vertices, int[] triangles) = CalculateLocalMeshData();
+            Mesh = ProvideNewMeshData(vertices, triangles);
+            UpdatedMesh?.Invoke(this, Mesh);
         }
 
         public (Vector3[], int[]) CalculateLocalMeshData()
@@ -71,17 +53,16 @@ namespace Game.Entity
                 {
                     for (int z = -2; z < 3; z++)
                     {
-                        Vector3 globalPosition = ParentEntityTransform.position + new Vector3(x, y, z);
+                        Vector3 globalPosition = transform.position + new Vector3(x, y, z);
 
-                        Block block = new Block();
-                        WorldController.Current.GetBlockAtPosition(globalPosition.ToInt());
-
-                        if (block.Id == BlockController.BLOCK_EMPTY_ID)
+                        if (WorldController.Current.GetBlockAtPosition(globalPosition) ==
+                            BlockController._BLOCK_EMPTY_ID)
                         {
                             continue;
                         }
 
-                        if (block.HasFace(Direction.North))
+                        if (BlockController.Current.IsBlockDefaultTransparent(
+                            WorldController.Current.GetBlockAtPosition(globalPosition + Vector3.forward)))
                         {
                             triangles.AddRange(new[]
                             {
@@ -103,7 +84,8 @@ namespace Game.Entity
                             });
                         }
 
-                        if (block.HasFace(Direction.East))
+                        if (BlockController.Current.IsBlockDefaultTransparent(
+                            WorldController.Current.GetBlockAtPosition(globalPosition + Vector3.right)))
                         {
                             triangles.AddRange(new[]
                             {
@@ -125,7 +107,8 @@ namespace Game.Entity
                             });
                         }
 
-                        if (block.HasFace(Direction.South))
+                        if (BlockController.Current.IsBlockDefaultTransparent(
+                            WorldController.Current.GetBlockAtPosition(globalPosition + Vector3.back)))
                         {
                             triangles.AddRange(new[]
                             {
@@ -147,7 +130,8 @@ namespace Game.Entity
                             });
                         }
 
-                        if (block.HasFace(Direction.West))
+                        if (BlockController.Current.IsBlockDefaultTransparent(
+                            WorldController.Current.GetBlockAtPosition(globalPosition + Vector3.left)))
                         {
                             triangles.AddRange(new[]
                             {
@@ -169,7 +153,8 @@ namespace Game.Entity
                             });
                         }
 
-                        if (block.HasFace(Direction.Up))
+                        if (BlockController.Current.IsBlockDefaultTransparent(
+                            WorldController.Current.GetBlockAtPosition(globalPosition + Vector3.up)))
                         {
                             triangles.AddRange(new[]
                             {
@@ -191,7 +176,8 @@ namespace Game.Entity
                             });
                         }
 
-                        if (block.HasFace(Direction.Down))
+                        if (BlockController.Current.IsBlockDefaultTransparent(
+                            WorldController.Current.GetBlockAtPosition(globalPosition + Vector3.down)))
                         {
                             triangles.AddRange(new[]
                             {
@@ -227,8 +213,8 @@ namespace Game.Entity
                 triangles = triangles
             };
 
-            mesh.RecalculateTangents();
             mesh.RecalculateNormals();
+            mesh.RecalculateTangents();
             mesh.Optimize();
 
             return mesh;

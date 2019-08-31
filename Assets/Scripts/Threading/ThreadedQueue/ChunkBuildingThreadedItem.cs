@@ -5,6 +5,7 @@ using Controllers.World;
 using Game.World;
 using Noise.OpenSimplex;
 using UnityEngine;
+using Random = System.Random;
 
 #endregion
 
@@ -15,6 +16,7 @@ namespace Threading.ThreadedQueue
         private static readonly OpenSimplexNoise NoiseFunction =
             new OpenSimplexNoise(WorldController.Current.WorldGenerationSettings.Seed);
 
+        private readonly Random _Rand;
         private readonly Vector3 _Position;
         private readonly ushort[] _Blocks;
 
@@ -26,6 +28,7 @@ namespace Threading.ThreadedQueue
         /// <seealso cref="Threading.ThreadedQueue.ChunkMeshingThreadedItem" />
         public ChunkBuildingThreadedItem(Vector3 position, ref ushort[] blocks)
         {
+            _Rand = new Random(WorldController.Current.WorldGenerationSettings.Seed);
             _Position = position;
             _Blocks = blocks;
         }
@@ -140,6 +143,18 @@ namespace Threading.ThreadedQueue
         private void Generate3DSimplex(int index)
         {
             (int x, int y, int z) = Mathv.GetVector3IntIndex(index, Chunk.Size);
+
+            if (y < 4)
+            {
+                int val = _Rand.Next(0, 4);
+
+                if (y <= val)
+                {
+                    _Blocks[index] = BlockController.Current.GetBlockId("Bedrock");
+                }
+
+                return;
+            }
 
             double noiseValue =
                 NoiseFunction.Evaluate((_Position.x + x) / 20d, (_Position.y + y) / 20d, (_Position.z + z) / 20d);
