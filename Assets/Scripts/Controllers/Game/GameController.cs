@@ -46,7 +46,7 @@ namespace Controllers.Game
         {
             BlockController.Current.RegisterBlockRules("Grass", false, (position, direction) =>
             {
-                Vector3Int positionAbove = position + Vector3Int.up;
+                Vector3 positionAbove = position + Vector3.up;
                 ushort blockId = WorldController.Current.GetBlockAtPosition(positionAbove);
 
                 if (!BlockController.Current.IsBlockTransparent(blockId))

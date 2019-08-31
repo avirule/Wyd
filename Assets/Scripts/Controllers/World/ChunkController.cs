@@ -3,6 +3,7 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
+using System.Runtime.InteropServices.WindowsRuntime;
 using Controllers.Entity;
 using Controllers.Game;
 using Game.Entity;
@@ -19,11 +20,11 @@ namespace Controllers.World
 
         private Stopwatch _FrameTimeLimiter;
         private Chunk _ChunkObject;
-        private Dictionary<Vector3Int, Chunk> _Chunks;
+        private Dictionary<Vector3, Chunk> _Chunks;
         private Queue<Chunk> _CachedChunks;
         private Queue<Chunk> _DeactivationQueue;
 
-        public Queue<Vector3Int> BuildChunkQueue;
+        public Queue<Vector3> BuildChunkQueue;
         public int ActiveChunksCount => _Chunks.Count;
         public int CachedChunksCount => _CachedChunks.Count;
         public bool AllChunksBuilt => _Chunks.All(kvp => kvp.Value.Built);
@@ -47,13 +48,21 @@ namespace Controllers.World
             _DeactivationQueue = new Queue<Chunk>();
             _FrameTimeLimiter = new Stopwatch();
 
-            _Chunks = new Dictionary<Vector3Int, Chunk>();
-            BuildChunkQueue = new Queue<Vector3Int>();
+            _Chunks = new Dictionary<Vector3, Chunk>();
+            BuildChunkQueue = new Queue<Vector3>();
         }
 
         private void Start()
         {
             PlayerController.Current.RegisterEntityChangedSubscriber(this);
+
+            if (OptionsController.Current.PreInitializeChunkCache)
+            {
+                for (int i = 0; i < OptionsController.Current.MaximumChunkCacheSize / 2; i++)
+                {
+                    BuildChunkQueue.Enqueue(Vector3Int.zero);
+                }
+            }
         }
 
         private void Update()
@@ -128,7 +137,7 @@ namespace Controllers.World
         {
             while (BuildChunkQueue.Count > 0)
             {
-                Vector3Int position = BuildChunkQueue.Dequeue();
+                Vector3 position = BuildChunkQueue.Dequeue();
 
                 if (CheckChunkExistsAtPosition(position))
                 {
@@ -159,7 +168,7 @@ namespace Controllers.World
             }
         }
 
-        private void FlagNeighborsPendingUpdate(Vector3Int position)
+        private void FlagNeighborsPendingUpdate(Vector3 position)
         {
             for (int x = -1; x <= 1; x++)
             {
@@ -168,7 +177,7 @@ namespace Controllers.World
                     continue;
                 }
 
-                Vector3Int modifiedPosition = position + new Vector3Int(x * Chunk.Size.x, 0, 0);
+                Vector3 modifiedPosition = position + new Vector3(x * Chunk.Size.x, 0, 0);
                 Chunk chunkAtPosition = GetChunkAtPosition(modifiedPosition);
 
                 if ((chunkAtPosition == default) || chunkAtPosition.PendingMeshUpdate || !chunkAtPosition.Active)
@@ -186,7 +195,7 @@ namespace Controllers.World
                     continue;
                 }
 
-                Vector3Int modifiedPosition = position + new Vector3Int(0, 0, z * Chunk.Size.z);
+                Vector3 modifiedPosition = position + new Vector3(0, 0, z * Chunk.Size.z);
                 Chunk chunkAtPosition = GetChunkAtPosition(modifiedPosition);
 
                 if ((chunkAtPosition == default) || chunkAtPosition.PendingMeshUpdate || !chunkAtPosition.Active)
@@ -205,9 +214,9 @@ namespace Controllers.World
 
         private void MarkOutOfBoundsChunksForDeactivation(Vector3Int chunkPosition)
         {
-            foreach (KeyValuePair<Vector3Int, Chunk> kvp in _Chunks)
+            foreach (KeyValuePair<Vector3, Chunk> kvp in _Chunks)
             {
-                Vector3Int difference = (kvp.Value.Position - chunkPosition).Abs();
+                Vector3 difference = (kvp.Value.Position - chunkPosition).Abs();
 
                 if ((difference.x <= ((WorldController.Current.WorldGenerationSettings.Radius + 1) * Chunk.Size.x)) &&
                     (difference.z <= ((WorldController.Current.WorldGenerationSettings.Radius + 1) * Chunk.Size.z)))
@@ -274,22 +283,22 @@ namespace Controllers.World
 
         #region MISC
 
-        public bool CheckChunkExistsAtPosition(Vector3Int position)
+        public bool CheckChunkExistsAtPosition(Vector3 position)
         {
             return _Chunks.ContainsKey(position);
         }
 
         // todo this function needs to be made thread-safe
-        public Chunk GetChunkAtPosition(Vector3Int position)
+        public Chunk GetChunkAtPosition(Vector3 position)
         {
             bool trySuccess = _Chunks.TryGetValue(position, out Chunk chunk);
 
             return trySuccess ? chunk : default;
         }
 
-        public ushort GetIdAtPosition(Vector3Int position)
+        public ushort GetIdAtPosition(Vector3 position)
         {
-            Vector3Int chunkPosition = WorldController.GetWorldChunkOriginFromGlobalPosition(position).ToInt();
+            Vector3 chunkPosition = WorldController.GetWorldChunkOriginFromGlobalPosition(position).ToInt();
 
             Chunk chunk = GetChunkAtPosition(chunkPosition);
 
@@ -298,7 +307,7 @@ namespace Controllers.World
                 return default;
             }
 
-            Vector3Int localPosition = (position - chunkPosition).Abs();
+            Vector3 localPosition = (position - chunkPosition).Abs();
             int localPosition1d = localPosition.To1D(Chunk.Size);
 
             if (chunk.Blocks.Length <= localPosition1d)

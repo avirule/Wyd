@@ -22,13 +22,13 @@ namespace Game.World
 
     public struct BlockRule : IBlockRule
     {
-        private RuleEvaluation<Vector3Int, Direction> UVsRule { get; }
+        private RuleEvaluation<Vector3, Direction> UVsRule { get; }
 
         public ushort Id { get; }
         public string BlockName { get; }
         public bool Transparent { get; }
 
-        public BlockRule(ushort id, string blockName, bool transparent, RuleEvaluation<Vector3Int, Direction> uvsRule)
+        public BlockRule(ushort id, string blockName, bool transparent, RuleEvaluation<Vector3, Direction> uvsRule)
         {
             UVsRule = uvsRule ?? ((position, direction) => string.Empty);
 
@@ -37,7 +37,7 @@ namespace Game.World
             Transparent = transparent;
         }
 
-        public bool ReadUVsRule(ushort blockId, Vector3Int position, Direction direction, out string spriteName)
+        public bool ReadUVsRule(ushort blockId, Vector3 position, Direction direction, out string spriteName)
         {
             if (Id != blockId)
             {

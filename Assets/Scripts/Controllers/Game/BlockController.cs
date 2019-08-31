@@ -39,7 +39,7 @@ namespace Controllers.Game
         }
 
         public int RegisterBlockRules(string blockName, bool isTransparent,
-            RuleEvaluation<Vector3Int, Direction> uvsRule = default)
+            RuleEvaluation<Vector3, Direction> uvsRule = default)
         {
             blockName = blockName.ToLowerInvariant();
             ushort blockId = 0;
@@ -71,7 +71,7 @@ namespace Controllers.Game
             return blockId;
         }
 
-        public bool GetBlockSpriteUVs(ushort blockId, Vector3Int position, Direction direction, Vector3 size2d,
+        public bool GetBlockSpriteUVs(ushort blockId, Vector3 position, Direction direction, Vector3 size2d,
             out Vector3[] uvs)
         {
             uvs = null;

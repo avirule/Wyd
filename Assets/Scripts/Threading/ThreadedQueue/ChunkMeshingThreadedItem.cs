@@ -14,7 +14,7 @@ namespace Threading.ThreadedQueue
 {
     public class ChunkMeshingThreadedItem : ThreadedItem
     {
-        private readonly Vector3Int _Position;
+        private readonly Vector3 _Position;
         private readonly ushort[] _Blocks;
         private readonly List<int> _Triangles;
         private readonly List<Vector3> _Vertices;
@@ -26,7 +26,7 @@ namespace Threading.ThreadedQueue
         /// <param name="position"><see cref="UnityEngine.Vector3Int" /> position of chunk being meshed.</param>
         /// <param name="blocks">Pre-initialized and built <see cref="T:Block[]" /> to iterate through.</param>
         /// <seealso cref="Threading.ThreadedQueue.ChunkBuildingThreadedItem" />
-        public ChunkMeshingThreadedItem(Vector3Int position, ushort[] blocks)
+        public ChunkMeshingThreadedItem(Vector3 position, ushort[] blocks)
         {
             _Position = position;
             _Blocks = blocks;
@@ -45,11 +45,11 @@ namespace Threading.ThreadedQueue
                 }
 
                 (int x, int y, int z) = Mathv.GetVector3IntIndex(index, Chunk.Size);
-                Vector3Int globalPosition = _Position + new Vector3Int(x, y, z);
+                Vector3 globalPosition = _Position + new Vector3(x, y, z);
 
                 if (((z == (Chunk.Size.z - 1)) &&
                      BlockController.Current.IsBlockTransparent(
-                         WorldController.Current.GetBlockAtPosition(globalPosition + new Vector3Int(0, 0, 1)))) ||
+                         WorldController.Current.GetBlockAtPosition(globalPosition + Vector3.forward))) ||
                     ((z < (Chunk.Size.z - 1)) &&
                      BlockController.Current.IsBlockTransparent(_Blocks[index + Chunk.Size.x])))
                 {
@@ -124,7 +124,7 @@ namespace Threading.ThreadedQueue
 
                 if (((z == 0) &&
                      BlockController.Current.IsBlockTransparent(
-                         WorldController.Current.GetBlockAtPosition(globalPosition + new Vector3Int(0, 0, -1)))) ||
+                         WorldController.Current.GetBlockAtPosition(globalPosition + Vector3.back))) ||
                     ((z > 0) && BlockController.Current.IsBlockTransparent(_Blocks[index - Chunk.Size.x])))
                 {
                     _Triangles.AddRange(new[]

@@ -119,6 +119,18 @@ public static class Mathv
 
         return a;
     }
+    
+    /// <summary>
+    ///     Calculates 1D <see cref="System.Int32" /> index from 3D <see cref="UnityEngine.Vector3Int" />, given a
+    ///     <see cref="UnityEngine.Vector3Int" /> size in 3D space.
+    /// </summary>
+    /// <param name="a">3D <see cref="UnityEngine.Vector3Int" /> index.</param>
+    /// <param name="size3d"><see cref="UnityEngine.Vector3Int" /> size in 3D space.</param>
+    /// <returns>1D <see cref="System.Int32" /> index.</returns>
+    public static int To1D(this Vector3 a, Vector3 size3d)
+    {
+        return (int)(a.x + (a.z * size3d.x) + (a.y * size3d.x * size3d.z));
+    }
 
     #endregion
 

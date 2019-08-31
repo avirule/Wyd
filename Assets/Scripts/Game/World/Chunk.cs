@@ -1,13 +1,10 @@
 #region
 
-using System;
 using Controllers.Entity;
 using Controllers.Game;
 using Controllers.UI.Diagnostics;
 using Controllers.World;
 using Game.Entity;
-using Logging;
-using NLog;
 using Threading.ThreadedQueue;
 using UnityEngine;
 
@@ -27,9 +24,16 @@ namespace Game.World
         public static readonly ThreadedQueue ThreadedExecutionQueue = new ThreadedQueue(200, 4000);
         public static readonly Vector3Int Size = new Vector3Int(16, 256, 16);
 
+        private Transform _Transform;
         private object _BuildingIdentity;
         private object _MeshingIdentity;
         private Mesh _Mesh;
+
+        public Vector3 Position
+        {
+            get => _Transform.position;
+            set => _Transform.position = value;
+        }
 
         public MeshFilter MeshFilter;
         public MeshRenderer MeshRenderer;
@@ -39,7 +43,6 @@ namespace Game.World
         public bool Meshed;
         public bool Meshing;
         public bool PendingMeshUpdate;
-        public Vector3Int Position;
 
         [Header("Graphics")] public bool DrawShadows;
 
@@ -54,10 +57,9 @@ namespace Game.World
                 ThreadedExecutionQueue.Start();
             }
 
+            _Transform = transform;
             Blocks = new ushort[Size.x * Size.y * Size.z];
-            Position = transform.position.ToInt();
-            Built = Building = Meshed = Meshing = false;
-            PendingMeshUpdate = true;
+            Built = Building = Meshed = Meshing = PendingMeshUpdate = false;
 
             MeshRenderer.material.SetTexture(TextureController.Current.MainTex,
                 TextureController.Current.TerrainTexture);
@@ -97,13 +99,12 @@ namespace Game.World
             ThreadedExecutionQueue.Abort();
         }
 
-        public void Activate(Vector3Int position = default)
+        public void Activate(Vector3 position = default)
         {
             Transform self = transform;
             self.position = position;
             Position = position;
-            Built = Building = Meshed = Meshing = false;
-            PendingMeshUpdate = true;
+            Built = Building = Meshed = Meshing = PendingMeshUpdate = false;
             gameObject.SetActive(true);
         }
 
@@ -123,30 +124,7 @@ namespace Game.World
             Built = false;
             Building = true;
 
-            float[] noiseMap;
-
-            try
-            {
-                // todo fix retrieval of noise values without errors when player is moving extremely fast
-
-                noiseMap = WorldController.Current.NoiseMap.GetSection(Position, Size);
-            }
-            catch (Exception)
-            {
-                Building = false;
-                return default;
-            }
-
-            if (noiseMap == default)
-            {
-                EventLog.Logger.Log(LogLevel.Error,
-                    $"Failed to generate chunk at position ({Position.x}, {Position.z}): failed to get noise map.");
-                Building = false;
-                return default;
-            }
-
-            return ThreadedExecutionQueue.AddThreadedItem(new ChunkBuildingThreadedItem(ref Position, ref Blocks,
-                noiseMap));
+            return ThreadedExecutionQueue.AddThreadedItem(new ChunkBuildingThreadedItem(Position, ref Blocks));
         }
 
         private object BeginGenerateMesh()
@@ -207,13 +185,13 @@ namespace Game.World
             }
             else
             {
-                Vector3Int difference = (Position - chunkPosition).Abs();
+                Vector3 difference = (Position - chunkPosition).Abs();
 
                 DrawShadows = CheckDrawShadows(difference);
             }
         }
 
-        private static bool CheckDrawShadows(Vector3Int difference)
+        private static bool CheckDrawShadows(Vector3 difference)
         {
             return (OptionsController.Current.ShadowDistance == 0) ||
                    ((difference.x <= (OptionsController.Current.ShadowDistance * Size.x)) &&

@@ -12,22 +12,19 @@ namespace Threading.ThreadedQueue
 {
     public class ChunkBuildingThreadedItem : ThreadedItem
     {
-        private readonly Vector3Int _Position;
+        private readonly Vector3 _Position;
         private readonly ushort[] _Blocks;
-        private readonly float[] _NoiseMap;
 
         /// <summary>
         ///     Initialises a new instance of the <see cref="Threading.ThreadedQueue.ChunkBuildingThreadedItem" /> class.
         /// </summary>
         /// <param name="position"></param>
         /// <param name="blocks">Pre-initialized <see cref="T:Block[]" /> of blocks to iterate through.</param>
-        /// <param name="noiseMap">Pre-initialized <see cref="T:float[][]" /> of noise values.</param>
         /// <seealso cref="Threading.ThreadedQueue.ChunkMeshingThreadedItem" />
-        public ChunkBuildingThreadedItem(ref Vector3Int position, ref ushort[] blocks, float[] noiseMap)
+        public ChunkBuildingThreadedItem(Vector3 position, ref ushort[] blocks)
         {
             _Position = position;
             _Blocks = blocks;
-            _NoiseMap = noiseMap;
         }
 
         protected override void Process()
@@ -139,35 +136,6 @@ namespace Threading.ThreadedQueue
 
         private static readonly OpenSimplexNoise NoiseFunction =
             new OpenSimplexNoise(WorldController.Current.WorldGenerationSettings.Seed);
-
-        private void GenerateNormal(int index)
-        {
-            (int x, int y, int z) = Mathv.GetVector3IntIndex(index, Chunk.Size);
-
-            int noiseIndex = x + (Chunk.Size.x * z);
-
-            float noiseHeight = _NoiseMap[noiseIndex];
-
-            int perlinValue = Mathf.FloorToInt(noiseHeight * Chunk.Size.y);
-
-            if (y > perlinValue)
-            {
-                return;
-            }
-
-            if ((y == perlinValue) || (y == (Chunk.Size.y - 1)))
-            {
-                _Blocks[index] = BlockController.Current.GetBlockId("Grass");
-            }
-            else if ((y < perlinValue) && (y > (perlinValue - 5)))
-            {
-                _Blocks[index] = BlockController.Current.GetBlockId("Dirt");
-            }
-            else if (y <= (perlinValue - 5))
-            {
-                _Blocks[index] = BlockController.Current.GetBlockId("Stone");
-            }
-        }
 
         private void Generate3DSimplex(int index)
         {

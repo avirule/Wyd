@@ -28,7 +28,6 @@ namespace Controllers.World
         public float TicksPerSecond;
         public WorldGenerationSettings WorldGenerationSettings;
         public ChunkController ChunkController;
-        public NoiseMap NoiseMap;
 
         public bool EntityChangedChunk { get; set; }
 
@@ -60,10 +59,6 @@ namespace Controllers.World
 
             WorldTickRate = TimeSpan.FromSeconds(1d / TicksPerSecond);
 
-            NoiseMap = new NoiseMap(null, Vector3Int.zero,
-                new Vector3Int((WorldGenerationSettings.Diameter + 1) * Chunk.Size.x, 0,
-                    (WorldGenerationSettings.Diameter + 1) * Chunk.Size.z));
-
             _EntityTokens = new List<GameObject>();
 
             InitialTick = DateTime.Now.Ticks;
@@ -89,7 +84,7 @@ namespace Controllers.World
             return globalPosition.Divide(Chunk.Size).Floor().Multiply(Chunk.Size);
         }
 
-        public ushort GetBlockAtPosition(Vector3Int position)
+        public ushort GetBlockAtPosition(Vector3 position)
         {
             return ChunkController.GetIdAtPosition(position);
         }
@@ -112,7 +107,6 @@ namespace Controllers.World
 
         private void UpdateChunkLoadArea(Vector3Int chunkPosition)
         {
-            NoiseMap.Generate(chunkPosition, NoiseMap.Bounds.size, WorldGenerationSettings);
             EnqueueBuildChunkArea(chunkPosition, WorldGenerationSettings.Radius);
         }
 

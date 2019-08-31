@@ -36,10 +36,16 @@ namespace Controllers.Game
 
         private Configuration _Configuration;
 
+        // General
         public ThreadingMode ThreadingMode;
+
+        // Chunking
+        public bool PreInitializeChunkCache;
         public int MaximumChunkCacheSize;
         public CacheCullingAggression ChunkCacheCullingAggression;
         public int MaximumChunkLoadTimeBufferSize;
+
+        // Graphics
         public int MaximumFrameRateBufferSize;
         public int MinimumInternalFrames;
         public float MaximumInternalFrameTime;
@@ -77,6 +83,14 @@ namespace Controllers.Game
             _Configuration = !File.Exists(_configPath)
                 ? InitialiseDefaultConfig()
                 : Configuration.LoadFromFile(_configPath);
+
+            // General
+            if (!GetSetting("General", nameof(ThreadingMode), out ThreadingMode))
+            {
+                EventLog.Logger.Log(LogLevel.Warn, $"Error loading setting {nameof(ThreadingMode)}.");
+                ThreadingMode = ThreadingMode.Variable;
+            }
+
 
             // Graphics
             if (!GetSetting("Graphics", nameof(MinimumInternalFrames), out MinimumInternalFrames) ||
@@ -128,10 +142,11 @@ namespace Controllers.Game
 
 
             // Chunking
-            if (!GetSetting("Chunking", nameof(ThreadingMode), out ThreadingMode))
+            if (!GetSetting("General", nameof(PreInitializeChunkCache), out PreInitializeChunkCache))
             {
-                EventLog.Logger.Log(LogLevel.Warn, $"Error loading setting {nameof(ThreadingMode)}.");
-                ThreadingMode = ThreadingMode.Variable;
+                EventLog.Logger.Log(LogLevel.Warn,
+                    $"Error loading setting {nameof(PreInitializeChunkCache)}.");
+                PreInitializeChunkCache = true;
             }
 
             if (!GetSetting("Chunking", nameof(MaximumChunkCacheSize), out MaximumChunkCacheSize) ||
@@ -168,6 +183,13 @@ namespace Controllers.Game
 
             _Configuration = new Configuration();
 
+            // General
+            _Configuration["General"][nameof(ThreadingMode)].PreComment =
+                "Determines whether the threading mode the game will use when generating chunk data and meshes.";
+            _Configuration["General"][nameof(ThreadingMode)].Comment = "(0 = single, 1 = multi, 2 = variable)";
+            _Configuration["General"][nameof(ThreadingMode)].IntValue = 2;
+            
+            
             // Graphics
             _Configuration["Graphics"][nameof(MinimumInternalFrames)].PreComment =
                 "Maximum number of frames internal systems will allow to lapse during updates.";
@@ -195,12 +217,12 @@ namespace Controllers.Game
             _Configuration["Graphics"][nameof(ExpensiveMeshingDistance)].Comment = "High values will cause lag.";
             _Configuration["Graphics"][nameof(ExpensiveMeshingDistance)].IntValue = 1;
 
+            
             // Chunking
-            _Configuration["Chunking"][nameof(ThreadingMode)].PreComment =
-                "Determines whether the threading mode the game will use when generating chunk data and meshes.";
-            _Configuration["Chunking"][nameof(ThreadingMode)].Comment = "(0 = single, 1 = multi, 2 = variable)";
-            _Configuration["Chunking"][nameof(ThreadingMode)].IntValue = 2;
-
+            _Configuration["General"][nameof(PreInitializeChunkCache)].PreComment =
+                "Determines whether the chunk cache is pre-initialized to safe capacity.";
+            _Configuration["General"][nameof(PreInitializeChunkCache)].BoolValue = true;
+            
             _Configuration["Chunking"][nameof(MaximumChunkCacheSize)].PreComment =
                 "Lower values are harder on the CPU, higher values use more RAM.";
             _Configuration["Chunking"][nameof(MaximumChunkCacheSize)].IntValue = 30;
