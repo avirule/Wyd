@@ -79,7 +79,7 @@ namespace Threading.ThreadedQueue
             ExecutionFinishTime = DateTime.Now;
 
             IsDone = true;
-            
+
             return Task.CompletedTask;
         }
 

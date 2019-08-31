@@ -14,7 +14,7 @@ namespace Controllers.Entity
     public class PlayerController : MonoBehaviour
     {
         public const int Reach = 5;
-        
+
         public static PlayerController Current;
 
         private Vector3 _Movement;

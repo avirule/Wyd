@@ -146,10 +146,10 @@ namespace Threading.ThreadedQueue
 
             int val = _Rand.Next(0, 4);
 
-            
-            if (y < 4 && y <= val)
+
+            if ((y < 4) && (y <= val))
             {
-                    _Blocks[index] = BlockController.Current.GetBlockId("Bedrock");
+                _Blocks[index] = BlockController.Current.GetBlockId("Bedrock");
             }
             else
             {

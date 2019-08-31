@@ -48,11 +48,11 @@ namespace Game
             List<Vector3> vertices = new List<Vector3>();
             List<int> triangles = new List<int>();
 
-            for (int x = -Radius; x < Radius + 1; x++)
+            for (int x = -Radius; x < (Radius + 1); x++)
             {
-                for (int y = -Radius; y < Radius + 1; y++)
+                for (int y = -Radius; y < (Radius + 1); y++)
                 {
-                    for (int z = -Radius; z < Radius + 1; z++)
+                    for (int z = -Radius; z < (Radius + 1); z++)
                     {
                         Vector3 globalPosition = transform.position + new Vector3(x, y, z);
 
