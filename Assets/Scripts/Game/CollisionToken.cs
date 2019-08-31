@@ -8,12 +8,13 @@ using UnityEngine;
 
 #endregion
 
-namespace Game.Entity
+namespace Game
 {
-    public class EntityTransformToken : MonoBehaviour
+    public class CollisionToken : MonoBehaviour
     {
         public Transform ParentEntityTransform;
         public Mesh Mesh;
+        public int Radius;
 
         public event EventHandler<Mesh> UpdatedMesh;
 
@@ -47,11 +48,11 @@ namespace Game.Entity
             List<Vector3> vertices = new List<Vector3>();
             List<int> triangles = new List<int>();
 
-            for (int x = -2; x < 3; x++)
+            for (int x = -Radius; x < Radius + 1; x++)
             {
-                for (int y = -2; y < 3; y++)
+                for (int y = -Radius; y < Radius + 1; y++)
                 {
-                    for (int z = -2; z < 3; z++)
+                    for (int z = -Radius; z < Radius + 1; z++)
                     {
                         Vector3 globalPosition = transform.position + new Vector3(x, y, z);
 

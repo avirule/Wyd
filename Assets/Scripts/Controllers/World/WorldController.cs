@@ -4,6 +4,7 @@ using System;
 using System.Collections.Generic;
 using Controllers.Entity;
 using Controllers.Game;
+using Game;
 using Game.Entity;
 using Game.World;
 using Logging;
@@ -20,7 +21,7 @@ namespace Controllers.World
         public static WorldController Current;
 
         private GameObject _EntityToken;
-        private List<EntityTransformToken> _EntityTokens;
+        private List<CollisionToken> _EntityTokens;
         private Mesh _ColliderMesh;
         private bool _UpdateColliderMesh;
 
@@ -62,7 +63,7 @@ namespace Controllers.World
 
             WorldTickRate = TimeSpan.FromSeconds(1d / TicksPerSecond);
 
-            _EntityTokens = new List<EntityTransformToken>();
+            _EntityTokens = new List<CollisionToken>();
             _ColliderMesh = new Mesh();
             _UpdateColliderMesh = false;
 
@@ -87,7 +88,7 @@ namespace Controllers.World
             {
                 List<CombineInstance> combines = new List<CombineInstance>();
 
-                foreach (EntityTransformToken entityTransformToken in _EntityTokens)
+                foreach (CollisionToken entityTransformToken in _EntityTokens)
                 {
                     CombineInstance combine = new CombineInstance
                     {
@@ -113,14 +114,15 @@ namespace Controllers.World
 
         #region ENTITY MANAGMENT
 
-        public void RegisterEntity(Transform parent)
+        public void RegisterEntity(Transform parent, int radius = 2)
         {
             GameObject entityToken = Instantiate(_EntityToken, transform);
-            EntityTransformToken entityTransformToken = entityToken.GetComponent<EntityTransformToken>();
-            entityTransformToken.ParentEntityTransform = parent;
-            entityTransformToken.UpdatedMesh += OnEntityChangedMesh;
+            CollisionToken collisionToken = entityToken.GetComponent<CollisionToken>();
+            collisionToken.ParentEntityTransform = parent;
+            collisionToken.Radius = radius;
+            collisionToken.UpdatedMesh += OnEntityChangedMesh;
 
-            _EntityTokens.Add(entityTransformToken);
+            _EntityTokens.Add(collisionToken);
         }
 
         private void OnEntityChangedMesh(object sender, Mesh mesh)

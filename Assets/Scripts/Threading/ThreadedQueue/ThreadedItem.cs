@@ -2,6 +2,7 @@
 
 using System;
 using System.Diagnostics;
+using System.Threading.Tasks;
 
 #endregion
 
@@ -67,7 +68,7 @@ namespace Threading.ThreadedQueue
         /// <summary>
         ///     Begins executing the <see cref="ThreadedItem" />
         /// </summary>
-        public virtual void Execute()
+        public virtual Task Execute()
         {
             _ExecutionTimer.Reset();
             _ExecutionTimer.Start();
@@ -78,6 +79,8 @@ namespace Threading.ThreadedQueue
             ExecutionFinishTime = DateTime.Now;
 
             IsDone = true;
+            
+            return Task.CompletedTask;
         }
 
         protected virtual void Process()

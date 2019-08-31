@@ -4,6 +4,7 @@ using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Threading;
+using System.Threading.Tasks;
 
 #endregion
 
@@ -139,16 +140,15 @@ namespace Threading.ThreadedQueue
         ///     <see cref="ThreadedItem" />s.
         /// </summary>
         /// <param name="threadedItem"><see cref="ThreadedItem" /> to be processed.</param>
-        protected virtual void ProcessThreadedItem(ThreadedItem threadedItem)
+        protected virtual async void ProcessThreadedItem(ThreadedItem threadedItem)
         {
             if (MultiThreadedExecution)
             {
-                Thread thread = new Thread(threadedItem.Execute);
-                thread.Start();
+                await Task.Run(threadedItem.Execute, AbortToken);
             }
             else
             {
-                threadedItem.Execute();
+                await threadedItem.Execute();
             }
 
             ProcessedItems.TryAdd(threadedItem.Identity, threadedItem);

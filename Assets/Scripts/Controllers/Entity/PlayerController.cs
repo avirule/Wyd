@@ -13,6 +13,8 @@ namespace Controllers.Entity
 {
     public class PlayerController : MonoBehaviour
     {
+        public const int Reach = 5;
+        
         public static PlayerController Current;
 
         private Vector3 _Movement;
@@ -20,11 +22,12 @@ namespace Controllers.Entity
 
         public bool Grounded;
         public LayerMask GroundedMask;
+        public LayerMask RaycastLayerMask;
 
         public float JumpForce;
         public Rigidbody Rigidbody;
         public float RotationSensitivity;
-        public Transform RotationTransform;
+        public Transform CameraTransform;
         public float TravelSpeed;
         public Vector3Int CurrentChunk;
 
@@ -46,7 +49,7 @@ namespace Controllers.Entity
 
         private void Start()
         {
-            WorldController.Current.RegisterEntity(transform);
+            WorldController.Current.RegisterEntity(transform, Reach);
         }
 
         private void FixedUpdate()
@@ -64,10 +67,9 @@ namespace Controllers.Entity
 
             if (Input.GetButton("Fire1"))
             {
-                Transform self = transform;
-                Ray ray = new Ray(self.position, self.eulerAngles);
+                Ray ray = new Ray(CameraTransform.position, CameraTransform.eulerAngles);
 
-                if (Physics.Raycast(ray, out RaycastHit hit, 50f, gameObject.layer))
+                if (Physics.Raycast(ray, out RaycastHit hit, Reach, RaycastLayerMask))
                 {
                     EventLog.Logger.Log(LogLevel.Info, hit.point);
                 }
@@ -105,7 +107,7 @@ namespace Controllers.Entity
 
         private void CalculateRotation()
         {
-            Rigidbody.MoveRotation(Quaternion.Euler(0f, RotationTransform.eulerAngles.y, 0f));
+            Rigidbody.MoveRotation(Quaternion.Euler(0f, CameraTransform.eulerAngles.y, 0f));
         }
 
         private void CalculateJump()
