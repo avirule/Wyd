@@ -3,7 +3,6 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
-using System.Runtime.InteropServices.WindowsRuntime;
 using Controllers.Entity;
 using Controllers.Game;
 using Game.Entity;
@@ -58,9 +57,13 @@ namespace Controllers.World
 
             if (OptionsController.Current.PreInitializeChunkCache)
             {
-                for (int i = 0; i < OptionsController.Current.MaximumChunkCacheSize / 2; i++)
+                for (int i = 0; i < (OptionsController.Current.MaximumChunkCacheSize / 2); i++)
                 {
-                    BuildChunkQueue.Enqueue(Vector3Int.zero);
+                    Chunk chunk = Instantiate(_ChunkObject, Vector3.zero, Quaternion.identity,
+                        WorldController.Current.transform);
+                    chunk.Deactivate();
+
+                    _CachedChunks.Enqueue(chunk);
                 }
             }
         }

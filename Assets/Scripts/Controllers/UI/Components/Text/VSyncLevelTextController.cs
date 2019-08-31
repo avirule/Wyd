@@ -15,18 +15,26 @@ namespace Controllers.UI.Components.Text
         private void Awake()
         {
             _VSyncLevelText = GetComponent<TextMeshProUGUI>();
-            _LastVSyncCount = QualitySettings.vSyncCount;
-            _VSyncLevelText.text = $"VSync Level: {_LastVSyncCount}";
+        }
+
+        private void Start()
+        {
+            UpdateVSyncLevelText();
         }
 
         private void Update()
         {
             if (_LastVSyncCount != QualitySettings.vSyncCount)
             {
-                _LastVSyncCount = QualitySettings.vSyncCount;
-
-                _VSyncLevelText.text = $"VSync Level: {_LastVSyncCount}";
+                UpdateVSyncLevelText();
             }
+        }
+
+        private void UpdateVSyncLevelText()
+        {
+            _LastVSyncCount = QualitySettings.vSyncCount;
+
+            _VSyncLevelText.text = $"VSync Level: {_LastVSyncCount}";
         }
     }
 }

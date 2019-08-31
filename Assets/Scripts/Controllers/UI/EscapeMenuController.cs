@@ -13,6 +13,7 @@ namespace Controllers.UI
         private bool _EscapeKeyPressed;
         private bool _CursorUnlocked;
 
+        public GameObject Backdrop;
         public GameObject Main;
         public GameObject Options;
         public Button OptionsButton;
@@ -20,6 +21,7 @@ namespace Controllers.UI
         // Start is called before the first frame update
         private void Awake()
         {
+            Backdrop.SetActive(false);
             Main.SetActive(false);
             Options.SetActive(false);
         }
@@ -63,7 +65,8 @@ namespace Controllers.UI
                 SetOptionsActive(false);
                 ToggleCursorUnlocked();
             }
-
+            
+            Backdrop.SetActive(active);
             Main.SetActive(active);
         }
 
@@ -75,6 +78,7 @@ namespace Controllers.UI
                 ToggleCursorUnlocked();
             }
 
+            Backdrop.SetActive(active);
             Options.SetActive(active);
         }
 

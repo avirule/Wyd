@@ -58,6 +58,7 @@ namespace Game.World
             }
 
             _Transform = transform;
+            _Mesh = new Mesh();
             Blocks = new ushort[Size.x * Size.y * Size.z];
             Built = Building = Meshed = Meshing = PendingMeshUpdate = false;
 
@@ -136,7 +137,7 @@ namespace Game.World
 
             Meshed = PendingMeshUpdate = false;
             Meshing = true;
-
+            
             return ThreadedExecutionQueue.AddThreadedItem(new ChunkMeshingThreadedItem(Position, Blocks));
         }
 
@@ -148,7 +149,7 @@ namespace Game.World
                 {
                     Building = false;
                     Built = PendingMeshUpdate = true;
-
+                    
                     DiagnosticsPanelController.ChunkBuildTimes.Enqueue(threadedItem.ExecutionTime.TotalMilliseconds);
                 }
             }
@@ -163,8 +164,8 @@ namespace Game.World
                 {
                     Meshing = false;
                     Meshed = true;
-
-                    ((ChunkMeshingThreadedItem) threadedItem).GetMesh(ref _Mesh);
+                    
+                    ((ChunkMeshingThreadedItem) threadedItem).SetMesh(ref _Mesh);
                     MeshFilter.mesh = _Mesh;
 
                     DiagnosticsPanelController.ChunkMeshTimes.Enqueue(threadedItem.ExecutionTime.TotalMilliseconds);

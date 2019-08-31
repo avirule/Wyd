@@ -12,6 +12,9 @@ namespace Threading.ThreadedQueue
 {
     public class ChunkBuildingThreadedItem : ThreadedItem
     {
+        private static readonly OpenSimplexNoise NoiseFunction =
+            new OpenSimplexNoise(WorldController.Current.WorldGenerationSettings.Seed);
+        
         private readonly Vector3 _Position;
         private readonly ushort[] _Blocks;
 
@@ -134,9 +137,6 @@ namespace Threading.ThreadedQueue
             }
         }
 
-        private static readonly OpenSimplexNoise NoiseFunction =
-            new OpenSimplexNoise(WorldController.Current.WorldGenerationSettings.Seed);
-
         private void Generate3DSimplex(int index)
         {
             (int x, int y, int z) = Mathv.GetVector3IntIndex(index, Chunk.Size);
@@ -145,7 +145,7 @@ namespace Threading.ThreadedQueue
                 NoiseFunction.Evaluate((_Position.x + x) / 20d, (_Position.y + y) / 20d, (_Position.z + z) / 20d);
             noiseValue /= y;
 
-            if (noiseValue >= 0.2d)
+            if (noiseValue >= 0.05d)
             {
                 _Blocks[index] = BlockController.Current.GetBlockId("Grass");
             }
