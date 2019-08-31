@@ -286,6 +286,15 @@ namespace Threading.ThreadedQueue
                 return mesh;
             }
 
+            if (mesh == default)
+            {
+                mesh = new Mesh();
+            }
+            else
+            {
+                mesh.Clear();
+            }
+            
             if (_Vertices.Count > 65000)
             {
                 mesh.indexFormat = IndexFormat.UInt32;

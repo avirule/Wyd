@@ -85,7 +85,7 @@ namespace Controllers.World
 
         public ushort GetBlockAtPosition(Vector3 position)
         {
-            return ChunkController.GetIdAtPosition(position);
+            return ChunkController.GetBlockAtPosition(position);
         }
 
 

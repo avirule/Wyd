@@ -25,19 +25,13 @@ namespace Game.World
         public static readonly Vector3Int Size = new Vector3Int(16, 256, 16);
 
         private Transform _Transform;
+        private ushort[] _Blocks;
+        private Mesh _Mesh;
         private object _BuildingIdentity;
         private object _MeshingIdentity;
-        private Mesh _Mesh;
-
-        public Vector3 Position
-        {
-            get => _Transform.position;
-            set => _Transform.position = value;
-        }
 
         public MeshFilter MeshFilter;
         public MeshRenderer MeshRenderer;
-        public ushort[] Blocks;
         public bool Built;
         public bool Building;
         public bool Meshed;
@@ -47,8 +41,12 @@ namespace Game.World
         [Header("Graphics")] public bool DrawShadows;
 
         public bool Active => gameObject.activeSelf;
-
         public bool EntityChangedChunk { get; set; }
+        public Vector3 Position
+        {
+            get => _Transform.position;
+            set => _Transform.position = value;
+        }
 
         private void Awake()
         {
@@ -58,8 +56,7 @@ namespace Game.World
             }
 
             _Transform = transform;
-            _Mesh = new Mesh();
-            Blocks = new ushort[Size.x * Size.y * Size.z];
+            _Blocks = new ushort[Size.x * Size.y * Size.z];
             Built = Building = Meshed = Meshing = PendingMeshUpdate = false;
 
             MeshRenderer.material.SetTexture(TextureController.Current.MainTex,
@@ -100,6 +97,8 @@ namespace Game.World
             ThreadedExecutionQueue.Abort();
         }
 
+        #region ACTIVATION STATE
+        
         public void Activate(Vector3 position = default)
         {
             Transform self = transform;
@@ -119,13 +118,16 @@ namespace Game.World
             gameObject.SetActive(false);
         }
 
+        #endregion
+
+        #region CHUNK GENERATION
 
         private object BeginBuildChunk()
         {
             Built = false;
             Building = true;
 
-            return ThreadedExecutionQueue.AddThreadedItem(new ChunkBuildingThreadedItem(Position, ref Blocks));
+            return ThreadedExecutionQueue.AddThreadedItem(new ChunkBuildingThreadedItem(Position, ref _Blocks));
         }
 
         private object BeginGenerateMesh()
@@ -138,7 +140,7 @@ namespace Game.World
             Meshed = PendingMeshUpdate = false;
             Meshing = true;
 
-            return ThreadedExecutionQueue.AddThreadedItem(new ChunkMeshingThreadedItem(Position, Blocks));
+            return ThreadedExecutionQueue.AddThreadedItem(new ChunkMeshingThreadedItem(Position, _Blocks));
         }
 
         private void GenerationCheckAndStart()
@@ -177,6 +179,21 @@ namespace Game.World
             }
         }
 
+        #endregion
+
+        public ushort GetBlockAtPosition(Vector3 position)
+        {
+            Vector3 localPosition = (position - Position).Abs();
+            int localPosition1d = localPosition.To1D(Size);
+
+            if (_Blocks.Length <= localPosition1d)
+            {
+                return default;
+            }
+
+            return _Blocks[localPosition1d];
+        }
+        
         private void CheckUpdateInternalSettings(Vector3Int chunkPosition)
         {
             // chunk player is in should always be expensive / shadowed

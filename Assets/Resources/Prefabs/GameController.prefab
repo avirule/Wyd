@@ -12,7 +12,6 @@ GameObject:
   - component: {fileID: 7333379184776353552}
   - component: {fileID: 7333379184776353554}
   - component: {fileID: 7333379184776353555}
-  - component: {fileID: 6712973419219175376}
   - component: {fileID: 7333379184776353548}
   m_Layer: 0
   m_Name: GameController
@@ -72,18 +71,6 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   TextureController: {fileID: 7333379184776353554}
---- !u!114 &6712973419219175376
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 7333379184776353559}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 6bb1b77da96c4e34b677b3d9c3e8db7e, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
 --- !u!114 &7333379184776353548
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -96,6 +83,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: c2bfbe7e71c143e0ad0d7d1269cef501, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  ThreadingMode: 0
+  PreInitializeChunkCache: 0
   MaximumChunkCacheSize: 30
   ChunkCacheCullingAggression: 0
   MaximumChunkLoadTimeBufferSize: 0

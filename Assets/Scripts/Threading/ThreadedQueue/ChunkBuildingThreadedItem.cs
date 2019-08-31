@@ -145,7 +145,7 @@ namespace Threading.ThreadedQueue
                 NoiseFunction.Evaluate((_Position.x + x) / 20d, (_Position.y + y) / 20d, (_Position.z + z) / 20d);
             noiseValue /= y;
 
-            if (noiseValue >= 0.05d)
+            if (noiseValue >= 0.01d)
             {
                 _Blocks[index] = BlockController.Current.GetBlockId("Grass");
             }

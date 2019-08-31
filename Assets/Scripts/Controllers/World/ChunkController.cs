@@ -299,7 +299,7 @@ namespace Controllers.World
             return trySuccess ? chunk : default;
         }
 
-        public ushort GetIdAtPosition(Vector3 position)
+        public ushort GetBlockAtPosition(Vector3 position)
         {
             Vector3 chunkPosition = WorldController.GetWorldChunkOriginFromGlobalPosition(position).ToInt();
 
@@ -310,15 +310,7 @@ namespace Controllers.World
                 return default;
             }
 
-            Vector3 localPosition = (position - chunkPosition).Abs();
-            int localPosition1d = localPosition.To1D(Chunk.Size);
-
-            if (chunk.Blocks.Length <= localPosition1d)
-            {
-                return default;
-            }
-
-            return chunk.Blocks[localPosition1d];
+            return chunk.GetBlockAtPosition(position);
         }
 
         #endregion
