@@ -144,11 +144,16 @@ namespace Threading.ThreadedQueue
         {
             if (MultiThreadedExecution)
             {
-                await Task.Run(threadedItem.Execute, AbortToken);
+                TaskCreationOptions taskCreationOption = threadedItem.LongRunning
+                    ? TaskCreationOptions.LongRunning
+                    : TaskCreationOptions.PreferFairness;
+
+                await Task.Factory.StartNew(threadedItem.Execute, null, AbortToken, taskCreationOption,
+                    TaskScheduler.Default);
             }
             else
             {
-                await threadedItem.Execute();
+                await threadedItem.Execute(null);
             }
 
             ProcessedItems.TryAdd(threadedItem.Identity, threadedItem);

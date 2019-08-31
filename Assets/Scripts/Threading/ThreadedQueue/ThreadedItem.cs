@@ -14,6 +14,8 @@ namespace Threading.ThreadedQueue
         private readonly Stopwatch _ExecutionTimer;
         protected bool Done;
 
+        public readonly bool LongRunning;
+
         /// <summary>
         ///     Total elapsed time of execution in milliseconds.
         /// </summary>
@@ -32,12 +34,13 @@ namespace Threading.ThreadedQueue
         /// <summary>
         ///     Instantiates a new instance of the <see cref="ThreadedItem" /> class.
         /// </summary>
-        public ThreadedItem()
+        public ThreadedItem(bool longRunning = false)
         {
             _Handle = new object();
             _ExecutionTimer = new Stopwatch();
             Done = false;
             ExecutionFinishTime = DateTime.MaxValue;
+            LongRunning = longRunning;
         }
 
         /// <summary>
@@ -68,10 +71,9 @@ namespace Threading.ThreadedQueue
         /// <summary>
         ///     Begins executing the <see cref="ThreadedItem" />
         /// </summary>
-        public virtual Task Execute()
+        public virtual Task Execute(object obj)
         {
-            _ExecutionTimer.Reset();
-            _ExecutionTimer.Start();
+            _ExecutionTimer.Restart();
 
             Process();
 

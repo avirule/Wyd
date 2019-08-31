@@ -26,7 +26,7 @@ namespace Threading.ThreadedQueue
         /// <param name="position"></param>
         /// <param name="blocks">Pre-initialized <see cref="T:Block[]" /> of blocks to iterate through.</param>
         /// <seealso cref="Threading.ThreadedQueue.ChunkMeshingThreadedItem" />
-        public ChunkBuildingThreadedItem(Vector3 position, ref ushort[] blocks)
+        public ChunkBuildingThreadedItem(Vector3 position, ref ushort[] blocks) : base(true)
         {
             _Rand = new Random(WorldController.Current.WorldGenerationSettings.Seed);
             _Position = position;
