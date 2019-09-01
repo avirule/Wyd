@@ -34,7 +34,7 @@ namespace Controllers.World
         public ChunkController ChunkController;
         public DateTime UpdateTime;
 
-        public bool EntityChangedChunk { get; set; }
+        public bool PrimaryLoaderChangedChunk { get; set; }
 
         private void Awake()
         {
@@ -80,11 +80,11 @@ namespace Controllers.World
         {
             UpdateTime = DateTime.Now;
 
-            if (EntityChangedChunk)
+            if (PrimaryLoaderChangedChunk)
             {
                 UpdateChunkLoadArea(PlayerController.Current.CurrentChunk);
 
-                EntityChangedChunk = false;
+                PrimaryLoaderChangedChunk = false;
             }
 
             if (_UpdateColliderMesh)
@@ -128,16 +128,6 @@ namespace Controllers.World
             _UpdateColliderMesh = false;
         }
 
-        public ushort GetBlockAt(Vector3 position)
-        {
-            return ChunkController.GetBlockAt(position);
-        }
-
-        public bool BlockExistsAt(Vector3 position)
-        {
-            return ChunkController.BlockExistsAt(position);
-        }
-        
         public bool IsOnBorrowedUpdateTime()
         {
             return (DateTime.Now - UpdateTime) > OptionsController.Current.MaximumInternalFrameTime;
@@ -168,7 +158,7 @@ namespace Controllers.World
 
         private void UpdateChunkLoadArea(Vector3Int chunkPosition)
         {
-            EnqueueBuildChunkArea(chunkPosition, WorldGenerationSettings.Radius);
+            EnqueueBuildChunkArea(chunkPosition, WorldGenerationSettings.Radius + OptionsController.Current.PreLoadChunkDistance);
         }
 
         public void EnqueueBuildChunkArea(Vector3Int origin, int radius)

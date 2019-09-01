@@ -94,14 +94,14 @@ namespace Game
                     {
                         Vector3 globalPosition = transform.position + new Vector3(x, y, z);
 
-                        if (WorldController.Current.GetBlockAt(globalPosition) ==
+                        if (ChunkController.Current.GetBlockAt(globalPosition) ==
                             BlockController._BLOCK_EMPTY_ID)
                         {
                             continue;
                         }
 
                         if (BlockController.Current.IsBlockDefaultTransparent(
-                            WorldController.Current.GetBlockAt(globalPosition + Vector3.forward)))
+                            ChunkController.Current.GetBlockAt(globalPosition + Vector3.forward)))
                         {
                             _Triangles.Add(_Vertices.Count + 0);
                             _Triangles.Add(_Vertices.Count + 2);
@@ -117,7 +117,7 @@ namespace Game
                         }
 
                         if (BlockController.Current.IsBlockDefaultTransparent(
-                            WorldController.Current.GetBlockAt(globalPosition + Vector3.right)))
+                            ChunkController.Current.GetBlockAt(globalPosition + Vector3.right)))
                         {
                             _Triangles.Add(_Vertices.Count + 0);
                             _Triangles.Add(_Vertices.Count + 2);
@@ -134,7 +134,7 @@ namespace Game
                         }
 
                         if (BlockController.Current.IsBlockDefaultTransparent(
-                            WorldController.Current.GetBlockAt(globalPosition + Vector3.back)))
+                            ChunkController.Current.GetBlockAt(globalPosition + Vector3.back)))
                         {
                             _Triangles.Add(_Vertices.Count + 0);
                             _Triangles.Add(_Vertices.Count + 2);
@@ -150,7 +150,7 @@ namespace Game
                         }
 
                         if (BlockController.Current.IsBlockDefaultTransparent(
-                            WorldController.Current.GetBlockAt(globalPosition + Vector3.left)))
+                            ChunkController.Current.GetBlockAt(globalPosition + Vector3.left)))
                         {
                             _Triangles.Add(_Vertices.Count + 0);
                             _Triangles.Add(_Vertices.Count + 2);
@@ -166,7 +166,7 @@ namespace Game
                         }
 
                         if (BlockController.Current.IsBlockDefaultTransparent(
-                            WorldController.Current.GetBlockAt(globalPosition + Vector3.up)))
+                            ChunkController.Current.GetBlockAt(globalPosition + Vector3.up)))
                         {
                             _Triangles.Add(_Vertices.Count + 0);
                             _Triangles.Add(_Vertices.Count + 2);
@@ -182,7 +182,7 @@ namespace Game
                         }
 
                         if (BlockController.Current.IsBlockDefaultTransparent(
-                            WorldController.Current.GetBlockAt(globalPosition + Vector3.down)))
+                            ChunkController.Current.GetBlockAt(globalPosition + Vector3.down)))
                         {
                             _Triangles.Add(_Vertices.Count + 0);
                             _Triangles.Add(_Vertices.Count + 2);

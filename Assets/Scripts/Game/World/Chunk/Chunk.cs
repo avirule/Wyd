@@ -1,5 +1,6 @@
 #region
 
+using System;
 using System.Collections.Concurrent;
 using Controllers.Entity;
 using Controllers.Game;
@@ -38,6 +39,7 @@ namespace Game.World.Chunk
         private object _BuildingIdentity;
         private object _MeshingIdentity;
         private bool _OnBorrowedUpdateTime;
+        private bool _Visible;
 
         public MeshFilter MeshFilter;
         public MeshRenderer MeshRenderer;
@@ -50,7 +52,25 @@ namespace Game.World.Chunk
         [Header("Graphics")] public bool DrawShadows;
 
         public bool Active => gameObject.activeSelf;
-        public bool EntityChangedChunk { get; set; }
+
+        public bool Visible
+        {
+            get => _Visible;
+            set
+            {
+                if (_Visible == value)
+                {
+                    return;
+                }
+
+                _Visible = value;
+                MeshRenderer.enabled = value;
+            }
+        }
+
+        public bool PrimaryLoaderChangedChunk { get; set; }
+
+        public event EventHandler<Vector3> DeactivationCallback;
 
         public Vector3 Position
         {
@@ -77,6 +97,9 @@ namespace Game.World.Chunk
             MeshFilter.sharedMesh = _Mesh;
             MeshRenderer.material.SetTexture(TextureController.Current.MainTex,
                 TextureController.Current.TerrainTexture);
+            _Visible = MeshRenderer.enabled;
+
+            CheckInternalsAgainstLoaderPosition(PlayerController.Current.CurrentChunk);
 
             // todo implement chunk ticks
 //            double waitTime = TimeSpan
@@ -98,9 +121,9 @@ namespace Game.World.Chunk
         {
             _OnBorrowedUpdateTime = WorldController.Current.IsOnBorrowedUpdateTime();
 
-            if (EntityChangedChunk)
+            if (PrimaryLoaderChangedChunk)
             {
-                CheckUpdateInternalSettings(PlayerController.Current.CurrentChunk);
+                CheckInternalsAgainstLoaderPosition(PlayerController.Current.CurrentChunk);
             }
 
             if (Active)
@@ -141,6 +164,7 @@ namespace Game.World.Chunk
         {
             Position = position;
             Built = Building = Meshed = Meshing = PendingMeshUpdate = false;
+            CheckInternalsAgainstLoaderPosition(PlayerController.Current.CurrentChunk);
             gameObject.SetActive(true);
         }
 
@@ -160,6 +184,11 @@ namespace Game.World.Chunk
 
         private void GenerationCheckAndStart()
         {
+            if (_OnBorrowedUpdateTime)
+            {
+                return;
+            }
+            
             CheckBuildingOrStart();
             CheckMeshingOrStart();
         }
@@ -168,8 +197,7 @@ namespace Game.World.Chunk
         {
             if (Building)
             {
-                if (!_OnBorrowedUpdateTime &&
-                    ThreadedExecutionQueue.TryGetFinishedItem(_BuildingIdentity, out ThreadedItem threadedItem))
+                if (ThreadedExecutionQueue.TryGetFinishedItem(_BuildingIdentity, out ThreadedItem threadedItem))
                 {
                     Building = false;
                     Built = PendingMeshUpdate = true;
@@ -187,8 +215,7 @@ namespace Game.World.Chunk
         {
             if (Meshing)
             {
-                if (!_OnBorrowedUpdateTime &&
-                    ThreadedExecutionQueue.TryGetFinishedItem(_MeshingIdentity, out ThreadedItem threadedItem))
+                if (ThreadedExecutionQueue.TryGetFinishedItem(_MeshingIdentity, out ThreadedItem threadedItem))
                 {
                     Meshing = false;
                     Meshed = true;
@@ -198,7 +225,7 @@ namespace Game.World.Chunk
                     MeshTimes.Enqueue(threadedItem.ExecutionTime.TotalMilliseconds);
                 }
             }
-            else if ((PendingMeshUpdate || !Meshed) && ChunkController.Current.AllChunksBuilt)
+            else if ((PendingMeshUpdate || !Meshed) && ChunkController.Current.AllChunksBuilt && Visible)
             {
                 _MeshingIdentity = BeginGenerateMesh();
             }
@@ -226,11 +253,11 @@ namespace Game.World.Chunk
             Meshing = true;
 
             ChunkMeshingThreadedItem threadedItem = ChunkMeshersCache.RetrieveItem();
-            threadedItem.Set(Position, _Blocks);
+            threadedItem.Set(Position, _Blocks, false);
 
             return ThreadedExecutionQueue.QueueThreadedItem(threadedItem);
         }
-        
+
         #endregion
 
 
@@ -241,7 +268,7 @@ namespace Game.World.Chunk
             Vector3 localPosition = (position - Position).Abs();
             return localPosition.To1D(Size);
         }
-        
+
         public ushort GetBlockAt(Vector3 position)
         {
             int localPosition1d = Get1DLocal(position);
@@ -258,37 +285,57 @@ namespace Game.World.Chunk
         {
             int localPosition1d = Get1DLocal(position);
 
-            if (_Blocks.Length <= localPosition1d ||
-                _Blocks[localPosition1d] == BlockController._BLOCK_EMPTY_ID)
+            if ((_Blocks.Length <= localPosition1d) ||
+                (_Blocks[localPosition1d] == BlockController._BLOCK_EMPTY_ID))
             {
                 return false;
             }
 
             return true;
         }
-
-        private void CheckUpdateInternalSettings(Vector3 chunkPosition)
+        
+        private void CheckInternalsAgainstLoaderPosition(Vector3 loaderChunkPosition)
         {
-            // chunk player is in should always be expensive / shadowed
-            if (Position == chunkPosition)
+            if (Position == loaderChunkPosition)
             {
-                DrawShadows = true;
+                return;
             }
-            else
-            {
-                Vector3 difference = (Position - chunkPosition).Abs();
 
-                DrawShadows = CheckDrawShadows(difference);
+            // chunk player is in should always be expensive / shadowed
+            Vector3 difference = (Position - loaderChunkPosition).Abs();
+
+            if (!IsWithinLoaderRange(difference))
+            {
+                DeactivationCallback?.Invoke(this, Position);
+                return;
             }
+
+            Visible = IsWithinRenderDistance(difference);
+            DrawShadows = IsWithinDrawShadowsDistance(difference);
         }
 
-        private static bool CheckDrawShadows(Vector3 difference)
+        private static bool IsWithinLoaderRange(Vector3 difference)
+        {
+            int totalValidLoaderRadius =
+                WorldController.Current.WorldGenerationSettings.Radius +  OptionsController.Current.PreLoadChunkDistance;
+
+            return (difference.x <= (totalValidLoaderRadius * Size.x)) &&
+                   (difference.z <= (totalValidLoaderRadius * Size.z));
+        }
+
+        private static bool IsWithinRenderDistance(Vector3 difference)
+        {
+            return (difference.x <= (WorldController.Current.WorldGenerationSettings.Radius * Size.x)) &&
+                   (difference.z <= (WorldController.Current.WorldGenerationSettings.Radius * Size.z));
+        }
+
+        private static bool IsWithinDrawShadowsDistance(Vector3 difference)
         {
             return (OptionsController.Current.ShadowDistance == 0) ||
                    ((difference.x <= (OptionsController.Current.ShadowDistance * Size.x)) &&
                     (difference.z <= (OptionsController.Current.ShadowDistance * Size.z)));
         }
-        
+
         #endregion
     }
 }

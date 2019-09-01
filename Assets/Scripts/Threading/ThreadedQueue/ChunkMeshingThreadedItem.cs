@@ -5,6 +5,7 @@ using Controllers.Game;
 using Controllers.World;
 using Game;
 using Game.World.Chunk;
+using TMPro;
 using UnityEngine;
 using UnityEngine.Rendering;
 
@@ -20,6 +21,7 @@ namespace Threading.ThreadedQueue
 
         private Vector3 _Position;
         private ushort[] _Blocks;
+        private bool _Greedy;
 
         /// <summary>
         ///     Initialises a new instance of the <see cref="Threading.ThreadedQueue.ChunkMeshingThreadedItem" /> class.
@@ -37,7 +39,7 @@ namespace Threading.ThreadedQueue
         /// </summary>
         /// <param name="position"><see cref="UnityEngine.Vector3" /> position of chunk being meshed.</param>
         /// <param name="blocks">Pre-initialized and built <see cref="T:ushort[]" /> to iterate through.</param>
-        public void Set(Vector3 position, ushort[] blocks)
+        public void Set(Vector3 position, ushort[] blocks, bool greedy)
         {
             _Vertices.Clear();
             _Triangles.Clear();
@@ -45,6 +47,7 @@ namespace Threading.ThreadedQueue
 
             _Position = position;
             _Blocks = blocks;
+            _Greedy = greedy;
         }
 
         protected override void Process()
@@ -54,178 +57,13 @@ namespace Threading.ThreadedQueue
                 return;
             }
 
-            for (int index = 0; index < _Blocks.Length; index++)
+            if (_Greedy)
             {
-                if (_Blocks[index] == BlockController._BLOCK_EMPTY_ID)
-                {
-                    continue;
-                }
-
-                (int x, int y, int z) = Mathv.GetVector3IntIndex(index, Chunk.Size);
-                Vector3 globalPosition = _Position + new Vector3(x, y, z);
-
-                if (((z == (Chunk.Size.z - 1)) &&
-                     BlockController.Current.IsBlockTransparent(
-                         WorldController.Current.GetBlockAt(globalPosition + Vector3.forward))) ||
-                    ((z < (Chunk.Size.z - 1)) &&
-                     BlockController.Current.IsBlockTransparent(_Blocks[index + Chunk.Size.x])))
-                {
-                    _Triangles.Add(_Vertices.Count + 0);
-                    _Triangles.Add(_Vertices.Count + 2);
-                    _Triangles.Add(_Vertices.Count + 1);
-                    _Triangles.Add(_Vertices.Count + 2);
-                    _Triangles.Add(_Vertices.Count + 3);
-                    _Triangles.Add(_Vertices.Count + 1);
-
-                    _Vertices.Add(new Vector3(x, y, z + 1));
-                    _Vertices.Add(new Vector3(x, y + 1, z + 1));
-                    _Vertices.Add(new Vector3(x + 1, y, z + 1));
-                    _Vertices.Add(new Vector3(x + 1, y + 1, z + 1));
-
-                    if (BlockController.Current.GetBlockSpriteUVs(_Blocks[index], globalPosition,
-                        Direction.North, new Vector3(1f, 0f, 1f), out Vector3[] uvs))
-                    {
-                        _UVs.Add(uvs[1]);
-                        _UVs.Add(uvs[3]);
-                        _UVs.Add(uvs[0]);
-                        _UVs.Add(uvs[2]);
-                    }
-                }
-
-                if (((x == (Chunk.Size.x - 1)) &&
-                     BlockController.Current.IsBlockTransparent(
-                         WorldController.Current.GetBlockAt(globalPosition + Vector3.right))) ||
-                    ((x < (Chunk.Size.x - 1)) && BlockController.Current.IsBlockTransparent(_Blocks[index + 1])))
-                {
-                    _Triangles.Add(_Vertices.Count + 0);
-                    _Triangles.Add(_Vertices.Count + 2);
-                    _Triangles.Add(_Vertices.Count + 1);
-                    _Triangles.Add(_Vertices.Count + 2);
-                    _Triangles.Add(_Vertices.Count + 3);
-                    _Triangles.Add(_Vertices.Count + 1);
-
-                    _Vertices.Add(new Vector3(x + 1, y, z));
-                    _Vertices.Add(new Vector3(x + 1, y, z + 1));
-                    _Vertices.Add(new Vector3(x + 1, y + 1, z));
-                    _Vertices.Add(new Vector3(x + 1, y + 1, z + 1));
-
-                    if (BlockController.Current.GetBlockSpriteUVs(_Blocks[index], globalPosition,
-                        Direction.East, new Vector3(1f, 0f, 1f), out Vector3[] uvs))
-                    {
-                        _UVs.Add(uvs[0]);
-                        _UVs.Add(uvs[1]);
-                        _UVs.Add(uvs[2]);
-                        _UVs.Add(uvs[3]);
-                    }
-                }
-
-                if (((z == 0) &&
-                     BlockController.Current.IsBlockTransparent(
-                         WorldController.Current.GetBlockAt(globalPosition + Vector3.back))) ||
-                    ((z > 0) && BlockController.Current.IsBlockTransparent(_Blocks[index - Chunk.Size.x])))
-                {
-                    _Triangles.Add(_Vertices.Count + 0);
-                    _Triangles.Add(_Vertices.Count + 2);
-                    _Triangles.Add(_Vertices.Count + 1);
-                    _Triangles.Add(_Vertices.Count + 2);
-                    _Triangles.Add(_Vertices.Count + 3);
-                    _Triangles.Add(_Vertices.Count + 1);
-
-                    _Vertices.Add(new Vector3(x, y, z));
-                    _Vertices.Add(new Vector3(x + 1, y, z));
-                    _Vertices.Add(new Vector3(x, y + 1, z));
-                    _Vertices.Add(new Vector3(x + 1, y + 1, z));
-
-                    if (BlockController.Current.GetBlockSpriteUVs(_Blocks[index], globalPosition,
-                        Direction.South, new Vector3(1f, 0f, 1f), out Vector3[] uvs))
-                    {
-                        _UVs.Add(uvs[0]);
-                        _UVs.Add(uvs[1]);
-                        _UVs.Add(uvs[2]);
-                        _UVs.Add(uvs[3]);
-                    }
-                }
-
-                if (((x == 0) && BlockController.Current.IsBlockTransparent(
-                         WorldController.Current.GetBlockAt(globalPosition + Vector3.left))) ||
-                    ((x > 0) && BlockController.Current.IsBlockTransparent(_Blocks[index - 1])))
-                {
-                    _Triangles.Add(_Vertices.Count + 0);
-                    _Triangles.Add(_Vertices.Count + 2);
-                    _Triangles.Add(_Vertices.Count + 1);
-                    _Triangles.Add(_Vertices.Count + 2);
-                    _Triangles.Add(_Vertices.Count + 3);
-                    _Triangles.Add(_Vertices.Count + 1);
-
-                    _Vertices.Add(new Vector3(x, y, z));
-                    _Vertices.Add(new Vector3(x, y + 1, z));
-                    _Vertices.Add(new Vector3(x, y, z + 1));
-                    _Vertices.Add(new Vector3(x, y + 1, z + 1));
-
-                    if (BlockController.Current.GetBlockSpriteUVs(_Blocks[index], globalPosition,
-                        Direction.West, new Vector3(1f, 0f, 1f), out Vector3[] uvs))
-                    {
-                        _UVs.Add(uvs[1]);
-                        _UVs.Add(uvs[3]);
-                        _UVs.Add(uvs[0]);
-                        _UVs.Add(uvs[2]);
-                    }
-                }
-
-                if (((y == (Chunk.Size.y - 1)) &&
-                     BlockController.Current.IsBlockTransparent(
-                         WorldController.Current.GetBlockAt(globalPosition + Vector3.up))) ||
-                    ((y < (Chunk.Size.y - 1)) &&
-                     BlockController.Current.IsBlockTransparent(_Blocks[index + (Chunk.Size.x * Chunk.Size.z)])))
-                {
-                    _Triangles.Add(_Vertices.Count + 0);
-                    _Triangles.Add(_Vertices.Count + 2);
-                    _Triangles.Add(_Vertices.Count + 1);
-                    _Triangles.Add(_Vertices.Count + 2);
-                    _Triangles.Add(_Vertices.Count + 3);
-                    _Triangles.Add(_Vertices.Count + 1);
-
-                    _Vertices.Add(new Vector3(x, y + 1, z));
-                    _Vertices.Add(new Vector3(x + 1, y + 1, z));
-                    _Vertices.Add(new Vector3(x, y + 1, z + 1));
-                    _Vertices.Add(new Vector3(x + 1, y + 1, z + 1));
-
-                    if (BlockController.Current.GetBlockSpriteUVs(_Blocks[index], globalPosition,
-                        Direction.Up, new Vector3(1f, 0f, 1f), out Vector3[] uvs))
-                    {
-                        _UVs.Add(uvs[0]);
-                        _UVs.Add(uvs[2]);
-                        _UVs.Add(uvs[1]);
-                        _UVs.Add(uvs[3]);
-                    }
-                }
-
-                if (((y == 0) && BlockController.Current.IsBlockTransparent(
-                         WorldController.Current.GetBlockAt(globalPosition + Vector3.down))) ||
-                    ((y > 0) && BlockController.Current.IsBlockTransparent(
-                         _Blocks[index - (Chunk.Size.x * Chunk.Size.z)])))
-                {
-                    _Triangles.Add(_Vertices.Count + 0);
-                    _Triangles.Add(_Vertices.Count + 2);
-                    _Triangles.Add(_Vertices.Count + 1);
-                    _Triangles.Add(_Vertices.Count + 2);
-                    _Triangles.Add(_Vertices.Count + 3);
-                    _Triangles.Add(_Vertices.Count + 1);
-
-                    _Vertices.Add(new Vector3(x, y, z));
-                    _Vertices.Add(new Vector3(x, y, z + 1));
-                    _Vertices.Add(new Vector3(x + 1, y, z));
-                    _Vertices.Add(new Vector3(x + 1, y, z + 1));
-
-                    if (BlockController.Current.GetBlockSpriteUVs(_Blocks[index], globalPosition,
-                        Direction.Down, new Vector3(1f, 0f, 1f), out Vector3[] uvs))
-                    {
-                        _UVs.Add(uvs[0]);
-                        _UVs.Add(uvs[1]);
-                        _UVs.Add(uvs[2]);
-                        _UVs.Add(uvs[3]);
-                    }
-                }
+                // MeshGreedy();
+            }
+            else
+            {
+                MeshSimple();
             }
         }
 
@@ -262,6 +100,184 @@ namespace Threading.ThreadedQueue
 
             mesh.RecalculateNormals();
             mesh.RecalculateTangents();
+        }
+
+        private void MeshSimple()
+        {
+            for (int index = 0; index < _Blocks.Length; index++)
+            {
+                if (_Blocks[index] == BlockController._BLOCK_EMPTY_ID)
+                {
+                    continue;
+                }
+
+                (int x, int y, int z) = Mathv.GetVector3IntIndex(index, Chunk.Size);
+                Vector3 globalPosition = _Position + new Vector3(x, y, z);
+                Vector3 uvSize = new Vector3(1f, 0, 1f);
+
+                if (((z == (Chunk.Size.z - 1)) &&
+                     BlockController.Current.IsBlockTransparent(
+                         ChunkController.Current.GetBlockAt(globalPosition + Vector3.forward))) ||
+                    ((z < (Chunk.Size.z - 1)) &&
+                     BlockController.Current.IsBlockTransparent(_Blocks[index + Chunk.Size.x])))
+                {
+                    _Triangles.Add(_Vertices.Count + 0);
+                    _Triangles.Add(_Vertices.Count + 2);
+                    _Triangles.Add(_Vertices.Count + 1);
+                    _Triangles.Add(_Vertices.Count + 2);
+                    _Triangles.Add(_Vertices.Count + 3);
+                    _Triangles.Add(_Vertices.Count + 1);
+
+                    _Vertices.Add(new Vector3(x, y, z + 1));
+                    _Vertices.Add(new Vector3(x, y + 1, z + 1));
+                    _Vertices.Add(new Vector3(x + 1, y, z + 1));
+                    _Vertices.Add(new Vector3(x + 1, y + 1, z + 1));
+
+                    if (BlockController.Current.GetBlockSpriteUVs(_Blocks[index], globalPosition,
+                        Direction.North, uvSize, out Vector3[] uvs))
+                    {
+                        _UVs.Add(uvs[1]);
+                        _UVs.Add(uvs[3]);
+                        _UVs.Add(uvs[0]);
+                        _UVs.Add(uvs[2]);
+                    }
+                }
+
+                if (((x == (Chunk.Size.x - 1)) &&
+                     BlockController.Current.IsBlockTransparent(
+                         ChunkController.Current.GetBlockAt(globalPosition + Vector3.right))) ||
+                    ((x < (Chunk.Size.x - 1)) && BlockController.Current.IsBlockTransparent(_Blocks[index + 1])))
+                {
+                    _Triangles.Add(_Vertices.Count + 0);
+                    _Triangles.Add(_Vertices.Count + 2);
+                    _Triangles.Add(_Vertices.Count + 1);
+                    _Triangles.Add(_Vertices.Count + 2);
+                    _Triangles.Add(_Vertices.Count + 3);
+                    _Triangles.Add(_Vertices.Count + 1);
+
+                    _Vertices.Add(new Vector3(x + 1, y, z));
+                    _Vertices.Add(new Vector3(x + 1, y, z + 1));
+                    _Vertices.Add(new Vector3(x + 1, y + 1, z));
+                    _Vertices.Add(new Vector3(x + 1, y + 1, z + 1));
+
+                    if (BlockController.Current.GetBlockSpriteUVs(_Blocks[index], globalPosition,
+                        Direction.East, uvSize, out Vector3[] uvs))
+                    {
+                        _UVs.Add(uvs[0]);
+                        _UVs.Add(uvs[1]);
+                        _UVs.Add(uvs[2]);
+                        _UVs.Add(uvs[3]);
+                    }
+                }
+
+                if (((z == 0) &&
+                     BlockController.Current.IsBlockTransparent(
+                         ChunkController.Current.GetBlockAt(globalPosition + Vector3.back))) ||
+                    ((z > 0) && BlockController.Current.IsBlockTransparent(_Blocks[index - Chunk.Size.x])))
+                {
+                    _Triangles.Add(_Vertices.Count + 0);
+                    _Triangles.Add(_Vertices.Count + 2);
+                    _Triangles.Add(_Vertices.Count + 1);
+                    _Triangles.Add(_Vertices.Count + 2);
+                    _Triangles.Add(_Vertices.Count + 3);
+                    _Triangles.Add(_Vertices.Count + 1);
+
+                    _Vertices.Add(new Vector3(x, y, z));
+                    _Vertices.Add(new Vector3(x + 1, y, z));
+                    _Vertices.Add(new Vector3(x, y + 1, z));
+                    _Vertices.Add(new Vector3(x + 1, y + 1, z));
+
+                    if (BlockController.Current.GetBlockSpriteUVs(_Blocks[index], globalPosition,
+                        Direction.South, uvSize, out Vector3[] uvs))
+                    {
+                        _UVs.Add(uvs[0]);
+                        _UVs.Add(uvs[1]);
+                        _UVs.Add(uvs[2]);
+                        _UVs.Add(uvs[3]);
+                    }
+                }
+
+                if (((x == 0) && BlockController.Current.IsBlockTransparent(
+                         ChunkController.Current.GetBlockAt(globalPosition + Vector3.left))) ||
+                    ((x > 0) && BlockController.Current.IsBlockTransparent(_Blocks[index - 1])))
+                {
+                    _Triangles.Add(_Vertices.Count + 0);
+                    _Triangles.Add(_Vertices.Count + 2);
+                    _Triangles.Add(_Vertices.Count + 1);
+                    _Triangles.Add(_Vertices.Count + 2);
+                    _Triangles.Add(_Vertices.Count + 3);
+                    _Triangles.Add(_Vertices.Count + 1);
+
+                    _Vertices.Add(new Vector3(x, y, z));
+                    _Vertices.Add(new Vector3(x, y + 1, z));
+                    _Vertices.Add(new Vector3(x, y, z + 1));
+                    _Vertices.Add(new Vector3(x, y + 1, z + 1));
+
+                    if (BlockController.Current.GetBlockSpriteUVs(_Blocks[index], globalPosition,
+                        Direction.West, uvSize, out Vector3[] uvs))
+                    {
+                        _UVs.Add(uvs[1]);
+                        _UVs.Add(uvs[3]);
+                        _UVs.Add(uvs[0]);
+                        _UVs.Add(uvs[2]);
+                    }
+                }
+
+                if (((y == (Chunk.Size.y - 1)) &&
+                     BlockController.Current.IsBlockTransparent(
+                         ChunkController.Current.GetBlockAt(globalPosition + Vector3.up))) ||
+                    ((y < (Chunk.Size.y - 1)) &&
+                     BlockController.Current.IsBlockTransparent(_Blocks[index + (Chunk.Size.x * Chunk.Size.z)])))
+                {
+                    _Triangles.Add(_Vertices.Count + 0);
+                    _Triangles.Add(_Vertices.Count + 2);
+                    _Triangles.Add(_Vertices.Count + 1);
+                    _Triangles.Add(_Vertices.Count + 2);
+                    _Triangles.Add(_Vertices.Count + 3);
+                    _Triangles.Add(_Vertices.Count + 1);
+
+                    _Vertices.Add(new Vector3(x, y + 1, z));
+                    _Vertices.Add(new Vector3(x + 1, y + 1, z));
+                    _Vertices.Add(new Vector3(x, y + 1, z + 1));
+                    _Vertices.Add(new Vector3(x + 1, y + 1, z + 1));
+
+                    if (BlockController.Current.GetBlockSpriteUVs(_Blocks[index], globalPosition,
+                        Direction.Up, uvSize, out Vector3[] uvs))
+                    {
+                        _UVs.Add(uvs[0]);
+                        _UVs.Add(uvs[2]);
+                        _UVs.Add(uvs[1]);
+                        _UVs.Add(uvs[3]);
+                    }
+                }
+
+                if (((y == 0) && BlockController.Current.IsBlockTransparent(
+                         ChunkController.Current.GetBlockAt(globalPosition + Vector3.down))) ||
+                    ((y > 0) && BlockController.Current.IsBlockTransparent(
+                         _Blocks[index - (Chunk.Size.x * Chunk.Size.z)])))
+                {
+                    _Triangles.Add(_Vertices.Count + 0);
+                    _Triangles.Add(_Vertices.Count + 2);
+                    _Triangles.Add(_Vertices.Count + 1);
+                    _Triangles.Add(_Vertices.Count + 2);
+                    _Triangles.Add(_Vertices.Count + 3);
+                    _Triangles.Add(_Vertices.Count + 1);
+
+                    _Vertices.Add(new Vector3(x, y, z));
+                    _Vertices.Add(new Vector3(x, y, z + 1));
+                    _Vertices.Add(new Vector3(x + 1, y, z));
+                    _Vertices.Add(new Vector3(x + 1, y, z + 1));
+
+                    if (BlockController.Current.GetBlockSpriteUVs(_Blocks[index], globalPosition,
+                        Direction.Down, uvSize, out Vector3[] uvs))
+                    {
+                        _UVs.Add(uvs[0]);
+                        _UVs.Add(uvs[1]);
+                        _UVs.Add(uvs[2]);
+                        _UVs.Add(uvs[3]);
+                    }
+                }
+            }
         }
     }
 }

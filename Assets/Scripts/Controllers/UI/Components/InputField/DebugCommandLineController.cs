@@ -67,7 +67,7 @@ namespace Controllers.UI.Components.InputField
                                 return;
                             }
 
-                            ushort blockId = WorldController.Current.GetBlockAt(new Vector3Int(x, y, z));
+                            ushort blockId = ChunkController.Current.GetBlockAt(new Vector3Int(x, y, z));
 
                             string blockName = blockId == BlockController._BLOCK_EMPTY_ID
                                 ? "Air"

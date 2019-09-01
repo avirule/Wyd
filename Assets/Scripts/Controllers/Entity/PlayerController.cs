@@ -142,7 +142,7 @@ namespace Controllers.Entity
         {
             foreach (IEntityChunkChangedSubscriber subscriber in _EntityChangedChunkSubscribers)
             {
-                subscriber.EntityChangedChunk = true;
+                subscriber.PrimaryLoaderChangedChunk = true;
             }
         }
 

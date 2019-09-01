@@ -15,7 +15,8 @@ using UnityEngine;
 
 namespace Controllers.World
 {
-    public sealed class ChunkController : MonoBehaviour, IEntityChunkChangedSubscriber
+    [RequireComponent(typeof(WorldController))]
+    public sealed class ChunkController : MonoBehaviour
     {
         public static ChunkController Current;
 
@@ -23,15 +24,13 @@ namespace Controllers.World
         private Chunk _ChunkObject;
         private Dictionary<Vector3, Chunk> _Chunks;
         private ObjectCache<Chunk> _ChunkCache;
-        private Queue<Chunk> _DeactivationQueue;
+        private Queue<Vector3> _DeactivationQueue;
 
         public Queue<Vector3> BuildChunkQueue;
         public int ActiveChunksCount => _Chunks.Count;
         public int CachedChunksCount => _ChunkCache.Size;
         public bool AllChunksBuilt => _Chunks.All(kvp => kvp.Value.Built);
         public bool AllChunksMeshed => _Chunks.All(kvp => kvp.Value.Meshed);
-
-        public bool EntityChangedChunk { get; set; }
 
         private void Awake()
         {
@@ -45,7 +44,7 @@ namespace Controllers.World
             }
 
             _ChunkObject = Resources.Load<Chunk>(@"Prefabs/Chunk");
-            _DeactivationQueue = new Queue<Chunk>();
+            _DeactivationQueue = new Queue<Vector3>();
             _FrameTimeLimiter = new Stopwatch();
             _Chunks = new Dictionary<Vector3, Chunk>();
             BuildChunkQueue = new Queue<Vector3>();
@@ -55,8 +54,6 @@ namespace Controllers.World
         {
             _ChunkCache = new ObjectCache<Chunk>(DeactivateChunk, chunk => Destroy(chunk.gameObject), false,
                 OptionsController.Current.MaximumChunkCacheSize);
-
-            PlayerController.Current.RegisterEntityChangedSubscriber(this);
 
             if (OptionsController.Current.PreInitializeChunkCache)
             {
@@ -77,13 +74,6 @@ namespace Controllers.World
             if (OptionsController.Current.ThreadingMode != ThreadingMode.Variable)
             {
                 ModifyThreadedExecutionQueueThreadingMode();
-            }
-
-            if (EntityChangedChunk)
-            {
-                MarkOutOfBoundsChunksForDeactivation(PlayerController.Current.CurrentChunk);
-
-                EntityChangedChunk = false;
             }
 
             if (BuildChunkQueue.Count > 0)
@@ -137,7 +127,7 @@ namespace Controllers.World
             {
                 Vector3 position = BuildChunkQueue.Dequeue();
 
-                if (CheckChunkExistsAtPosition(position))
+                if (ChunkExistsAt(position))
                 {
                     continue;
                 }
@@ -147,21 +137,16 @@ namespace Controllers.World
                 if (chunk == default)
                 {
                     chunk = Instantiate(_ChunkObject, position, Quaternion.identity, transform);
+                    chunk.DeactivationCallback += (sender, chunkPosition) => { _DeactivationQueue.Enqueue(chunkPosition); };
                 }
                 else
                 {
                     chunk.Activate(position);
                 }
 
-                try
-                {
                     AddChunk(chunk);
-                }
-                catch (Exception)
-                {
-                }
 
-                // ensures that neighbours update their meshes to cull newly out of sight faces
+                    // ensures that neighbours update their meshes to cull newly out of sight faces
                 FlagNeighborsPendingUpdate(chunk.Position);
 
                 if (_FrameTimeLimiter.Elapsed > OptionsController.Current.MaximumInternalFrameTime)
@@ -181,7 +166,7 @@ namespace Controllers.World
                 }
 
                 Vector3 modifiedPosition = position + new Vector3(x * Chunk.Size.x, 0, 0);
-                Chunk chunkAtPosition = GetChunkAtPosition(modifiedPosition);
+                Chunk chunkAtPosition = GetChunkAt(modifiedPosition);
 
                 if ((chunkAtPosition == default) || chunkAtPosition.PendingMeshUpdate || !chunkAtPosition.Active)
                 {
@@ -199,7 +184,7 @@ namespace Controllers.World
                 }
 
                 Vector3 modifiedPosition = position + new Vector3(0, 0, z * Chunk.Size.z);
-                Chunk chunkAtPosition = GetChunkAtPosition(modifiedPosition);
+                Chunk chunkAtPosition = GetChunkAt(modifiedPosition);
 
                 if ((chunkAtPosition == default) || chunkAtPosition.PendingMeshUpdate || !chunkAtPosition.Active)
                 {
@@ -215,32 +200,17 @@ namespace Controllers.World
 
         #region CHUNK DISABLING
 
-        private void MarkOutOfBoundsChunksForDeactivation(Vector3Int chunkPosition)
-        {
-            foreach (KeyValuePair<Vector3, Chunk> kvp in _Chunks)
-            {
-                Vector3 difference = (kvp.Value.Position - chunkPosition).Abs();
-
-                if ((difference.x <= ((WorldController.Current.WorldGenerationSettings.Radius + 1) * Chunk.Size.x)) &&
-                    (difference.z <= ((WorldController.Current.WorldGenerationSettings.Radius + 1) * Chunk.Size.z)))
-                {
-                    continue;
-                }
-
-                _DeactivationQueue.Enqueue(kvp.Value);
-
-                if (_FrameTimeLimiter.Elapsed > OptionsController.Current.MaximumInternalFrameTime)
-                {
-                    break;
-                }
-            }
-        }
-
         private void ProcessDeactivationQueue()
         {
             while (_DeactivationQueue.Count > 0)
             {
-                Chunk chunk = _DeactivationQueue.Dequeue();
+                Vector3 chunkPosition = _DeactivationQueue.Dequeue();
+
+                if (!_Chunks.TryGetValue(chunkPosition, out Chunk chunk))
+                {
+                    continue;
+                }
+                
                 _ChunkCache.CacheItem(ref chunk);
 
                 if (_FrameTimeLimiter.Elapsed > OptionsController.Current.MaximumInternalFrameTime)
@@ -264,13 +234,13 @@ namespace Controllers.World
 
         #region MISC
 
-        public bool CheckChunkExistsAtPosition(Vector3 position)
+        public bool ChunkExistsAt(Vector3 position)
         {
             return _Chunks.ContainsKey(position);
         }
 
         // todo this function needs to be made thread-safe
-        public Chunk GetChunkAtPosition(Vector3 position)
+        public Chunk GetChunkAt(Vector3 position)
         {
             bool trySuccess = _Chunks.TryGetValue(position, out Chunk chunk);
 
@@ -281,7 +251,7 @@ namespace Controllers.World
         {
             Vector3 chunkPosition = GetWorldChunkOriginFromGlobalPosition(position);
 
-            Chunk chunk = GetChunkAtPosition(chunkPosition);
+            Chunk chunk = GetChunkAt(chunkPosition);
 
             if ((chunk == default) || !chunk.Built)
             {
@@ -295,7 +265,7 @@ namespace Controllers.World
         {
             Vector3 chunkPosition = GetWorldChunkOriginFromGlobalPosition(position);
 
-            Chunk chunk = GetChunkAtPosition(chunkPosition);
+            Chunk chunk = GetChunkAt(chunkPosition);
 
             if ((chunk == default) || !chunk.Built)
             {

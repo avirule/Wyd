@@ -30,6 +30,25 @@ namespace Controllers.Game
 
     public class OptionsController : MonoBehaviour
     {
+        public static class Defaults
+        {
+            // General
+            public const ThreadingMode THREADING_MODE = ThreadingMode.Single;
+
+            // Graphics
+            public const int MAXIMUM_FRAME_RATE_BUFFER_SIZE = 60;
+            public const int MAXIMUM_INTERNAL_FRAMES = 60;
+            public const int VSYNC_LEVEL = 1;
+            public const int SHADOW_DISTANCE = 3;
+            
+            // Chunking
+            public const bool PRE_INITIALIZE_CHUNK_CACHE = true;
+            public const int MAXIMUM_CHUNK_CACHE_SIZE = 20;
+            public const CacheCullingAggression CHUNK_CACHE_CULLING_AGGRESSION = CacheCullingAggression.Passive;
+            public const int MAXIMUM_CHUNK_LOAD_TIME_BUFFER_SIZE = 60;
+            public const int PRE_LOAD_CHUNK_DISTANCE = 2;
+        }
+        
         private static string _configPath;
 
         public static OptionsController Current;
@@ -39,17 +58,18 @@ namespace Controllers.Game
         // General
         public ThreadingMode ThreadingMode;
 
+        // Graphics
+        public int MaximumInternalFrames;
+        public TimeSpan MaximumInternalFrameTime;
+        public int MaximumFrameRateBufferSize;
+
         // Chunking
         public bool PreInitializeChunkCache;
         public int MaximumChunkCacheSize;
         public CacheCullingAggression ChunkCacheCullingAggression;
         public int MaximumChunkLoadTimeBufferSize;
-
-        // Graphics
-        public int MaximumFrameRateBufferSize;
-        public int MaximumInternalFrames;
-        public TimeSpan MaximumInternalFrameTime;
-
+        public int PreLoadChunkDistance;
+        
         public int VSyncLevel
         {
             get => QualitySettings.vSyncCount;
@@ -57,7 +77,6 @@ namespace Controllers.Game
         }
 
         public int ShadowDistance;
-        public int ExpensiveMeshingDistance;
 
         private void Awake()
         {
@@ -87,8 +106,8 @@ namespace Controllers.Game
             // General
             if (!GetSetting("General", nameof(ThreadingMode), out ThreadingMode))
             {
-                EventLog.Logger.Log(LogLevel.Warn, $"Error loading setting {nameof(ThreadingMode)}.");
-                ThreadingMode = ThreadingMode.Variable;
+                SettingLoadError(nameof(ThreadingMode), Defaults.THREADING_MODE);
+                ThreadingMode = Defaults.THREADING_MODE;
             }
 
 
@@ -97,9 +116,8 @@ namespace Controllers.Game
                 (MaximumInternalFrames < 0) ||
                 (MaximumInternalFrames > 300))
             {
-                EventLog.Logger.Log(LogLevel.Warn,
-                    $"Error loading setting {nameof(MaximumInternalFrames)}.");
-                MaximumInternalFrames = 15;
+                SettingLoadError(nameof(MaximumInternalFrames), Defaults.MAXIMUM_INTERNAL_FRAMES);
+                MaximumInternalFrames = Defaults.MAXIMUM_INTERNAL_FRAMES;
             }
 
             MaximumInternalFrameTime = TimeSpan.FromSeconds(1f / MaximumInternalFrames);
@@ -108,17 +126,16 @@ namespace Controllers.Game
                 (MaximumFrameRateBufferSize < 0) ||
                 (MaximumFrameRateBufferSize > 120))
             {
-                EventLog.Logger.Log(LogLevel.Warn,
-                    $"Error loading setting {nameof(MaximumFrameRateBufferSize)}.");
-                MaximumFrameRateBufferSize = 30;
+                SettingLoadError(nameof(MaximumFrameRateBufferSize), Defaults.MAXIMUM_FRAME_RATE_BUFFER_SIZE);
+                MaximumFrameRateBufferSize = Defaults.MAXIMUM_FRAME_RATE_BUFFER_SIZE;
             }
 
             if (!GetSetting("Graphics", nameof(VSyncLevel), out int vSyncLevel) ||
                 (vSyncLevel < 0) ||
                 (vSyncLevel > 4))
             {
-                EventLog.Logger.Log(LogLevel.Warn, $"Error loading setting {nameof(VSyncLevel)}.");
-                vSyncLevel = 0;
+                SettingLoadError(nameof(vSyncLevel), Defaults.VSYNC_LEVEL);
+                vSyncLevel = Defaults.VSYNC_LEVEL;
             }
 
             VSyncLevel = vSyncLevel;
@@ -127,51 +144,45 @@ namespace Controllers.Game
                 (ShadowDistance < 0) ||
                 (ShadowDistance > 25))
             {
-                EventLog.Logger.Log(LogLevel.Warn, $"Error loading setting {nameof(ShadowDistance)}.");
-                ShadowDistance = 4;
-            }
-
-            if (!GetSetting("Graphics", nameof(ExpensiveMeshingDistance), out ExpensiveMeshingDistance) ||
-                (ExpensiveMeshingDistance < 1) ||
-                (ExpensiveMeshingDistance > 25))
-            {
-                EventLog.Logger.Log(LogLevel.Warn,
-                    $"Error loading setting {nameof(ExpensiveMeshingDistance)}.");
-                ExpensiveMeshingDistance = 1;
+                SettingLoadError(nameof(ShadowDistance), Defaults.SHADOW_DISTANCE);
+                ShadowDistance = Defaults.SHADOW_DISTANCE;
             }
 
 
             // Chunking
             if (!GetSetting("Chunking", nameof(PreInitializeChunkCache), out PreInitializeChunkCache))
             {
-                EventLog.Logger.Log(LogLevel.Warn,
-                    $"Error loading setting {nameof(PreInitializeChunkCache)}.");
-                PreInitializeChunkCache = true;
+                SettingLoadError(nameof(PreInitializeChunkCache), Defaults.PRE_INITIALIZE_CHUNK_CACHE);
+                PreInitializeChunkCache = Defaults.PRE_INITIALIZE_CHUNK_CACHE;
             }
 
             if (!GetSetting("Chunking", nameof(MaximumChunkCacheSize), out MaximumChunkCacheSize) ||
                 (MaximumChunkCacheSize < -1) ||
                 (MaximumChunkCacheSize > 625))
             {
-                EventLog.Logger.Log(LogLevel.Warn,
-                    $"Error loading setting {nameof(MaximumChunkCacheSize)}.");
-                MaximumChunkCacheSize = -1;
+                SettingLoadError(nameof(MaximumChunkCacheSize), Defaults.MAXIMUM_CHUNK_CACHE_SIZE);
+                MaximumChunkCacheSize = Defaults.MAXIMUM_CHUNK_CACHE_SIZE;
             }
 
             if (!GetSetting("Chunking", nameof(ChunkCacheCullingAggression), out ChunkCacheCullingAggression))
             {
-                EventLog.Logger.Log(LogLevel.Warn,
-                    $"Error loading setting {nameof(ExpensiveMeshingDistance)}.");
-                ChunkCacheCullingAggression = CacheCullingAggression.Active;
+                SettingLoadError(nameof(ChunkCacheCullingAggression), Defaults.CHUNK_CACHE_CULLING_AGGRESSION);
+                ChunkCacheCullingAggression = Defaults.CHUNK_CACHE_CULLING_AGGRESSION;
             }
 
             if (!GetSetting("Chunking", nameof(MaximumChunkLoadTimeBufferSize), out MaximumChunkLoadTimeBufferSize) ||
                 (MaximumFrameRateBufferSize < 0) ||
                 (MaximumChunkLoadTimeBufferSize > 120))
             {
-                EventLog.Logger.Log(LogLevel.Warn,
-                    $"Error loading setting {nameof(MaximumChunkLoadTimeBufferSize)}.");
-                MaximumChunkLoadTimeBufferSize = 60;
+                SettingLoadError(nameof(MaximumChunkLoadTimeBufferSize), Defaults.MAXIMUM_CHUNK_LOAD_TIME_BUFFER_SIZE);
+                MaximumChunkLoadTimeBufferSize = Defaults.MAXIMUM_CHUNK_LOAD_TIME_BUFFER_SIZE;
+            }
+
+            if (!GetSetting("Chunking", nameof(PreLoadChunkDistance), out PreLoadChunkDistance) ||
+                PreLoadChunkDistance < 0)
+            {
+                SettingLoadError(nameof(PreLoadChunkDistance), Defaults.PRE_LOAD_CHUNK_DISTANCE);
+                PreLoadChunkDistance = Defaults.PRE_LOAD_CHUNK_DISTANCE;
             }
 
             EventLog.Logger.Log(LogLevel.Info, "Configuration loaded.");
@@ -187,7 +198,8 @@ namespace Controllers.Game
             _Configuration["General"][nameof(ThreadingMode)].PreComment =
                 "Determines whether the threading mode the game will use when generating chunk data and meshes.";
             _Configuration["General"][nameof(ThreadingMode)].Comment = "(0 = single, 1 = multi, 2 = variable)";
-            _Configuration["General"][nameof(ThreadingMode)].IntValue = 2;
+            _Configuration["General"][nameof(ThreadingMode)].IntValue =
+                (int)Defaults.THREADING_MODE;
 
 
             // Graphics
@@ -195,49 +207,57 @@ namespace Controllers.Game
                 "Maximum number of frames internal systems will allow to lapse during updates.";
             _Configuration["Graphics"][nameof(MaximumInternalFrames)].Comment =
                 "Higher values decrease overall CPU stress (min 15, max 150).";
-            _Configuration["Graphics"][nameof(MaximumInternalFrames)].IntValue = 30;
+            _Configuration["Graphics"][nameof(MaximumInternalFrames)].IntValue =
+                Defaults.MAXIMUM_INTERNAL_FRAMES;
 
             _Configuration["Graphics"][nameof(MaximumFrameRateBufferSize)].PreComment =
                 "Maximum size of buffer for reporting average frame rate.";
             _Configuration["Graphics"][nameof(MaximumFrameRateBufferSize)].Comment =
                 "Higher values decrease frame-to-frame accuracy. (min 0, max 120)";
-            _Configuration["Graphics"][nameof(MaximumFrameRateBufferSize)].IntValue = 60;
+            _Configuration["Graphics"][nameof(MaximumFrameRateBufferSize)].IntValue =
+                Defaults.MAXIMUM_FRAME_RATE_BUFFER_SIZE;
 
             _Configuration["Graphics"][nameof(VSyncLevel)].PreComment =
                 "Each level increases the number of screen updates to wait before rendering to the screen.";
             _Configuration["Graphics"][nameof(VSyncLevel)].Comment = "Maximum value of 4";
-            _Configuration["Graphics"][nameof(VSyncLevel)].IntValue = 0;
+            _Configuration["Graphics"][nameof(VSyncLevel)].IntValue =
+                Defaults.VSYNC_LEVEL;
 
             _Configuration["Graphics"][nameof(ShadowDistance)].PreComment =
                 "Defines radius in chunks around player to draw shadows.";
-            _Configuration["Graphics"][nameof(ShadowDistance)].IntValue = 5;
-
-            _Configuration["Graphics"][nameof(ExpensiveMeshingDistance)].PreComment =
-                "Defines radius in chunks around player to generate collision meshes.";
-            _Configuration["Graphics"][nameof(ExpensiveMeshingDistance)].Comment = "High values will cause lag.";
-            _Configuration["Graphics"][nameof(ExpensiveMeshingDistance)].IntValue = 1;
+            _Configuration["Graphics"][nameof(ShadowDistance)].IntValue =
+                Defaults.SHADOW_DISTANCE;
 
 
             // Chunking
             _Configuration["Chunking"][nameof(PreInitializeChunkCache)].PreComment =
                 "Determines whether the chunk cache is pre-initialized to safe capacity.";
-            _Configuration["Chunking"][nameof(PreInitializeChunkCache)].BoolValue = true;
+            _Configuration["Chunking"][nameof(PreInitializeChunkCache)].BoolValue =
+                Defaults.PRE_INITIALIZE_CHUNK_CACHE;
 
             _Configuration["Chunking"][nameof(MaximumChunkCacheSize)].PreComment =
                 "Lower values are harder on the CPU, higher values use more RAM.";
             _Configuration["Chunking"][nameof(MaximumChunkCacheSize)].Comment = "(-1 = unlimited)";
-            _Configuration["Chunking"][nameof(MaximumChunkCacheSize)].IntValue = -1;
+            _Configuration["Chunking"][nameof(MaximumChunkCacheSize)].IntValue =
+                Defaults.MAXIMUM_CHUNK_CACHE_SIZE;
 
             _Configuration["Chunking"][nameof(ChunkCacheCullingAggression)].PreComment =
                 "Active culling keeps the total cache size below maximum, passive lets it grow until there's free frame time to cull it.";
             _Configuration["Chunking"][nameof(ChunkCacheCullingAggression)].Comment =
                 "0 = Passive, 1 = Active";
-            _Configuration["Chunking"][nameof(ChunkCacheCullingAggression)].IntValue = 1;
+            _Configuration["Chunking"][nameof(ChunkCacheCullingAggression)].IntValue =
+                (int)Defaults.CHUNK_CACHE_CULLING_AGGRESSION;
 
             _Configuration["Chunking"][nameof(MaximumChunkLoadTimeBufferSize)].PreComment =
                 "Lower values give a more accurate frame-to-frame reading, with higher values giving more long-term accuracy.";
             _Configuration["Chunking"][nameof(MaximumChunkLoadTimeBufferSize)].Comment = "(min 0, max 120)";
-            _Configuration["Chunking"][nameof(MaximumChunkLoadTimeBufferSize)].IntValue = 15;
+            _Configuration["Chunking"][nameof(MaximumChunkLoadTimeBufferSize)].IntValue =
+                Defaults.MAXIMUM_CHUNK_LOAD_TIME_BUFFER_SIZE;
+
+            _Configuration["Chunking"][nameof(PreLoadChunkDistance)].PreComment =
+                "Defines extra radius of chunks to pre-load (build).";
+            _Configuration["Chunking"][nameof(PreLoadChunkDistance)].IntValue =
+                Defaults.PRE_LOAD_CHUNK_DISTANCE;
 
             EventLog.Logger.Log(LogLevel.Info, "Default configuration initialized. Saving...");
 
@@ -261,6 +281,11 @@ namespace Controllers.Game
             }
 
             return true;
+        }
+
+        private void SettingLoadError(string settingName, object defaultValue)
+        {
+            EventLog.Logger.Log(LogLevel.Warn, $"Error loading setting `{settingName}`, defaulting to {defaultValue}.");
         }
     }
 }
