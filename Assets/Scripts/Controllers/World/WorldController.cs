@@ -128,11 +128,16 @@ namespace Controllers.World
             _UpdateColliderMesh = false;
         }
 
-        public ushort GetBlockAtPosition(Vector3 position)
+        public ushort GetBlockAt(Vector3 position)
         {
-            return ChunkController.GetBlockAtPosition(position);
+            return ChunkController.GetBlockAt(position);
         }
 
+        public bool BlockExistsAt(Vector3 position)
+        {
+            return ChunkController.BlockExistsAt(position);
+        }
+        
         public bool IsOnBorrowedUpdateTime()
         {
             return (DateTime.Now - UpdateTime) > OptionsController.Current.MaximumInternalFrameTime;

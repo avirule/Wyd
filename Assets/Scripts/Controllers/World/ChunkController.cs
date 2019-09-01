@@ -277,9 +277,9 @@ namespace Controllers.World
             return trySuccess ? chunk : default;
         }
 
-        public ushort GetBlockAtPosition(Vector3 position)
+        public ushort GetBlockAt(Vector3 position)
         {
-            Vector3 chunkPosition = GetWorldChunkOriginFromGlobalPosition(position).ToInt();
+            Vector3 chunkPosition = GetWorldChunkOriginFromGlobalPosition(position);
 
             Chunk chunk = GetChunkAtPosition(chunkPosition);
 
@@ -288,7 +288,21 @@ namespace Controllers.World
                 return default;
             }
 
-            return chunk.GetBlockAtPosition(position);
+            return chunk.GetBlockAt(position);
+        }
+
+        public bool BlockExistsAt(Vector3 position)
+        {
+            Vector3 chunkPosition = GetWorldChunkOriginFromGlobalPosition(position);
+
+            Chunk chunk = GetChunkAtPosition(chunkPosition);
+
+            if ((chunk == default) || !chunk.Built)
+            {
+                return default;
+            }
+
+            return chunk.BlockExistsAt(position);
         }
 
         public static Vector3 GetWorldChunkOriginFromGlobalPosition(Vector3 globalPosition)

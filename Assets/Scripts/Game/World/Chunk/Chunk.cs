@@ -236,10 +236,15 @@ namespace Game.World.Chunk
 
         #region MISC
 
-        public ushort GetBlockAtPosition(Vector3 position)
+        private int Get1DLocal(Vector3 position)
         {
             Vector3 localPosition = (position - Position).Abs();
-            int localPosition1d = localPosition.To1D(Size);
+            return localPosition.To1D(Size);
+        }
+        
+        public ushort GetBlockAt(Vector3 position)
+        {
+            int localPosition1d = Get1DLocal(position);
 
             if (_Blocks.Length <= localPosition1d)
             {
@@ -247,6 +252,19 @@ namespace Game.World.Chunk
             }
 
             return _Blocks[localPosition1d];
+        }
+
+        public bool BlockExistsAt(Vector3 position)
+        {
+            int localPosition1d = Get1DLocal(position);
+
+            if (_Blocks.Length <= localPosition1d ||
+                _Blocks[localPosition1d] == BlockController._BLOCK_EMPTY_ID)
+            {
+                return false;
+            }
+
+            return true;
         }
 
         private void CheckUpdateInternalSettings(Vector3 chunkPosition)

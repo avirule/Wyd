@@ -1,10 +1,11 @@
 #region
 
+using Controllers.Entity;
 using UnityEngine;
 
 #endregion
 
-namespace Controllers.Entity
+namespace Controllers.Graphics
 {
     public class CameraController : MonoBehaviour
     {
