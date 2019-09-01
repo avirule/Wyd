@@ -47,8 +47,8 @@ namespace Controllers.Game
 
         // Graphics
         public int MaximumFrameRateBufferSize;
-        public int MinimumInternalFrames;
-        public float MaximumInternalFrameTime;
+        public int MaximumInternalFrames;
+        public TimeSpan MaximumInternalFrameTime;
 
         public int VSyncLevel
         {
@@ -93,16 +93,16 @@ namespace Controllers.Game
 
 
             // Graphics
-            if (!GetSetting("Graphics", nameof(MinimumInternalFrames), out MinimumInternalFrames) ||
-                (MinimumInternalFrames < 0) ||
-                (MinimumInternalFrames > 300))
+            if (!GetSetting("Graphics", nameof(MaximumInternalFrames), out MaximumInternalFrames) ||
+                (MaximumInternalFrames < 0) ||
+                (MaximumInternalFrames > 300))
             {
                 EventLog.Logger.Log(LogLevel.Warn,
-                    $"Error loading setting {nameof(MinimumInternalFrames)}.");
-                MinimumInternalFrames = 15;
+                    $"Error loading setting {nameof(MaximumInternalFrames)}.");
+                MaximumInternalFrames = 15;
             }
 
-            MaximumInternalFrameTime = 1f / MinimumInternalFrames;
+            MaximumInternalFrameTime = TimeSpan.FromSeconds(1f / MaximumInternalFrames);
 
             if (!GetSetting("Graphics", nameof(MaximumFrameRateBufferSize), out MaximumFrameRateBufferSize) ||
                 (MaximumFrameRateBufferSize < 0) ||
@@ -191,11 +191,11 @@ namespace Controllers.Game
 
 
             // Graphics
-            _Configuration["Graphics"][nameof(MinimumInternalFrames)].PreComment =
+            _Configuration["Graphics"][nameof(MaximumInternalFrames)].PreComment =
                 "Maximum number of frames internal systems will allow to lapse during updates.";
-            _Configuration["Graphics"][nameof(MinimumInternalFrames)].Comment =
+            _Configuration["Graphics"][nameof(MaximumInternalFrames)].Comment =
                 "Higher values decrease overall CPU stress (min 15, max 150).";
-            _Configuration["Graphics"][nameof(MinimumInternalFrames)].IntValue = 30;
+            _Configuration["Graphics"][nameof(MaximumInternalFrames)].IntValue = 30;
 
             _Configuration["Graphics"][nameof(MaximumFrameRateBufferSize)].PreComment =
                 "Maximum size of buffer for reporting average frame rate.";

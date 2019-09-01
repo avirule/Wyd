@@ -262,8 +262,6 @@ namespace Threading.ThreadedQueue
 
             mesh.RecalculateNormals();
             mesh.RecalculateTangents();
-            mesh.RecalculateBounds();
-            mesh.Optimize();
         }
     }
 }

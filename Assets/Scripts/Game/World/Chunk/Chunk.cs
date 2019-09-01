@@ -37,6 +37,7 @@ namespace Game.World.Chunk
         private Mesh _Mesh;
         private object _BuildingIdentity;
         private object _MeshingIdentity;
+        private bool _OnBorrowedUpdateTime;
 
         public MeshFilter MeshFilter;
         public MeshRenderer MeshRenderer;
@@ -70,7 +71,7 @@ namespace Game.World.Chunk
 
             _Position = transform.position;
             _Blocks = new ushort[Size.x * Size.y * Size.z];
-            Built = Building = Meshed = Meshing = PendingMeshUpdate = false;
+            _OnBorrowedUpdateTime = Built = Building = Meshed = Meshing = PendingMeshUpdate = false;
             _Mesh = new Mesh();
 
             MeshFilter.sharedMesh = _Mesh;
@@ -95,6 +96,8 @@ namespace Game.World.Chunk
 
         private void Update()
         {
+            _OnBorrowedUpdateTime = WorldController.Current.IsOnBorrowedUpdateTime();
+
             if (EntityChangedChunk)
             {
                 CheckUpdateInternalSettings(PlayerController.Current.CurrentChunk);
@@ -155,6 +158,52 @@ namespace Game.World.Chunk
 
         #region CHUNK GENERATION
 
+        private void GenerationCheckAndStart()
+        {
+            CheckBuildingOrStart();
+            CheckMeshingOrStart();
+        }
+
+        private void CheckBuildingOrStart()
+        {
+            if (Building)
+            {
+                if (!_OnBorrowedUpdateTime &&
+                    ThreadedExecutionQueue.TryGetFinishedItem(_BuildingIdentity, out ThreadedItem threadedItem))
+                {
+                    Building = false;
+                    Built = PendingMeshUpdate = true;
+
+                    BuildTimes.Enqueue(threadedItem.ExecutionTime.TotalMilliseconds);
+                }
+            }
+            else if (!Built && !Building)
+            {
+                _BuildingIdentity = BeginBuildChunk();
+            }
+        }
+
+        private void CheckMeshingOrStart()
+        {
+            if (Meshing)
+            {
+                if (!_OnBorrowedUpdateTime &&
+                    ThreadedExecutionQueue.TryGetFinishedItem(_MeshingIdentity, out ThreadedItem threadedItem))
+                {
+                    Meshing = false;
+                    Meshed = true;
+
+                    ((ChunkMeshingThreadedItem) threadedItem).SetMesh(ref _Mesh);
+
+                    MeshTimes.Enqueue(threadedItem.ExecutionTime.TotalMilliseconds);
+                }
+            }
+            else if ((PendingMeshUpdate || !Meshed) && ChunkController.Current.AllChunksBuilt)
+            {
+                _MeshingIdentity = BeginGenerateMesh();
+            }
+        }
+
         private object BeginBuildChunk()
         {
             Built = false;
@@ -181,52 +230,11 @@ namespace Game.World.Chunk
 
             return ThreadedExecutionQueue.QueueThreadedItem(threadedItem);
         }
-
-        private void GenerationCheckAndStart()
-        {
-            CheckBuildingOrStart();
-            CheckMeshingOrStart();
-        }
-
-        private void CheckBuildingOrStart()
-        {
-            if (Building)
-            {
-                if (ThreadedExecutionQueue.TryGetFinishedItem(_BuildingIdentity, out ThreadedItem threadedItem))
-                {
-                    Building = false;
-                    Built = PendingMeshUpdate = true;
-
-                    BuildTimes.Enqueue(threadedItem.ExecutionTime.TotalMilliseconds);
-                }
-            }
-            else if (!Built && !Building)
-            {
-                _BuildingIdentity = BeginBuildChunk();
-            }
-        }
-
-        private void CheckMeshingOrStart()
-        {
-            if (Meshing)
-            {
-                if (ThreadedExecutionQueue.TryGetFinishedItem(_MeshingIdentity, out ThreadedItem threadedItem))
-                {
-                    Meshing = false;
-                    Meshed = true;
-
-                    ((ChunkMeshingThreadedItem) threadedItem).SetMesh(ref _Mesh);
-
-                    MeshTimes.Enqueue(threadedItem.ExecutionTime.TotalMilliseconds);
-                }
-            }
-            else if ((PendingMeshUpdate || !Meshed) && ChunkController.Current.AllChunksBuilt)
-            {
-                _MeshingIdentity = BeginGenerateMesh();
-            }
-        }
-
+        
         #endregion
+
+
+        #region MISC
 
         public ushort GetBlockAtPosition(Vector3 position)
         {
@@ -262,5 +270,7 @@ namespace Game.World.Chunk
                    ((difference.x <= (OptionsController.Current.ShadowDistance * Size.x)) &&
                     (difference.z <= (OptionsController.Current.ShadowDistance * Size.z)));
         }
+        
+        #endregion
     }
 }

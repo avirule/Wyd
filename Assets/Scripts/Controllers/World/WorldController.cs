@@ -32,6 +32,7 @@ namespace Controllers.World
         public float TicksPerSecond;
         public WorldGenerationSettings WorldGenerationSettings;
         public ChunkController ChunkController;
+        public DateTime UpdateTime;
 
         public bool EntityChangedChunk { get; set; }
 
@@ -77,6 +78,8 @@ namespace Controllers.World
 
         private void Update()
         {
+            UpdateTime = DateTime.Now;
+
             if (EntityChangedChunk)
             {
                 UpdateChunkLoadArea(PlayerController.Current.CurrentChunk);
@@ -130,6 +133,11 @@ namespace Controllers.World
             return ChunkController.GetBlockAtPosition(position);
         }
 
+        public bool IsOnBorrowedUpdateTime()
+        {
+            return (DateTime.Now - UpdateTime) > OptionsController.Current.MaximumInternalFrameTime;
+        }
+        
         #region ENTITY MANAGMENT
 
         public void RegisterEntity(Transform parent, int radius = 2)

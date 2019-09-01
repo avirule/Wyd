@@ -192,8 +192,6 @@ namespace Game
 
             Mesh.RecalculateNormals();
             Mesh.RecalculateTangents();
-            Mesh.RecalculateBounds();
-            Mesh.Optimize();
         }
     }
 }

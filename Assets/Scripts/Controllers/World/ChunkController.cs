@@ -74,7 +74,7 @@ namespace Controllers.World
         {
             _FrameTimeLimiter.Restart();
 
-            if (OptionsController.Current.ThreadingMode == ThreadingMode.Variable)
+            if (OptionsController.Current.ThreadingMode != ThreadingMode.Variable)
             {
                 ModifyThreadedExecutionQueueThreadingMode();
             }
@@ -164,7 +164,7 @@ namespace Controllers.World
                 // ensures that neighbours update their meshes to cull newly out of sight faces
                 FlagNeighborsPendingUpdate(chunk.Position);
 
-                if (_FrameTimeLimiter.Elapsed.TotalSeconds > OptionsController.Current.MaximumInternalFrameTime)
+                if (_FrameTimeLimiter.Elapsed > OptionsController.Current.MaximumInternalFrameTime)
                 {
                     break;
                 }
@@ -229,7 +229,7 @@ namespace Controllers.World
 
                 _DeactivationQueue.Enqueue(kvp.Value);
 
-                if (_FrameTimeLimiter.Elapsed.TotalSeconds > OptionsController.Current.MaximumInternalFrameTime)
+                if (_FrameTimeLimiter.Elapsed > OptionsController.Current.MaximumInternalFrameTime)
                 {
                     break;
                 }
@@ -243,7 +243,7 @@ namespace Controllers.World
                 Chunk chunk = _DeactivationQueue.Dequeue();
                 _ChunkCache.CacheItem(ref chunk);
 
-                if (_FrameTimeLimiter.Elapsed.TotalSeconds > OptionsController.Current.MaximumInternalFrameTime)
+                if (_FrameTimeLimiter.Elapsed > OptionsController.Current.MaximumInternalFrameTime)
                 {
                     break;
                 }
