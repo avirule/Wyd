@@ -2,6 +2,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Security.Cryptography;
 using Controllers.Entity;
 using Controllers.Game;
 using Game;
@@ -22,11 +23,10 @@ namespace Controllers.World
         public static WorldController Current;
 
         private GameObject _CollisionToken;
-        private List<CollisionToken> _EntityTokens;
+        private List<CollisionToken> _CollisionTokens;
         private Mesh _ColliderMesh;
         private bool _UpdateColliderMesh;
 
-        public MeshFilter MeshFilter;
         public MeshCollider MeshCollider;
         public long InitialTick;
         public TimeSpan WorldTickRate;
@@ -64,7 +64,7 @@ namespace Controllers.World
 
             WorldTickRate = TimeSpan.FromSeconds(1d / TicksPerSecond);
 
-            _EntityTokens = new List<CollisionToken>();
+            _CollisionTokens = new List<CollisionToken>();
             _ColliderMesh = new Mesh();
             _UpdateColliderMesh = false;
 
@@ -87,31 +87,50 @@ namespace Controllers.World
 
             if (_UpdateColliderMesh)
             {
-                List<CombineInstance> combines = new List<CombineInstance>();
-
-                foreach (CollisionToken entityTransformToken in _EntityTokens)
-                {
-                    CombineInstance combine = new CombineInstance
-                    {
-                        mesh = entityTransformToken.Mesh,
-                        transform = entityTransformToken.transform.localToWorldMatrix
-                    };
-
-                    combines.Add(combine);
-                }
-
-                _ColliderMesh.CombineMeshes(combines.ToArray(), true, true);
-                MeshFilter.mesh = _ColliderMesh;
-                MeshCollider.sharedMesh = MeshFilter.sharedMesh;
-                _UpdateColliderMesh = false;
+                GenerateColliderMesh();
             }
+
         }
 
+        private void OnApplicationQuit()
+        {
+            Destroy(_ColliderMesh);
+        }
+
+        private void GenerateColliderMesh()
+        {
+            List<CombineInstance> combines = new List<CombineInstance>();
+
+            foreach (CollisionToken collisionToken in _CollisionTokens)
+            {
+                if (collisionToken.Mesh == default || collisionToken.Mesh.vertexCount == 0)
+                {
+                    continue;
+                }
+                    
+                CombineInstance combine = new CombineInstance
+                {
+                    mesh = collisionToken.Mesh,
+                    transform = collisionToken.transform.localToWorldMatrix
+                };
+
+                combines.Add(combine);
+            }
+
+            _ColliderMesh.CombineMeshes(combines.ToArray(), true, true);
+            _ColliderMesh.RecalculateNormals();
+            _ColliderMesh.RecalculateTangents();
+            _ColliderMesh.Optimize();
+
+            MeshCollider.sharedMesh = _ColliderMesh;
+            
+            _UpdateColliderMesh = false;
+        }
+        
         public ushort GetBlockAtPosition(Vector3 position)
         {
             return ChunkController.GetBlockAtPosition(position);
         }
-
 
         #region ENTITY MANAGMENT
 
@@ -123,7 +142,7 @@ namespace Controllers.World
             collisionToken.Radius = radius;
             collisionToken.UpdatedMesh += OnEntityChangedMesh;
 
-            _EntityTokens.Add(collisionToken);
+            _CollisionTokens.Add(collisionToken);
         }
 
         private void OnEntityChangedMesh(object sender, Mesh mesh)

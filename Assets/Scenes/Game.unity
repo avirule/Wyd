@@ -2543,7 +2543,6 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 1461272636}
-  - component: {fileID: 1461272639}
   - component: {fileID: 1461272638}
   - component: {fileID: 1461272635}
   - component: {fileID: 1461272637}
@@ -2567,7 +2566,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 0468092b4dbf446bb494bab4364c5e45, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  MeshFilter: {fileID: 1461272639}
   MeshCollider: {fileID: 1461272638}
   InitialTick: 0
   TicksPerSecond: 15
@@ -2618,14 +2616,6 @@ MeshCollider:
   serializedVersion: 3
   m_Convex: 0
   m_CookingOptions: -1
-  m_Mesh: {fileID: 0}
---- !u!33 &1461272639
-MeshFilter:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1461272634}
   m_Mesh: {fileID: 0}
 --- !u!114 &1461272641
 MonoBehaviour:
@@ -3366,7 +3356,7 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 2134891953}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 7, z: 0}
+  m_LocalPosition: {x: 0, y: 40, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children:
   - {fileID: 963194228}
