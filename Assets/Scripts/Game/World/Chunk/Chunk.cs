@@ -146,7 +146,7 @@ namespace Game.World.Chunk
             ChunkBuildingThreadedItem threadedItem = ChunkBuildersCache.RetrieveItem();
             threadedItem.Set(Position, _Blocks);
 
-            return ThreadedExecutionQueue.AddThreadedItem(threadedItem);
+            return ThreadedExecutionQueue.QueueThreadedItem(threadedItem);
         }
 
         private object BeginGenerateMesh()
@@ -162,7 +162,7 @@ namespace Game.World.Chunk
             ChunkMeshingThreadedItem threadedItem = ChunkMeshersCache.RetrieveItem();
             threadedItem.Set(Position, _Blocks);
 
-            return ThreadedExecutionQueue.AddThreadedItem(threadedItem);
+            return ThreadedExecutionQueue.QueueThreadedItem(threadedItem);
         }
 
         private void GenerationCheckAndStart()
@@ -224,7 +224,7 @@ namespace Game.World.Chunk
             return _Blocks[localPosition1d];
         }
 
-        private void CheckUpdateInternalSettings(Vector3Int chunkPosition)
+        private void CheckUpdateInternalSettings(Vector3 chunkPosition)
         {
             // chunk player is in should always be expensive / shadowed
             if (Position == chunkPosition)

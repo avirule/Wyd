@@ -164,11 +164,11 @@ namespace Threading.ThreadedQueue
         /// </summary>
         /// <param name="threadedItem"><see cref="ThreadedItem" /> to be added.</param>
         /// <returns>A unique <see cref="System.Object" /> identity.</returns>
-        public virtual object AddThreadedItem(ThreadedItem threadedItem)
+        public virtual object QueueThreadedItem(ThreadedItem threadedItem)
         {
             if (!Running)
             {
-                return null;
+                return default;
             }
 
             string guid = Guid.NewGuid().ToString();
