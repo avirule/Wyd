@@ -113,7 +113,7 @@ namespace Controllers.Entity
         private void CalculateJump()
         {
             Transform self = transform;
-            Grounded = Physics.Raycast(self.position, Vector3.down, (self.localScale.y / 2f) + 0.001f, GroundedMask);
+            Grounded = Physics.Raycast(self.position, Vector3.down, self.localScale.y + 0.001f, GroundedMask);
 
             if (Grounded && Input.GetButton("Jump"))
             {

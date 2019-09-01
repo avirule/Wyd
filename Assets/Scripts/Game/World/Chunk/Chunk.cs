@@ -1,5 +1,6 @@
 #region
 
+using System.Collections.Concurrent;
 using Controllers.Entity;
 using Controllers.Game;
 using Controllers.UI.Diagnostics;
@@ -27,6 +28,8 @@ namespace Game.World.Chunk
         private static readonly ObjectCache<ChunkMeshingThreadedItem> ChunkMeshersCache =
             new ObjectCache<ChunkMeshingThreadedItem>(null, null, true);
 
+        public static readonly ConcurrentQueue<double> BuildTimes = new ConcurrentQueue<double>();
+        public static readonly ConcurrentQueue<double> MeshTimes = new ConcurrentQueue<double>();
         public static readonly ThreadedQueue ThreadedExecutionQueue = new ThreadedQueue(200, 4000);
         public static readonly Vector3Int Size = new Vector3Int(32, 256, 32);
 
@@ -102,6 +105,8 @@ namespace Game.World.Chunk
             {
                 GenerationCheckAndStart();
             }
+            
+            CullChunkLoadTimesQueue();
         }
 
         private void OnDestroy()
@@ -115,6 +120,19 @@ namespace Game.World.Chunk
             ThreadedExecutionQueue.Abort();
         }
 
+        private static void CullChunkLoadTimesQueue()
+        {
+            while (MeshTimes.Count > OptionsController.Current.MaximumChunkLoadTimeBufferSize)
+            {
+                MeshTimes.TryDequeue(out double _);
+            }
+
+            while (MeshTimes.Count > OptionsController.Current.MaximumChunkLoadTimeBufferSize)
+            {
+                MeshTimes.TryDequeue(out double _);
+            }
+        }
+        
         #region ACTIVATION STATE
 
         public void Activate(Vector3 position = default)
@@ -180,7 +198,7 @@ namespace Game.World.Chunk
                     Building = false;
                     Built = PendingMeshUpdate = true;
 
-                    DiagnosticsPanelController.ChunkBuildTimes.Enqueue(threadedItem.ExecutionTime.TotalMilliseconds);
+                    BuildTimes.Enqueue(threadedItem.ExecutionTime.TotalMilliseconds);
                 }
             }
             else if (!Built && !Building)
@@ -200,7 +218,7 @@ namespace Game.World.Chunk
 
                     ((ChunkMeshingThreadedItem) threadedItem).SetMesh(ref _Mesh);
 
-                    DiagnosticsPanelController.ChunkMeshTimes.Enqueue(threadedItem.ExecutionTime.TotalMilliseconds);
+                    MeshTimes.Enqueue(threadedItem.ExecutionTime.TotalMilliseconds);
                 }
             }
             else if ((PendingMeshUpdate || !Meshed) && ChunkController.Current.AllChunksBuilt)
