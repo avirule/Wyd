@@ -132,7 +132,7 @@ namespace Controllers.World
         {
             return (DateTime.Now - UpdateTime) > OptionsController.Current.MaximumInternalFrameTime;
         }
-        
+
         #region ENTITY MANAGMENT
 
         public void RegisterEntity(Transform parent, int radius = 2)
@@ -158,7 +158,8 @@ namespace Controllers.World
 
         private void UpdateChunkLoadArea(Vector3Int chunkPosition)
         {
-            EnqueueBuildChunkArea(chunkPosition, WorldGenerationSettings.Radius + OptionsController.Current.PreLoadChunkDistance);
+            EnqueueBuildChunkArea(chunkPosition,
+                WorldGenerationSettings.Radius + OptionsController.Current.PreLoadChunkDistance);
         }
 
         public void EnqueueBuildChunkArea(Vector3Int origin, int radius)

@@ -188,7 +188,7 @@ namespace Game.World.Chunk
             {
                 return;
             }
-            
+
             CheckBuildingOrStart();
             CheckMeshingOrStart();
         }
@@ -293,7 +293,7 @@ namespace Game.World.Chunk
 
             return true;
         }
-        
+
         private void CheckInternalsAgainstLoaderPosition(Vector3 loaderChunkPosition)
         {
             if (Position == loaderChunkPosition)
@@ -317,7 +317,7 @@ namespace Game.World.Chunk
         private static bool IsWithinLoaderRange(Vector3 difference)
         {
             int totalValidLoaderRadius =
-                WorldController.Current.WorldGenerationSettings.Radius +  OptionsController.Current.PreLoadChunkDistance;
+                WorldController.Current.WorldGenerationSettings.Radius + OptionsController.Current.PreLoadChunkDistance;
 
             return (difference.x <= (totalValidLoaderRadius * Size.x)) &&
                    (difference.z <= (totalValidLoaderRadius * Size.z));

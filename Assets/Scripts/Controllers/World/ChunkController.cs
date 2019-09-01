@@ -1,13 +1,10 @@
 #region
 
-using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
-using Controllers.Entity;
 using Controllers.Game;
 using Game;
-using Game.Entity;
 using Game.World.Chunk;
 using UnityEngine;
 
@@ -137,16 +134,19 @@ namespace Controllers.World
                 if (chunk == default)
                 {
                     chunk = Instantiate(_ChunkObject, position, Quaternion.identity, transform);
-                    chunk.DeactivationCallback += (sender, chunkPosition) => { _DeactivationQueue.Enqueue(chunkPosition); };
+                    chunk.DeactivationCallback += (sender, chunkPosition) =>
+                    {
+                        _DeactivationQueue.Enqueue(chunkPosition);
+                    };
                 }
                 else
                 {
                     chunk.Activate(position);
                 }
 
-                    AddChunk(chunk);
+                AddChunk(chunk);
 
-                    // ensures that neighbours update their meshes to cull newly out of sight faces
+                // ensures that neighbours update their meshes to cull newly out of sight faces
                 FlagNeighborsPendingUpdate(chunk.Position);
 
                 if (_FrameTimeLimiter.Elapsed > OptionsController.Current.MaximumInternalFrameTime)
@@ -210,7 +210,7 @@ namespace Controllers.World
                 {
                     continue;
                 }
-                
+
                 _ChunkCache.CacheItem(ref chunk);
 
                 if (_FrameTimeLimiter.Elapsed > OptionsController.Current.MaximumInternalFrameTime)

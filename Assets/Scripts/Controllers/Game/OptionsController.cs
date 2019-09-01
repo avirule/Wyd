@@ -40,7 +40,7 @@ namespace Controllers.Game
             public const int MAXIMUM_INTERNAL_FRAMES = 60;
             public const int VSYNC_LEVEL = 1;
             public const int SHADOW_DISTANCE = 3;
-            
+
             // Chunking
             public const bool PRE_INITIALIZE_CHUNK_CACHE = true;
             public const int MAXIMUM_CHUNK_CACHE_SIZE = 20;
@@ -48,7 +48,7 @@ namespace Controllers.Game
             public const int MAXIMUM_CHUNK_LOAD_TIME_BUFFER_SIZE = 60;
             public const int PRE_LOAD_CHUNK_DISTANCE = 2;
         }
-        
+
         private static string _configPath;
 
         public static OptionsController Current;
@@ -69,7 +69,7 @@ namespace Controllers.Game
         public CacheCullingAggression ChunkCacheCullingAggression;
         public int MaximumChunkLoadTimeBufferSize;
         public int PreLoadChunkDistance;
-        
+
         public int VSyncLevel
         {
             get => QualitySettings.vSyncCount;
@@ -179,7 +179,7 @@ namespace Controllers.Game
             }
 
             if (!GetSetting("Chunking", nameof(PreLoadChunkDistance), out PreLoadChunkDistance) ||
-                PreLoadChunkDistance < 0)
+                (PreLoadChunkDistance < 0))
             {
                 SettingLoadError(nameof(PreLoadChunkDistance), Defaults.PRE_LOAD_CHUNK_DISTANCE);
                 PreLoadChunkDistance = Defaults.PRE_LOAD_CHUNK_DISTANCE;
@@ -199,7 +199,7 @@ namespace Controllers.Game
                 "Determines whether the threading mode the game will use when generating chunk data and meshes.";
             _Configuration["General"][nameof(ThreadingMode)].Comment = "(0 = single, 1 = multi, 2 = variable)";
             _Configuration["General"][nameof(ThreadingMode)].IntValue =
-                (int)Defaults.THREADING_MODE;
+                (int) Defaults.THREADING_MODE;
 
 
             // Graphics
@@ -246,7 +246,7 @@ namespace Controllers.Game
             _Configuration["Chunking"][nameof(ChunkCacheCullingAggression)].Comment =
                 "0 = Passive, 1 = Active";
             _Configuration["Chunking"][nameof(ChunkCacheCullingAggression)].IntValue =
-                (int)Defaults.CHUNK_CACHE_CULLING_AGGRESSION;
+                (int) Defaults.CHUNK_CACHE_CULLING_AGGRESSION;
 
             _Configuration["Chunking"][nameof(MaximumChunkLoadTimeBufferSize)].PreComment =
                 "Lower values give a more accurate frame-to-frame reading, with higher values giving more long-term accuracy.";

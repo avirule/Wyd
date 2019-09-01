@@ -21,6 +21,7 @@ namespace Game
 
         public Mesh Mesh { get; private set; }
         public Bounds BoundingBox { get; private set; }
+
         public int Radius
         {
             get => _Radius;
@@ -30,7 +31,7 @@ namespace Game
                 {
                     return;
                 }
-                
+
                 _Radius = value;
                 _ScheduledRecalculation = true;
             }

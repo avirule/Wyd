@@ -1,8 +1,5 @@
 #region
 
-using Controllers.World;
-using UnityEngine;
-
 #endregion
 
 namespace Game.Meshing
@@ -21,7 +18,5 @@ namespace Game.Meshing
         private int chunkPosX = 0;
         private int chunkPosY = 0;
         private int chunkPosZ = 0;
-
-        
     }
 }

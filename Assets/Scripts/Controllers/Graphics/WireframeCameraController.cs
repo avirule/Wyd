@@ -1,6 +1,8 @@
-using System;
-using UnityEditor.U2D;
+#region
+
 using UnityEngine;
+
+#endregion
 
 namespace Controllers.Graphics
 {
@@ -12,7 +14,7 @@ namespace Controllers.Graphics
         private Color _OriginalBackgroundColor;
         private bool _PreviousMode;
         private bool _HasPressed;
-        
+
         public Color WireframeBackgroundColor = Color.black;
         public bool IsWireframeMode;
 
