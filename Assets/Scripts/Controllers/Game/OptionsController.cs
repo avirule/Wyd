@@ -142,7 +142,7 @@ namespace Controllers.Game
 
 
             // Chunking
-            if (!GetSetting("General", nameof(PreInitializeChunkCache), out PreInitializeChunkCache))
+            if (!GetSetting("Chunking", nameof(PreInitializeChunkCache), out PreInitializeChunkCache))
             {
                 EventLog.Logger.Log(LogLevel.Warn,
                     $"Error loading setting {nameof(PreInitializeChunkCache)}.");
