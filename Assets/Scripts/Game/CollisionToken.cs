@@ -12,7 +12,10 @@ namespace Game
 {
     public class CollisionToken : MonoBehaviour
     {
-        public Transform ParentEntityTransform;
+        private List<Vector3> _Vertices;
+        private List<int> _Triangles;
+
+        public Transform AuthorTransform;
         public Mesh Mesh;
         public int Radius;
 
@@ -20,34 +23,36 @@ namespace Game
 
         private void Awake()
         {
-            ParentEntityTransform = transform.parent;
+            _Vertices = new List<Vector3>();
+            _Triangles = new List<int>();
+
+            AuthorTransform = transform.parent;
         }
 
         private void Update()
         {
-            if (ParentEntityTransform == default)
+            if (AuthorTransform == default)
             {
                 return;
             }
 
-            Vector3 difference = (transform.position - ParentEntityTransform.position).Abs();
+            Vector3 difference = (transform.position - AuthorTransform.position).Abs();
 
             if (!Mathv.GreaterThanVector3(difference, Vector3.one))
             {
                 return;
             }
 
-            transform.position = ParentEntityTransform.position.Floor();
-            (Vector3[] vertices, int[] triangles) = CalculateLocalMeshData();
-            Mesh = ProvideNewMeshData(vertices, triangles);
+            transform.position = AuthorTransform.position.Floor();
+
+            CalculateLocalMeshData();
+            ApplyMeshData();
+
             UpdatedMesh?.Invoke(this, Mesh);
         }
 
-        public (Vector3[], int[]) CalculateLocalMeshData()
+        public void CalculateLocalMeshData()
         {
-            List<Vector3> vertices = new List<Vector3>();
-            List<int> triangles = new List<int>();
-
             for (int x = -Radius; x < (Radius + 1); x++)
             {
                 for (int y = -Radius; y < (Radius + 1); y++)
@@ -65,160 +70,122 @@ namespace Game
                         if (BlockController.Current.IsBlockDefaultTransparent(
                             WorldController.Current.GetBlockAtPosition(globalPosition + Vector3.forward)))
                         {
-                            triangles.AddRange(new[]
+                            _Triangles.Add(_Vertices.Count + 0);
+                            _Triangles.Add(_Vertices.Count + 2);
+                            _Triangles.Add(_Vertices.Count + 1);
+                            _Triangles.Add(_Vertices.Count + 2);
+                            _Triangles.Add(_Vertices.Count + 3);
+                            _Triangles.Add(_Vertices.Count + 1);
+
+                            _Vertices.Add(new Vector3(x, y, z + 1));
+                            _Vertices.Add(new Vector3(x, y + 1, z + 1));
+                            _Vertices.Add(new Vector3(x + 1, y, z + 1));
+                            _Vertices.Add(new Vector3(x + 1, y + 1, z + 1));
+
+                            if (BlockController.Current.IsBlockDefaultTransparent(
+                                WorldController.Current.GetBlockAtPosition(globalPosition + Vector3.right)))
                             {
-                                vertices.Count + 0,
-                                vertices.Count + 2,
-                                vertices.Count + 1,
+                                _Triangles.Add(_Vertices.Count + 0);
+                                _Triangles.Add(_Vertices.Count + 2);
+                                _Triangles.Add(_Vertices.Count + 1);
 
-                                vertices.Count + 2,
-                                vertices.Count + 3,
-                                vertices.Count + 1
-                            });
+                                _Triangles.Add(_Vertices.Count + 2);
+                                _Triangles.Add(_Vertices.Count + 3);
+                                _Triangles.Add(_Vertices.Count + 1);
 
-                            vertices.AddRange(new[]
+                                _Vertices.Add(new Vector3(x + 1, y, z));
+                                _Vertices.Add(new Vector3(x + 1, y, z + 1));
+                                _Vertices.Add(new Vector3(x + 1, y + 1, z));
+                                _Vertices.Add(new Vector3(x + 1, y + 1, z + 1));
+                            }
+
+                            if (BlockController.Current.IsBlockDefaultTransparent(
+                                WorldController.Current.GetBlockAtPosition(globalPosition + Vector3.back)))
                             {
-                                new Vector3(x, y, z + 1),
-                                new Vector3(x, y + 1, z + 1),
-                                new Vector3(x + 1, y, z + 1),
-                                new Vector3(x + 1, y + 1, z + 1)
-                            });
-                        }
+                                _Triangles.Add(_Vertices.Count + 0);
+                                _Triangles.Add(_Vertices.Count + 2);
+                                _Triangles.Add(_Vertices.Count + 1);
+                                _Triangles.Add(_Vertices.Count + 2);
+                                _Triangles.Add(_Vertices.Count + 3);
+                                _Triangles.Add(_Vertices.Count + 1);
 
-                        if (BlockController.Current.IsBlockDefaultTransparent(
-                            WorldController.Current.GetBlockAtPosition(globalPosition + Vector3.right)))
-                        {
-                            triangles.AddRange(new[]
+                                _Vertices.Add(new Vector3(x, y, z));
+                                _Vertices.Add(new Vector3(x + 1, y, z));
+                                _Vertices.Add(new Vector3(x, y + 1, z));
+                                _Vertices.Add(new Vector3(x + 1, y + 1, z));
+                            }
+
+                            if (BlockController.Current.IsBlockDefaultTransparent(
+                                WorldController.Current.GetBlockAtPosition(globalPosition + Vector3.left)))
                             {
-                                vertices.Count + 0,
-                                vertices.Count + 2,
-                                vertices.Count + 1,
+                                _Triangles.Add(_Vertices.Count + 0);
+                                _Triangles.Add(_Vertices.Count + 2);
+                                _Triangles.Add(_Vertices.Count + 1);
+                                _Triangles.Add(_Vertices.Count + 2);
+                                _Triangles.Add(_Vertices.Count + 3);
+                                _Triangles.Add(_Vertices.Count + 1);
 
-                                vertices.Count + 2,
-                                vertices.Count + 3,
-                                vertices.Count + 1
-                            });
+                                _Vertices.Add(new Vector3(x, y, z));
+                                _Vertices.Add(new Vector3(x, y + 1, z));
+                                _Vertices.Add(new Vector3(x, y, z + 1));
+                                _Vertices.Add(new Vector3(x, y + 1, z + 1));
+                            }
 
-                            vertices.AddRange(new[]
+                            if (BlockController.Current.IsBlockDefaultTransparent(
+                                WorldController.Current.GetBlockAtPosition(globalPosition + Vector3.up)))
                             {
-                                new Vector3(x + 1, y, z),
-                                new Vector3(x + 1, y, z + 1),
-                                new Vector3(x + 1, y + 1, z),
-                                new Vector3(x + 1, y + 1, z + 1)
-                            });
-                        }
+                                _Triangles.Add(_Vertices.Count + 0);
+                                _Triangles.Add(_Vertices.Count + 2);
+                                _Triangles.Add(_Vertices.Count + 1);
+                                _Triangles.Add(_Vertices.Count + 2);
+                                _Triangles.Add(_Vertices.Count + 3);
+                                _Triangles.Add(_Vertices.Count + 1);
 
-                        if (BlockController.Current.IsBlockDefaultTransparent(
-                            WorldController.Current.GetBlockAtPosition(globalPosition + Vector3.back)))
-                        {
-                            triangles.AddRange(new[]
+                                _Vertices.Add(new Vector3(x, y + 1, z));
+                                _Vertices.Add(new Vector3(x + 1, y + 1, z));
+                                _Vertices.Add(new Vector3(x, y + 1, z + 1));
+                                _Vertices.Add(new Vector3(x + 1, y + 1, z + 1));
+                            }
+
+                            if (BlockController.Current.IsBlockDefaultTransparent(
+                                WorldController.Current.GetBlockAtPosition(globalPosition + Vector3.down)))
                             {
-                                vertices.Count + 0,
-                                vertices.Count + 2,
-                                vertices.Count + 1,
+                                _Triangles.Add(_Vertices.Count + 0);
+                                _Triangles.Add(_Vertices.Count + 2);
+                                _Triangles.Add(_Vertices.Count + 1);
+                                _Triangles.Add(_Vertices.Count + 2);
+                                _Triangles.Add(_Vertices.Count + 3);
+                                _Triangles.Add(_Vertices.Count + 1);
 
-                                vertices.Count + 2,
-                                vertices.Count + 3,
-                                vertices.Count + 1
-                            });
-
-                            vertices.AddRange(new[]
-                            {
-                                new Vector3(x, y, z),
-                                new Vector3(x + 1, y, z),
-                                new Vector3(x, y + 1, z),
-                                new Vector3(x + 1, y + 1, z)
-                            });
-                        }
-
-                        if (BlockController.Current.IsBlockDefaultTransparent(
-                            WorldController.Current.GetBlockAtPosition(globalPosition + Vector3.left)))
-                        {
-                            triangles.AddRange(new[]
-                            {
-                                vertices.Count + 0,
-                                vertices.Count + 2,
-                                vertices.Count + 1,
-
-                                vertices.Count + 2,
-                                vertices.Count + 3,
-                                vertices.Count + 1
-                            });
-
-                            vertices.AddRange(new[]
-                            {
-                                new Vector3(x, y, z),
-                                new Vector3(x, y + 1, z),
-                                new Vector3(x, y, z + 1),
-                                new Vector3(x, y + 1, z + 1)
-                            });
-                        }
-
-                        if (BlockController.Current.IsBlockDefaultTransparent(
-                            WorldController.Current.GetBlockAtPosition(globalPosition + Vector3.up)))
-                        {
-                            triangles.AddRange(new[]
-                            {
-                                vertices.Count + 0,
-                                vertices.Count + 2,
-                                vertices.Count + 1,
-
-                                vertices.Count + 2,
-                                vertices.Count + 3,
-                                vertices.Count + 1
-                            });
-
-                            vertices.AddRange(new[]
-                            {
-                                new Vector3(x, y + 1, z),
-                                new Vector3(x + 1, y + 1, z),
-                                new Vector3(x, y + 1, z + 1),
-                                new Vector3(x + 1, y + 1, z + 1)
-                            });
-                        }
-
-                        if (BlockController.Current.IsBlockDefaultTransparent(
-                            WorldController.Current.GetBlockAtPosition(globalPosition + Vector3.down)))
-                        {
-                            triangles.AddRange(new[]
-                            {
-                                vertices.Count + 0,
-                                vertices.Count + 2,
-                                vertices.Count + 1,
-
-                                vertices.Count + 2,
-                                vertices.Count + 3,
-                                vertices.Count + 1
-                            });
-
-                            vertices.AddRange(new[]
-                            {
-                                new Vector3(x, y, z),
-                                new Vector3(x, y, z + 1),
-                                new Vector3(x + 1, y, z),
-                                new Vector3(x + 1, y, z + 1)
-                            });
+                                _Vertices.Add(new Vector3(x, y, z));
+                                _Vertices.Add(new Vector3(x, y, z + 1));
+                                _Vertices.Add(new Vector3(x + 1, y, z));
+                                _Vertices.Add(new Vector3(x + 1, y, z + 1));
+                            }
                         }
                     }
                 }
             }
-
-            return (vertices.ToArray(), triangles.ToArray());
         }
 
-        private static Mesh ProvideNewMeshData(Vector3[] vertices, int[] triangles)
+        private void ApplyMeshData()
         {
-            Mesh mesh = new Mesh
+            if (Mesh == default)
             {
-                vertices = vertices,
-                triangles = triangles
-            };
+                Mesh = new Mesh();
+            }
+            else
+            {
+                Mesh.Clear();
+            }
 
-            mesh.RecalculateNormals();
-            mesh.RecalculateTangents();
-            mesh.Optimize();
+            Mesh.SetVertices(_Vertices);
+            Mesh.SetTriangles(_Triangles, 0);
 
-            return mesh;
+            Mesh.RecalculateNormals();
+            Mesh.RecalculateTangents();
+            Mesh.RecalculateBounds();
+            Mesh.Optimize();
         }
     }
 }

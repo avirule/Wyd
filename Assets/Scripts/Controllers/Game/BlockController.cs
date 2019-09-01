@@ -4,7 +4,7 @@ using System;
 using System.Collections.Concurrent;
 using System.Linq;
 using Game;
-using Game.World;
+using Game.World.Block;
 using Logging;
 using NLog;
 using UnityEngine;

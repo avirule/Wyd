@@ -2,7 +2,7 @@
 
 using System;
 using System.IO;
-using Game.World;
+using Game.World.Chunk;
 using Logging;
 using NLog;
 using SharpConfig;
@@ -150,12 +150,12 @@ namespace Controllers.Game
             }
 
             if (!GetSetting("Chunking", nameof(MaximumChunkCacheSize), out MaximumChunkCacheSize) ||
-                (MaximumChunkCacheSize < 0) ||
+                (MaximumChunkCacheSize < -1) ||
                 (MaximumChunkCacheSize > 625))
             {
                 EventLog.Logger.Log(LogLevel.Warn,
                     $"Error loading setting {nameof(MaximumChunkCacheSize)}.");
-                MaximumChunkCacheSize = 60;
+                MaximumChunkCacheSize = -1;
             }
 
             if (!GetSetting("Chunking", nameof(ChunkCacheCullingAggression), out ChunkCacheCullingAggression))
@@ -219,13 +219,14 @@ namespace Controllers.Game
 
 
             // Chunking
-            _Configuration["General"][nameof(PreInitializeChunkCache)].PreComment =
+            _Configuration["Chunking"][nameof(PreInitializeChunkCache)].PreComment =
                 "Determines whether the chunk cache is pre-initialized to safe capacity.";
-            _Configuration["General"][nameof(PreInitializeChunkCache)].BoolValue = true;
+            _Configuration["Chunking"][nameof(PreInitializeChunkCache)].BoolValue = true;
 
             _Configuration["Chunking"][nameof(MaximumChunkCacheSize)].PreComment =
                 "Lower values are harder on the CPU, higher values use more RAM.";
-            _Configuration["Chunking"][nameof(MaximumChunkCacheSize)].IntValue = 30;
+            _Configuration["Chunking"][nameof(MaximumChunkCacheSize)].Comment = "(-1 = unlimited)";
+            _Configuration["Chunking"][nameof(MaximumChunkCacheSize)].IntValue = -1;
 
             _Configuration["Chunking"][nameof(ChunkCacheCullingAggression)].PreComment =
                 "Active culling keeps the total cache size below maximum, passive lets it grow until there's free frame time to cull it.";

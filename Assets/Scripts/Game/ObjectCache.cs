@@ -7,22 +7,24 @@ using System.Collections.Concurrent;
 
 namespace Game
 {
-    public class ObjectCache<T>
+    public class ObjectCache<T> where T : new()
     {
         private readonly ConcurrentQueue<T> _InternalCache;
         private Func<T, T> _PreCachingOperation;
         private Action<T> _ItemCulledOperation;
 
+        public bool CreateNewIfEmpty;
         public int MaximumSize;
 
         public int Size => _InternalCache.Count;
 
         public ObjectCache(Func<T, T> preCachingOperation = default, Action<T> itemCulledOperation = default,
-            int maximumSize = -1)
+            bool createNewIfEmpty = false, int maximumSize = -1)
         {
             _InternalCache = new ConcurrentQueue<T>();
             SetPreCachingOperation(preCachingOperation);
             SetItemCulledOperation(itemCulledOperation);
+            CreateNewIfEmpty = createNewIfEmpty;
             MaximumSize = maximumSize;
         }
 
@@ -63,11 +65,21 @@ namespace Game
 
         public T RetrieveItem()
         {
-            return !_InternalCache.TryDequeue(out T item) ? default : item;
+            if (!_InternalCache.TryDequeue(out T item))
+            {
+                return CreateNewIfEmpty ? new T() : default;
+            }
+
+            return item;
         }
 
         private void CullCache()
         {
+            if (MaximumSize == -1)
+            {
+                return;
+            }
+
             while (_InternalCache.Count > MaximumSize)
             {
                 _InternalCache.TryDequeue(out T item);

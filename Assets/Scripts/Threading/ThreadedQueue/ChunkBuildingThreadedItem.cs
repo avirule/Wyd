@@ -2,7 +2,7 @@
 
 using Controllers.Game;
 using Controllers.World;
-using Game.World;
+using Game.World.Chunk;
 using Noise.OpenSimplex;
 using UnityEngine;
 using Random = System.Random;
@@ -16,17 +16,23 @@ namespace Threading.ThreadedQueue
         private static readonly OpenSimplexNoise NoiseFunction =
             new OpenSimplexNoise(WorldController.Current.WorldGenerationSettings.Seed);
 
-        private readonly Random _Rand;
-        private readonly Vector3 _Position;
-        private readonly ushort[] _Blocks;
+        private Random _Rand;
+        private Vector3 _Position;
+        private ushort[] _Blocks;
 
         /// <summary>
         ///     Initialises a new instance of the <see cref="Threading.ThreadedQueue.ChunkBuildingThreadedItem" /> class.
         /// </summary>
-        /// <param name="position"></param>
-        /// <param name="blocks">Pre-initialized <see cref="T:Block[]" /> of blocks to iterate through.</param>
-        /// <seealso cref="Threading.ThreadedQueue.ChunkMeshingThreadedItem" />
-        public ChunkBuildingThreadedItem(Vector3 position, ref ushort[] blocks) : base(true)
+        public ChunkBuildingThreadedItem() : base(true)
+        {
+        }
+
+        /// <summary>
+        ///     Prepares item for new execution.
+        /// </summary>
+        /// <param name="position"><see cref="UnityEngine.Vector3" /> position of chunk being meshed.</param>
+        /// <param name="blocks">Pre-initialized and built <see cref="T:ushort[]" /> to iterate through.</param>
+        public void Set(Vector3 position, ushort[] blocks)
         {
             _Rand = new Random(WorldController.Current.WorldGenerationSettings.Seed);
             _Position = position;
@@ -35,6 +41,11 @@ namespace Threading.ThreadedQueue
 
         protected override void Process()
         {
+            if (_Blocks == default)
+            {
+                return;
+            }
+        
             for (int index = 0; index < _Blocks.Length; index++)
             {
                 //GenerateCheckerBoard(index);

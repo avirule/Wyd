@@ -10,7 +10,7 @@ using UnityEngine;
 
 #endregion
 
-namespace Game.World
+namespace Game.World.Chunk
 {
     public enum ThreadingMode
     {
@@ -21,6 +21,12 @@ namespace Game.World
 
     public class Chunk : MonoBehaviour, IEntityChunkChangedSubscriber
     {
+        private static readonly ObjectCache<ChunkBuildingThreadedItem> ChunkBuildersCache =
+            new ObjectCache<ChunkBuildingThreadedItem>(null, null, true);
+
+        private static readonly ObjectCache<ChunkMeshingThreadedItem> ChunkMeshersCache =
+            new ObjectCache<ChunkMeshingThreadedItem>(null, null, true);
+
         public static readonly ThreadedQueue ThreadedExecutionQueue = new ThreadedQueue(200, 4000);
         public static readonly Vector3Int Size = new Vector3Int(32, 256, 32);
 
@@ -63,7 +69,9 @@ namespace Game.World
             _Position = transform.position;
             _Blocks = new ushort[Size.x * Size.y * Size.z];
             Built = Building = Meshed = Meshing = PendingMeshUpdate = false;
+            _Mesh = new Mesh();
 
+            MeshFilter.sharedMesh = _Mesh;
             MeshRenderer.material.SetTexture(TextureController.Current.MainTex,
                 TextureController.Current.TerrainTexture);
 
@@ -94,6 +102,11 @@ namespace Game.World
             {
                 GenerationCheckAndStart();
             }
+        }
+
+        private void OnDestroy()
+        {
+            Destroy(_Mesh);
         }
 
         private void OnApplicationQuit()
@@ -130,7 +143,10 @@ namespace Game.World
             Built = false;
             Building = true;
 
-            return ThreadedExecutionQueue.AddThreadedItem(new ChunkBuildingThreadedItem(Position, ref _Blocks));
+            ChunkBuildingThreadedItem threadedItem = ChunkBuildersCache.RetrieveItem();
+            threadedItem.Set(Position, _Blocks);
+
+            return ThreadedExecutionQueue.AddThreadedItem(threadedItem);
         }
 
         private object BeginGenerateMesh()
@@ -143,10 +159,19 @@ namespace Game.World
             Meshed = PendingMeshUpdate = false;
             Meshing = true;
 
-            return ThreadedExecutionQueue.AddThreadedItem(new ChunkMeshingThreadedItem(Position, _Blocks));
+            ChunkMeshingThreadedItem threadedItem = ChunkMeshersCache.RetrieveItem();
+            threadedItem.Set(Position, _Blocks);
+
+            return ThreadedExecutionQueue.AddThreadedItem(threadedItem);
         }
 
         private void GenerationCheckAndStart()
+        {
+            CheckBuildingOrStart();
+            CheckMeshingOrStart();
+        }
+
+        private void CheckBuildingOrStart()
         {
             if (Building)
             {
@@ -162,7 +187,10 @@ namespace Game.World
             {
                 _BuildingIdentity = BeginBuildChunk();
             }
+        }
 
+        private void CheckMeshingOrStart()
+        {
             if (Meshing)
             {
                 if (ThreadedExecutionQueue.TryGetFinishedItem(_MeshingIdentity, out ThreadedItem threadedItem))
@@ -171,7 +199,6 @@ namespace Game.World
                     Meshed = true;
 
                     ((ChunkMeshingThreadedItem) threadedItem).SetMesh(ref _Mesh);
-                    MeshFilter.mesh = _Mesh;
 
                     DiagnosticsPanelController.ChunkMeshTimes.Enqueue(threadedItem.ExecutionTime.TotalMilliseconds);
                 }

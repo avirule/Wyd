@@ -4,7 +4,7 @@ using System.Collections.Generic;
 using Controllers.Game;
 using Controllers.World;
 using Game;
-using Game.World;
+using Game.World.Chunk;
 using UnityEngine;
 using UnityEngine.Rendering;
 
@@ -14,30 +14,46 @@ namespace Threading.ThreadedQueue
 {
     public class ChunkMeshingThreadedItem : ThreadedItem
     {
-        private readonly Vector3 _Position;
-        private readonly ushort[] _Blocks;
         private readonly List<int> _Triangles;
         private readonly List<Vector3> _Vertices;
         private readonly List<Vector3> _UVs;
 
+        private Vector3 _Position;
+        private ushort[] _Blocks;
+
         /// <summary>
         ///     Initialises a new instance of the <see cref="Threading.ThreadedQueue.ChunkMeshingThreadedItem" /> class.
         /// </summary>
-        /// <param name="position"><see cref="UnityEngine.Vector3Int" /> position of chunk being meshed.</param>
-        /// <param name="blocks">Pre-initialized and built <see cref="T:Block[]" /> to iterate through.</param>
-        /// <param name="mesh"></param>
         /// <seealso cref="Threading.ThreadedQueue.ChunkBuildingThreadedItem" />
-        public ChunkMeshingThreadedItem(Vector3 position, ushort[] blocks)
+        public ChunkMeshingThreadedItem()
         {
-            _Position = position;
-            _Blocks = blocks;
             _Triangles = new List<int>();
             _Vertices = new List<Vector3>();
             _UVs = new List<Vector3>();
         }
 
+        /// <summary>
+        ///     Prepares item for new execution.
+        /// </summary>
+        /// <param name="position"><see cref="UnityEngine.Vector3" /> position of chunk being meshed.</param>
+        /// <param name="blocks">Pre-initialized and built <see cref="T:ushort[]" /> to iterate through.</param>
+        public void Set(Vector3 position, ushort[] blocks)
+        {
+            _Vertices.Clear();
+            _Triangles.Clear();
+            _UVs.Clear();
+
+            _Position = position;
+            _Blocks = blocks;
+        }
+
         protected override void Process()
         {
+            if (_Blocks == default)
+            {
+                return;
+            }
+            
             for (int index = 0; index < _Blocks.Length; index++)
             {
                 if (_Blocks[index] == BlockController._BLOCK_EMPTY_ID)
@@ -54,35 +70,25 @@ namespace Threading.ThreadedQueue
                     ((z < (Chunk.Size.z - 1)) &&
                      BlockController.Current.IsBlockTransparent(_Blocks[index + Chunk.Size.x])))
                 {
-                    _Triangles.AddRange(new[]
-                    {
-                        _Vertices.Count + 0,
-                        _Vertices.Count + 2,
-                        _Vertices.Count + 1,
+                    _Triangles.Add(_Vertices.Count + 0);
+                    _Triangles.Add(_Vertices.Count + 2);
+                    _Triangles.Add(_Vertices.Count + 1);
+                    _Triangles.Add(_Vertices.Count + 2);
+                    _Triangles.Add(_Vertices.Count + 3);
+                    _Triangles.Add(_Vertices.Count + 1);
 
-                        _Vertices.Count + 2,
-                        _Vertices.Count + 3,
-                        _Vertices.Count + 1
-                    });
-
-                    _Vertices.AddRange(new[]
-                    {
-                        new Vector3(x, y, z + 1),
-                        new Vector3(x, y + 1, z + 1),
-                        new Vector3(x + 1, y, z + 1),
-                        new Vector3(x + 1, y + 1, z + 1)
-                    });
+                    _Vertices.Add(new Vector3(x, y, z + 1));
+                    _Vertices.Add(new Vector3(x, y + 1, z + 1));
+                    _Vertices.Add(new Vector3(x + 1, y, z + 1));
+                    _Vertices.Add(new Vector3(x + 1, y + 1, z + 1));
 
                     if (BlockController.Current.GetBlockSpriteUVs(_Blocks[index], globalPosition,
                         Direction.North, new Vector3(1f, 0f, 1f), out Vector3[] uvs))
                     {
-                        _UVs.AddRange(new[]
-                        {
-                            uvs[1],
-                            uvs[3],
-                            uvs[0],
-                            uvs[2]
-                        });
+                        _UVs.Add(uvs[1]);
+                        _UVs.Add(uvs[3]);
+                        _UVs.Add(uvs[0]);
+                        _UVs.Add(uvs[2]);
                     }
                 }
 
@@ -91,35 +97,25 @@ namespace Threading.ThreadedQueue
                          WorldController.Current.GetBlockAtPosition(globalPosition + Vector3.right))) ||
                     ((x < (Chunk.Size.x - 1)) && BlockController.Current.IsBlockTransparent(_Blocks[index + 1])))
                 {
-                    _Triangles.AddRange(new[]
-                    {
-                        _Vertices.Count + 0,
-                        _Vertices.Count + 2,
-                        _Vertices.Count + 1,
+                    _Triangles.Add(_Vertices.Count + 0);
+                    _Triangles.Add(_Vertices.Count + 2);
+                    _Triangles.Add(_Vertices.Count + 1);
+                    _Triangles.Add(_Vertices.Count + 2);
+                    _Triangles.Add(_Vertices.Count + 3);
+                    _Triangles.Add(_Vertices.Count + 1);
 
-                        _Vertices.Count + 2,
-                        _Vertices.Count + 3,
-                        _Vertices.Count + 1
-                    });
-
-                    _Vertices.AddRange(new[]
-                    {
-                        new Vector3(x + 1, y, z),
-                        new Vector3(x + 1, y, z + 1),
-                        new Vector3(x + 1, y + 1, z),
-                        new Vector3(x + 1, y + 1, z + 1)
-                    });
+                    _Vertices.Add(new Vector3(x + 1, y, z));
+                    _Vertices.Add(new Vector3(x + 1, y, z + 1));
+                    _Vertices.Add(new Vector3(x + 1, y + 1, z));
+                    _Vertices.Add(new Vector3(x + 1, y + 1, z + 1));
 
                     if (BlockController.Current.GetBlockSpriteUVs(_Blocks[index], globalPosition,
                         Direction.East, new Vector3(1f, 0f, 1f), out Vector3[] uvs))
                     {
-                        _UVs.AddRange(new[]
-                        {
-                            uvs[0],
-                            uvs[1],
-                            uvs[2],
-                            uvs[3]
-                        });
+                        _UVs.Add(uvs[0]);
+                        _UVs.Add(uvs[1]);
+                        _UVs.Add(uvs[2]);
+                        _UVs.Add(uvs[3]);
                     }
                 }
 
@@ -128,35 +124,25 @@ namespace Threading.ThreadedQueue
                          WorldController.Current.GetBlockAtPosition(globalPosition + Vector3.back))) ||
                     ((z > 0) && BlockController.Current.IsBlockTransparent(_Blocks[index - Chunk.Size.x])))
                 {
-                    _Triangles.AddRange(new[]
-                    {
-                        _Vertices.Count + 0,
-                        _Vertices.Count + 2,
-                        _Vertices.Count + 1,
+                    _Triangles.Add(_Vertices.Count + 0);
+                    _Triangles.Add(_Vertices.Count + 2);
+                    _Triangles.Add(_Vertices.Count + 1);
+                    _Triangles.Add(_Vertices.Count + 2);
+                    _Triangles.Add(_Vertices.Count + 3);
+                    _Triangles.Add(_Vertices.Count + 1);
 
-                        _Vertices.Count + 2,
-                        _Vertices.Count + 3,
-                        _Vertices.Count + 1
-                    });
-
-                    _Vertices.AddRange(new[]
-                    {
-                        new Vector3(x, y, z),
-                        new Vector3(x + 1, y, z),
-                        new Vector3(x, y + 1, z),
-                        new Vector3(x + 1, y + 1, z)
-                    });
+                    _Vertices.Add(new Vector3(x, y, z));
+                    _Vertices.Add(new Vector3(x + 1, y, z));
+                    _Vertices.Add(new Vector3(x, y + 1, z));
+                    _Vertices.Add(new Vector3(x + 1, y + 1, z));
 
                     if (BlockController.Current.GetBlockSpriteUVs(_Blocks[index], globalPosition,
                         Direction.South, new Vector3(1f, 0f, 1f), out Vector3[] uvs))
                     {
-                        _UVs.AddRange(new[]
-                        {
-                            uvs[0],
-                            uvs[1],
-                            uvs[2],
-                            uvs[3]
-                        });
+                        _UVs.Add(uvs[0]);
+                        _UVs.Add(uvs[1]);
+                        _UVs.Add(uvs[2]);
+                        _UVs.Add(uvs[3]);
                     }
                 }
 
@@ -164,35 +150,25 @@ namespace Threading.ThreadedQueue
                          WorldController.Current.GetBlockAtPosition(globalPosition + Vector3.left))) ||
                     ((x > 0) && BlockController.Current.IsBlockTransparent(_Blocks[index - 1])))
                 {
-                    _Triangles.AddRange(new[]
-                    {
-                        _Vertices.Count + 0,
-                        _Vertices.Count + 2,
-                        _Vertices.Count + 1,
+                    _Triangles.Add(_Vertices.Count + 0);
+                    _Triangles.Add(_Vertices.Count + 2);
+                    _Triangles.Add(_Vertices.Count + 1);
+                    _Triangles.Add(_Vertices.Count + 2);
+                    _Triangles.Add(_Vertices.Count + 3);
+                    _Triangles.Add(_Vertices.Count + 1);
 
-                        _Vertices.Count + 2,
-                        _Vertices.Count + 3,
-                        _Vertices.Count + 1
-                    });
-
-                    _Vertices.AddRange(new[]
-                    {
-                        new Vector3(x, y, z),
-                        new Vector3(x, y + 1, z),
-                        new Vector3(x, y, z + 1),
-                        new Vector3(x, y + 1, z + 1)
-                    });
+                    _Vertices.Add(new Vector3(x, y, z));
+                    _Vertices.Add(new Vector3(x, y + 1, z));
+                    _Vertices.Add(new Vector3(x, y, z + 1));
+                    _Vertices.Add(new Vector3(x, y + 1, z + 1));
 
                     if (BlockController.Current.GetBlockSpriteUVs(_Blocks[index], globalPosition,
                         Direction.West, new Vector3(1f, 0f, 1f), out Vector3[] uvs))
                     {
-                        _UVs.AddRange(new[]
-                        {
-                            uvs[1],
-                            uvs[3],
-                            uvs[0],
-                            uvs[2]
-                        });
+                        _UVs.Add(uvs[1]);
+                        _UVs.Add(uvs[3]);
+                        _UVs.Add(uvs[0]);
+                        _UVs.Add(uvs[2]);
                     }
                 }
 
@@ -202,35 +178,25 @@ namespace Threading.ThreadedQueue
                     ((y < (Chunk.Size.y - 1)) &&
                      BlockController.Current.IsBlockTransparent(_Blocks[index + (Chunk.Size.x * Chunk.Size.z)])))
                 {
-                    _Triangles.AddRange(new[]
-                    {
-                        _Vertices.Count + 0,
-                        _Vertices.Count + 2,
-                        _Vertices.Count + 1,
+                    _Triangles.Add(_Vertices.Count + 0);
+                    _Triangles.Add(_Vertices.Count + 2);
+                    _Triangles.Add(_Vertices.Count + 1);
+                    _Triangles.Add(_Vertices.Count + 2);
+                    _Triangles.Add(_Vertices.Count + 3);
+                    _Triangles.Add(_Vertices.Count + 1);
 
-                        _Vertices.Count + 2,
-                        _Vertices.Count + 3,
-                        _Vertices.Count + 1
-                    });
-
-                    _Vertices.AddRange(new[]
-                    {
-                        new Vector3(x, y + 1, z),
-                        new Vector3(x + 1, y + 1, z),
-                        new Vector3(x, y + 1, z + 1),
-                        new Vector3(x + 1, y + 1, z + 1)
-                    });
+                    _Vertices.Add(new Vector3(x, y + 1, z));
+                    _Vertices.Add(new Vector3(x + 1, y + 1, z));
+                    _Vertices.Add(new Vector3(x, y + 1, z + 1));
+                    _Vertices.Add(new Vector3(x + 1, y + 1, z + 1));
 
                     if (BlockController.Current.GetBlockSpriteUVs(_Blocks[index], globalPosition,
                         Direction.Up, new Vector3(1f, 0f, 1f), out Vector3[] uvs))
                     {
-                        _UVs.AddRange(new[]
-                        {
-                            uvs[0],
-                            uvs[2],
-                            uvs[1],
-                            uvs[3]
-                        });
+                        _UVs.Add(uvs[0]);
+                        _UVs.Add(uvs[2]);
+                        _UVs.Add(uvs[1]);
+                        _UVs.Add(uvs[3]);
                     }
                 }
 
@@ -239,35 +205,25 @@ namespace Threading.ThreadedQueue
                     ((y > 0) && BlockController.Current.IsBlockTransparent(
                          _Blocks[index - (Chunk.Size.x * Chunk.Size.z)])))
                 {
-                    _Triangles.AddRange(new[]
-                    {
-                        _Vertices.Count + 0,
-                        _Vertices.Count + 2,
-                        _Vertices.Count + 1,
+                    _Triangles.Add(_Vertices.Count + 0);
+                    _Triangles.Add(_Vertices.Count + 2);
+                    _Triangles.Add(_Vertices.Count + 1);
+                    _Triangles.Add(_Vertices.Count + 2);
+                    _Triangles.Add(_Vertices.Count + 3);
+                    _Triangles.Add(_Vertices.Count + 1);
 
-                        _Vertices.Count + 2,
-                        _Vertices.Count + 3,
-                        _Vertices.Count + 1
-                    });
-
-                    _Vertices.AddRange(new[]
-                    {
-                        new Vector3(x, y, z),
-                        new Vector3(x, y, z + 1),
-                        new Vector3(x + 1, y, z),
-                        new Vector3(x + 1, y, z + 1)
-                    });
+                    _Vertices.Add(new Vector3(x, y, z));
+                    _Vertices.Add(new Vector3(x, y, z + 1));
+                    _Vertices.Add(new Vector3(x + 1, y, z));
+                    _Vertices.Add(new Vector3(x + 1, y, z + 1));
 
                     if (BlockController.Current.GetBlockSpriteUVs(_Blocks[index], globalPosition,
                         Direction.Down, new Vector3(1f, 0f, 1f), out Vector3[] uvs))
                     {
-                        _UVs.AddRange(new[]
-                        {
-                            uvs[0],
-                            uvs[1],
-                            uvs[2],
-                            uvs[3]
-                        });
+                        _UVs.Add(uvs[0]);
+                        _UVs.Add(uvs[1]);
+                        _UVs.Add(uvs[2]);
+                        _UVs.Add(uvs[3]);
                     }
                 }
             }
@@ -278,12 +234,12 @@ namespace Threading.ThreadedQueue
         /// </summary>
         /// <param name="mesh">Given <see cref="UnityEngine.Mesh" /> to apply processed data to.</param>
         /// <returns>Processed <see cref="UnityEngine.Mesh" />.</returns>
-        public Mesh SetMesh(ref Mesh mesh)
+        public void SetMesh(ref Mesh mesh)
         {
             if ((_Vertices.Count == 0) ||
                 (_Triangles.Count == 0))
             {
-                return mesh;
+                return;
             }
 
             if (mesh == default)
@@ -306,9 +262,8 @@ namespace Threading.ThreadedQueue
 
             mesh.RecalculateNormals();
             mesh.RecalculateTangents();
+            mesh.RecalculateBounds();
             mesh.Optimize();
-
-            return mesh;
         }
     }
 }

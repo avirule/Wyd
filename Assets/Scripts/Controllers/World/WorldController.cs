@@ -7,6 +7,7 @@ using Controllers.Game;
 using Game;
 using Game.Entity;
 using Game.World;
+using Game.World.Chunk;
 using Logging;
 using NLog;
 using UnityEngine;
@@ -118,7 +119,7 @@ namespace Controllers.World
         {
             GameObject entityToken = Instantiate(_CollisionToken, transform);
             CollisionToken collisionToken = entityToken.GetComponent<CollisionToken>();
-            collisionToken.ParentEntityTransform = parent;
+            collisionToken.AuthorTransform = parent;
             collisionToken.Radius = radius;
             collisionToken.UpdatedMesh += OnEntityChangedMesh;
 

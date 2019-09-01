@@ -1,7 +1,7 @@
 #region
 
 using Controllers.Game;
-using Game.World;
+using Game.World.Chunk;
 using UnityEngine;
 
 #endregion

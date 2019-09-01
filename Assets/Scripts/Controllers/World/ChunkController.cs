@@ -8,7 +8,7 @@ using Controllers.Entity;
 using Controllers.Game;
 using Game;
 using Game.Entity;
-using Game.World;
+using Game.World.Chunk;
 using UnityEngine;
 
 #endregion
@@ -53,7 +53,7 @@ namespace Controllers.World
 
         private void Start()
         {
-            _ChunkCache = new ObjectCache<Chunk>(DeactivateChunk, chunk => Destroy(chunk.gameObject),
+            _ChunkCache = new ObjectCache<Chunk>(DeactivateChunk, chunk => Destroy(chunk.gameObject), false,
                 OptionsController.Current.MaximumChunkCacheSize);
 
             PlayerController.Current.RegisterEntityChangedSubscriber(this);
@@ -241,7 +241,7 @@ namespace Controllers.World
             while (_DeactivationQueue.Count > 0)
             {
                 Chunk chunk = _DeactivationQueue.Dequeue();
-                DeactivateChunk(chunk);
+                _ChunkCache.CacheItem(ref chunk);
 
                 if (_FrameTimeLimiter.Elapsed.TotalSeconds > OptionsController.Current.MaximumInternalFrameTime)
                 {
