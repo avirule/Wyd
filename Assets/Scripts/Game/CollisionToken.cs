@@ -14,10 +14,28 @@ namespace Game
     {
         private List<Vector3> _Vertices;
         private List<int> _Triangles;
+        private bool _ScheduledRecalculation;
 
         public Transform AuthorTransform;
-        public Mesh Mesh;
-        public int Radius;
+        private int _Radius;
+
+        public Mesh Mesh { get; private set; }
+        public Bounds BoundingBox { get; private set; }
+        public int Radius
+        {
+            get => _Radius;
+            set
+            {
+                if (_Radius == value)
+                {
+                    return;
+                }
+                
+                _Radius = value;
+                _ScheduledRecalculation = true;
+            }
+        }
+
 
         public event EventHandler<Mesh> UpdatedMesh;
 
@@ -38,17 +56,14 @@ namespace Game
 
             Vector3 difference = (transform.position - AuthorTransform.position).Abs();
 
-            if (!Mathv.GreaterThanVector3(difference, Vector3.one))
+            if (!Mathv.GreaterThanVector3(difference, Vector3.one) && !_ScheduledRecalculation)
             {
                 return;
             }
 
             transform.position = AuthorTransform.position.Floor();
 
-            CalculateLocalMeshData();
-            ApplyMeshData();
-
-            UpdatedMesh?.Invoke(this, Mesh);
+            Recalculate();
         }
 
         private void OnDestroy()
@@ -56,7 +71,17 @@ namespace Game
             Destroy(Mesh);
         }
 
-        public void CalculateLocalMeshData()
+        private void Recalculate()
+        {
+            RecalculateBoundingBox();
+            CalculateLocalMeshData();
+            ApplyMeshData();
+
+            UpdatedMesh?.Invoke(this, Mesh);
+            _ScheduledRecalculation = false;
+        }
+
+        private void CalculateLocalMeshData()
         {
             _Vertices.Clear();
             _Triangles.Clear();
@@ -192,6 +217,15 @@ namespace Game
 
             Mesh.RecalculateNormals();
             Mesh.RecalculateTangents();
+        }
+
+
+        private void RecalculateBoundingBox()
+        {
+            // +1 to include center blocks / position
+            int size = (Radius * 2) + 1;
+
+            BoundingBox = new Bounds(transform.position, new Vector3(size, size, size));
         }
     }
 }
