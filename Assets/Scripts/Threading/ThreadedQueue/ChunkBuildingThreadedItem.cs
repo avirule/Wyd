@@ -45,7 +45,7 @@ namespace Threading.ThreadedQueue
             {
                 return;
             }
-        
+
             for (int index = 0; index < _Blocks.Length; index++)
             {
                 //GenerateCheckerBoard(index);
@@ -155,10 +155,7 @@ namespace Threading.ThreadedQueue
         {
             (int x, int y, int z) = Mathv.GetVector3IntIndex(index, Chunk.Size);
 
-            int val = _Rand.Next(0, 4);
-
-
-            if ((y < 4) && (y <= val))
+            if ((y < 4) && (y <= _Rand.Next(0, 4)))
             {
                 _Blocks[index] = BlockController.Current.GetBlockId("Bedrock");
             }

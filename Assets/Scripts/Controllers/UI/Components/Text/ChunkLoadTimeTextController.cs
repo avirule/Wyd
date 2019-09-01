@@ -1,8 +1,12 @@
+#region
+
 using System;
 using System.Linq;
 using Game.World.Chunk;
 using TMPro;
 using UnityEngine;
+
+#endregion
 
 namespace Controllers.UI.Components.Text
 {
@@ -27,11 +31,10 @@ namespace Controllers.UI.Components.Text
 
         private void Update()
         {
-
             (double buildTime, double meshTime) = CalculateBuildAndMeshTimes();
-            
-            if (Math.Abs(buildTime - _LastBuildTime) > _TOLERANCE ||
-                Math.Abs(meshTime - _LastMeshTime) > _TOLERANCE)
+
+            if ((Math.Abs(buildTime - _LastBuildTime) > _TOLERANCE) ||
+                (Math.Abs(meshTime - _LastMeshTime) > _TOLERANCE))
             {
                 UpdateChunkLoadTimeText(buildTime, meshTime);
             }
@@ -47,7 +50,7 @@ namespace Controllers.UI.Components.Text
 
             return (buildTime, meshTime);
         }
-        
+
         private void UpdateChunkLoadTimeText(double buildTime, double meshTime)
         {
             _LastBuildTime = buildTime;

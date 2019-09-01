@@ -53,7 +53,7 @@ namespace Threading.ThreadedQueue
             {
                 return;
             }
-            
+
             for (int index = 0; index < _Blocks.Length; index++)
             {
                 if (_Blocks[index] == BlockController._BLOCK_EMPTY_ID)

@@ -2,7 +2,6 @@
 
 using System;
 using System.Collections.Generic;
-using System.Security.Cryptography;
 using Controllers.Entity;
 using Controllers.Game;
 using Game;
@@ -89,7 +88,6 @@ namespace Controllers.World
             {
                 GenerateColliderMesh();
             }
-
         }
 
         private void OnApplicationQuit()
@@ -103,11 +101,11 @@ namespace Controllers.World
 
             foreach (CollisionToken collisionToken in _CollisionTokens)
             {
-                if (collisionToken.Mesh == default || collisionToken.Mesh.vertexCount == 0)
+                if ((collisionToken.Mesh == default) || (collisionToken.Mesh.vertexCount == 0))
                 {
                     continue;
                 }
-                    
+
                 CombineInstance combine = new CombineInstance
                 {
                     mesh = collisionToken.Mesh,
@@ -123,10 +121,10 @@ namespace Controllers.World
             _ColliderMesh.Optimize();
 
             MeshCollider.sharedMesh = _ColliderMesh;
-            
+
             _UpdateColliderMesh = false;
         }
-        
+
         public ushort GetBlockAtPosition(Vector3 position)
         {
             return ChunkController.GetBlockAtPosition(position);

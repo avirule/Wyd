@@ -3,7 +3,6 @@
 using System.Collections.Concurrent;
 using Controllers.Entity;
 using Controllers.Game;
-using Controllers.UI.Diagnostics;
 using Controllers.World;
 using Game.Entity;
 using Threading.ThreadedQueue;
@@ -105,7 +104,7 @@ namespace Game.World.Chunk
             {
                 GenerationCheckAndStart();
             }
-            
+
             CullChunkLoadTimesQueue();
         }
 
@@ -132,7 +131,7 @@ namespace Game.World.Chunk
                 MeshTimes.TryDequeue(out double _);
             }
         }
-        
+
         #region ACTIVATION STATE
 
         public void Activate(Vector3 position = default)
