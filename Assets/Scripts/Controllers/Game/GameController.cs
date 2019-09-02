@@ -12,21 +12,11 @@ using UnityEngine.SceneManagement;
 
 namespace Controllers.Game
 {
-    public class GameController : MonoBehaviour
+    public class GameController : SingletonController<GameController>
     {
-        public static GameController Current;
-
         private void Awake()
         {
-            if ((Current != null) && (Current != this))
-            {
-                Destroy(gameObject);
-            }
-            else
-            {
-                Current = this;
-            }
-
+            AssignCurrent(this);
             DontDestroyOnLoad(this);
             ToggleCursorLocked(true);
             QualitySettings.vSyncCount = 0;

@@ -28,7 +28,7 @@ namespace Controllers.Game
         Active = 1
     }
 
-    public class OptionsController : MonoBehaviour
+    public class OptionsController : SingletonController<OptionsController>
     {
         public static class Defaults
         {
@@ -50,8 +50,6 @@ namespace Controllers.Game
         }
 
         private static string _configPath;
-
-        public static OptionsController Current;
 
         private Configuration _Configuration;
 
@@ -80,14 +78,7 @@ namespace Controllers.Game
 
         private void Awake()
         {
-            if ((Current != default) && (Current != this))
-            {
-                Destroy(gameObject);
-            }
-            else
-            {
-                Current = this;
-            }
+            AssignCurrent(this);
 
             _configPath = $@"{Application.persistentDataPath}/config.ini";
         }

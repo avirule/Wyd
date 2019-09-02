@@ -286,7 +286,7 @@ namespace Game.World.Chunk
             int localPosition1d = Get1DLocal(position);
 
             if ((_Blocks.Length <= localPosition1d) ||
-                (_Blocks[localPosition1d] == BlockController._BLOCK_EMPTY_ID))
+                (_Blocks[localPosition1d] == BlockController.BLOCK_EMPTY_ID))
             {
                 return false;
             }

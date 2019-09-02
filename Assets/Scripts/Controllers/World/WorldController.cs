@@ -17,24 +17,17 @@ using UnityEngine.SceneManagement;
 
 namespace Controllers.World
 {
-    public class WorldController : MonoBehaviour, IEntityChunkChangedSubscriber
+    public class WorldController : SingletonController<WorldController>
     {
-        public static WorldController Current;
-
-        private GameObject _CollisionToken;
-        private List<CollisionToken> _CollisionTokens;
-        private Mesh _ColliderMesh;
-        private bool _UpdateColliderMesh;
-
-        public MeshCollider MeshCollider;
-        public long InitialTick;
-        public TimeSpan WorldTickRate;
-        public float TicksPerSecond;
+        public CollisionTokenController CollisionTokenController;
         public WorldGenerationSettings WorldGenerationSettings;
         public ChunkController ChunkController;
-        public DateTime UpdateTime;
+        public float TicksPerSecond;
 
+        public long InitialTick { get; private set; }
+        public TimeSpan WorldTickRate { get; private set; }
         public bool PrimaryLoaderChangedChunk { get; set; }
+        public DateTime UpdateTime { get; private set; }
 
         private void Awake()
         {
@@ -43,14 +36,7 @@ namespace Controllers.World
                 SceneManager.LoadSceneAsync("Scenes/MainMenu", LoadSceneMode.Single);
             }
 
-            if ((Current != null) && (Current != this))
-            {
-                Destroy(gameObject);
-            }
-            else
-            {
-                Current = this;
-            }
+            AssignCurrent(this);
 
             if (TicksPerSecond < 1)
             {
@@ -60,20 +46,9 @@ namespace Controllers.World
                 return;
             }
 
-            _CollisionToken = Resources.Load<GameObject>($@"Prefabs/{nameof(CollisionToken)}");
-
             WorldTickRate = TimeSpan.FromSeconds(1d / TicksPerSecond);
 
-            _CollisionTokens = new List<CollisionToken>();
-            _ColliderMesh = new Mesh();
-            _UpdateColliderMesh = false;
-
             InitialTick = DateTime.Now.Ticks;
-        }
-
-        private void Start()
-        {
-            PlayerController.Current.RegisterEntityChangedSubscriber(this);
         }
 
         private void Update()
@@ -86,46 +61,6 @@ namespace Controllers.World
 
                 PrimaryLoaderChangedChunk = false;
             }
-
-            if (_UpdateColliderMesh)
-            {
-                GenerateColliderMesh();
-            }
-        }
-
-        private void OnApplicationQuit()
-        {
-            Destroy(_ColliderMesh);
-        }
-
-        private void GenerateColliderMesh()
-        {
-            List<CombineInstance> combines = new List<CombineInstance>();
-
-            foreach (CollisionToken collisionToken in _CollisionTokens)
-            {
-                if ((collisionToken.Mesh == default) || (collisionToken.Mesh.vertexCount == 0))
-                {
-                    continue;
-                }
-
-                CombineInstance combine = new CombineInstance
-                {
-                    mesh = collisionToken.Mesh,
-                    transform = collisionToken.transform.localToWorldMatrix
-                };
-
-                combines.Add(combine);
-            }
-
-            _ColliderMesh.CombineMeshes(combines.ToArray(), true, true);
-            _ColliderMesh.RecalculateNormals();
-            _ColliderMesh.RecalculateTangents();
-            _ColliderMesh.Optimize();
-
-            MeshCollider.sharedMesh = _ColliderMesh;
-
-            _UpdateColliderMesh = false;
         }
 
         public bool IsOnBorrowedUpdateTime()
@@ -133,26 +68,10 @@ namespace Controllers.World
             return (DateTime.Now - UpdateTime) > OptionsController.Current.MaximumInternalFrameTime;
         }
 
-        #region ENTITY MANAGMENT
-
-        public void RegisterEntity(Transform parent, int radius = 2)
+        public void RegisterEntity(Transform attachTo, int loadRadius)
         {
-            GameObject entityToken = Instantiate(_CollisionToken, transform);
-            CollisionToken collisionToken = entityToken.GetComponent<CollisionToken>();
-            collisionToken.AuthorTransform = parent;
-            collisionToken.Radius = radius;
-            collisionToken.UpdatedMesh += OnEntityChangedMesh;
-
-            _CollisionTokens.Add(collisionToken);
+            CollisionTokenController.RegisterEntity(attachTo, loadRadius);   
         }
-
-        private void OnEntityChangedMesh(object sender, Mesh mesh)
-        {
-            _UpdateColliderMesh = true;
-        }
-
-        #endregion
-
 
         #region ON EVENT
 

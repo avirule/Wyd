@@ -13,15 +13,12 @@ using UnityEngine;
 
 namespace Controllers.Game
 {
-    public class BlockController : MonoBehaviour
+    public class BlockController : SingletonController<BlockController>
     {
-        public const ushort _BLOCK_EMPTY_ID = 0;
-
-        public static BlockController Current;
-
+        public const ushort BLOCK_EMPTY_ID = 0;
+        
         public ConcurrentDictionary<string, ushort> BlockNameIds;
         public ConcurrentDictionary<ushort, IBlockRule> Blocks;
-        public TextureController TextureController;
 
         private void Awake()
         {
@@ -85,7 +82,7 @@ namespace Controllers.Game
 
             Blocks[blockId].ReadUVsRule(blockId, position, direction, out string textureName);
 
-            if (!TextureController.TryGetTextureId(textureName, out int textureId))
+            if (!TextureController.Current.TryGetTextureId(textureName, out int textureId))
             {
                 EventLog.Logger.Log(LogLevel.Error,
                     $"Failed to return block sprite UVs for direction `{direction}` of block with id `{blockId}`: texture does not exist for block.");
@@ -136,7 +133,7 @@ namespace Controllers.Game
 
         public string GetBlockName(ushort blockId)
         {
-            if (blockId == _BLOCK_EMPTY_ID)
+            if (blockId == BLOCK_EMPTY_ID)
             {
                 return "Air";
             }

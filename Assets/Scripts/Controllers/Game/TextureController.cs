@@ -9,24 +9,15 @@ using UnityEngine;
 
 namespace Controllers.Game
 {
-    public class TextureController : MonoBehaviour
+    public class TextureController : SingletonController<TextureController>
     {
-        public static TextureController Current;
-
         public readonly int MainTex = Shader.PropertyToID("_MainTex");
         public Texture2DArray TerrainTexture { get; private set; }
         private Dictionary<string, int> _TextureIDs;
 
         private void Awake()
         {
-            if ((Current != null) && (Current != this))
-            {
-                Destroy(gameObject);
-            }
-            else
-            {
-                Current = this;
-            }
+            AssignCurrent(this);
 
             _TextureIDs = new Dictionary<string, int>();
         }

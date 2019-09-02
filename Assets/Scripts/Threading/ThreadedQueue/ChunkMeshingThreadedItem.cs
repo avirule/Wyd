@@ -105,7 +105,7 @@ namespace Threading.ThreadedQueue
         {
             for (int index = 0; index < _Blocks.Length; index++)
             {
-                if (_Blocks[index] == BlockController._BLOCK_EMPTY_ID)
+                if (_Blocks[index] == BlockController.BLOCK_EMPTY_ID)
                 {
                     continue;
                 }

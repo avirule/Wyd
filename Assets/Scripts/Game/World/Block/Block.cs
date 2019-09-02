@@ -71,7 +71,7 @@ namespace Game.World.Block
 
         public bool HasAnyFace()
         {
-            if (Id == BlockController._BLOCK_EMPTY_ID)
+            if (Id == BlockController.BLOCK_EMPTY_ID)
             {
                 return false;
             }

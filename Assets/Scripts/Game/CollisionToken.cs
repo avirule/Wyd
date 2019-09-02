@@ -96,7 +96,7 @@ namespace Game
                         Vector3 globalPosition = transform.position + new Vector3(x, y, z);
 
                         if (ChunkController.Current.GetBlockAt(globalPosition) ==
-                            BlockController._BLOCK_EMPTY_ID)
+                            BlockController.BLOCK_EMPTY_ID)
                         {
                             continue;
                         }

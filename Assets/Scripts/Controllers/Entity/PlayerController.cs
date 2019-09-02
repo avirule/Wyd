@@ -6,16 +6,15 @@ using Game.Entity;
 using Logging;
 using NLog;
 using UnityEngine;
+using UnityEngine.Diagnostics;
 
 #endregion
 
 namespace Controllers.Entity
 {
-    public class PlayerController : MonoBehaviour
+    public class PlayerController : SingletonController<PlayerController>
     {
-        public const int Reach = 5;
-
-        public static PlayerController Current;
+        public const int REACH = 5;
 
         private Vector3 _Movement;
         private List<IEntityChunkChangedSubscriber> _EntityChangedChunkSubscribers;
@@ -33,14 +32,7 @@ namespace Controllers.Entity
 
         private void Awake()
         {
-            if ((Current != default) && (Current != this))
-            {
-                Destroy(gameObject);
-            }
-            else
-            {
-                Current = this;
-            }
+            AssignCurrent(this);
 
             _EntityChangedChunkSubscribers = new List<IEntityChunkChangedSubscriber>();
 
@@ -49,7 +41,7 @@ namespace Controllers.Entity
 
         private void Start()
         {
-            WorldController.Current.RegisterEntity(transform);
+            WorldController.Current.RegisterEntity(transform, 2);
         }
 
         private void FixedUpdate()
@@ -69,7 +61,7 @@ namespace Controllers.Entity
             {
                 Ray ray = new Ray(CameraTransform.position, CameraTransform.eulerAngles);
 
-                if (Physics.Raycast(ray, out RaycastHit hit, Reach, RaycastLayerMask))
+                if (Physics.Raycast(ray, out RaycastHit hit, REACH, RaycastLayerMask))
                 {
                     EventLog.Logger.Log(LogLevel.Info, hit.point);
                 }
