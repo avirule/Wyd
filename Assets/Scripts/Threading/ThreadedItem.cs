@@ -11,9 +11,11 @@ namespace Threading
     {
         private readonly object _Handle;
         protected bool Done;
-
+        
+        public long MaximumLifetime { get; private set; }
         public DateTime StartTime { get; private set; }
         public DateTime FinishTime { get; private set; }
+        public DateTime ExpirationTime { get; private set; }
 
         /// <summary>
         ///     Total elapsed time of execution in milliseconds.
@@ -30,10 +32,11 @@ namespace Threading
         /// <summary>
         ///     Instantiates a new instance of the <see cref="ThreadedItem" /> class.
         /// </summary>
-        public ThreadedItem()
+        public ThreadedItem(long maximumLifetime = 30000)
         {
             _Handle = new object();
             Done = false;
+            MaximumLifetime = maximumLifetime;
         }
 
         /// <summary>
@@ -71,6 +74,7 @@ namespace Threading
             Process();
 
             FinishTime = DateTime.Now;
+            ExpirationTime = FinishTime.AddMilliseconds(MaximumLifetime);
             ExecutionTime = FinishTime - StartTime;
 
             IsDone = true;

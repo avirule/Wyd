@@ -158,9 +158,7 @@ namespace Threading
                     foreach (KeyValuePair<object, ThreadedItem> kvp in ProcessedItems)
                     {
                         // todo possibly cache the value of the DateTime to compare against
-                        if (kvp.Value.IsDone &&
-                            (kvp.Value.FinishTime.AddMilliseconds(4000) <
-                             DateTime.Now))
+                        if (kvp.Value.IsDone && (kvp.Value.ExpirationTime < DateTime.Now))
                         {
                             ProcessedItems.TryRemove(kvp.Key, out ThreadedItem _);
                         }
@@ -168,10 +166,9 @@ namespace Threading
                 }
                 catch (OperationCanceledException)
                 {
+                    // thread aborted
                     return;
                 }
-
-                // removed processed item that have lived for too long
             }
 
             Dispose();
