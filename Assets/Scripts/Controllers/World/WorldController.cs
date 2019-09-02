@@ -314,6 +314,16 @@ namespace Controllers.World
             return globalPosition.Divide(Chunk.Size).Floor().Multiply(Chunk.Size);
         }
 
+        public bool AreNeighborsBuilt(Vector3 position)
+        {
+            bool northBuilt = GetChunkAt(position + new Vector3(0, 0, Chunk.Size.z))?.Built ?? true;
+            bool eastBuilt = GetChunkAt(position + new Vector3(Chunk.Size.x, 0, 0))?.Built ?? true;
+            bool southBuilt = GetChunkAt(position + new Vector3(0, 0, -Chunk.Size.z))?.Built ?? true;
+            bool westBuilt = GetChunkAt(position + new Vector3(-Chunk.Size.x, 0, 0))?.Built ?? true;
+
+            return northBuilt && eastBuilt && southBuilt && westBuilt;
+        }
+
         #endregion
 
 

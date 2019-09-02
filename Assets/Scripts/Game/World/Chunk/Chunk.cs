@@ -237,7 +237,7 @@ namespace Game.World.Chunk
                     MeshTimes.Enqueue(threadedItem.ExecutionTime.TotalMilliseconds);
                 }
             }
-            else if (Visible && (PendingMeshUpdate || !Meshed) && WorldController.Current.AllChunksBuilt)
+            else if (Visible && (PendingMeshUpdate || !Meshed) && WorldController.Current.AreNeighborsBuilt(Position))
             {
                 _MeshingIdentity = BeginGenerateMesh();
             }
