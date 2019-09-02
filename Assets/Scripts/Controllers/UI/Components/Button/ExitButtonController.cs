@@ -2,19 +2,20 @@
 
 using Controllers.Game;
 using UnityEngine;
+using UnityEngine.EventSystems;
 
 #endregion
 
 namespace Controllers.UI.Components.Button
 {
-    public class ExitButtonController : MonoBehaviour
+    public class ExitButtonController : MonoBehaviour, IPointerClickHandler
     {
-        private UnityEngine.UI.Button _ExitButton;
-
-        private void Awake()
+        public void OnPointerClick(PointerEventData eventData)
         {
-            _ExitButton = GetComponent<UnityEngine.UI.Button>();
-            _ExitButton.onClick.AddListener(() => GameController.ApplicationClose(0));
+            if (eventData.button == PointerEventData.InputButton.Left)
+            {
+                GameController.ApplicationClose(0);
+            }
         }
     }
 }

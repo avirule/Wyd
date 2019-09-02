@@ -2,19 +2,20 @@
 
 using Controllers.Game;
 using UnityEngine;
+using UnityEngine.EventSystems;
 
 #endregion
 
 namespace Controllers.UI.Components.Button
 {
-    public class QuitMainMenuButtonController : MonoBehaviour
+    public class QuitMainMenuButtonController : MonoBehaviour, IPointerClickHandler
     {
-        private UnityEngine.UI.Button _QuitMainMenuButton;
-
-        private void Awake()
+        public void OnPointerClick(PointerEventData eventData)
         {
-            _QuitMainMenuButton = GetComponent<UnityEngine.UI.Button>();
-            _QuitMainMenuButton.onClick.AddListener(() => GameController.Current.QuitToMainMenu());
+            if (eventData.button == PointerEventData.InputButton.Left)
+            {
+                GameController.Current.QuitToMainMenu();
+            }
         }
     }
 }

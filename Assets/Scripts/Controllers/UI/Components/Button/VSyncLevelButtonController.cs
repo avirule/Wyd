@@ -2,24 +2,26 @@
 
 using Controllers.Game;
 using UnityEngine;
+using UnityEngine.EventSystems;
 
 #endregion
 
 namespace Controllers.UI.Components.Button
 {
-    public class VSyncLevelButtonController : MonoBehaviour
+    public class VSyncLevelButtonController : MonoBehaviour, IPointerClickHandler
     {
-        private UnityEngine.UI.Button _VSyncLevelButton;
-
-        private void Awake()
+        public void OnPointerClick(PointerEventData eventData)
         {
-            _VSyncLevelButton = GetComponent<UnityEngine.UI.Button>();
-            _VSyncLevelButton.onClick.AddListener(ScrollVSyncLevel);
-        }
+            int step = eventData.GetButtonAsInt();
 
-        private static void ScrollVSyncLevel()
-        {
-            OptionsController.Current.VSyncLevel = (OptionsController.Current.VSyncLevel + 1) % 5;
+            if (step == -1 && OptionsController.Current.VSyncLevel == 0)
+            {
+                OptionsController.Current.VSyncLevel = 4;
+            }
+            else
+            {
+                OptionsController.Current.VSyncLevel = (OptionsController.Current.VSyncLevel + step) % 5;
+            }
         }
     }
 }

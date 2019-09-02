@@ -3,25 +3,27 @@
 using Controllers.Game;
 using Game.World.Chunk;
 using UnityEngine;
+using UnityEngine.EventSystems;
 
 #endregion
 
 namespace Controllers.UI.Components.Button
 {
-    public class ThreadingModeButtonController : MonoBehaviour
+    public class ThreadingModeButtonController : MonoBehaviour, IPointerClickHandler
     {
-        private UnityEngine.UI.Button _ThreadingModeButton;
-
-        private void Awake()
+        public void OnPointerClick(PointerEventData eventData)
         {
-            _ThreadingModeButton = GetComponent<UnityEngine.UI.Button>();
-            _ThreadingModeButton.onClick.AddListener(ScrollThreadingMode);
-        }
+            int step = eventData.GetButtonAsInt();
 
-        private static void ScrollThreadingMode()
-        {
-            OptionsController.Current.ThreadingMode =
-                (ThreadingMode) ((int) (OptionsController.Current.ThreadingMode + 1) % 3);
+            if (step == -1 && OptionsController.Current.ThreadingMode == 0)
+            {
+                OptionsController.Current.ThreadingMode = (ThreadingMode)2;
+            }
+            else
+            {
+                OptionsController.Current.ThreadingMode =
+                    (ThreadingMode) ((int) (OptionsController.Current.ThreadingMode + step) % 3);
+            }
         }
     }
 }
