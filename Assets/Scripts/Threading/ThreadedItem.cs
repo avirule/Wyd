@@ -11,7 +11,7 @@ namespace Threading
     {
         private readonly object _Handle;
         protected bool Done;
-        
+
         public long MaximumLifetime { get; private set; }
         public DateTime StartTime { get; private set; }
         public DateTime FinishTime { get; private set; }
