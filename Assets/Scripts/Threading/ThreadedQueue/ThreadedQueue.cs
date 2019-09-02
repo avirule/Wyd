@@ -5,7 +5,6 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
-using Controllers.Game;
 using Game.World.Chunk;
 
 #endregion
@@ -58,7 +57,8 @@ namespace Threading.ThreadedQueue
         ///     Determines whether the <see cref="ThreadedQueue" /> executes <see cref="ThreadedItem" /> on the
         ///     internal thread, or uses <see cref="System.Threading.ThreadPool" />.
         /// </param>
-        public ThreadedQueue(int millisecondWaitTimeout, int maximumFinishedThreadedItemLifetime, ThreadingMode threadingMode = ThreadingMode.Single)
+        public ThreadedQueue(int millisecondWaitTimeout, int maximumFinishedThreadedItemLifetime,
+            ThreadingMode threadingMode = ThreadingMode.Single)
         {
             // todo add variable that decides whether to use single-threaded or multi-threaded execution
 
@@ -158,9 +158,8 @@ namespace Threading.ThreadedQueue
                 default:
                     throw new ArgumentOutOfRangeException();
             }
-            
-            ProcessedItems.TryAdd(threadedItem.Identity, threadedItem);
 
+            ProcessedItems.TryAdd(threadedItem.Identity, threadedItem);
         }
 
         /// <summary>
