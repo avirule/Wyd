@@ -7,6 +7,7 @@ using System.Linq;
 using Controllers.Entity;
 using Controllers.Game;
 using Game;
+using Game.Entity;
 using Game.World;
 using Game.World.Chunk;
 using Logging;
@@ -20,7 +21,7 @@ using UnityEngine.SceneManagement;
 
 namespace Controllers.World
 {
-    public class WorldController : SingletonController<WorldController>
+    public class WorldController : SingletonController<WorldController>, IEntityChunkChangedSubscriber
     {
         private Stopwatch _FrameTimeLimiter;
         private Chunk _ChunkObject;
@@ -64,15 +65,11 @@ namespace Controllers.World
         private void Start()
         {
             _ChunkCache.MaximumSize = OptionsController.Current.MaximumChunkCacheSize;
+            PlayerController.Current.RegisterEntityChangedSubscriber(this);
 
-            if (OptionsController.Current.PreInitializeChunkCache)
+            if (!OptionsController.Current.PreInitializeChunkCache)
             {
-                for (int i = 0; i < (OptionsController.Current.MaximumChunkCacheSize / 2); i++)
-                {
-                    Chunk chunk = Instantiate(_ChunkObject, Vector3.zero, Quaternion.identity, transform);
-
-                    _ChunkCache.CacheItem(ref chunk);
-                }
+                InitialiseChunkCache();
             }
         }
 
@@ -330,8 +327,23 @@ namespace Controllers.World
 
         #region MISC
 
+        private void InitialiseChunkCache()
+        {
+            for (int i = 0; i < (OptionsController.Current.MaximumChunkCacheSize / 2); i++)
+            {
+                Chunk chunk = Instantiate(_ChunkObject, Vector3.zero, Quaternion.identity, transform);
+
+                _ChunkCache.CacheItem(ref chunk);
+            }
+        }
+
         public void RegisterEntity(Transform attachTo, int loadRadius)
         {
+            if (CollisionTokenController == default)
+            {
+                return;
+            }
+
             CollisionTokenController.RegisterEntity(attachTo, loadRadius);
         }
 

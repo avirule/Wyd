@@ -8,17 +8,20 @@ namespace Controllers
 {
     public abstract class SingletonController<T> : MonoBehaviour where T : class
     {
-        public static T Current;
+        private static SingletonController<T> _singletonInstance;
+
+        public static T Current { get; private set; }
 
         protected virtual void AssignCurrent(T instance)
         {
-            if (Current == default)
+            if ((_singletonInstance != default) && (_singletonInstance != this))
             {
-                Current = instance;
+                Destroy(gameObject);
             }
             else
             {
-                Destroy(gameObject);
+                _singletonInstance = this;
+                Current = instance;
             }
         }
     }

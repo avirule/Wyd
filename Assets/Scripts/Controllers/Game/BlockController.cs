@@ -22,15 +22,7 @@ namespace Controllers.Game
 
         private void Awake()
         {
-            if ((Current != null) && (Current != this))
-            {
-                Destroy(gameObject);
-            }
-            else
-            {
-                Current = this;
-            }
-
+            AssignCurrent(this);
             BlockNameIds = new ConcurrentDictionary<string, ushort>();
             Blocks = new ConcurrentDictionary<ushort, IBlockRule>();
         }

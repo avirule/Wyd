@@ -15,8 +15,7 @@ namespace Controllers.Graphics
 
         private void Start()
         {
-            _RotationSensitivity =
-                GameObject.FindWithTag("Player").GetComponent<PlayerController>().RotationSensitivity;
+            _RotationSensitivity = PlayerController.Current.RotationSensitivity;
         }
 
         private void FixedUpdate()
