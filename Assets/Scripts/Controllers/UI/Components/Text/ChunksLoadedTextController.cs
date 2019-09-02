@@ -23,7 +23,7 @@ namespace Controllers.UI.Components.Text
         {
             int chunksActive = WorldController.Current.ChunksActiveCount;
             int chunksCached = WorldController.Current.ChunksCachedCount;
-            
+
             UpdateChunksLoadedText(chunksActive, chunksCached);
         }
 
@@ -31,7 +31,7 @@ namespace Controllers.UI.Components.Text
         {
             int chunksActive = WorldController.Current.ChunksActiveCount;
             int chunksCached = WorldController.Current.ChunksCachedCount;
-            
+
             if ((chunksActive != _LastChunksActiveCount) ||
                 (chunksCached != _LastChunksCachedCount))
             {

@@ -2,11 +2,11 @@
 
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Linq;
 using Controllers.Game;
 using TMPro;
 using UnityEngine;
+
 // ReSharper disable InconsistentNaming
 
 #endregion
@@ -17,21 +17,32 @@ namespace Controllers.UI.Components.Text
     {
         private List<float> _DeltaTimes;
         private TextMeshProUGUI _FPSText;
+        private int _SkippedFrames;
+
+        public int MinimumSkipFrames = 8;
 
         private void Awake()
         {
             _DeltaTimes = new List<float>();
             _FPSText = GetComponent<TextMeshProUGUI>();
+            _SkippedFrames = 0;
         }
 
         private void Update()
         {
+            // avoids div by zero
+            if (MinimumSkipFrames <= 0)
+            {
+                MinimumSkipFrames = 1;
+            }
+
             UpdateDeltaTimes();
         }
 
         private void LateUpdate()
         {
-            if (_DeltaTimes.Count == 0)
+            if ((_DeltaTimes.Count == 0) ||
+                ((_SkippedFrames % MinimumSkipFrames) != 0))
             {
                 return;
             }
@@ -39,6 +50,7 @@ namespace Controllers.UI.Components.Text
             double averageDelaTime = Math.Round(1f / _DeltaTimes.Average(), 4);
 
             _FPSText.text = $"FPS: {averageDelaTime}";
+            _SkippedFrames = 0;
         }
 
         private void UpdateDeltaTimes()

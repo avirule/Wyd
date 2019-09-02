@@ -1,14 +1,18 @@
+#region
+
 using System;
 using TMPro;
 using UnityEngine;
 using UnityEngine.Profiling;
+
+#endregion
 
 namespace Controllers.UI.Components.Text
 {
     public class UsedMemoryTextController : MonoBehaviour
     {
         private const double _MEGABYTE_VALUE = 1000000d;
-        
+
         private TextMeshProUGUI _UsedMemoryText;
         private TimeSpan _MaximumDisplayAccuracyUpdateInterval;
         private DateTime _LastCheckedDisplayedAccuracyTime;
@@ -16,7 +20,7 @@ namespace Controllers.UI.Components.Text
         private long _LastAllocatedMemoryTotal;
 
         public int Precision = 1;
-        
+
         private void Awake()
         {
             _UsedMemoryText = GetComponent<TextMeshProUGUI>();
@@ -34,8 +38,8 @@ namespace Controllers.UI.Components.Text
 
             (long totalReservedMemory, long totalAllocatedMemory) = GetUsedMemory();
 
-            if (totalReservedMemory != _LastReservedMemoryTotal ||
-                totalAllocatedMemory != _LastAllocatedMemoryTotal)
+            if ((totalReservedMemory != _LastReservedMemoryTotal) ||
+                (totalAllocatedMemory != _LastAllocatedMemoryTotal))
             {
                 UpdateUsedMemoryText(totalReservedMemory, totalAllocatedMemory);
             }
@@ -50,7 +54,7 @@ namespace Controllers.UI.Components.Text
             double allocatedMemoryInMb = Math.Round(allocatedMemory / _MEGABYTE_VALUE, Precision);
 
             _UsedMemoryText.text = $"Used Memory: (r{reservedMemoryInMb}MB, a{allocatedMemoryInMb}MB)";
-            
+
             _LastCheckedDisplayedAccuracyTime = DateTime.Now;
         }
 

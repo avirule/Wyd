@@ -24,7 +24,7 @@ namespace Controllers.UI.Components.Text
         {
             int chunksQueuedForBuilding = WorldController.Current.ChunksQueuedForBuilding;
             int chunksQueuedForCaching = WorldController.Current.ChunkQueuedForCaching;
-            
+
             if ((chunksQueuedForBuilding != _LastQueuedForBuildingCount) ||
                 (chunksQueuedForCaching != _LastQueuedForCachingCount))
             {

@@ -41,7 +41,7 @@ namespace Controllers.UI.Components.Text
 
             _ChunkLoadTimeText.text = $"Chunk Load Time: (b{buildTime}ms, m{meshTime}ms)";
         }
-        
+
         private static (double, double) CalculateBuildAndMeshTimes()
         {
             double avgBuildTime = Chunk.BuildTimes.Count > 0 ? Chunk.BuildTimes.Average() : 0d;
