@@ -21,13 +21,6 @@ namespace Threading
         private ushort[] _Blocks;
 
         /// <summary>
-        ///     Initialises a new instance of the <see cref="ChunkBuildingThreadedItem" /> class.
-        /// </summary>
-        public ChunkBuildingThreadedItem()
-        {
-        }
-
-        /// <summary>
         ///     Prepares item for new execution.
         /// </summary>
         /// <param name="position"><see cref="UnityEngine.Vector3" /> position of chunk being meshed.</param>

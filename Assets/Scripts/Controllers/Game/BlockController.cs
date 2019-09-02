@@ -1,7 +1,6 @@
 #region
 
 using System;
-using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using Game;
@@ -96,7 +95,7 @@ namespace Controllers.Game
         public ushort GetBlockId(string blockName)
         {
             blockName = blockName.ToLowerInvariant();
-            
+
             if (!BlockNameIds.TryGetValue(blockName, out ushort blockId))
             {
                 EventLog.Logger.Log(LogLevel.Warn,
@@ -123,7 +122,7 @@ namespace Controllers.Game
 
             return blockRule.BlockName;
         }
-        
+
         public bool IsBlockTransparent(ushort blockId)
         {
             if (blockId == BLOCK_EMPTY_ID)

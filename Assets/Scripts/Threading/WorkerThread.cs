@@ -20,7 +20,7 @@ namespace Threading
         public bool Running { get; private set; }
         public bool Processing { get; private set; }
         public int ManagedThreadId => _InternalThread.ManagedThreadId;
-        
+
         public event EventHandler<WorkerThreadFinishedItemEventArgs> FinishedItem;
 
         public WorkerThread(int waitTimeout)
@@ -78,10 +78,10 @@ namespace Threading
         private void ProcessThreadedItem(ThreadedItem threadedItem)
         {
             Processing = true;
-            
+
             threadedItem.Execute();
             OnFinishedItem(this, new WorkerThreadFinishedItemEventArgs(_InternalThread.ManagedThreadId, threadedItem));
-            
+
             Processing = false;
         }
 

@@ -5,9 +5,6 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Threading;
 using Game.World.Chunk;
-using Logging;
-using NLog;
-using UnityEngine;
 
 #endregion
 
@@ -75,11 +72,10 @@ namespace Threading
         {
             // todo add variable that decides whether to use single-threaded or multi-threaded execution
 
-            if (threadSize <= 0 ||
-                threadSize > 15)
+            if ((threadSize <= 0) ||
+                (threadSize > 15))
             {
-                // cnt / 2 assumes hyper-threading
-                threadSize = SystemInfo.processorCount / 2;
+                threadSize = 4;
             }
 
             WaitTimeout = waitTimeout;

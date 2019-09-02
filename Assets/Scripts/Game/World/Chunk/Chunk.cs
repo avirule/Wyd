@@ -170,8 +170,7 @@ namespace Game.World.Chunk
             }
         }
 
-        
-        
+
         #region ACTIVATION STATE
 
         public void Activate(Vector3 position = default)
@@ -194,8 +193,7 @@ namespace Game.World.Chunk
 
         #endregion
 
-        
-        
+
         #region CHUNK GENERATION
 
         private void GenerationCheckAndStart()
@@ -277,7 +275,6 @@ namespace Game.World.Chunk
         #endregion
 
 
-        
         #region MISC
 
         private int Get1DLocal(Vector3 position)
