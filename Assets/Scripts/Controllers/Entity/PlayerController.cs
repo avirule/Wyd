@@ -71,7 +71,7 @@ namespace Controllers.Entity
         private void CheckChangedChunk()
         {
             Vector3Int chunkPosition =
-                ChunkController.GetWorldChunkOriginFromGlobalPosition(transform.position).ToInt();
+                WorldController.GetWorldChunkOriginFromGlobalPosition(transform.position).ToInt();
             chunkPosition.y = 0;
 
             if (chunkPosition == CurrentChunk)

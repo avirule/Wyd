@@ -38,8 +38,8 @@ namespace Controllers.UI.Diagnostics
 
         private void UpdateFramesText()
         {
-            ChunksActive.text = $"Chunks Active: {ChunkController.Current.ActiveChunksCount}";
-            ChunksCached.text = $"Chunks Cached: {ChunkController.Current.CachedChunksCount}";
+            ChunksActive.text = $"Chunks Active: {WorldController.Current.ActiveChunksCount}";
+            ChunksCached.text = $"Chunks Cached: {WorldController.Current.CachedChunksCount}";
         }
 
         private void UpdateResourcesText()

@@ -16,8 +16,7 @@ namespace Game.World.Chunk
     public enum ThreadingMode
     {
         Single = 0,
-        Multi = 1,
-        Variable = 2
+        Multi = 1
     }
 
     public class Chunk : MonoBehaviour, IEntityChunkChangedSubscriber
@@ -225,7 +224,7 @@ namespace Game.World.Chunk
                     MeshTimes.Enqueue(threadedItem.ExecutionTime.TotalMilliseconds);
                 }
             }
-            else if ((PendingMeshUpdate || !Meshed) && ChunkController.Current.AllChunksBuilt && Visible)
+            else if (Visible && (PendingMeshUpdate || !Meshed) && WorldController.Current.AllChunksBuilt)
             {
                 _MeshingIdentity = BeginGenerateMesh();
             }

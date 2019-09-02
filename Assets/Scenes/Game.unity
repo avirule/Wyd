@@ -2599,6 +2599,7 @@ GameObject:
   - component: {fileID: 1461272635}
   - component: {fileID: 1461272637}
   - component: {fileID: 1461272641}
+  - component: {fileID: 1461272639}
   m_Layer: 8
   m_Name: WorldController
   m_TagString: WorldController
@@ -2618,11 +2619,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 0468092b4dbf446bb494bab4364c5e45, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  MeshCollider: {fileID: 1461272638}
-  InitialTick: 0
-  TicksPerSecond: 15
+  CollisionTokenController: {fileID: 0}
   WorldGenerationSettings: {fileID: 1461272637}
   ChunkController: {fileID: 1461272641}
+  TicksPerSecond: 15
 --- !u!4 &1461272636
 Transform:
   m_ObjectHideFlags: 0
@@ -2669,6 +2669,18 @@ MeshCollider:
   m_Convex: 0
   m_CookingOptions: -1
   m_Mesh: {fileID: 0}
+--- !u!114 &1461272639
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1461272634}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9cb4e17c7e1045acb26e5a2cb6496a65, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
 --- !u!114 &1461272641
 MonoBehaviour:
   m_ObjectHideFlags: 0

@@ -55,6 +55,11 @@ namespace Game
                 item = _PreCachingOperation(item);
             }
 
+            if (item == null)
+            {
+                return;
+            }
+
             _InternalCache.AddFirst(item);
 
             if (MaximumSize > -1)

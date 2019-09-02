@@ -38,7 +38,7 @@ namespace Controllers.Game
             BlockController.Current.RegisterBlockRules("Grass", false, (position, direction) =>
             {
                 Vector3 positionAbove = position + Vector3.up;
-                ushort blockId = ChunkController.Current.GetBlockAt(positionAbove);
+                ushort blockId = WorldController.Current.GetBlockAt(positionAbove);
 
                 if (!BlockController.Current.IsBlockTransparent(blockId))
                 {

@@ -22,7 +22,7 @@ namespace Controllers.UI.Components.Button
             else
             {
                 OptionsController.Current.ThreadingMode =
-                    (ThreadingMode) ((int) (OptionsController.Current.ThreadingMode + step) % 3);
+                    (ThreadingMode) ((int) (OptionsController.Current.ThreadingMode + step) % 2);
             }
         }
     }
