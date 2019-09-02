@@ -9,7 +9,7 @@ using Random = System.Random;
 
 #endregion
 
-namespace Threading.ThreadedQueue
+namespace Threading
 {
     public class ChunkBuildingThreadedItem : ThreadedItem
     {
@@ -21,9 +21,9 @@ namespace Threading.ThreadedQueue
         private ushort[] _Blocks;
 
         /// <summary>
-        ///     Initialises a new instance of the <see cref="Threading.ThreadedQueue.ChunkBuildingThreadedItem" /> class.
+        ///     Initialises a new instance of the <see cref="ChunkBuildingThreadedItem" /> class.
         /// </summary>
-        public ChunkBuildingThreadedItem() : base(true)
+        public ChunkBuildingThreadedItem()
         {
         }
 

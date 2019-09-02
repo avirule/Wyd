@@ -6,7 +6,7 @@ using Controllers.Entity;
 using Controllers.Game;
 using Controllers.World;
 using Game.Entity;
-using Threading.ThreadedQueue;
+using Threading;
 using UnityEngine;
 using UnityEngine.Rendering;
 
@@ -28,9 +28,9 @@ namespace Game.World.Chunk
         private static readonly ObjectCache<ChunkMeshingThreadedItem> ChunkMeshersCache =
             new ObjectCache<ChunkMeshingThreadedItem>(null, null, true);
 
-        public static readonly ConcurrentQueue<double> BuildTimes = new ConcurrentQueue<double>();
-        public static readonly ConcurrentQueue<double> MeshTimes = new ConcurrentQueue<double>();
-        public static readonly ThreadedQueue ThreadedExecutionQueue = new ThreadedQueue(200, 4000);
+        public static readonly ConcurrentQueue<TimeSpan> BuildTimes = new ConcurrentQueue<TimeSpan>();
+        public static readonly ConcurrentQueue<TimeSpan> MeshTimes = new ConcurrentQueue<TimeSpan>();
+        public static readonly ThreadedQueue ThreadedExecutionQueue = new ThreadedQueue(200);
         public static readonly Vector3Int Size = new Vector3Int(32, 256, 32);
 
         private Vector3 _Position;
@@ -40,7 +40,7 @@ namespace Game.World.Chunk
         private object _MeshingIdentity;
         private bool _OnBorrowedUpdateTime;
         private bool _Visible;
-        private bool _UseShadows;
+        private bool _RenderShadows;
 
         public MeshFilter MeshFilter;
         public MeshRenderer MeshRenderer;
@@ -50,19 +50,19 @@ namespace Game.World.Chunk
         public bool Meshing;
         public bool PendingMeshUpdate;
 
-        public bool DrawShadows
+        public bool RenderShadows
         {
-            get => _UseShadows;
+            get => _RenderShadows;
             set
             {
-                if (_UseShadows == value)
+                if (_RenderShadows == value)
                 {
                     return;
                 }
 
-                _UseShadows = value;
-                MeshRenderer.receiveShadows = _UseShadows;
-                MeshRenderer.shadowCastingMode = _UseShadows ? ShadowCastingMode.On : ShadowCastingMode.Off;
+                _RenderShadows = value;
+                MeshRenderer.receiveShadows = _RenderShadows;
+                MeshRenderer.shadowCastingMode = _RenderShadows ? ShadowCastingMode.On : ShadowCastingMode.Off;
             }
         }
 
@@ -161,15 +161,17 @@ namespace Game.World.Chunk
         {
             while (MeshTimes.Count > OptionsController.Current.MaximumChunkLoadTimeBufferSize)
             {
-                MeshTimes.TryDequeue(out double _);
+                MeshTimes.TryDequeue(out TimeSpan _);
             }
 
             while (MeshTimes.Count > OptionsController.Current.MaximumChunkLoadTimeBufferSize)
             {
-                MeshTimes.TryDequeue(out double _);
+                MeshTimes.TryDequeue(out TimeSpan _);
             }
         }
 
+        
+        
         #region ACTIVATION STATE
 
         public void Activate(Vector3 position = default)
@@ -192,6 +194,8 @@ namespace Game.World.Chunk
 
         #endregion
 
+        
+        
         #region CHUNK GENERATION
 
         private void GenerationCheckAndStart()
@@ -214,7 +218,7 @@ namespace Game.World.Chunk
                     Building = false;
                     Built = PendingMeshUpdate = true;
 
-                    BuildTimes.Enqueue(threadedItem.ExecutionTime.TotalMilliseconds);
+                    BuildTimes.Enqueue(threadedItem.ExecutionTime);
                 }
             }
             else if (!Built && !Building)
@@ -234,7 +238,7 @@ namespace Game.World.Chunk
 
                     ((ChunkMeshingThreadedItem) threadedItem).SetMesh(ref _Mesh);
 
-                    MeshTimes.Enqueue(threadedItem.ExecutionTime.TotalMilliseconds);
+                    MeshTimes.Enqueue(threadedItem.ExecutionTime);
                 }
             }
             else if (Visible && (PendingMeshUpdate || !Meshed) && WorldController.Current.AreNeighborsBuilt(Position))
@@ -273,6 +277,7 @@ namespace Game.World.Chunk
         #endregion
 
 
+        
         #region MISC
 
         private int Get1DLocal(Vector3 position)
@@ -323,7 +328,7 @@ namespace Game.World.Chunk
             }
 
             Visible = IsWithinRenderDistance(difference);
-            DrawShadows = IsWithinDrawShadowsDistance(difference);
+            RenderShadows = IsWithinDrawShadowsDistance(difference);
         }
 
         private static bool IsWithinLoaderRange(Vector3 difference)

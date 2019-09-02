@@ -1,46 +1,39 @@
 #region
 
 using System;
-using System.Diagnostics;
 using System.Threading.Tasks;
 
 #endregion
 
-namespace Threading.ThreadedQueue
+namespace Threading
 {
     public abstract class ThreadedItem
     {
         private readonly object _Handle;
-        private readonly Stopwatch _ExecutionTimer;
         protected bool Done;
 
-        public readonly bool LongRunning;
+        public DateTime StartTime { get; private set; }
+        public DateTime FinishTime { get; private set; }
 
         /// <summary>
         ///     Total elapsed time of execution in milliseconds.
         /// </summary>
-        public TimeSpan ExecutionTime => _ExecutionTimer.Elapsed;
-
-        /// <summary>
-        ///     Time at which execution finished.
-        /// </summary>
-        public DateTime ExecutionFinishTime { get; private set; }
+        public TimeSpan ExecutionTime { get; private set; }
 
         /// <summary>
         ///     Identity of <see cref="ThreadedItem" />.
         /// </summary>
         public object Identity { get; internal set; }
 
+        public event EventHandler Finished;
+
         /// <summary>
         ///     Instantiates a new instance of the <see cref="ThreadedItem" /> class.
         /// </summary>
-        public ThreadedItem(bool longRunning = false)
+        public ThreadedItem()
         {
             _Handle = new object();
-            _ExecutionTimer = new Stopwatch();
             Done = false;
-            ExecutionFinishTime = DateTime.MaxValue;
-            LongRunning = longRunning;
         }
 
         /// <summary>
@@ -71,16 +64,17 @@ namespace Threading.ThreadedQueue
         /// <summary>
         ///     Begins executing the <see cref="ThreadedItem" />
         /// </summary>
-        public virtual Task Execute(object obj)
+        public virtual Task Execute()
         {
-            _ExecutionTimer.Restart();
+            StartTime = DateTime.Now;
 
             Process();
 
-            _ExecutionTimer.Stop();
-            ExecutionFinishTime = DateTime.Now;
+            FinishTime = DateTime.Now;
+            ExecutionTime = FinishTime - StartTime;
 
             IsDone = true;
+            Finished?.Invoke(this, EventArgs.Empty);
 
             return Task.CompletedTask;
         }

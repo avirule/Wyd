@@ -4,26 +4,34 @@ using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Threading;
-using System.Threading.Tasks;
 using Game.World.Chunk;
+using Logging;
+using NLog;
+using UnityEngine;
 
 #endregion
 
-namespace Threading.ThreadedQueue
+namespace Threading
 {
     public class ThreadedQueue
     {
         private bool _Disposed;
 
+        protected readonly int ThreadSize;
         protected readonly Thread ProcessingThread;
-        protected readonly BlockingCollection<ThreadedItem> ProcessQueue;
+        protected readonly List<WorkerThread> InternalThreads;
+        protected readonly BlockingCollection<ThreadedItem> ItemQueue;
         protected readonly ConcurrentDictionary<object, ThreadedItem> ProcessedItems;
         protected readonly CancellationTokenSource AbortTokenSource;
         protected CancellationToken AbortToken;
+        protected int LastThreadIndexQueuedInto;
+
+        private int _WaitTimeout;
 
         /// <summary>
-        ///     Determines whether the <see cref="ThreadedQueue" /> executes <see cref="ThreadedItem" /> on the
-        ///     internal thread, or uses <see cref="System.Threading.ThreadPool" />.
+        ///     Determines whether the <see cref="ThreadedQueue" /> executes <see cref="ThreadedItem" /> on
+        ///     the
+        ///     internal thread, or uses the internal thread pool.
         /// </summary>
         public ThreadingMode ThreadingMode;
 
@@ -36,40 +44,56 @@ namespace Threading.ThreadedQueue
         ///     Time in milliseconds to wait between attempts to process an item in internal
         ///     queue.
         /// </summary>
-        public int MillisecondWaitTimeout;
+        public int WaitTimeout
+        {
+            get => _WaitTimeout;
+            set
+            {
+                if ((value <= 0) ||
+                    (_WaitTimeout == value))
+                {
+                    return;
+                }
 
-        /// <summary>
-        ///     Maximum lifetime in milliseconds that a threaded item can live after finishing execution.
-        /// </summary>
-        public int MaximumFinishedThreadedItemLifetime;
+                _WaitTimeout = value;
+            }
+        }
 
         /// <summary>
         ///     Initializes a new instance of <see cref="ThreadedQueue" /> class.
         /// </summary>
-        /// <param name="millisecondWaitTimeout">
+        /// <param name="waitTimeout">
         ///     Time in milliseconds to wait between attempts to process an item in internal
         ///     queue.
         /// </param>
-        /// <param name="maximumFinishedThreadedItemLifetime">
-        ///     Maximum lifetime in milliseconds that a threaded item can live after finishing execution.
-        /// </param>
+        /// <param name="threadSize">Size of internal <see cref="WorkerThread" /> pool</param>
         /// <param name="threadingMode">
         ///     Determines whether the <see cref="ThreadedQueue" /> executes <see cref="ThreadedItem" /> on the
         ///     internal thread, or uses <see cref="System.Threading.ThreadPool" />.
         /// </param>
-        public ThreadedQueue(int millisecondWaitTimeout, int maximumFinishedThreadedItemLifetime,
-            ThreadingMode threadingMode = ThreadingMode.Single)
+        public ThreadedQueue(int waitTimeout, int threadSize = -1, ThreadingMode threadingMode = ThreadingMode.Single)
         {
             // todo add variable that decides whether to use single-threaded or multi-threaded execution
 
-            MillisecondWaitTimeout = millisecondWaitTimeout;
-            MaximumFinishedThreadedItemLifetime = maximumFinishedThreadedItemLifetime;
+            if (threadSize <= 0 ||
+                threadSize > 15)
+            {
+                // cnt / 2 assumes hyper-threading
+                threadSize = SystemInfo.processorCount / 2;
+            }
+
+            WaitTimeout = waitTimeout;
+            ThreadSize = threadSize;
             ThreadingMode = threadingMode;
             ProcessingThread = new Thread(ProcessThreadedItems);
-            ProcessQueue = new BlockingCollection<ThreadedItem>();
+            InternalThreads = new List<WorkerThread>(threadSize);
+            ItemQueue = new BlockingCollection<ThreadedItem>();
             ProcessedItems = new ConcurrentDictionary<object, ThreadedItem>();
             AbortTokenSource = new CancellationTokenSource();
             AbortToken = AbortTokenSource.Token;
+            LastThreadIndexQueuedInto = 0;
+
+            InitialiseWorkerThreads();
 
             Running = false;
         }
@@ -94,8 +118,30 @@ namespace Threading.ThreadedQueue
             }
 
             AbortTokenSource.Cancel();
-            MillisecondWaitTimeout = 0;
+
+            foreach (WorkerThread workerThread in InternalThreads)
+            {
+                workerThread.Abort();
+            }
+
+            WaitTimeout = 0;
             Running = false;
+        }
+
+        private void InitialiseWorkerThreads()
+        {
+            for (int i = 0; i < ThreadSize; i++)
+            {
+                WorkerThread workerThread = new WorkerThread(WaitTimeout);
+                workerThread.FinishedItem += OnWorkerThreadFinishedItem;
+                workerThread.Start();
+                InternalThreads.Add(workerThread);
+            }
+        }
+
+        private void OnWorkerThreadFinishedItem(object sender, WorkerThreadFinishedItemEventArgs args)
+        {
+            ProcessedItems.TryAdd(args.ThreadedItem.Identity, args.ThreadedItem);
         }
 
         /// <summary>
@@ -107,7 +153,7 @@ namespace Threading.ThreadedQueue
             {
                 try
                 {
-                    if (ProcessQueue.TryTake(out ThreadedItem threadedItem, MillisecondWaitTimeout, AbortToken) &&
+                    if (ItemQueue.TryTake(out ThreadedItem threadedItem, WaitTimeout, AbortToken) &&
                         (threadedItem != default))
                     {
                         ProcessThreadedItem(threadedItem);
@@ -117,7 +163,7 @@ namespace Threading.ThreadedQueue
                     {
                         // todo possibly cache the value of the DateTime to compare against
                         if (kvp.Value.IsDone &&
-                            (kvp.Value.ExecutionFinishTime.AddMilliseconds(MaximumFinishedThreadedItemLifetime) <
+                            (kvp.Value.FinishTime.AddMilliseconds(4000) <
                              DateTime.Now))
                         {
                             ProcessedItems.TryRemove(kvp.Key, out ThreadedItem _);
@@ -145,15 +191,12 @@ namespace Threading.ThreadedQueue
             switch (ThreadingMode)
             {
                 case ThreadingMode.Single:
-                    await threadedItem.Execute(null);
+                    await threadedItem.Execute();
                     break;
                 case ThreadingMode.Multi:
-                    TaskCreationOptions taskCreationOption = threadedItem.LongRunning
-                        ? TaskCreationOptions.LongRunning
-                        : TaskCreationOptions.PreferFairness;
+                    LastThreadIndexQueuedInto = (LastThreadIndexQueuedInto + 1) % ThreadSize;
 
-                    await Task.Factory.StartNew(threadedItem.Execute, null, AbortToken, taskCreationOption,
-                        TaskScheduler.Default);
+                    InternalThreads[LastThreadIndexQueuedInto].QueueThreadedItem(threadedItem);
                     break;
                 default:
                     throw new ArgumentOutOfRangeException();
@@ -174,11 +217,10 @@ namespace Threading.ThreadedQueue
                 return default;
             }
 
-            string guid = Guid.NewGuid().ToString();
-            threadedItem.Identity = guid;
-            ProcessQueue.Add(threadedItem, AbortToken);
+            threadedItem.Identity = Guid.NewGuid().ToString();
+            ItemQueue.Add(threadedItem, AbortToken);
 
-            return guid;
+            return threadedItem.Identity;
         }
 
         /// <summary>
@@ -225,7 +267,7 @@ namespace Threading.ThreadedQueue
 
             if (disposing)
             {
-                ProcessQueue?.Dispose();
+                ItemQueue?.Dispose();
             }
 
             _Disposed = true;

@@ -10,7 +10,7 @@ using UnityEngine.Rendering;
 
 #endregion
 
-namespace Threading.ThreadedQueue
+namespace Threading
 {
     public class ChunkMeshingThreadedItem : ThreadedItem
     {
@@ -23,9 +23,9 @@ namespace Threading.ThreadedQueue
         private bool _Greedy;
 
         /// <summary>
-        ///     Initialises a new instance of the <see cref="Threading.ThreadedQueue.ChunkMeshingThreadedItem" /> class.
+        ///     Initialises a new instance of the <see cref="ChunkMeshingThreadedItem" /> class.
         /// </summary>
-        /// <seealso cref="Threading.ThreadedQueue.ChunkBuildingThreadedItem" />
+        /// <seealso cref="ChunkBuildingThreadedItem" />
         public ChunkMeshingThreadedItem()
         {
             _Triangles = new List<int>();

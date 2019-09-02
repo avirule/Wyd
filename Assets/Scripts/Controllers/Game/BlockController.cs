@@ -97,7 +97,7 @@ namespace Controllers.Game
         {
             blockName = blockName.ToLowerInvariant();
             
-            if (BlockNameIds.TryGetValue(blockName, out ushort blockId))
+            if (!BlockNameIds.TryGetValue(blockName, out ushort blockId))
             {
                 EventLog.Logger.Log(LogLevel.Warn,
                     $"Failed to return block id for block `{blockName}`: block does not exist.");
