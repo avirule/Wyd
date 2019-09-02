@@ -6,7 +6,6 @@ using Game.Entity;
 using Logging;
 using NLog;
 using UnityEngine;
-using UnityEngine.Diagnostics;
 
 #endregion
 
@@ -71,7 +70,7 @@ namespace Controllers.Entity
         private void CheckChangedChunk()
         {
             Vector3Int chunkPosition =
-                WorldController.GetWorldChunkOriginFromGlobalPosition(transform.position).ToInt();
+                WorldController.GetChunkOriginFromPosition(transform.position).ToInt();
             chunkPosition.y = 0;
 
             if (chunkPosition == CurrentChunk)

@@ -1,5 +1,9 @@
+#region
+
 using System;
 using UnityEngine.EventSystems;
+
+#endregion
 
 public static class PointerExtension
 {
@@ -14,7 +18,8 @@ public static class PointerExtension
             case PointerEventData.InputButton.Middle:
                 return 0;
             default:
-                throw new ArgumentOutOfRangeException(nameof(eventData.button), eventData, $"Pointer button click {eventData.button} unhandled.");
+                throw new ArgumentOutOfRangeException(nameof(eventData.button), eventData,
+                    $"Pointer button click {eventData.button} unhandled.");
         }
-    } 
+    }
 }

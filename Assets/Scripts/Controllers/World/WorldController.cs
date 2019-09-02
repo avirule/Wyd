@@ -7,13 +7,14 @@ using System.Linq;
 using Controllers.Entity;
 using Controllers.Game;
 using Game;
-using Game.Entity;
 using Game.World;
 using Game.World.Chunk;
 using Logging;
 using NLog;
 using UnityEngine;
 using UnityEngine.SceneManagement;
+
+// ReSharper disable UnusedAutoPropertyAccessor.Global
 
 #endregion
 
@@ -36,7 +37,7 @@ namespace Controllers.World
         public int CachedChunksCount => _ChunkCache.Size;
         public bool AllChunksBuilt => _Chunks.All(kvp => kvp.Value.Built);
         public bool AllChunksMeshed => _Chunks.All(kvp => kvp.Value.Meshed);
-        
+
         public long InitialTick { get; private set; }
         public TimeSpan WorldTickRate { get; private set; }
         public bool PrimaryLoaderChangedChunk { get; set; }
@@ -55,14 +56,14 @@ namespace Controllers.World
             _ChunkObject = Resources.Load<Chunk>(@"Prefabs/Chunk");
             _FrameTimeLimiter = new Stopwatch();
             _Chunks = new Dictionary<Vector3, Chunk>();
+            _ChunkCache = new ObjectCache<Chunk>(DeactivateChunk, chunk => Destroy(chunk.gameObject));
             _BuildChunkQueue = new Queue<Vector3>();
             _DeactivationQueue = new Queue<Vector3>();
         }
 
         private void Start()
         {
-            _ChunkCache = new ObjectCache<Chunk>(DeactivateChunk, chunk => Destroy(chunk.gameObject), false,
-                OptionsController.Current.MaximumChunkCacheSize);
+            _ChunkCache.MaximumSize = OptionsController.Current.MaximumChunkCacheSize;
 
             if (OptionsController.Current.PreInitializeChunkCache)
             {
@@ -78,7 +79,7 @@ namespace Controllers.World
         private void Update()
         {
             UpdateTime = DateTime.Now;
-            
+
             _FrameTimeLimiter.Restart();
 
             if (PrimaryLoaderChangedChunk)
@@ -101,8 +102,7 @@ namespace Controllers.World
             _FrameTimeLimiter.Stop();
         }
 
-        
-        
+
         #region TICKS / TIME
 
         private void SetTickRate()
@@ -119,7 +119,7 @@ namespace Controllers.World
 
             InitialTick = DateTime.Now.Ticks;
         }
-        
+
         public bool IsOnBorrowedUpdateTime()
         {
             return (DateTime.Now - UpdateTime) > OptionsController.Current.MaximumInternalFrameTime;
@@ -127,7 +127,6 @@ namespace Controllers.World
 
         #endregion
 
-        
 
         #region CHUNK BUILDING
 
@@ -212,9 +211,8 @@ namespace Controllers.World
         }
 
         #endregion
-        
-        
-        
+
+
         #region CHUNK DISABLING
 
         private void ProcessDeactivationQueue()
@@ -243,7 +241,7 @@ namespace Controllers.World
             {
                 return default;
             }
-            
+
             _Chunks.Remove(chunk.Position);
             FlagNeighborsPendingUpdate(chunk.Position);
             chunk.Deactivate();
@@ -252,9 +250,8 @@ namespace Controllers.World
         }
 
         #endregion
-        
-        
-        
+
+
         #region ON EVENT
 
         private void UpdateChunkLoadArea(Vector3 chunkPosition)
@@ -278,9 +275,8 @@ namespace Controllers.World
         }
 
         #endregion
-        
-        
-        
+
+
         #region GET / EXISTS
 
         public bool ChunkExistsAt(Vector3 position)
@@ -298,7 +294,7 @@ namespace Controllers.World
 
         public ushort GetBlockAt(Vector3 position)
         {
-            Vector3 chunkPosition = GetWorldChunkOriginFromGlobalPosition(position);
+            Vector3 chunkPosition = GetChunkOriginFromPosition(position);
 
             Chunk chunk = GetChunkAt(chunkPosition);
 
@@ -312,7 +308,7 @@ namespace Controllers.World
 
         public bool BlockExistsAt(Vector3 position)
         {
-            Vector3 chunkPosition = GetWorldChunkOriginFromGlobalPosition(position);
+            Vector3 chunkPosition = GetChunkOriginFromPosition(position);
 
             Chunk chunk = GetChunkAt(chunkPosition);
 
@@ -324,20 +320,19 @@ namespace Controllers.World
             return chunk.BlockExistsAt(position);
         }
 
-        public static Vector3 GetWorldChunkOriginFromGlobalPosition(Vector3 globalPosition)
+        public static Vector3 GetChunkOriginFromPosition(Vector3 globalPosition)
         {
             return globalPosition.Divide(Chunk.Size).Floor().Multiply(Chunk.Size);
         }
 
         #endregion
-        
-        
-        
+
+
         #region MISC
 
         public void RegisterEntity(Transform attachTo, int loadRadius)
         {
-            CollisionTokenController.RegisterEntity(attachTo, loadRadius);   
+            CollisionTokenController.RegisterEntity(attachTo, loadRadius);
         }
 
         #endregion

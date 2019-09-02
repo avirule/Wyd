@@ -1,7 +1,3 @@
-#region
-
-#endregion
-
 namespace Game.Meshing
 {
     public class GreedyMeshing

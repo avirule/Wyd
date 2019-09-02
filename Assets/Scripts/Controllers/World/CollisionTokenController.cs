@@ -1,10 +1,12 @@
-using System;
+#region
+
 using System.Collections.Generic;
 using Controllers.Entity;
 using Game;
 using Game.Entity;
 using UnityEngine;
-using UnityEngine.Diagnostics;
+
+#endregion
 
 namespace Controllers.World
 {
@@ -21,7 +23,7 @@ namespace Controllers.World
 
         private void Awake()
         {
-            _CollisionTokenObject = Resources.Load<GameObject>($@"Prefabs/CollisionToken");
+            _CollisionTokenObject = Resources.Load<GameObject>(@"Prefabs/CollisionToken");
             _CollisionTokens = new List<CollisionToken>();
             _CombinedColliderMesh = new Mesh();
             _MeshCollider = GetComponent<MeshCollider>();
@@ -44,18 +46,18 @@ namespace Controllers.World
         {
             Destroy(_CombinedColliderMesh);
         }
-        
+
         public void RegisterEntity(Transform attachTo, int loadRadius)
         {
             GameObject entityToken = Instantiate(_CollisionTokenObject, transform);
             CollisionToken collisionToken = entityToken.GetComponent<CollisionToken>();
             collisionToken.AuthorTransform = attachTo;
             collisionToken.Radius = loadRadius;
-            collisionToken.UpdatedMesh += (sender, mesh) => { _UpdateColliderMesh = true;};
+            collisionToken.UpdatedMesh += (sender, mesh) => { _UpdateColliderMesh = true; };
 
             _CollisionTokens.Add(collisionToken);
         }
-        
+
         private void GenerateColliderMesh()
         {
             List<CombineInstance> combines = new List<CombineInstance>();

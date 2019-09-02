@@ -16,7 +16,7 @@ namespace Controllers.Game
     public class BlockController : SingletonController<BlockController>
     {
         public const ushort BLOCK_EMPTY_ID = 0;
-        
+
         public ConcurrentDictionary<string, ushort> BlockNameIds;
         public ConcurrentDictionary<ushort, IBlockRule> Blocks;
 

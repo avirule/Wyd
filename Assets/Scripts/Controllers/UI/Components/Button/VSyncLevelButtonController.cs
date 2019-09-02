@@ -14,7 +14,7 @@ namespace Controllers.UI.Components.Button
         {
             int step = eventData.GetButtonAsInt();
 
-            if (step == -1 && OptionsController.Current.VSyncLevel == 0)
+            if ((step == -1) && (OptionsController.Current.VSyncLevel == 0))
             {
                 OptionsController.Current.VSyncLevel = 4;
             }
