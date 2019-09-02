@@ -23,7 +23,6 @@ namespace Controllers.World
 {
     public class WorldController : SingletonController<WorldController>, IEntityChunkChangedSubscriber
     {
-        private Stopwatch _FrameTimeLimiter;
         private Chunk _ChunkObject;
         private Dictionary<Vector3, Chunk> _Chunks;
         private ObjectCache<Chunk> _ChunkCache;
@@ -55,7 +54,6 @@ namespace Controllers.World
             SetTickRate();
 
             _ChunkObject = Resources.Load<Chunk>(@"Prefabs/Chunk");
-            _FrameTimeLimiter = new Stopwatch();
             _Chunks = new Dictionary<Vector3, Chunk>();
             _ChunkCache = new ObjectCache<Chunk>(DeactivateChunk, chunk => Destroy(chunk.gameObject));
             _BuildChunkQueue = new Queue<Vector3>();
@@ -77,26 +75,22 @@ namespace Controllers.World
         {
             UpdateTime = DateTime.Now;
 
-            _FrameTimeLimiter.Restart();
-
+            if (_DeactivationQueue.Count > 0)
+            {
+                ProcessDeactivationQueue();
+            }
+            
             if (PrimaryLoaderChangedChunk)
             {
                 UpdateChunkLoadArea(PlayerController.Current.CurrentChunk);
 
                 PrimaryLoaderChangedChunk = false;
             }
-
+            
             if (_BuildChunkQueue.Count > 0)
             {
                 ProcessBuildChunkQueue();
             }
-
-            if (_DeactivationQueue.Count > 0)
-            {
-                ProcessDeactivationQueue();
-            }
-
-            _FrameTimeLimiter.Stop();
         }
 
 
@@ -161,7 +155,7 @@ namespace Controllers.World
                 // ensures that neighbours update their meshes to cull newly out of sight faces
                 FlagNeighborsPendingUpdate(chunk.Position);
 
-                if (_FrameTimeLimiter.Elapsed > OptionsController.Current.MaximumInternalFrameTime)
+                if (IsOnBorrowedUpdateTime())
                 {
                     break;
                 }
@@ -224,11 +218,6 @@ namespace Controllers.World
                 }
 
                 _ChunkCache.CacheItem(ref chunk);
-
-                if (_FrameTimeLimiter.Elapsed > OptionsController.Current.MaximumInternalFrameTime)
-                {
-                    break;
-                }
             }
         }
 
