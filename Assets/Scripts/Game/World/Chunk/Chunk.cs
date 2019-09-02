@@ -113,7 +113,7 @@ namespace Game.World.Chunk
             MeshRenderer.material.SetTexture(TextureController.Current.MainTex,
                 TextureController.Current.TerrainTexture);
             _Visible = MeshRenderer.enabled;
-            
+
             // todo implement chunk ticks
 //            double waitTime = TimeSpan
 //                .FromTicks((DateTime.Now.Ticks - WorldController.Current.InitialTick) %
@@ -124,7 +124,7 @@ namespace Game.World.Chunk
 
         private void Start()
         {
-            PlayerController.Current.RegisterEntityChangedSubscriber(this);    
+            PlayerController.Current.RegisterEntityChangedSubscriber(this);
             CheckInternalsAgainstLoaderPosition(PlayerController.Current.CurrentChunk);
         }
 
