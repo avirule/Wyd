@@ -250,10 +250,7 @@ namespace Threading
                     }
                 }
 
-                if (((y == 0) && BlockController.Current.IsBlockTransparent(
-                         WorldController.Current.GetBlockAt(globalPosition + Vector3.down))) ||
-                    ((y > 0) && BlockController.Current.IsBlockTransparent(
-                         _Blocks[index - (Chunk.Size.x * Chunk.Size.z)])))
+                if ((y > 0) && BlockController.Current.IsBlockTransparent(_Blocks[index - (Chunk.Size.x * Chunk.Size.z)]))
                 {
                     _Triangles.Add(_Vertices.Count + 0);
                     _Triangles.Add(_Vertices.Count + 2);
