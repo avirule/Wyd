@@ -2,6 +2,7 @@
 
 using System;
 using System.Collections.Concurrent;
+using System.Collections.Generic;
 using System.Linq;
 using Game;
 using Game.World.Block;
@@ -17,14 +18,14 @@ namespace Controllers.Game
     {
         public const ushort BLOCK_EMPTY_ID = 0;
 
-        public ConcurrentDictionary<string, ushort> BlockNameIds;
-        public ConcurrentDictionary<ushort, IBlockRule> Blocks;
+        public Dictionary<string, ushort> BlockNameIds;
+        public Dictionary<ushort, IBlockRule> Blocks;
 
         private void Awake()
         {
             AssignCurrent(this);
-            BlockNameIds = new ConcurrentDictionary<string, ushort>();
-            Blocks = new ConcurrentDictionary<ushort, IBlockRule>();
+            BlockNameIds = new Dictionary<string, ushort>();
+            Blocks = new Dictionary<ushort, IBlockRule>();
         }
 
         public int RegisterBlockRules(string blockName, bool isTransparent,
@@ -50,8 +51,8 @@ namespace Controllers.Game
 
             if (!Blocks.ContainsKey(blockId))
             {
-                Blocks.TryAdd(blockId, new BlockRule(blockId, blockName, isTransparent, uvsRule));
-                BlockNameIds.TryAdd(blockName, blockId);
+                Blocks.Add(blockId, new BlockRule(blockId, blockName, isTransparent, uvsRule));
+                BlockNameIds.Add(blockName, blockId);
             }
 
             EventLog.Logger.Log(LogLevel.Info,
@@ -92,35 +93,18 @@ namespace Controllers.Game
             return true;
         }
 
-        public bool IsBlockDefaultTransparent(ushort blockId)
-        {
-            if (blockId == 0)
-            {
-                return true;
-            }
-
-            if (!Blocks.ContainsKey(blockId))
-            {
-                EventLog.Logger.Log(LogLevel.Error,
-                    $"Failed to return block rule for block with id `{blockId}`: block does not exist.");
-                return false;
-            }
-
-            return Blocks[blockId].Transparent;
-        }
-
         public ushort GetBlockId(string blockName)
         {
             blockName = blockName.ToLowerInvariant();
-
-            if (!BlockNameIds.ContainsKey(blockName))
+            
+            if (BlockNameIds.TryGetValue(blockName, out ushort blockId))
             {
                 EventLog.Logger.Log(LogLevel.Warn,
                     $"Failed to return block id for block `{blockName}`: block does not exist.");
-                return 0;
+                return BLOCK_EMPTY_ID;
             }
 
-            return BlockNameIds[blockName];
+            return blockId;
         }
 
         public string GetBlockName(ushort blockId)
@@ -130,19 +114,31 @@ namespace Controllers.Game
                 return "Air";
             }
 
-            if (!Blocks.ContainsKey(blockId))
+            if (!Blocks.TryGetValue(blockId, out IBlockRule blockRule))
             {
                 EventLog.Logger.Log(LogLevel.Warn,
                     $"Failed to return block name for block id `{blockId}`: block does not exist.");
                 return "Null";
             }
 
-            return Blocks[blockId].BlockName;
+            return blockRule.BlockName;
         }
-
-        public bool IsBlockTransparent(ushort id)
+        
+        public bool IsBlockTransparent(ushort blockId)
         {
-            return !Blocks.ContainsKey(id) || Blocks[id].Transparent;
+            if (blockId == BLOCK_EMPTY_ID)
+            {
+                return true;
+            }
+
+            if (!Blocks.TryGetValue(blockId, out IBlockRule blockRule))
+            {
+                EventLog.Logger.Log(LogLevel.Error,
+                    $"Failed to return block rule for block with id `{blockId}`: block does not exist.");
+                return false;
+            }
+
+            return blockRule.Transparent;
         }
     }
 }

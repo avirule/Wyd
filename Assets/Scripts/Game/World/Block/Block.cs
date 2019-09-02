@@ -66,7 +66,7 @@ namespace Game.World.Block
                 [FaceSections[5]] = faces & (byte) Direction.Down
             };
 
-            Transparent = BlockController.Current.IsBlockDefaultTransparent(Id);
+            Transparent = BlockController.Current.IsBlockTransparent(Id);
         }
 
         public bool HasAnyFace()

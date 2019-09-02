@@ -20,6 +20,7 @@ namespace Controllers.UI.Components.Text
         private int _SkippedFrames;
 
         public int MinimumSkipFrames = 8;
+        public int Precision = 2;
 
         private void Awake()
         {
@@ -47,7 +48,7 @@ namespace Controllers.UI.Components.Text
                 return;
             }
 
-            double averageDelaTime = Math.Round(1f / _DeltaTimes.Average(), 4);
+            double averageDelaTime = Math.Round(1f / _DeltaTimes.Average(), Precision);
 
             _FPSText.text = $"FPS: {averageDelaTime}";
             _SkippedFrames = 0;
