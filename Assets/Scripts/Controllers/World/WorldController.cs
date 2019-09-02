@@ -2,7 +2,6 @@
 
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Linq;
 using Controllers.Entity;
 using Controllers.Game;
@@ -75,18 +74,23 @@ namespace Controllers.World
         {
             UpdateTime = DateTime.Now;
 
+            if (Chunk.ThreadedExecutionQueue.ThreadingMode != OptionsController.Current.ThreadingMode)
+            {
+                Chunk.ThreadedExecutionQueue.ThreadingMode = OptionsController.Current.ThreadingMode;
+            }
+
             if (_DeactivationQueue.Count > 0)
             {
                 ProcessDeactivationQueue();
             }
-            
+
             if (PrimaryLoaderChangedChunk)
             {
                 UpdateChunkLoadArea(PlayerController.Current.CurrentChunk);
 
                 PrimaryLoaderChangedChunk = false;
             }
-            
+
             if (_BuildChunkQueue.Count > 0)
             {
                 ProcessBuildChunkQueue();

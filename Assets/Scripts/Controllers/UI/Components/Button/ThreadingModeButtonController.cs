@@ -17,7 +17,7 @@ namespace Controllers.UI.Components.Button
 
             if ((step == -1) && (OptionsController.Current.ThreadingMode == 0))
             {
-                OptionsController.Current.ThreadingMode = (ThreadingMode) 2;
+                OptionsController.Current.ThreadingMode = (ThreadingMode) 1;
             }
             else
             {

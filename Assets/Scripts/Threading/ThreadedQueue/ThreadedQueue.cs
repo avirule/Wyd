@@ -5,6 +5,8 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
+using Controllers.Game;
+using Game.World.Chunk;
 
 #endregion
 
@@ -24,7 +26,7 @@ namespace Threading.ThreadedQueue
         ///     Determines whether the <see cref="ThreadedQueue" /> executes <see cref="ThreadedItem" /> on the
         ///     internal thread, or uses <see cref="System.Threading.ThreadPool" />.
         /// </summary>
-        public bool MultiThreadedExecution;
+        public ThreadingMode ThreadingMode;
 
         /// <summary>
         ///     Whether or not the internal thread has been started.
@@ -52,19 +54,17 @@ namespace Threading.ThreadedQueue
         /// <param name="maximumFinishedThreadedItemLifetime">
         ///     Maximum lifetime in milliseconds that a threaded item can live after finishing execution.
         /// </param>
-        /// <param name="multiThreadedExecution">
+        /// <param name="threadingMode">
         ///     Determines whether the <see cref="ThreadedQueue" /> executes <see cref="ThreadedItem" /> on the
         ///     internal thread, or uses <see cref="System.Threading.ThreadPool" />.
         /// </param>
-        public ThreadedQueue(int millisecondWaitTimeout, int maximumFinishedThreadedItemLifetime,
-            bool multiThreadedExecution = false)
+        public ThreadedQueue(int millisecondWaitTimeout, int maximumFinishedThreadedItemLifetime, ThreadingMode threadingMode = ThreadingMode.Single)
         {
             // todo add variable that decides whether to use single-threaded or multi-threaded execution
 
             MillisecondWaitTimeout = millisecondWaitTimeout;
             MaximumFinishedThreadedItemLifetime = maximumFinishedThreadedItemLifetime;
-            MultiThreadedExecution = multiThreadedExecution;
-
+            ThreadingMode = threadingMode;
             ProcessingThread = new Thread(ProcessThreadedItems);
             ProcessQueue = new BlockingCollection<ThreadedItem>();
             ProcessedItems = new ConcurrentDictionary<object, ThreadedItem>();
@@ -142,21 +142,25 @@ namespace Threading.ThreadedQueue
         /// <param name="threadedItem"><see cref="ThreadedItem" /> to be processed.</param>
         protected virtual async void ProcessThreadedItem(ThreadedItem threadedItem)
         {
-            if (MultiThreadedExecution)
+            switch (ThreadingMode)
             {
-                TaskCreationOptions taskCreationOption = threadedItem.LongRunning
-                    ? TaskCreationOptions.LongRunning
-                    : TaskCreationOptions.PreferFairness;
+                case ThreadingMode.Single:
+                    await threadedItem.Execute(null);
+                    break;
+                case ThreadingMode.Multi:
+                    TaskCreationOptions taskCreationOption = threadedItem.LongRunning
+                        ? TaskCreationOptions.LongRunning
+                        : TaskCreationOptions.PreferFairness;
 
-                await Task.Factory.StartNew(threadedItem.Execute, null, AbortToken, taskCreationOption,
-                    TaskScheduler.Default);
+                    await Task.Factory.StartNew(threadedItem.Execute, null, AbortToken, taskCreationOption,
+                        TaskScheduler.Default);
+                    break;
+                default:
+                    throw new ArgumentOutOfRangeException();
             }
-            else
-            {
-                await threadedItem.Execute(null);
-            }
-
+            
             ProcessedItems.TryAdd(threadedItem.Identity, threadedItem);
+
         }
 
         /// <summary>

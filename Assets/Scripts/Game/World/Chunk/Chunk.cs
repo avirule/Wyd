@@ -110,9 +110,6 @@ namespace Game.World.Chunk
 
         private void Start()
         {
-            ThreadedExecutionQueue.MultiThreadedExecution =
-                OptionsController.Current.ThreadingMode != ThreadingMode.Single;
-
             PlayerController.Current.RegisterEntityChangedSubscriber(this);
         }
 
