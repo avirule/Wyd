@@ -8,6 +8,7 @@ using Controllers.World;
 using Game.Entity;
 using Threading.ThreadedQueue;
 using UnityEngine;
+using UnityEngine.Rendering;
 
 #endregion
 
@@ -39,6 +40,7 @@ namespace Game.World.Chunk
         private object _MeshingIdentity;
         private bool _OnBorrowedUpdateTime;
         private bool _Visible;
+        private bool _UseShadows;
 
         public MeshFilter MeshFilter;
         public MeshRenderer MeshRenderer;
@@ -48,7 +50,21 @@ namespace Game.World.Chunk
         public bool Meshing;
         public bool PendingMeshUpdate;
 
-        [Header("Graphics")] public bool DrawShadows;
+        public bool DrawShadows
+        {
+            get => _UseShadows;
+            set
+            {
+                if (_UseShadows == value)
+                {
+                    return;
+                }
+
+                _UseShadows = value;
+                MeshRenderer.receiveShadows = _UseShadows;
+                MeshRenderer.shadowCastingMode = _UseShadows ? ShadowCastingMode.On : ShadowCastingMode.Off;
+            }
+        }
 
         public bool Active => gameObject.activeSelf;
 

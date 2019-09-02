@@ -15,11 +15,7 @@ namespace Controllers.UI.Components.Text
         private void Awake()
         {
             _VSyncLevelText = GetComponent<TextMeshProUGUI>();
-        }
-
-        private void Start()
-        {
-            UpdateVSyncLevelText();
+            _VSyncLevelText.text = "VSync Level: null";
         }
 
         private void Update()

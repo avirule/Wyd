@@ -7,6 +7,7 @@ using System.Linq;
 using Controllers.Game;
 using TMPro;
 using UnityEngine;
+// ReSharper disable InconsistentNaming
 
 #endregion
 
@@ -14,26 +15,17 @@ namespace Controllers.UI.Components.Text
 {
     public class FPSTextController : MonoBehaviour
     {
-        private Stopwatch _LocalFrameStopwatch;
         private List<float> _DeltaTimes;
         private TextMeshProUGUI _FPSText;
 
         private void Awake()
         {
-            _LocalFrameStopwatch = new Stopwatch();
             _DeltaTimes = new List<float>();
             _FPSText = GetComponent<TextMeshProUGUI>();
         }
 
-        private void Start()
-        {
-            _LocalFrameStopwatch.Start();
-        }
-
         private void Update()
         {
-            _LocalFrameStopwatch.Restart();
-
             UpdateDeltaTimes();
         }
 

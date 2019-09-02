@@ -14,10 +14,6 @@ namespace Controllers.UI.Diagnostics
         public GameObject DiagnosticPanel;
         public TextMeshProUGUI VersionText;
 
-        private void Start()
-        {
-        }
-
         private void Update()
         {
             CheckPressedDiagnosticKey();

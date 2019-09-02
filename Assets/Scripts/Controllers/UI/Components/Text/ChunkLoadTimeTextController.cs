@@ -20,13 +20,7 @@ namespace Controllers.UI.Components.Text
         private void Awake()
         {
             _ChunkLoadTimeText = GetComponent<TextMeshProUGUI>();
-        }
-
-        private void Start()
-        {
-            (double buildTime, double meshTime) = CalculateBuildAndMeshTimes();
-
-            UpdateChunkLoadTimeText(buildTime, meshTime);
+            _ChunkLoadTimeText.text = "Chunk Load Time: (b0ms, m0ms)";
         }
 
         private void Update()
@@ -40,7 +34,15 @@ namespace Controllers.UI.Components.Text
             }
         }
 
-        private (double, double) CalculateBuildAndMeshTimes()
+        private void UpdateChunkLoadTimeText(double buildTime, double meshTime)
+        {
+            _LastBuildTime = buildTime;
+            _LastMeshTime = meshTime;
+
+            _ChunkLoadTimeText.text = $"Chunk Load Time: (b{buildTime}ms, m{meshTime}ms)";
+        }
+        
+        private static (double, double) CalculateBuildAndMeshTimes()
         {
             double avgBuildTime = Chunk.BuildTimes.Count > 0 ? Chunk.BuildTimes.Average() : 0d;
             double avgMeshTime = Chunk.MeshTimes.Count > 0 ? Chunk.MeshTimes.Average() : 0d;
@@ -49,14 +51,6 @@ namespace Controllers.UI.Components.Text
             double meshTime = Math.Round(avgMeshTime, 0);
 
             return (buildTime, meshTime);
-        }
-
-        private void UpdateChunkLoadTimeText(double buildTime, double meshTime)
-        {
-            _LastBuildTime = buildTime;
-            _LastMeshTime = meshTime;
-
-            _ChunkLoadTimeText.text = $"Chunk Load Time: (b{buildTime}ms, m{meshTime}ms)";
         }
     }
 }

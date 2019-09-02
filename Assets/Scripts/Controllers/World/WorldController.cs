@@ -26,14 +26,16 @@ namespace Controllers.World
         private Dictionary<Vector3, Chunk> _Chunks;
         private ObjectCache<Chunk> _ChunkCache;
         private Queue<Vector3> _BuildChunkQueue;
-        private Queue<Vector3> _DeactivationQueue;
+        private Queue<Vector3> _CachingQueue;
 
         public CollisionTokenController CollisionTokenController;
         public WorldGenerationSettings WorldGenerationSettings;
         public float TicksPerSecond;
 
-        public int ActiveChunksCount => _Chunks.Count;
-        public int CachedChunksCount => _ChunkCache.Size;
+        public int ChunksActiveCount => _Chunks.Count;
+        public int ChunksCachedCount => _ChunkCache.Size;
+        public int ChunksQueuedForBuilding => _BuildChunkQueue.Count;
+        public int ChunkQueuedForCaching => _CachingQueue.Count;
         public bool AllChunksBuilt => _Chunks.All(kvp => kvp.Value.Built);
         public bool AllChunksMeshed => _Chunks.All(kvp => kvp.Value.Meshed);
 
@@ -56,7 +58,7 @@ namespace Controllers.World
             _Chunks = new Dictionary<Vector3, Chunk>();
             _ChunkCache = new ObjectCache<Chunk>(DeactivateChunk, chunk => Destroy(chunk.gameObject));
             _BuildChunkQueue = new Queue<Vector3>();
-            _DeactivationQueue = new Queue<Vector3>();
+            _CachingQueue = new Queue<Vector3>();
         }
 
         private void Start()
@@ -79,9 +81,9 @@ namespace Controllers.World
                 Chunk.ThreadedExecutionQueue.ThreadingMode = OptionsController.Current.ThreadingMode;
             }
 
-            if (_DeactivationQueue.Count > 0)
+            if (_CachingQueue.Count > 0)
             {
-                ProcessDeactivationQueue();
+                ProcessCachingQueue();
             }
 
             if (PrimaryLoaderChangedChunk)
@@ -141,10 +143,7 @@ namespace Controllers.World
                 if (chunk == default)
                 {
                     chunk = Instantiate(_ChunkObject, position, Quaternion.identity, transform);
-                    chunk.DeactivationCallback += (sender, chunkPosition) =>
-                    {
-                        _DeactivationQueue.Enqueue(chunkPosition);
-                    };
+                    chunk.DeactivationCallback += (sender, chunkPosition) => { _CachingQueue.Enqueue(chunkPosition); };
                 }
                 else
                 {
@@ -210,11 +209,11 @@ namespace Controllers.World
 
         #region CHUNK DISABLING
 
-        private void ProcessDeactivationQueue()
+        private void ProcessCachingQueue()
         {
-            while (_DeactivationQueue.Count > 0)
+            while (_CachingQueue.Count > 0)
             {
-                Vector3 chunkPosition = _DeactivationQueue.Dequeue();
+                Vector3 chunkPosition = _CachingQueue.Dequeue();
 
                 if (!_Chunks.TryGetValue(chunkPosition, out Chunk chunk))
                 {

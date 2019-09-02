@@ -17,11 +17,7 @@ namespace Controllers.UI.Components.Text
         private void Awake()
         {
             _ThreadingModeText = GetComponent<TextMeshProUGUI>();
-        }
-
-        private void Start()
-        {
-            UpdateThreadingModeText();
+            _ThreadingModeText.text = $"Threading Mode: {_LastThreadingMode.ToString()}";
         }
 
         private void Update()
