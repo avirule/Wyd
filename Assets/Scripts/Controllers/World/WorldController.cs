@@ -2,6 +2,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using Controllers.Entity;
 using Controllers.Game;
@@ -27,6 +28,7 @@ namespace Controllers.World
         private ObjectCache<Chunk> _ChunkCache;
         private Queue<Vector3> _BuildChunkQueue;
         private Queue<Vector3> _CachingQueue;
+        private Stopwatch _FrameTimer;
 
         public CollisionTokenController CollisionTokenController;
         public WorldGenerationSettings WorldGenerationSettings;
@@ -42,7 +44,6 @@ namespace Controllers.World
         public long InitialTick { get; private set; }
         public TimeSpan WorldTickRate { get; private set; }
         public bool PrimaryLoaderChangedChunk { get; set; }
-        public DateTime UpdateTime { get; private set; }
 
         private void Awake()
         {
@@ -59,6 +60,7 @@ namespace Controllers.World
             _ChunkCache = new ObjectCache<Chunk>(DeactivateChunk, chunk => Destroy(chunk.gameObject));
             _BuildChunkQueue = new Queue<Vector3>();
             _CachingQueue = new Queue<Vector3>();
+            _FrameTimer = new Stopwatch();
         }
 
         private void Start()
@@ -74,7 +76,7 @@ namespace Controllers.World
 
         private void Update()
         {
-            UpdateTime = DateTime.Now;
+            _FrameTimer.Restart();
 
             if (_CachingQueue.Count > 0)
             {
@@ -114,7 +116,7 @@ namespace Controllers.World
 
         public bool IsOnBorrowedUpdateTime()
         {
-            return (DateTime.Now - UpdateTime) > OptionsController.Current.MaximumInternalFrameTime;
+            return _FrameTimer.Elapsed > OptionsController.Current.MaximumInternalFrameTime;
         }
 
         #endregion

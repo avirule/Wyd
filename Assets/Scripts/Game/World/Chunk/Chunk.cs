@@ -2,6 +2,7 @@
 
 using System;
 using System.Collections.Concurrent;
+using Collections;
 using Controllers.Entity;
 using Controllers.Game;
 using Controllers.World;
@@ -30,9 +31,9 @@ namespace Game.World.Chunk
 
         private static ThreadedQueue _threadedExecutionQueue;
 
-        public static readonly ConcurrentQueue<TimeSpan> BuildTimes = new ConcurrentQueue<TimeSpan>();
-        public static readonly ConcurrentQueue<TimeSpan> MeshTimes = new ConcurrentQueue<TimeSpan>();
         public static readonly Vector3Int Size = new Vector3Int(32, 256, 32);
+        public static FixedConcurrentQueue<TimeSpan> BuildTimes;
+        public static FixedConcurrentQueue<TimeSpan> MeshTimes;
 
         private Vector3 _Position;
         private ushort[] _Blocks;
@@ -101,12 +102,6 @@ namespace Game.World.Chunk
 
         private void Awake()
         {
-            if (_threadedExecutionQueue == default)
-            {
-                _threadedExecutionQueue = new ThreadedQueue(200, () => OptionsController.Current.ThreadingMode);
-                _threadedExecutionQueue.Start();
-            }
-
             _Position = transform.position;
             _Blocks = new ushort[Size.x * Size.y * Size.z];
             _OnBorrowedUpdateTime = Built = Building = Meshed = Meshing = PendingMeshUpdate = false;
@@ -128,6 +123,24 @@ namespace Game.World.Chunk
 
         private void Start()
         {
+            if (_threadedExecutionQueue == default)
+            {
+                _threadedExecutionQueue = new ThreadedQueue(200, () => OptionsController.Current.ThreadingMode);
+                _threadedExecutionQueue.Start();
+            }
+
+            if (BuildTimes == default)
+            {
+                BuildTimes =
+                    new FixedConcurrentQueue<TimeSpan>(OptionsController.Current.MaximumChunkLoadTimeBufferSize);
+            }
+
+            if (MeshTimes == default)
+            {
+                MeshTimes = new FixedConcurrentQueue<TimeSpan>(OptionsController.Current
+                    .MaximumChunkLoadTimeBufferSize);
+            }
+
             PlayerController.Current.RegisterEntityChangedSubscriber(this);
             CheckInternalsAgainstLoaderPosition(PlayerController.Current.CurrentChunk);
         }
@@ -150,8 +163,6 @@ namespace Game.World.Chunk
             {
                 action?.Invoke();
             }
-
-            CullChunkLoadTimesQueue();
         }
 
         private void OnDestroy()
@@ -163,19 +174,6 @@ namespace Game.World.Chunk
         {
             // Deallocate and destroy ALL NativeCollection / disposable objects
             _threadedExecutionQueue.Abort();
-        }
-
-        private static void CullChunkLoadTimesQueue()
-        {
-            while (MeshTimes.Count > OptionsController.Current.MaximumChunkLoadTimeBufferSize)
-            {
-                MeshTimes.TryDequeue(out TimeSpan _);
-            }
-
-            while (MeshTimes.Count > OptionsController.Current.MaximumChunkLoadTimeBufferSize)
-            {
-                MeshTimes.TryDequeue(out TimeSpan _);
-            }
         }
 
 

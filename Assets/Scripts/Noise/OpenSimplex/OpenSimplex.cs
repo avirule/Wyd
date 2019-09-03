@@ -331,7 +331,7 @@ namespace Noise.OpenSimplex
         }
 
         public OpenSimplexNoise()
-            : this(DateTime.Now.Ticks)
+            : this(DateTime.UtcNow.Ticks)
         {
         }
 

@@ -1,6 +1,7 @@
 #region
 
 using System;
+using System.Diagnostics;
 using TMPro;
 using UnityEngine;
 using UnityEngine.Profiling;
@@ -15,7 +16,7 @@ namespace Controllers.UI.Components.Text
 
         private TextMeshProUGUI _UsedMemoryText;
         private TimeSpan _MaximumDisplayAccuracyUpdateInterval;
-        private DateTime _LastCheckedDisplayedAccuracyTime;
+        private Stopwatch _LastUpdateTimer;
         private long _LastReservedMemoryTotal;
         private long _LastAllocatedMemoryTotal;
 
@@ -26,12 +27,12 @@ namespace Controllers.UI.Components.Text
             _UsedMemoryText = GetComponent<TextMeshProUGUI>();
             _UsedMemoryText.text = "Used Memory: (r0MB, a0MB)";
             _MaximumDisplayAccuracyUpdateInterval = TimeSpan.FromSeconds(1d / 2);
-            _LastCheckedDisplayedAccuracyTime = DateTime.MinValue;
+            _LastUpdateTimer = Stopwatch.StartNew();
         }
 
         private void Update()
         {
-            if ((DateTime.Now - _LastCheckedDisplayedAccuracyTime) < _MaximumDisplayAccuracyUpdateInterval)
+            if (_LastUpdateTimer.Elapsed <= _MaximumDisplayAccuracyUpdateInterval)
             {
                 return;
             }
@@ -43,6 +44,8 @@ namespace Controllers.UI.Components.Text
             {
                 UpdateUsedMemoryText(totalReservedMemory, totalAllocatedMemory);
             }
+
+            _LastUpdateTimer.Restart();
         }
 
         private void UpdateUsedMemoryText(long reservedMemory, long allocatedMemory)
@@ -54,8 +57,6 @@ namespace Controllers.UI.Components.Text
             double allocatedMemoryInMb = Math.Round(allocatedMemory / _MEGABYTE_VALUE, Precision);
 
             _UsedMemoryText.text = $"Used Memory: (r{reservedMemoryInMb}MB, a{allocatedMemoryInMb}MB)";
-
-            _LastCheckedDisplayedAccuracyTime = DateTime.Now;
         }
 
         private static (long, long) GetUsedMemory()

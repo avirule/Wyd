@@ -44,12 +44,18 @@ namespace Controllers.UI.Components.Text
 
         private static (double, double) CalculateBuildAndMeshTimes()
         {
-            double avgBuildTime = Chunk.BuildTimes.Count > 0
-                ? Chunk.BuildTimes.Average(timeSpan => timeSpan.TotalMilliseconds)
-                : 0d;
-            double avgMeshTime = Chunk.MeshTimes.Count > 0
-                ? Chunk.MeshTimes.Average(timeSpan => timeSpan.TotalMilliseconds)
-                : 0d;
+            double avgBuildTime = 0d;
+            double avgMeshTime = 0d;
+
+            if ((Chunk.BuildTimes != default) && (Chunk.BuildTimes.Count > 0))
+            {
+                avgBuildTime = Chunk.BuildTimes.Average(timeSpan => timeSpan.TotalMilliseconds);
+            }
+
+            if ((Chunk.MeshTimes != default) && (Chunk.MeshTimes.Count > 0))
+            {
+                avgMeshTime = Chunk.MeshTimes.Average(timeSpan => timeSpan.TotalMilliseconds);
+            }
 
             double buildTime = Math.Round(avgBuildTime, 0);
             double meshTime = Math.Round(avgMeshTime, 0);

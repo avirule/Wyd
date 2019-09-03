@@ -78,11 +78,11 @@ namespace Threading
         /// </summary>
         public virtual Task Execute()
         {
-            StartTime = DateTime.Now;
+            StartTime = DateTime.UtcNow;
 
             Process();
 
-            FinishTime = DateTime.Now;
+            FinishTime = DateTime.UtcNow;
             ExecutionTime = FinishTime - StartTime;
 
             IsDone = true;
