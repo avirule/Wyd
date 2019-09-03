@@ -3,6 +3,7 @@
 using Controllers.Game;
 using Controllers.World;
 using Game.World.Chunk;
+using Noise;
 using Noise.OpenSimplex;
 using UnityEngine;
 using Random = System.Random;
@@ -13,9 +14,7 @@ namespace Threading
 {
     public class ChunkBuildingThreadedItem : ThreadedItem
     {
-        private static readonly OpenSimplexNoise NoiseFunction =
-            new OpenSimplexNoise(WorldController.Current.WorldGenerationSettings.Seed);
-
+        private FastNoise _NoiseFunction;
         private Random _Rand;
         private Vector3 _Position;
         private ushort[] _Blocks;
@@ -27,6 +26,7 @@ namespace Threading
         /// <param name="blocks">Pre-initialized and built <see cref="T:ushort[]" /> to iterate through.</param>
         public void Set(Vector3 position, ushort[] blocks)
         {
+            _NoiseFunction = new FastNoise(WorldController.Current.WorldGenerationSettings.Seed);
             _Rand = new Random(WorldController.Current.WorldGenerationSettings.Seed);
             _Position = position;
             _Blocks = blocks;
@@ -159,11 +159,10 @@ namespace Threading
             }
             else
             {
-                double noiseValue =
-                    NoiseFunction.Evaluate((_Position.x + x) / 20d, (_Position.y + y) / 20d, (_Position.z + z) / 20d);
+                float noiseValue = _NoiseFunction.GetSimplex((_Position.x + x) / 20f, (_Position.y + y) / 20f, (_Position.z + z) / 20f);
                 noiseValue /= y;
 
-                if (noiseValue >= 0.01d)
+                if (noiseValue >= 0.01f)
                 {
                     _Blocks[index] = BlockController.Current.GetBlockId("Grass");
                 }

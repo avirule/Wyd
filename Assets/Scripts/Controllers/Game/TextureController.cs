@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using Logging;
 using NLog;
 using UnityEngine;
+using UnityEngine.UI;
 
 #endregion
 
@@ -55,13 +56,7 @@ namespace Controllers.Game
             textureName = textureName.ToLowerInvariant();
             textureId = -1;
 
-            if (!_TextureIDs.ContainsKey(textureName))
-            {
-                return false;
-            }
-
-            textureId = _TextureIDs[textureName];
-            return true;
+            return _TextureIDs.TryGetValue(textureName, out textureId);
         }
 
         public static Color[] GetPixels(Sprite sprite)
