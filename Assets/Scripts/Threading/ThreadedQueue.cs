@@ -4,7 +4,6 @@ using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Threading;
-using Controllers;
 using Game.World.Chunk;
 
 #endregion
@@ -34,7 +33,7 @@ namespace Threading
         /// </summary>
         public ThreadingMode ThreadingMode { get; private set; }
 
-        
+
         /// <summary>
         ///     Whether or not the internal thread has been started.
         /// </summary>
@@ -153,7 +152,7 @@ namespace Threading
                         {
                             ThreadingMode = _ThreadingModeReference();
                         }
-                        
+
                         ProcessThreadedItem(threadedItem);
                     }
                 }
@@ -174,8 +173,6 @@ namespace Threading
         /// <param name="threadedItem"><see cref="ThreadedItem" /> to be processed.</param>
         protected virtual async void ProcessThreadedItem(ThreadedItem threadedItem)
         {
-            
-            
             switch (ThreadingMode)
             {
                 case ThreadingMode.Single:

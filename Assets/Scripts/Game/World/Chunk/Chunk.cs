@@ -27,7 +27,7 @@ namespace Game.World.Chunk
 
         private static readonly ObjectCache<ChunkMeshingThreadedItem> ChunkMeshersCache =
             new ObjectCache<ChunkMeshingThreadedItem>(null, null, true);
-        
+
         private static ThreadedQueue _threadedExecutionQueue;
 
         public static readonly ConcurrentQueue<TimeSpan> BuildTimes = new ConcurrentQueue<TimeSpan>();
@@ -106,7 +106,7 @@ namespace Game.World.Chunk
                 _threadedExecutionQueue = new ThreadedQueue(200, () => OptionsController.Current.ThreadingMode);
                 _threadedExecutionQueue.Start();
             }
-            
+
             _Position = transform.position;
             _Blocks = new ushort[Size.x * Size.y * Size.z];
             _OnBorrowedUpdateTime = Built = Building = Meshed = Meshing = PendingMeshUpdate = false;

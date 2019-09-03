@@ -95,7 +95,12 @@ namespace Threading
 
             mesh.SetVertices(_Vertices);
             mesh.SetTriangles(_Triangles, 0);
-            mesh.SetUVs(0, _UVs);
+
+            // in case of no UVs to apply to mesh
+            if (_UVs.Count > 0)
+            {
+                mesh.SetUVs(0, _UVs);
+            }
 
             mesh.RecalculateNormals();
             mesh.RecalculateTangents();
