@@ -1,8 +1,6 @@
 #region
 
-using System;
 using System.Collections.Generic;
-using System.Linq;
 using Controllers.Game;
 using Controllers.World;
 using Game;
@@ -20,13 +18,10 @@ namespace Threading
         private readonly List<int> _Triangles;
         private readonly List<Vector3> _Vertices;
         private readonly List<Vector3> _UVs;
-        private readonly int _MaximumChunkAxisSize;
         private readonly byte[] _Faces;
 
         private Vector3 _Position;
         private ushort[] _Blocks;
-        private ushort[][] _FirstMask;
-        private ushort[][] _SecondMask;
         private bool _Greedy;
 
         /// <summary>
@@ -39,9 +34,6 @@ namespace Threading
             _Vertices = new List<Vector3>();
             _UVs = new List<Vector3>();
             _Faces = new byte[Chunk.Size.Product()];
-
-            _MaximumChunkAxisSize = Math.Max(Math.Max(Chunk.Size.x, Chunk.Size.y), Chunk.Size.z);
-            _FirstMask = _SecondMask = new ushort[_MaximumChunkAxisSize][];
         }
 
         /// <summary>
@@ -117,6 +109,8 @@ namespace Threading
             mesh.RecalculateTangents();
         }
 
+        #region NAIVE MESHING
+
         private void GenerateNaiveMeshData()
         {
             for (int index = 0; index < _Blocks.Length; index++)
@@ -144,7 +138,7 @@ namespace Threading
                 {
                     AddTriangles(Direction.North);
                     AddVertices(Direction.North, localPosition);
-                    
+
                     if (BlockController.Current.GetBlockSpriteUVs(_Blocks[index], globalPosition,
                         Direction.North, uvSize, out Vector3[] uvs))
                     {
@@ -162,7 +156,7 @@ namespace Threading
                 {
                     AddTriangles(Direction.East);
                     AddVertices(Direction.East, localPosition);
-                    
+
                     if (BlockController.Current.GetBlockSpriteUVs(_Blocks[index], globalPosition,
                         Direction.East, uvSize, out Vector3[] uvs))
                     {
@@ -180,7 +174,7 @@ namespace Threading
                 {
                     AddTriangles(Direction.South);
                     AddVertices(Direction.South, localPosition);
-                    
+
                     if (BlockController.Current.GetBlockSpriteUVs(_Blocks[index], globalPosition,
                         Direction.South, uvSize, out Vector3[] uvs))
                     {
@@ -197,7 +191,7 @@ namespace Threading
                 {
                     AddTriangles(Direction.West);
                     AddVertices(Direction.West, localPosition);
-                    
+
                     if (BlockController.Current.GetBlockSpriteUVs(_Blocks[index], globalPosition,
                         Direction.West, uvSize, out Vector3[] uvs))
                     {
@@ -232,7 +226,7 @@ namespace Threading
                 {
                     AddTriangles(Direction.Down);
                     AddVertices(Direction.Down, localPosition);
-                    
+
                     if (BlockController.Current.GetBlockSpriteUVs(_Blocks[index], globalPosition,
                         Direction.Down, uvSize, out Vector3[] uvs))
                     {
@@ -242,340 +236,6 @@ namespace Threading
                         _UVs.Add(uvs[3]);
                     }
                 }
-            }
-        }
-
-        private void GenerateGreedyMeshData()
-        {
-            for (int index = 0; index < _Blocks.Length; index++)
-            {
-                (int x, int y, int z) = Mathv.GetVector3IntIndex(index, Chunk.Size);
-
-                if (BlockController.Current.IsBlockTransparent(_Blocks[index]))
-                {
-                    _Faces[index] = 0;
-                    continue;
-                }
-
-                Vector3 globalPosition = _Position + new Vector3(x, y, z);
-
-                if (((z == (Chunk.Size.z - 1)) && BlockController.Current.IsBlockTransparent(
-                         WorldController.Current.GetBlockAt(globalPosition + Vector3.forward))) ||
-                    ((z < (Chunk.Size.z - 1)) && BlockController.Current.IsBlockTransparent(
-                         _Blocks[index + Chunk.Size.x])))
-                {
-                    _Faces[index] |= (byte) Direction.North;
-                }
-
-                if (((x == (Chunk.Size.x - 1)) && BlockController.Current.IsBlockTransparent(
-                         WorldController.Current.GetBlockAt(globalPosition + Vector3.right))) ||
-                    ((x < (Chunk.Size.x - 1)) && BlockController.Current.IsBlockTransparent(
-                         _Blocks[index + 1])))
-                {
-                    _Faces[index] |= (byte) Direction.East;
-                }
-
-                if (((z == 0) && BlockController.Current.IsBlockTransparent(
-                         WorldController.Current.GetBlockAt(globalPosition + Vector3.back))) ||
-                    ((z > 0) && BlockController.Current.IsBlockTransparent(
-                         _Blocks[index - Chunk.Size.x])))
-                {
-                    _Faces[index] |= (byte) Direction.South;
-                }
-
-                if (((x == 0) && BlockController.Current.IsBlockTransparent(
-                         WorldController.Current.GetBlockAt(globalPosition + Vector3.left))) ||
-                    ((x > 0) && BlockController.Current.IsBlockTransparent(
-                         _Blocks[index - 1])))
-                {
-                    _Faces[index] |= (byte) Direction.West;
-                }
-
-                if (((y == (Chunk.Size.y - 1)) && BlockController.Current.IsBlockTransparent(
-                         WorldController.Current.GetBlockAt(globalPosition + Vector3.up))) ||
-                    ((y < (Chunk.Size.y - 1)) && BlockController.Current.IsBlockTransparent(
-                         _Blocks[index + (Chunk.Size.x * Chunk.Size.z)])))
-                {
-                    _Faces[index] |= (byte) Direction.Up;
-                }
-
-                if (((y == 0) && BlockController.Current.IsBlockTransparent(
-                         WorldController.Current.GetBlockAt(globalPosition + Vector3.down))) ||
-                    ((y > 0) && BlockController.Current.IsBlockTransparent(
-                         _Blocks[index - (Chunk.Size.x * Chunk.Size.z)])))
-                {
-                    _Faces[index] |= (byte) Direction.Down;
-                }
-            }
-
-            
-            // initialise mask arrays
-            for (int i = 0; i < _FirstMask.Length; i++)
-            {
-                _FirstMask[i] = new ushort[_MaximumChunkAxisSize];
-            }
-
-            for (int i = 0; i < _SecondMask.Length; i++)
-            {
-                _SecondMask[i] = new ushort[_MaximumChunkAxisSize];
-            }
-            
-            
-            for (int x = 0; x < Chunk.Size.x; x++)
-            {
-                for (int y = 0; y < Chunk.Size.y; y++)
-                {
-                    for (int z = 0; z < Chunk.Size.z; z++)
-                    {
-                        int index = Index3DTo1D(x, y, z, Chunk.Size);
-
-                        if ((_Faces[index] & (byte) Direction.West) != 0)
-                        {
-                            _FirstMask[z][y] = _Blocks[index];
-                        }
-                        else
-                        {
-                            _FirstMask[z][y] = BlockController.BLOCK_EMPTY_ID;
-                        }
-
-                        if ((_Faces[index] & (byte) Direction.East) != 0)
-                        {
-                            _SecondMask[z][y] = _Blocks[index];
-                        }
-                        else
-                        {
-                            _SecondMask[z][y] = BlockController.BLOCK_EMPTY_ID;
-                        }
-                    }
-                }
-                
-                FilLWithQuads(_FirstMask, x, Direction.West);
-                FilLWithQuads(_SecondMask, x + 1, Direction.East);
-            }
-
-            for (int y = 0; y < Chunk.Size.y; y++)
-            {
-                for (int x = 0; x < Chunk.Size.x; x++)
-                {
-                    for (int z = 0; z < Chunk.Size.z; z++)
-                    {
-                        int index = Index3DTo1D(x, y, z, Chunk.Size);
-
-                        if ((_Faces[index] & (byte) Direction.Down) != 0)
-                        {
-                            _FirstMask[x][z] = _Blocks[index];
-                        }
-                        else
-                        {
-                            _FirstMask[x][z] = BlockController.BLOCK_EMPTY_ID;
-                        }
-
-                        if ((_Faces[index] & (byte) Direction.Up) != 0)
-                        {
-                            _SecondMask[x][z] = _Blocks[index];
-                        }
-                        else
-                        {
-                            _SecondMask[x][z] = BlockController.BLOCK_EMPTY_ID;
-                        }
-                    }
-                }
-                
-                FilLWithQuads(_FirstMask, y, Direction.Down);
-                FilLWithQuads(_SecondMask, y + 1, Direction.Up);
-            }
-
-            for (int z = 0; z < Chunk.Size.z; z++)
-            {
-                for (int x = 0; x < Chunk.Size.x; x++)
-                {
-                    for (int y = 0; y < Chunk.Size.y; y++)
-                    {
-                        int index = Index3DTo1D(x, y, z, Chunk.Size);
-
-                        if ((_Faces[index] & (byte) Direction.South) != 0)
-                        {
-                            _FirstMask[x][y] = _Blocks[index];
-                        }
-                        else
-                        {
-                            _FirstMask[x][y] = BlockController.BLOCK_EMPTY_ID;
-                        }
-
-                        if ((_Faces[index] & (byte) Direction.North) != 0)
-                        {
-                            _SecondMask[x][y] = _Blocks[index];
-                        }
-                        else
-                        {
-                            _SecondMask[x][y] = _Blocks[index];
-                        }
-                    }
-                }
-                
-                FilLWithQuads(_FirstMask, z, Direction.South);
-                FilLWithQuads(_SecondMask, z + 1, Direction.North);
-            }
-        }
-
-        private void FilLWithQuads(ushort[][] mask, int index, Direction direction)
-        {
-            for (int x = 0; x < mask.Length; x++)
-            {
-                ushort[] row = mask[x];
-
-                for (int y = 0; y < row.Length; y++)
-                {
-                    if (row[y] == BlockController.BLOCK_EMPTY_ID)
-                    {
-                        continue;
-                    }
-
-                    int currentBlockId = row[y];
-                    
-                    int endY = FindEndY(row, currentBlockId, y);
-                    int endX = FindEndX(mask, currentBlockId, y, endY, x);
-
-                    y = endX - 1;
-
-                    switch (direction)
-                    {
-                        case Direction.North:
-                            CreateFaceNorth(index, x, y, endX, endY, index);
-                            break;
-                        case Direction.East:
-                            CreateFaceEast(index, x, y, endX, endY, index);
-                            break;
-                        case Direction.South:
-                            CreateFaceSouth(index, x, y, endX, endY, index);
-                            break;
-                        case Direction.West:
-                            CreateFaceWest(index, x, y, endX, endY, index);
-                            break;
-                        case Direction.Up:
-                            CreateFaceUp(index, x, y, endX, endY, index);
-                            break;
-                        case Direction.Down:
-                            CreateFaceDown(index, x, y, endX, endY, index);
-                            break;
-                        default:
-                            throw new ArgumentOutOfRangeException(nameof(direction), direction, null);
-                    }
-                }
-            }
-        }
-
-        private void CreateFaceNorth(int index, float x, float y, float x2, float y2, float z)
-        {
-            AddTriangles(Direction.North);
-            
-            _Vertices.Add(new Vector3(x, y, z));
-            _Vertices.Add(new Vector3(x2, y, z));
-            _Vertices.Add(new Vector3(x2, y2, z));
-            _Vertices.Add(new Vector3(x, y2, z));
-            
-            if (BlockController.Current.GetBlockSpriteUVs(_Blocks[index], new Vector3(x, y, z), 
-                Direction.North, new Vector3(x - x2, y - y2), out Vector3[] uvs))
-            {
-                _UVs.Add(uvs[1]);
-                _UVs.Add(uvs[3]);
-                _UVs.Add(uvs[0]);
-                _UVs.Add(uvs[2]);
-            }
-        }
-
-        private void CreateFaceEast(int index, float z, float y, float z2, float y2, float x)
-        {
-            AddTriangles(Direction.East);
-            
-            _Vertices.Add(new Vector3(x, y, z2));
-            _Vertices.Add(new Vector3(x, y, z));
-            _Vertices.Add(new Vector3(x, y2, z));
-            _Vertices.Add(new Vector3(x, y2, z2));
-            
-            if (BlockController.Current.GetBlockSpriteUVs(_Blocks[index], new Vector3(x, y, z),
-                Direction.East, new Vector3(z - z2, y - y2), out Vector3[] uvs))
-            {
-                _UVs.Add(uvs[0]);
-                _UVs.Add(uvs[1]);
-                _UVs.Add(uvs[2]);
-                _UVs.Add(uvs[3]);
-            }
-        }
-
-        private void CreateFaceSouth(int index, float x, float y, float x2, float y2, float z)
-        {
-            AddTriangles(Direction.South);
-            
-            _Vertices.Add(new Vector3(x2, y, z));
-            _Vertices.Add(new Vector3(x, y, z));
-            _Vertices.Add(new Vector3(x, y2, z));
-            _Vertices.Add(new Vector3(x2, y2, z));
-            
-            if (BlockController.Current.GetBlockSpriteUVs(_Blocks[index], new Vector3(x, y, z),
-                Direction.South, new Vector3(x - x2, y - y2), out Vector3[] uvs))
-            {
-                _UVs.Add(uvs[0]);
-                _UVs.Add(uvs[1]);
-                _UVs.Add(uvs[2]);
-                _UVs.Add(uvs[3]);
-            }
-        }
-
-        private void CreateFaceWest(int index, float z, float y, float z2, float y2, float x)
-        {
-            AddTriangles(Direction.West);
-            
-            _Vertices.Add(new Vector3(x, y, z));
-            _Vertices.Add(new Vector3(x, y, z2));
-            _Vertices.Add(new Vector3(x, y2, z2));
-            _Vertices.Add(new Vector3(x, y2, z));
-            
-            if (BlockController.Current.GetBlockSpriteUVs(_Blocks[index], new Vector3(x, y, z),
-                Direction.West, new Vector3(z - z2, y - y2), out Vector3[] uvs))
-            {
-                _UVs.Add(uvs[1]);
-                _UVs.Add(uvs[3]);
-                _UVs.Add(uvs[0]);
-                _UVs.Add(uvs[2]);
-            }
-        }
-
-        private void CreateFaceUp(int index, float x, float z, float x2, float z2, float y)
-        {
-            AddTriangles(Direction.Up);
-            
-            _Vertices.Add(new Vector3(x, y, z2));
-            _Vertices.Add(new Vector3(x2, y, z2));
-            _Vertices.Add(new Vector3(x2, y, z));
-            _Vertices.Add(new Vector3(x, y, z));
-            
-            if (BlockController.Current.GetBlockSpriteUVs(_Blocks[index], new Vector3(x, y, z),
-                Direction.Up, new Vector3(x - x2, z - z2), out Vector3[] uvs))
-            {
-                _UVs.Add(uvs[0]);
-                _UVs.Add(uvs[2]);
-                _UVs.Add(uvs[1]);
-                _UVs.Add(uvs[3]);
-            }
-        }
-
-        private void CreateFaceDown(int index, float x, float z, float x2, float z2, float y)
-        {
-            AddTriangles(Direction.Down);
-            
-            _Vertices.Add(new Vector3(x2, y, z2));
-            _Vertices.Add(new Vector3(x, y, z2));
-            _Vertices.Add(new Vector3(x, y, z));
-            _Vertices.Add(new Vector3(x2, y, z));
-            
-            if (BlockController.Current.GetBlockSpriteUVs(_Blocks[index], new Vector3(x, y, z),
-                Direction.Down, new Vector3(x - x2, z - z2), out Vector3[] uvs))
-            {
-                _UVs.Add(uvs[0]);
-                _UVs.Add(uvs[1]);
-                _UVs.Add(uvs[2]);
-                _UVs.Add(uvs[3]);
             }
         }
 
@@ -598,48 +258,141 @@ namespace Threading
                 _Vertices.Add(vertex + localPosition);
             }
         }
-        
-        private static int FindEndX(ushort[][] mask, int currentBlockId, int startY, int endY, int x)
-        {
-            int end = x + 1;
 
-            while (end < mask.Length)
+        #endregion
+
+        private void GenerateGreedyMeshData()
+        {
+            // This greedy algorithm is converted from PHP to C# from this article:
+            // http://0fps.wordpress.com/2012/06/30/meshing-in-a-minecraft-game/
+            //
+            // The original source code can be found here:
+            // https://github.com/mikolalysenko/mikolalysenko.github.com/blob/gh-pages/MinecraftMeshes/js/greedy.js
+            int size = Chunk.Size.z;
+
+            for (int axis = 0; axis < 3; axis++)
             {
-                for (int checkY = startY; checkY < endY; checkY++)
+                int i, j, k, l, w, h, u = (axis + 1) % 3, v = (axis + 2) % 3;
+                int[] x = new int[3];
+                int[] q = new int[3];
+                bool[] mask = new bool[size * size];
+
+                q[axis] = 1;
+
+                for (x[axis] = -1; x[axis] < size;)
                 {
-                    if (mask[end][checkY] != currentBlockId)
+                    // Compute the mask
+                    int n = 0;
+                    for (x[v] = 0; x[v] < size; ++x[v])
                     {
-                        return end;
+                        for (x[u] = 0; x[u] < size; ++x[u])
+                        {
+                            mask[n++] = ((0 <= x[axis]) && !BlockController.Current.IsBlockTransparent(
+                                             _Blocks[Index3DTo1D(x[0], x[1], x[2])])) !=
+                                        ((x[axis] < (size - 1)) && !BlockController.Current.IsBlockTransparent(
+                                             _Blocks[Index3DTo1D(x[0] + q[0], x[1] + q[1], x[2] + q[2])]));
+                        }
+                    }
+
+                    // Increment x[d]
+                    ++x[axis];
+
+                    // Generate mesh for mask using lexicographic ordering
+                    n = 0;
+                    for (j = 0; j < size; ++j)
+                    {
+                        for (i = 0; i < size;)
+                        {
+                            if (mask[n])
+                            {
+                                // Compute width
+                                for (w = 1; ((i + w) < size) && mask[n + w]; ++w)
+                                {
+                                    ;
+                                }
+
+                                // Compute height (this is slightly awkward
+                                bool done = false;
+                                for (h = 1; (j + h) < size; ++h)
+                                {
+                                    for (k = 0; k < w; ++k)
+                                    {
+                                        if (mask[n + k + (h * size)])
+                                        {
+                                            continue;
+                                        }
+
+                                        done = true;
+                                        break;
+                                    }
+
+                                    if (done)
+                                    {
+                                        break;
+                                    }
+                                }
+
+                                // Add quad
+                                x[u] = i;
+                                x[v] = j;
+                                int[] du = new int[3];
+                                int[] dv = new int[3];
+                                du[u] = w;
+                                dv[v] = h;
+
+                                AddFace(
+                                    new Vector3(x[0], x[1], x[2]),
+                                    new Vector3(x[0] + du[0], x[1] + du[1], x[2] + du[2]),
+                                    new Vector3(x[0] + du[0] + dv[0], x[1] + du[1] + dv[1], x[2] + du[2] + dv[2]),
+                                    new Vector3(x[0] + dv[0], x[1] + dv[1], x[2] + dv[2]));
+
+
+                                // Zero-out mask
+                                for (l = 0; l < h; ++l)
+                                {
+                                    for (k = 0; k < w; ++k)
+                                    {
+                                        mask[n + k + (l * size)] = false;
+                                    }
+                                }
+
+                                // Increment counters and continue
+                                i += w;
+                                n += w;
+                            }
+                            else
+                            {
+                                ++i;
+                                ++n;
+                            }
+                        }
                     }
                 }
-
-                for (int checkY = startY; checkY < endY; checkY++)
-                {
-                    mask[end][checkY] = 0;
-                }
-
-                end++;
             }
-
-            return end;
         }
 
-        private static int FindEndY(ushort[] row, int currentBlockId, int startY)
+        private void AddFace(Vector3 v1, Vector3 v2, Vector3 v3, Vector3 v4)
         {
-            int end = startY;
+            _Triangles.Add(_Vertices.Count + WorldController.Current.TriValues[0]);
+            _Triangles.Add(_Vertices.Count + WorldController.Current.TriValues[1]);
+            _Triangles.Add(_Vertices.Count + WorldController.Current.TriValues[2]);
+            _Triangles.Add(_Vertices.Count + WorldController.Current.TriValues[3]);
+            _Triangles.Add(_Vertices.Count + WorldController.Current.TriValues[4]);
+            _Triangles.Add(_Vertices.Count + WorldController.Current.TriValues[5]);
 
-            while (end < row.Length && row[end] == currentBlockId)
-            {
-                row[end] = 0;
-                end++;
-            }
-
-            return end;
+            // 0   1
+            //
+            // 2   3
+            
+            _Vertices.Add(v1);
+            _Vertices.Add(v2);
+            _Vertices.Add(v3);
+            _Vertices.Add(v4);
         }
 
-        public static int Index3DTo1D(int x, int y, int z, Vector3Int size3d)
+        private static int Index3DTo1D(int x, int y, int z)
         {
-            return x + (z * size3d.x) + (y * size3d.x * size3d.z);
+            return x + (z * Chunk.Size.x) + (y * Chunk.Size.x * Chunk.Size.z);
         }
     }
 }

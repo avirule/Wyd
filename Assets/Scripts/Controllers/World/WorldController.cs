@@ -37,6 +37,11 @@ namespace Controllers.World
         // used as a conditional to output debug info to console
         public bool DebugWrite;
 
+        public int[] TriValues =
+        {
+            1,1,1,1,1,1
+        };
+
         public int ChunksActiveCount => _Chunks.Count;
         public int ChunksCachedCount => _ChunkCache.Size;
         public int ChunksQueuedForBuilding => _BuildChunkQueue.Count;

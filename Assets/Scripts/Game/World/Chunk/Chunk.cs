@@ -309,9 +309,9 @@ namespace Game.World.Chunk
             return localPosition.To1D(Size);
         }
 
-        public ushort GetBlockAt(Vector3 position)
+        public ushort GetBlockAt(Vector3 position, bool isLocal = false)
         {
-            int localPosition1d = Get1DLocal(position);
+            int localPosition1d = isLocal ? Get1DLocal(position) : position.To1D(Size);
 
             if (_Blocks.Length <= localPosition1d)
             {
