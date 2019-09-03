@@ -76,11 +76,6 @@ namespace Controllers.World
         {
             UpdateTime = DateTime.Now;
 
-            if (Chunk.ThreadedExecutionQueue.ThreadingMode != OptionsController.Current.ThreadingMode)
-            {
-                Chunk.ThreadedExecutionQueue.ThreadingMode = OptionsController.Current.ThreadingMode;
-            }
-
             if (_CachingQueue.Count > 0)
             {
                 ProcessCachingQueue();

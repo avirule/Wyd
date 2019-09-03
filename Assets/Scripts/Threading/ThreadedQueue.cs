@@ -4,6 +4,7 @@ using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Threading;
+using Controllers;
 using Game.World.Chunk;
 
 #endregion
@@ -12,6 +13,8 @@ namespace Threading
 {
     public class ThreadedQueue
     {
+        private readonly Func<ThreadingMode> _ThreadingModeReference;
+
         private bool _Disposed;
 
         protected readonly int ThreadSize;
@@ -29,8 +32,9 @@ namespace Threading
         ///     the
         ///     internal thread, or uses the internal thread pool.
         /// </summary>
-        public ThreadingMode ThreadingMode;
+        public ThreadingMode ThreadingMode { get; private set; }
 
+        
         /// <summary>
         ///     Whether or not the internal thread has been started.
         /// </summary>
@@ -64,12 +68,9 @@ namespace Threading
         ///     Time in milliseconds to wait between attempts to process an item in internal
         ///     queue.
         /// </param>
+        /// <param name="threadingModeReference"></param>
         /// <param name="threadSize">Size of internal <see cref="WorkerThread" /> pool</param>
-        /// <param name="threadingMode">
-        ///     Determines whether the <see cref="ThreadedQueue" /> executes <see cref="ThreadedItem" /> on the
-        ///     internal thread, or uses <see cref="System.Threading.ThreadPool" />.
-        /// </param>
-        public ThreadedQueue(int waitTimeout, int threadSize = -1, ThreadingMode threadingMode = ThreadingMode.Single)
+        public ThreadedQueue(int waitTimeout, Func<ThreadingMode> threadingModeReference = null, int threadSize = -1)
         {
             // todo add variable that decides whether to use single-threaded or multi-threaded execution
 
@@ -81,7 +82,7 @@ namespace Threading
 
             WaitTimeout = waitTimeout;
             ThreadSize = threadSize;
-            ThreadingMode = threadingMode;
+            _ThreadingModeReference = threadingModeReference ?? (() => ThreadingMode.Single);
             ProcessingThread = new Thread(ProcessThreadedItems);
             InternalThreads = new List<WorkerThread>(threadSize);
             ItemQueue = new BlockingCollection<ThreadedItem>();
@@ -108,11 +109,6 @@ namespace Threading
         /// </summary>
         public virtual void Abort()
         {
-            if (!Running && AbortToken.IsCancellationRequested)
-            {
-                return;
-            }
-
             AbortTokenSource.Cancel();
 
             foreach (WorkerThread workerThread in InternalThreads)
@@ -120,7 +116,7 @@ namespace Threading
                 workerThread.Abort();
             }
 
-            WaitTimeout = 0;
+            WaitTimeout = 1;
             Running = false;
         }
 
@@ -152,6 +148,12 @@ namespace Threading
                     if (ItemQueue.TryTake(out ThreadedItem threadedItem, WaitTimeout, AbortToken) &&
                         (threadedItem != default))
                     {
+                        // update threading mode if object is taken
+                        if (ThreadingMode != _ThreadingModeReference())
+                        {
+                            ThreadingMode = _ThreadingModeReference();
+                        }
+                        
                         ProcessThreadedItem(threadedItem);
                     }
                 }
@@ -172,11 +174,13 @@ namespace Threading
         /// <param name="threadedItem"><see cref="ThreadedItem" /> to be processed.</param>
         protected virtual async void ProcessThreadedItem(ThreadedItem threadedItem)
         {
+            
+            
             switch (ThreadingMode)
             {
                 case ThreadingMode.Single:
                     await threadedItem.Execute();
-                    
+
                     OnThreadedItemFinished(this, new ThreadedItemFinishedEventArgs(threadedItem));
                     break;
                 case ThreadingMode.Multi:

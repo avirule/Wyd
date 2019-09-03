@@ -55,7 +55,7 @@ namespace Controllers.Game
             }
 
             EventLog.Logger.Log(LogLevel.Info,
-                $"Successfully added block `{blockName}` with id `{blockId}`.");
+                $"Successfully added block `{blockName}` with ID: {blockId}");
 
             return blockId;
         }

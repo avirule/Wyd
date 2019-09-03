@@ -45,7 +45,7 @@ namespace Threading
                 {
                     return;
                 }
-                
+
                 //GenerateCheckerBoard(index);
                 //GenerateRaisedStripes(index);
                 //GenerateFlat(index);

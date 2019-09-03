@@ -1,9 +1,7 @@
 #region
 
 using System;
-using System.Collections;
 using System.Collections.Concurrent;
-using System.Collections.Generic;
 using Controllers.Entity;
 using Controllers.Game;
 using Controllers.World;
@@ -29,10 +27,11 @@ namespace Game.World.Chunk
 
         private static readonly ObjectCache<ChunkMeshingThreadedItem> ChunkMeshersCache =
             new ObjectCache<ChunkMeshingThreadedItem>(null, null, true);
+        
+        private static ThreadedQueue _threadedExecutionQueue;
 
         public static readonly ConcurrentQueue<TimeSpan> BuildTimes = new ConcurrentQueue<TimeSpan>();
         public static readonly ConcurrentQueue<TimeSpan> MeshTimes = new ConcurrentQueue<TimeSpan>();
-        public static readonly ThreadedQueue ThreadedExecutionQueue = new ThreadedQueue(200);
         public static readonly Vector3Int Size = new Vector3Int(32, 256, 32);
 
         private Vector3 _Position;
@@ -102,11 +101,12 @@ namespace Game.World.Chunk
 
         private void Awake()
         {
-            if (!ThreadedExecutionQueue.Running)
+            if (_threadedExecutionQueue == default)
             {
-                ThreadedExecutionQueue.Start();
+                _threadedExecutionQueue = new ThreadedQueue(200, () => OptionsController.Current.ThreadingMode);
+                _threadedExecutionQueue.Start();
             }
-
+            
             _Position = transform.position;
             _Blocks = new ushort[Size.x * Size.y * Size.z];
             _OnBorrowedUpdateTime = Built = Building = Meshed = Meshing = PendingMeshUpdate = false;
@@ -162,7 +162,7 @@ namespace Game.World.Chunk
         private void OnApplicationQuit()
         {
             // Deallocate and destroy ALL NativeCollection / disposable objects
-            ThreadedExecutionQueue.Abort();
+            _threadedExecutionQueue.Abort();
         }
 
         private static void CullChunkLoadTimesQueue()
@@ -197,7 +197,7 @@ namespace Game.World.Chunk
             }
 
             StopAllCoroutines();
-            
+
             gameObject.SetActive(false);
         }
 
@@ -217,20 +217,21 @@ namespace Game.World.Chunk
             if (!Built && !Building)
             {
                 ThreadedItem threadedItem = GetChunkBuildingThreadedItem();
-                
+
                 if (threadedItem == default)
                 {
                     return;
                 }
-                
-                ThreadedExecutionQueue.ThreadedItemFinished += OnThreadedQueueFinishedItem;
-                _BuildingIdentity = ThreadedExecutionQueue.QueueThreadedItem(threadedItem);
+
+                _threadedExecutionQueue.ThreadedItemFinished += OnThreadedQueueFinishedItem;
+                _BuildingIdentity = _threadedExecutionQueue.QueueThreadedItem(threadedItem);
             }
         }
 
         private void CheckMeshingOrStart()
         {
-            if (!Meshing && (PendingMeshUpdate || !Meshed) && Visible && WorldController.Current.AreNeighborsBuilt(Position))
+            if (!Meshing && (PendingMeshUpdate || !Meshed) && Visible &&
+                WorldController.Current.AreNeighborsBuilt(Position))
             {
                 ThreadedItem threadedItem = GetChunkMeshingThreadedItem();
 
@@ -238,9 +239,9 @@ namespace Game.World.Chunk
                 {
                     return;
                 }
-                
-                ThreadedExecutionQueue.ThreadedItemFinished += OnThreadedQueueFinishedItem;
-                _MeshingIdentity = ThreadedExecutionQueue.QueueThreadedItem(threadedItem);
+
+                _threadedExecutionQueue.ThreadedItemFinished += OnThreadedQueueFinishedItem;
+                _MeshingIdentity = _threadedExecutionQueue.QueueThreadedItem(threadedItem);
             }
         }
 
@@ -250,22 +251,23 @@ namespace Game.World.Chunk
             {
                 Building = false;
                 Built = PendingMeshUpdate = true;
-                ThreadedExecutionQueue.ThreadedItemFinished -= OnThreadedQueueFinishedItem;
-                
+                _threadedExecutionQueue.ThreadedItemFinished -= OnThreadedQueueFinishedItem;
+
                 BuildTimes.Enqueue(args.ThreadedItem.ExecutionTime);
-            } else if (args.ThreadedItem.Identity == _MeshingIdentity)
+            }
+            else if (args.ThreadedItem.Identity == _MeshingIdentity)
             {
                 Meshing = false;
                 Meshed = true;
-                ThreadedExecutionQueue.ThreadedItemFinished -= OnThreadedQueueFinishedItem;
+                _threadedExecutionQueue.ThreadedItemFinished -= OnThreadedQueueFinishedItem;
 
                 // Safely apply mesh when there is free frame time
-                _AsynchronousCoroutineQueue.Enqueue(() => ApplyMesh((ChunkMeshingThreadedItem)args.ThreadedItem));
-                
+                _AsynchronousCoroutineQueue.Enqueue(() => ApplyMesh((ChunkMeshingThreadedItem) args.ThreadedItem));
+
                 MeshTimes.Enqueue(args.ThreadedItem.ExecutionTime);
             }
         }
-        
+
         private ThreadedItem GetChunkBuildingThreadedItem()
         {
             Built = false;
@@ -297,7 +299,7 @@ namespace Game.World.Chunk
         {
             threadedItem.SetMesh(ref _Mesh);
         }
-        
+
         #endregion
 
 

@@ -41,13 +41,8 @@ namespace Threading
 
         public void Abort()
         {
-            if (!Running && _AbortToken.IsCancellationRequested)
-            {
-                return;
-            }
-
             _AbortTokenSource.Cancel();
-            WaitTimeout = 0;
+            WaitTimeout = 1;
             Running = false;
         }
 
