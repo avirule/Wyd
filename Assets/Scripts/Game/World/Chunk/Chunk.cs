@@ -288,7 +288,7 @@ namespace Game.World.Chunk
             Meshing = true;
 
             ChunkMeshingThreadedItem threadedItem = ChunkMeshersCache.RetrieveItem();
-            threadedItem.Set(Position, _Blocks, false);
+            threadedItem.Set(Position, _Blocks, true);
 
             return threadedItem;
         }

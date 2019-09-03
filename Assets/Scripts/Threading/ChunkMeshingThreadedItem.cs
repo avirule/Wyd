@@ -475,7 +475,7 @@ namespace Threading
             _Vertices.Add(new Vector3(x, y2, z));
             
             if (BlockController.Current.GetBlockSpriteUVs(_Blocks[index], new Vector3(x, y, z), 
-                Direction.North, Vector3.one, out Vector3[] uvs))
+                Direction.North, new Vector3(x - x2, y - y2), out Vector3[] uvs))
             {
                 _UVs.Add(uvs[1]);
                 _UVs.Add(uvs[3]);
@@ -494,7 +494,7 @@ namespace Threading
             _Vertices.Add(new Vector3(x, y2, z2));
             
             if (BlockController.Current.GetBlockSpriteUVs(_Blocks[index], new Vector3(x, y, z),
-                Direction.East, Vector3.one, out Vector3[] uvs))
+                Direction.East, new Vector3(z - z2, y - y2), out Vector3[] uvs))
             {
                 _UVs.Add(uvs[0]);
                 _UVs.Add(uvs[1]);
@@ -513,7 +513,7 @@ namespace Threading
             _Vertices.Add(new Vector3(x2, y2, z));
             
             if (BlockController.Current.GetBlockSpriteUVs(_Blocks[index], new Vector3(x, y, z),
-                Direction.South, Vector3.one, out Vector3[] uvs))
+                Direction.South, new Vector3(x - x2, y - y2), out Vector3[] uvs))
             {
                 _UVs.Add(uvs[0]);
                 _UVs.Add(uvs[1]);
@@ -532,7 +532,7 @@ namespace Threading
             _Vertices.Add(new Vector3(x, y2, z));
             
             if (BlockController.Current.GetBlockSpriteUVs(_Blocks[index], new Vector3(x, y, z),
-                Direction.West, Vector3.one, out Vector3[] uvs))
+                Direction.West, new Vector3(z - z2, y - y2), out Vector3[] uvs))
             {
                 _UVs.Add(uvs[1]);
                 _UVs.Add(uvs[3]);
@@ -551,7 +551,7 @@ namespace Threading
             _Vertices.Add(new Vector3(x, y, z));
             
             if (BlockController.Current.GetBlockSpriteUVs(_Blocks[index], new Vector3(x, y, z),
-                Direction.Up, Vector3.one, out Vector3[] uvs))
+                Direction.Up, new Vector3(x - x2, z - z2), out Vector3[] uvs))
             {
                 _UVs.Add(uvs[0]);
                 _UVs.Add(uvs[2]);
@@ -570,7 +570,7 @@ namespace Threading
             _Vertices.Add(new Vector3(x2, y, z));
             
             if (BlockController.Current.GetBlockSpriteUVs(_Blocks[index], new Vector3(x, y, z),
-                Direction.Down, Vector3.one, out Vector3[] uvs))
+                Direction.Down, new Vector3(x - x2, z - z2), out Vector3[] uvs))
             {
                 _UVs.Add(uvs[0]);
                 _UVs.Add(uvs[1]);
@@ -599,7 +599,7 @@ namespace Threading
             }
         }
         
-        private static int FindEndX(ushort[][] mask, int currentBlockId, int x, int startY, int endY)
+        private static int FindEndX(ushort[][] mask, int currentBlockId, int startY, int endY, int x)
         {
             int end = x + 1;
 
