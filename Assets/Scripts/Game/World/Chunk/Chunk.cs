@@ -1,7 +1,9 @@
 #region
 
 using System;
+using System.Collections;
 using System.Collections.Concurrent;
+using System.Collections.Generic;
 using Controllers.Entity;
 using Controllers.Game;
 using Controllers.World;
@@ -36,6 +38,7 @@ namespace Game.World.Chunk
         private Vector3 _Position;
         private ushort[] _Blocks;
         private Mesh _Mesh;
+        private ConcurrentQueue<Action> _AsynchronousCoroutineQueue;
         private object _BuildingIdentity;
         private object _MeshingIdentity;
         private bool _OnBorrowedUpdateTime;
@@ -108,6 +111,7 @@ namespace Game.World.Chunk
             _Blocks = new ushort[Size.x * Size.y * Size.z];
             _OnBorrowedUpdateTime = Built = Building = Meshed = Meshing = PendingMeshUpdate = false;
             _Mesh = new Mesh();
+            _AsynchronousCoroutineQueue = new ConcurrentQueue<Action>();
 
             MeshFilter.sharedMesh = _Mesh;
             MeshRenderer.material.SetTexture(TextureController.Current.MainTex,
@@ -137,9 +141,14 @@ namespace Game.World.Chunk
                 CheckInternalsAgainstLoaderPosition(PlayerController.Current.CurrentChunk);
             }
 
-            if (Active)
+            if (!_OnBorrowedUpdateTime)
             {
                 GenerationCheckAndStart();
+            }
+
+            while (!_OnBorrowedUpdateTime && _AsynchronousCoroutineQueue.TryDequeue(out Action action))
+            {
+                action?.Invoke();
             }
 
             CullChunkLoadTimesQueue();
@@ -187,6 +196,8 @@ namespace Game.World.Chunk
                 _Mesh.Clear();
             }
 
+            StopAllCoroutines();
+            
             gameObject.SetActive(false);
         }
 
@@ -197,54 +208,65 @@ namespace Game.World.Chunk
 
         private void GenerationCheckAndStart()
         {
-            if (_OnBorrowedUpdateTime)
-            {
-                return;
-            }
-
             CheckBuildingOrStart();
             CheckMeshingOrStart();
         }
 
         private void CheckBuildingOrStart()
         {
-            if (Building)
+            if (!Built && !Building)
             {
-                if (ThreadedExecutionQueue.TryGetFinishedItem(_BuildingIdentity, out ThreadedItem threadedItem))
+                ThreadedItem threadedItem = GetChunkBuildingThreadedItem();
+                
+                if (threadedItem == default)
                 {
-                    Building = false;
-                    Built = PendingMeshUpdate = true;
-
-                    BuildTimes.Enqueue(threadedItem.ExecutionTime);
+                    return;
                 }
-            }
-            else if (!Built && !Building)
-            {
-                _BuildingIdentity = BeginBuildChunk();
+                
+                ThreadedExecutionQueue.ThreadedItemFinished += OnThreadedQueueFinishedItem;
+                _BuildingIdentity = ThreadedExecutionQueue.QueueThreadedItem(threadedItem);
             }
         }
 
         private void CheckMeshingOrStart()
         {
-            if (Meshing)
+            if (!Meshing && (PendingMeshUpdate || !Meshed) && Visible && WorldController.Current.AreNeighborsBuilt(Position))
             {
-                if (ThreadedExecutionQueue.TryGetFinishedItem(_MeshingIdentity, out ThreadedItem threadedItem))
+                ThreadedItem threadedItem = GetChunkMeshingThreadedItem();
+
+                if (threadedItem == default)
                 {
-                    Meshing = false;
-                    Meshed = true;
-
-                    ((ChunkMeshingThreadedItem) threadedItem).SetMesh(ref _Mesh);
-
-                    MeshTimes.Enqueue(threadedItem.ExecutionTime);
+                    return;
                 }
-            }
-            else if (Visible && (PendingMeshUpdate || !Meshed) && WorldController.Current.AreNeighborsBuilt(Position))
-            {
-                _MeshingIdentity = BeginGenerateMesh();
+                
+                ThreadedExecutionQueue.ThreadedItemFinished += OnThreadedQueueFinishedItem;
+                _MeshingIdentity = ThreadedExecutionQueue.QueueThreadedItem(threadedItem);
             }
         }
 
-        private object BeginBuildChunk()
+        private void OnThreadedQueueFinishedItem(object sender, ThreadedItemFinishedEventArgs args)
+        {
+            if (args.ThreadedItem.Identity == _BuildingIdentity)
+            {
+                Building = false;
+                Built = PendingMeshUpdate = true;
+                ThreadedExecutionQueue.ThreadedItemFinished -= OnThreadedQueueFinishedItem;
+                
+                BuildTimes.Enqueue(args.ThreadedItem.ExecutionTime);
+            } else if (args.ThreadedItem.Identity == _MeshingIdentity)
+            {
+                Meshing = false;
+                Meshed = true;
+                ThreadedExecutionQueue.ThreadedItemFinished -= OnThreadedQueueFinishedItem;
+
+                // Safely apply mesh when there is free frame time
+                _AsynchronousCoroutineQueue.Enqueue(() => ApplyMesh((ChunkMeshingThreadedItem)args.ThreadedItem));
+                
+                MeshTimes.Enqueue(args.ThreadedItem.ExecutionTime);
+            }
+        }
+        
+        private ThreadedItem GetChunkBuildingThreadedItem()
         {
             Built = false;
             Building = true;
@@ -252,10 +274,10 @@ namespace Game.World.Chunk
             ChunkBuildingThreadedItem threadedItem = ChunkBuildersCache.RetrieveItem();
             threadedItem.Set(Position, _Blocks);
 
-            return ThreadedExecutionQueue.QueueThreadedItem(threadedItem);
+            return threadedItem;
         }
 
-        private object BeginGenerateMesh()
+        private ThreadedItem GetChunkMeshingThreadedItem()
         {
             if (!Built)
             {
@@ -268,9 +290,14 @@ namespace Game.World.Chunk
             ChunkMeshingThreadedItem threadedItem = ChunkMeshersCache.RetrieveItem();
             threadedItem.Set(Position, _Blocks, false);
 
-            return ThreadedExecutionQueue.QueueThreadedItem(threadedItem);
+            return threadedItem;
         }
 
+        private void ApplyMesh(ChunkMeshingThreadedItem threadedItem)
+        {
+            threadedItem.SetMesh(ref _Mesh);
+        }
+        
         #endregion
 
 

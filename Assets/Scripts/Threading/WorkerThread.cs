@@ -21,7 +21,7 @@ namespace Threading
         public bool Processing { get; private set; }
         public int ManagedThreadId => _InternalThread.ManagedThreadId;
 
-        public event EventHandler<WorkerThreadFinishedItemEventArgs> FinishedItem;
+        public event EventHandler<ThreadedItemFinishedEventArgs> ThreadedItemFinished;
 
         public WorkerThread(int waitTimeout)
         {
@@ -80,26 +80,14 @@ namespace Threading
             Processing = true;
 
             threadedItem.Execute();
-            OnFinishedItem(this, new WorkerThreadFinishedItemEventArgs(_InternalThread.ManagedThreadId, threadedItem));
+            OnThreadedItemFinished(this, new ThreadedItemFinishedEventArgs(threadedItem));
 
             Processing = false;
         }
 
-        private void OnFinishedItem(object sender, WorkerThreadFinishedItemEventArgs args)
+        private void OnThreadedItemFinished(object sender, ThreadedItemFinishedEventArgs args)
         {
-            FinishedItem?.Invoke(sender, args);
-        }
-    }
-
-    public class WorkerThreadFinishedItemEventArgs : EventArgs
-    {
-        public readonly int ManagedId;
-        public readonly ThreadedItem ThreadedItem;
-
-        public WorkerThreadFinishedItemEventArgs(int managedId, ThreadedItem threadedItem)
-        {
-            ManagedId = managedId;
-            ThreadedItem = threadedItem;
+            ThreadedItemFinished?.Invoke(sender, args);
         }
     }
 }

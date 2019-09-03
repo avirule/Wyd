@@ -105,6 +105,11 @@ namespace Threading
         {
             for (int index = 0; index < _Blocks.Length; index++)
             {
+                if (AbortToken.IsCancellationRequested)
+                {
+                    return;
+                }
+
                 if (_Blocks[index] == BlockController.BLOCK_EMPTY_ID)
                 {
                     continue;

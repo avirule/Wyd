@@ -41,6 +41,11 @@ namespace Threading
 
             for (int index = 0; index < _Blocks.Length; index++)
             {
+                if (AbortToken.IsCancellationRequested)
+                {
+                    return;
+                }
+                
                 //GenerateCheckerBoard(index);
                 //GenerateRaisedStripes(index);
                 //GenerateFlat(index);

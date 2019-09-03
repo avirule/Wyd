@@ -1,6 +1,7 @@
 #region
 
 using System;
+using System.Threading;
 using System.Threading.Tasks;
 
 #endregion
@@ -12,31 +13,33 @@ namespace Threading
         private readonly object _Handle;
         protected bool Done;
 
-        public long MaximumLifetime { get; private set; }
         public DateTime StartTime { get; private set; }
         public DateTime FinishTime { get; private set; }
-        public DateTime ExpirationTime { get; private set; }
+
+        /// <summary>
+        ///     Identity of <see cref="ThreadedItem" />.
+        /// </summary>
+        public object Identity { get; private set; }
+
+        /// <summary>
+        ///     Token signalling cancellation of internal process.
+        /// </summary>
+        public CancellationToken AbortToken { get; private set; }
 
         /// <summary>
         ///     Total elapsed time of execution in milliseconds.
         /// </summary>
         public TimeSpan ExecutionTime { get; private set; }
 
-        /// <summary>
-        ///     Identity of <see cref="ThreadedItem" />.
-        /// </summary>
-        public object Identity { get; internal set; }
-
         public event EventHandler Finished;
 
         /// <summary>
         ///     Instantiates a new instance of the <see cref="ThreadedItem" /> class.
         /// </summary>
-        public ThreadedItem(long maximumLifetime = 30000)
+        public ThreadedItem()
         {
             _Handle = new object();
             Done = false;
-            MaximumLifetime = maximumLifetime;
         }
 
         /// <summary>
@@ -64,6 +67,12 @@ namespace Threading
             }
         }
 
+        internal virtual void Set(object identity, CancellationToken token)
+        {
+            Identity = identity;
+            AbortToken = token;
+        }
+
         /// <summary>
         ///     Begins executing the <see cref="ThreadedItem" />
         /// </summary>
@@ -74,7 +83,6 @@ namespace Threading
             Process();
 
             FinishTime = DateTime.Now;
-            ExpirationTime = FinishTime.AddMilliseconds(MaximumLifetime);
             ExecutionTime = FinishTime - StartTime;
 
             IsDone = true;

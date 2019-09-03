@@ -18,7 +18,6 @@ namespace Threading
         protected readonly Thread ProcessingThread;
         protected readonly List<WorkerThread> InternalThreads;
         protected readonly BlockingCollection<ThreadedItem> ItemQueue;
-        protected readonly ConcurrentDictionary<object, ThreadedItem> ProcessedItems;
         protected readonly CancellationTokenSource AbortTokenSource;
         protected CancellationToken AbortToken;
         protected int LastThreadIndexQueuedInto;
@@ -56,6 +55,8 @@ namespace Threading
             }
         }
 
+        public event EventHandler<ThreadedItemFinishedEventArgs> ThreadedItemFinished;
+
         /// <summary>
         ///     Initializes a new instance of <see cref="ThreadedQueue" /> class.
         /// </summary>
@@ -84,7 +85,6 @@ namespace Threading
             ProcessingThread = new Thread(ProcessThreadedItems);
             InternalThreads = new List<WorkerThread>(threadSize);
             ItemQueue = new BlockingCollection<ThreadedItem>();
-            ProcessedItems = new ConcurrentDictionary<object, ThreadedItem>();
             AbortTokenSource = new CancellationTokenSource();
             AbortToken = AbortTokenSource.Token;
             LastThreadIndexQueuedInto = 0;
@@ -129,15 +129,15 @@ namespace Threading
             for (int i = 0; i < ThreadSize; i++)
             {
                 WorkerThread workerThread = new WorkerThread(WaitTimeout);
-                workerThread.FinishedItem += OnWorkerThreadFinishedItem;
+                workerThread.ThreadedItemFinished += OnThreadedItemFinished;
                 workerThread.Start();
                 InternalThreads.Add(workerThread);
             }
         }
 
-        private void OnWorkerThreadFinishedItem(object sender, WorkerThreadFinishedItemEventArgs args)
+        private void OnThreadedItemFinished(object sender, ThreadedItemFinishedEventArgs args)
         {
-            ProcessedItems.TryAdd(args.ThreadedItem.Identity, args.ThreadedItem);
+            ThreadedItemFinished?.Invoke(sender, args);
         }
 
         /// <summary>
@@ -153,15 +153,6 @@ namespace Threading
                         (threadedItem != default))
                     {
                         ProcessThreadedItem(threadedItem);
-                    }
-
-                    foreach (KeyValuePair<object, ThreadedItem> kvp in ProcessedItems)
-                    {
-                        // todo possibly cache the value of the DateTime to compare against
-                        if (kvp.Value.IsDone && (kvp.Value.ExpirationTime < DateTime.Now))
-                        {
-                            ProcessedItems.TryRemove(kvp.Key, out ThreadedItem _);
-                        }
                     }
                 }
                 catch (OperationCanceledException)
@@ -185,6 +176,8 @@ namespace Threading
             {
                 case ThreadingMode.Single:
                     await threadedItem.Execute();
+                    
+                    OnThreadedItemFinished(this, new ThreadedItemFinishedEventArgs(threadedItem));
                     break;
                 case ThreadingMode.Multi:
                     LastThreadIndexQueuedInto = (LastThreadIndexQueuedInto + 1) % ThreadSize;
@@ -194,8 +187,6 @@ namespace Threading
                 default:
                     throw new ArgumentOutOfRangeException();
             }
-
-            ProcessedItems.TryAdd(threadedItem.Identity, threadedItem);
         }
 
         /// <summary>
@@ -210,36 +201,10 @@ namespace Threading
                 return default;
             }
 
-            threadedItem.Identity = Guid.NewGuid().ToString();
+            threadedItem.Set(Guid.NewGuid(), AbortToken);
             ItemQueue.Add(threadedItem, AbortToken);
 
             return threadedItem.Identity;
-        }
-
-        /// <summary>
-        ///     Tries to get a finished <see cref="ThreadedItem" /> from the internal processed list.
-        ///     If successful, the <see cref="ThreadedItem" /> is removed from the internal list as well.
-        /// </summary>
-        /// <param name="identity">
-        ///     <see cref="System.Object" /> representing identity of desired
-        ///     <see cref="ThreadedItem" />.
-        /// </param>
-        /// <param name="threadedItem"><see cref="ThreadedItem" /> found done.</param>
-        /// <returns>
-        ///     <see langword="true" /> if <see cref="ThreadedItem" /> exists and is done executing; otherwise,
-        ///     <see langword="false" />.
-        /// </returns>
-        public virtual bool TryGetFinishedItem(object identity, out ThreadedItem threadedItem)
-        {
-            if (!ProcessedItems.ContainsKey(identity) ||
-                !ProcessedItems[identity].IsDone)
-            {
-                threadedItem = default;
-                return false;
-            }
-
-            ProcessedItems.TryRemove(identity, out threadedItem);
-            return true;
         }
 
         /// <summary>
