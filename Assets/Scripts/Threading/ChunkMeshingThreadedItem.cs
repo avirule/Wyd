@@ -441,22 +441,22 @@ namespace Threading
                     switch (direction)
                     {
                         case Direction.North:
-                            CreateFaceNorth(x, y, endX, endY, index);
+                            CreateFaceNorth(index, x, y, endX, endY, index);
                             break;
                         case Direction.East:
-                            CreateFaceEast(x, y, endX, endY, index);
+                            CreateFaceEast(index, x, y, endX, endY, index);
                             break;
                         case Direction.South:
-                            CreateFaceSouth(x, y, endX, endY, index);
+                            CreateFaceSouth(index, x, y, endX, endY, index);
                             break;
                         case Direction.West:
-                            CreateFaceWest(x, y, endX, endY, index);
+                            CreateFaceWest(index, x, y, endX, endY, index);
                             break;
                         case Direction.Up:
-                            CreateFaceUp(x, y, endX, endY, index);
+                            CreateFaceUp(index, x, y, endX, endY, index);
                             break;
                         case Direction.Down:
-                            CreateFaceDown(x, y, endX, endY, index);
+                            CreateFaceDown(index, x, y, endX, endY, index);
                             break;
                         default:
                             throw new ArgumentOutOfRangeException(nameof(direction), direction, null);
@@ -465,7 +465,7 @@ namespace Threading
             }
         }
 
-        private void CreateFaceNorth(float x, float y, float x2, float y2, float z)
+        private void CreateFaceNorth(int index, float x, float y, float x2, float y2, float z)
         {
             AddTriangles(Direction.North);
             
@@ -473,9 +473,18 @@ namespace Threading
             _Vertices.Add(new Vector3(x2, y, z));
             _Vertices.Add(new Vector3(x2, y2, z));
             _Vertices.Add(new Vector3(x, y2, z));
+            
+            if (BlockController.Current.GetBlockSpriteUVs(_Blocks[index], new Vector3(x, y, z), 
+                Direction.North, Vector3.one, out Vector3[] uvs))
+            {
+                _UVs.Add(uvs[1]);
+                _UVs.Add(uvs[3]);
+                _UVs.Add(uvs[0]);
+                _UVs.Add(uvs[2]);
+            }
         }
 
-        private void CreateFaceEast(float z, float y, float z2, float y2, float x)
+        private void CreateFaceEast(int index, float z, float y, float z2, float y2, float x)
         {
             AddTriangles(Direction.East);
             
@@ -483,9 +492,18 @@ namespace Threading
             _Vertices.Add(new Vector3(x, y, z));
             _Vertices.Add(new Vector3(x, y2, z));
             _Vertices.Add(new Vector3(x, y2, z2));
+            
+            if (BlockController.Current.GetBlockSpriteUVs(_Blocks[index], new Vector3(x, y, z),
+                Direction.East, Vector3.one, out Vector3[] uvs))
+            {
+                _UVs.Add(uvs[0]);
+                _UVs.Add(uvs[1]);
+                _UVs.Add(uvs[2]);
+                _UVs.Add(uvs[3]);
+            }
         }
 
-        private void CreateFaceSouth(float x, float y, float x2, float y2, float z)
+        private void CreateFaceSouth(int index, float x, float y, float x2, float y2, float z)
         {
             AddTriangles(Direction.South);
             
@@ -493,9 +511,18 @@ namespace Threading
             _Vertices.Add(new Vector3(x, y, z));
             _Vertices.Add(new Vector3(x, y2, z));
             _Vertices.Add(new Vector3(x2, y2, z));
+            
+            if (BlockController.Current.GetBlockSpriteUVs(_Blocks[index], new Vector3(x, y, z),
+                Direction.South, Vector3.one, out Vector3[] uvs))
+            {
+                _UVs.Add(uvs[0]);
+                _UVs.Add(uvs[1]);
+                _UVs.Add(uvs[2]);
+                _UVs.Add(uvs[3]);
+            }
         }
 
-        private void CreateFaceWest(float z, float y, float z2, float y2, float x)
+        private void CreateFaceWest(int index, float z, float y, float z2, float y2, float x)
         {
             AddTriangles(Direction.West);
             
@@ -503,9 +530,18 @@ namespace Threading
             _Vertices.Add(new Vector3(x, y, z2));
             _Vertices.Add(new Vector3(x, y2, z2));
             _Vertices.Add(new Vector3(x, y2, z));
+            
+            if (BlockController.Current.GetBlockSpriteUVs(_Blocks[index], new Vector3(x, y, z),
+                Direction.West, Vector3.one, out Vector3[] uvs))
+            {
+                _UVs.Add(uvs[1]);
+                _UVs.Add(uvs[3]);
+                _UVs.Add(uvs[0]);
+                _UVs.Add(uvs[2]);
+            }
         }
 
-        private void CreateFaceUp(float x, float z, float x2, float z2, float y)
+        private void CreateFaceUp(int index, float x, float z, float x2, float z2, float y)
         {
             AddTriangles(Direction.Up);
             
@@ -513,9 +549,18 @@ namespace Threading
             _Vertices.Add(new Vector3(x2, y, z2));
             _Vertices.Add(new Vector3(x2, y, z));
             _Vertices.Add(new Vector3(x, y, z));
+            
+            if (BlockController.Current.GetBlockSpriteUVs(_Blocks[index], new Vector3(x, y, z),
+                Direction.Up, Vector3.one, out Vector3[] uvs))
+            {
+                _UVs.Add(uvs[0]);
+                _UVs.Add(uvs[2]);
+                _UVs.Add(uvs[1]);
+                _UVs.Add(uvs[3]);
+            }
         }
 
-        private void CreateFaceDown(float x, float z, float x2, float z2, float y)
+        private void CreateFaceDown(int index, float x, float z, float x2, float z2, float y)
         {
             AddTriangles(Direction.Down);
             
@@ -523,6 +568,15 @@ namespace Threading
             _Vertices.Add(new Vector3(x, y, z2));
             _Vertices.Add(new Vector3(x, y, z));
             _Vertices.Add(new Vector3(x2, y, z));
+            
+            if (BlockController.Current.GetBlockSpriteUVs(_Blocks[index], new Vector3(x, y, z),
+                Direction.Down, Vector3.one, out Vector3[] uvs))
+            {
+                _UVs.Add(uvs[0]);
+                _UVs.Add(uvs[1]);
+                _UVs.Add(uvs[2]);
+                _UVs.Add(uvs[3]);
+            }
         }
 
         private void AddTriangles(Direction direction)
