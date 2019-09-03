@@ -2467,6 +2467,7 @@ MonoBehaviour:
   CollisionTokenController: {fileID: 1461272639}
   WorldGenerationSettings: {fileID: 1461272637}
   TicksPerSecond: 15
+  DebugWrite: 0
 --- !u!4 &1461272636
 Transform:
   m_ObjectHideFlags: 0
@@ -2496,7 +2497,7 @@ MonoBehaviour:
   Lacunarity: 2
   Octaves: 16
   Persistence: 0.5
-  Radius: 5
+  Radius: 1
   Scale: 512
   SeedString: genericseed
 --- !u!64 &1461272638

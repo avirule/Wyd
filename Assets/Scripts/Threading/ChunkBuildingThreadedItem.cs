@@ -4,8 +4,8 @@ using Controllers.Game;
 using Controllers.World;
 using Game.World.Chunk;
 using Noise;
-using Noise.OpenSimplex;
 using UnityEngine;
+using Debug = System.Diagnostics.Debug;
 using Random = System.Random;
 
 #endregion
@@ -151,6 +151,11 @@ namespace Threading
 
         private void Generate3DSimplex(int index)
         {
+            if (WorldController.Current.DebugWrite)
+            {
+                Debug.WriteLine(index);
+            }
+
             (int x, int y, int z) = Mathv.GetVector3IntIndex(index, Chunk.Size);
 
             if ((y < 4) && (y <= _Rand.Next(0, 4)))
@@ -159,8 +164,8 @@ namespace Threading
             }
             else
             {
-                float noiseValue = _NoiseFunction.GetSimplex((_Position.x + x) / 20f, (_Position.y + y) / 20f, (_Position.z + z) / 20f);
-                noiseValue /= y;
+                float noiseValue = _NoiseFunction.GetSimplex(_Position.x + x, _Position.y + y, _Position.z + z);
+                noiseValue /= y * 1.5f;
 
                 if (noiseValue >= 0.01f)
                 {

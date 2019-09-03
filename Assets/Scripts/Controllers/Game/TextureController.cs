@@ -4,7 +4,6 @@ using System.Collections.Generic;
 using Logging;
 using NLog;
 using UnityEngine;
-using UnityEngine.UI;
 
 #endregion
 

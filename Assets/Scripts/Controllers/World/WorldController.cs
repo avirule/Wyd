@@ -33,6 +33,9 @@ namespace Controllers.World
         public CollisionTokenController CollisionTokenController;
         public WorldGenerationSettings WorldGenerationSettings;
         public float TicksPerSecond;
+        
+        // used as a conditional to output debug info to console
+        public bool DebugWrite;
 
         public int ChunksActiveCount => _Chunks.Count;
         public int ChunksCachedCount => _ChunkCache.Size;

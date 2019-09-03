@@ -5,44 +5,6 @@ using UnityEngine;
 
 #endregion
 
-public struct Vector3D
-{
-    public double X;
-    public double Y;
-    public double Z;
-    
-    public Vector3D(double x, double y, double z)
-    {
-        X = x;
-        Y = y;
-        Z = z;
-    }
-
-    public Vector3D(Vector3 a)
-    {
-        X = a.x;
-        Y = a.y;
-        Z = a.z;
-    }
-
-    public Vector3D(Vector3Int a)
-    {
-        X = a.x;
-        Y = a.y;
-        Z = a.z;
-    }
-
-    public static implicit operator Vector3(Vector3D a)
-    {
-        return new Vector3((float)a.X, (float)a.Y, (float)a.Z);
-    }
-
-    public static implicit operator Vector3D(Vector3 a)
-    {
-        return new Vector3D(a);
-    }
-}
-
 public static class Mathv
 {
     #region Vector3
@@ -156,8 +118,7 @@ public static class Mathv
 
     public static Vector3 Trunc(this Vector3 a)
     {
-        // todo this
-        return default;
+        return new Vector3((float)Math.Truncate(a.x), (float)Math.Truncate(a.x), (float)Math.Truncate(a.x));
     }
 
     /// <summary>
