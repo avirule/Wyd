@@ -7,13 +7,14 @@ using Controllers.Entity;
 using Controllers.Game;
 using Controllers.World;
 using Game.Entity;
+using Game.World.Blocks;
 using Threading;
 using UnityEngine;
 using UnityEngine.Rendering;
 
 #endregion
 
-namespace Game.World.Chunk
+namespace Game.World.Chunks
 {
     public enum ThreadingMode
     {
@@ -31,12 +32,12 @@ namespace Game.World.Chunk
 
         private static ThreadedQueue _threadedExecutionQueue;
 
-        public static readonly Vector3Int Size = new Vector3Int(16, 64, 16);
+        public static readonly Vector3Int Size = new Vector3Int(32, 256, 32);
         public static FixedConcurrentQueue<TimeSpan> BuildTimes;
         public static FixedConcurrentQueue<TimeSpan> MeshTimes;
 
         private Vector3 _Position;
-        private ushort[] _Blocks;
+        private Block[] _Blocks;
         private Mesh _Mesh;
         private ConcurrentQueue<Action> _AsynchronousCoroutineQueue;
         private object _BuildingIdentity;
@@ -103,7 +104,7 @@ namespace Game.World.Chunk
         private void Awake()
         {
             _Position = transform.position;
-            _Blocks = new ushort[Size.x * Size.y * Size.z];
+            _Blocks = new Block[Size.Product()];
             _OnBorrowedUpdateTime = Built = Building = Meshed = Meshing = PendingMeshUpdate = false;
             _Mesh = new Mesh();
             _AsynchronousCoroutineQueue = new ConcurrentQueue<Action>();
@@ -288,7 +289,7 @@ namespace Game.World.Chunk
             Meshing = true;
 
             ChunkMeshingThreadedItem threadedItem = ChunkMeshersCache.RetrieveItem();
-            threadedItem.Set(Position, _Blocks, false);
+            threadedItem.Set(Position, _Blocks, true);
 
             return threadedItem;
         }
@@ -303,19 +304,21 @@ namespace Game.World.Chunk
 
         #region MISC
 
-        private int Get1DLocal(Vector3 position)
+        private int ConvertGlobalPositionToLocal1D(Vector3 position)
         {
             Vector3 localPosition = (position - Position).Abs();
             return localPosition.To1D(Size);
         }
 
-        public ushort GetBlockAt(Vector3 position, bool isLocal = false)
+        public Block GetBlockAt(Vector3 position)
         {
-            int localPosition1d = isLocal ? Get1DLocal(position) : position.To1D(Size);
+            // localize position value
+            int localPosition1d = ConvertGlobalPositionToLocal1D(position);
 
-            if (localPosition1d < 0 || _Blocks.Length <= localPosition1d)
+            if ((localPosition1d < 0) || (_Blocks.Length <= localPosition1d))
             {
-                return default;
+                throw new ArgumentOutOfRangeException(nameof(position), position,
+                    "Given position exists outside of local bounds.");
             }
 
             return _Blocks[localPosition1d];
@@ -323,15 +326,16 @@ namespace Game.World.Chunk
 
         public bool BlockExistsAt(Vector3 position)
         {
-            int localPosition1d = Get1DLocal(position);
+            // localize position value
+            int localPosition1d = ConvertGlobalPositionToLocal1D(position);
 
-            if ((_Blocks.Length <= localPosition1d) ||
-                (_Blocks[localPosition1d] == BlockController.BLOCK_EMPTY_ID))
+            if (_Blocks.Length <= localPosition1d)
             {
-                return false;
+                throw new ArgumentOutOfRangeException(nameof(position), position,
+                    "Given position exists outside of local bounds.");
             }
 
-            return true;
+            return _Blocks[localPosition1d].Id != BlockController.BLOCK_EMPTY_ID;
         }
 
         private void CheckInternalsAgainstLoaderPosition(Vector3 loaderChunkPosition)

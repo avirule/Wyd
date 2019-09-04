@@ -1,7 +1,7 @@
 #region
 
 using Controllers.Game;
-using Game.World.Chunk;
+using Game.World.Chunks;
 using TMPro;
 using UnityEngine;
 

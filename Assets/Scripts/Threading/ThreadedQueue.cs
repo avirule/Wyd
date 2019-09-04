@@ -4,7 +4,7 @@ using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Threading;
-using Game.World.Chunk;
+using Game.World.Chunks;
 
 #endregion
 

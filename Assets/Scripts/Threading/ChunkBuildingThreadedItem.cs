@@ -2,7 +2,8 @@
 
 using Controllers.Game;
 using Controllers.World;
-using Game.World.Chunk;
+using Game.World.Blocks;
+using Game.World.Chunks;
 using Noise;
 using UnityEngine;
 using Debug = System.Diagnostics.Debug;
@@ -17,14 +18,14 @@ namespace Threading
         private FastNoise _NoiseFunction;
         private Random _Rand;
         private Vector3 _Position;
-        private ushort[] _Blocks;
+        private Block[] _Blocks;
 
         /// <summary>
         ///     Prepares item for new execution.
         /// </summary>
         /// <param name="position"><see cref="UnityEngine.Vector3" /> position of chunk being meshed.</param>
         /// <param name="blocks">Pre-initialized and built <see cref="T:ushort[]" /> to iterate through.</param>
-        public void Set(Vector3 position, ushort[] blocks)
+        public void Set(Vector3 position, Block[] blocks)
         {
             _NoiseFunction = new FastNoise(WorldController.Current.WorldGenerationSettings.Seed);
             _Rand = new Random(WorldController.Current.WorldGenerationSettings.Seed);
@@ -68,22 +69,22 @@ namespace Threading
             {
                 if ((z % 2) == 0)
                 {
-                    _Blocks[index] = BlockController.Current.GetBlockId("Stone");
+                    _Blocks[index].Initialise(BlockController.Current.GetBlockId("Stone"));
                 }
                 else
                 {
-                    _Blocks[index] = BlockController.Current.GetBlockId("Dirt");
+                    _Blocks[index].Initialise(BlockController.Current.GetBlockId("Dirt"));
                 }
             }
             else
             {
                 if ((z % 2) == 0)
                 {
-                    _Blocks[index] = BlockController.Current.GetBlockId("Dirt");
+                    _Blocks[index].Initialise(BlockController.Current.GetBlockId("Dirt"));
                 }
                 else
                 {
-                    _Blocks[index] = BlockController.Current.GetBlockId("Stone");
+                    _Blocks[index].Initialise(BlockController.Current.GetBlockId("Stone"));
                 }
             }
         }
@@ -101,11 +102,11 @@ namespace Threading
 
             if (((y == halfSize) && ((x % 2) == 0)) || ((y == (halfSize - 1)) && ((x % 2) != 0)))
             {
-                _Blocks[index] = BlockController.Current.GetBlockId("Grass");
+                _Blocks[index].Initialise(BlockController.Current.GetBlockId("Grass"));
             }
             else if (y < halfSize)
             {
-                _Blocks[index] = BlockController.Current.GetBlockId("Stone");
+                _Blocks[index].Initialise(BlockController.Current.GetBlockId("Stone"));
             }
         }
 
@@ -122,11 +123,11 @@ namespace Threading
 
             if (y == halfSize)
             {
-                _Blocks[index] = BlockController.Current.GetBlockId("Grass");
+                _Blocks[index].Initialise(BlockController.Current.GetBlockId("Grass"));
             }
             else
             {
-                _Blocks[index] = BlockController.Current.GetBlockId("Stone");
+                _Blocks[index].Initialise(BlockController.Current.GetBlockId("Stone"));
             }
         }
 
@@ -141,11 +142,11 @@ namespace Threading
 
             if ((x % 2) == 0)
             {
-                _Blocks[index] = BlockController.Current.GetBlockId("Stone");
+                _Blocks[index].Initialise(BlockController.Current.GetBlockId("Stone"));
             }
             else
             {
-                _Blocks[index] = BlockController.Current.GetBlockId("Dirt");
+                _Blocks[index].Initialise(BlockController.Current.GetBlockId("Dirt"));
             }
         }
 
@@ -160,7 +161,7 @@ namespace Threading
 
             if ((y < 4) && (y <= _Rand.Next(0, 4)))
             {
-                _Blocks[index] = BlockController.Current.GetBlockId("Bedrock");
+                _Blocks[index].Initialise(BlockController.Current.GetBlockId("Bedrock"));
             }
             else
             {
@@ -169,7 +170,7 @@ namespace Threading
 
                 if (noiseValue >= 0.01f)
                 {
-                    _Blocks[index] = BlockController.Current.GetBlockId("Grass");
+                    _Blocks[index].Initialise(BlockController.Current.GetBlockId("stone"));
                 }
             }
         }

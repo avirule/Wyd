@@ -2,7 +2,7 @@
 
 using System;
 using System.IO;
-using Game.World.Chunk;
+using Game.World.Chunks;
 using Logging;
 using NLog;
 using SharpConfig;

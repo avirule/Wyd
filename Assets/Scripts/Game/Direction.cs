@@ -1,3 +1,7 @@
+using System;
+using System.Numerics;
+using Vector3 = UnityEngine.Vector3;
+
 namespace Game
 {
     /// <summary>
@@ -34,5 +38,29 @@ namespace Game
         ///     Negative on Y axis
         /// </summary>
         Down = 0b00100000
+    }
+
+    public static class DirectionExtensions
+    {
+        public static Vector3 AsVector3(this Direction direction)
+        {
+            switch (direction)
+            {
+                case Direction.North:
+                    return Vector3.forward;
+                case Direction.East:
+                    return Vector3.right;
+                case Direction.South:
+                    return Vector3.back;
+                case Direction.West:
+                    return Vector3.left;
+                case Direction.Up:
+                    return Vector3.up;
+                case Direction.Down:
+                    return Vector3.down;
+                default:
+                    throw new ArgumentOutOfRangeException(nameof(direction), direction, null);
+            }
+        }
     }
 }

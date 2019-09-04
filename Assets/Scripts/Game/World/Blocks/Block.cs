@@ -1,14 +1,13 @@
 #region
 
-using System;
 using System.Collections.Specialized;
 using Controllers.Game;
 
 #endregion
 
-namespace Game.World.Block
+namespace Game.World.Blocks
 {
-    public class Block
+    public struct Block
     {
         public BitVector32 Bits;
 
@@ -19,7 +18,7 @@ namespace Game.World.Block
         }
 
         /// <summary>
-        ///     Determines whether the block is opaque.
+        ///     Determines whether the block is transparent.
         /// </summary>
         public bool Transparent
         {
@@ -27,16 +26,9 @@ namespace Game.World.Block
             set => Bits[TransparencySection] = value ? 0 : 1;
         }
 
-        public bool Traversed
-        {
-            get => Bits[TraversedSection] == 0;
-            set => Bits[TraversedSection] = value ? 0 : 1;
-        }
-
         public static readonly BitVector32.Section IdSection;
         public static readonly BitVector32.Section TransparencySection;
         public static readonly BitVector32.Section[] FaceSections;
-        public static readonly BitVector32.Section TraversedSection;
 
         static Block()
         {
@@ -53,7 +45,6 @@ namespace Game.World.Block
             FaceSections[3] = BitVector32.CreateSection(1, FaceSections[2]);
             FaceSections[4] = BitVector32.CreateSection(1, FaceSections[3]);
             FaceSections[5] = BitVector32.CreateSection(1, FaceSections[4]);
-            TraversedSection = BitVector32.CreateSection(1, FaceSections[5]);
         }
 
         public Block(ushort id, byte faces = byte.MinValue)
@@ -74,66 +65,29 @@ namespace Game.World.Block
                 [FaceSections[5]] = faces & (byte) Direction.Down
             };
 
-            Transparent = BlockController.Current.IsBlockTransparent(Id);
+            Transparent = BlockController.Current.IsBlockDefaultTransparent(Id);
         }
 
         public bool HasAnyFace()
         {
-            if (Id == BlockController.BLOCK_EMPTY_ID)
-            {
-                return false;
-            }
-
             return HasFace(Direction.North) || HasFace(Direction.East) || HasFace(Direction.South) ||
                    HasFace(Direction.East) || HasFace(Direction.Up) || HasFace(Direction.Down);
         }
 
+        public bool HasAllFaces()
+        {
+            return HasFace(Direction.North) && HasFace(Direction.East) && HasFace(Direction.South) &&
+                   HasFace(Direction.East) && HasFace(Direction.Up) && HasFace(Direction.Down);
+        }
+
         public bool HasFace(Direction direction)
         {
-            switch (direction)
-            {
-                case Direction.North:
-                    return Bits[FaceSections[0]] == 1;
-                case Direction.East:
-                    return Bits[FaceSections[1]] == 1;
-                case Direction.South:
-                    return Bits[FaceSections[2]] == 1;
-                case Direction.West:
-                    return Bits[FaceSections[3]] == 1;
-                case Direction.Up:
-                    return Bits[FaceSections[4]] == 1;
-                case Direction.Down:
-                    return Bits[FaceSections[5]] == 1;
-                default:
-                    throw new ArgumentOutOfRangeException(nameof(direction), direction, null);
-            }
+            return Bits[FaceSections[((byte) direction).SmallestBitDigit()]] == 1;
         }
 
         public void SetFace(Direction direction, bool value)
         {
-            switch (direction)
-            {
-                case Direction.North:
-                    Bits[FaceSections[0]] = value ? 1 : 0;
-                    break;
-                case Direction.East:
-                    Bits[FaceSections[1]] = value ? 1 : 0;
-                    break;
-                case Direction.South:
-                    Bits[FaceSections[2]] = value ? 1 : 0;
-                    break;
-                case Direction.West:
-                    Bits[FaceSections[3]] = value ? 1 : 0;
-                    break;
-                case Direction.Up:
-                    Bits[FaceSections[4]] = value ? 1 : 0;
-                    break;
-                case Direction.Down:
-                    Bits[FaceSections[5]] = value ? 1 : 0;
-                    break;
-                default:
-                    throw new ArgumentOutOfRangeException(nameof(direction), direction, null);
-            }
+            Bits[FaceSections[((byte) direction).SmallestBitDigit()]] = value ? 1 : 0;
         }
     }
 }

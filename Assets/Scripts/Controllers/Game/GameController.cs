@@ -3,6 +3,7 @@
 using System;
 using Controllers.World;
 using Game;
+using Game.World.Blocks;
 using NLog;
 using UnityEditor;
 using UnityEngine;
@@ -38,9 +39,9 @@ namespace Controllers.Game
             BlockController.Current.RegisterBlockRules("Grass", false, (position, direction) =>
             {
                 Vector3 positionAbove = position + Vector3.up;
-                ushort blockId = WorldController.Current.GetBlockAt(positionAbove);
+                Block block = WorldController.Current.GetBlockAt(positionAbove);
 
-                if (!BlockController.Current.IsBlockTransparent(blockId))
+                if (!block.Transparent)
                 {
                     return "Dirt";
                 }

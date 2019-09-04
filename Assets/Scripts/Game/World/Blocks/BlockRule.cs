@@ -6,7 +6,7 @@ using UnityEngine;
 
 #endregion
 
-namespace Game.World.Block
+namespace Game.World.Blocks
 {
     public delegate string RuleEvaluation<T1>(T1 arg1);
 

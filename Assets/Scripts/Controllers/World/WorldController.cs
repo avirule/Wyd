@@ -9,7 +9,8 @@ using Controllers.Game;
 using Game;
 using Game.Entity;
 using Game.World;
-using Game.World.Chunk;
+using Game.World.Blocks;
+using Game.World.Chunks;
 using Logging;
 using NLog;
 using UnityEngine;
@@ -33,14 +34,6 @@ namespace Controllers.World
         public CollisionTokenController CollisionTokenController;
         public WorldGenerationSettings WorldGenerationSettings;
         public float TicksPerSecond;
-        
-        // used as a conditional to output debug info to console
-        public bool DebugWrite;
-
-        public int[] TriValues =
-        {
-            1,1,1,1,1,1
-        };
 
         public int ChunksActiveCount => _Chunks.Count;
         public int ChunksCachedCount => _ChunkCache.Size;
@@ -286,7 +279,7 @@ namespace Controllers.World
             return trySuccess ? chunk : default;
         }
 
-        public ushort GetBlockAt(Vector3 position)
+        public Block GetBlockAt(Vector3 position)
         {
             Vector3 chunkPosition = GetChunkOriginFromPosition(position);
 

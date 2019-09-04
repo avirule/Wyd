@@ -4,7 +4,7 @@ using UnityEngine;
 
 #endregion
 
-namespace Game.World.Block
+namespace Game.World.Blocks
 {
     public interface IBlockRule
     {

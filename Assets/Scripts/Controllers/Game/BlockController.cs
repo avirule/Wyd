@@ -4,7 +4,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using Game;
-using Game.World.Block;
+using Game.World.Blocks;
 using Logging;
 using NLog;
 using UnityEngine;
@@ -123,7 +123,7 @@ namespace Controllers.Game
             return blockRule.BlockName;
         }
 
-        public bool IsBlockTransparent(ushort blockId)
+        public bool IsBlockDefaultTransparent(ushort blockId)
         {
             if (blockId == BLOCK_EMPTY_ID)
             {

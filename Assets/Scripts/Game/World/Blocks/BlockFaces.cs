@@ -5,7 +5,7 @@ using UnityEngine;
 
 #endregion
 
-namespace Game.World.Block
+namespace Game.World.Blocks
 {
     public static class BlockFaces
     {
@@ -15,8 +15,8 @@ namespace Game.World.Block
             {
                 new Vector3(0f, 0f, 1f),
                 new Vector3(0f, 1f, 1f),
-                new Vector3(1f, 0f, 1f),
-                new Vector3(1f, 1f, 1f)
+                new Vector3(2f, 0f, 1f),
+                new Vector3(2f, 1f, 1f)
             };
 
             public static readonly Vector3[] East =
