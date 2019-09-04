@@ -152,11 +152,6 @@ namespace Threading
 
         private void Generate3DSimplex(int index)
         {
-            if (WorldController.Current.DebugWrite)
-            {
-                Debug.WriteLine(index);
-            }
-
             (int x, int y, int z) = Mathv.GetVector3IntIndex(index, Chunk.Size);
 
             if ((y < 4) && (y <= _Rand.Next(0, 4)))

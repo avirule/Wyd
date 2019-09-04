@@ -134,7 +134,7 @@ namespace Threading
                     AddTriangles(Direction.North);
 
                     int traversals = 1;
-                    
+
                     if (_AggressiveFaceMerging)
                     {
                         traversals = GetTraversals(index, globalPosition, x, Direction.North);
@@ -357,11 +357,11 @@ namespace Threading
             {
                 return traversals;
             }
-            
+
             int traversalFactor = GetTraversalFactor(direction);
             int limitingSliceValue = GetLimitingSliceValue(direction);
             Vector3 traversalDirectionAsVector3 = GetTraversalDirectionAsVector3(direction);
-            
+
             // incrementing on x, so the traversal factor is 1
             // if we were incrementing on z, the factor would be Chunk.Size.x
             // and on y it would be (Chunk.Size.x * Chunk.Size.z)
@@ -387,7 +387,7 @@ namespace Threading
 
             return traversals;
         }
-        
+
         private int GetTraversalFactor(Direction direction)
         {
             switch (direction)
@@ -411,7 +411,7 @@ namespace Threading
             switch (direction)
             {
                 case Direction.North:
-                    case Direction.South:
+                case Direction.South:
                     return Chunk.Size.x;
                 case Direction.East:
                 case Direction.West:
@@ -423,7 +423,7 @@ namespace Threading
                     throw new ArgumentOutOfRangeException(nameof(direction), direction, null);
             }
         }
-        
+
         private Vector3 GetTraversalDirectionAsVector3(Direction direction)
         {
             switch (direction)

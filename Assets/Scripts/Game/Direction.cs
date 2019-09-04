@@ -1,6 +1,9 @@
+#region
+
 using System;
-using System.Numerics;
-using Vector3 = UnityEngine.Vector3;
+using UnityEngine;
+
+#endregion
 
 namespace Game
 {
