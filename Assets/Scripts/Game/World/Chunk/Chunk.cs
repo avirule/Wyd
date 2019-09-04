@@ -31,7 +31,7 @@ namespace Game.World.Chunk
 
         private static ThreadedQueue _threadedExecutionQueue;
 
-        public static readonly Vector3Int Size = new Vector3Int(32, 256, 32);
+        public static readonly Vector3Int Size = new Vector3Int(16, 64, 16);
         public static FixedConcurrentQueue<TimeSpan> BuildTimes;
         public static FixedConcurrentQueue<TimeSpan> MeshTimes;
 
@@ -288,7 +288,7 @@ namespace Game.World.Chunk
             Meshing = true;
 
             ChunkMeshingThreadedItem threadedItem = ChunkMeshersCache.RetrieveItem();
-            threadedItem.Set(Position, _Blocks, true);
+            threadedItem.Set(Position, _Blocks, false);
 
             return threadedItem;
         }
@@ -313,7 +313,7 @@ namespace Game.World.Chunk
         {
             int localPosition1d = isLocal ? Get1DLocal(position) : position.To1D(Size);
 
-            if (_Blocks.Length <= localPosition1d)
+            if (localPosition1d < 0 || _Blocks.Length <= localPosition1d)
             {
                 return default;
             }

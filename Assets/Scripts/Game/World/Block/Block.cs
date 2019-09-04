@@ -8,7 +8,7 @@ using Controllers.Game;
 
 namespace Game.World.Block
 {
-    public struct Block
+    public class Block
     {
         public BitVector32 Bits;
 
@@ -27,9 +27,16 @@ namespace Game.World.Block
             set => Bits[TransparencySection] = value ? 0 : 1;
         }
 
+        public bool Traversed
+        {
+            get => Bits[TraversedSection] == 0;
+            set => Bits[TraversedSection] = value ? 0 : 1;
+        }
+
         public static readonly BitVector32.Section IdSection;
         public static readonly BitVector32.Section TransparencySection;
         public static readonly BitVector32.Section[] FaceSections;
+        public static readonly BitVector32.Section TraversedSection;
 
         static Block()
         {
@@ -46,6 +53,7 @@ namespace Game.World.Block
             FaceSections[3] = BitVector32.CreateSection(1, FaceSections[2]);
             FaceSections[4] = BitVector32.CreateSection(1, FaceSections[3]);
             FaceSections[5] = BitVector32.CreateSection(1, FaceSections[4]);
+            TraversedSection = BitVector32.CreateSection(1, FaceSections[5]);
         }
 
         public Block(ushort id, byte faces = byte.MinValue)

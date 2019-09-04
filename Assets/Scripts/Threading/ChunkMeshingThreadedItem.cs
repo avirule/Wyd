@@ -268,56 +268,79 @@ namespace Threading
             //
             // The original source code can be found here:
             // https://github.com/mikolalysenko/mikolalysenko.github.com/blob/gh-pages/MinecraftMeshes/js/greedy.js
-            int size = Chunk.Size.z;
+
+            // roll sizes into array for simpler relation when processing axes 
+            int[] sizes = Chunk.Size.ToArray();
 
             for (int axis = 0; axis < 3; axis++)
             {
-                int i, j, k, l, w, h, u = (axis + 1) % 3, v = (axis + 2) % 3;
+                int i, j, k, l;
+                int width, height;
+                int axisIncrementedOne = (axis + 1) % 3;
+                int axisIncrementedTwo = (axis + 2) % 3;
                 int[] x = new int[3];
-                int[] q = new int[3];
-                bool[] mask = new bool[size * size];
+                int[] q = new int[3];    
+
+                // initialise largest possible mask, which is y * y
+                bool[] mask = new bool[Chunk.Size.y * Chunk.Size.y];
 
                 q[axis] = 1;
 
-                for (x[axis] = -1; x[axis] < size;)
+                for (x[axis] = -1; x[axis] < sizes[axis];)
                 {
                     // Compute the mask
                     int n = 0;
-                    for (x[v] = 0; x[v] < size; ++x[v])
+                    for (x[axisIncrementedTwo] = 0; x[axisIncrementedTwo] < sizes[axisIncrementedTwo]; ++x[axisIncrementedTwo])
                     {
-                        for (x[u] = 0; x[u] < size; ++x[u])
+                        for (x[axisIncrementedOne] = 0; x[axisIncrementedOne] < sizes[axisIncrementedOne]; ++x[axisIncrementedOne])
                         {
-                            mask[n++] = ((0 <= x[axis]) && !BlockController.Current.IsBlockTransparent(
-                                             _Blocks[Index3DTo1D(x[0], x[1], x[2])])) !=
-                                        ((x[axis] < (size - 1)) && !BlockController.Current.IsBlockTransparent(
-                                             _Blocks[Index3DTo1D(x[0] + q[0], x[1] + q[1], x[2] + q[2])]));
+                            bool maskValue;
+
+                            Vector3 blockAPosition = new Vector3(x[0], x[1], x[2]);
+                            Vector3 blockBPosition = new Vector3(x[0] + q[0], x[1] + q[1], x[2] + q[2]);
+
+                            ushort blockAId =
+                                0 <= x[axis] ?
+                                _Blocks[blockAPosition.To1D(Chunk.Size)] :
+                                BlockController.BLOCK_EMPTY_ID;
+
+                            ushort blockBId = x[axis] < (sizes[axis] - 1) ?
+                                _Blocks[blockBPosition.To1D(Chunk.Size)] :
+                                WorldController.Current.GetBlockAt(blockBPosition);
+
+                            bool blockAIsTransparent =!BlockController.Current.IsBlockTransparent(blockAId);
+                            bool blockBIsTransparent =!BlockController.Current.IsBlockTransparent(blockBId);
+                            
+                            // decide if a face should be drawn based on whether two neighbors are opposite transparency
+                            // and also if the block types match
+                            maskValue = blockAIsTransparent != blockBIsTransparent && blockAId != blockBId;
+                            mask[n++] = maskValue;
                         }
                     }
 
                     // Increment x[d]
-                    ++x[axis];
+                    x[axis]++;
 
                     // Generate mesh for mask using lexicographic ordering
                     n = 0;
-                    for (j = 0; j < size; ++j)
+                    for (j = 0; j < sizes[axisIncrementedTwo]; ++j)
                     {
-                        for (i = 0; i < size;)
+                        for (i = 0; i < sizes[axisIncrementedOne];)
                         {
                             if (mask[n])
                             {
                                 // Compute width
-                                for (w = 1; ((i + w) < size) && mask[n + w]; ++w)
+                                for (width = 1; ((i + width) < sizes[axisIncrementedOne]) && mask[n + width]; ++width)
                                 {
-                                    ;
                                 }
 
                                 // Compute height (this is slightly awkward
                                 bool done = false;
-                                for (h = 1; (j + h) < size; ++h)
+                                for (height = 1; (j + height) < sizes[axisIncrementedTwo]; ++height)
                                 {
-                                    for (k = 0; k < w; ++k)
+                                    for (k = 0; k < width; ++k)
                                     {
-                                        if (mask[n + k + (h * size)])
+                                        if (mask[n + k + (height * sizes[axisIncrementedTwo])])
                                         {
                                             continue;
                                         }
@@ -333,12 +356,12 @@ namespace Threading
                                 }
 
                                 // Add quad
-                                x[u] = i;
-                                x[v] = j;
+                                x[axisIncrementedOne] = i;
+                                x[axisIncrementedTwo] = j;
                                 int[] du = new int[3];
                                 int[] dv = new int[3];
-                                du[u] = w;
-                                dv[v] = h;
+                                du[axisIncrementedOne] = width;
+                                dv[axisIncrementedTwo] = height;
 
                                 AddFace(
                                     new Vector3(x[0], x[1], x[2]),
@@ -348,22 +371,22 @@ namespace Threading
 
 
                                 // Zero-out mask
-                                for (l = 0; l < h; ++l)
+                                for (l = 0; l < height; ++l)
                                 {
-                                    for (k = 0; k < w; ++k)
+                                    for (k = 0; k < width; ++k)
                                     {
-                                        mask[n + k + (l * size)] = false;
+                                        mask[n + k + (l * sizes[axis])] = false;
                                     }
                                 }
 
                                 // Increment counters and continue
-                                i += w;
-                                n += w;
+                                i += width;
+                                n += width;
                             }
                             else
                             {
-                                ++i;
-                                ++n;
+                                i++;
+                                n++;
                             }
                         }
                     }

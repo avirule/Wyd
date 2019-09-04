@@ -118,7 +118,7 @@ public static class Mathv
 
     public static Vector3 Trunc(this Vector3 a)
     {
-        return new Vector3((float)Math.Truncate(a.x), (float)Math.Truncate(a.x), (float)Math.Truncate(a.x));
+        return new Vector3((float) Math.Truncate(a.x), (float) Math.Truncate(a.x), (float) Math.Truncate(a.x));
     }
 
     /// <summary>
@@ -240,6 +240,11 @@ public static class Mathv
     public static int To1D(this Vector3Int a, Vector3Int size3d)
     {
         return a.x + (a.z * size3d.x) + (a.y * size3d.x * size3d.z);
+    }
+
+    public static int[] ToArray(this Vector3Int a)
+    {
+        return new[] {a.x, a.y, a.z};
     }
 
     #endregion

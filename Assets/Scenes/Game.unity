@@ -2468,6 +2468,7 @@ MonoBehaviour:
   WorldGenerationSettings: {fileID: 1461272637}
   TicksPerSecond: 15
   DebugWrite: 0
+  TriValues: 030000000200000000000000000000000200000001000000
 --- !u!4 &1461272636
 Transform:
   m_ObjectHideFlags: 0
@@ -2497,7 +2498,7 @@ MonoBehaviour:
   Lacunarity: 2
   Octaves: 16
   Persistence: 0.5
-  Radius: 1
+  Radius: 4
   Scale: 512
   SeedString: genericseed
 --- !u!64 &1461272638
