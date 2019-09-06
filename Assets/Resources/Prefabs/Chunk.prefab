@@ -91,13 +91,12 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: da7f38601b0f4d2f91db1e916ea65fc0, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  BuildingShaderMaterial: {fileID: 2100000, guid: e2157c593c489bb48af12f2cdb2009b7,
+    type: 2}
   MeshFilter: {fileID: -925064434372530524}
   MeshRenderer: {fileID: 5378599154586136568}
-  Blocks: 
   Built: 0
   Building: 0
   Meshed: 0
   Meshing: 0
   PendingMeshUpdate: 0
-  Position: {x: 0, y: 0, z: 0}
-  DrawShadows: 0

@@ -1,4 +1,4 @@
-﻿Shader "Standard/Standard Terrain"
+﻿Shader "Wyd/Standard Terrain"
 {
     Properties
     {
