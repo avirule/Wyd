@@ -3,7 +3,6 @@
     Properties
     {
         _Blocks ("Texture", 3D) = "" {}
-        _Offset ("UV Offset", Float) = 1
     }
     SubShader
     {
@@ -43,7 +42,6 @@
             float4 frag (v2f i) : SV_Target
             {            
                 fixed4 col = tex3D(_Blocks, i.uv);
-                // just invert the colors
                 col.r = snoise(i.uv);
                 return col;
             }            
