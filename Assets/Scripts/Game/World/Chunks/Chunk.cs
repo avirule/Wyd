@@ -126,7 +126,7 @@ namespace Game.World.Chunks
         {
             if (_threadedExecutionQueue == default)
             {
-                _threadedExecutionQueue = new ThreadedQueue(200, () => OptionsController.Current.ThreadingMode);
+                _threadedExecutionQueue = new ThreadedQueue(200, () => OptionsController.Current.ThreadingMode, Environment.ProcessorCount);
                 _threadedExecutionQueue.Start();
             }
 
