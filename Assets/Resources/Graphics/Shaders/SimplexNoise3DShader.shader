@@ -37,22 +37,16 @@
                 return o;
             }
 
-            sampler3D _Blocks;
-
-            float4 frag (v2f i) : SV_Target
-            {            
-                fixed4 col = tex3D(_Blocks, i.uv);
-                col.r = snoise(i.uv);
-                return col;
-            }            
+            sampler3D _Blocks;            
             
             float3 mod289(float3 x)
             {
-                return x - floor(x * (1.0 / 289.0)) * 289.0;
+                return x - floor(x / 289.0) * 289.0;
             }
             
-            float4 mod289(float4 x) {
-                return x - floor(x * (1.0 / 289.0)) * 289.0;
+            float4 mod289(float4 x)
+            {
+                return x - floor(x / 289.0) * 289.0;
             }
             
             float4 permute(float4 x)
@@ -62,7 +56,7 @@
             
             float4 taylorInvSqrt(float4 r)
             {
-                return 1.79284291400159 - 0.85373472095314 * r;
+                return 1.79284291400159 - r * 0.85373472095314;
             }
             
             float snoise(float3 v)
@@ -95,13 +89,13 @@
             
                 // Gradients: 7x7 points over a square, mapped onto an octahedron.
                 // The ring size 17*17 = 289 is close to a multiple of 49 (49*6 = 294)
-                float4 j = p - 49.0 * floor(p * (1.0 / 49.0));  // mod(p,7*7)
+                float4 j = p - 49.0 * floor(p / 49.0);  // mod(p,7*7)
             
-                float4 x_ = floor(j * (1.0 / 7.0));
-                float4 y_ = floor(j - 7.0 * x_ );  // mod(j,N)
+                float4 x_ = floor(j / 7.0);
+                float4 y_ = floor(j - 7.0 * x_);  // mod(j,N)
             
-                float4 x = x_ * (2.0 / 7.0) + 0.5 / 7.0 - 1.0;
-                float4 y = y_ * (2.0 / 7.0) + 0.5 / 7.0 - 1.0;
+                float4 x = (x_ * 2.0 + 0.5) / 7.0 - 1.0;
+                float4 y = (y_ * 2.0 + 0.5) / 7.0 - 1.0;
             
                 float4 h = 1.0 - abs(x) - abs(y);
             
@@ -112,7 +106,7 @@
                 //float4 s1 = float4(lessThan(b1, 0.0)) * 2.0 - 1.0;
                 float4 s0 = floor(b0) * 2.0 + 1.0;
                 float4 s1 = floor(b1) * 2.0 + 1.0;
-                float4 sh = -step(h, float4(0.0, 0.0, 0.0, 0.0));
+                float4 sh = -step(h, 0.0);
             
                 float4 a0 = b0.xzyw + s0.xzyw * sh.xxyy;
                 float4 a1 = b1.xzyw + s1.xzyw * sh.zzww;
@@ -136,6 +130,21 @@
             
                 float4 px = float4(dot(x0, g0), dot(x1, g1), dot(x2, g2), dot(x3, g3));
                 return 42.0 * dot(m, px);
+            }
+            
+            float4 _Offset;
+            
+            float4 frag (v2f i) : SV_Target
+            {
+                const float epsilon = 0.0001;
+                float3 coord = _Offset.xyz + i.uv.xyz;
+            
+                float v0 = snoise(coord);
+                float vx = snoise(coord + float3(epsilon, 0, 0));
+                float vy = snoise(coord + float3(0, epsilon, 0));
+                float vz = snoise(coord + float3(0, 0, epsilon));
+            
+                return float4(v0, vx, vy, vz);
             }
 
             ENDCG
