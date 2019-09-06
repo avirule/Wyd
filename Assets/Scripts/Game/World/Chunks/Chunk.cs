@@ -36,6 +36,9 @@ namespace Game.World.Chunks
         public static FixedConcurrentQueue<TimeSpan> BuildTimes;
         public static FixedConcurrentQueue<TimeSpan> MeshTimes;
 
+        private ComputeShader _BuilderShader;
+        private int _BuilderShaderKernelHandle;
+        private RenderTexture _Blocks3DTexture;
         private Vector3 _Position;
         private Block[] _Blocks;
         private Mesh _Mesh;
@@ -103,6 +106,15 @@ namespace Game.World.Chunks
 
         private void Awake()
         {
+            // create render texture for blocks computing
+            _BuilderShader = Resources.Load<ComputeShader>(@"Graphics\Shaders\SimplexNoise3D");
+            _BuilderShaderKernelHandle = _BuilderShader.FindKernel("CSMain");
+            _Blocks3DTexture = new RenderTexture(Size.x, Size.y, Size.z, RenderTextureFormat.ARGB32)
+            {
+                enableRandomWrite = true
+            };
+            _Blocks3DTexture.Create();
+            
             _Position = transform.position;
             _Blocks = new Block[Size.Product()];
             _OnBorrowedUpdateTime = Built = Building = Meshed = Meshing = PendingMeshUpdate = false;
@@ -224,6 +236,13 @@ namespace Game.World.Chunks
 
                 _threadedExecutionQueue.ThreadedItemFinished += OnThreadedQueueFinishedItem;
                 _BuildingIdentity = _threadedExecutionQueue.QueueThreadedItem(threadedItem);
+                
+                
+                
+                //     compute shader building
+                _BuilderShader.SetTexture(_BuilderShaderKernelHandle, "Result", _Blocks3DTexture);
+                _BuilderShader.Dispatch(_BuilderShaderKernelHandle, Size.x, Size.y, Size.z);
+                
             }
         }
 

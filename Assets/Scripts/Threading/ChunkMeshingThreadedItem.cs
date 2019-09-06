@@ -18,7 +18,6 @@ namespace Threading
         private readonly List<int> _Triangles;
         private readonly List<Vector3> _Vertices;
         private readonly List<Vector3> _UVs;
-        private readonly byte[] _Faces;
 
         private Vector3 _Position;
         private Block[] _Blocks;
@@ -33,7 +32,6 @@ namespace Threading
             _Triangles = new List<int>();
             _Vertices = new List<Vector3>();
             _UVs = new List<Vector3>();
-            _Faces = new byte[Chunk.Size.Product()];
         }
 
         /// <summary>
