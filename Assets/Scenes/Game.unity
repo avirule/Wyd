@@ -2467,8 +2467,6 @@ MonoBehaviour:
   CollisionTokenController: {fileID: 1461272639}
   WorldGenerationSettings: {fileID: 1461272637}
   TicksPerSecond: 15
-  DebugWrite: 0
-  TriValues: 030000000200000000000000000000000200000001000000
 --- !u!4 &1461272636
 Transform:
   m_ObjectHideFlags: 0
@@ -3177,7 +3175,7 @@ MonoBehaviour:
   Rigidbody: {fileID: 2134891959}
   RotationSensitivity: 40
   CameraTransform: {fileID: 963194228}
-  TravelSpeed: 15
+  TravelSpeed: 45
   CurrentChunk: {x: 0, y: 0, z: 0}
 --- !u!136 &2134891955
 CapsuleCollider:

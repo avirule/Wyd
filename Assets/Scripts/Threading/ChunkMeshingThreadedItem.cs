@@ -1,6 +1,5 @@
 #region
 
-using System;
 using System.Collections.Generic;
 using Controllers.Game;
 using Controllers.World;
@@ -134,16 +133,34 @@ namespace Threading
                     AddTriangles(Direction.North);
 
                     int traversals = 1;
+                    Vector3 uvSize = Vector3.one;
 
                     if (_AggressiveFaceMerging)
                     {
-                        traversals = GetTraversals(index, globalPosition, x, Direction.North);
-                        // The traversals value guess into the vertex points that have a positive value
-                        // on the same axis as your slice value
-                        _Vertices.Add(localPosition + new Vector3(0f, 0f, 1f));
-                        _Vertices.Add(localPosition + new Vector3(0f, 1f, 1f));
-                        _Vertices.Add(localPosition + new Vector3(traversals, 0f, 1f));
-                        _Vertices.Add(localPosition + new Vector3(traversals, 1f, 1f));
+                        traversals = GetTraversals(index, globalPosition, x, Direction.North, Direction.East, 1,
+                            Chunk.Size.x);
+
+                        if (traversals == 1)
+                        {
+                            traversals = GetTraversals(index, globalPosition, y, Direction.North, Direction.Up,
+                                Chunk.Size.x * Chunk.Size.z, Chunk.Size.y);
+
+                            _Vertices.Add(localPosition + new Vector3(0f, 0f, 1f));
+                            _Vertices.Add(localPosition + new Vector3(0f, traversals, 1f));
+                            _Vertices.Add(localPosition + new Vector3(1f, 0f, 1f));
+                            _Vertices.Add(localPosition + new Vector3(1f, traversals, 1f));
+                            uvSize.z = traversals;
+                        }
+                        else
+                        {
+                            // The traversals value guess into the vertex points that have a positive value
+                            // on the same axis as your slice value
+                            _Vertices.Add(localPosition + new Vector3(0f, 0f, 1f));
+                            _Vertices.Add(localPosition + new Vector3(0f, 1f, 1f));
+                            _Vertices.Add(localPosition + new Vector3(traversals, 0f, 1f));
+                            _Vertices.Add(localPosition + new Vector3(traversals, 1f, 1f));
+                            uvSize.x = traversals;
+                        }
                     }
                     else
                     {
@@ -151,7 +168,7 @@ namespace Threading
                     }
 
                     if (BlockController.Current.GetBlockSpriteUVs(_Blocks[index].Id, globalPosition,
-                        Direction.North, new Vector3(traversals, 0f, 1f), out Vector3[] uvs))
+                        Direction.North, uvSize, out Vector3[] uvs))
                     {
                         _UVs.Add(uvs[1]);
                         _UVs.Add(uvs[3]);
@@ -169,13 +186,33 @@ namespace Threading
                     AddTriangles(Direction.East);
 
                     int traversals = 1;
+                    Vector3 uvSize = Vector3.one;
+
                     if (_AggressiveFaceMerging)
                     {
-                        traversals = GetTraversals(index, globalPosition, z, Direction.East);
-                        _Vertices.Add(localPosition + new Vector3(1f, 0f, 0f));
-                        _Vertices.Add(localPosition + new Vector3(1f, 0f, traversals));
-                        _Vertices.Add(localPosition + new Vector3(1f, 1f, 0f));
-                        _Vertices.Add(localPosition + new Vector3(1f, 1f, traversals));
+                        traversals = GetTraversals(index, globalPosition, z, Direction.East, Direction.North,
+                            Chunk.Size.z, Chunk.Size.z);
+
+                        // if traversal failed (no blocks found in probed direction) then look on next axis
+                        if (traversals == 1)
+                        {
+                            traversals = GetTraversals(index, globalPosition, y, Direction.East, Direction.Up,
+                                Chunk.Size.x * Chunk.Size.z, Chunk.Size.y);
+
+                            _Vertices.Add(localPosition + new Vector3(1f, 0f, 0f));
+                            _Vertices.Add(localPosition + new Vector3(1f, 0f, 1f));
+                            _Vertices.Add(localPosition + new Vector3(1f, traversals, 0f));
+                            _Vertices.Add(localPosition + new Vector3(1f, traversals, 1f));
+                            uvSize.z = traversals;
+                        }
+                        else
+                        {
+                            _Vertices.Add(localPosition + new Vector3(1f, 0f, 0f));
+                            _Vertices.Add(localPosition + new Vector3(1f, 0f, traversals));
+                            _Vertices.Add(localPosition + new Vector3(1f, 1f, 0f));
+                            _Vertices.Add(localPosition + new Vector3(1f, 1f, traversals));
+                            uvSize.x = traversals;
+                        }
                     }
                     else
                     {
@@ -183,7 +220,7 @@ namespace Threading
                     }
 
                     if (BlockController.Current.GetBlockSpriteUVs(_Blocks[index].Id, globalPosition,
-                        Direction.East, new Vector3(traversals, 0f, 1f), out Vector3[] uvs))
+                        Direction.East, uvSize, out Vector3[] uvs))
                     {
                         _UVs.Add(uvs[0]);
                         _UVs.Add(uvs[1]);
@@ -200,13 +237,32 @@ namespace Threading
                     AddTriangles(Direction.South);
 
                     int traversals = 1;
+                    Vector3 uvSize = Vector3.one;
+
                     if (_AggressiveFaceMerging)
                     {
-                        traversals = GetTraversals(index, globalPosition, x, Direction.South);
-                        _Vertices.Add(localPosition + new Vector3(0f, 0f, 0f));
-                        _Vertices.Add(localPosition + new Vector3(traversals, 0f, 0f));
-                        _Vertices.Add(localPosition + new Vector3(0f, 1f, 0f));
-                        _Vertices.Add(localPosition + new Vector3(traversals, 1f, 0f));
+                        traversals = GetTraversals(index, globalPosition, x, Direction.South, Direction.East, 1,
+                            Chunk.Size.x);
+
+                        if (traversals == 1)
+                        {
+                            traversals = GetTraversals(index, globalPosition, y, Direction.South, Direction.Up,
+                                Chunk.Size.x * Chunk.Size.z, Chunk.Size.y);
+
+                            _Vertices.Add(localPosition + new Vector3(0f, 0f, 0f));
+                            _Vertices.Add(localPosition + new Vector3(1f, 0f, 0f));
+                            _Vertices.Add(localPosition + new Vector3(0f, traversals, 0f));
+                            _Vertices.Add(localPosition + new Vector3(1f, traversals, 0f));
+                            uvSize.z = traversals;
+                        }
+                        else
+                        {
+                            _Vertices.Add(localPosition + new Vector3(0f, 0f, 0f));
+                            _Vertices.Add(localPosition + new Vector3(traversals, 0f, 0f));
+                            _Vertices.Add(localPosition + new Vector3(0f, 1f, 0f));
+                            _Vertices.Add(localPosition + new Vector3(traversals, 1f, 0f));
+                            uvSize.x = traversals;
+                        }
                     }
                     else
                     {
@@ -214,7 +270,7 @@ namespace Threading
                     }
 
                     if (BlockController.Current.GetBlockSpriteUVs(_Blocks[index].Id, globalPosition,
-                        Direction.South, new Vector3(traversals, 0f, 1f), out Vector3[] uvs))
+                        Direction.South, uvSize, out Vector3[] uvs))
                     {
                         _UVs.Add(uvs[0]);
                         _UVs.Add(uvs[1]);
@@ -231,13 +287,32 @@ namespace Threading
                     AddTriangles(Direction.West);
 
                     int traversals = 1;
+                    Vector3 uvSize = Vector3.one;
+
                     if (_AggressiveFaceMerging)
                     {
-                        traversals = GetTraversals(index, globalPosition, z, Direction.West);
-                        _Vertices.Add(localPosition + new Vector3(0f, 0f, 0f));
-                        _Vertices.Add(localPosition + new Vector3(0f, 1f, 0f));
-                        _Vertices.Add(localPosition + new Vector3(0f, 0f, traversals));
-                        _Vertices.Add(localPosition + new Vector3(0f, 1f, traversals));
+                        traversals = GetTraversals(index, globalPosition, z, Direction.West, Direction.North,
+                            Chunk.Size.z, Chunk.Size.z);
+
+                        if (traversals == 1)
+                        {
+                            traversals = GetTraversals(index, globalPosition, y, Direction.West, Direction.Up,
+                                Chunk.Size.x * Chunk.Size.z, Chunk.Size.y);
+
+                            _Vertices.Add(localPosition + new Vector3(0f, 0f, 0f));
+                            _Vertices.Add(localPosition + new Vector3(0f, traversals, 0f));
+                            _Vertices.Add(localPosition + new Vector3(0f, 0f, 1f));
+                            _Vertices.Add(localPosition + new Vector3(0f, traversals, 1f));
+                            uvSize.z = traversals;
+                        }
+                        else
+                        {
+                            _Vertices.Add(localPosition + new Vector3(0f, 0f, 0f));
+                            _Vertices.Add(localPosition + new Vector3(0f, 1f, 0f));
+                            _Vertices.Add(localPosition + new Vector3(0f, 0f, traversals));
+                            _Vertices.Add(localPosition + new Vector3(0f, 1f, traversals));
+                            uvSize.x = traversals;
+                        }
                     }
                     else
                     {
@@ -245,7 +320,7 @@ namespace Threading
                     }
 
                     if (BlockController.Current.GetBlockSpriteUVs(_Blocks[index].Id, globalPosition,
-                        Direction.West, new Vector3(traversals, 0f, 1f), out Vector3[] uvs))
+                        Direction.West, uvSize, out Vector3[] uvs))
                     {
                         _UVs.Add(uvs[1]);
                         _UVs.Add(uvs[3]);
@@ -263,13 +338,32 @@ namespace Threading
                     AddTriangles(Direction.Up);
 
                     int traversals = 1;
+                    Vector3 uvSize = Vector3.one;
+
                     if (_AggressiveFaceMerging)
                     {
-                        traversals = GetTraversals(index, globalPosition, z, Direction.Up);
-                        _Vertices.Add(localPosition + new Vector3(0f, 1f, 0f));
-                        _Vertices.Add(localPosition + new Vector3(1f, 1f, 0f));
-                        _Vertices.Add(localPosition + new Vector3(0f, 1f, traversals));
-                        _Vertices.Add(localPosition + new Vector3(1f, 1f, traversals));
+                        traversals = GetTraversals(index, globalPosition, z, Direction.Up, Direction.North,
+                            Chunk.Size.z, Chunk.Size.z);
+
+                        if (traversals == 1)
+                        {
+                            traversals = GetTraversals(index, globalPosition, x, Direction.Up, Direction.East, 1,
+                                Chunk.Size.x);
+
+                            _Vertices.Add(localPosition + new Vector3(0f, 1f, 0f));
+                            _Vertices.Add(localPosition + new Vector3(traversals, 1f, 0f));
+                            _Vertices.Add(localPosition + new Vector3(0f, 1f, 1f));
+                            _Vertices.Add(localPosition + new Vector3(traversals, 1f, 1f));
+                            uvSize.z = traversals;
+                        }
+                        else
+                        {
+                            _Vertices.Add(localPosition + new Vector3(0f, 1f, 0f));
+                            _Vertices.Add(localPosition + new Vector3(1f, 1f, 0f));
+                            _Vertices.Add(localPosition + new Vector3(0f, 1f, traversals));
+                            _Vertices.Add(localPosition + new Vector3(1f, 1f, traversals));
+                            uvSize.x = traversals;
+                        }
                     }
                     else
                     {
@@ -277,7 +371,7 @@ namespace Threading
                     }
 
                     if (BlockController.Current.GetBlockSpriteUVs(_Blocks[index].Id, globalPosition,
-                        Direction.Up, new Vector3(traversals, 0f, 1f), out Vector3[] uvs))
+                        Direction.Up, uvSize, out Vector3[] uvs))
                     {
                         _UVs.Add(uvs[0]);
                         _UVs.Add(uvs[2]);
@@ -294,13 +388,32 @@ namespace Threading
                     AddTriangles(Direction.Down);
 
                     int traversals = 1;
+                    Vector3 uvSize = Vector3.one;
+
                     if (_AggressiveFaceMerging)
                     {
-                        traversals = GetTraversals(index, globalPosition, z, Direction.Down);
-                        _Vertices.Add(localPosition + new Vector3(0f, 0f, 0f));
-                        _Vertices.Add(localPosition + new Vector3(0f, 0f, traversals));
-                        _Vertices.Add(localPosition + new Vector3(1f, 0f, 0f));
-                        _Vertices.Add(localPosition + new Vector3(1f, 0f, traversals));
+                        traversals = GetTraversals(index, globalPosition, z, Direction.Down, Direction.North,
+                            Chunk.Size.z, Chunk.Size.z);
+
+                        if (traversals == 1)
+                        {
+                            traversals = GetTraversals(index, globalPosition, x, Direction.Down, Direction.East, 1,
+                                Chunk.Size.x);
+
+                            _Vertices.Add(localPosition + new Vector3(0f, 0f, 0f));
+                            _Vertices.Add(localPosition + new Vector3(0f, 0f, 1f));
+                            _Vertices.Add(localPosition + new Vector3(traversals, 0f, 0f));
+                            _Vertices.Add(localPosition + new Vector3(traversals, 0f, 1f));
+                            uvSize.z = traversals;
+                        }
+                        else
+                        {
+                            _Vertices.Add(localPosition + new Vector3(0f, 0f, 0f));
+                            _Vertices.Add(localPosition + new Vector3(0f, 0f, traversals));
+                            _Vertices.Add(localPosition + new Vector3(1f, 0f, 0f));
+                            _Vertices.Add(localPosition + new Vector3(1f, 0f, traversals));
+                            uvSize.x = traversals;
+                        }
                     }
                     else
                     {
@@ -308,7 +421,7 @@ namespace Threading
                     }
 
                     if (BlockController.Current.GetBlockSpriteUVs(_Blocks[index].Id, globalPosition,
-                        Direction.Down, new Vector3(traversals, 0f, 1f), out Vector3[] uvs))
+                        Direction.Down, uvSize, out Vector3[] uvs))
                     {
                         _UVs.Add(uvs[0]);
                         _UVs.Add(uvs[1]);
@@ -345,9 +458,13 @@ namespace Threading
         /// <param name="index">1D index of current block</param>
         /// <param name="globalPosition">Global position of current block</param>
         /// <param name="slice">Current slice perpendicular to the traversing direction</param>
-        /// <param name="direction">Direction to traverse</param>
+        /// <param name="traversalDirection"></param>
+        /// <param name="faceDirection">Direction to traverse</param>
+        /// <param name="traversalFactor"></param>
+        /// <param name="limitingSliceValue"></param>
         /// <returns></returns>
-        private int GetTraversals(int index, Vector3 globalPosition, int slice, Direction direction)
+        private int GetTraversals(int index, Vector3 globalPosition, int slice, Direction faceDirection,
+            Direction traversalDirection, int traversalFactor, int limitingSliceValue)
         {
             // 1 being the current block at `index`
             int traversals = 1;
@@ -357,10 +474,6 @@ namespace Threading
             {
                 return traversals;
             }
-
-            int traversalFactor = GetTraversalFactor(direction);
-            int limitingSliceValue = GetLimitingSliceValue(direction);
-            Vector3 traversalDirectionAsVector3 = GetTraversalDirectionAsVector3(direction);
 
             // incrementing on x, so the traversal factor is 1
             // if we were incrementing on z, the factor would be Chunk.Size.x
@@ -372,13 +485,13 @@ namespace Threading
                 // This check removes the need to check if the adjacent block is transparent,
                 // as our current block will never be transparent
                 (_Blocks[index].Id == _Blocks[traversalIndex].Id) &&
-                !_Blocks[traversalIndex].HasFace(direction) &&
+                !_Blocks[traversalIndex].HasFace(faceDirection) &&
                 // ensure the block to the north of our current block is transparent
                 WorldController.Current.GetBlockAt(
-                        globalPosition + (traversals * traversalDirectionAsVector3) + direction.AsVector3())
+                        globalPosition + (traversals * traversalDirection.AsVector3()) + faceDirection.AsVector3())
                     .Transparent)
             {
-                _Blocks[traversalIndex].SetFace(direction, true);
+                _Blocks[traversalIndex].SetFace(faceDirection, true);
 
                 // increment and set traversal values
                 traversals++;
@@ -386,60 +499,6 @@ namespace Threading
             }
 
             return traversals;
-        }
-
-        private int GetTraversalFactor(Direction direction)
-        {
-            switch (direction)
-            {
-                case Direction.North:
-                case Direction.South:
-                    return 1;
-                case Direction.East:
-                case Direction.West:
-                    return Chunk.Size.x;
-                case Direction.Up:
-                case Direction.Down:
-                    return Chunk.Size.z;
-                default:
-                    throw new ArgumentOutOfRangeException(nameof(direction), direction, null);
-            }
-        }
-
-        private int GetLimitingSliceValue(Direction direction)
-        {
-            switch (direction)
-            {
-                case Direction.North:
-                case Direction.South:
-                    return Chunk.Size.x;
-                case Direction.East:
-                case Direction.West:
-                    return Chunk.Size.z;
-                case Direction.Up:
-                case Direction.Down:
-                    return Chunk.Size.z;
-                default:
-                    throw new ArgumentOutOfRangeException(nameof(direction), direction, null);
-            }
-        }
-
-        private Vector3 GetTraversalDirectionAsVector3(Direction direction)
-        {
-            switch (direction)
-            {
-                case Direction.North:
-                case Direction.South:
-                    return Vector3.right;
-                case Direction.East:
-                case Direction.West:
-                    return Vector3.forward;
-                case Direction.Up:
-                case Direction.Down:
-                    return Vector3.forward;
-                default:
-                    throw new ArgumentOutOfRangeException(nameof(direction), direction, null);
-            }
         }
 
         #endregion

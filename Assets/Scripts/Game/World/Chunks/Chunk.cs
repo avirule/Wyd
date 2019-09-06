@@ -32,7 +32,7 @@ namespace Game.World.Chunks
 
         private static ThreadedQueue _threadedExecutionQueue;
 
-        public static readonly Vector3Int Size = new Vector3Int(32, 256, 32);
+        public static readonly Vector3Int Size = new Vector3Int(16, 32, 16);
         public static FixedConcurrentQueue<TimeSpan> BuildTimes;
         public static FixedConcurrentQueue<TimeSpan> MeshTimes;
 
