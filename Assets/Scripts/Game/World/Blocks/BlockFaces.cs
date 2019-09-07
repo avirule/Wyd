@@ -1,6 +1,5 @@
 #region
 
-using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using UnityEngine;
@@ -14,7 +13,7 @@ namespace Game.World.Blocks
         public static class Vertices
         {
             public static ReadOnlyDictionary<Direction, Vector3[]> FaceVertices;
-            
+
             public static readonly Vector3[] North =
             {
                 new Vector3(0f, 0f, 1f),
@@ -65,7 +64,7 @@ namespace Game.World.Blocks
 
             static Vertices()
             {
-                Dictionary<Direction, Vector3[]> faceVertices = new Dictionary<Direction, Vector3[]>()
+                Dictionary<Direction, Vector3[]> faceVertices = new Dictionary<Direction, Vector3[]>
                 {
                     {Direction.North, North},
                     {Direction.East, East},
@@ -82,7 +81,7 @@ namespace Game.World.Blocks
         public static class Triangles
         {
             public static readonly ReadOnlyDictionary<Direction, int[]> FaceTriangles;
-            
+
             public static readonly int[] North =
             {
                 0,
@@ -145,7 +144,7 @@ namespace Game.World.Blocks
 
             static Triangles()
             {
-                Dictionary<Direction, int[]> faceTriangles = new Dictionary<Direction, int[]>()
+                Dictionary<Direction, int[]> faceTriangles = new Dictionary<Direction, int[]>
                 {
                     {Direction.North, North},
                     {Direction.East, East},

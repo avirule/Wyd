@@ -12,6 +12,7 @@ namespace Game
 {
     public class CollisionToken : MonoBehaviour
     {
+        private Transform _SelfTransform;
         private List<Vector3> _Vertices;
         private List<int> _Triangles;
         private bool _ScheduledRecalculation;
@@ -42,10 +43,11 @@ namespace Game
 
         private void Awake()
         {
+            _SelfTransform = transform;
             _Vertices = new List<Vector3>();
             _Triangles = new List<int>();
 
-            AuthorTransform = transform.parent;
+            AuthorTransform = _SelfTransform.parent;
         }
 
         private void Update()
@@ -55,14 +57,14 @@ namespace Game
                 return;
             }
 
-            Vector3 difference = (transform.position - AuthorTransform.position).Abs();
+            Vector3 difference = (_SelfTransform.position - AuthorTransform.position).Abs();
 
             if (!Mathv.GreaterThanVector3(difference, Vector3.one) && !_ScheduledRecalculation)
             {
                 return;
             }
 
-            transform.position = AuthorTransform.position.Floor();
+            _SelfTransform.position = AuthorTransform.position.Floor();
 
             Recalculate();
         }
@@ -93,7 +95,7 @@ namespace Game
                 {
                     for (int z = -Radius; z < (Radius + 1); z++)
                     {
-                        Vector3 globalPosition = transform.position + new Vector3(x, y, z);
+                        Vector3 globalPosition = _SelfTransform.position + new Vector3(x, y, z);
 
                         if (WorldController.Current.GetBlockAt(globalPosition).Id == BlockController.BLOCK_EMPTY_ID)
                         {
@@ -218,7 +220,7 @@ namespace Game
             // +1 to include center blocks / position
             int size = (Radius * 2) + 1;
 
-            BoundingBox = new Bounds(transform.position, new Vector3(size, size, size));
+            BoundingBox = new Bounds(_SelfTransform.position, new Vector3(size, size, size));
         }
     }
 }

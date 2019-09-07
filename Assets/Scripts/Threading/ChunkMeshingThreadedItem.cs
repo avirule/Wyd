@@ -38,7 +38,7 @@ namespace Threading
             {
                 return;
             }
-            
+
             _Mesher.GenerateMesh();
         }
 

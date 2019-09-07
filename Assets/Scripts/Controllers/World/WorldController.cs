@@ -28,7 +28,6 @@ namespace Controllers.World
         private Dictionary<Vector3, Chunk> _Chunks;
         private ObjectCache<Chunk> _ChunkCache;
         private Queue<Vector3> _BuildChunkQueue;
-        private Queue<Vector3> _CachingQueue;
         private Stopwatch _FrameTimer;
 
         public CollisionTokenController CollisionTokenController;
@@ -38,7 +37,6 @@ namespace Controllers.World
         public int ChunksActiveCount => _Chunks.Count;
         public int ChunksCachedCount => _ChunkCache.Size;
         public int ChunksQueuedForBuilding => _BuildChunkQueue.Count;
-        public int ChunkQueuedForCaching => _CachingQueue.Count;
         public bool AllChunksBuilt => _Chunks.All(kvp => kvp.Value.Built);
         public bool AllChunksMeshed => _Chunks.All(kvp => kvp.Value.Meshed);
 
@@ -60,7 +58,6 @@ namespace Controllers.World
             _Chunks = new Dictionary<Vector3, Chunk>();
             _ChunkCache = new ObjectCache<Chunk>(DeactivateChunk, chunk => Destroy(chunk.gameObject));
             _BuildChunkQueue = new Queue<Vector3>();
-            _CachingQueue = new Queue<Vector3>();
             _FrameTimer = new Stopwatch();
         }
 
@@ -78,11 +75,6 @@ namespace Controllers.World
         private void Update()
         {
             _FrameTimer.Restart();
-
-            if (_CachingQueue.Count > 0)
-            {
-                ProcessCachingQueue();
-            }
 
             if (PrimaryLoaderChangedChunk)
             {
@@ -141,7 +133,7 @@ namespace Controllers.World
                 if (chunk == default)
                 {
                     chunk = Instantiate(_ChunkObject, position, Quaternion.identity, transform);
-                    chunk.DeactivationCallback += (sender, chunkPosition) => { _CachingQueue.Enqueue(chunkPosition); };
+                    chunk.DeactivationCallback += (sender, chunkPosition) => { CacheChunk(chunkPosition); };
                 }
                 else
                 {
@@ -207,19 +199,15 @@ namespace Controllers.World
 
         #region CHUNK DISABLING
 
-        private void ProcessCachingQueue()
+        private void CacheChunk(Vector3 chunkPosition)
         {
-            while (_CachingQueue.Count > 0)
+            if (!_Chunks.TryGetValue(chunkPosition, out Chunk chunk))
             {
-                Vector3 chunkPosition = _CachingQueue.Dequeue();
-
-                if (!_Chunks.TryGetValue(chunkPosition, out Chunk chunk))
-                {
-                    continue;
-                }
-
-                _ChunkCache.CacheItem(ref chunk);
+                return;
             }
+
+            // Chunk is automatically deactivated by ObjectCache
+            _ChunkCache.CacheItem(ref chunk);
         }
 
         private Chunk DeactivateChunk(Chunk chunk)

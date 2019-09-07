@@ -23,21 +23,18 @@ namespace Controllers.UI.Components.Text
         private void Update()
         {
             int chunksQueuedForBuilding = WorldController.Current.ChunksQueuedForBuilding;
-            int chunksQueuedForCaching = WorldController.Current.ChunkQueuedForCaching;
 
-            if ((chunksQueuedForBuilding != _LastQueuedForBuildingCount) ||
-                (chunksQueuedForCaching != _LastQueuedForCachingCount))
+            if (chunksQueuedForBuilding != _LastQueuedForBuildingCount)
             {
-                UpdateChunksQueuedText(chunksQueuedForBuilding, chunksQueuedForCaching);
+                UpdateChunksQueuedText(chunksQueuedForBuilding);
             }
         }
 
-        private void UpdateChunksQueuedText(int chunksQueuedForBuilding, int chunksQueuedForCaching)
+        private void UpdateChunksQueuedText(int chunksQueuedForBuilding)
         {
             _LastQueuedForBuildingCount = chunksQueuedForBuilding;
-            _LastQueuedForCachingCount = chunksQueuedForCaching;
 
-            _ChunksQueuedText.text = $"Chunks Queued: (b{chunksQueuedForBuilding}, c{chunksQueuedForCaching})";
+            _ChunksQueuedText.text = $"Chunks Queued: (b{chunksQueuedForBuilding})";
         }
     }
 }

@@ -36,7 +36,7 @@ namespace Game.World.Chunks
 
         private static ThreadedQueue _threadedExecutionQueue;
 
-        public static readonly Vector3Int Size = new Vector3Int(16, 256, 16);
+        public static readonly Vector3Int Size = new Vector3Int(32, 256, 32);
         public static FixedConcurrentQueue<TimeSpan> BuildTimes;
         public static FixedConcurrentQueue<TimeSpan> MeshTimes;
 
@@ -116,7 +116,7 @@ namespace Game.World.Chunks
             MeshRenderer.material.SetTexture(TextureController.Current.MainTex,
                 TextureController.Current.TerrainTexture);
             AggressiveFaceMerging = true;
-            
+
             _Visible = MeshRenderer.enabled;
 
             // todo implement chunk ticks
@@ -187,7 +187,7 @@ namespace Game.World.Chunks
 
         #region ACTIVATION STATE
 
-        public void Activate(Vector3 position = default)
+        public void Activate(Vector3 position)
         {
             _SelfTransform.position = Position = position;
             GenerationComputeShader.SetVector("_Offset", Position);
@@ -204,7 +204,6 @@ namespace Game.World.Chunks
             }
 
             StopAllCoroutines();
-
             gameObject.SetActive(false);
         }
 
