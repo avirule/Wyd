@@ -120,7 +120,6 @@ namespace Game
                             _Triangles.Add(_Vertices.Count + 0);
                             _Triangles.Add(_Vertices.Count + 2);
                             _Triangles.Add(_Vertices.Count + 1);
-
                             _Triangles.Add(_Vertices.Count + 2);
                             _Triangles.Add(_Vertices.Count + 3);
                             _Triangles.Add(_Vertices.Count + 1);

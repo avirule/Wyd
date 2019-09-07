@@ -35,7 +35,7 @@ namespace Controllers.Entity
 
             _EntityChangedChunkSubscribers = new List<IEntityChunkChangedSubscriber>();
 
-            CurrentChunk = new Vector3Int(int.MaxValue, 0, int.MaxValue);
+            CurrentChunk.Set(int.MaxValue, 0, int.MaxValue);
         }
 
         private void Start()

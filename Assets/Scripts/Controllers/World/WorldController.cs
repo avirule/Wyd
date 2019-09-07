@@ -314,10 +314,10 @@ namespace Controllers.World
 
         public bool AreNeighborsBuilt(Vector3 position)
         {
-            bool northBuilt = GetChunkAt(position + new Vector3(0, 0, Chunk.Size.z))?.Built ?? true;
-            bool eastBuilt = GetChunkAt(position + new Vector3(Chunk.Size.x, 0, 0))?.Built ?? true;
-            bool southBuilt = GetChunkAt(position + new Vector3(0, 0, -Chunk.Size.z))?.Built ?? true;
-            bool westBuilt = GetChunkAt(position + new Vector3(-Chunk.Size.x, 0, 0))?.Built ?? true;
+            bool northBuilt = GetChunkAt(position + (Vector3.forward * Chunk.Size.z))?.Built ?? true;
+            bool eastBuilt = GetChunkAt(position + (Vector3.right * Chunk.Size.x))?.Built ?? true;
+            bool southBuilt = GetChunkAt(position + (Vector3.back * Chunk.Size.z))?.Built ?? true;
+            bool westBuilt = GetChunkAt(position + (Vector3.left * Chunk.Size.x))?.Built ?? true;
 
             return northBuilt && eastBuilt && southBuilt && westBuilt;
         }

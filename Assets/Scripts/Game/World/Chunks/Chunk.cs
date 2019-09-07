@@ -8,9 +8,10 @@ using Controllers.Game;
 using Controllers.World;
 using Game.Entity;
 using Game.World.Blocks;
+using Logging;
+using NLog;
 using Threading;
 using UnityEngine;
-using UnityEngine.Experimental.Rendering;
 using UnityEngine.Rendering;
 
 #endregion
@@ -29,7 +30,7 @@ namespace Game.World.Chunks
 
         private static readonly ObjectCache<BlocksArrayComputeBuffer> BlockArrayComputeBufferObjectCache =
             new ObjectCache<BlocksArrayComputeBuffer>(null, null, true);
-        
+
         private static readonly ObjectCache<ChunkBuildingThreadedItem> ChunkBuildersCache =
             new ObjectCache<ChunkBuildingThreadedItem>(null, null, true);
 
@@ -38,13 +39,13 @@ namespace Game.World.Chunks
 
         private static ThreadedQueue _threadedExecutionQueue;
 
-        public static readonly Vector3Int Size = new Vector3Int(16, 32, 16);
+        public static readonly Vector3Int Size = new Vector3Int(16, 256, 16);
         public static FixedConcurrentQueue<TimeSpan> BuildTimes;
         public static FixedConcurrentQueue<TimeSpan> MeshTimes;
 
+        private Transform _SelfTransform;
         private RenderTexture _BuiltTexture;
         private int _ChunkBuiltTextureKernelHandle;
-        private Vector3 _Position;
         private Block[] _Blocks;
         private Mesh _Mesh;
         private ConcurrentQueue<Action> _AsynchronousCoroutineQueue;
@@ -62,6 +63,9 @@ namespace Game.World.Chunks
         public bool Meshed;
         public bool Meshing;
         public bool PendingMeshUpdate;
+        public bool AggressiveFaceMerging;
+
+        public Vector3 Position { get; private set; }
 
         public bool RenderShadows
         {
@@ -100,19 +104,10 @@ namespace Game.World.Chunks
 
         public event EventHandler<Vector3> DeactivationCallback;
 
-        public Vector3 Position
-        {
-            get => _Position;
-            set
-            {
-                _Position = value;
-                transform.position = _Position;
-            }
-        }
-
         private void Awake()
         {
-            _Position = transform.position;
+            _SelfTransform = transform;
+            Position = _SelfTransform.position;
             _Blocks = new Block[Size.Product()];
             _OnBorrowedUpdateTime = Built = Building = Meshed = Meshing = PendingMeshUpdate = false;
             _Mesh = new Mesh();
@@ -123,6 +118,8 @@ namespace Game.World.Chunks
             MeshFilter.sharedMesh = _Mesh;
             MeshRenderer.material.SetTexture(TextureController.Current.MainTex,
                 TextureController.Current.TerrainTexture);
+            AggressiveFaceMerging = true;
+            
             _Visible = MeshRenderer.enabled;
 
             // todo implement chunk ticks
@@ -137,6 +134,7 @@ namespace Game.World.Chunks
         {
             if (_threadedExecutionQueue == default)
             {
+                // init ThreadedQueue with # of threads matching logical processors
                 _threadedExecutionQueue = new ThreadedQueue(200, () => OptionsController.Current.ThreadingMode,
                     Environment.ProcessorCount);
                 _threadedExecutionQueue.Start();
@@ -194,7 +192,7 @@ namespace Game.World.Chunks
 
         public void Activate(Vector3 position = default)
         {
-            Position = position;
+            _SelfTransform.position = Position = position;
             GenerationComputeShader.SetVector("_Offset", Position);
             Built = Building = Meshed = Meshing = PendingMeshUpdate = false;
             CheckInternalsAgainstLoaderPosition(PlayerController.Current.CurrentChunk);
@@ -232,26 +230,35 @@ namespace Game.World.Chunks
 
                 if (threadedItem == default)
                 {
+                    EventLog.Logger.Log(LogLevel.Error, $"Failed to retrieve building item for chunk at {Position}.");
                     return;
                 }
 
+                // do a full update of state booleans
+                Built = Meshed = Meshing = PendingMeshUpdate = false;
+                Building = true;
+
                 _threadedExecutionQueue.ThreadedItemFinished += OnThreadedQueueFinishedItem;
                 _BuildingIdentity = _threadedExecutionQueue.QueueThreadedItem(threadedItem);
-
             }
         }
 
         private void CheckMeshingOrStart()
         {
-            if (!Meshing && (PendingMeshUpdate || !Meshed) && Visible &&
+            if (Built && !Meshing && (PendingMeshUpdate || !Meshed) && Visible &&
                 WorldController.Current.AreNeighborsBuilt(Position))
             {
                 ThreadedItem threadedItem = GetChunkMeshingThreadedItem();
 
                 if (threadedItem == default)
                 {
+                    EventLog.Logger.Log(LogLevel.Error, $"Failed to retrieve meshing item for chunk at {Position}.");
                     return;
                 }
+
+                // do a full update of state booleans
+                Meshed = PendingMeshUpdate = false;
+                Meshing = true;
 
                 _threadedExecutionQueue.ThreadedItemFinished += OnThreadedQueueFinishedItem;
                 _MeshingIdentity = _threadedExecutionQueue.QueueThreadedItem(threadedItem);
@@ -283,9 +290,6 @@ namespace Game.World.Chunks
 
         private ThreadedItem GetChunkBuildingThreadedItem()
         {
-            Built = false;
-            Building = true;
-
             ChunkBuildingThreadedItem threadedItem = ChunkBuildersCache.RetrieveItem();
             threadedItem.Set(Position, _Blocks);
 
@@ -294,16 +298,8 @@ namespace Game.World.Chunks
 
         private ThreadedItem GetChunkMeshingThreadedItem()
         {
-            if (!Built)
-            {
-                return default;
-            }
-
-            Meshed = PendingMeshUpdate = false;
-            Meshing = true;
-
             ChunkMeshingThreadedItem threadedItem = ChunkMeshersCache.RetrieveItem();
-            threadedItem.Set(Position, _Blocks, true);
+            threadedItem.Set(Position, _Blocks, AggressiveFaceMerging);
 
             return threadedItem;
         }

@@ -9,6 +9,8 @@ using Game.World.Chunks;
 using UnityEngine;
 using UnityEngine.Rendering;
 
+// ReSharper disable TooWideLocalVariableScope
+
 #endregion
 
 namespace Threading
@@ -39,16 +41,16 @@ namespace Threading
         /// </summary>
         /// <param name="position"><see cref="UnityEngine.Vector3" /> position of chunk being meshed.</param>
         /// <param name="blocks">Pre-initialized and built <see cref="T:ushort[]" /> to iterate through.</param>
-        /// <param name="aggressiveLinking"></param>
-        public void Set(Vector3 position, Block[] blocks, bool aggressiveLinking)
+        /// <param name="aggressiveFaceMerging"></param>
+        public void Set(Vector3 position, Block[] blocks, bool aggressiveFaceMerging)
         {
             _Vertices.Clear();
             _Triangles.Clear();
             _UVs.Clear();
 
-            _Position = position;
+            _Position.Set(position.x, position.y, position.z);
             _Blocks = blocks;
-            _AggressiveFaceMerging = aggressiveLinking;
+            _AggressiveFaceMerging = aggressiveFaceMerging;
         }
 
         protected override void Process()
@@ -138,7 +140,17 @@ namespace Threading
                         traversals = GetTraversals(index, globalPosition, x, Direction.North, Direction.East, 1,
                             Chunk.Size.x);
 
-                        if (traversals == 1)
+                        if (traversals > 1)
+                        {
+                            // The traversals value goes into the vertex points that have a positive value
+                            // on the same axis as your slice value
+                            _Vertices.Add(localPosition + new Vector3(0f, 0f, 1f));
+                            _Vertices.Add(localPosition + new Vector3(0f, 1f, 1f));
+                            _Vertices.Add(localPosition + new Vector3(traversals, 0f, 1f));
+                            _Vertices.Add(localPosition + new Vector3(traversals, 1f, 1f));
+                            uvSize.x = traversals;
+                        }
+                        else
                         {
                             traversals = GetTraversals(index, globalPosition, y, Direction.North, Direction.Up,
                                 Chunk.Size.x * Chunk.Size.z, Chunk.Size.y);
@@ -148,16 +160,6 @@ namespace Threading
                             _Vertices.Add(localPosition + new Vector3(1f, 0f, 1f));
                             _Vertices.Add(localPosition + new Vector3(1f, traversals, 1f));
                             uvSize.z = traversals;
-                        }
-                        else
-                        {
-                            // The traversals value guess into the vertex points that have a positive value
-                            // on the same axis as your slice value
-                            _Vertices.Add(localPosition + new Vector3(0f, 0f, 1f));
-                            _Vertices.Add(localPosition + new Vector3(0f, 1f, 1f));
-                            _Vertices.Add(localPosition + new Vector3(traversals, 0f, 1f));
-                            _Vertices.Add(localPosition + new Vector3(traversals, 1f, 1f));
-                            uvSize.x = traversals;
                         }
                     }
                     else
@@ -192,7 +194,15 @@ namespace Threading
                             Chunk.Size.z, Chunk.Size.z);
 
                         // if traversal failed (no blocks found in probed direction) then look on next axis
-                        if (traversals == 1)
+                        if (traversals > 1)
+                        {
+                            _Vertices.Add(localPosition + new Vector3(1f, 0f, 0f));
+                            _Vertices.Add(localPosition + new Vector3(1f, 0f, traversals));
+                            _Vertices.Add(localPosition + new Vector3(1f, 1f, 0f));
+                            _Vertices.Add(localPosition + new Vector3(1f, 1f, traversals));
+                            uvSize.x = traversals;
+                        }
+                        else
                         {
                             traversals = GetTraversals(index, globalPosition, y, Direction.East, Direction.Up,
                                 Chunk.Size.x * Chunk.Size.z, Chunk.Size.y);
@@ -202,14 +212,6 @@ namespace Threading
                             _Vertices.Add(localPosition + new Vector3(1f, traversals, 0f));
                             _Vertices.Add(localPosition + new Vector3(1f, traversals, 1f));
                             uvSize.z = traversals;
-                        }
-                        else
-                        {
-                            _Vertices.Add(localPosition + new Vector3(1f, 0f, 0f));
-                            _Vertices.Add(localPosition + new Vector3(1f, 0f, traversals));
-                            _Vertices.Add(localPosition + new Vector3(1f, 1f, 0f));
-                            _Vertices.Add(localPosition + new Vector3(1f, 1f, traversals));
-                            uvSize.x = traversals;
                         }
                     }
                     else
@@ -242,7 +244,15 @@ namespace Threading
                         traversals = GetTraversals(index, globalPosition, x, Direction.South, Direction.East, 1,
                             Chunk.Size.x);
 
-                        if (traversals == 1)
+                        if (traversals > 1)
+                        {
+                            _Vertices.Add(localPosition + new Vector3(0f, 0f, 0f));
+                            _Vertices.Add(localPosition + new Vector3(traversals, 0f, 0f));
+                            _Vertices.Add(localPosition + new Vector3(0f, 1f, 0f));
+                            _Vertices.Add(localPosition + new Vector3(traversals, 1f, 0f));
+                            uvSize.x = traversals;
+                        }
+                        else
                         {
                             traversals = GetTraversals(index, globalPosition, y, Direction.South, Direction.Up,
                                 Chunk.Size.x * Chunk.Size.z, Chunk.Size.y);
@@ -252,14 +262,6 @@ namespace Threading
                             _Vertices.Add(localPosition + new Vector3(0f, traversals, 0f));
                             _Vertices.Add(localPosition + new Vector3(1f, traversals, 0f));
                             uvSize.z = traversals;
-                        }
-                        else
-                        {
-                            _Vertices.Add(localPosition + new Vector3(0f, 0f, 0f));
-                            _Vertices.Add(localPosition + new Vector3(traversals, 0f, 0f));
-                            _Vertices.Add(localPosition + new Vector3(0f, 1f, 0f));
-                            _Vertices.Add(localPosition + new Vector3(traversals, 1f, 0f));
-                            uvSize.x = traversals;
                         }
                     }
                     else
@@ -292,7 +294,15 @@ namespace Threading
                         traversals = GetTraversals(index, globalPosition, z, Direction.West, Direction.North,
                             Chunk.Size.z, Chunk.Size.z);
 
-                        if (traversals == 1)
+                        if (traversals > 1)
+                        {
+                            _Vertices.Add(localPosition + new Vector3(0f, 0f, 0f));
+                            _Vertices.Add(localPosition + new Vector3(0f, 1f, 0f));
+                            _Vertices.Add(localPosition + new Vector3(0f, 0f, traversals));
+                            _Vertices.Add(localPosition + new Vector3(0f, 1f, traversals));
+                            uvSize.x = traversals;
+                        }
+                        else
                         {
                             traversals = GetTraversals(index, globalPosition, y, Direction.West, Direction.Up,
                                 Chunk.Size.x * Chunk.Size.z, Chunk.Size.y);
@@ -302,14 +312,6 @@ namespace Threading
                             _Vertices.Add(localPosition + new Vector3(0f, 0f, 1f));
                             _Vertices.Add(localPosition + new Vector3(0f, traversals, 1f));
                             uvSize.z = traversals;
-                        }
-                        else
-                        {
-                            _Vertices.Add(localPosition + new Vector3(0f, 0f, 0f));
-                            _Vertices.Add(localPosition + new Vector3(0f, 1f, 0f));
-                            _Vertices.Add(localPosition + new Vector3(0f, 0f, traversals));
-                            _Vertices.Add(localPosition + new Vector3(0f, 1f, traversals));
-                            uvSize.x = traversals;
                         }
                     }
                     else
@@ -343,7 +345,15 @@ namespace Threading
                         traversals = GetTraversals(index, globalPosition, z, Direction.Up, Direction.North,
                             Chunk.Size.z, Chunk.Size.z);
 
-                        if (traversals == 1)
+                        if (traversals > 1)
+                        {
+                            _Vertices.Add(localPosition + new Vector3(0f, 1f, 0f));
+                            _Vertices.Add(localPosition + new Vector3(1f, 1f, 0f));
+                            _Vertices.Add(localPosition + new Vector3(0f, 1f, traversals));
+                            _Vertices.Add(localPosition + new Vector3(1f, 1f, traversals));
+                            uvSize.x = traversals;
+                        }
+                        else
                         {
                             traversals = GetTraversals(index, globalPosition, x, Direction.Up, Direction.East, 1,
                                 Chunk.Size.x);
@@ -353,14 +363,6 @@ namespace Threading
                             _Vertices.Add(localPosition + new Vector3(0f, 1f, 1f));
                             _Vertices.Add(localPosition + new Vector3(traversals, 1f, 1f));
                             uvSize.z = traversals;
-                        }
-                        else
-                        {
-                            _Vertices.Add(localPosition + new Vector3(0f, 1f, 0f));
-                            _Vertices.Add(localPosition + new Vector3(1f, 1f, 0f));
-                            _Vertices.Add(localPosition + new Vector3(0f, 1f, traversals));
-                            _Vertices.Add(localPosition + new Vector3(1f, 1f, traversals));
-                            uvSize.x = traversals;
                         }
                     }
                     else
@@ -393,7 +395,15 @@ namespace Threading
                         traversals = GetTraversals(index, globalPosition, z, Direction.Down, Direction.North,
                             Chunk.Size.z, Chunk.Size.z);
 
-                        if (traversals == 1)
+                        if (traversals > 1)
+                        {
+                            _Vertices.Add(localPosition + new Vector3(0f, 0f, 0f));
+                            _Vertices.Add(localPosition + new Vector3(0f, 0f, traversals));
+                            _Vertices.Add(localPosition + new Vector3(1f, 0f, 0f));
+                            _Vertices.Add(localPosition + new Vector3(1f, 0f, traversals));
+                            uvSize.x = traversals;
+                        }
+                        else
                         {
                             traversals = GetTraversals(index, globalPosition, x, Direction.Down, Direction.East, 1,
                                 Chunk.Size.x);
@@ -403,14 +413,6 @@ namespace Threading
                             _Vertices.Add(localPosition + new Vector3(traversals, 0f, 0f));
                             _Vertices.Add(localPosition + new Vector3(traversals, 0f, 1f));
                             uvSize.z = traversals;
-                        }
-                        else
-                        {
-                            _Vertices.Add(localPosition + new Vector3(0f, 0f, 0f));
-                            _Vertices.Add(localPosition + new Vector3(0f, 0f, traversals));
-                            _Vertices.Add(localPosition + new Vector3(1f, 0f, 0f));
-                            _Vertices.Add(localPosition + new Vector3(1f, 0f, traversals));
-                            uvSize.x = traversals;
                         }
                     }
                     else
@@ -467,7 +469,7 @@ namespace Threading
             // 1 being the current block at `index`
             int traversals = 1;
 
-            // todo make aggressive linking compatible with special block shapes
+            // todo make aggressive face merging compatible with special block shapes
             if (!_AggressiveFaceMerging)
             {
                 return traversals;

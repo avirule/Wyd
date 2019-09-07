@@ -8,7 +8,6 @@ using Game.World.Chunks;
 using Logging;
 using NLog;
 using Noise;
-using UnityEditor.U2D;
 using UnityEngine;
 using Random = System.Random;
 
@@ -16,10 +15,10 @@ using Random = System.Random;
 
 namespace Threading
 {
-    public class ChunkBuildingThreadedItem : ThreadedItem
+    public class ChunkBuildingThreadedItem : ThreadedItem, IDisposable
     {
         private static FastNoise _noiseFunction;
-        
+
         private Random _Rand;
         private Vector3 _Position;
         private Block[] _Blocks;
@@ -27,8 +26,8 @@ namespace Threading
         private ComputeShader _NoiseShader;
         private ComputeBuffer _NoiseBuffer;
         private float[] _NoiseValues;
-        
-        
+
+
         /// <summary>
         ///     Prepares item for new execution.
         /// </summary>
@@ -36,16 +35,17 @@ namespace Threading
         /// <param name="blocks">Pre-initialized and built <see cref="T:ushort[]" /> to iterate through.</param>
         /// <param name="memoryNegligent"></param>
         /// <param name="noiseShader"></param>
-        public void Set(Vector3 position, Block[] blocks, bool memoryNegligent = false, ComputeShader noiseShader = null)
+        public void Set(Vector3 position, Block[] blocks, bool memoryNegligent = false,
+            ComputeShader noiseShader = null)
         {
             if (_noiseFunction == default)
             {
                 _noiseFunction = new FastNoise(WorldController.Current.WorldGenerationSettings.Seed);
             }
-            
+
 
             _Rand = new Random(WorldController.Current.WorldGenerationSettings.Seed);
-            _Position = position;
+            _Position.Set(position.x, position.y, position.z);
             _Blocks = blocks;
             _MemoryNegligent = memoryNegligent;
             _NoiseShader = noiseShader;
@@ -62,16 +62,17 @@ namespace Threading
             {
                 if (_NoiseShader == null)
                 {
-                    EventLog.Logger.Log(LogLevel.Error, $"Field `{nameof(_NoiseShader)}` has not been properly set. Defaulting to memory-sensitive execution.");
+                    EventLog.Logger.Log(LogLevel.Error,
+                        $"Field `{nameof(_NoiseShader)}` has not been properly set. Defaulting to memory-sensitive execution.");
                     _MemoryNegligent = false;
                     return;
                 }
-                
+
                 InitializeMemoryNegligentComputationResources();
                 ExecuteNoiseMappingOnGPU();
             }
 
-            
+
             // split the if to be conscious of any errors found in the initial statement above
             if (_MemoryNegligent)
             {
@@ -130,7 +131,7 @@ namespace Threading
                 }
             }
         }
-        
+
         private void GenerateCheckerBoard(int index)
         {
             (int x, int y, int z) = Mathv.GetVector3IntIndex(index, Chunk.Size);
@@ -240,9 +241,14 @@ namespace Threading
 
                 if (noiseValue >= 0.01f)
                 {
-                    _Blocks[index].Initialise(BlockController.Current.GetBlockId("stone"));
+                    _Blocks[index].Initialise(BlockController.Current.GetBlockId("Stone"));
                 }
             }
+        }
+
+        public void Dispose()
+        {
+            _NoiseBuffer?.Dispose();
         }
     }
 }

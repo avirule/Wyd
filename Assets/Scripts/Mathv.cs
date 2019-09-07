@@ -56,11 +56,7 @@ public static class Mathv
     /// <seealso cref="Abs(Vector3Int)" />
     public static Vector3 Abs(this Vector3 a)
     {
-        a.x = Mathf.Abs(a.x);
-        a.y = Mathf.Abs(a.y);
-        a.z = Mathf.Abs(a.z);
-
-        return a;
+        return new Vector3(Math.Abs(a.x), Math.Abs(a.y), Math.Abs(a.z));
     }
 
     /// <summary>
@@ -72,11 +68,7 @@ public static class Mathv
     /// <seealso cref="Multiply(Vector3Int, Vector3Int)" />
     public static Vector3 Multiply(this Vector3 a, Vector3 b)
     {
-        a.x *= b.x;
-        a.y *= b.y;
-        a.z *= b.z;
-
-        return a;
+        return new Vector3(a.x * b.x, a.y * b.y, a.z * b.z);
     }
 
     /// <summary>
@@ -88,11 +80,7 @@ public static class Mathv
     /// <seealso cref="Divide(Vector3Int, Vector3Int)" />
     public static Vector3 Divide(this Vector3 a, Vector3 b)
     {
-        a.x /= b.x;
-        a.y /= b.y;
-        a.z /= b.z;
-
-        return a;
+        return new Vector3(a.x / b.x, a.y / b.y, a.z / b.z);
     }
 
     /// <summary>
@@ -104,18 +92,14 @@ public static class Mathv
     /// <seealso cref="Mod(Vector3Int, Vector3Int)" />
     public static Vector3 Mod(this Vector3 a, Vector3 mod)
     {
-        a.x %= mod.x;
-        a.y %= mod.y;
-        a.z %= mod.z;
-
-        return a;
+        return new Vector3(a.x % mod.x, a.y % mod.y, a.z % mod.z);
     }
 
     public static float Product(this Vector3 a)
     {
         return a.x * a.y * a.z;
     }
-    
+
     public static Vector3 Floor(this Vector3 a)
     {
         return new Vector3(Mathf.Floor(a.x), Mathf.Floor(a.y), Mathf.Floor(a.z));
@@ -138,6 +122,11 @@ public static class Mathv
         return (int) (a.x + (a.z * size3d.x) + (a.y * size3d.x * size3d.z));
     }
 
+    public static float[] ToArray(this Vector3 a)
+    {
+        return new[] {a.x, a.y, a.z};
+    }
+
     #endregion
 
 
@@ -151,11 +140,7 @@ public static class Mathv
     /// <seealso cref="Abs(Vector3)" />
     public static Vector3Int Abs(this Vector3Int a)
     {
-        a.x = Mathf.Abs(a.x);
-        a.y = Mathf.Abs(a.y);
-        a.z = Mathf.Abs(a.z);
-
-        return a;
+        return new Vector3Int(Math.Abs(a.x), Math.Abs(a.y), Math.Abs(a.z));
     }
 
     /// <summary>
@@ -167,11 +152,7 @@ public static class Mathv
     /// <seealso cref="Multiply(Vector3, Vector3)" />
     public static Vector3Int Multiply(this Vector3Int a, Vector3Int b)
     {
-        a.x *= b.x;
-        a.y *= b.y;
-        a.z *= b.z;
-
-        return a;
+        return new Vector3Int(a.x * b.x, a.y * b.y, a.z * b.z);
     }
 
     /// <summary>
@@ -183,11 +164,7 @@ public static class Mathv
     /// <seealso cref="Divide(Vector3, Vector3)" />
     public static Vector3Int Divide(this Vector3Int a, Vector3Int b)
     {
-        a.x /= b.x;
-        a.y /= b.y;
-        a.z /= b.z;
-
-        return a;
+        return new Vector3Int(a.x / b.x, a.y / b.y, a.z / b.z);
     }
 
     /// <summary>
@@ -199,11 +176,7 @@ public static class Mathv
     /// <seealso cref="Mod(Vector3, Vector3)" />
     public static Vector3Int Mod(this Vector3Int a, Vector3Int mod)
     {
-        a.x %= mod.x;
-        a.y %= mod.y;
-        a.z %= mod.z;
-
-        return a;
+        return new Vector3Int(a.x % mod.x, a.y % mod.y, a.z % mod.z);
     }
 
     /// <summary>

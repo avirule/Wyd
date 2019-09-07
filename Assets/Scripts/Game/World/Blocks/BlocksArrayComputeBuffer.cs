@@ -1,5 +1,9 @@
+#region
+
 using Game.World.Chunks;
 using UnityEngine;
+
+#endregion
 
 namespace Game.World.Blocks
 {
