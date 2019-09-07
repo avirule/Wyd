@@ -111,6 +111,11 @@ public static class Mathv
         return a;
     }
 
+    public static float Product(this Vector3 a)
+    {
+        return a.x * a.y * a.z;
+    }
+    
     public static Vector3 Floor(this Vector3 a)
     {
         return new Vector3(Mathf.Floor(a.x), Mathf.Floor(a.y), Mathf.Floor(a.z));

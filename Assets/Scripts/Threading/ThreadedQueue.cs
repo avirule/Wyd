@@ -202,7 +202,7 @@ namespace Threading
                 return default;
             }
 
-            threadedItem.Set(Guid.NewGuid(), AbortToken);
+            threadedItem.Initialize(Guid.NewGuid(), AbortToken);
             ItemQueue.Add(threadedItem, AbortToken);
 
             return threadedItem.Identity;

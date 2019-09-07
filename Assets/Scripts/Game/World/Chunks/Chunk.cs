@@ -27,6 +27,9 @@ namespace Game.World.Chunks
     {
         private static readonly int Offset = Shader.PropertyToID("_Offset");
 
+        private static readonly ObjectCache<BlocksArrayComputeBuffer> BlockArrayComputeBufferObjectCache =
+            new ObjectCache<BlocksArrayComputeBuffer>(null, null, true);
+        
         private static readonly ObjectCache<ChunkBuildingThreadedItem> ChunkBuildersCache =
             new ObjectCache<ChunkBuildingThreadedItem>(null, null, true);
 
@@ -39,7 +42,8 @@ namespace Game.World.Chunks
         public static FixedConcurrentQueue<TimeSpan> BuildTimes;
         public static FixedConcurrentQueue<TimeSpan> MeshTimes;
 
-        private Texture3D _BlocksTexture3D;
+        private RenderTexture _BuiltTexture;
+        private int _ChunkBuiltTextureKernelHandle;
         private Vector3 _Position;
         private Block[] _Blocks;
         private Mesh _Mesh;
@@ -50,7 +54,7 @@ namespace Game.World.Chunks
         private bool _Visible;
         private bool _RenderShadows;
 
-        public Material BuildingShaderMaterial;
+        public ComputeShader GenerationComputeShader;
         public MeshFilter MeshFilter;
         public MeshRenderer MeshRenderer;
         public bool Built;
@@ -108,15 +112,14 @@ namespace Game.World.Chunks
 
         private void Awake()
         {
-            _BlocksTexture3D = new Texture3D(Size.x, Size.y, Size.x, GraphicsFormat.R32_SFloat,
-                TextureCreationFlags.None, 0);
             _Position = transform.position;
             _Blocks = new Block[Size.Product()];
             _OnBorrowedUpdateTime = Built = Building = Meshed = Meshing = PendingMeshUpdate = false;
             _Mesh = new Mesh();
             _AsynchronousCoroutineQueue = new ConcurrentQueue<Action>();
 
-            BuildingShaderMaterial.SetVector(Offset, Position);
+            GenerationComputeShader.SetVector("_MaximumSize", new Vector4(Size.x, Size.y, Size.z));
+            GenerationComputeShader.SetVector("_Offset", Position);
             MeshFilter.sharedMesh = _Mesh;
             MeshRenderer.material.SetTexture(TextureController.Current.MainTex,
                 TextureController.Current.TerrainTexture);
@@ -192,7 +195,7 @@ namespace Game.World.Chunks
         public void Activate(Vector3 position = default)
         {
             Position = position;
-            BuildingShaderMaterial.SetVector(Offset, Position);
+            GenerationComputeShader.SetVector("_Offset", Position);
             Built = Building = Meshed = Meshing = PendingMeshUpdate = false;
             CheckInternalsAgainstLoaderPosition(PlayerController.Current.CurrentChunk);
             gameObject.SetActive(true);
@@ -225,26 +228,16 @@ namespace Game.World.Chunks
         {
             if (!Built && !Building)
             {
-//                ThreadedItem threadedItem = GetChunkBuildingThreadedItem();
-//
-//                if (threadedItem == default)
-//                {
-//                    return;
-//                }
-//
-//                _threadedExecutionQueue.ThreadedItemFinished += OnThreadedQueueFinishedItem;
-//                _BuildingIdentity = _threadedExecutionQueue.QueueThreadedItem(threadedItem);
-//                
-//                
-//                
-                //  
-                Color color = _BlocksTexture3D.GetPixel(0, 0, 0);
-                float red = color.r;
+                ThreadedItem threadedItem = GetChunkBuildingThreadedItem();
 
-                UnityEngine.Graphics.Blit(_BlocksTexture3D, BuildingShaderMaterial);
+                if (threadedItem == default)
+                {
+                    return;
+                }
 
-                color = _BlocksTexture3D.GetPixel(0, 0, 0);
-                red = color.r;
+                _threadedExecutionQueue.ThreadedItemFinished += OnThreadedQueueFinishedItem;
+                _BuildingIdentity = _threadedExecutionQueue.QueueThreadedItem(threadedItem);
+
             }
         }
 

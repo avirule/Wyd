@@ -67,7 +67,7 @@ namespace Threading
             }
         }
 
-        internal virtual void Set(object identity, CancellationToken token)
+        internal virtual void Initialize(object identity, CancellationToken token)
         {
             Identity = identity;
             AbortToken = token;

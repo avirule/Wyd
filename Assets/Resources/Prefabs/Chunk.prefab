@@ -91,8 +91,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: da7f38601b0f4d2f91db1e916ea65fc0, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  BuildingShaderMaterial: {fileID: 2100000, guid: e2157c593c489bb48af12f2cdb2009b7,
-    type: 2}
+  GenerationComputeShader: {fileID: 7200000, guid: 223558b9b7904774eb5dd3f9a795f3f6,
+    type: 3}
   MeshFilter: {fileID: -925064434372530524}
   MeshRenderer: {fileID: 5378599154586136568}
   Built: 0

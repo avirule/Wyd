@@ -136,15 +136,10 @@
             
             float4 frag (v2f i) : SV_Target
             {
-                const float epsilon = 0.0001;
                 float3 coord = _Offset.xyz + i.uv.xyz;
+                float noise = snoise(coord);
             
-                float v0 = snoise(coord);
-                float vx = snoise(coord + float3(epsilon, 0, 0));
-                float vy = snoise(coord + float3(0, epsilon, 0));
-                float vz = snoise(coord + float3(0, 0, epsilon));
-            
-                return float4(v0, vx, vy, vz);
+                return float4(noise, 0, 0, 0);
             }
 
             ENDCG
