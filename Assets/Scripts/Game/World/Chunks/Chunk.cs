@@ -1,7 +1,6 @@
 #region
 
 using System;
-using System.Collections.Concurrent;
 using Collections;
 using Controllers.Entity;
 using Controllers.Game;
@@ -165,7 +164,7 @@ namespace Game.World.Chunks
                 GenerationCheckAndStart();
             }
 
-            while (!_OnBorrowedUpdateTime && _PendingAction != default)
+            while (!_OnBorrowedUpdateTime && (_PendingAction != default))
             {
                 _PendingAction?.Invoke();
                 _PendingAction = default;
