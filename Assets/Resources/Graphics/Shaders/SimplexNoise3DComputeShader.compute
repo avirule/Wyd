@@ -102,10 +102,19 @@ int coordTo1D(float3 coord) {
     return (coord.x + (coord.z * _MaximumSize.x) + (coord.y * (_MaximumSize.x * _MaximumSize.z)));
 }
 
-[numthreads(16, 1, 1)]
+float3 coordTo3D(uint index) {
+    int x = index % _MaximumSize.x;
+    int z = (index / _MaximumSize.x) % _MaximumSize.z;
+    int y = index / (_MaximumSize.x * _MaximumSize.z);
+    
+    return float3(x, y, z);
+}
+
+[numthreads(256, 1, 1)]
 void CSMain (uint3 id : SV_DispatchThreadID)
 {
-    float3 coord = _Offset + id;
+    float3 coord = coordTo3D(id.x);
+    coord += _Offset;
     // todo temper noise with /=
     float noise = snoise(coord);
     

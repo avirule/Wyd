@@ -15,7 +15,7 @@ using Random = System.Random;
 
 namespace Game.World.Chunks
 {
-    public class ChunkBuilder : IDisposable
+    public class ChunkBuilder
     {
         private static FastNoise _noiseFunction;
 
@@ -23,10 +23,6 @@ namespace Game.World.Chunks
         public Random Rand;
         public Vector3 Position;
         public Block[] Blocks;
-        public bool MemoryNegligent;
-        public ComputeShader NoiseShader;
-        public ComputeBuffer NoiseBuffer;
-        public float[] NoiseValues;
 
         public ChunkBuilder()
         {
@@ -42,48 +38,12 @@ namespace Game.World.Chunks
         /// <param name="position"><see cref="UnityEngine.Vector3" /> position of chunk being meshed.</param>
         /// <param name="blocks">Pre-initialized and built <see cref="T:ushort[]" /> to iterate through.</param>
         /// <param name="abortToken"></param>
-        /// <param name="memoryNegligent"></param>
-        /// <param name="noiseShader"></param>
-        public ChunkBuilder(Vector3 position, Block[] blocks, CancellationToken abortToken,
-            bool memoryNegligent = false, ComputeShader noiseShader = null) : this()
+        public ChunkBuilder(Vector3 position, Block[] blocks, CancellationToken abortToken) : this()
         {
             AbortToken = abortToken;
             Rand = new Random(WorldController.Current.WorldGenerationSettings.Seed);
             Position.Set(position.x, position.y, position.z);
             Blocks = blocks;
-            MemoryNegligent = memoryNegligent;
-            NoiseShader = noiseShader;
-        }
-
-        public void GenerateMemoryNegligent()
-        {
-            if (NoiseShader == default)
-            {
-                EventLog.Logger.Log(LogLevel.Error,
-                    $"Field `{nameof(NoiseShader)}` has not been properly set. Defaulting to memory-sensitive execution.");
-                MemoryNegligent = false;
-                return;
-            }
-
-            if (NoiseBuffer == default)
-            {
-                EventLog.Logger.Log(LogLevel.Error,
-                    $"Field `{nameof(NoiseBuffer)}` has not been properly set. Defaulting to memory-sensitive execution.");
-                MemoryNegligent = false;
-                return;
-            }
-
-            if (NoiseValues == default)
-            {
-                EventLog.Logger.Log(LogLevel.Error,
-                    $"Field `{nameof(NoiseValues)}` has not been properly set. Defaulting to memory-sensitive execution.");
-                MemoryNegligent = false;
-                return;
-            }
-
-            InitializeMemoryNegligentComputationResources();
-            ExecuteNoiseMappingOnGpu();
-            ProcessPreGeneratedNoiseData();
         }
 
         public void GenerateMemorySensitive()
@@ -106,25 +66,16 @@ namespace Game.World.Chunks
             }
         }
 
-
-        private void InitializeMemoryNegligentComputationResources()
+        public void ProcessPreGeneratedNoiseData(float[] noiseValues)
         {
-            // stride 4 bytes for float values
-            NoiseBuffer = new ComputeBuffer(Blocks.Length, 4);
-            NoiseValues = new float[Blocks.Length];
-        }
-
-        private void ExecuteNoiseMappingOnGpu()
-        {
-            int kernel = NoiseShader.FindKernel("CSMain");
-            NoiseShader.SetBuffer(kernel, "Result", NoiseBuffer);
-            NoiseShader.Dispatch(kernel, NoiseValues.Length / 16, 1, 1);
-            NoiseBuffer.GetData(NoiseValues);
-        }
-
-        private void ProcessPreGeneratedNoiseData()
-        {
-            for (int index = 0; index < NoiseValues.Length; index++)
+            if (Blocks == default)
+            {
+                EventLog.Logger.Log(LogLevel.Error,
+                    $"Field `{nameof(Blocks)}` has not been properly set. Cancelling operation.");
+                return;
+            }
+            
+            for (int index = 0; index < noiseValues.Length && !AbortToken.IsCancellationRequested; index++)
             {
                 (int x, int y, int z) = Mathv.GetVector3IntIndex(index, Chunk.Size);
 
@@ -134,7 +85,7 @@ namespace Game.World.Chunks
                 }
                 else
                 {
-                    if (NoiseValues[index] >= 0.01f)
+                    if (noiseValues[index] >= 0.01f)
                     {
                         Blocks[index].Initialise(BlockController.Current.GetBlockId("stone"));
                     }
@@ -254,11 +205,6 @@ namespace Game.World.Chunks
                     Blocks[index].Initialise(BlockController.Current.GetBlockId("Stone"));
                 }
             }
-        }
-
-        public void Dispose()
-        {
-            NoiseBuffer?.Dispose();
         }
     }
 }

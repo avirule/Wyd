@@ -11,9 +11,11 @@ using Random = System.Random;
 
 namespace Threading
 {
-    public class ChunkBuildingThreadedItem : ThreadedItem, IDisposable
+    public class ChunkBuildingThreadedItem : ThreadedItem
     {
         private ChunkBuilder _Builder;
+        private bool _MemoryNegligent;
+        private float[] _NoiseValues;
 
         /// <summary>
         ///     Prepares item for new execution.
@@ -21,9 +23,8 @@ namespace Threading
         /// <param name="position"><see cref="UnityEngine.Vector3" /> position of chunk being meshed.</param>
         /// <param name="blocks">Pre-initialized and built <see cref="T:ushort[]" /> to iterate through.</param>
         /// <param name="memoryNegligent"></param>
-        /// <param name="noiseShader"></param>
-        public void Set(Vector3 position, Block[] blocks, bool memoryNegligent = false,
-            ComputeShader noiseShader = null)
+        /// <param name="noiseValues"></param>
+        public void Set(Vector3 position, Block[] blocks, bool memoryNegligent = false, float[] noiseValues = null)
         {
             if (_Builder == default)
             {
@@ -34,27 +35,20 @@ namespace Threading
             _Builder.Rand = new Random(WorldController.Current.WorldGenerationSettings.Seed);
             _Builder.Position.Set(position.x, position.y, position.z);
             _Builder.Blocks = blocks;
-            _Builder.MemoryNegligent = memoryNegligent;
-            _Builder.NoiseShader = noiseShader;
+            _MemoryNegligent = memoryNegligent;
+            _NoiseValues = noiseValues;
         }
 
         protected override void Process()
         {
-            if (_Builder.MemoryNegligent)
+            if (_MemoryNegligent)
             {
-                _Builder.GenerateMemoryNegligent();
+                _Builder.ProcessPreGeneratedNoiseData(_NoiseValues);
             }
-
-            // separate blocks to respond to errors that change the memory mode inside GenerateMemoryNegligent()
-            if (!_Builder.MemoryNegligent)
+            else
             {
                 _Builder.GenerateMemorySensitive();
             }
-        }
-
-        public void Dispose()
-        {
-            _Builder?.Dispose();
         }
     }
 }

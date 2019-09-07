@@ -218,23 +218,34 @@ namespace Game.World.Chunks
 
         private void CheckBuildingOrStart()
         {
-            if (!Built && !Building)
+            if (Built || Building)
             {
-                ThreadedItem threadedItem = GetChunkBuildingThreadedItem();
-
-                if (threadedItem == default)
-                {
-                    EventLog.Logger.Log(LogLevel.Error, $"Failed to retrieve building item for chunk at {Position}.");
-                    return;
-                }
-
-                // do a full update of state booleans
-                Built = Meshed = Meshing = PendingMeshUpdate = false;
-                Building = true;
-
-                _threadedExecutionQueue.ThreadedItemFinished += OnThreadedQueueFinishedItem;
-                _BuildingIdentity = _threadedExecutionQueue.QueueThreadedItem(threadedItem);
+                return;
             }
+            
+            // will enable this when I can get the time to get it working
+            // ComputeBuffer buffer = new ComputeBuffer(Size.Product(), 4);
+            // float[] output = new float[Size.Product()];
+            // int kernel = GenerationComputeShader.FindKernel("CSMain");
+            // GenerationComputeShader.SetBuffer(kernel, "Result", buffer);
+            // GenerationComputeShader.Dispatch(kernel, Size.Product() / 256, 1, 1);
+            // buffer.GetData(output);
+            // buffer.Release();
+
+            ThreadedItem threadedItem = GetChunkBuildingThreadedItem();
+
+            if (threadedItem == default)
+            {
+                EventLog.Logger.Log(LogLevel.Error, $"Failed to retrieve building item for chunk at {Position}.");
+                return;
+            }
+
+            // do a full update of state booleans
+            Built = Meshed = Meshing = PendingMeshUpdate = false;
+            Building = true;
+
+            _threadedExecutionQueue.ThreadedItemFinished += OnThreadedQueueFinishedItem;
+            _BuildingIdentity = _threadedExecutionQueue.QueueThreadedItem(threadedItem);
         }
 
         private void CheckMeshingOrStart()
@@ -282,10 +293,10 @@ namespace Game.World.Chunks
             }
         }
 
-        private ThreadedItem GetChunkBuildingThreadedItem()
+        private ThreadedItem GetChunkBuildingThreadedItem(bool memoryNegligent = false, float[] noiseValues = null)
         {
             ChunkBuildingThreadedItem threadedItem = ChunkBuildersCache.RetrieveItem();
-            threadedItem.Set(Position, _Blocks);
+            threadedItem.Set(Position, _Blocks, memoryNegligent, noiseValues);
 
             return threadedItem;
         }
