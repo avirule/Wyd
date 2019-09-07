@@ -28,9 +28,6 @@ namespace Game.World.Chunks
     {
         private static readonly int Offset = Shader.PropertyToID("_Offset");
 
-        private static readonly ObjectCache<BlocksArrayComputeBuffer> BlockArrayComputeBufferObjectCache =
-            new ObjectCache<BlocksArrayComputeBuffer>(null, null, true);
-
         private static readonly ObjectCache<ChunkBuildingThreadedItem> ChunkBuildersCache =
             new ObjectCache<ChunkBuildingThreadedItem>(null, null, true);
 

@@ -1,6 +1,8 @@
 #region
 
 using System;
+using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using UnityEngine;
 
 #endregion
@@ -11,6 +13,8 @@ namespace Game.World.Blocks
     {
         public static class Vertices
         {
+            public static ReadOnlyDictionary<Direction, Vector3[]> FaceVertices;
+            
             public static readonly Vector3[] North =
             {
                 new Vector3(0f, 0f, 1f),
@@ -59,30 +63,26 @@ namespace Game.World.Blocks
                 new Vector3(1f, 0f, 1f)
             };
 
-            public static Vector3[] Get(Direction direction)
+            static Vertices()
             {
-                switch (direction)
+                Dictionary<Direction, Vector3[]> faceVertices = new Dictionary<Direction, Vector3[]>()
                 {
-                    case Direction.North:
-                        return North;
-                    case Direction.East:
-                        return East;
-                    case Direction.South:
-                        return South;
-                    case Direction.West:
-                        return West;
-                    case Direction.Up:
-                        return Up;
-                    case Direction.Down:
-                        return Down;
-                    default:
-                        throw new ArgumentOutOfRangeException(nameof(direction), direction, null);
-                }
+                    {Direction.North, North},
+                    {Direction.East, East},
+                    {Direction.South, South},
+                    {Direction.West, West},
+                    {Direction.Up, Up},
+                    {Direction.Down, Down}
+                };
+
+                FaceVertices = new ReadOnlyDictionary<Direction, Vector3[]>(faceVertices);
             }
         }
 
         public static class Triangles
         {
+            public static readonly ReadOnlyDictionary<Direction, int[]> FaceTriangles;
+            
             public static readonly int[] North =
             {
                 0,
@@ -143,25 +143,19 @@ namespace Game.World.Blocks
                 1
             };
 
-            public static int[] Get(Direction direction)
+            static Triangles()
             {
-                switch (direction)
+                Dictionary<Direction, int[]> faceTriangles = new Dictionary<Direction, int[]>()
                 {
-                    case Direction.North:
-                        return North;
-                    case Direction.East:
-                        return East;
-                    case Direction.South:
-                        return South;
-                    case Direction.West:
-                        return West;
-                    case Direction.Up:
-                        return Up;
-                    case Direction.Down:
-                        return Down;
-                    default:
-                        throw new ArgumentOutOfRangeException(nameof(direction), direction, null);
-                }
+                    {Direction.North, North},
+                    {Direction.East, East},
+                    {Direction.South, South},
+                    {Direction.West, West},
+                    {Direction.Up, Up},
+                    {Direction.Down, Down}
+                };
+
+                FaceTriangles = new ReadOnlyDictionary<Direction, int[]>(faceTriangles);
             }
         }
     }
