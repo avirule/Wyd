@@ -40,12 +40,11 @@ namespace Game.World.Chunks
         public static FixedConcurrentQueue<TimeSpan> BuildTimes;
         public static FixedConcurrentQueue<TimeSpan> MeshTimes;
 
+        private Action _PendingAction;
         private Transform _SelfTransform;
         private RenderTexture _BuiltTexture;
-        private int _ChunkBuiltTextureKernelHandle;
         private Block[] _Blocks;
         private Mesh _Mesh;
-        private ConcurrentQueue<Action> _AsynchronousCoroutineQueue;
         private object _BuildingIdentity;
         private object _MeshingIdentity;
         private bool _OnBorrowedUpdateTime;
@@ -108,7 +107,6 @@ namespace Game.World.Chunks
             _Blocks = new Block[Size.Product()];
             _OnBorrowedUpdateTime = Built = Building = Meshed = Meshing = PendingMeshUpdate = false;
             _Mesh = new Mesh();
-            _AsynchronousCoroutineQueue = new ConcurrentQueue<Action>();
 
             GenerationComputeShader.SetVector("_MaximumSize", new Vector4(Size.x, Size.y, Size.z));
             GenerationComputeShader.SetVector("_Offset", Position);
@@ -150,7 +148,7 @@ namespace Game.World.Chunks
             }
 
             PlayerController.Current.RegisterEntityChangedSubscriber(this);
-            CheckInternalsAgainstLoaderPosition(PlayerController.Current.CurrentChunk);
+            CheckInternalSettings(PlayerController.Current.CurrentChunk);
         }
 
         private void Update()
@@ -159,7 +157,7 @@ namespace Game.World.Chunks
 
             if (PrimaryLoaderChangedChunk)
             {
-                CheckInternalsAgainstLoaderPosition(PlayerController.Current.CurrentChunk);
+                CheckInternalSettings(PlayerController.Current.CurrentChunk);
             }
 
             if (!_OnBorrowedUpdateTime)
@@ -167,9 +165,10 @@ namespace Game.World.Chunks
                 GenerationCheckAndStart();
             }
 
-            while (!_OnBorrowedUpdateTime && _AsynchronousCoroutineQueue.TryDequeue(out Action action))
+            while (!_OnBorrowedUpdateTime && _PendingAction != default)
             {
-                action?.Invoke();
+                _PendingAction?.Invoke();
+                _PendingAction = default;
             }
         }
 
@@ -192,7 +191,7 @@ namespace Game.World.Chunks
             _SelfTransform.position = Position = position;
             GenerationComputeShader.SetVector("_Offset", Position);
             Built = Building = Meshed = Meshing = PendingMeshUpdate = false;
-            CheckInternalsAgainstLoaderPosition(PlayerController.Current.CurrentChunk);
+            CheckInternalSettings(PlayerController.Current.CurrentChunk);
             gameObject.SetActive(true);
         }
 
@@ -278,7 +277,7 @@ namespace Game.World.Chunks
                 _threadedExecutionQueue.ThreadedItemFinished -= OnThreadedQueueFinishedItem;
 
                 // Safely apply mesh when there is free frame time
-                _AsynchronousCoroutineQueue.Enqueue(() => ApplyMesh((ChunkMeshingThreadedItem) args.ThreadedItem));
+                _PendingAction = () => ((ChunkMeshingThreadedItem) args.ThreadedItem).SetMesh(ref _Mesh);
 
                 MeshTimes.Enqueue(args.ThreadedItem.ExecutionTime);
             }
@@ -298,11 +297,6 @@ namespace Game.World.Chunks
             threadedItem.Set(Position, _Blocks, AggressiveFaceMerging);
 
             return threadedItem;
-        }
-
-        private void ApplyMesh(ChunkMeshingThreadedItem threadedItem)
-        {
-            threadedItem.SetMesh(ref _Mesh);
         }
 
         #endregion
@@ -332,7 +326,6 @@ namespace Game.World.Chunks
 
         public bool BlockExistsAt(Vector3 position)
         {
-            // localize position value
             int localPosition1d = ConvertGlobalPositionToLocal1D(position);
 
             if (_Blocks.Length <= localPosition1d)
@@ -344,14 +337,13 @@ namespace Game.World.Chunks
             return _Blocks[localPosition1d].Id != BlockController.BLOCK_EMPTY_ID;
         }
 
-        private void CheckInternalsAgainstLoaderPosition(Vector3 loaderChunkPosition)
+        private void CheckInternalSettings(Vector3 loaderChunkPosition)
         {
             if (Position == loaderChunkPosition)
             {
                 return;
             }
 
-            // chunk player is in should always be expensive / shadowed
             Vector3 difference = (Position - loaderChunkPosition).Abs();
 
             if (!IsWithinLoaderRange(difference))
