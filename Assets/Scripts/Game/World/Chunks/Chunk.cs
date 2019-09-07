@@ -222,7 +222,7 @@ namespace Game.World.Chunks
             {
                 return;
             }
-            
+
             // will enable this when I can get the time to get it working
             // ComputeBuffer buffer = new ComputeBuffer(Size.Product(), 4);
             // float[] output = new float[Size.Product()];
@@ -368,24 +368,19 @@ namespace Game.World.Chunks
 
         private static bool IsWithinLoaderRange(Vector3 difference)
         {
-            int totalValidLoaderRadius =
-                WorldController.Current.WorldGenerationSettings.Radius + OptionsController.Current.PreLoadChunkDistance;
-
-            return (difference.x <= (totalValidLoaderRadius * Size.x)) &&
-                   (difference.z <= (totalValidLoaderRadius * Size.z));
+            return difference.LessThanOrEqual(Size * (WorldController.Current.WorldGenerationSettings.Radius +
+                                                      OptionsController.Current.PreLoadChunkDistance));
         }
 
         private static bool IsWithinRenderDistance(Vector3 difference)
         {
-            return (difference.x <= (WorldController.Current.WorldGenerationSettings.Radius * Size.x)) &&
-                   (difference.z <= (WorldController.Current.WorldGenerationSettings.Radius * Size.z));
+            return difference.LessThanOrEqual(Size * WorldController.Current.WorldGenerationSettings.Radius);
         }
 
         private static bool IsWithinDrawShadowsDistance(Vector3 difference)
         {
             return (OptionsController.Current.ShadowDistance == 0) ||
-                   ((difference.x <= (OptionsController.Current.ShadowDistance * Size.x)) &&
-                    (difference.z <= (OptionsController.Current.ShadowDistance * Size.z)));
+                   difference.LessThanOrEqual(Size * OptionsController.Current.ShadowDistance);
         }
 
         #endregion

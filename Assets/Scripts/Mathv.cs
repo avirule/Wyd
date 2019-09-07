@@ -110,6 +110,16 @@ public static class Mathv
         return new Vector3((float) Math.Truncate(a.x), (float) Math.Truncate(a.x), (float) Math.Truncate(a.x));
     }
 
+    public static bool IsLessThan(this Vector3 a, Vector3 b)
+    {
+        return a.x < b.x && a.y < b.y && a.z < b.z;
+    }
+
+    public static bool LessThanOrEqual(this Vector3 a, Vector3 b)
+    {
+        return a.x <= b.x && a.y <= b.y && a.z <= b.z;
+    }
+    
     /// <summary>
     ///     Calculates 1D <see cref="System.Int32" /> index from 3D <see cref="UnityEngine.Vector3Int" />, given a
     ///     <see cref="UnityEngine.Vector3Int" /> size in 3D space.
