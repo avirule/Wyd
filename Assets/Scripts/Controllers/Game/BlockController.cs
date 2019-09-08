@@ -27,7 +27,7 @@ namespace Controllers.Game
             Blocks = new Dictionary<ushort, IBlockRule>();
         }
 
-        public int RegisterBlockRules(string blockName, bool isTransparent,
+        public ushort RegisterBlockRules(string blockName, bool isTransparent,
             RuleEvaluation<Vector3, Direction> uvsRule = default)
         {
             blockName = blockName.ToLowerInvariant();

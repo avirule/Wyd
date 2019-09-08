@@ -56,12 +56,12 @@ namespace Game.World.Chunks
 
             for (int index = 0; (index < Blocks.Length) && !AbortToken.IsCancellationRequested; index++)
             {
-                //GenerateCheckerBoard(index);
-                //GenerateRaisedStripes(index);
-                //GenerateFlat(index);
-                //GenerateFlatStriped(index);
-                //GenerateNormal(index);
                 Generate3DSimplex(index);
+            }
+
+            for (int index = 0; (index < Blocks.Length) && !AbortToken.IsCancellationRequested; index++)
+            {
+                GenerateGrass(index);
             }
         }
 
@@ -91,6 +91,8 @@ namespace Game.World.Chunks
                 }
             }
         }
+
+#if UNITY_EDITOR
 
         private void GenerateCheckerBoard(int index)
         {
@@ -186,6 +188,8 @@ namespace Game.World.Chunks
             }
         }
 
+#endif
+
         private void Generate3DSimplex(int index)
         {
             (int x, int y, int z) = Mathv.GetVector3IntIndex(index, Chunk.Size);
@@ -207,6 +211,32 @@ namespace Game.World.Chunks
                 {
                     Blocks[index] = default;
                 }
+            }
+        }
+
+        private void GenerateGrass(int index)
+        {
+            (int x, int y, int z) = Mathv.GetVector3IntIndex(index, Chunk.Size);
+
+            int indexAbove = index + (Chunk.Size.x * Chunk.Size.z);
+            
+            if (indexAbove >= Blocks.Length || !Blocks[indexAbove].Transparent)
+            {
+                return;
+            }
+
+            Blocks[index].Initialise(BlockController.Current.GetBlockId("Grass"));
+
+            for (int i = 0; i < 3; i++)
+            {
+                int currentIndex = index - (i * Chunk.Size.x * Chunk.Size.z);
+
+                if (currentIndex < 0 || Blocks[currentIndex].Transparent)
+                {
+                    continue;
+                }
+
+                Blocks[currentIndex].Initialise(BlockController.Current.GetBlockId("Dirt"));
             }
         }
     }

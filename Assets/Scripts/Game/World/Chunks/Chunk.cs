@@ -35,7 +35,7 @@ namespace Game.World.Chunks
 
         private static ThreadedQueue _threadedExecutionQueue;
 
-        public static readonly Vector3Int Size = new Vector3Int(32, 256, 32);
+        public static readonly Vector3Int Size = new Vector3Int(16, 32, 16);
         public static FixedConcurrentQueue<TimeSpan> BuildTimes;
         public static FixedConcurrentQueue<TimeSpan> MeshTimes;
 
@@ -59,7 +59,6 @@ namespace Game.World.Chunks
         public bool Meshing;
         public bool UpdateMesh;
         public bool AggressiveFaceMerging;
-        public bool ClearMesh;
 
         public Vector3 Position { get; private set; }
 
@@ -155,29 +154,25 @@ namespace Game.World.Chunks
         {
             _OnBorrowedUpdateTime = WorldController.Current.IsOnBorrowedUpdateTime();
 
-            if (ClearMesh)
+            if (_OnBorrowedUpdateTime)
             {
-                _Mesh.Clear();
-                ClearMesh = false;
+                return;
             }
 
-            if (!_OnBorrowedUpdateTime)
+            if (PrimaryLoaderChangedChunk)
             {
-                if (PrimaryLoaderChangedChunk)
-                {
-                    CheckInternalSettings(PlayerController.Current.CurrentChunk);
-                }
-
-                GenerationStateCheckAndStart();
-
-                if (_PendingAction == default)
-                {
-                    return;
-                }
-
-                _PendingAction?.Invoke();
-                _PendingAction = default;
+                CheckInternalSettings(PlayerController.Current.CurrentChunk);
             }
+
+            GenerationStateCheckAndStart();
+
+            if (_PendingAction == default)
+            {
+                return;
+            }
+
+            _PendingAction?.Invoke();
+            _PendingAction = default;
         }
 
         private void OnDestroy()
