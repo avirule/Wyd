@@ -49,7 +49,7 @@ namespace Game.World.Chunks
         private bool _OnBorrowedUpdateTime;
         private bool _Visible;
         private bool _RenderShadows;
-        
+
         public ComputeShader GenerationComputeShader;
         public MeshFilter MeshFilter;
         public MeshRenderer MeshRenderer;
@@ -160,7 +160,7 @@ namespace Game.World.Chunks
                 _Mesh.Clear();
                 ClearMesh = false;
             }
-            
+
             if (PrimaryLoaderChangedChunk)
             {
                 CheckInternalSettings(PlayerController.Current.CurrentChunk);
@@ -257,24 +257,26 @@ namespace Game.World.Chunks
 
         private void CheckStateAndStartMeshing()
         {
-            if (Built && !Meshing && (UpdateMesh || !Meshed) && Visible &&
-                WorldController.Current.AreNeighborsBuilt(Position))
+            if (!Built || Meshing || (!UpdateMesh && Meshed) || !Visible ||
+                !WorldController.Current.AreNeighborsBuilt(Position))
             {
-                ThreadedItem threadedItem = GetChunkMeshingThreadedItem();
-
-                if (threadedItem == default)
-                {
-                    EventLog.Logger.Log(LogLevel.Error, $"Failed to retrieve meshing item for chunk at {Position}.");
-                    return;
-                }
-
-                // do a full update of state booleans
-                Meshed = UpdateMesh = false;
-                Meshing = true;
-
-                _threadedExecutionQueue.ThreadedItemFinished += OnThreadedQueueFinishedItem;
-                _MeshingIdentity = _threadedExecutionQueue.QueueThreadedItem(threadedItem);
+                return;
             }
+
+            ThreadedItem threadedItem = GetChunkMeshingThreadedItem();
+
+            if (threadedItem == default)
+            {
+                EventLog.Logger.Log(LogLevel.Error, $"Failed to retrieve meshing item for chunk at {Position}.");
+                return;
+            }
+
+            // do a full update of state booleans
+            Meshed = UpdateMesh = false;
+            Meshing = true;
+
+            _threadedExecutionQueue.ThreadedItemFinished += OnThreadedQueueFinishedItem;
+            _MeshingIdentity = _threadedExecutionQueue.QueueThreadedItem(threadedItem);
         }
 
         private void OnThreadedQueueFinishedItem(object sender, ThreadedItemFinishedEventArgs args)
@@ -320,7 +322,7 @@ namespace Game.World.Chunks
         {
             threadedItem.SetMesh(ref _Mesh);
         }
-        
+
         #endregion
 
 

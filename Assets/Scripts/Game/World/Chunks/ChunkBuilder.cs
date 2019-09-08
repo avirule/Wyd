@@ -8,6 +8,7 @@ using Game.World.Blocks;
 using Logging;
 using NLog;
 using Noise;
+using UnityEditor.MemoryProfiler;
 using UnityEngine;
 using Random = System.Random;
 
@@ -203,6 +204,10 @@ namespace Game.World.Chunks
                 if (noiseValue >= 0.01f)
                 {
                     Blocks[index].Initialise(BlockController.Current.GetBlockId("Stone"));
+                }
+                else
+                {
+                    Blocks[index] = default;
                 }
             }
         }
