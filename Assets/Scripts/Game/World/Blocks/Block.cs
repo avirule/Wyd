@@ -1,6 +1,7 @@
 #region
 
 using System.Collections.Specialized;
+using System.Runtime.InteropServices.WindowsRuntime;
 using Controllers.Game;
 
 #endregion
@@ -88,6 +89,18 @@ namespace Game.World.Blocks
         public void SetFace(Direction direction, bool value)
         {
             Bits[FaceSections[((byte) direction).SmallestBitDigit()]] = value ? 1 : 0;
+        }
+
+        public void ClearFaces()
+        {
+            // ReSharper disable once ForCanBeConvertedToForeach
+            for (int face = 0; face < FaceSections.Length; face++)
+            {
+                if (Bits[FaceSections[face]] == 1)
+                {
+                    Bits[FaceSections[face]] = 0;
+                }
+            }
         }
     }
 }

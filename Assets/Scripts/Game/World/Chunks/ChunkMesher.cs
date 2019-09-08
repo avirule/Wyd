@@ -114,7 +114,6 @@ namespace Game.World.Chunks
             Vector3 localPosition = new Vector3(x, y, z);
             Vector3 globalPosition = Position + localPosition;
 
-
             if ((((z == (Chunk.Size.z - 1)) &&
                   WorldController.Current.GetBlockAt(globalPosition + Vector3.forward).Transparent) ||
                  ((z < (Chunk.Size.z - 1)) && Blocks[index + Chunk.Size.x].Transparent)) &&

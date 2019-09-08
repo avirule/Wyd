@@ -49,7 +49,7 @@ namespace Game.World.Chunks
         private bool _OnBorrowedUpdateTime;
         private bool _Visible;
         private bool _RenderShadows;
-
+        
         public ComputeShader GenerationComputeShader;
         public MeshFilter MeshFilter;
         public MeshRenderer MeshRenderer;
@@ -57,8 +57,9 @@ namespace Game.World.Chunks
         public bool Building;
         public bool Meshed;
         public bool Meshing;
-        public bool PendingMeshUpdate;
+        public bool UpdateMesh;
         public bool AggressiveFaceMerging;
+        public bool ClearMesh;
 
         public Vector3 Position { get; private set; }
 
@@ -104,7 +105,7 @@ namespace Game.World.Chunks
             _SelfTransform = transform;
             Position = _SelfTransform.position;
             _Blocks = new Block[Size.Product()];
-            _OnBorrowedUpdateTime = Built = Building = Meshed = Meshing = PendingMeshUpdate = false;
+            _OnBorrowedUpdateTime = Built = Building = Meshed = Meshing = UpdateMesh = false;
             _Mesh = new Mesh();
 
             GenerationComputeShader.SetVector("_MaximumSize", new Vector4(Size.x, Size.y, Size.z));
@@ -154,6 +155,12 @@ namespace Game.World.Chunks
         {
             _OnBorrowedUpdateTime = WorldController.Current.IsOnBorrowedUpdateTime();
 
+            if (ClearMesh)
+            {
+                _Mesh.Clear();
+                ClearMesh = false;
+            }
+            
             if (PrimaryLoaderChangedChunk)
             {
                 CheckInternalSettings(PlayerController.Current.CurrentChunk);
@@ -189,7 +196,7 @@ namespace Game.World.Chunks
         {
             _SelfTransform.position = Position = position;
             GenerationComputeShader.SetVector("_Offset", Position);
-            Built = Building = Meshed = Meshing = PendingMeshUpdate = false;
+            Built = Building = Meshed = Meshing = UpdateMesh = false;
             CheckInternalSettings(PlayerController.Current.CurrentChunk);
             gameObject.SetActive(true);
         }
@@ -241,7 +248,7 @@ namespace Game.World.Chunks
             }
 
             // do a full update of state booleans
-            Built = Meshed = Meshing = PendingMeshUpdate = false;
+            Built = Meshed = Meshing = UpdateMesh = false;
             Building = true;
 
             _threadedExecutionQueue.ThreadedItemFinished += OnThreadedQueueFinishedItem;
@@ -250,7 +257,7 @@ namespace Game.World.Chunks
 
         private void CheckStateAndStartMeshing()
         {
-            if (Built && !Meshing && (PendingMeshUpdate || !Meshed) && Visible &&
+            if (Built && !Meshing && (UpdateMesh || !Meshed) && Visible &&
                 WorldController.Current.AreNeighborsBuilt(Position))
             {
                 ThreadedItem threadedItem = GetChunkMeshingThreadedItem();
@@ -262,7 +269,7 @@ namespace Game.World.Chunks
                 }
 
                 // do a full update of state booleans
-                Meshed = PendingMeshUpdate = false;
+                Meshed = UpdateMesh = false;
                 Meshing = true;
 
                 _threadedExecutionQueue.ThreadedItemFinished += OnThreadedQueueFinishedItem;
@@ -275,7 +282,7 @@ namespace Game.World.Chunks
             if (args.ThreadedItem.Identity == _BuildingIdentity)
             {
                 Building = false;
-                Built = PendingMeshUpdate = true;
+                Built = UpdateMesh = true;
                 _threadedExecutionQueue.ThreadedItemFinished -= OnThreadedQueueFinishedItem;
 
                 BuildTimes.Enqueue(args.ThreadedItem.ExecutionTime);
@@ -304,7 +311,7 @@ namespace Game.World.Chunks
         private ThreadedItem GetChunkMeshingThreadedItem()
         {
             ChunkMeshingThreadedItem threadedItem = ChunkMeshersCache.RetrieveItem();
-            threadedItem.Set(Position, _Blocks, AggressiveFaceMerging);
+            threadedItem.Set(Position, _Blocks, AggressiveFaceMerging, Meshed);
 
             return threadedItem;
         }

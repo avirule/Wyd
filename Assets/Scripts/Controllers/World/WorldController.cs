@@ -167,12 +167,12 @@ namespace Controllers.World
                 Vector3 modifiedPosition = position + new Vector3(x * Chunk.Size.x, 0, 0);
                 Chunk chunkAtPosition = GetChunkAt(modifiedPosition);
 
-                if ((chunkAtPosition == default) || chunkAtPosition.PendingMeshUpdate || !chunkAtPosition.Active)
+                if ((chunkAtPosition == default) || chunkAtPosition.UpdateMesh || !chunkAtPosition.Active)
                 {
                     continue;
                 }
 
-                chunkAtPosition.PendingMeshUpdate = true;
+                chunkAtPosition.UpdateMesh = true;
             }
 
             for (int z = -1; z <= 1; z++)
@@ -185,12 +185,12 @@ namespace Controllers.World
                 Vector3 modifiedPosition = position + new Vector3(0, 0, z * Chunk.Size.z);
                 Chunk chunkAtPosition = GetChunkAt(modifiedPosition);
 
-                if ((chunkAtPosition == default) || chunkAtPosition.PendingMeshUpdate || !chunkAtPosition.Active)
+                if ((chunkAtPosition == default) || chunkAtPosition.UpdateMesh || !chunkAtPosition.Active)
                 {
                     continue;
                 }
 
-                chunkAtPosition.PendingMeshUpdate = true;
+                chunkAtPosition.UpdateMesh = true;
             }
         }
 
