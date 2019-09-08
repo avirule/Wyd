@@ -59,6 +59,10 @@ namespace Controllers.World
             _ChunkCache = new ObjectCache<Chunk>(DeactivateChunk, chunk => Destroy(chunk.gameObject));
             _BuildChunkQueue = new Queue<Vector3>();
             _FrameTimer = new Stopwatch();
+
+#if UNITY_EDITOR
+            WorldGenerationSettings.Radius = 5;
+#endif
         }
 
         private void Start()

@@ -94,8 +94,6 @@ namespace Controllers.Game
 
         public ushort GetBlockId(string blockName)
         {
-            blockName = blockName.ToLowerInvariant();
-
             if (!BlockNameIds.TryGetValue(blockName, out ushort blockId))
             {
                 EventLog.Logger.Log(LogLevel.Warn,
