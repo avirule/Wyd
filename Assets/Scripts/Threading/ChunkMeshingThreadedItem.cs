@@ -29,7 +29,7 @@ namespace Threading
             {
                 ClearAllFaces(blocks);
             }
-            
+
             _Mesher.ClearInternalData();
             _Mesher.AbortToken = AbortToken;
             _Mesher.Position.Set(position.x, position.y, position.z);

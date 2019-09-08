@@ -23,6 +23,7 @@ namespace Game.World.Blocks
         public bool Transparent
         {
             get => Bits[TransparencySection] == 0;
+            // value = true is transparent so that the default value of block is transparent
             set => Bits[TransparencySection] = value ? 0 : 1;
         }
 
@@ -62,10 +63,9 @@ namespace Game.World.Blocks
                 [FaceSections[2]] = faces & (byte) Direction.South,
                 [FaceSections[3]] = faces & (byte) Direction.West,
                 [FaceSections[4]] = faces & (byte) Direction.Up,
-                [FaceSections[5]] = faces & (byte) Direction.Down
+                [FaceSections[5]] = faces & (byte) Direction.Down,
+                [TransparencySection] = BlockController.Current.IsBlockDefaultTransparent(Id) ? 0 : 1
             };
-
-            Transparent = BlockController.Current.IsBlockDefaultTransparent(Id);
         }
 
         public bool HasAnyFace()

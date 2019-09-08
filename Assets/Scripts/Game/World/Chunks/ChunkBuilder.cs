@@ -1,6 +1,5 @@
 #region
 
-using System;
 using System.Threading;
 using Controllers.Game;
 using Controllers.World;
@@ -8,7 +7,6 @@ using Game.World.Blocks;
 using Logging;
 using NLog;
 using Noise;
-using UnityEditor.MemoryProfiler;
 using UnityEngine;
 using Random = System.Random;
 
@@ -75,8 +73,8 @@ namespace Game.World.Chunks
                     $"Field `{nameof(Blocks)}` has not been properly set. Cancelling operation.");
                 return;
             }
-            
-            for (int index = 0; index < noiseValues.Length && !AbortToken.IsCancellationRequested; index++)
+
+            for (int index = 0; (index < noiseValues.Length) && !AbortToken.IsCancellationRequested; index++)
             {
                 (int x, int y, int z) = Mathv.GetVector3IntIndex(index, Chunk.Size);
 

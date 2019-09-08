@@ -161,18 +161,20 @@ namespace Game.World.Chunks
                 ClearMesh = false;
             }
 
-            if (PrimaryLoaderChangedChunk)
-            {
-                CheckInternalSettings(PlayerController.Current.CurrentChunk);
-            }
-
             if (!_OnBorrowedUpdateTime)
             {
-                GenerationStateCheckAndStart();
-            }
+                if (PrimaryLoaderChangedChunk)
+                {
+                    CheckInternalSettings(PlayerController.Current.CurrentChunk);
+                }
 
-            while (!_OnBorrowedUpdateTime && (_PendingAction != default))
-            {
+                GenerationStateCheckAndStart();
+
+                if (_PendingAction == default)
+                {
+                    return;
+                }
+
                 _PendingAction?.Invoke();
                 _PendingAction = default;
             }
