@@ -1,7 +1,9 @@
 #region
 
+using System;
 using Controllers.Game;
 using Controllers.World;
+using Game.World.Chunks;
 using Logging;
 using NLog;
 using TMPro;
@@ -51,8 +53,13 @@ namespace Controllers.UI.Components.InputField
             }
         }
 
-        private void ParseCommandLineArguments(params string[] args)
+        private static void ParseCommandLineArguments(params string[] args)
         {
+            for (int i = 0; i < args.Length; i++)
+            {
+                args[i] = args[i].ToLower();
+            }
+            
             switch (args[0])
             {
                 case "get":
@@ -79,6 +86,11 @@ namespace Controllers.UI.Components.InputField
                     }
 
                     break;
+                case "lowestterrainvalue":
+                    EventLog.Logger.Log(LogLevel.Info, $"Lowest hit terrain noise value is currently: {ChunkBuilder.LowestValue}");
+                    break;
+                default:
+                    throw new NotImplementedException();
             }
         }
     }

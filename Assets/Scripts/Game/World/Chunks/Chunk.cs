@@ -130,7 +130,7 @@ namespace Game.World.Chunks
             {
                 // init ThreadedQueue with # of threads matching logical processors
                 _threadedExecutionQueue = new ThreadedQueue(200, () => OptionsController.Current.ThreadingMode,
-                    Environment.ProcessorCount);
+                    Environment.ProcessorCount / 2);
                 _threadedExecutionQueue.Start();
             }
 

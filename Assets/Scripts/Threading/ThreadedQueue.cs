@@ -109,12 +109,6 @@ namespace Threading
         public virtual void Abort()
         {
             AbortTokenSource.Cancel();
-
-            foreach (WorkerThread workerThread in InternalThreads)
-            {
-                workerThread.Abort();
-            }
-
             WaitTimeout = 1;
             Running = false;
         }
@@ -123,7 +117,7 @@ namespace Threading
         {
             for (int i = 0; i < ThreadSize; i++)
             {
-                WorkerThread workerThread = new WorkerThread(WaitTimeout);
+                WorkerThread workerThread = new WorkerThread(WaitTimeout, AbortToken);
                 workerThread.ThreadedItemFinished += OnThreadedItemFinished;
                 workerThread.Start();
                 InternalThreads.Add(workerThread);
@@ -144,17 +138,19 @@ namespace Threading
             {
                 try
                 {
-                    if (ItemQueue.TryTake(out ThreadedItem threadedItem, WaitTimeout, AbortToken) &&
-                        (threadedItem != default))
+                    if (!ItemQueue.TryTake(out ThreadedItem threadedItem, WaitTimeout, AbortToken)
+                        || (threadedItem == default))
                     {
-                        // update threading mode if object is taken
-                        if (ThreadingMode != _ThreadingModeReference())
-                        {
-                            ThreadingMode = _ThreadingModeReference();
-                        }
-
-                        ProcessThreadedItem(threadedItem);
+                        continue;
                     }
+
+                    // update threading mode if object is taken
+                    if (ThreadingMode != _ThreadingModeReference())
+                    {
+                        ThreadingMode = _ThreadingModeReference();
+                    }
+
+                    ProcessThreadedItem(threadedItem);
                 }
                 catch (OperationCanceledException)
                 {

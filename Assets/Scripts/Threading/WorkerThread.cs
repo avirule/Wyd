@@ -12,7 +12,6 @@ namespace Threading
     {
         private readonly Thread _InternalThread;
         private readonly BlockingCollection<ThreadedItem> _ItemQueue;
-        private readonly CancellationTokenSource _AbortTokenSource;
         private readonly CancellationToken _AbortToken;
 
         public int WaitTimeout;
@@ -23,12 +22,11 @@ namespace Threading
 
         public event EventHandler<ThreadedItemFinishedEventArgs> ThreadedItemFinished;
 
-        public WorkerThread(int waitTimeout)
+        public WorkerThread(int waitTimeout, CancellationToken abortToken)
         {
             _InternalThread = new Thread(ProcessItemQueue);
             _ItemQueue = new BlockingCollection<ThreadedItem>();
-            _AbortTokenSource = new CancellationTokenSource();
-            _AbortToken = _AbortTokenSource.Token;
+            _AbortToken = abortToken;
 
             WaitTimeout = waitTimeout;
         }
@@ -37,13 +35,6 @@ namespace Threading
         {
             _InternalThread.Start();
             Running = true;
-        }
-
-        public void Abort()
-        {
-            _AbortTokenSource.Cancel();
-            WaitTimeout = 1;
-            Running = false;
         }
 
         public bool QueueThreadedItem(ThreadedItem threadedItem)

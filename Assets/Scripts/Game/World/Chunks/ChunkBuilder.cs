@@ -1,6 +1,7 @@
 #region
 
 using System.Threading;
+using Collections;
 using Controllers.Game;
 using Controllers.World;
 using Game.World.Blocks;
@@ -16,7 +17,12 @@ namespace Game.World.Chunks
 {
     public class ChunkBuilder
     {
+        private const float _MAXIMUM_INVERSE_LERP_BOUND = -1f;
+        private const float _MINIMUM_INVERSE_LERP_BOUND = -1f;
+
         private static FastNoise _noiseFunction;
+
+        public static float LowestValue;
 
         public CancellationToken AbortToken;
         public Random Rand;
@@ -91,6 +97,8 @@ namespace Game.World.Chunks
                 }
             }
         }
+
+        #region DEBUG GEN MODES
 
 #if UNITY_EDITOR
 
@@ -190,6 +198,8 @@ namespace Game.World.Chunks
 
 #endif
 
+        #endregion
+
         private void Generate3DSimplex(int index)
         {
             (int x, int y, int z) = Mathv.GetVector3IntIndex(index, Chunk.Size);
@@ -201,7 +211,14 @@ namespace Game.World.Chunks
             else
             {
                 float noiseValue = _noiseFunction.GetSimplex(Position.x + x, Position.y + y, Position.z + z);
-                noiseValue /= y;
+
+                if (noiseValue < LowestValue)
+                {
+                    LowestValue = noiseValue;
+                }
+
+                noiseValue +=  3f * (1f - Mathf.InverseLerp(0f, Chunk.Size.y, y));
+                noiseValue /= (y + 1f) * 1.5f;
 
                 if (noiseValue >= 0.01f)
                 {
@@ -218,7 +235,7 @@ namespace Game.World.Chunks
         {
             int indexAbove = index + (Chunk.Size.x * Chunk.Size.z);
 
-            if (indexAbove >= Blocks.Length
+            if ((indexAbove >= Blocks.Length)
                 || Blocks[index].Transparent
                 || !Blocks[indexAbove].Transparent
                 || (Blocks[index].Id == BlockController.Current.GetBlockId("Bedrock")))
