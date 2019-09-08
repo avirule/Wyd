@@ -18,6 +18,7 @@ namespace Threading
         /// <param name="position"><see cref="UnityEngine.Vector3" /> position of chunk being meshed.</param>
         /// <param name="blocks">Pre-initialized and built <see cref="T:ushort[]" /> to iterate through.</param>
         /// <param name="aggressiveFaceMerging"></param>
+        /// <param name="isRemesh"></param>
         public void Set(Vector3 position, Block[] blocks, bool aggressiveFaceMerging, bool isRemesh = false)
         {
             if (_Mesher == default)
@@ -52,7 +53,7 @@ namespace Threading
             _Mesher.SetMesh(ref mesh);
         }
 
-        private void ClearAllFaces(Block[] blocks)
+        private static void ClearAllFaces(Block[] blocks)
         {
             for (int index = 0; index < blocks.Length; index++)
             {
