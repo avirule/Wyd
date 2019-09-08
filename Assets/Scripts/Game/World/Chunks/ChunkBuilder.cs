@@ -216,14 +216,12 @@ namespace Game.World.Chunks
 
         private void GenerateGrass(int index)
         {
-            (int x, int y, int z) = Mathv.GetVector3IntIndex(index, Chunk.Size);
-
             int indexAbove = index + (Chunk.Size.x * Chunk.Size.z);
 
             if (indexAbove >= Blocks.Length
-                || (Blocks[index].Id == BlockController.Current.GetBlockId("Bedrock"))
                 || Blocks[index].Transparent
-                || !Blocks[indexAbove].Transparent)
+                || !Blocks[indexAbove].Transparent
+                || (Blocks[index].Id == BlockController.Current.GetBlockId("Bedrock")))
             {
                 return;
             }
