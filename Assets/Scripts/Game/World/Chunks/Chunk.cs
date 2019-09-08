@@ -161,7 +161,7 @@ namespace Game.World.Chunks
 
             if (!_OnBorrowedUpdateTime)
             {
-                GenerationCheckAndStart();
+                GenerationStateCheckAndStart();
             }
 
             while (!_OnBorrowedUpdateTime && (_PendingAction != default))
@@ -210,13 +210,13 @@ namespace Game.World.Chunks
 
         #region CHUNK GENERATION
 
-        private void GenerationCheckAndStart()
+        private void GenerationStateCheckAndStart()
         {
-            CheckBuildingOrStart();
-            CheckMeshingOrStart();
+            CheckStateAndStartBuilding();
+            CheckStateAndStartMeshing();
         }
 
-        private void CheckBuildingOrStart()
+        private void CheckStateAndStartBuilding()
         {
             if (Built || Building)
             {
@@ -248,7 +248,7 @@ namespace Game.World.Chunks
             _BuildingIdentity = _threadedExecutionQueue.QueueThreadedItem(threadedItem);
         }
 
-        private void CheckMeshingOrStart()
+        private void CheckStateAndStartMeshing()
         {
             if (Built && !Meshing && (PendingMeshUpdate || !Meshed) && Visible &&
                 WorldController.Current.AreNeighborsBuilt(Position))
@@ -287,7 +287,7 @@ namespace Game.World.Chunks
                 _threadedExecutionQueue.ThreadedItemFinished -= OnThreadedQueueFinishedItem;
 
                 // Safely apply mesh when there is free frame time
-                _PendingAction = () => ((ChunkMeshingThreadedItem) args.ThreadedItem).SetMesh(ref _Mesh);
+                _PendingAction = () => ApplyMesh((ChunkMeshingThreadedItem) args.ThreadedItem);
 
                 MeshTimes.Enqueue(args.ThreadedItem.ExecutionTime);
             }
@@ -309,6 +309,11 @@ namespace Game.World.Chunks
             return threadedItem;
         }
 
+        private void ApplyMesh(ChunkMeshingThreadedItem threadedItem)
+        {
+            threadedItem.SetMesh(ref _Mesh);
+        }
+        
         #endregion
 
 

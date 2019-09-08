@@ -48,9 +48,11 @@ namespace Controllers.UI.Components.Text
                 return;
             }
 
-            double averageDelaTime = Math.Round(1f / _DeltaTimes.Average(), Precision);
+            double averageDeltaTime = _DeltaTimes.Average();
+            double averageDeltaTimeAsFrames = Math.Ceiling(1d / averageDeltaTime);
+            double averageDeltaTimeAsMillisecondsRounded = Math.Round(1000d * averageDeltaTime, Precision);
 
-            _FPSText.text = $"FPS: {averageDelaTime}";
+            _FPSText.text = $"({averageDeltaTimeAsFrames}fps, {averageDeltaTimeAsMillisecondsRounded}ms)";
             _SkippedFrames = 0;
         }
 
