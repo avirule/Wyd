@@ -360,7 +360,7 @@ namespace Game.World.Chunks
                     "Given position exists outside of local bounds.");
             }
 
-            return _Blocks[localPosition1d].ID != BlockController.BLOCK_EMPTY_ID;
+            return _Blocks[localPosition1d].Id != BlockController.BLOCK_EMPTY_ID;
         }
 
         private void CheckInternalSettings(Vector3 loaderChunkPosition)
@@ -384,19 +384,19 @@ namespace Game.World.Chunks
 
         private static bool IsWithinLoaderRange(Vector3 difference)
         {
-            return difference.LessThanOrEqual(Size * (WorldController.Current.WorldGenerationSettings.Radius +
-                                                      OptionsController.Current.PreLoadChunkDistance));
+            return Mathv.AllLessThanOrEqual(difference, Size * (WorldController.Current.WorldGenerationSettings.Radius +
+                                                                OptionsController.Current.PreLoadChunkDistance));
         }
 
         private static bool IsWithinRenderDistance(Vector3 difference)
         {
-            return difference.LessThanOrEqual(Size * WorldController.Current.WorldGenerationSettings.Radius);
+            return Mathv.AllLessThanOrEqual(difference, Size * WorldController.Current.WorldGenerationSettings.Radius);
         }
 
         private static bool IsWithinDrawShadowsDistance(Vector3 difference)
         {
             return (OptionsController.Current.ShadowDistance == 0) ||
-                   difference.LessThanOrEqual(Size * OptionsController.Current.ShadowDistance);
+                   Mathv.AllLessThanOrEqual(difference, Size * OptionsController.Current.ShadowDistance);
         }
 
         #endregion
