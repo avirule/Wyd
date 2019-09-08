@@ -1,7 +1,6 @@
 #region
 
 using System.Collections.Generic;
-using System.Linq;
 using Controllers.Entity;
 using Game;
 using Game.Entity;
@@ -45,6 +44,7 @@ namespace Controllers.World
             CollisionToken collisionToken = entityToken.GetComponent<CollisionToken>();
             collisionToken.AttachedTransform = attachTo;
             collisionToken.Radius = loadRadius;
+            collisionToken.UpdatedMesh += (sender, mesh) => { _UpdateColliderMesh = true; };
 
             _CollisionTokens.Add(collisionToken);
         }
@@ -53,8 +53,13 @@ namespace Controllers.World
         {
             List<CombineInstance> combines = new List<CombineInstance>();
 
-            foreach (CollisionToken collisionToken in _CollisionTokens.Where(token => token.Mesh != default && token.Mesh.vertexCount != 0))
+            foreach (CollisionToken collisionToken in _CollisionTokens)
             {
+                if ((collisionToken.Mesh == default) || (collisionToken.Mesh.vertexCount == 0))
+                {
+                    continue;
+                }
+
                 CombineInstance combine = new CombineInstance
                 {
                     mesh = collisionToken.Mesh,

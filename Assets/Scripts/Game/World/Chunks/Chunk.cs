@@ -233,7 +233,6 @@ namespace Game.World.Chunks
             }
 
             // will enable this when I can get the time to get it working
-            //
             // ComputeBuffer buffer = new ComputeBuffer(Size.Product(), 4);
             // float[] output = new float[Size.Product()];
             // int kernel = GenerationComputeShader.FindKernel("CSMain");

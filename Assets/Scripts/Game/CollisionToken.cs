@@ -1,5 +1,6 @@
 #region
 
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using Controllers.World;
@@ -21,10 +22,28 @@ namespace Game
 
         public GameObject CubeObject;
         public Transform AttachedTransform;
+        private int _Radius;
 
         public Mesh Mesh { get; private set; }
         public Bounds BoundingBox { get; private set; }
-        public int Radius { get; set; }
+
+        public int Radius
+        {
+            get => _Radius;
+            set
+            {
+                if (_Radius == value)
+                {
+                    return;
+                }
+
+                _Radius = value;
+                _ScheduledRecalculation = true;
+            }
+        }
+
+
+        public event EventHandler<Mesh> UpdatedMesh;
 
         private void Awake()
         {
@@ -85,14 +104,18 @@ namespace Game
         {
             // todo add support for special bounds
 
-            GameObject cube = CubeCache.RetrieveItem() ?? Instantiate(CubeObject);
+            GameObject cube = CubeCache.RetrieveItem();
 
-            cube.SetActive(true);
+            if (cube == default)
+            {
+                cube = Instantiate(CubeObject);
+            }
 
             Transform cubeTransform = cube.transform;
+
             cubeTransform.parent = _SelfTransform;
             cubeTransform.position = position;
-            
+
             return cube;
         }
 
