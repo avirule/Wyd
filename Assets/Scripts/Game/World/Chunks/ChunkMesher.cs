@@ -105,7 +105,7 @@ namespace Game.World.Chunks
 
         private void TraverseIndex(int index)
         {
-            if (Blocks[index].Id == BlockController.BLOCK_EMPTY_ID)
+            if (Blocks[index].ID == BlockController.BLOCK_EMPTY_ID)
             {
                 return;
             }
@@ -157,7 +157,7 @@ namespace Game.World.Chunks
                     AddVertices(Direction.North, localPosition);
                 }
 
-                if (BlockController.Current.GetBlockSpriteUVs(Blocks[index].Id, globalPosition,
+                if (BlockController.Current.GetBlockSpriteUVs(Blocks[index].ID, globalPosition,
                     Direction.North, uvSize, out Vector3[] uvs))
                 {
                     _UVs.Add(uvs[1]);
@@ -209,7 +209,7 @@ namespace Game.World.Chunks
                     AddVertices(Direction.East, localPosition);
                 }
 
-                if (BlockController.Current.GetBlockSpriteUVs(Blocks[index].Id, globalPosition,
+                if (BlockController.Current.GetBlockSpriteUVs(Blocks[index].ID, globalPosition,
                     Direction.East, uvSize, out Vector3[] uvs))
                 {
                     _UVs.Add(uvs[0]);
@@ -259,7 +259,7 @@ namespace Game.World.Chunks
                     AddVertices(Direction.South, localPosition);
                 }
 
-                if (BlockController.Current.GetBlockSpriteUVs(Blocks[index].Id, globalPosition,
+                if (BlockController.Current.GetBlockSpriteUVs(Blocks[index].ID, globalPosition,
                     Direction.South, uvSize, out Vector3[] uvs))
                 {
                     _UVs.Add(uvs[0]);
@@ -309,7 +309,7 @@ namespace Game.World.Chunks
                     AddVertices(Direction.West, localPosition);
                 }
 
-                if (BlockController.Current.GetBlockSpriteUVs(Blocks[index].Id, globalPosition,
+                if (BlockController.Current.GetBlockSpriteUVs(Blocks[index].ID, globalPosition,
                     Direction.West, uvSize, out Vector3[] uvs))
                 {
                     _UVs.Add(uvs[1]);
@@ -360,7 +360,7 @@ namespace Game.World.Chunks
                     AddVertices(Direction.Up, localPosition);
                 }
 
-                if (BlockController.Current.GetBlockSpriteUVs(Blocks[index].Id, globalPosition,
+                if (BlockController.Current.GetBlockSpriteUVs(Blocks[index].ID, globalPosition,
                     Direction.Up, uvSize, out Vector3[] uvs))
                 {
                     _UVs.Add(uvs[0]);
@@ -410,7 +410,7 @@ namespace Game.World.Chunks
                     AddVertices(Direction.Down, localPosition);
                 }
 
-                if (BlockController.Current.GetBlockSpriteUVs(Blocks[index].Id, globalPosition,
+                if (BlockController.Current.GetBlockSpriteUVs(Blocks[index].ID, globalPosition,
                     Direction.Down, uvSize, out Vector3[] uvs))
                 {
                     _UVs.Add(uvs[0]);
@@ -473,7 +473,7 @@ namespace Game.World.Chunks
                 ((slice + traversals) < limitingSliceValue) &&
                 // This check removes the need to check if the adjacent block is transparent,
                 // as our current block will never be transparent
-                (Blocks[index].Id == Blocks[traversalIndex].Id) &&
+                (Blocks[index].ID == Blocks[traversalIndex].ID) &&
                 !Blocks[traversalIndex].HasFace(faceDirection) &&
                 // ensure the block to the north of our current block is transparent
                 WorldController.Current.GetBlockAt(
@@ -538,12 +538,12 @@ namespace Game.World.Chunks
 
                             ushort blockAId =
                                 0 <= x[axis]
-                                    ? Blocks[blockAPosition.To1D(Chunk.Size)].Id
+                                    ? Blocks[blockAPosition.To1D(Chunk.Size)].ID
                                     : BlockController.BLOCK_EMPTY_ID;
 
                             ushort blockBId = x[axis] < (sizes[axis] - 1)
-                                ? Blocks[blockBPosition.To1D(Chunk.Size)].Id
-                                : WorldController.Current.GetBlockAt(blockBPosition).Id;
+                                ? Blocks[blockBPosition.To1D(Chunk.Size)].ID
+                                : WorldController.Current.GetBlockAt(blockBPosition).ID;
 
                             bool blockAIsTransparent = !BlockController.Current.IsBlockDefaultTransparent(blockAId);
                             bool blockBIsTransparent = !BlockController.Current.IsBlockDefaultTransparent(blockBId);

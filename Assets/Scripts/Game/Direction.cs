@@ -10,7 +10,7 @@ namespace Game
     /// <summary>
     ///     6-way cardinal directions in byte values.
     /// </summary>
-    public enum Direction : byte
+    public enum Direction : sbyte
     {
         /// <summary>
         ///     Positive on Z axis
@@ -40,7 +40,8 @@ namespace Game
         /// <summary>
         ///     Negative on Y axis
         /// </summary>
-        Down = 0b00100000
+        Down = 0b00100000,
+        All = 0b00111111
     }
 
     public static class DirectionExtensions

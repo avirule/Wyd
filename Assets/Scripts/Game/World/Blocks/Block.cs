@@ -1,6 +1,5 @@
 #region
 
-using System.Collections.Specialized;
 using Controllers.Game;
 
 #endregion
@@ -9,97 +8,79 @@ namespace Game.World.Blocks
 {
     public struct Block
     {
-        public BitVector32 Bits;
+        private const sbyte _TRANSPARENCY_MASK = 0b01000000;
 
-        public ushort Id
-        {
-            get => (ushort) Bits[IdSection];
-            set => Bits[IdSection] = (short) value;
-        }
+        public ushort ID { get; private set; }
 
         /// <summary>
         ///     Determines whether the block is transparent.
         /// </summary>
         public bool Transparent
         {
-            get => Bits[TransparencySection] == 0;
-            // value = true is transparent so that the default value of block is transparent
-            set => Bits[TransparencySection] = value ? 0 : 1;
-        }
-
-        public static readonly BitVector32.Section IdSection;
-        public static readonly BitVector32.Section TransparencySection;
-        public static readonly BitVector32.Section[] FaceSections;
-
-        static Block()
-        {
-            unchecked
+            // set to true == 0 so that the default value is true.
+            get => (Faces & _TRANSPARENCY_MASK) == 0;
+            set
             {
-                IdSection = BitVector32.CreateSection(short.MaxValue);
+                if (value)
+                {
+                    Faces &= ~_TRANSPARENCY_MASK;
+                }
+                else
+                {
+                    Faces |= _TRANSPARENCY_MASK;
+                }
             }
-
-            TransparencySection = BitVector32.CreateSection(1, IdSection);
-            FaceSections = new BitVector32.Section[6];
-            FaceSections[0] = BitVector32.CreateSection(1, TransparencySection);
-            FaceSections[1] = BitVector32.CreateSection(1, FaceSections[0]);
-            FaceSections[2] = BitVector32.CreateSection(1, FaceSections[1]);
-            FaceSections[3] = BitVector32.CreateSection(1, FaceSections[2]);
-            FaceSections[4] = BitVector32.CreateSection(1, FaceSections[3]);
-            FaceSections[5] = BitVector32.CreateSection(1, FaceSections[4]);
         }
 
-        public Block(ushort id, byte faces = byte.MinValue)
+        public sbyte Faces { get; set; }
+
+        public Block(ushort id, sbyte faces = 0)
         {
-            Initialise(id, faces);
+            ID = id;
+            Faces = faces;
+            Transparent = BlockController.Current.IsBlockDefaultTransparent(ID);
         }
 
-        public void Initialise(ushort id, byte faces = byte.MinValue)
+        public void Initialise(ushort id, sbyte faces = 0)
         {
-            Bits = new BitVector32(0)
-            {
-                [IdSection] = id,
-                [FaceSections[0]] = faces & (byte) Direction.North,
-                [FaceSections[1]] = faces & (byte) Direction.East,
-                [FaceSections[2]] = faces & (byte) Direction.South,
-                [FaceSections[3]] = faces & (byte) Direction.West,
-                [FaceSections[4]] = faces & (byte) Direction.Up,
-                [FaceSections[5]] = faces & (byte) Direction.Down,
-                [TransparencySection] = BlockController.Current.IsBlockDefaultTransparent(Id) ? 0 : 1
-            };
+            ID = id;
+            Faces = faces;
+            Transparent = BlockController.Current.IsBlockDefaultTransparent(ID);
         }
 
         public bool HasAnyFace()
         {
-            return HasFace(Direction.North) || HasFace(Direction.East) || HasFace(Direction.South) ||
-                   HasFace(Direction.East) || HasFace(Direction.Up) || HasFace(Direction.Down);
+            return (Faces & 0) != 0;
         }
 
         public bool HasAllFaces()
         {
-            return HasFace(Direction.North) && HasFace(Direction.East) && HasFace(Direction.South) &&
-                   HasFace(Direction.East) && HasFace(Direction.Up) && HasFace(Direction.Down);
+            // if it is greater than this byte, then 6 or more bits
+            // have been set, so all faces are true
+            return (Faces & (sbyte) Direction.All) == (sbyte) Direction.All;
         }
 
         public bool HasFace(Direction direction)
         {
-            return Bits[FaceSections[((byte) direction).SmallestBitDigit()]] == 1;
+            return (Faces & (byte) direction) != 0;
         }
 
         public void SetFace(Direction direction, bool value)
         {
-            Bits[FaceSections[((byte) direction).SmallestBitDigit()]] = value ? 1 : 0;
+            if (value)
+            {
+                Faces |= (sbyte) direction;
+            }
+            else
+            {
+                // for the record, this is stupid.
+                Faces &= (sbyte) ~(sbyte) direction;
+            }
         }
 
         public void ClearFaces()
         {
-            // ReSharper disable once ForCanBeConvertedToForeach
-            for (int face = 0; face < FaceSections.Length; face++)
-            {
-                if (Bits[FaceSections[face]] == 1)
-                {
-                    Bits[FaceSections[face]] = 0;
-                }
-            }
+            Faces = 0;
         }
     }
 }
