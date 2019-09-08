@@ -12,14 +12,14 @@ namespace Game.World.Blocks
     {
         public static class Vertices
         {
-            public static ReadOnlyDictionary<Direction, Vector3[]> FaceVertices;
+            public static readonly ReadOnlyDictionary<Direction, Vector3[]> FaceVertices;
 
             public static readonly Vector3[] North =
             {
                 new Vector3(0f, 0f, 1f),
                 new Vector3(0f, 1f, 1f),
-                new Vector3(2f, 0f, 1f),
-                new Vector3(2f, 1f, 1f)
+                new Vector3(1f, 0f, 1f),
+                new Vector3(1f, 1f, 1f)
             };
 
             public static readonly Vector3[] East =

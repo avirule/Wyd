@@ -40,7 +40,7 @@ namespace Controllers.Entity
 
         private void Start()
         {
-            WorldController.Current.RegisterEntity(transform, 2);
+            WorldController.Current.RegisterEntity(transform, 3);
         }
 
         private void FixedUpdate()

@@ -452,7 +452,7 @@ MonoBehaviour:
   Lacunarity: 2
   Octaves: 16
   Persistence: 0.5
-  Radius: 8
+  Radius: 2
   Scale: 512
   SeedString: genericseed
 --- !u!64 &1461272638

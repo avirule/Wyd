@@ -360,7 +360,7 @@ namespace Game.World.Chunks
                     "Given position exists outside of local bounds.");
             }
 
-            return _Blocks[localPosition1d].ID != BlockController.BLOCK_EMPTY_ID;
+            return _Blocks[localPosition1d].Id != BlockController.BLOCK_EMPTY_ID;
         }
 
         private void CheckInternalSettings(Vector3 loaderChunkPosition)

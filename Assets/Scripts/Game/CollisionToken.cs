@@ -4,6 +4,7 @@ using System;
 using System.Collections.Generic;
 using Controllers.Game;
 using Controllers.World;
+using Game.World.Blocks;
 using UnityEngine;
 
 #endregion
@@ -95,104 +96,68 @@ namespace Game
                 {
                     for (int z = -Radius; z < (Radius + 1); z++)
                     {
-                        Vector3 globalPosition = _SelfTransform.position + new Vector3(x, y, z);
+                        Vector3 localPosition = new Vector3(x, y, z);
+                        Vector3 globalPosition = _SelfTransform.position + localPosition;
+                        Block block = WorldController.Current.GetBlockAt(globalPosition);
 
-                        if (WorldController.Current.GetBlockAt(globalPosition).Id == BlockController.BLOCK_EMPTY_ID)
+                        if ((block.Id == BlockController.BLOCK_EMPTY_ID) || !block.HasAnyFaces())
                         {
                             continue;
                         }
 
-                        if (WorldController.Current.GetBlockAt(globalPosition + Vector3.forward).Transparent)
+                        if (block.HasFace(Direction.North))
                         {
-                            _Triangles.Add(_Vertices.Count + 0);
-                            _Triangles.Add(_Vertices.Count + 2);
-                            _Triangles.Add(_Vertices.Count + 1);
-                            _Triangles.Add(_Vertices.Count + 2);
-                            _Triangles.Add(_Vertices.Count + 3);
-                            _Triangles.Add(_Vertices.Count + 1);
-
-                            _Vertices.Add(new Vector3(x, y, z + 1));
-                            _Vertices.Add(new Vector3(x, y + 1, z + 1));
-                            _Vertices.Add(new Vector3(x + 1, y, z + 1));
-                            _Vertices.Add(new Vector3(x + 1, y + 1, z + 1));
+                            AddTriangles(Direction.North);
+                            AddVertices(Direction.North, localPosition);
                         }
 
-                        if (WorldController.Current.GetBlockAt(globalPosition + Vector3.right).Transparent)
+                        if (block.HasFace(Direction.East))
                         {
-                            _Triangles.Add(_Vertices.Count + 0);
-                            _Triangles.Add(_Vertices.Count + 2);
-                            _Triangles.Add(_Vertices.Count + 1);
-                            _Triangles.Add(_Vertices.Count + 2);
-                            _Triangles.Add(_Vertices.Count + 3);
-                            _Triangles.Add(_Vertices.Count + 1);
-
-                            _Vertices.Add(new Vector3(x + 1, y, z));
-                            _Vertices.Add(new Vector3(x + 1, y, z + 1));
-                            _Vertices.Add(new Vector3(x + 1, y + 1, z));
-                            _Vertices.Add(new Vector3(x + 1, y + 1, z + 1));
+                            AddTriangles(Direction.East);
+                            AddVertices(Direction.East, localPosition);
                         }
 
-                        if (WorldController.Current.GetBlockAt(globalPosition + Vector3.back).Transparent)
+                        if (block.HasFace(Direction.South))
                         {
-                            _Triangles.Add(_Vertices.Count + 0);
-                            _Triangles.Add(_Vertices.Count + 2);
-                            _Triangles.Add(_Vertices.Count + 1);
-                            _Triangles.Add(_Vertices.Count + 2);
-                            _Triangles.Add(_Vertices.Count + 3);
-                            _Triangles.Add(_Vertices.Count + 1);
-
-                            _Vertices.Add(new Vector3(x, y, z));
-                            _Vertices.Add(new Vector3(x + 1, y, z));
-                            _Vertices.Add(new Vector3(x, y + 1, z));
-                            _Vertices.Add(new Vector3(x + 1, y + 1, z));
+                            AddTriangles(Direction.South);
+                            AddVertices(Direction.South, localPosition);
                         }
 
-                        if (WorldController.Current.GetBlockAt(globalPosition + Vector3.left).Transparent)
+                        if (block.HasFace(Direction.West))
                         {
-                            _Triangles.Add(_Vertices.Count + 0);
-                            _Triangles.Add(_Vertices.Count + 2);
-                            _Triangles.Add(_Vertices.Count + 1);
-                            _Triangles.Add(_Vertices.Count + 2);
-                            _Triangles.Add(_Vertices.Count + 3);
-                            _Triangles.Add(_Vertices.Count + 1);
-
-                            _Vertices.Add(new Vector3(x, y, z));
-                            _Vertices.Add(new Vector3(x, y + 1, z));
-                            _Vertices.Add(new Vector3(x, y, z + 1));
-                            _Vertices.Add(new Vector3(x, y + 1, z + 1));
+                            AddTriangles(Direction.West);
+                            AddVertices(Direction.West, localPosition);
                         }
 
-                        if (WorldController.Current.GetBlockAt(globalPosition + Vector3.up).Transparent)
+                        if (block.HasFace(Direction.Up))
                         {
-                            _Triangles.Add(_Vertices.Count + 0);
-                            _Triangles.Add(_Vertices.Count + 2);
-                            _Triangles.Add(_Vertices.Count + 1);
-                            _Triangles.Add(_Vertices.Count + 2);
-                            _Triangles.Add(_Vertices.Count + 3);
-                            _Triangles.Add(_Vertices.Count + 1);
-
-                            _Vertices.Add(new Vector3(x, y + 1, z));
-                            _Vertices.Add(new Vector3(x + 1, y + 1, z));
-                            _Vertices.Add(new Vector3(x, y + 1, z + 1));
-                            _Vertices.Add(new Vector3(x + 1, y + 1, z + 1));
+                            AddTriangles(Direction.Up);
+                            AddVertices(Direction.Up, localPosition);
                         }
 
-                        if (WorldController.Current.GetBlockAt(globalPosition + Vector3.down).Transparent)
+                        if (block.HasFace(Direction.Down))
                         {
-                            _Triangles.Add(_Vertices.Count + 0);
-                            _Triangles.Add(_Vertices.Count + 2);
-                            _Triangles.Add(_Vertices.Count + 1);
-                            _Triangles.Add(_Vertices.Count + 2);
-                            _Triangles.Add(_Vertices.Count + 3);
-                            _Triangles.Add(_Vertices.Count + 1);
-
-                            _Vertices.Add(new Vector3(x, y, z));
-                            _Vertices.Add(new Vector3(x, y, z + 1));
-                            _Vertices.Add(new Vector3(x + 1, y, z));
-                            _Vertices.Add(new Vector3(x + 1, y, z + 1));
+                            AddTriangles(Direction.Down);
+                            AddVertices(Direction.Down, localPosition);
                         }
                     }
                 }
+            }
+        }
+
+        private void AddTriangles(Direction direction)
+        {
+            foreach (int triangleValue in BlockFaces.Triangles.FaceTriangles[direction])
+            {
+                _Triangles.Add(_Vertices.Count + triangleValue);
+            }
+        }
+
+        private void AddVertices(Direction direction, Vector3 localPosition)
+        {
+            foreach (Vector3 vertex in BlockFaces.Vertices.FaceVertices[direction])
+            {
+                _Vertices.Add(vertex + localPosition);
             }
         }
 

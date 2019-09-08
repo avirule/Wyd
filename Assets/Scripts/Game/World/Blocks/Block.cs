@@ -10,7 +10,7 @@ namespace Game.World.Blocks
     {
         private const sbyte _TRANSPARENCY_MASK = 0b01000000;
 
-        public ushort ID { get; private set; }
+        public ushort Id { get; private set; }
 
         /// <summary>
         ///     Determines whether the block is transparent.
@@ -36,21 +36,21 @@ namespace Game.World.Blocks
 
         public Block(ushort id, sbyte faces = 0)
         {
-            ID = id;
+            Id = id;
             Faces = faces;
-            Transparent = BlockController.Current.IsBlockDefaultTransparent(ID);
+            Transparent = BlockController.Current.IsBlockDefaultTransparent(Id);
         }
 
         public void Initialise(ushort id, sbyte faces = 0)
         {
-            ID = id;
+            Id = id;
             Faces = faces;
-            Transparent = BlockController.Current.IsBlockDefaultTransparent(ID);
+            Transparent = BlockController.Current.IsBlockDefaultTransparent(Id);
         }
 
-        public bool HasAnyFace()
+        public bool HasAnyFaces()
         {
-            return (Faces & 0) != 0;
+            return (Faces & (sbyte) Direction.All) != 0;
         }
 
         public bool HasAllFaces()
