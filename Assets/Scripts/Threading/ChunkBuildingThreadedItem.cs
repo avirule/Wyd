@@ -1,6 +1,5 @@
 #region
 
-using System;
 using Controllers.World;
 using Game.World.Blocks;
 using Game.World.Chunks;
