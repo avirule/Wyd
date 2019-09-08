@@ -10,6 +10,7 @@ using UnityEngine;
 
 namespace Controllers.World
 {
+    [RequireComponent(typeof(MeshCollider))]
     public class CollisionTokenController : MonoBehaviour, IEntityChunkChangedSubscriber
     {
         private GameObject _CollisionTokenObject;
@@ -33,6 +34,14 @@ namespace Controllers.World
             PlayerController.Current.RegisterEntityChangedSubscriber(this);
         }
 
+        private void Update()
+        {
+            if (_UpdateColliderMesh)
+            {
+                GenerateColliderMesh();
+            }
+        }
+
         private void OnApplicationQuit()
         {
             Destroy(_CombinedColliderMesh);
@@ -42,7 +51,7 @@ namespace Controllers.World
         {
             GameObject entityToken = Instantiate(_CollisionTokenObject, transform);
             CollisionToken collisionToken = entityToken.GetComponent<CollisionToken>();
-            collisionToken.AttachedTransform = attachTo;
+            collisionToken.AuthorTransform = attachTo;
             collisionToken.Radius = loadRadius;
             collisionToken.UpdatedMesh += (sender, mesh) => { _UpdateColliderMesh = true; };
 

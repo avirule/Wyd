@@ -2,7 +2,7 @@
 
 using System;
 using System.Collections.Generic;
-using System.Linq;
+using Controllers.Game;
 using Controllers.World;
 using UnityEngine;
 
@@ -12,16 +12,12 @@ namespace Game
 {
     public class CollisionToken : MonoBehaviour
     {
-        private static readonly Vector3 PivotOffset = new Vector3(0.5f, 0.5f, 0.5f);
-        private static readonly ObjectCache<GameObject> CubeCache = new ObjectCache<GameObject>(DeactivateCube);
-
         private Transform _SelfTransform;
-        private Dictionary<Vector3, GameObject> _CubeColliders;
-        private Queue<Vector3> _DeactivationQueue;
+        private List<Vector3> _Vertices;
+        private List<int> _Triangles;
         private bool _ScheduledRecalculation;
 
-        public GameObject CubeObject;
-        public Transform AttachedTransform;
+        public Transform AuthorTransform;
         private int _Radius;
 
         public Mesh Mesh { get; private set; }
@@ -48,32 +44,27 @@ namespace Game
         private void Awake()
         {
             _SelfTransform = transform;
-            _CubeColliders = new Dictionary<Vector3, GameObject>();
-            _DeactivationQueue = new Queue<Vector3>();
+            _Vertices = new List<Vector3>();
+            _Triangles = new List<int>();
 
-            AttachedTransform = _SelfTransform.parent;
-            _SelfTransform.position = AttachedTransform.position.Floor();
-            RecalculateBoundingBox();
-            Recalculate();
+            AuthorTransform = _SelfTransform.parent;
         }
 
         private void Update()
         {
-            ProcessDeactivationQueue();
-
-            if (AttachedTransform == default)
+            if (AuthorTransform == default)
             {
                 return;
             }
 
-            Vector3 difference = (_SelfTransform.position - AttachedTransform.position).Abs();
+            Vector3 difference = (_SelfTransform.position - AuthorTransform.position).Abs();
 
-            if (!Mathv.AnyGreaterThanVector3(difference, Vector3.one) && !_ScheduledRecalculation)
+            if (!Mathv.GreaterThanVector3(difference, Vector3.one) && !_ScheduledRecalculation)
             {
                 return;
             }
 
-            _SelfTransform.position = AttachedTransform.position.Floor();
+            _SelfTransform.position = AuthorTransform.position.Floor();
 
             Recalculate();
         }
@@ -83,92 +74,146 @@ namespace Game
             Destroy(Mesh);
         }
 
-        private static GameObject DeactivateCube(GameObject cube)
-        {
-            cube.SetActive(false);
-            return cube;
-        }
-
         private void Recalculate()
         {
             RecalculateBoundingBox();
-            BuildCubeTerrainMirror();
-            QueueOutOfRangeCubes();
+            CalculateLocalMeshData();
+            ApplyMeshData();
 
-            // todo use meshing to handle special block shapes
-            //UpdatedMesh?.Invoke(this, Mesh);
+            UpdatedMesh?.Invoke(this, Mesh);
             _ScheduledRecalculation = false;
         }
 
-        private GameObject GetNewCube(Vector3 position)
+        private void CalculateLocalMeshData()
         {
-            // todo add support for special bounds
+            _Vertices.Clear();
+            _Triangles.Clear();
 
-            GameObject cube = CubeCache.RetrieveItem();
-
-            if (cube == default)
-            {
-                cube = Instantiate(CubeObject);
-            }
-
-            Transform cubeTransform = cube.transform;
-
-            cubeTransform.parent = _SelfTransform;
-            cubeTransform.position = position;
-
-            return cube;
-        }
-
-        private void BuildCubeTerrainMirror()
-        {
             for (int x = -Radius; x < (Radius + 1); x++)
             {
                 for (int y = -Radius; y < (Radius + 1); y++)
                 {
                     for (int z = -Radius; z < (Radius + 1); z++)
                     {
-                        Vector3 localPosition = new Vector3(x, y, z);
-                        Vector3 globalPosition = _SelfTransform.position + localPosition;
+                        Vector3 globalPosition = _SelfTransform.position + new Vector3(x, y, z);
 
-                        bool cubeExistsAtPosition = _CubeColliders.ContainsKey(globalPosition);
-
-                        if (cubeExistsAtPosition || !WorldController.Current.GetBlockAt(globalPosition).HasAnyFace())
+                        if (WorldController.Current.GetBlockAt(globalPosition).Id == BlockController.BLOCK_EMPTY_ID)
                         {
-                            if (cubeExistsAtPosition)
-                            {
-                                _DeactivationQueue.Enqueue(globalPosition);
-                            }
-
                             continue;
                         }
 
-                        GameObject cube = GetNewCube(globalPosition + PivotOffset);
+                        if (WorldController.Current.GetBlockAt(globalPosition + Vector3.forward).Transparent)
+                        {
+                            _Triangles.Add(_Vertices.Count + 0);
+                            _Triangles.Add(_Vertices.Count + 2);
+                            _Triangles.Add(_Vertices.Count + 1);
+                            _Triangles.Add(_Vertices.Count + 2);
+                            _Triangles.Add(_Vertices.Count + 3);
+                            _Triangles.Add(_Vertices.Count + 1);
 
-                        _CubeColliders.Add(globalPosition, cube);
+                            _Vertices.Add(new Vector3(x, y, z + 1));
+                            _Vertices.Add(new Vector3(x, y + 1, z + 1));
+                            _Vertices.Add(new Vector3(x + 1, y, z + 1));
+                            _Vertices.Add(new Vector3(x + 1, y + 1, z + 1));
+                        }
+
+                        if (WorldController.Current.GetBlockAt(globalPosition + Vector3.right).Transparent)
+                        {
+                            _Triangles.Add(_Vertices.Count + 0);
+                            _Triangles.Add(_Vertices.Count + 2);
+                            _Triangles.Add(_Vertices.Count + 1);
+                            _Triangles.Add(_Vertices.Count + 2);
+                            _Triangles.Add(_Vertices.Count + 3);
+                            _Triangles.Add(_Vertices.Count + 1);
+
+                            _Vertices.Add(new Vector3(x + 1, y, z));
+                            _Vertices.Add(new Vector3(x + 1, y, z + 1));
+                            _Vertices.Add(new Vector3(x + 1, y + 1, z));
+                            _Vertices.Add(new Vector3(x + 1, y + 1, z + 1));
+                        }
+
+                        if (WorldController.Current.GetBlockAt(globalPosition + Vector3.back).Transparent)
+                        {
+                            _Triangles.Add(_Vertices.Count + 0);
+                            _Triangles.Add(_Vertices.Count + 2);
+                            _Triangles.Add(_Vertices.Count + 1);
+                            _Triangles.Add(_Vertices.Count + 2);
+                            _Triangles.Add(_Vertices.Count + 3);
+                            _Triangles.Add(_Vertices.Count + 1);
+
+                            _Vertices.Add(new Vector3(x, y, z));
+                            _Vertices.Add(new Vector3(x + 1, y, z));
+                            _Vertices.Add(new Vector3(x, y + 1, z));
+                            _Vertices.Add(new Vector3(x + 1, y + 1, z));
+                        }
+
+                        if (WorldController.Current.GetBlockAt(globalPosition + Vector3.left).Transparent)
+                        {
+                            _Triangles.Add(_Vertices.Count + 0);
+                            _Triangles.Add(_Vertices.Count + 2);
+                            _Triangles.Add(_Vertices.Count + 1);
+                            _Triangles.Add(_Vertices.Count + 2);
+                            _Triangles.Add(_Vertices.Count + 3);
+                            _Triangles.Add(_Vertices.Count + 1);
+
+                            _Vertices.Add(new Vector3(x, y, z));
+                            _Vertices.Add(new Vector3(x, y + 1, z));
+                            _Vertices.Add(new Vector3(x, y, z + 1));
+                            _Vertices.Add(new Vector3(x, y + 1, z + 1));
+                        }
+
+                        if (WorldController.Current.GetBlockAt(globalPosition + Vector3.up).Transparent)
+                        {
+                            _Triangles.Add(_Vertices.Count + 0);
+                            _Triangles.Add(_Vertices.Count + 2);
+                            _Triangles.Add(_Vertices.Count + 1);
+                            _Triangles.Add(_Vertices.Count + 2);
+                            _Triangles.Add(_Vertices.Count + 3);
+                            _Triangles.Add(_Vertices.Count + 1);
+
+                            _Vertices.Add(new Vector3(x, y + 1, z));
+                            _Vertices.Add(new Vector3(x + 1, y + 1, z));
+                            _Vertices.Add(new Vector3(x, y + 1, z + 1));
+                            _Vertices.Add(new Vector3(x + 1, y + 1, z + 1));
+                        }
+
+                        if (WorldController.Current.GetBlockAt(globalPosition + Vector3.down).Transparent)
+                        {
+                            _Triangles.Add(_Vertices.Count + 0);
+                            _Triangles.Add(_Vertices.Count + 2);
+                            _Triangles.Add(_Vertices.Count + 1);
+                            _Triangles.Add(_Vertices.Count + 2);
+                            _Triangles.Add(_Vertices.Count + 3);
+                            _Triangles.Add(_Vertices.Count + 1);
+
+                            _Vertices.Add(new Vector3(x, y, z));
+                            _Vertices.Add(new Vector3(x, y, z + 1));
+                            _Vertices.Add(new Vector3(x + 1, y, z));
+                            _Vertices.Add(new Vector3(x + 1, y, z + 1));
+                        }
                     }
                 }
             }
         }
 
-        private void QueueOutOfRangeCubes()
+        private void ApplyMeshData()
         {
-            foreach ((Vector3 position, GameObject _) in _CubeColliders.Where(kvp => BoundingBox.Contains(kvp.Key)))
+            if (Mesh == default)
             {
-                _DeactivationQueue.Enqueue(position);
+                Mesh = new Mesh();
             }
+            else
+            {
+                Mesh.Clear();
+            }
+
+            Mesh.SetVertices(_Vertices);
+            Mesh.SetTriangles(_Triangles, 0);
+
+            Mesh.RecalculateNormals();
+            Mesh.RecalculateTangents();
         }
 
-        private void ProcessDeactivationQueue()
-        {
-            while (_DeactivationQueue.Count > 0)
-            {
-                Vector3 position = _DeactivationQueue.Dequeue();
-
-                GameObject cube = _CubeColliders[position];
-                _CubeColliders.Remove(position);
-                CubeCache.CacheItem(ref cube);
-            }
-        }
 
         private void RecalculateBoundingBox()
         {

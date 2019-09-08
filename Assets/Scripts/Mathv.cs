@@ -22,26 +22,16 @@ public static class Mathv
         return new Vector3Int((int) a.x, (int) a.y, (int) a.z);
     }
 
-    public static bool AnyGreaterThanVector3(Vector3 a, Vector3 b)
+    public static bool GreaterThanVector3(Vector3 a, Vector3 b)
     {
         return (a.x > b.x) || (a.y > b.y) || (a.z > b.z);
     }
 
-    public static bool AnyLessThanVector3(Vector3 a, Vector3 b)
+    public static bool LessThanVector3(Vector3 a, Vector3 b)
     {
         return (a.x < b.x) || (a.y < b.y) || (a.z < b.z);
     }
 
-    public static bool AllLessThanVector3(Vector3 a, Vector3 b)
-    {
-        return (a.x < b.x) && (a.y < b.y) && (a.z < b.z);
-    }
-
-    public static bool AllLessThanOrEqual(Vector3 a, Vector3 b)
-    {
-        return (a.x <= b.x) && (a.y <= b.y) && (a.z <= b.z);
-    }
-    
     public static bool ContainsVector3(Bounds bounds, Vector3 point)
     {
         return (point.x >= bounds.min.x) &&
@@ -118,6 +108,16 @@ public static class Mathv
     public static Vector3 Trunc(this Vector3 a)
     {
         return new Vector3((float) Math.Truncate(a.x), (float) Math.Truncate(a.x), (float) Math.Truncate(a.x));
+    }
+
+    public static bool IsLessThan(this Vector3 a, Vector3 b)
+    {
+        return (a.x < b.x) && (a.y < b.y) && (a.z < b.z);
+    }
+
+    public static bool LessThanOrEqual(this Vector3 a, Vector3 b)
+    {
+        return (a.x <= b.x) && (a.y <= b.y) && (a.z <= b.z);
     }
 
     /// <summary>
