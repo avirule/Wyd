@@ -9,7 +9,8 @@ namespace Noise.Perlin
 {
     public static class PerlinNoise
     {
-        public static float[][] GenerateMap(ref float[][] noiseMap, Vector3Int offset,
+        public static float[][] GenerateMap(
+            ref float[][] noiseMap, Vector3Int offset,
             WorldGenerationSettings generationSettings)
         {
             return GenerateMap(ref noiseMap, offset, generationSettings.Seed, generationSettings.Octaves,
@@ -34,7 +35,8 @@ namespace Noise.Perlin
         /// <param name="lacunarity">Value grater than 1</param>
         /// <param name="normalize"></param>
         /// <returns>2D jagged array representing XZ noise values.</returns>
-        public static float[][] GenerateMap(ref float[][] noiseMap, Vector3 offset, WorldSeed seed, int octaves,
+        public static float[][] GenerateMap(
+            ref float[][] noiseMap, Vector3 offset, WorldSeed seed, int octaves,
             float scale, float persistence, float lacunarity, bool normalize = false)
         {
             if (scale <= 0)

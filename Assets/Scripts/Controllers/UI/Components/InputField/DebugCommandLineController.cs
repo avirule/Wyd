@@ -1,9 +1,7 @@
 #region
 
-using System;
 using Controllers.Game;
 using Controllers.World;
-using Game.World.Chunks;
 using Logging;
 using NLog;
 using TMPro;
@@ -59,7 +57,7 @@ namespace Controllers.UI.Components.InputField
             {
                 args[i] = args[i].ToLower();
             }
-            
+
             switch (args[0])
             {
                 case "get":
@@ -67,9 +65,9 @@ namespace Controllers.UI.Components.InputField
                     {
                         if (args.Length >= 6)
                         {
-                            if (!int.TryParse(args[3], out int x) ||
-                                !int.TryParse(args[4], out int y) ||
-                                !int.TryParse(args[5], out int z))
+                            if (!int.TryParse(args[3], out int x)
+                                || !int.TryParse(args[4], out int y)
+                                || !int.TryParse(args[5], out int z))
                             {
                                 return;
                             }
@@ -87,7 +85,7 @@ namespace Controllers.UI.Components.InputField
 
                     break;
                 default:
-                    EventLog.Logger.Log(LogLevel.Error, $"Command invalid.");
+                    EventLog.Logger.Log(LogLevel.Error, "Command invalid.");
                     break;
             }
         }

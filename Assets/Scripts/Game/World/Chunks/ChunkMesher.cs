@@ -37,7 +37,8 @@ namespace Game.World.Chunks
         ///     Initialises a new instance of the <see cref="ChunkMeshingThreadedItem" /> class.
         /// </summary>
         /// <seealso cref="ChunkBuildingThreadedItem" />
-        public ChunkMesher(Vector3 position, Block[] blocks, bool aggressiveFaceMerging,
+        public ChunkMesher(
+            Vector3 position, Block[] blocks, bool aggressiveFaceMerging,
             CancellationToken abortToken) : this()
         {
             AbortToken = abortToken;
@@ -68,8 +69,7 @@ namespace Game.World.Chunks
         /// <returns>Processed <see cref="UnityEngine.Mesh" />.</returns>
         public void SetMesh(ref Mesh mesh)
         {
-            if ((_Vertices.Count == 0) ||
-                (_Triangles.Count == 0))
+            if ((_Vertices.Count == 0) || (_Triangles.Count == 0))
             {
                 return;
             }
@@ -114,10 +114,10 @@ namespace Game.World.Chunks
             Vector3 localPosition = new Vector3(x, y, z);
             Vector3 globalPosition = Position + localPosition;
 
-            if ((((z == (Chunk.Size.z - 1)) &&
-                  WorldController.Current.GetBlockAt(globalPosition + Vector3.forward).Transparent) ||
-                 ((z < (Chunk.Size.z - 1)) && Blocks[index + Chunk.Size.x].Transparent)) &&
-                !Blocks[index].HasFace(Direction.North))
+            if ((((z == (Chunk.Size.z - 1))
+                  && WorldController.Current.GetBlockAt(globalPosition + Vector3.forward).Transparent)
+                 || ((z < (Chunk.Size.z - 1)) && Blocks[index + Chunk.Size.x].Transparent))
+                && !Blocks[index].HasFace(Direction.North))
             {
                 Blocks[index].SetFace(Direction.North, true);
                 AddTriangles(Direction.North);
@@ -167,10 +167,10 @@ namespace Game.World.Chunks
                 }
             }
 
-            if ((((x == (Chunk.Size.x - 1)) &&
-                  WorldController.Current.GetBlockAt(globalPosition + Vector3.right).Transparent) ||
-                 ((x < (Chunk.Size.x - 1)) && Blocks[index + 1].Transparent)) &&
-                !Blocks[index].HasFace(Direction.East))
+            if ((((x == (Chunk.Size.x - 1))
+                  && WorldController.Current.GetBlockAt(globalPosition + Vector3.right).Transparent)
+                 || ((x < (Chunk.Size.x - 1)) && Blocks[index + 1].Transparent))
+                && !Blocks[index].HasFace(Direction.East))
             {
                 Blocks[index].SetFace(Direction.East, true);
                 AddTriangles(Direction.East);
@@ -219,9 +219,9 @@ namespace Game.World.Chunks
                 }
             }
 
-            if ((((z == 0) && WorldController.Current.GetBlockAt(globalPosition + Vector3.back).Transparent) ||
-                 ((z > 0) && Blocks[index - Chunk.Size.x].Transparent)) &&
-                !Blocks[index].HasFace(Direction.South))
+            if ((((z == 0) && WorldController.Current.GetBlockAt(globalPosition + Vector3.back).Transparent)
+                 || ((z > 0) && Blocks[index - Chunk.Size.x].Transparent))
+                && !Blocks[index].HasFace(Direction.South))
             {
                 Blocks[index].SetFace(Direction.South, true);
                 AddTriangles(Direction.South);
@@ -269,9 +269,9 @@ namespace Game.World.Chunks
                 }
             }
 
-            if ((((x == 0) && WorldController.Current.GetBlockAt(globalPosition + Vector3.left).Transparent) ||
-                 ((x > 0) && Blocks[index - 1].Transparent)) &&
-                !Blocks[index].HasFace(Direction.West))
+            if ((((x == 0) && WorldController.Current.GetBlockAt(globalPosition + Vector3.left).Transparent)
+                 || ((x > 0) && Blocks[index - 1].Transparent))
+                && !Blocks[index].HasFace(Direction.West))
             {
                 Blocks[index].SetFace(Direction.West, true);
                 AddTriangles(Direction.West);
@@ -319,10 +319,10 @@ namespace Game.World.Chunks
                 }
             }
 
-            if ((((y == (Chunk.Size.y - 1)) &&
-                  WorldController.Current.GetBlockAt(globalPosition + Vector3.up).Transparent) ||
-                 ((y < (Chunk.Size.y - 1)) && Blocks[index + (Chunk.Size.x * Chunk.Size.z)].Transparent)) &&
-                !Blocks[index].HasFace(Direction.Up))
+            if ((((y == (Chunk.Size.y - 1))
+                  && WorldController.Current.GetBlockAt(globalPosition + Vector3.up).Transparent)
+                 || ((y < (Chunk.Size.y - 1)) && Blocks[index + (Chunk.Size.x * Chunk.Size.z)].Transparent))
+                && !Blocks[index].HasFace(Direction.Up))
             {
                 Blocks[index].SetFace(Direction.Up, true);
                 AddTriangles(Direction.Up);
@@ -371,8 +371,9 @@ namespace Game.World.Chunks
             }
 
             // ignore the very bottom face of the world to reduce verts/tris
-            if ((y > 0) && Blocks[index - (Chunk.Size.x * Chunk.Size.z)].Transparent &&
-                !Blocks[index].HasFace(Direction.Down))
+            if ((y > 0)
+                && Blocks[index - (Chunk.Size.x * Chunk.Size.z)].Transparent
+                && !Blocks[index].HasFace(Direction.Down))
             {
                 Blocks[index].SetFace(Direction.Down, true);
                 AddTriangles(Direction.Down);
@@ -452,7 +453,8 @@ namespace Game.World.Chunks
         /// <param name="traversalFactor"></param>
         /// <param name="limitingSliceValue"></param>
         /// <returns></returns>
-        private int GetTraversals(int index, Vector3 globalPosition, int slice, Direction faceDirection,
+        private int GetTraversals(
+            int index, Vector3 globalPosition, int slice, Direction faceDirection,
             Direction traversalDirection, int traversalFactor, int limitingSliceValue)
         {
             // 1 being the current block at `index`
@@ -470,11 +472,13 @@ namespace Game.World.Chunks
             int traversalIndex = index + (traversals * traversalFactor);
 
             while ( // Set traversalIndex and ensure it is within the chunk's context
-                ((slice + traversals) < limitingSliceValue) &&
+                ((slice + traversals) < limitingSliceValue)
+                &&
                 // This check removes the need to check if the adjacent block is transparent,
                 // as our current block will never be transparent
-                (Blocks[index].Id == Blocks[traversalIndex].Id) &&
-                !Blocks[traversalIndex].HasFace(faceDirection) &&
+                (Blocks[index].Id == Blocks[traversalIndex].Id)
+                && !Blocks[traversalIndex].HasFace(faceDirection)
+                &&
                 // ensure the block to the north of our current block is transparent
                 WorldController.Current.GetBlockAt(
                         globalPosition + (traversals * traversalDirection.AsVector3()) + faceDirection.AsVector3())

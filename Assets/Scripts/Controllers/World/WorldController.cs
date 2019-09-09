@@ -275,7 +275,7 @@ namespace Controllers.World
         {
             return _Chunks.TryGetValue(position, out chunk);
         }
-        
+
         public Block GetBlockAt(Vector3 position)
         {
             Vector3 chunkPosition = GetChunkOriginFromPosition(position);
@@ -295,8 +295,7 @@ namespace Controllers.World
         {
             Vector3 chunkPosition = GetChunkOriginFromPosition(position);
 
-            if (!TryGetChunkAt(chunkPosition, out Chunk chunk) ||
-                !chunk.TryGetBlockAt(position, out block))
+            if (!TryGetChunkAt(chunkPosition, out Chunk chunk) || !chunk.TryGetBlockAt(position, out block))
             {
                 block = default;
                 return false;
@@ -304,7 +303,7 @@ namespace Controllers.World
 
             return true;
         }
-        
+
         public bool BlockExistsAt(Vector3 position)
         {
             Vector3 chunkPosition = GetChunkOriginFromPosition(position);

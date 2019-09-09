@@ -39,8 +39,8 @@ namespace Controllers.UI.Components.Text
 
             (long totalReservedMemory, long totalAllocatedMemory) = GetUsedMemory();
 
-            if ((totalReservedMemory != _LastReservedMemoryTotal) ||
-                (totalAllocatedMemory != _LastAllocatedMemoryTotal))
+            if ((totalReservedMemory != _LastReservedMemoryTotal)
+                || (totalAllocatedMemory != _LastAllocatedMemoryTotal))
             {
                 UpdateUsedMemoryText(totalReservedMemory, totalAllocatedMemory);
             }

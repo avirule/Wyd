@@ -18,7 +18,8 @@ namespace Game
 
         public int Size => _InternalCache.Count;
 
-        public ObjectCache(Func<T, T> preCachingOperation = default, Action<T> itemCulledOperation = default,
+        public ObjectCache(
+            Func<T, T> preCachingOperation = default, Action<T> itemCulledOperation = default,
             bool createNewIfEmpty = false, int maximumSize = -1)
         {
             _InternalCache = new LinkedList<T>();

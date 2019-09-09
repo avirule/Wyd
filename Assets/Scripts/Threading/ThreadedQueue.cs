@@ -48,8 +48,7 @@ namespace Threading
             get => _WaitTimeout;
             set
             {
-                if ((value <= 0) ||
-                    (_WaitTimeout == value))
+                if ((value <= 0) || (_WaitTimeout == value))
                 {
                     return;
                 }
@@ -73,8 +72,7 @@ namespace Threading
         {
             // todo add variable that decides whether to use single-threaded or multi-threaded execution
 
-            if ((threadSize <= 0) ||
-                (threadSize > 15))
+            if ((threadSize <= 0) || (threadSize > 15))
             {
                 threadSize = 4;
             }

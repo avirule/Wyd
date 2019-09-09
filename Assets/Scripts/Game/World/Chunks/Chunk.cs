@@ -254,8 +254,11 @@ namespace Game.World.Chunks
 
         private void CheckStateAndStartMeshing()
         {
-            if (!Built || Meshing || (!UpdateMesh && Meshed) || !Visible ||
-                !WorldController.Current.AreNeighborsBuilt(Position))
+            if (!Built
+                || Meshing
+                || (!UpdateMesh && Meshed)
+                || !Visible
+                || !WorldController.Current.AreNeighborsBuilt(Position))
             {
                 return;
             }
@@ -338,9 +341,9 @@ namespace Game.World.Chunks
 
             if (!Built)
             {
-                throw new Exception($"Requested block present in chunk that hasn't finished building.'");
+                throw new Exception("Requested block present in chunk that hasn't finished building.'");
             }
-            
+
             if ((localPosition1d < 0) || (_Blocks.Length <= localPosition1d))
             {
                 throw new ArgumentOutOfRangeException(nameof(position), position,
@@ -354,7 +357,7 @@ namespace Game.World.Chunks
         {
             int localPosition1d = ConvertGlobalPositionToLocal1D(position);
 
-            if (localPosition1d < 0 || _Blocks.Length <= localPosition1d)
+            if ((localPosition1d < 0) || (_Blocks.Length <= localPosition1d))
             {
                 block = default;
                 return false;
@@ -398,8 +401,9 @@ namespace Game.World.Chunks
 
         private static bool IsWithinLoaderRange(Vector3 difference)
         {
-            return difference.LessThanOrEqual(Size * (WorldController.Current.WorldGenerationSettings.Radius +
-                                                      OptionsController.Current.PreLoadChunkDistance));
+            return difference.LessThanOrEqual(Size
+                                              * (WorldController.Current.WorldGenerationSettings.Radius
+                                                 + OptionsController.Current.PreLoadChunkDistance));
         }
 
         private static bool IsWithinRenderDistance(Vector3 difference)
@@ -409,8 +413,8 @@ namespace Game.World.Chunks
 
         private static bool IsWithinDrawShadowsDistance(Vector3 difference)
         {
-            return (OptionsController.Current.ShadowDistance == 0) ||
-                   difference.LessThanOrEqual(Size * OptionsController.Current.ShadowDistance);
+            return (OptionsController.Current.ShadowDistance == 0)
+                   || difference.LessThanOrEqual(Size * OptionsController.Current.ShadowDistance);
         }
 
         #endregion

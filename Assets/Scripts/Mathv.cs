@@ -34,18 +34,18 @@ public static class Mathv
 
     public static bool ContainsVector3(Bounds bounds, Vector3 point)
     {
-        return (point.x >= bounds.min.x) &&
-               (point.z >= bounds.min.z) &&
-               (point.x <= bounds.max.x) &&
-               (point.z <= bounds.max.z);
+        return (point.x >= bounds.min.x)
+               && (point.z >= bounds.min.z)
+               && (point.x <= bounds.max.x)
+               && (point.z <= bounds.max.z);
     }
 
     public static bool ContainsVector3Int(BoundsInt bounds, Vector3Int point)
     {
-        return (point.x >= bounds.min.x) &&
-               (point.z >= bounds.min.z) &&
-               (point.x <= bounds.max.x) &&
-               (point.z <= bounds.max.z);
+        return (point.x >= bounds.min.x)
+               && (point.z >= bounds.min.z)
+               && (point.x <= bounds.max.x)
+               && (point.z <= bounds.max.z);
     }
 
     /// <summary>
@@ -134,7 +134,12 @@ public static class Mathv
 
     public static float[] ToArray(this Vector3 a)
     {
-        return new[] {a.x, a.y, a.z};
+        return new[]
+        {
+            a.x,
+            a.y,
+            a.z
+        };
     }
 
     #endregion
@@ -232,7 +237,12 @@ public static class Mathv
 
     public static int[] ToArray(this Vector3Int a)
     {
-        return new[] {a.x, a.y, a.z};
+        return new[]
+        {
+            a.x,
+            a.y,
+            a.z
+        };
     }
 
     #endregion

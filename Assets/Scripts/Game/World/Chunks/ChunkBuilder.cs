@@ -1,10 +1,8 @@
 #region
 
-using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
-using Collections;
 using Controllers.Game;
 using Controllers.World;
 using Game.World.Blocks;
@@ -20,7 +18,11 @@ namespace Game.World.Chunks
 {
     public class ChunkBuilder
     {
-        private static readonly string[] BlockNamesToIgnoreWhenGenerating = {"bedrock"};
+        private static readonly string[] BlockNamesToIgnoreWhenGenerating =
+        {
+            "bedrock"
+        };
+
         private static FastNoise _noiseFunction;
 
         public CancellationToken AbortToken;
@@ -66,7 +68,7 @@ namespace Game.World.Chunks
 
             // get list of block ids that should be ignored on second generation pass
             ushort[] blockIdsToIgnore = GetBlockIdsToIgnoreFromCachedNames().ToArray();
-            
+
             for (int index = 0; (index < Blocks.Length) && !AbortToken.IsCancellationRequested; index++)
             {
                 GenerateGrass(index, blockIdsToIgnore);
@@ -95,7 +97,8 @@ namespace Game.World.Chunks
                 }
                 else
                 {
-                    if (noiseValues[index] >= 0.01f && BlockController.Current.TryGetBlockId("stone", out ushort blockId))
+                    if ((noiseValues[index] >= 0.01f)
+                        && BlockController.Current.TryGetBlockId("stone", out ushort blockId))
                     {
                         Blocks[index].Initialise(blockId);
                     }
@@ -113,7 +116,7 @@ namespace Game.World.Chunks
                 }
             }
         }
-        
+
         #region DEBUG GEN MODES
 
 #if UNITY_EDITOR
@@ -220,17 +223,19 @@ namespace Game.World.Chunks
         {
             (int x, int y, int z) = Mathv.GetVector3IntIndex(index, Chunk.Size);
 
-            if ((y < 4) && (y <= Rand.Next(0, 4)) && BlockController.Current.TryGetBlockId("bedrock", out ushort bedrockBlockId))
+            if ((y < 4)
+                && (y <= Rand.Next(0, 4))
+                && BlockController.Current.TryGetBlockId("bedrock", out ushort bedrockBlockId))
             {
                 Blocks[index].Initialise(bedrockBlockId);
             }
             else
             {
                 float noiseValue = _noiseFunction.GetSimplex(Position.x + x, Position.y + y, Position.z + z);
-                noiseValue +=  3f * (1f - Mathf.InverseLerp(0f, Chunk.Size.y, y));
+                noiseValue += 3f * (1f - Mathf.InverseLerp(0f, Chunk.Size.y, y));
                 noiseValue /= (y + 1f) * 1.5f;
 
-                if (noiseValue >= 0.01f && BlockController.Current.TryGetBlockId("stone", out ushort stoneBlockId))
+                if ((noiseValue >= 0.01f) && BlockController.Current.TryGetBlockId("stone", out ushort stoneBlockId))
                 {
                     Blocks[index].Initialise(stoneBlockId);
                 }
@@ -253,15 +258,16 @@ namespace Game.World.Chunks
             {
                 return;
             }
-            
+
             Blocks[index].Initialise(grassBlockId);
 
             for (int i = 1; i < 4; i++)
             {
                 int currentIndex = index - (i * Chunk.Size.x * Chunk.Size.z);
 
-                if ((currentIndex < 0) ||Blocks[currentIndex].Transparent ||
-                    !BlockController.Current.TryGetBlockId("dirt", out ushort dirtBlockId))
+                if ((currentIndex < 0)
+                    || Blocks[currentIndex].Transparent
+                    || !BlockController.Current.TryGetBlockId("dirt", out ushort dirtBlockId))
                 {
                     continue;
                 }

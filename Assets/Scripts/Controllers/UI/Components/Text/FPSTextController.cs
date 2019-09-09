@@ -42,8 +42,7 @@ namespace Controllers.UI.Components.Text
 
         private void LateUpdate()
         {
-            if ((_DeltaTimes.Count == 0) ||
-                ((_SkippedFrames % MinimumSkipFrames) != 0))
+            if ((_DeltaTimes.Count == 0) || ((_SkippedFrames % MinimumSkipFrames) != 0))
             {
                 return;
             }

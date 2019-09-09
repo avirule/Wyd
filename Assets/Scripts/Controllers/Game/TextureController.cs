@@ -35,7 +35,7 @@ namespace Controllers.Game
                 sprites.Length, TextureFormat.RGBA32, true, false)
             {
                 filterMode = FilterMode.Point,
-                wrapMode = TextureWrapMode.Repeat 
+                wrapMode = TextureWrapMode.Repeat
             };
 
             for (int i = 0; i < TerrainTexture.depth; i++)

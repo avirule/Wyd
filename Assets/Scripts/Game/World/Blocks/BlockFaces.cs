@@ -66,12 +66,24 @@ namespace Game.World.Blocks
             {
                 Dictionary<Direction, Vector3[]> faceVertices = new Dictionary<Direction, Vector3[]>
                 {
-                    {Direction.North, North},
-                    {Direction.East, East},
-                    {Direction.South, South},
-                    {Direction.West, West},
-                    {Direction.Up, Up},
-                    {Direction.Down, Down}
+                    {
+                        Direction.North, North
+                    },
+                    {
+                        Direction.East, East
+                    },
+                    {
+                        Direction.South, South
+                    },
+                    {
+                        Direction.West, West
+                    },
+                    {
+                        Direction.Up, Up
+                    },
+                    {
+                        Direction.Down, Down
+                    }
                 };
 
                 FaceVertices = new ReadOnlyDictionary<Direction, Vector3[]>(faceVertices);
@@ -146,12 +158,24 @@ namespace Game.World.Blocks
             {
                 Dictionary<Direction, int[]> faceTriangles = new Dictionary<Direction, int[]>
                 {
-                    {Direction.North, North},
-                    {Direction.East, East},
-                    {Direction.South, South},
-                    {Direction.West, West},
-                    {Direction.Up, Up},
-                    {Direction.Down, Down}
+                    {
+                        Direction.North, North
+                    },
+                    {
+                        Direction.East, East
+                    },
+                    {
+                        Direction.South, South
+                    },
+                    {
+                        Direction.West, West
+                    },
+                    {
+                        Direction.Up, Up
+                    },
+                    {
+                        Direction.Down, Down
+                    }
                 };
 
                 FaceTriangles = new ReadOnlyDictionary<Direction, int[]>(faceTriangles);

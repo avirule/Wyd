@@ -27,7 +27,8 @@ namespace Controllers.Game
             Blocks = new Dictionary<ushort, IBlockRule>();
         }
 
-        public ushort RegisterBlockRules(string blockName, bool isTransparent,
+        public ushort RegisterBlockRules(
+            string blockName, bool isTransparent,
             RuleEvaluation<Vector3, Direction> uvsRule = default)
         {
             ushort blockId = 0;
@@ -59,7 +60,8 @@ namespace Controllers.Game
             return blockId;
         }
 
-        public bool GetBlockSpriteUVs(ushort blockId, Vector3 position, Direction direction, Vector3 size2d,
+        public bool GetBlockSpriteUVs(
+            ushort blockId, Vector3 position, Direction direction, Vector3 size2d,
             out Vector3[] uvs)
         {
             uvs = null;

@@ -44,7 +44,6 @@ namespace Controllers.Game
             // Chunking
             public const bool PRE_INITIALIZE_CHUNK_CACHE = true;
             public const int MAXIMUM_CHUNK_CACHE_SIZE = 20;
-            public const CacheCullingAggression CHUNK_CACHE_CULLING_AGGRESSION = CacheCullingAggression.Passive;
             public const int MAXIMUM_CHUNK_LOAD_TIME_BUFFER_SIZE = 60;
             public const int PRE_LOAD_CHUNK_DISTANCE = 2;
         }
@@ -64,7 +63,6 @@ namespace Controllers.Game
         // Chunking
         public bool PreInitializeChunkCache;
         public int MaximumChunkCacheSize;
-        public CacheCullingAggression ChunkCacheCullingAggression;
         public int MaximumChunkLoadTimeBufferSize;
         public int PreLoadChunkDistance;
 
@@ -103,9 +101,9 @@ namespace Controllers.Game
 
 
             // Graphics
-            if (!GetSetting("Graphics", nameof(MaximumInternalFrames), out MaximumInternalFrames) ||
-                (MaximumInternalFrames < 0) ||
-                (MaximumInternalFrames > 300))
+            if (!GetSetting("Graphics", nameof(MaximumInternalFrames), out MaximumInternalFrames)
+                || (MaximumInternalFrames < 0)
+                || (MaximumInternalFrames > 300))
             {
                 SettingLoadError(nameof(MaximumInternalFrames), Defaults.MAXIMUM_INTERNAL_FRAMES);
                 MaximumInternalFrames = Defaults.MAXIMUM_INTERNAL_FRAMES;
@@ -113,17 +111,15 @@ namespace Controllers.Game
 
             MaximumInternalFrameTime = TimeSpan.FromSeconds(1f / MaximumInternalFrames);
 
-            if (!GetSetting("Graphics", nameof(MaximumFrameRateBufferSize), out MaximumFrameRateBufferSize) ||
-                (MaximumFrameRateBufferSize < 0) ||
-                (MaximumFrameRateBufferSize > 120))
+            if (!GetSetting("Graphics", nameof(MaximumFrameRateBufferSize), out MaximumFrameRateBufferSize)
+                || (MaximumFrameRateBufferSize < 0)
+                || (MaximumFrameRateBufferSize > 120))
             {
                 SettingLoadError(nameof(MaximumFrameRateBufferSize), Defaults.MAXIMUM_FRAME_RATE_BUFFER_SIZE);
                 MaximumFrameRateBufferSize = Defaults.MAXIMUM_FRAME_RATE_BUFFER_SIZE;
             }
 
-            if (!GetSetting("Graphics", nameof(VSyncLevel), out int vSyncLevel) ||
-                (vSyncLevel < 0) ||
-                (vSyncLevel > 4))
+            if (!GetSetting("Graphics", nameof(VSyncLevel), out int vSyncLevel) || (vSyncLevel < 0) || (vSyncLevel > 4))
             {
                 SettingLoadError(nameof(vSyncLevel), Defaults.VSYNC_LEVEL);
                 vSyncLevel = Defaults.VSYNC_LEVEL;
@@ -131,9 +127,9 @@ namespace Controllers.Game
 
             VSyncLevel = vSyncLevel;
 
-            if (!GetSetting("Graphics", nameof(ShadowDistance), out ShadowDistance) ||
-                (ShadowDistance < 0) ||
-                (ShadowDistance > 25))
+            if (!GetSetting("Graphics", nameof(ShadowDistance), out ShadowDistance)
+                || (ShadowDistance < 0)
+                || (ShadowDistance > 25))
             {
                 SettingLoadError(nameof(ShadowDistance), Defaults.SHADOW_DISTANCE);
                 ShadowDistance = Defaults.SHADOW_DISTANCE;
@@ -147,30 +143,24 @@ namespace Controllers.Game
                 PreInitializeChunkCache = Defaults.PRE_INITIALIZE_CHUNK_CACHE;
             }
 
-            if (!GetSetting("Chunking", nameof(MaximumChunkCacheSize), out MaximumChunkCacheSize) ||
-                (MaximumChunkCacheSize < -1) ||
-                (MaximumChunkCacheSize > 625))
+            if (!GetSetting("Chunking", nameof(MaximumChunkCacheSize), out MaximumChunkCacheSize)
+                || (MaximumChunkCacheSize < -1)
+                || (MaximumChunkCacheSize > 625))
             {
                 SettingLoadError(nameof(MaximumChunkCacheSize), Defaults.MAXIMUM_CHUNK_CACHE_SIZE);
                 MaximumChunkCacheSize = Defaults.MAXIMUM_CHUNK_CACHE_SIZE;
             }
 
-            if (!GetSetting("Chunking", nameof(ChunkCacheCullingAggression), out ChunkCacheCullingAggression))
-            {
-                SettingLoadError(nameof(ChunkCacheCullingAggression), Defaults.CHUNK_CACHE_CULLING_AGGRESSION);
-                ChunkCacheCullingAggression = Defaults.CHUNK_CACHE_CULLING_AGGRESSION;
-            }
-
-            if (!GetSetting("Chunking", nameof(MaximumChunkLoadTimeBufferSize), out MaximumChunkLoadTimeBufferSize) ||
-                (MaximumFrameRateBufferSize < 0) ||
-                (MaximumChunkLoadTimeBufferSize > 120))
+            if (!GetSetting("Chunking", nameof(MaximumChunkLoadTimeBufferSize), out MaximumChunkLoadTimeBufferSize)
+                || (MaximumFrameRateBufferSize < 0)
+                || (MaximumChunkLoadTimeBufferSize > 120))
             {
                 SettingLoadError(nameof(MaximumChunkLoadTimeBufferSize), Defaults.MAXIMUM_CHUNK_LOAD_TIME_BUFFER_SIZE);
                 MaximumChunkLoadTimeBufferSize = Defaults.MAXIMUM_CHUNK_LOAD_TIME_BUFFER_SIZE;
             }
 
-            if (!GetSetting("Chunking", nameof(PreLoadChunkDistance), out PreLoadChunkDistance) ||
-                (PreLoadChunkDistance < 0))
+            if (!GetSetting("Chunking", nameof(PreLoadChunkDistance), out PreLoadChunkDistance)
+                || (PreLoadChunkDistance < 0))
             {
                 SettingLoadError(nameof(PreLoadChunkDistance), Defaults.PRE_LOAD_CHUNK_DISTANCE);
                 PreLoadChunkDistance = Defaults.PRE_LOAD_CHUNK_DISTANCE;
@@ -231,13 +221,6 @@ namespace Controllers.Game
             _Configuration["Chunking"][nameof(MaximumChunkCacheSize)].Comment = "(-1 = unlimited)";
             _Configuration["Chunking"][nameof(MaximumChunkCacheSize)].IntValue =
                 Defaults.MAXIMUM_CHUNK_CACHE_SIZE;
-
-            _Configuration["Chunking"][nameof(ChunkCacheCullingAggression)].PreComment =
-                "Active culling keeps the total cache size below maximum, passive lets it grow until there's free frame time to cull it.";
-            _Configuration["Chunking"][nameof(ChunkCacheCullingAggression)].Comment =
-                "0 = Passive, 1 = Active";
-            _Configuration["Chunking"][nameof(ChunkCacheCullingAggression)].IntValue =
-                (int) Defaults.CHUNK_CACHE_CULLING_AGGRESSION;
 
             _Configuration["Chunking"][nameof(MaximumChunkLoadTimeBufferSize)].PreComment =
                 "Lower values give a more accurate frame-to-frame reading, with higher values giving more long-term accuracy.";

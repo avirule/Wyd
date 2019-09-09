@@ -27,8 +27,8 @@ namespace Controllers.UI.Components.Text
         {
             (double buildTime, double meshTime) = CalculateBuildAndMeshTimes();
 
-            if ((Math.Abs(buildTime - _LastBuildTime) > _TOLERANCE) ||
-                (Math.Abs(meshTime - _LastMeshTime) > _TOLERANCE))
+            if ((Math.Abs(buildTime - _LastBuildTime) > _TOLERANCE)
+                || (Math.Abs(meshTime - _LastMeshTime) > _TOLERANCE))
             {
                 UpdateChunkLoadTimeText(buildTime, meshTime);
             }
