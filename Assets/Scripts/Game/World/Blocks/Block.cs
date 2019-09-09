@@ -80,7 +80,7 @@ namespace Game.World.Blocks
 
         public void ClearFaces()
         {
-            Faces = 0;
+            Faces &= ~(sbyte)Direction.All;
         }
     }
 }

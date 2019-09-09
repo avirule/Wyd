@@ -51,6 +51,11 @@ namespace Game
             AuthorTransform = _SelfTransform.parent;
         }
 
+        private void Start()
+        {
+            WorldController.Current.ChunkChanged += OnChunkChangedInWorld;
+        }
+
         private void Update()
         {
             if (AuthorTransform == default)
@@ -78,14 +83,19 @@ namespace Game
         private void Recalculate()
         {
             RecalculateBoundingBox();
-            CalculateLocalMeshData();
+            
+            if (!TryCalculateLocalMeshData())
+            {
+                return;
+            }
+            
             ApplyMeshData();
 
             UpdatedMesh?.Invoke(this, Mesh);
             _ScheduledRecalculation = false;
         }
 
-        private void CalculateLocalMeshData()
+        private bool TryCalculateLocalMeshData()
         {
             _Vertices.Clear();
             _Triangles.Clear();
@@ -98,8 +108,12 @@ namespace Game
                     {
                         Vector3 localPosition = new Vector3(x, y, z);
                         Vector3 globalPosition = _SelfTransform.position + localPosition;
-                        Block block = WorldController.Current.GetBlockAt(globalPosition);
 
+                        if (!WorldController.Current.TryGetBlockAt(globalPosition, out Block block))
+                        {
+                            return false;
+                        }
+                        
                         if ((block.Id == BlockController.BLOCK_EMPTY_ID) || !block.HasAnyFaces())
                         {
                             continue;
@@ -143,6 +157,8 @@ namespace Game
                     }
                 }
             }
+
+            return true;
         }
 
         private void AddTriangles(Direction direction)
@@ -186,6 +202,11 @@ namespace Game
             int size = (Radius * 2) + 1;
 
             BoundingBox = new Bounds(_SelfTransform.position, new Vector3(size, size, size));
+        }
+
+        private void OnChunkChangedInWorld(object sender, Bounds bounds)
+        {
+            _ScheduledRecalculation = true;
         }
     }
 }

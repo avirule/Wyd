@@ -520,7 +520,7 @@ MonoBehaviour:
     m_Bits: 256
   RaycastLayerMask:
     serializedVersion: 2
-    m_Bits: 0
+    m_Bits: 256
   JumpForce: 10
   Rigidbody: {fileID: 2134891959}
   RotationSensitivity: 40

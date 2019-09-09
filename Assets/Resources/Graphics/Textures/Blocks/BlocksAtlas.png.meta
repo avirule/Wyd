@@ -34,7 +34,7 @@ TextureImporter:
     second: Snow_Side
   - first:
       213: -2742879469586323853
-    second: Oak_Leaf_Apples
+    second: Oak_Leaf_Apple
   - first:
       213: 5479825531284107837
     second: Oak_Leaf
@@ -326,7 +326,7 @@ TextureImporter:
       edges: []
       weights: []
     - serializedVersion: 2
-      name: Oak_Leaf_Apples
+      name: Oak_Leaf_Apple
       rect:
         serializedVersion: 2
         x: 0

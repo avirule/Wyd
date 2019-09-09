@@ -44,6 +44,8 @@ namespace Controllers.World
         public TimeSpan WorldTickRate { get; private set; }
         public bool PrimaryLoaderChangedChunk { get; set; }
 
+        public event EventHandler<Bounds> ChunkChanged;
+
         private void Awake()
         {
             if (GameController.Current == default)
@@ -137,7 +139,9 @@ namespace Controllers.World
                 if (chunk == default)
                 {
                     chunk = Instantiate(_ChunkObject, position, Quaternion.identity, transform);
-                    chunk.DeactivationCallback += (sender, chunkPosition) => { CacheChunk(chunkPosition); };
+                    chunk.BlocksChanged += OnChunkChanged;
+                    chunk.MeshChanged += OnChunkChanged;
+                    chunk.DeactivationCallback += (sender, chunkBounds) => { CacheChunk(chunkBounds.min); };
                 }
                 else
                 {
@@ -169,14 +173,13 @@ namespace Controllers.World
                 }
 
                 Vector3 modifiedPosition = position + new Vector3(x * Chunk.Size.x, 0, 0);
-                Chunk chunkAtPosition = GetChunkAt(modifiedPosition);
 
-                if ((chunkAtPosition == default) || chunkAtPosition.UpdateMesh || !chunkAtPosition.Active)
+                if (!TryGetChunkAt(modifiedPosition, out Chunk chunk) || chunk.UpdateMesh)
                 {
                     continue;
                 }
 
-                chunkAtPosition.UpdateMesh = true;
+                chunk.UpdateMesh = true;
             }
 
             for (int z = -1; z <= 1; z++)
@@ -187,14 +190,13 @@ namespace Controllers.World
                 }
 
                 Vector3 modifiedPosition = position + new Vector3(0, 0, z * Chunk.Size.z);
-                Chunk chunkAtPosition = GetChunkAt(modifiedPosition);
 
-                if ((chunkAtPosition == default) || chunkAtPosition.UpdateMesh || !chunkAtPosition.Active)
+                if (!TryGetChunkAt(modifiedPosition, out Chunk chunk) || chunk.UpdateMesh)
                 {
                     continue;
                 }
 
-                chunkAtPosition.UpdateMesh = true;
+                chunk.UpdateMesh = true;
             }
         }
 
@@ -285,7 +287,7 @@ namespace Controllers.World
             if (chunk == default)
             {
                 throw new ArgumentOutOfRangeException(
-                    $"Position `({position.x}, {position.y}, {position.z})` outside of current loaded radius.");
+                    $"Position `{position}` outside of current loaded radius.");
             }
 
             return chunk.GetBlockAt(position);
@@ -316,6 +318,46 @@ namespace Controllers.World
             }
 
             return chunk.BlockExistsAt(position);
+        }
+
+        public void PlaceBlockAt(Vector3 globalPosition, ushort id)
+        {
+            Vector3 chunkPosition = GetChunkOriginFromPosition(globalPosition);
+
+            if (!TryGetChunkAt(chunkPosition, out Chunk chunk))
+            {
+                throw new ArgumentOutOfRangeException($"Chunk containing position {globalPosition} does not exist.");
+            }
+
+            chunk.PlaceBlockAt(globalPosition, id);
+        }
+
+        public bool TryPlaceBlockAt(Vector3 globalPosition, ushort id)
+        {
+            Vector3 chunkPosition = GetChunkOriginFromPosition(globalPosition);
+
+            return TryGetChunkAt(chunkPosition, out Chunk chunk)
+                   && chunk.TryPlaceBlockAt(globalPosition, id);
+        }
+
+        public void RemoveBlockAt(Vector3 globalPosition)
+        {
+            Vector3 chunkPosition = GetChunkOriginFromPosition(globalPosition);
+
+            if (!TryGetChunkAt(chunkPosition, out Chunk chunk))
+            {
+                throw new ArgumentOutOfRangeException($"Chunk containing position {globalPosition} does not exist.");
+            }
+
+            chunk.RemoveBlockAt(globalPosition);
+        }
+
+        public bool TryRemoveBlockAt(Vector3 globalPosition)
+        {
+            Vector3 chunkPosition = GetChunkOriginFromPosition(globalPosition);
+
+            return TryGetChunkAt(chunkPosition, out Chunk chunk)
+                   && chunk.TryRemoveBlockAt(globalPosition);
         }
 
         public static Vector3 GetChunkOriginFromPosition(Vector3 globalPosition)
@@ -359,5 +401,11 @@ namespace Controllers.World
         }
 
         #endregion
+
+        protected virtual void OnChunkChanged(object sender, Bounds bounds)
+        {
+            FlagNeighborsPendingUpdate(bounds.min);
+            ChunkChanged?.Invoke(sender, bounds);
+        }
     }
 }

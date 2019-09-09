@@ -10,6 +10,7 @@ using Game.World.Blocks;
 using Logging;
 using NLog;
 using Threading;
+using UnityEditor;
 using UnityEngine;
 using UnityEngine.Rendering;
 
@@ -39,6 +40,7 @@ namespace Game.World.Chunks
         public static FixedConcurrentQueue<TimeSpan> BuildTimes;
         public static FixedConcurrentQueue<TimeSpan> MeshTimes;
 
+        private Bounds _Bounds;
         private Action _PendingAction;
         private Transform _SelfTransform;
         private RenderTexture _BuiltTexture;
@@ -49,7 +51,7 @@ namespace Game.World.Chunks
         private bool _OnBorrowedUpdateTime;
         private bool _Visible;
         private bool _RenderShadows;
-
+        
         public ComputeShader GenerationComputeShader;
         public MeshFilter MeshFilter;
         public MeshRenderer MeshRenderer;
@@ -97,12 +99,15 @@ namespace Game.World.Chunks
 
         public bool PrimaryLoaderChangedChunk { get; set; }
 
-        public event EventHandler<Vector3> DeactivationCallback;
+        public event EventHandler<Bounds> BlocksChanged;
+        public event EventHandler<Bounds> MeshChanged;
+        public event EventHandler<Bounds> DeactivationCallback;
 
         private void Awake()
         {
             _SelfTransform = transform;
             Position = _SelfTransform.position;
+            UpdateBounds();
             _Blocks = new Block[Size.Product()];
             _OnBorrowedUpdateTime = Built = Building = Meshed = Meshing = UpdateMesh = false;
             _Mesh = new Mesh();
@@ -193,6 +198,7 @@ namespace Game.World.Chunks
         {
             _SelfTransform.position = Position = position;
             GenerationComputeShader.SetVector("_Offset", Position);
+            UpdateBounds();
             Built = Building = Meshed = Meshing = UpdateMesh = false;
             CheckInternalSettings(PlayerController.Current.CurrentChunk);
             gameObject.SetActive(true);
@@ -288,6 +294,8 @@ namespace Game.World.Chunks
                 _threadedExecutionQueue.ThreadedItemFinished -= OnThreadedQueueFinishedItem;
 
                 BuildTimes.Enqueue(args.ThreadedItem.ExecutionTime);
+                
+                OnBlocksChanged();
             }
             else if (args.ThreadedItem.Identity == _MeshingIdentity)
             {
@@ -299,6 +307,8 @@ namespace Game.World.Chunks
                 _PendingAction = () => ApplyMesh((ChunkMeshingThreadedItem) args.ThreadedItem);
 
                 MeshTimes.Enqueue(args.ThreadedItem.ExecutionTime);
+                
+                OnMeshChanged();
             }
         }
 
@@ -328,58 +338,125 @@ namespace Game.World.Chunks
 
         #region MISC
 
+        private void UpdateBounds()
+        {
+            _Bounds = new Bounds(Position +  Size.Divide(2), Size);
+        }
+        
         private int ConvertGlobalPositionToLocal1D(Vector3 position)
         {
             Vector3 localPosition = (position - Position).Abs();
             return localPosition.To1D(Size);
         }
 
-        public Block GetBlockAt(Vector3 position)
+        public Block GetBlockAt(Vector3 globalPosition)
         {
-            // localize position value
-            int localPosition1d = ConvertGlobalPositionToLocal1D(position);
+            if (!_Bounds.Contains(globalPosition))
+            {
+                throw new ArgumentOutOfRangeException(nameof(globalPosition), globalPosition,
+                    $"Given position `{globalPosition}` exists outside of local bounds.");
+            }
+            
+            int localPosition1d = ConvertGlobalPositionToLocal1D(globalPosition);
 
             if (!Built)
             {
                 throw new Exception("Requested block present in chunk that hasn't finished building.'");
             }
 
-            if ((localPosition1d < 0) || (_Blocks.Length <= localPosition1d))
-            {
-                throw new ArgumentOutOfRangeException(nameof(position), position,
-                    "Given position exists outside of local bounds.");
-            }
-
             return _Blocks[localPosition1d];
         }
 
-        public bool TryGetBlockAt(Vector3 position, out Block block)
+        public bool TryGetBlockAt(Vector3 globalPosition, out Block block)
         {
-            int localPosition1d = ConvertGlobalPositionToLocal1D(position);
-
-            if ((localPosition1d < 0) || (_Blocks.Length <= localPosition1d))
+            if (!_Bounds.Contains(globalPosition))
             {
                 block = default;
                 return false;
             }
-
+            
+            int localPosition1d = ConvertGlobalPositionToLocal1D(globalPosition);
             block = _Blocks[localPosition1d];
             return true;
         }
 
-        public bool BlockExistsAt(Vector3 position)
+        public bool BlockExistsAt(Vector3 globalPosition)
         {
-            int localPosition1d = ConvertGlobalPositionToLocal1D(position);
-
-            if (_Blocks.Length <= localPosition1d)
+            if (!_Bounds.Contains(globalPosition))
             {
-                throw new ArgumentOutOfRangeException(nameof(position), position,
-                    "Given position exists outside of local bounds.");
+                throw new ArgumentOutOfRangeException(nameof(globalPosition), globalPosition,
+                    $"Given position `{globalPosition}` exists outside of local bounds.");
             }
+            
+            int localPosition1d = ConvertGlobalPositionToLocal1D(globalPosition);
 
             return _Blocks[localPosition1d].Id != BlockController.BLOCK_EMPTY_ID;
         }
 
+        public void PlaceBlockAt(Vector3 globalPosition, ushort id)
+        {
+            if (!_Bounds.Contains(globalPosition))
+            {
+                throw new ArgumentOutOfRangeException(nameof(globalPosition), globalPosition,
+                    $"Given position `{globalPosition}` outside of local bounds.");
+            }
+            
+            int localPosition1d = ConvertGlobalPositionToLocal1D(globalPosition);
+
+            _Blocks[localPosition1d].Initialise(id);
+            UpdateMesh = true;
+
+            OnBlocksChanged();
+        }
+
+        public bool TryPlaceBlockAt(Vector3 globalPosition, ushort id)
+        {
+            if (!_Bounds.Contains(globalPosition))
+            {
+                return false;
+            }
+            
+            int localPosition1d = ConvertGlobalPositionToLocal1D(globalPosition);
+
+            _Blocks[localPosition1d].Initialise(id);
+            UpdateMesh = true;
+
+            OnBlocksChanged();
+            return true;
+        }
+
+        public void RemoveBlockAt(Vector3 globalPosition)
+        {
+            if (!_Bounds.Contains(globalPosition))
+            {
+                throw new ArgumentOutOfRangeException(nameof(globalPosition), globalPosition,
+                    $"Given position `{globalPosition}` outside of local bounds.");
+            }
+            
+            int localPosition1d = ConvertGlobalPositionToLocal1D(globalPosition);
+
+            _Blocks[localPosition1d].Initialise(BlockController.BLOCK_EMPTY_ID);
+            UpdateMesh = true;
+
+            OnBlocksChanged();
+        }
+
+        public bool TryRemoveBlockAt(Vector3 globalPosition)
+        {
+            if (!_Bounds.Contains(globalPosition))
+            {
+                return false;
+            }
+            
+            int localPosition1d = ConvertGlobalPositionToLocal1D(globalPosition);
+
+            _Blocks[localPosition1d].Initialise(BlockController.BLOCK_EMPTY_ID);
+            UpdateMesh = true;
+
+            OnBlocksChanged();
+            return true;
+        }
+        
         private void CheckInternalSettings(Vector3 loaderChunkPosition)
         {
             if (Position == loaderChunkPosition)
@@ -391,7 +468,7 @@ namespace Game.World.Chunks
 
             if (!IsWithinLoaderRange(difference))
             {
-                DeactivationCallback?.Invoke(this, Position);
+                DeactivationCallback?.Invoke(this, _Bounds);
                 return;
             }
 
@@ -418,5 +495,47 @@ namespace Game.World.Chunks
         }
 
         #endregion
+
+        /// <summary>
+        ///     Scans the block array and returns the highest index that is non-air
+        /// </summary>
+        /// <param name="blocks">Array of blocks to scan</param>
+        /// <param name="startIndex"></param>
+        /// <param name="strideSize">Number of indexes to jump each iteration</param>
+        /// <param name="maxHeight">Maximum amount of iterations to stride</param>
+        /// <returns></returns>
+        public static int GetTopmostBlockIndex(Block[] blocks, int startIndex, int strideSize, int maxHeight)
+        {
+            int highestNonAirIndex = 0;
+            
+            for (int y = 0; y < maxHeight; y++)
+            {
+                int currentIndex = startIndex + (y * strideSize);
+
+                if (currentIndex >= blocks.Length)
+                {
+                    break;
+                }
+
+                if (blocks[currentIndex].Id == BlockController.BLOCK_EMPTY_ID)
+                {
+                    continue;
+                }
+                
+                highestNonAirIndex = currentIndex;
+            }
+
+            return highestNonAirIndex;
+        }
+
+        protected virtual void OnBlocksChanged()
+        {
+            BlocksChanged?.Invoke(this, _Bounds);
+        }
+
+        protected virtual void OnMeshChanged()
+        {
+            MeshChanged?.Invoke(this, _Bounds);
+        }
     }
 }

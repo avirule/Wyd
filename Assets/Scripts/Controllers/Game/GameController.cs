@@ -39,7 +39,7 @@ namespace Controllers.Game
             BlockController.Current.RegisterBlockRules("grass", false, (position, direction) =>
             {
                 Vector3 positionAbove = position + Vector3.up;
-                Block block = WorldController.Current.GetBlockAt(positionAbove);
+                WorldController.Current.TryGetBlockAt(positionAbove, out Block block);
 
                 if (!block.Transparent)
                 {
@@ -84,7 +84,25 @@ namespace Controllers.Game
             BlockController.Current.RegisterBlockRules("glass", true);
             BlockController.Current.RegisterBlockRules("coal_ore", false);
             BlockController.Current.RegisterBlockRules("gold_ore", false);
-            BlockController.Current.RegisterBlockRules("Diamond_ore", false);
+            BlockController.Current.RegisterBlockRules("diamond_ore", false);
+            BlockController.Current.RegisterBlockRules("oak_log", false, (vector3, direction) =>
+            {
+                switch (direction)
+                {
+                    case Direction.North:
+                    case Direction.East:
+                    case Direction.South:
+                    case Direction.West:
+                        return "oak_log";
+                    case Direction.Up:
+                    case Direction.Down:
+                        return "oak_log_inner";
+                    default:
+                        throw new ArgumentOutOfRangeException(nameof(direction), direction, null);
+                }
+            });
+            BlockController.Current.RegisterBlockRules("oak_leaf", false);
+            BlockController.Current.RegisterBlockRules("oak_leaf_apple", false);
         }
 
         public void ToggleCursorLocked(bool value)

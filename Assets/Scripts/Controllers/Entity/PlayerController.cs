@@ -15,6 +15,7 @@ namespace Controllers.Entity
     {
         public const int REACH = 5;
 
+        private Ray _ReachRay;
         private Vector3 _Movement;
         private List<IEntityChunkChangedSubscriber> _EntityChangedChunkSubscribers;
 
@@ -33,6 +34,7 @@ namespace Controllers.Entity
         {
             AssignCurrent(this);
 
+            _ReachRay = new Ray();
             _EntityChangedChunkSubscribers = new List<IEntityChunkChangedSubscriber>();
 
             CurrentChunk.Set(int.MaxValue, 0, int.MaxValue);
@@ -40,7 +42,7 @@ namespace Controllers.Entity
 
         private void Start()
         {
-            WorldController.Current.RegisterEntity(transform, 3);
+            WorldController.Current.RegisterEntity(transform, REACH + 1);
         }
 
         private void FixedUpdate()
@@ -56,13 +58,24 @@ namespace Controllers.Entity
             UpdateMovement();
             CalculateJump();
 
+            
             if (Input.GetButton("Fire1"))
             {
-                Ray ray = new Ray(CameraTransform.position, CameraTransform.eulerAngles);
+                UpdateReachRay();
 
-                if (Physics.Raycast(ray, out RaycastHit hit, REACH, RaycastLayerMask))
+                if (Physics.Raycast(_ReachRay, out RaycastHit hit, REACH, RaycastLayerMask))
                 {
-                    EventLog.Logger.Log(LogLevel.Info, hit.point);
+                    WorldController.Current.TryRemoveBlockAt(hit.point.Floor());
+                }
+            }
+
+            if (Input.GetButton("Fire2"))
+            {
+                UpdateReachRay();
+                
+                if (Physics.Raycast(_ReachRay, out RaycastHit hit, REACH, RaycastLayerMask))
+                {
+                    WorldController.Current.TryPlaceBlockAt(hit.point.Floor(), 9);
                 }
             }
         }
@@ -88,6 +101,12 @@ namespace Controllers.Entity
         }
 
 
+        private void UpdateReachRay()
+        {
+            _ReachRay.origin = CameraTransform.position;
+            _ReachRay.direction = CameraTransform.forward;
+        }
+        
         #region MOVEMENT
 
         private void UpdateMovement()

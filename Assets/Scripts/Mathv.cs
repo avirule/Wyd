@@ -129,7 +129,9 @@ public static class Mathv
     /// <returns>1D <see cref="System.Int32" /> index.</returns>
     public static int To1D(this Vector3 a, Vector3 size3d)
     {
-        return (int) (a.x + (a.z * size3d.x) + (a.y * size3d.x * size3d.z));
+        Vector3 aFloored = a.Floor();
+        
+        return (int) (aFloored.x + (aFloored.z * size3d.x) + (aFloored.y * size3d.x * size3d.z));
     }
 
     public static float[] ToArray(this Vector3 a)
@@ -182,6 +184,11 @@ public static class Mathv
         return new Vector3Int(a.x / b.x, a.y / b.y, a.z / b.z);
     }
 
+    public static Vector3Int Divide(this Vector3Int a, int b)
+    {
+        return new Vector3Int(a.x / b, a.y / b, a.z / b);
+    }
+    
     /// <summary>
     ///     Calculates <see cref="UnityEngine.Vector3Int" /> of division remainders.
     /// </summary>
