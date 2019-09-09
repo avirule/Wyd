@@ -115,7 +115,8 @@ namespace Game.World.Chunks
             Vector3 globalPosition = Position + localPosition;
 
             if ((((z == (Chunk.Size.z - 1))
-                  && WorldController.Current.GetBlockAt(globalPosition + Vector3.forward).Transparent)
+                  && WorldController.Current.TryGetBlockAt(globalPosition + Vector3.forward, out Block block)
+                  && block.Transparent )
                  || ((z < (Chunk.Size.z - 1)) && Blocks[index + Chunk.Size.x].Transparent))
                 && !Blocks[index].HasFace(Direction.North))
             {
@@ -168,7 +169,8 @@ namespace Game.World.Chunks
             }
 
             if ((((x == (Chunk.Size.x - 1))
-                  && WorldController.Current.GetBlockAt(globalPosition + Vector3.right).Transparent)
+                  && WorldController.Current.TryGetBlockAt(globalPosition + Vector3.right, out block)
+                  && block.Transparent)
                  || ((x < (Chunk.Size.x - 1)) && Blocks[index + 1].Transparent))
                 && !Blocks[index].HasFace(Direction.East))
             {
@@ -219,7 +221,9 @@ namespace Game.World.Chunks
                 }
             }
 
-            if ((((z == 0) && WorldController.Current.GetBlockAt(globalPosition + Vector3.back).Transparent)
+            if ((((z == 0)
+                  && WorldController.Current.TryGetBlockAt(globalPosition + Vector3.back, out block)
+                  && block.Transparent)
                  || ((z > 0) && Blocks[index - Chunk.Size.x].Transparent))
                 && !Blocks[index].HasFace(Direction.South))
             {
@@ -269,7 +273,9 @@ namespace Game.World.Chunks
                 }
             }
 
-            if ((((x == 0) && WorldController.Current.GetBlockAt(globalPosition + Vector3.left).Transparent)
+            if ((((x == 0)
+                  && WorldController.Current.TryGetBlockAt(globalPosition + Vector3.left, out block)
+                  && block.Transparent)
                  || ((x > 0) && Blocks[index - 1].Transparent))
                 && !Blocks[index].HasFace(Direction.West))
             {
@@ -320,7 +326,8 @@ namespace Game.World.Chunks
             }
 
             if ((((y == (Chunk.Size.y - 1))
-                  && WorldController.Current.GetBlockAt(globalPosition + Vector3.up).Transparent)
+                  && WorldController.Current.TryGetBlockAt(globalPosition + Vector3.up, out block)
+                  && block.Transparent)
                  || ((y < (Chunk.Size.y - 1)) && Blocks[index + (Chunk.Size.x * Chunk.Size.z)].Transparent))
                 && !Blocks[index].HasFace(Direction.Up))
             {

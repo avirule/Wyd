@@ -44,7 +44,8 @@ namespace Controllers.World
         public TimeSpan WorldTickRate { get; private set; }
         public bool PrimaryLoaderChangedChunk { get; set; }
 
-        public event EventHandler<Bounds> ChunkChanged;
+        public event EventHandler<Bounds> ChunkBlocksChanged;
+        public event EventHandler<Bounds> ChunkMeshChanged;
 
         private void Awake()
         {
@@ -139,8 +140,8 @@ namespace Controllers.World
                 if (chunk == default)
                 {
                     chunk = Instantiate(_ChunkObject, position, Quaternion.identity, transform);
-                    chunk.BlocksChanged += OnChunkChanged;
-                    chunk.MeshChanged += OnChunkChanged;
+                    chunk.BlocksChanged += OnChunkBlocksChanged;
+                    chunk.MeshChanged += OnChunkMeshChanged;
                     chunk.DeactivationCallback += (sender, chunkBounds) => { CacheChunk(chunkBounds.min); };
                 }
                 else
@@ -154,7 +155,7 @@ namespace Controllers.World
                 }
 
                 // ensures that neighbours update their meshes to cull newly out of sight faces
-                FlagNeighborsPendingUpdate(chunk.Position);
+                FlagNeighborsForMeshUpdate(chunk.Position);
 
                 if (IsOnBorrowedUpdateTime())
                 {
@@ -163,7 +164,7 @@ namespace Controllers.World
             }
         }
 
-        private void FlagNeighborsPendingUpdate(Vector3 position)
+        private void FlagNeighborsForMeshUpdate(Vector3 position)
         {
             for (int x = -1; x <= 1; x++)
             {
@@ -224,7 +225,7 @@ namespace Controllers.World
             }
 
             _Chunks.Remove(chunk.Position);
-            FlagNeighborsPendingUpdate(chunk.Position);
+            FlagNeighborsForMeshUpdate(chunk.Position);
             chunk.Deactivate();
 
             return chunk;
@@ -309,12 +310,10 @@ namespace Controllers.World
         public bool BlockExistsAt(Vector3 position)
         {
             Vector3 chunkPosition = GetChunkOriginFromPosition(position);
-
-            Chunk chunk = GetChunkAt(chunkPosition);
-
-            if ((chunk == default) || !chunk.Built)
+            
+            if (!TryGetChunkAt(chunkPosition, out Chunk chunk) || !chunk.Built)
             {
-                return default;
+                return false;
             }
 
             return chunk.BlockExistsAt(position);
@@ -402,10 +401,15 @@ namespace Controllers.World
 
         #endregion
 
-        protected virtual void OnChunkChanged(object sender, Bounds bounds)
+        protected virtual void OnChunkBlocksChanged(object sender, Bounds bounds)
         {
-            FlagNeighborsPendingUpdate(bounds.min);
-            ChunkChanged?.Invoke(sender, bounds);
+            FlagNeighborsForMeshUpdate(bounds.min);
+            ChunkBlocksChanged?.Invoke(sender, bounds);
+        }
+
+        protected virtual void OnChunkMeshChanged(object sender, Bounds bounds)
+        {
+            ChunkMeshChanged?.Invoke(sender, bounds);
         }
     }
 }

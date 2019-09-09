@@ -478,20 +478,20 @@ namespace Game.World.Chunks
 
         private static bool IsWithinLoaderRange(Vector3 difference)
         {
-            return difference.LessThanOrEqual(Size
+            return difference.AllLessThanOrEqual(Size
                                               * (WorldController.Current.WorldGenerationSettings.Radius
                                                  + OptionsController.Current.PreLoadChunkDistance));
         }
 
         private static bool IsWithinRenderDistance(Vector3 difference)
         {
-            return difference.LessThanOrEqual(Size * WorldController.Current.WorldGenerationSettings.Radius);
+            return difference.AllLessThanOrEqual(Size * WorldController.Current.WorldGenerationSettings.Radius);
         }
 
         private static bool IsWithinDrawShadowsDistance(Vector3 difference)
         {
             return (OptionsController.Current.ShadowDistance == 0)
-                   || difference.LessThanOrEqual(Size * OptionsController.Current.ShadowDistance);
+                   || difference.AllLessThanOrEqual(Size * OptionsController.Current.ShadowDistance);
         }
 
         #endregion

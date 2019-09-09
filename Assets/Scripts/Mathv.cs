@@ -110,14 +110,29 @@ public static class Mathv
         return new Vector3((float) Math.Truncate(a.x), (float) Math.Truncate(a.x), (float) Math.Truncate(a.x));
     }
 
-    public static bool IsLessThan(this Vector3 a, Vector3 b)
+    public static bool AllLessThan(this Vector3 a, Vector3 b)
     {
         return (a.x < b.x) && (a.y < b.y) && (a.z < b.z);
     }
 
-    public static bool LessThanOrEqual(this Vector3 a, Vector3 b)
+    public static bool AllLessThanOrEqual(this Vector3 a, Vector3 b)
     {
         return (a.x <= b.x) && (a.y <= b.y) && (a.z <= b.z);
+    }
+
+    public static bool AllGreaterThan(this Vector3 a, Vector3 b)
+    {
+        return (a.x > b.x) && (a.y > b.y) && (a.z > b.z);
+    }
+
+    public static bool AllGreaterThanOrEqual(this Vector3 a, Vector3 b)
+    {
+        return (a.x >= b.x) && (a.y >= b.y) && (a.z >= b.z);
+    }
+
+    public static bool AnyGreaterThanOrEqual(this Vector3 a, Vector3 b)
+    {
+        return (a.x >= b.x) || (a.y >= b.y) || (a.z >= b.z);
     }
 
     /// <summary>
@@ -130,7 +145,7 @@ public static class Mathv
     public static int To1D(this Vector3 a, Vector3 size3d)
     {
         Vector3 aFloored = a.Floor();
-        
+
         return (int) (aFloored.x + (aFloored.z * size3d.x) + (aFloored.y * size3d.x * size3d.z));
     }
 
@@ -188,7 +203,7 @@ public static class Mathv
     {
         return new Vector3Int(a.x / b, a.y / b, a.z / b);
     }
-    
+
     /// <summary>
     ///     Calculates <see cref="UnityEngine.Vector3Int" /> of division remainders.
     /// </summary>

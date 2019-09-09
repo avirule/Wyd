@@ -53,7 +53,7 @@ namespace Game
 
         private void Start()
         {
-            WorldController.Current.ChunkChanged += OnChunkChangedInWorld;
+            WorldController.Current.ChunkMeshChanged += OnChunkMeshChangedInWorld;
         }
 
         private void Update()
@@ -65,14 +65,12 @@ namespace Game
 
             Vector3 difference = (_SelfTransform.position - AuthorTransform.position).Abs();
 
-            if (!Mathv.GreaterThanVector3(difference, Vector3.one) && !_ScheduledRecalculation)
+            if (_ScheduledRecalculation || difference.AnyGreaterThanOrEqual(Vector3.one))
             {
-                return;
+                _SelfTransform.position = AuthorTransform.position.Floor();
+
+                Recalculate();
             }
-
-            _SelfTransform.position = AuthorTransform.position.Floor();
-
-            Recalculate();
         }
 
         private void OnDestroy()
@@ -83,19 +81,14 @@ namespace Game
         private void Recalculate()
         {
             RecalculateBoundingBox();
-            
-            if (!TryCalculateLocalMeshData())
-            {
-                return;
-            }
-            
+            TryCalculateLocalMeshData();
             ApplyMeshData();
 
             UpdatedMesh?.Invoke(this, Mesh);
             _ScheduledRecalculation = false;
         }
 
-        private bool TryCalculateLocalMeshData()
+        private void TryCalculateLocalMeshData()
         {
             _Vertices.Clear();
             _Triangles.Clear();
@@ -108,13 +101,10 @@ namespace Game
                     {
                         Vector3 localPosition = new Vector3(x, y, z);
                         Vector3 globalPosition = _SelfTransform.position + localPosition;
-
-                        if (!WorldController.Current.TryGetBlockAt(globalPosition, out Block block))
-                        {
-                            return false;
-                        }
                         
-                        if ((block.Id == BlockController.BLOCK_EMPTY_ID) || !block.HasAnyFaces())
+                        if (!WorldController.Current.TryGetBlockAt(globalPosition, out Block block)
+                            || (block.Id == BlockController.BLOCK_EMPTY_ID)
+                            || !block.HasAnyFaces())
                         {
                             continue;
                         }
@@ -157,8 +147,6 @@ namespace Game
                     }
                 }
             }
-
-            return true;
         }
 
         private void AddTriangles(Direction direction)
@@ -204,7 +192,7 @@ namespace Game
             BoundingBox = new Bounds(_SelfTransform.position, new Vector3(size, size, size));
         }
 
-        private void OnChunkChangedInWorld(object sender, Bounds bounds)
+        private void OnChunkMeshChangedInWorld(object sender, Bounds bounds)
         {
             _ScheduledRecalculation = true;
         }

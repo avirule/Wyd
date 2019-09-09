@@ -15,6 +15,7 @@ namespace Controllers.Entity
     {
         public const int REACH = 5;
 
+        private MeshCollider _MeshCollider;
         private Ray _ReachRay;
         private Vector3 _Movement;
         private List<IEntityChunkChangedSubscriber> _EntityChangedChunkSubscribers;
@@ -34,6 +35,7 @@ namespace Controllers.Entity
         {
             AssignCurrent(this);
 
+            _MeshCollider = GetComponent<MeshCollider>();
             _ReachRay = new Ray();
             _EntityChangedChunkSubscribers = new List<IEntityChunkChangedSubscriber>();
 
@@ -73,7 +75,8 @@ namespace Controllers.Entity
             {
                 UpdateReachRay();
                 
-                if (Physics.Raycast(_ReachRay, out RaycastHit hit, REACH, RaycastLayerMask))
+                if (Physics.Raycast(_ReachRay, out RaycastHit hit, REACH, RaycastLayerMask)
+                && !_MeshCollider.bounds.Contains(hit.point))
                 {
                     WorldController.Current.TryPlaceBlockAt(hit.point.Floor(), 9);
                 }
