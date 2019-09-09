@@ -35,7 +35,7 @@ namespace Game.World.Chunks
 
         private static ThreadedQueue _threadedExecutionQueue;
 
-        public static readonly Vector3Int Size = new Vector3Int(32, 256, 32);
+        public static readonly Vector3Int Size = new Vector3Int(16, 256, 16);
         public static FixedConcurrentQueue<TimeSpan> BuildTimes;
         public static FixedConcurrentQueue<TimeSpan> MeshTimes;
 
@@ -128,7 +128,7 @@ namespace Game.World.Chunks
         {
             if (_threadedExecutionQueue == default)
             {
-                // init ThreadedQueue with # of threads matching logical processors
+                // init ThreadedQueue with # of threads matching 1/2 of logical processors
                 _threadedExecutionQueue = new ThreadedQueue(200, () => OptionsController.Current.ThreadingMode,
                     Environment.ProcessorCount / 2);
                 _threadedExecutionQueue.Start();
@@ -336,6 +336,11 @@ namespace Game.World.Chunks
             // localize position value
             int localPosition1d = ConvertGlobalPositionToLocal1D(position);
 
+            if (!Built)
+            {
+                throw new Exception($"Requested block present in chunk that hasn't finished building.'");
+            }
+            
             if ((localPosition1d < 0) || (_Blocks.Length <= localPosition1d))
             {
                 throw new ArgumentOutOfRangeException(nameof(position), position,
@@ -343,6 +348,20 @@ namespace Game.World.Chunks
             }
 
             return _Blocks[localPosition1d];
+        }
+
+        public bool TryGetBlockAt(Vector3 position, out Block block)
+        {
+            int localPosition1d = ConvertGlobalPositionToLocal1D(position);
+
+            if (localPosition1d < 0 || _Blocks.Length <= localPosition1d)
+            {
+                block = default;
+                return false;
+            }
+
+            block = _Blocks[localPosition1d];
+            return true;
         }
 
         public bool BlockExistsAt(Vector3 position)

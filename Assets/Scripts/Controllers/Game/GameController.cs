@@ -35,15 +35,15 @@ namespace Controllers.Game
 
         private void RegisterDefaultBlocks()
         {
-            BlockController.Current.RegisterBlockRules("Bedrock", false);
-            BlockController.Current.RegisterBlockRules("Grass", false, (position, direction) =>
+            BlockController.Current.RegisterBlockRules("bedrock", false);
+            BlockController.Current.RegisterBlockRules("grass", false, (position, direction) =>
             {
                 Vector3 positionAbove = position + Vector3.up;
                 Block block = WorldController.Current.GetBlockAt(positionAbove);
 
                 if (!block.Transparent)
                 {
-                    return "Dirt";
+                    return "dirt";
                 }
 
                 switch (direction)
@@ -70,21 +70,21 @@ namespace Controllers.Game
                     case Direction.East:
                     case Direction.South:
                     case Direction.West:
-                        return "GrassSide";
+                        return "grass_side";
                     case Direction.Up:
-                        return "Grass";
+                        return "grass";
                     case Direction.Down:
-                        return "Dirt";
+                        return "dirt";
                     default:
                         throw new ArgumentOutOfRangeException(nameof(direction), direction, null);
                 }
             });
-            BlockController.Current.RegisterBlockRules("Dirt", false);
-            BlockController.Current.RegisterBlockRules("Stone", false);
-            BlockController.Current.RegisterBlockRules("Glass", true);
-            BlockController.Current.RegisterBlockRules("CoalOre", false);
-            BlockController.Current.RegisterBlockRules("GoldOre", false);
-            BlockController.Current.RegisterBlockRules("DiamondOre", false);
+            BlockController.Current.RegisterBlockRules("dirt", false);
+            BlockController.Current.RegisterBlockRules("stone", false);
+            BlockController.Current.RegisterBlockRules("glass", true);
+            BlockController.Current.RegisterBlockRules("coal_ore", false);
+            BlockController.Current.RegisterBlockRules("gold_ore", false);
+            BlockController.Current.RegisterBlockRules("Diamond_ore", false);
         }
 
         public void ToggleCursorLocked(bool value)

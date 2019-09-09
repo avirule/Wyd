@@ -86,11 +86,9 @@ namespace Controllers.UI.Components.InputField
                     }
 
                     break;
-                case "lowestterrainvalue":
-                    EventLog.Logger.Log(LogLevel.Info, $"Lowest hit terrain noise value is currently: {ChunkBuilder.LowestValue}");
-                    break;
                 default:
-                    throw new NotImplementedException();
+                    EventLog.Logger.Log(LogLevel.Error, $"Command invalid.");
+                    break;
             }
         }
     }

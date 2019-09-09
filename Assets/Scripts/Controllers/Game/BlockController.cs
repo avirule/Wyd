@@ -30,7 +30,6 @@ namespace Controllers.Game
         public ushort RegisterBlockRules(string blockName, bool isTransparent,
             RuleEvaluation<Vector3, Direction> uvsRule = default)
         {
-            blockName = blockName.ToLowerInvariant();
             ushort blockId = 0;
 
             try
@@ -104,18 +103,29 @@ namespace Controllers.Game
             return blockId;
         }
 
+        public bool TryGetBlockId(string blockName, out ushort blockId)
+        {
+            if (!BlockNameIds.TryGetValue(blockName, out blockId))
+            {
+                blockId = 0;
+                return false;
+            }
+
+            return true;
+        }
+
         public string GetBlockName(ushort blockId)
         {
             if (blockId == BLOCK_EMPTY_ID)
             {
-                return "Air";
+                return "air";
             }
 
             if (!Blocks.TryGetValue(blockId, out IBlockRule blockRule))
             {
                 EventLog.Logger.Log(LogLevel.Warn,
                     $"Failed to return block name for block id `{blockId}`: block does not exist.");
-                return "Null";
+                return "null";
             }
 
             return blockRule.BlockName;

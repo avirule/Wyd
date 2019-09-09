@@ -271,20 +271,40 @@ namespace Controllers.World
             return trySuccess ? chunk : default;
         }
 
+        public bool TryGetChunkAt(Vector3 position, out Chunk chunk)
+        {
+            return _Chunks.TryGetValue(position, out chunk);
+        }
+        
         public Block GetBlockAt(Vector3 position)
         {
             Vector3 chunkPosition = GetChunkOriginFromPosition(position);
 
             Chunk chunk = GetChunkAt(chunkPosition);
 
-            if ((chunk == default) || !chunk.Built)
+            if (chunk == default)
             {
-                return default;
+                throw new ArgumentOutOfRangeException(
+                    $"Position `({position.x}, {position.y}, {position.z})` outside of current loaded radius.");
             }
 
             return chunk.GetBlockAt(position);
         }
 
+        public bool TryGetBlockAt(Vector3 position, out Block block)
+        {
+            Vector3 chunkPosition = GetChunkOriginFromPosition(position);
+
+            if (!TryGetChunkAt(chunkPosition, out Chunk chunk) ||
+                !chunk.TryGetBlockAt(position, out block))
+            {
+                block = default;
+                return false;
+            }
+
+            return true;
+        }
+        
         public bool BlockExistsAt(Vector3 position)
         {
             Vector3 chunkPosition = GetChunkOriginFromPosition(position);

@@ -35,14 +35,14 @@ namespace Controllers.Game
                 sprites.Length, TextureFormat.RGBA32, true, false)
             {
                 filterMode = FilterMode.Point,
-                wrapMode = TextureWrapMode.Repeat
+                wrapMode = TextureWrapMode.Repeat 
             };
 
             for (int i = 0; i < TerrainTexture.depth; i++)
             {
                 Color[] spritePixels = GetPixels(sprites[i]);
                 TerrainTexture.SetPixels(spritePixels, i, 0);
-                _TextureIDs.Add(sprites[i].name.ToLowerInvariant(), i);
+                _TextureIDs.Add(sprites[i].name.ToLower(), i);
 
                 EventLog.Logger.Log(LogLevel.Info, $"Texture processed: {sprites[i].name}");
             }
@@ -52,9 +52,6 @@ namespace Controllers.Game
 
         public bool TryGetTextureId(string textureName, out int textureId)
         {
-            textureName = textureName.ToLowerInvariant();
-            textureId = -1;
-
             return _TextureIDs.TryGetValue(textureName, out textureId);
         }
 

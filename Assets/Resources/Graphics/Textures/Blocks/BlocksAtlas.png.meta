@@ -4,7 +4,7 @@ TextureImporter:
   internalIDToNameTable:
   - first:
       213: 7896306450000886469
-    second: GrassSide
+    second: Grass_Side
   - first:
       213: -7129077596067031731
     second: Grass
@@ -22,31 +22,31 @@ TextureImporter:
     second: Glass
   - first:
       213: 3991693152041427042
-    second: CoalOre
+    second: Coal_Ore
   - first:
       213: 3283071777906387301
-    second: DiamondOre
+    second: Diamond_Ore
   - first:
       213: 5618026609613044863
-    second: GoldOre
+    second: Gold_Ore
   - first:
       213: 7896306450000886469
-    second: SnowSide
+    second: Snow_Side
   - first:
       213: -2742879469586323853
-    second: OakLeafApples
+    second: Oak_Leaf_Apples
   - first:
       213: 5479825531284107837
-    second: OakLeaf
+    second: Oak_Leaf
   - first:
       213: 2386729450503207710
-    second: OakLogInner
+    second: Oak_Log_Inner
   - first:
       213: 5159347885014166609
-    second: OakLog
+    second: Oak_Log
   - first:
       213: 7439985325722517764
-    second: DirtCoarse
+    second: Dirt_Coarse
   - first:
       213: 9174003105174058934
     second: Gravel
@@ -58,19 +58,19 @@ TextureImporter:
     second: Snow
   - first:
       213: 4572400587576004640
-    second: TungstenOre
+    second: Tungsten_Ore
   - first:
       213: -8747972959471140011
-    second: SilverOre
+    second: Silver_Ore
   - first:
       213: 7371098804393612467
-    second: CopperOre
+    second: Copper_Ore
   - first:
       213: 4576181694157419191
-    second: IronOre
+    second: Iron_Ore
   - first:
       213: -3549820833288396125
-    second: OakPlank
+    second: Oak_Plank
   - first:
       213: 7196079105303995997
     second: Bedrock
@@ -158,7 +158,7 @@ TextureImporter:
     serializedVersion: 2
     sprites:
     - serializedVersion: 2
-      name: GrassSide
+      name: Grass_Side
       rect:
         serializedVersion: 2
         x: 0
@@ -263,7 +263,7 @@ TextureImporter:
       edges: []
       weights: []
     - serializedVersion: 2
-      name: CoalOre
+      name: Coal_Ore
       rect:
         serializedVersion: 2
         x: 16
@@ -284,7 +284,7 @@ TextureImporter:
       edges: []
       weights: []
     - serializedVersion: 2
-      name: DiamondOre
+      name: Diamond_Ore
       rect:
         serializedVersion: 2
         x: 24
@@ -305,7 +305,7 @@ TextureImporter:
       edges: []
       weights: []
     - serializedVersion: 2
-      name: GoldOre
+      name: Gold_Ore
       rect:
         serializedVersion: 2
         x: 24
@@ -326,7 +326,7 @@ TextureImporter:
       edges: []
       weights: []
     - serializedVersion: 2
-      name: OakLeafApples
+      name: Oak_Leaf_Apples
       rect:
         serializedVersion: 2
         x: 0
@@ -347,7 +347,7 @@ TextureImporter:
       edges: []
       weights: []
     - serializedVersion: 2
-      name: OakLeaf
+      name: Oak_Leaf
       rect:
         serializedVersion: 2
         x: 0
@@ -368,7 +368,7 @@ TextureImporter:
       edges: []
       weights: []
     - serializedVersion: 2
-      name: OakLogInner
+      name: Oak_Log_Inner
       rect:
         serializedVersion: 2
         x: 8
@@ -389,7 +389,7 @@ TextureImporter:
       edges: []
       weights: []
     - serializedVersion: 2
-      name: OakLog
+      name: Oak_Log
       rect:
         serializedVersion: 2
         x: 8
@@ -410,7 +410,7 @@ TextureImporter:
       edges: []
       weights: []
     - serializedVersion: 2
-      name: DirtCoarse
+      name: Dirt_Coarse
       rect:
         serializedVersion: 2
         x: 16
@@ -473,7 +473,7 @@ TextureImporter:
       edges: []
       weights: []
     - serializedVersion: 2
-      name: SnowSide
+      name: Snow_Side
       rect:
         serializedVersion: 2
         x: 8
@@ -515,7 +515,7 @@ TextureImporter:
       edges: []
       weights: []
     - serializedVersion: 2
-      name: TungstenOre
+      name: Tungsten_Ore
       rect:
         serializedVersion: 2
         x: 32
@@ -536,7 +536,7 @@ TextureImporter:
       edges: []
       weights: []
     - serializedVersion: 2
-      name: SilverOre
+      name: Silver_Ore
       rect:
         serializedVersion: 2
         x: 32
@@ -557,7 +557,7 @@ TextureImporter:
       edges: []
       weights: []
     - serializedVersion: 2
-      name: CopperOre
+      name: Copper_Ore
       rect:
         serializedVersion: 2
         x: 24
@@ -578,7 +578,7 @@ TextureImporter:
       edges: []
       weights: []
     - serializedVersion: 2
-      name: IronOre
+      name: Iron_Ore
       rect:
         serializedVersion: 2
         x: 16
@@ -599,7 +599,7 @@ TextureImporter:
       edges: []
       weights: []
     - serializedVersion: 2
-      name: OakPlank
+      name: Oak_Plank
       rect:
         serializedVersion: 2
         x: 8
@@ -628,7 +628,7 @@ TextureImporter:
         width: 8
         height: 8
       alignment: 0
-      pivot: {x: 0, y: 0}
+      pivot: {x: 0.5, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}
       outline: []
       physicsShape: []
