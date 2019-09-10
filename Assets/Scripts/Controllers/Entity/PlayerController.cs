@@ -3,8 +3,7 @@
 using System.Collections.Generic;
 using Controllers.World;
 using Game.Entity;
-using Logging;
-using NLog;
+using Graphics;
 using UnityEngine;
 
 #endregion
@@ -15,30 +14,36 @@ namespace Controllers.Entity
     {
         public const int REACH = 5;
 
-        private MeshCollider _MeshCollider;
+        private CapsuleCollider _Collider;
         private Ray _ReachRay;
+        private RaycastHit _LastReachRayHit;
+        private bool _IsInReachOfValidSurface;
+        private Transform _ReachHitSurfaceObjectTransform;
         private Vector3 _Movement;
         private List<IEntityChunkChangedSubscriber> _EntityChangedChunkSubscribers;
 
-        public bool Grounded;
+        public Transform CameraTransform;
+        public Rigidbody Rigidbody;
+        public GameObject ReachHitSurfaceObject;
         public LayerMask GroundedMask;
         public LayerMask RaycastLayerMask;
-
-        public float JumpForce;
-        public Rigidbody Rigidbody;
+        public Vector3 CurrentChunk;
         public float RotationSensitivity;
-        public Transform CameraTransform;
         public float TravelSpeed;
-        public Vector3Int CurrentChunk;
+        public float JumpForce;
+        public bool Grounded;
 
         private void Awake()
         {
             AssignCurrent(this);
 
-            _MeshCollider = GetComponent<MeshCollider>();
+            _Collider = GetComponent<CapsuleCollider>();
             _ReachRay = new Ray();
             _EntityChangedChunkSubscribers = new List<IEntityChunkChangedSubscriber>();
 
+            ReachHitSurfaceObject = Instantiate(ReachHitSurfaceObject);
+            _ReachHitSurfaceObjectTransform = ReachHitSurfaceObject.transform;
+            
             CurrentChunk.Set(int.MaxValue, 0, int.MaxValue);
         }
 
@@ -59,34 +64,23 @@ namespace Controllers.Entity
         {
             UpdateMovement();
             CalculateJump();
+            UpdateReachRay();
+            UpdateLastLookAtCubeOrigin();
 
-            
-            if (Input.GetButton("Fire1"))
+            if (Input.GetButton("Fire1") && _IsInReachOfValidSurface)
             {
-                UpdateReachRay();
-
-                if (Physics.Raycast(_ReachRay, out RaycastHit hit, REACH, RaycastLayerMask))
-                {
-                    WorldController.Current.TryRemoveBlockAt(hit.point.Floor());
-                }
+                WorldController.Current.TryRemoveBlockAt(_LastReachRayHit.point.Floor() + -_LastReachRayHit.normal);
             }
 
-            if (Input.GetButton("Fire2"))
+            if (Input.GetButton("Fire2") && _IsInReachOfValidSurface && !_Collider.bounds.Contains(_LastReachRayHit.point))
             {
-                UpdateReachRay();
-                
-                if (Physics.Raycast(_ReachRay, out RaycastHit hit, REACH, RaycastLayerMask)
-                && !_MeshCollider.bounds.Contains(hit.point))
-                {
-                    WorldController.Current.TryPlaceBlockAt(hit.point.Floor(), 9);
-                }
+                WorldController.Current.TryPlaceBlockAt(_LastReachRayHit.point.Floor(), 9);
             }
         }
 
         private void CheckChangedChunk()
         {
-            Vector3Int chunkPosition =
-                WorldController.GetChunkOriginFromPosition(transform.position).ToInt();
+            Vector3 chunkPosition = WorldController.GetChunkOriginFromPosition(transform.position);
             chunkPosition.y = 0;
 
             if (chunkPosition == CurrentChunk)
@@ -109,7 +103,28 @@ namespace Controllers.Entity
             _ReachRay.origin = CameraTransform.position;
             _ReachRay.direction = CameraTransform.forward;
         }
-        
+
+        private void UpdateLastLookAtCubeOrigin()
+        {
+            if (!Physics.Raycast(_ReachRay, out _LastReachRayHit, REACH, RaycastLayerMask))
+            {
+                ReachHitSurfaceObject.SetActive(false);
+                _IsInReachOfValidSurface = false;
+                return;
+            }
+
+            if (!ReachHitSurfaceObject.activeSelf)
+            {
+                ReachHitSurfaceObject.SetActive(true);
+            }
+            
+            _IsInReachOfValidSurface = true;
+
+            Vector3 absoluteNormal = _LastReachRayHit.normal.Abs();
+            _ReachHitSurfaceObjectTransform.position = _LastReachRayHit.point.Floor() - (absoluteNormal * 0.4995f) + Mathv.Half;
+            _ReachHitSurfaceObjectTransform.rotation = Quaternion.FromToRotation(Vector3.back, absoluteNormal );
+        }
+
         #region MOVEMENT
 
         private void UpdateMovement()

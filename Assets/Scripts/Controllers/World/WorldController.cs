@@ -30,7 +30,7 @@ namespace Controllers.World
         private Queue<Vector3> _BuildChunkQueue;
         private Stopwatch _FrameTimer;
 
-        public CollisionTokenController CollisionTokenController;
+        public CollisionLoaderController CollisionLoaderController;
         public WorldGenerationSettings WorldGenerationSettings;
         public float TicksPerSecond;
 
@@ -391,12 +391,12 @@ namespace Controllers.World
 
         public void RegisterEntity(Transform attachTo, int loadRadius)
         {
-            if (CollisionTokenController == default)
+            if (CollisionLoaderController == default)
             {
                 return;
             }
 
-            CollisionTokenController.RegisterEntity(attachTo, loadRadius);
+            CollisionLoaderController.RegisterEntity(attachTo, loadRadius);
         }
 
         #endregion

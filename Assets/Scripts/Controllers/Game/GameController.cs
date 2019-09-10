@@ -1,6 +1,7 @@
 #region
 
 using System;
+using System.Threading;
 using Controllers.World;
 using Game;
 using Game.World.Blocks;
@@ -15,6 +16,8 @@ namespace Controllers.Game
 {
     public class GameController : SingletonController<GameController>
     {
+        public static int MainThreadId = Thread.CurrentThread.ManagedThreadId;
+        
         private void Awake()
         {
             AssignCurrent(this);

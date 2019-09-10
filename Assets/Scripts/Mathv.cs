@@ -9,6 +9,8 @@ public static class Mathv
 {
     #region Vector3
 
+    public static Vector3 Half = new Vector3(0.5f, 0.5f, 0.5f);
+
     /// <summary>
     ///     Casts all <see cref="System.Single" /> of given <see cref="UnityEngine.Vector3" /> to <see cref="System.Int32" />.
     /// </summary>
@@ -133,6 +135,11 @@ public static class Mathv
     public static bool AnyGreaterThanOrEqual(this Vector3 a, Vector3 b)
     {
         return (a.x >= b.x) || (a.y >= b.y) || (a.z >= b.z);
+    }
+
+    public static float Max(this Vector3 a)
+    {
+        return Mathf.Max(a.x, a.y, a.z);
     }
 
     /// <summary>

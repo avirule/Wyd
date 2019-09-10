@@ -11,20 +11,20 @@ using UnityEngine;
 namespace Controllers.World
 {
     [RequireComponent(typeof(MeshCollider))]
-    public class CollisionTokenController : MonoBehaviour, IEntityChunkChangedSubscriber
+    public class CollisionLoaderController : MonoBehaviour, IEntityChunkChangedSubscriber
     {
-        private GameObject _CollisionTokenObject;
-        private List<CollisionToken> _CollisionTokens;
+        private List<CollisionLoader> _CollisionLoaders;
         private Mesh _CombinedColliderMesh;
         private MeshCollider _MeshCollider;
         private bool _UpdateColliderMesh;
 
+        public GameObject CollisionLoaderObject;
+        
         public bool PrimaryLoaderChangedChunk { get; set; }
 
         private void Awake()
         {
-            _CollisionTokenObject = Resources.Load<GameObject>(@"Prefabs/CollisionToken");
-            _CollisionTokens = new List<CollisionToken>();
+            _CollisionLoaders = new List<CollisionLoader>();
             _CombinedColliderMesh = new Mesh();
             _MeshCollider = GetComponent<MeshCollider>();
         }
@@ -49,20 +49,20 @@ namespace Controllers.World
 
         public void RegisterEntity(Transform attachTo, int loadRadius)
         {
-            GameObject entityToken = Instantiate(_CollisionTokenObject, transform);
-            CollisionToken collisionToken = entityToken.GetComponent<CollisionToken>();
-            collisionToken.AuthorTransform = attachTo;
-            collisionToken.Radius = loadRadius;
-            collisionToken.UpdatedMesh += (sender, mesh) => { _UpdateColliderMesh = true; };
+            GameObject entityToken = Instantiate(CollisionLoaderObject, transform);
+            CollisionLoader collisionLoader = entityToken.GetComponent<CollisionLoader>();
+            collisionLoader.AttachedTransform = attachTo;
+            collisionLoader.Radius = loadRadius;
+            collisionLoader.UpdatedMesh += (sender, mesh) => { _UpdateColliderMesh = true; };
 
-            _CollisionTokens.Add(collisionToken);
+            _CollisionLoaders.Add(collisionLoader);
         }
 
         private void GenerateColliderMesh()
         {
             List<CombineInstance> combines = new List<CombineInstance>();
 
-            foreach (CollisionToken collisionToken in _CollisionTokens)
+            foreach (CollisionLoader collisionToken in _CollisionLoaders)
             {
                 if ((collisionToken.Mesh == default) || (collisionToken.Mesh.vertexCount == 0))
                 {

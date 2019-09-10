@@ -514,19 +514,21 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 790df1a5cdee4ac08ebd7225a231b208, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  Grounded: 0
+  CameraTransform: {fileID: 963194228}
+  Rigidbody: {fileID: 2134891959}
+  ReachHitSurfaceObject: {fileID: 5300161025883425984, guid: f9768a236bd68084b95cc3019b5c564e,
+    type: 3}
   GroundedMask:
     serializedVersion: 2
     m_Bits: 256
   RaycastLayerMask:
     serializedVersion: 2
     m_Bits: 256
-  JumpForce: 10
-  Rigidbody: {fileID: 2134891959}
-  RotationSensitivity: 40
-  CameraTransform: {fileID: 963194228}
-  TravelSpeed: 45
   CurrentChunk: {x: 0, y: 0, z: 0}
+  RotationSensitivity: 40
+  TravelSpeed: 45
+  JumpForce: 10
+  Grounded: 0
 --- !u!136 &2134891955
 CapsuleCollider:
   m_ObjectHideFlags: 0
@@ -595,7 +597,7 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 2134891953}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 140, z: 15}
+  m_LocalPosition: {x: 0, y: 121, z: 15}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children:
   - {fileID: 963194228}
