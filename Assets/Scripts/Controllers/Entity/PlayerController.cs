@@ -3,7 +3,6 @@
 using System.Collections.Generic;
 using Controllers.World;
 using Game.Entity;
-using Graphics;
 using UnityEngine;
 
 #endregion
@@ -43,7 +42,7 @@ namespace Controllers.Entity
 
             ReachHitSurfaceObject = Instantiate(ReachHitSurfaceObject);
             _ReachHitSurfaceObjectTransform = ReachHitSurfaceObject.transform;
-            
+
             CurrentChunk.Set(int.MaxValue, 0, int.MaxValue);
         }
 
@@ -69,12 +68,28 @@ namespace Controllers.Entity
 
             if (Input.GetButton("Fire1") && _IsInReachOfValidSurface)
             {
-                WorldController.Current.TryRemoveBlockAt(_LastReachRayHit.point.Floor() + -_LastReachRayHit.normal);
+                if (_LastReachRayHit.normal.Sum() > 0f)
+                {
+                    WorldController.Current.TryRemoveBlockAt(_LastReachRayHit.point.Floor() - _LastReachRayHit.normal);
+                }
+                else
+                {
+                    WorldController.Current.TryRemoveBlockAt(_LastReachRayHit.point.Floor());
+                }
             }
 
-            if (Input.GetButton("Fire2") && _IsInReachOfValidSurface && !_Collider.bounds.Contains(_LastReachRayHit.point))
+            if (Input.GetButton("Fire2")
+                && _IsInReachOfValidSurface
+                && !_Collider.bounds.Contains(_LastReachRayHit.point))
             {
-                WorldController.Current.TryPlaceBlockAt(_LastReachRayHit.point.Floor(), 9);
+                if (_LastReachRayHit.normal.Sum() > 0f)
+                {
+                    WorldController.Current.TryPlaceBlockAt(_LastReachRayHit.point.Floor(), 9);
+                }
+                else
+                {
+                    WorldController.Current.TryPlaceBlockAt(_LastReachRayHit.point.Floor() + _LastReachRayHit.normal, 9);
+                }
             }
         }
 
@@ -117,14 +132,27 @@ namespace Controllers.Entity
             {
                 ReachHitSurfaceObject.SetActive(true);
             }
-            
-            _IsInReachOfValidSurface = true;
 
-            Vector3 absoluteNormal = _LastReachRayHit.normal.Abs();
-            _ReachHitSurfaceObjectTransform.position = _LastReachRayHit.point.Floor() - (absoluteNormal * 0.4995f) + Mathv.Half;
-            _ReachHitSurfaceObjectTransform.rotation = Quaternion.FromToRotation(Vector3.back, absoluteNormal );
+            _IsInReachOfValidSurface = true;
+            OrientReachHitSurfaceObject(_LastReachRayHit.normal);
         }
 
+        private void OrientReachHitSurfaceObject(Vector3 normal)
+        {
+            if (normal.Sum() > 0f)
+            {
+                _ReachHitSurfaceObjectTransform.position =
+                    (_LastReachRayHit.point.Floor() - (normal.Abs() * 0.4995f)) + Mathv.Half;
+            }
+            else
+            {
+                _ReachHitSurfaceObjectTransform.position =
+                    (_LastReachRayHit.point.Floor() - (normal.Abs() * 0.5005f)) + Mathv.Half;
+            }
+
+            _ReachHitSurfaceObjectTransform.rotation = Quaternion.LookRotation(-normal);
+        }
+        
         #region MOVEMENT
 
         private void UpdateMovement()

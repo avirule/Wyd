@@ -420,7 +420,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 0468092b4dbf446bb494bab4364c5e45, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  CollisionTokenController: {fileID: 1461272639}
+  CollisionLoaderController: {fileID: 1461272639}
   WorldGenerationSettings: {fileID: 1461272637}
   TicksPerSecond: 15
 --- !u!4 &1461272636
@@ -481,6 +481,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 9cb4e17c7e1045acb26e5a2cb6496a65, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  CollisionLoaderObject: {fileID: 8029822122430994327, guid: 6308a178ed85ef143b76c9ca67b76deb,
+    type: 3}
 --- !u!1 &2134891953
 GameObject:
   m_ObjectHideFlags: 0

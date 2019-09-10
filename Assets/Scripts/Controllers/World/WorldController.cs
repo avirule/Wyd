@@ -44,8 +44,8 @@ namespace Controllers.World
         public TimeSpan WorldTickRate { get; private set; }
         public bool PrimaryLoaderChangedChunk { get; set; }
 
-        public event EventHandler<Bounds> ChunkBlocksChanged;
-        public event EventHandler<Bounds> ChunkMeshChanged;
+        public event EventHandler<ChunkChangedEventArgs> ChunkBlocksChanged;
+        public event EventHandler<ChunkChangedEventArgs> ChunkMeshChanged;
 
         private void Awake()
         {
@@ -142,7 +142,7 @@ namespace Controllers.World
                     chunk = Instantiate(_ChunkObject, position, Quaternion.identity, transform);
                     chunk.BlocksChanged += OnChunkBlocksChanged;
                     chunk.MeshChanged += OnChunkMeshChanged;
-                    chunk.DeactivationCallback += (sender, chunkBounds) => { CacheChunk(chunkBounds.min); };
+                    chunk.DeactivationCallback += OnChunkDeactivationCallback;
                 }
                 else
                 {
@@ -164,41 +164,22 @@ namespace Controllers.World
             }
         }
 
-        private void FlagNeighborsForMeshUpdate(Vector3 position)
+        private void FlagNeighborsForMeshUpdate(Vector3 chunkPosition)
         {
-            for (int x = -1; x <= 1; x++)
+            FlagChunkForUpdateMesh(chunkPosition + (Vector3.forward * Chunk.Size.z));
+            FlagChunkForUpdateMesh(chunkPosition + (Vector3.right * Chunk.Size.x));
+            FlagChunkForUpdateMesh(chunkPosition + (Vector3.back * Chunk.Size.z));
+            FlagChunkForUpdateMesh(chunkPosition + (Vector3.left * Chunk.Size.x));
+        }
+
+        private void FlagChunkForUpdateMesh(Vector3 chunkPosition)
+        {
+            if (!TryGetChunkAt(chunkPosition, out Chunk chunk) || chunk.UpdateMesh)
             {
-                if (x == 0)
-                {
-                    continue;
-                }
-
-                Vector3 modifiedPosition = position + new Vector3(x * Chunk.Size.x, 0, 0);
-
-                if (!TryGetChunkAt(modifiedPosition, out Chunk chunk) || chunk.UpdateMesh)
-                {
-                    continue;
-                }
-
-                chunk.UpdateMesh = true;
+                return;
             }
 
-            for (int z = -1; z <= 1; z++)
-            {
-                if (z == 0)
-                {
-                    continue;
-                }
-
-                Vector3 modifiedPosition = position + new Vector3(0, 0, z * Chunk.Size.z);
-
-                if (!TryGetChunkAt(modifiedPosition, out Chunk chunk) || chunk.UpdateMesh)
-                {
-                    continue;
-                }
-
-                chunk.UpdateMesh = true;
-            }
+            chunk.UpdateMesh = true;
         }
 
         #endregion
@@ -225,7 +206,6 @@ namespace Controllers.World
             }
 
             _Chunks.Remove(chunk.Position);
-            FlagNeighborsForMeshUpdate(chunk.Position);
             chunk.Deactivate();
 
             return chunk;
@@ -310,7 +290,7 @@ namespace Controllers.World
         public bool BlockExistsAt(Vector3 position)
         {
             Vector3 chunkPosition = GetChunkOriginFromPosition(position);
-            
+
             if (!TryGetChunkAt(chunkPosition, out Chunk chunk) || !chunk.Built)
             {
                 return false;
@@ -401,15 +381,34 @@ namespace Controllers.World
 
         #endregion
 
-        protected virtual void OnChunkBlocksChanged(object sender, Bounds bounds)
+        protected virtual void OnChunkBlocksChanged(object sender, ChunkChangedEventArgs args)
         {
-            FlagNeighborsForMeshUpdate(bounds.min);
-            ChunkBlocksChanged?.Invoke(sender, bounds);
+            if (args.ShouldUpdateNeighbors)
+            {
+                FlagNeighborsForMeshUpdate(args.ChunkBounds.min);
+            }
+
+            ChunkBlocksChanged?.Invoke(sender, args);
         }
 
-        protected virtual void OnChunkMeshChanged(object sender, Bounds bounds)
+        protected virtual void OnChunkMeshChanged(object sender, ChunkChangedEventArgs args)
         {
-            ChunkMeshChanged?.Invoke(sender, bounds);
+            if (args.ShouldUpdateNeighbors)
+            {
+                FlagNeighborsForMeshUpdate(args.ChunkBounds.min);
+            }
+
+            ChunkMeshChanged?.Invoke(sender, args);
+        }
+
+        protected virtual void OnChunkDeactivationCallback(object sender, ChunkChangedEventArgs args)
+        {
+            CacheChunk(args.ChunkBounds.min);
+
+            if (args.ShouldUpdateNeighbors)
+            {
+                FlagNeighborsForMeshUpdate(args.ChunkBounds.min);
+            }
         }
     }
 }

@@ -99,9 +99,9 @@ namespace Game.World.Chunks
 
         public bool PrimaryLoaderChangedChunk { get; set; }
 
-        public event EventHandler<Bounds> BlocksChanged;
-        public event EventHandler<Bounds> MeshChanged;
-        public event EventHandler<Bounds> DeactivationCallback;
+        public event EventHandler<ChunkChangedEventArgs> BlocksChanged;
+        public event EventHandler<ChunkChangedEventArgs> MeshChanged;
+        public event EventHandler<ChunkChangedEventArgs> DeactivationCallback;
 
         private void Awake()
         {
@@ -295,7 +295,7 @@ namespace Game.World.Chunks
 
                 BuildTimes.Enqueue(args.ThreadedItem.ExecutionTime);
                 
-                OnBlocksChanged();
+                OnBlocksChanged(new ChunkChangedEventArgs(_Bounds, true));
             }
             else if (args.ThreadedItem.Identity == _MeshingIdentity)
             {
@@ -308,7 +308,7 @@ namespace Game.World.Chunks
 
                 MeshTimes.Enqueue(args.ThreadedItem.ExecutionTime);
                 
-                OnMeshChanged();
+                OnMeshChanged(new ChunkChangedEventArgs(_Bounds, false));
             }
         }
 
@@ -406,7 +406,7 @@ namespace Game.World.Chunks
             _Blocks[localPosition1d].Initialise(id);
             UpdateMesh = true;
 
-            OnBlocksChanged();
+            OnBlocksChanged(new ChunkChangedEventArgs(_Bounds, DetermineShouldFlagNeighborsForChange(globalPosition)));
         }
 
         public bool TryPlaceBlockAt(Vector3 globalPosition, ushort id)
@@ -421,7 +421,7 @@ namespace Game.World.Chunks
             _Blocks[localPosition1d].Initialise(id);
             UpdateMesh = true;
 
-            OnBlocksChanged();
+            OnBlocksChanged(new ChunkChangedEventArgs(_Bounds, DetermineShouldFlagNeighborsForChange(globalPosition)));
             return true;
         }
 
@@ -438,7 +438,7 @@ namespace Game.World.Chunks
             _Blocks[localPosition1d].Initialise(BlockController.BLOCK_EMPTY_ID);
             UpdateMesh = true;
 
-            OnBlocksChanged();
+            OnBlocksChanged(new ChunkChangedEventArgs(_Bounds, DetermineShouldFlagNeighborsForChange(globalPosition)));
         }
 
         public bool TryRemoveBlockAt(Vector3 globalPosition)
@@ -452,9 +452,14 @@ namespace Game.World.Chunks
 
             _Blocks[localPosition1d].Initialise(BlockController.BLOCK_EMPTY_ID);
             UpdateMesh = true;
-
-            OnBlocksChanged();
+            
+            OnBlocksChanged(new ChunkChangedEventArgs(_Bounds, DetermineShouldFlagNeighborsForChange(globalPosition)));
             return true;
+        }
+
+        private static bool DetermineShouldFlagNeighborsForChange(Vector3 globalPosition)
+        {
+            return Mathf.Abs((globalPosition.x % Size.x) - (Size.x / 2f)) < 8 || Mathf.Abs((globalPosition.z % Size.z) - (Size.z / 2f)) < 8;
         }
         
         private void CheckInternalSettings(Vector3 loaderChunkPosition)
@@ -468,7 +473,7 @@ namespace Game.World.Chunks
 
             if (!IsWithinLoaderRange(difference))
             {
-                DeactivationCallback?.Invoke(this, _Bounds);
+                DeactivationCallback?.Invoke(this, new ChunkChangedEventArgs(_Bounds, true));
                 return;
             }
 
@@ -528,14 +533,14 @@ namespace Game.World.Chunks
             return highestNonAirIndex;
         }
 
-        protected virtual void OnBlocksChanged()
+        protected virtual void OnBlocksChanged(ChunkChangedEventArgs args)
         {
-            BlocksChanged?.Invoke(this, _Bounds);
+            BlocksChanged?.Invoke(this, args);
         }
 
-        protected virtual void OnMeshChanged()
+        protected virtual void OnMeshChanged(ChunkChangedEventArgs args)
         {
-            MeshChanged?.Invoke(this, _Bounds);
+            MeshChanged?.Invoke(this, args);
         }
     }
 }
