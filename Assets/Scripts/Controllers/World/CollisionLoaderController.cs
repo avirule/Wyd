@@ -19,7 +19,7 @@ namespace Controllers.World
         private bool _UpdateColliderMesh;
 
         public GameObject CollisionLoaderObject;
-        
+
         public bool PrimaryLoaderChangedChunk { get; set; }
 
         private void Awake()

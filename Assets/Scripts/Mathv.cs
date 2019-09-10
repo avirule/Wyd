@@ -106,7 +106,7 @@ public static class Mathv
     {
         return new Vector3(Mathf.Round(a.x), Mathf.Round(a.y), Mathf.Round(a.z));
     }
-    
+
     public static Vector3 Floor(this Vector3 a)
     {
         return new Vector3(Mathf.Floor(a.x), Mathf.Floor(a.y), Mathf.Floor(a.z));
@@ -116,7 +116,7 @@ public static class Mathv
     {
         return new Vector3(Mathf.Ceil(a.x), Mathf.Ceil(a.y), Mathf.Ceil(a.z));
     }
-    
+
     public static Vector3 Trunc(this Vector3 a)
     {
         return new Vector3((float) Math.Truncate(a.x), (float) Math.Truncate(a.x), (float) Math.Truncate(a.x));
@@ -151,7 +151,7 @@ public static class Mathv
     {
         return a.x + a.y + a.z;
     }
-    
+
     public static float Max(this Vector3 a)
     {
         return Mathf.Max(a.x, a.y, a.z);

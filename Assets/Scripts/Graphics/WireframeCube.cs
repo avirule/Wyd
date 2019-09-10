@@ -11,9 +11,9 @@ namespace Graphics
     public class WireframeCube
     {
         private static readonly Color LineColor = new Color(50f, 50f, 50f, 1f);
-        
+
         private readonly Material _LineMaterial;
-        
+
         public Bounds Bounds { get; private set; }
 
         public WireframeCube(Vector3 center, Vector3 size, Material lineMaterial)

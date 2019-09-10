@@ -69,7 +69,7 @@ namespace Game
 
         public static bool IsPositive(this Direction direction)
         {
-            return direction == Direction.North || direction == Direction.East || direction == Direction.Up;
+            return (direction == Direction.North) || (direction == Direction.East) || (direction == Direction.Up);
         }
     }
 }

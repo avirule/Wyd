@@ -116,7 +116,7 @@ namespace Game.World.Chunks
 
             if ((((z == (Chunk.Size.z - 1))
                   && WorldController.Current.TryGetBlockAt(globalPosition + Vector3.forward, out Block block)
-                  && block.Transparent )
+                  && block.Transparent)
                  || ((z < (Chunk.Size.z - 1)) && Blocks[index + Chunk.Size.x].Transparent))
                 && !Blocks[index].HasFace(Direction.North))
             {

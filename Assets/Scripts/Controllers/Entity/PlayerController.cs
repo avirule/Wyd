@@ -88,7 +88,8 @@ namespace Controllers.Entity
                 }
                 else
                 {
-                    WorldController.Current.TryPlaceBlockAt(_LastReachRayHit.point.Floor() + _LastReachRayHit.normal, 9);
+                    WorldController.Current.TryPlaceBlockAt(_LastReachRayHit.point.Floor() + _LastReachRayHit.normal,
+                        9);
                 }
             }
         }
@@ -152,7 +153,7 @@ namespace Controllers.Entity
 
             _ReachHitSurfaceObjectTransform.rotation = Quaternion.LookRotation(-normal);
         }
-        
+
         #region MOVEMENT
 
         private void UpdateMovement()

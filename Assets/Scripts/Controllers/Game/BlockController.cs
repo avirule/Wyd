@@ -97,7 +97,7 @@ namespace Controllers.Game
         {
             return Blocks.ContainsKey(blockId);
         }
-        
+
         public ushort GetBlockId(string blockName)
         {
             if (!BlockNameIds.TryGetValue(blockName, out ushort blockId))

@@ -17,7 +17,7 @@ namespace Controllers.Game
     public class GameController : SingletonController<GameController>
     {
         public static int MainThreadId = Thread.CurrentThread.ManagedThreadId;
-        
+
         private void Awake()
         {
             AssignCurrent(this);

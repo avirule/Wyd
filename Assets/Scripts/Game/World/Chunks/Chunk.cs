@@ -10,7 +10,6 @@ using Game.World.Blocks;
 using Logging;
 using NLog;
 using Threading;
-using UnityEditor;
 using UnityEngine;
 using UnityEngine.Rendering;
 
@@ -51,7 +50,7 @@ namespace Game.World.Chunks
         private bool _OnBorrowedUpdateTime;
         private bool _Visible;
         private bool _RenderShadows;
-        
+
         public ComputeShader GenerationComputeShader;
         public MeshFilter MeshFilter;
         public MeshRenderer MeshRenderer;
@@ -294,7 +293,7 @@ namespace Game.World.Chunks
                 _threadedExecutionQueue.ThreadedItemFinished -= OnThreadedQueueFinishedItem;
 
                 BuildTimes.Enqueue(args.ThreadedItem.ExecutionTime);
-                
+
                 OnBlocksChanged(new ChunkChangedEventArgs(_Bounds, true));
             }
             else if (args.ThreadedItem.Identity == _MeshingIdentity)
@@ -307,7 +306,7 @@ namespace Game.World.Chunks
                 _PendingAction = () => ApplyMesh((ChunkMeshingThreadedItem) args.ThreadedItem);
 
                 MeshTimes.Enqueue(args.ThreadedItem.ExecutionTime);
-                
+
                 OnMeshChanged(new ChunkChangedEventArgs(_Bounds, false));
             }
         }
@@ -340,9 +339,9 @@ namespace Game.World.Chunks
 
         private void UpdateBounds()
         {
-            _Bounds = new Bounds(Position +  Size.Divide(2), Size);
+            _Bounds = new Bounds(Position + Size.Divide(2), Size);
         }
-        
+
         private int ConvertGlobalPositionToLocal1D(Vector3 position)
         {
             Vector3 localPosition = (position - Position).Abs();
@@ -356,7 +355,7 @@ namespace Game.World.Chunks
                 throw new ArgumentOutOfRangeException(nameof(globalPosition), globalPosition,
                     $"Given position `{globalPosition}` exists outside of local bounds.");
             }
-            
+
             int localPosition1d = ConvertGlobalPositionToLocal1D(globalPosition);
 
             if (!Built)
@@ -374,7 +373,7 @@ namespace Game.World.Chunks
                 block = default;
                 return false;
             }
-            
+
             int localPosition1d = ConvertGlobalPositionToLocal1D(globalPosition);
             block = _Blocks[localPosition1d];
             return true;
@@ -387,7 +386,7 @@ namespace Game.World.Chunks
                 throw new ArgumentOutOfRangeException(nameof(globalPosition), globalPosition,
                     $"Given position `{globalPosition}` exists outside of local bounds.");
             }
-            
+
             int localPosition1d = ConvertGlobalPositionToLocal1D(globalPosition);
 
             return _Blocks[localPosition1d].Id != BlockController.BLOCK_EMPTY_ID;
@@ -400,7 +399,7 @@ namespace Game.World.Chunks
                 throw new ArgumentOutOfRangeException(nameof(globalPosition), globalPosition,
                     $"Given position `{globalPosition}` outside of local bounds.");
             }
-            
+
             int localPosition1d = ConvertGlobalPositionToLocal1D(globalPosition);
 
             _Blocks[localPosition1d].Initialise(id);
@@ -415,7 +414,7 @@ namespace Game.World.Chunks
             {
                 return false;
             }
-            
+
             int localPosition1d = ConvertGlobalPositionToLocal1D(globalPosition);
 
             _Blocks[localPosition1d].Initialise(id);
@@ -432,7 +431,7 @@ namespace Game.World.Chunks
                 throw new ArgumentOutOfRangeException(nameof(globalPosition), globalPosition,
                     $"Given position `{globalPosition}` outside of local bounds.");
             }
-            
+
             int localPosition1d = ConvertGlobalPositionToLocal1D(globalPosition);
 
             _Blocks[localPosition1d].Initialise(BlockController.BLOCK_EMPTY_ID);
@@ -447,21 +446,22 @@ namespace Game.World.Chunks
             {
                 return false;
             }
-            
+
             int localPosition1d = ConvertGlobalPositionToLocal1D(globalPosition);
 
             _Blocks[localPosition1d].Initialise(BlockController.BLOCK_EMPTY_ID);
             UpdateMesh = true;
-            
+
             OnBlocksChanged(new ChunkChangedEventArgs(_Bounds, DetermineShouldFlagNeighborsForChange(globalPosition)));
             return true;
         }
 
         private static bool DetermineShouldFlagNeighborsForChange(Vector3 globalPosition)
         {
-            return Mathf.Abs((globalPosition.x % Size.x) - (Size.x / 2f)) < 8 || Mathf.Abs((globalPosition.z % Size.z) - (Size.z / 2f)) < 8;
+            return (Mathf.Abs((globalPosition.x % Size.x) - (Size.x / 2f)) < 8)
+                   || (Mathf.Abs((globalPosition.z % Size.z) - (Size.z / 2f)) < 8);
         }
-        
+
         private void CheckInternalSettings(Vector3 loaderChunkPosition)
         {
             if (Position == loaderChunkPosition)
@@ -484,8 +484,8 @@ namespace Game.World.Chunks
         private static bool IsWithinLoaderRange(Vector3 difference)
         {
             return difference.AllLessThanOrEqual(Size
-                                              * (WorldController.Current.WorldGenerationSettings.Radius
-                                                 + OptionsController.Current.PreLoadChunkDistance));
+                                                 * (WorldController.Current.WorldGenerationSettings.Radius
+                                                    + OptionsController.Current.PreLoadChunkDistance));
         }
 
         private static bool IsWithinRenderDistance(Vector3 difference)
@@ -512,7 +512,7 @@ namespace Game.World.Chunks
         public static int GetTopmostBlockIndex(Block[] blocks, int startIndex, int strideSize, int maxHeight)
         {
             int highestNonAirIndex = 0;
-            
+
             for (int y = 0; y < maxHeight; y++)
             {
                 int currentIndex = startIndex + (y * strideSize);
@@ -526,7 +526,7 @@ namespace Game.World.Chunks
                 {
                     continue;
                 }
-                
+
                 highestNonAirIndex = currentIndex;
             }
 
