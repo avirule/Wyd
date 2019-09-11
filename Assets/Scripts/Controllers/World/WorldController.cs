@@ -29,6 +29,7 @@ namespace Controllers.World
         private ObjectCache<Chunk> _ChunkCache;
         private Queue<Vector3> _BuildChunkQueue;
         private Stopwatch _FrameTimer;
+        private Vector3 _SpawnPoint;
 
         public CollisionLoaderController CollisionLoaderController;
         public WorldGenerationSettings WorldGenerationSettings;
@@ -42,6 +43,16 @@ namespace Controllers.World
 
         public long InitialTick { get; private set; }
         public TimeSpan WorldTickRate { get; private set; }
+
+        /// <summary>
+        ///     X,Z point in the world for spawning the player.
+        /// </summary>
+        public Vector3 SpawnPoint
+        {
+            get => _SpawnPoint;
+            private set => _SpawnPoint = value;
+        }
+
         public bool PrimaryLoaderChangedChunk { get; set; }
 
         public event EventHandler<ChunkChangedEventArgs> ChunkBlocksChanged;
@@ -71,12 +82,16 @@ namespace Controllers.World
         private void Start()
         {
             _ChunkCache.MaximumSize = OptionsController.Current.MaximumChunkCacheSize;
+            (_SpawnPoint.x, _SpawnPoint.y, _SpawnPoint.z) =
+                Mathv.GetVector3IntIndex(WorldGenerationSettings.Seed, Chunk.Size);
             PlayerController.Current.RegisterEntityChangedSubscriber(this);
 
             if (!OptionsController.Current.PreInitializeChunkCache)
             {
                 InitialiseChunkCache();
             }
+            
+            PlayerController.Current.transform.position = new Vector3();
         }
 
         private void Update()
@@ -381,7 +396,7 @@ namespace Controllers.World
 
         #endregion
 
-        protected virtual void OnChunkBlocksChanged(object sender, ChunkChangedEventArgs args)
+        private void OnChunkBlocksChanged(object sender, ChunkChangedEventArgs args)
         {
             if (args.ShouldUpdateNeighbors)
             {
@@ -391,7 +406,7 @@ namespace Controllers.World
             ChunkBlocksChanged?.Invoke(sender, args);
         }
 
-        protected virtual void OnChunkMeshChanged(object sender, ChunkChangedEventArgs args)
+        private void OnChunkMeshChanged(object sender, ChunkChangedEventArgs args)
         {
             if (args.ShouldUpdateNeighbors)
             {
@@ -401,7 +416,7 @@ namespace Controllers.World
             ChunkMeshChanged?.Invoke(sender, args);
         }
 
-        protected virtual void OnChunkDeactivationCallback(object sender, ChunkChangedEventArgs args)
+        private void OnChunkDeactivationCallback(object sender, ChunkChangedEventArgs args)
         {
             CacheChunk(args.ChunkBounds.min);
 

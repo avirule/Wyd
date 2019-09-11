@@ -1,5 +1,6 @@
 #region
 
+using System;
 using System.Collections.Generic;
 using Controllers.World;
 using Game.Entity;
@@ -13,6 +14,7 @@ namespace Controllers.Entity
     {
         public const int REACH = 5;
 
+        private Transform _SelfTransform;
         private CapsuleCollider _Collider;
         private Ray _ReachRay;
         private RaycastHit _LastReachRayHit;
@@ -36,6 +38,7 @@ namespace Controllers.Entity
         {
             AssignCurrent(this);
 
+            _SelfTransform = transform;
             _Collider = GetComponent<CapsuleCollider>();
             _ReachRay = new Ray();
             _EntityChangedChunkSubscribers = new List<IEntityChunkChangedSubscriber>();
@@ -48,7 +51,7 @@ namespace Controllers.Entity
 
         private void Start()
         {
-            WorldController.Current.RegisterEntity(transform, REACH + 1);
+            WorldController.Current.RegisterEntity(_SelfTransform, REACH + 1);
         }
 
         private void FixedUpdate()
@@ -96,7 +99,7 @@ namespace Controllers.Entity
 
         private void CheckChangedChunk()
         {
-            Vector3 chunkPosition = WorldController.GetChunkOriginFromPosition(transform.position);
+            Vector3 chunkPosition = WorldController.GetChunkOriginFromPosition(_SelfTransform.position);
             chunkPosition.y = 0;
 
             if (chunkPosition == CurrentChunk)
@@ -169,8 +172,7 @@ namespace Controllers.Entity
 
         private void CalculateJump()
         {
-            Transform self = transform;
-            Grounded = Physics.Raycast(self.position, Vector3.down, self.localScale.y + 0.001f, GroundedMask);
+            Grounded = Physics.Raycast(_SelfTransform.position, Vector3.down, _SelfTransform.localScale.y + 0.001f, GroundedMask);
 
             if (Grounded && Input.GetButton("Jump"))
             {
@@ -187,7 +189,7 @@ namespace Controllers.Entity
 
             Vector3 modifiedMovement = TravelSpeed * Time.fixedDeltaTime * _Movement;
 
-            Rigidbody.MovePosition(Rigidbody.position + transform.TransformDirection(modifiedMovement));
+            Rigidbody.MovePosition(Rigidbody.position + _SelfTransform.TransformDirection(modifiedMovement));
         }
 
         #endregion

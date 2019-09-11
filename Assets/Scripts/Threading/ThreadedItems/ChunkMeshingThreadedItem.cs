@@ -6,7 +6,7 @@ using UnityEngine;
 
 #endregion
 
-namespace Threading
+namespace Threading.ThreadedItems
 {
     public class ChunkMeshingThreadedItem : ThreadedItem
     {

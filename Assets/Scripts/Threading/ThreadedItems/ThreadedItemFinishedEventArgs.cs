@@ -4,7 +4,7 @@ using System;
 
 #endregion
 
-namespace Threading
+namespace Threading.ThreadedItems
 {
     public class ThreadedItemFinishedEventArgs : EventArgs
     {

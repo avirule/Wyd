@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 #endregion
 
-namespace Threading
+namespace Threading.ThreadedItems
 {
     public abstract class ThreadedItem
     {

@@ -8,7 +8,7 @@ using Random = System.Random;
 
 #endregion
 
-namespace Threading
+namespace Threading.ThreadedItems
 {
     public class ChunkBuildingThreadedItem : ThreadedItem
     {
