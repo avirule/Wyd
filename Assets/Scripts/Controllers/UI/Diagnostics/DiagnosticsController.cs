@@ -1,5 +1,6 @@
 #region
 
+using Controllers.State;
 using TMPro;
 using UnityEngine;
 
@@ -21,7 +22,7 @@ namespace Controllers.UI.Diagnostics
 
         private void CheckPressedDiagnosticKey()
         {
-            if (!Input.GetKey(KeyCode.F3))
+            if (!InputController.Current.GetKey(KeyCode.F3))
             {
                 _DiagnosticKeyPressed = false;
                 return;

@@ -12,7 +12,7 @@ using UnityEngine.SceneManagement;
 
 #endregion
 
-namespace Controllers.Game
+namespace Controllers.State
 {
     public class GameController : SingletonController<GameController>
     {
@@ -22,7 +22,6 @@ namespace Controllers.Game
         {
             AssignCurrent(this);
             DontDestroyOnLoad(this);
-            ToggleCursorLocked(true);
             QualitySettings.vSyncCount = 0;
         }
 
@@ -106,20 +105,6 @@ namespace Controllers.Game
             });
             BlockController.Current.RegisterBlockRules("oak_leaf", false);
             BlockController.Current.RegisterBlockRules("oak_leaf_apple", false);
-        }
-
-        public void ToggleCursorLocked(bool value)
-        {
-            if (value)
-            {
-                Cursor.lockState = CursorLockMode.Locked;
-                Cursor.visible = false;
-            }
-            else
-            {
-                Cursor.lockState = CursorLockMode.None;
-                Cursor.visible = true;
-            }
         }
 
         public void QuitToMainMenu()

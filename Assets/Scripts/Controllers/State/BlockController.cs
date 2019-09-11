@@ -11,7 +11,7 @@ using UnityEngine;
 
 #endregion
 
-namespace Controllers.Game
+namespace Controllers.State
 {
     public class BlockController : SingletonController<BlockController>
     {

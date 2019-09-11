@@ -7,7 +7,7 @@ using UnityEngine;
 
 #endregion
 
-namespace Controllers.Game
+namespace Controllers.State
 {
     public class TextureController : SingletonController<TextureController>
     {

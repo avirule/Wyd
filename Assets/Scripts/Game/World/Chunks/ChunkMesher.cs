@@ -2,10 +2,9 @@
 
 using System.Collections.Generic;
 using System.Threading;
-using Controllers.Game;
+using Controllers.State;
 using Controllers.World;
 using Game.World.Blocks;
-using Threading;
 using Threading.ThreadedItems;
 using UnityEngine;
 using UnityEngine.Rendering;
@@ -481,16 +480,15 @@ namespace Game.World.Chunks
 
             while ( // Set traversalIndex and ensure it is within the chunk's context
                 ((slice + traversals) < limitingSliceValue)
-                &&
                 // This check removes the need to check if the adjacent block is transparent,
                 // as our current block will never be transparent
-                (Blocks[index].Id == Blocks[traversalIndex].Id)
+                && (Blocks[index].Id == Blocks[traversalIndex].Id)
                 && !Blocks[traversalIndex].HasFace(faceDirection)
-                &&
                 // ensure the block to the north of our current block is transparent
-                WorldController.Current.GetBlockAt(
-                        globalPosition + (traversals * traversalDirection.AsVector3()) + faceDirection.AsVector3())
-                    .Transparent)
+                && WorldController.Current.TryGetBlockAt(
+                    globalPosition + (traversals * traversalDirection.AsVector3()) + faceDirection.AsVector3(),
+                    out Block block)
+                && block.Transparent)
             {
                 Blocks[traversalIndex].SetFace(faceDirection, true);
 

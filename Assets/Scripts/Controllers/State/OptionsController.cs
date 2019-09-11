@@ -10,7 +10,7 @@ using UnityEngine;
 
 #endregion
 
-namespace Controllers.Game
+namespace Controllers.State
 {
     public enum CacheCullingAggression
     {

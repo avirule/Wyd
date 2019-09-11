@@ -1,7 +1,7 @@
 #region
 
-using System;
 using System.Collections.Generic;
+using Controllers.State;
 using Controllers.World;
 using Game.Entity;
 using UnityEngine;
@@ -51,6 +51,7 @@ namespace Controllers.Entity
 
         private void Start()
         {
+            InputController.Current.ToggleCursorLocked(true);
             WorldController.Current.RegisterEntity(_SelfTransform, REACH + 1);
         }
 
@@ -69,7 +70,8 @@ namespace Controllers.Entity
             UpdateReachRay();
             UpdateLastLookAtCubeOrigin();
 
-            if (Input.GetButton("Fire1") && _IsInReachOfValidSurface)
+            if (InputController.Current.GetButton("LeftClick")
+                && _IsInReachOfValidSurface)
             {
                 if (_LastReachRayHit.normal.Sum() > 0f)
                 {
@@ -81,7 +83,7 @@ namespace Controllers.Entity
                 }
             }
 
-            if (Input.GetButton("Fire2")
+            if (InputController.Current.GetButton("RightClick")
                 && _IsInReachOfValidSurface
                 && !_Collider.bounds.Contains(_LastReachRayHit.point))
             {
@@ -161,8 +163,8 @@ namespace Controllers.Entity
 
         private void UpdateMovement()
         {
-            _Movement.x = Input.GetAxisRaw("Horizontal");
-            _Movement.z = Input.GetAxisRaw("Vertical");
+            _Movement.x = InputController.Current.GetAxisRaw("Horizontal");
+            _Movement.z = InputController.Current.GetAxisRaw("Vertical");
         }
 
         private void CalculateRotation()
@@ -172,9 +174,10 @@ namespace Controllers.Entity
 
         private void CalculateJump()
         {
-            Grounded = Physics.Raycast(_SelfTransform.position, Vector3.down, _SelfTransform.localScale.y + 0.001f, GroundedMask);
+            Grounded = Physics.Raycast(_SelfTransform.position, Vector3.down, _SelfTransform.localScale.y + 0.001f,
+                GroundedMask);
 
-            if (Grounded && Input.GetButton("Jump"))
+            if (Grounded && InputController.Current.GetButton("Jump"))
             {
                 Rigidbody.AddForce(Vector3.up * JumpForce, ForceMode.Impulse);
             }

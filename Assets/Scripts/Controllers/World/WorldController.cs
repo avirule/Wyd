@@ -5,7 +5,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using Controllers.Entity;
-using Controllers.Game;
+using Controllers.State;
 using Game;
 using Game.Entity;
 using Game.World;
@@ -82,16 +82,16 @@ namespace Controllers.World
         private void Start()
         {
             _ChunkCache.MaximumSize = OptionsController.Current.MaximumChunkCacheSize;
+            // todo fix spawn point to set to useful value
             (_SpawnPoint.x, _SpawnPoint.y, _SpawnPoint.z) =
-                Mathv.GetVector3IntIndex(WorldGenerationSettings.Seed, Chunk.Size);
+                Mathv.GetVector3IntIndex(WorldGenerationSettings.Seed,
+                    new Vector3Int(int.MaxValue, int.MaxValue, int.MaxValue));
             PlayerController.Current.RegisterEntityChangedSubscriber(this);
 
             if (!OptionsController.Current.PreInitializeChunkCache)
             {
                 InitialiseChunkCache();
             }
-            
-            PlayerController.Current.transform.position = new Vector3();
         }
 
         private void Update()

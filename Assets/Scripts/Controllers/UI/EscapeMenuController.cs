@@ -1,6 +1,6 @@
 ﻿#region
 
-using Controllers.Game;
+using Controllers.State;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -34,16 +34,11 @@ namespace Controllers.UI
         private void Update()
         {
             CheckPressedEscapeKey();
-
-            if (_CursorUnlocked && !Main.activeSelf && !Options.activeSelf)
-            {
-                GameController.Current.ToggleCursorLocked(true);
-            }
         }
 
         private void CheckPressedEscapeKey()
         {
-            if (!Input.GetKey(KeyCode.Escape))
+            if (!InputController.Current.GetKey(KeyCode.Escape, this))
             {
                 _EscapeKeyPressed = false;
                 return;
@@ -60,10 +55,16 @@ namespace Controllers.UI
 
         private void SetMainActive(bool active)
         {
-            if (active)
+            if (active && InputController.Current.Lock(this))
             {
+                InputController.Current.ToggleCursorLocked(false, this);
                 SetOptionsActive(false);
-                ToggleCursorUnlocked();
+            }
+            else if (!active && !Options.activeSelf)
+            {
+                // this state should be effectively reached when the main menu is being exited
+                InputController.Current.ToggleCursorLocked(true, this);
+                InputController.Current.Unlock(this);
             }
 
             Backdrop.SetActive(active);
@@ -75,17 +76,10 @@ namespace Controllers.UI
             if (active)
             {
                 SetMainActive(false);
-                ToggleCursorUnlocked();
             }
 
             Backdrop.SetActive(active);
             Options.SetActive(active);
-        }
-
-        private void ToggleCursorUnlocked()
-        {
-            _CursorUnlocked = true;
-            GameController.Current.ToggleCursorLocked(false);
         }
     }
 }

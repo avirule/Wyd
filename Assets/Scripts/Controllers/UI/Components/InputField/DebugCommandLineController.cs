@@ -1,12 +1,12 @@
 #region
 
-using Controllers.Game;
+using Controllers.State;
 using Controllers.World;
+using Game.World.Blocks;
 using Logging;
 using NLog;
 using TMPro;
 using UnityEngine;
-using UnityEngine.EventSystems;
 
 #endregion
 
@@ -15,6 +15,7 @@ namespace Controllers.UI.Components.InputField
     public class DebugCommandLineController : MonoBehaviour
     {
         private TMP_InputField _CommandLineInput;
+        private bool _EscapeKeyPressed;
 
         private void Awake()
         {
@@ -25,12 +26,31 @@ namespace Controllers.UI.Components.InputField
 
         private void Update()
         {
-            if (Input.GetButton("CommandLine") && !_CommandLineInput.isFocused)
+            bool commandLineKeyPressed = InputController.Current.GetButton("CommandLine", this);
+
+            if (!commandLineKeyPressed && !_EscapeKeyPressed)
+            {
+                return;
+            }
+
+            if (commandLineKeyPressed
+                && !_CommandLineInput.isFocused)
             {
                 Focus(true);
             }
+            else if (InputController.Current.GetKey(KeyCode.Escape, this)
+                     && _CommandLineInput.isFocused)
+            {
+                _EscapeKeyPressed = true;
+            }
+            else if (!InputController.Current.GetKey(KeyCode.Escape, this)
+                     && _EscapeKeyPressed)
+            {
+                _EscapeKeyPressed = false;
+                Focus(false);
+            }
         }
-
+        
         private void OnSubmit(string value)
         {
             ParseCommandLineArguments(value.Split(' '));
@@ -40,19 +60,24 @@ namespace Controllers.UI.Components.InputField
 
         private void Focus(bool focus)
         {
-            if (focus)
+            if (focus && InputController.Current.Lock(this))
             {
-                EventSystem.current.SetSelectedGameObject(_CommandLineInput.gameObject, null);
-                _CommandLineInput.OnPointerClick(null);
+                _CommandLineInput.ActivateInputField();
             }
             else
             {
-                EventSystem.current.SetSelectedGameObject(null, null);
+                _CommandLineInput.DeactivateInputField();
+                InputController.Current.Unlock(this);
             }
         }
 
         private static void ParseCommandLineArguments(params string[] args)
         {
+            if ((args.Length == 0) || string.IsNullOrWhiteSpace(args[1]))
+            {
+                return;
+            }
+
             for (int i = 0; i < args.Length; i++)
             {
                 args[i] = args[i].ToLower();
@@ -72,20 +97,25 @@ namespace Controllers.UI.Components.InputField
                                 return;
                             }
 
-                            ushort blockId = WorldController.Current.GetBlockAt(new Vector3Int(x, y, z)).Id;
+                            Vector3 position = new Vector3(x, y, z);
 
-                            string blockName = blockId == BlockController.BLOCK_EMPTY_ID
+                            if (!WorldController.Current.TryGetBlockAt(position, out Block block))
+                            {
+                                EventLog.Logger.Log(LogLevel.Warn, $"Failed to get block at position: {position}");
+                            }
+
+                            string blockName = block.Id == BlockController.BLOCK_EMPTY_ID
                                 ? "Air"
-                                : BlockController.Current.GetBlockName(blockId);
+                                : BlockController.Current.GetBlockName(block.Id);
 
                             EventLog.Logger.Log(LogLevel.Info,
-                                $"Request for block at position ({x}, {y}, {z}) returned `{blockName}`.");
+                                $"Request for block at position {position} returned `{blockName}`.");
                         }
                     }
 
                     break;
                 default:
-                    EventLog.Logger.Log(LogLevel.Error, "Command invalid.");
+                    EventLog.Logger.Log(LogLevel.Warn, "Command invalid.");
                     break;
             }
         }

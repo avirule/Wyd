@@ -1,7 +1,7 @@
 #region
 
 using System.Threading;
-using Controllers.Game;
+using Controllers.State;
 using UnityEngine;
 
 #endregion

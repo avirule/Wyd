@@ -1,6 +1,7 @@
 #region
 
 using Controllers.Entity;
+using Controllers.State;
 using UnityEngine;
 
 #endregion
@@ -29,8 +30,8 @@ namespace Controllers.Graphics
 
         private void Update()
         {
-            _Pitch += _RotationSensitivity * Input.GetAxis("Mouse Y");
-            _Yaw += _RotationSensitivity * Input.GetAxis("Mouse X");
+            _Pitch += _RotationSensitivity * InputController.Current.GetAxis("Mouse Y");
+            _Yaw += _RotationSensitivity * InputController.Current.GetAxis("Mouse X");
         }
     }
 }

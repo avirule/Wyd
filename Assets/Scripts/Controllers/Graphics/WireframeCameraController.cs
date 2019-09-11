@@ -1,5 +1,6 @@
 #region
 
+using Controllers.State;
 using UnityEngine;
 
 #endregion
@@ -29,7 +30,7 @@ namespace Controllers.Graphics
 
         private void Update()
         {
-            if (Input.GetKey(KeyCode.F8))
+            if (InputController.Current.GetKey(KeyCode.F8))
             {
                 if (!_HasPressed)
                 {

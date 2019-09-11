@@ -1,6 +1,6 @@
 ﻿#region
 
-using Controllers.Game;
+using Controllers.State;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 
@@ -13,13 +13,12 @@ namespace Controllers.UI
         // Start is called before the first frame update
         private void Start()
         {
-            GameController.Current.ToggleCursorLocked(false);
+            InputController.Current.ToggleCursorLocked(false);
         }
 
         public void PlayGame()
         {
             SceneManager.LoadSceneAsync("Scenes/Game", LoadSceneMode.Single);
-            GameController.Current.ToggleCursorLocked(true);
         }
     }
 }
