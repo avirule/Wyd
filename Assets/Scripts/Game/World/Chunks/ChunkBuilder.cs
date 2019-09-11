@@ -248,7 +248,7 @@ namespace Game.World.Chunks
 
         private void GenerateGrass(int index, params ushort[] idsToIgnore)
         {
-            int indexAbove = index + (Chunk.Size.x * Chunk.Size.z);
+            int indexAbove = index + (Chunk.YIndexStep);
 
             if ((indexAbove >= Blocks.Length)
                 || Blocks[index].Transparent
@@ -263,7 +263,7 @@ namespace Game.World.Chunks
 
             for (int i = 1; i < 4; i++)
             {
-                int currentIndex = index - (i * Chunk.Size.x * Chunk.Size.z);
+                int currentIndex = index - (i * Chunk.YIndexStep);
 
                 if ((currentIndex < 0)
                     || Blocks[currentIndex].Transparent

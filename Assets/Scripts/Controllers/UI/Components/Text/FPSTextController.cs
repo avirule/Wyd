@@ -1,6 +1,5 @@
 #region
 
-using System;
 using System.Collections.Generic;
 using System.Linq;
 using Controllers.State;
@@ -19,39 +18,39 @@ namespace Controllers.UI.Components.Text
         private TextMeshProUGUI _FPSText;
         private int _SkippedFrames;
 
-        public int MinimumSkipFrames = 8;
-        public int Precision = 2;
+        public int SkipFrames = 4;
 
         private void Awake()
         {
             _DeltaTimes = new List<float>();
             _FPSText = GetComponent<TextMeshProUGUI>();
             _SkippedFrames = 0;
+
+            // avoids div by zero
+            if (SkipFrames <= 0)
+            {
+                SkipFrames = 1;
+            }
         }
 
         private void Update()
         {
-            // avoids div by zero
-            if (MinimumSkipFrames <= 0)
-            {
-                MinimumSkipFrames = 1;
-            }
-
             UpdateDeltaTimes();
         }
 
         private void LateUpdate()
         {
-            if ((_DeltaTimes.Count == 0) || ((_SkippedFrames % MinimumSkipFrames) != 0))
+            if ((_DeltaTimes.Count == 0) || (_SkippedFrames < SkipFrames))
             {
+                _SkippedFrames++;
                 return;
             }
 
             double averageDeltaTime = _DeltaTimes.Average();
-            double averageDeltaTimeAsFrames = Math.Ceiling(1d / averageDeltaTime);
-            double averageDeltaTimeAsMillisecondsRounded = Math.Round(1000d * averageDeltaTime, Precision);
+            double averageDeltaTimeAsFrames = 1d / averageDeltaTime;
+            double averageDeltaTimeAsMillisecondsRounded = 1000d * averageDeltaTime;
 
-            _FPSText.text = $"({averageDeltaTimeAsFrames}fps, {averageDeltaTimeAsMillisecondsRounded}ms)";
+            _FPSText.text = $"({averageDeltaTimeAsFrames:0}fps, {averageDeltaTimeAsMillisecondsRounded:0.00}ms)";
             _SkippedFrames = 0;
         }
 
