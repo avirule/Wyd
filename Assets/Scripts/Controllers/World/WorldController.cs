@@ -172,12 +172,12 @@ namespace Controllers.World
 
                         // ensures that neighbours update their meshes to cull newly out of sight faces
                         FlagNeighborsForMeshUpdate(chunkController.Position);
-
-                        if (IsOnBorrowedUpdateTime())
-                        {
-                            break;
-                        }
                     }
+                }
+                
+                if (IsOnBorrowedUpdateTime())
+                {
+                    break;
                 }
             }
         }

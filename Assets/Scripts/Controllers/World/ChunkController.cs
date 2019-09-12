@@ -50,7 +50,6 @@ namespace Controllers.World
         private Mesh _Mesh;
         private object _BuildingIdentity;
         private object _MeshingIdentity;
-        private bool _OnBorrowedUpdateTime;
         private bool _UpdateInternalSettingsOnNextFrame;
         private bool _Visible;
         private bool _RenderShadows;
@@ -108,11 +107,18 @@ namespace Controllers.World
 
         private void Awake()
         {
+            if (_threadedExecutionQueue == default)
+            {
+                // init ThreadedQueue with # of threads matching 1/2 of logical processors
+                _threadedExecutionQueue = new ThreadedQueue(200, () => OptionsController.Current.ThreadingMode,
+                    Environment.ProcessorCount / 2);
+                _threadedExecutionQueue.Start();
+            }
+            
             _SelfTransform = transform;
             Position = _SelfTransform.position;
             UpdateBounds();
             _Blocks = new Block[Size.Product()];
-            _OnBorrowedUpdateTime = Built = Building = Meshed = Meshing = UpdateMesh = false;
             _Mesh = new Mesh();
 
             GenerationComputeShader.SetVector("_MaximumSize", new Vector4(Size.x, Size.y, Size.z));
@@ -120,6 +126,7 @@ namespace Controllers.World
             MeshFilter.sharedMesh = _Mesh;
             MeshRenderer.material.SetTexture(TextureController.Current.MainTex,
                 TextureController.Current.TerrainTexture);
+            Built = Building = Meshed = Meshing = UpdateMesh = false;
             AggressiveFaceMerging = true;
 
             _Visible = MeshRenderer.enabled;
@@ -134,14 +141,6 @@ namespace Controllers.World
 
         private void Start()
         {
-            if (_threadedExecutionQueue == default)
-            {
-                // init ThreadedQueue with # of threads matching 1/2 of logical processors
-                _threadedExecutionQueue = new ThreadedQueue(200, () => OptionsController.Current.ThreadingMode,
-                    Environment.ProcessorCount / 2);
-                _threadedExecutionQueue.Start();
-            }
-
             if (BuildTimes == default)
             {
                 BuildTimes =
@@ -155,7 +154,7 @@ namespace Controllers.World
             }
 
             _UpdateInternalSettingsOnNextFrame = true;
-            
+
             if (_CurrentLoader == default)
             {
                 EventLog.Logger.Log(LogLevel.Warn,
@@ -165,9 +164,7 @@ namespace Controllers.World
 
         private void Update()
         {
-            _OnBorrowedUpdateTime = WorldController.Current.IsOnBorrowedUpdateTime();
-
-            if (_OnBorrowedUpdateTime)
+            if (WorldController.Current.IsOnBorrowedUpdateTime())
             {
                 return;
             }
