@@ -38,13 +38,15 @@
         half _Glossiness;
         half _Metallic;
         fixed4 _Color;
- 
+        
         // Add instancing support for this shader. You need to check 'Enable Instancing' on materials that use the shader.
         // See https://docs.unity3d.com/Manual/GPUInstancing.html for more information about instancing.
         // #pragma instancing_options assumeuniformscaling
         UNITY_INSTANCING_BUFFER_START(Props)
             // put more per-instance properties here
         UNITY_INSTANCING_BUFFER_END(Props)
+ 
+         float GlobalLightLevel;
  
         void vert(inout appdata_full v, out Input o)
         {
@@ -56,13 +58,17 @@
         void surf(Input IN, inout SurfaceOutputStandard o)
         {
             // Albedo comes from a texture tinted by color
-            fixed4 c = UNITY_SAMPLE_TEX2DARRAY(_MainTex, float3(IN.uv_MainTex, IN.arrayIndex)) * _Color;
-            o.Albedo = c.rgb * IN.color; // Combine normal color with the vertex color
+            fixed4 textureColor = UNITY_SAMPLE_TEX2DARRAY(_MainTex, float3(IN.uv_MainTex, IN.arrayIndex)) * _Color;
+            
+            clip(textureColor.a - 1);
+            
+            float localLightLevel = clamp(GlobalLightLevel + textureColor.a, 0, 1); 
+            o.Albedo = lerp(textureColor.rgb * IN.color, float4(0, 0, 0, 1), localLightLevel); // Combine normal color with the vertex color
  
             // Metallic and smoothness come from slider variables
             o.Metallic = _Metallic;
             o.Smoothness = _Glossiness;
-            o.Alpha = c.a;
+            o.Alpha = textureColor.a;
         }
         ENDCG
     }
