@@ -15,6 +15,7 @@ namespace Game.World.Blocks
         public static readonly BitVector32.Section TransparencySection;
         public static readonly BitVector32.Section AllFacesSection;
         public static readonly BitVector32.Section[] FaceSections;
+        public static readonly BitVector32.Section DamageSection;
 
         static Block()
         {
@@ -28,6 +29,7 @@ namespace Game.World.Blocks
             FaceSections[3] = BitVector32.CreateSection(1, FaceSections[2]);
             FaceSections[4] = BitVector32.CreateSection(1, FaceSections[3]);
             FaceSections[5] = BitVector32.CreateSection(1, FaceSections[4]);
+            DamageSection = BitVector32.CreateSection(15, FaceSections[5]);
         }
 
         #endregion
@@ -48,6 +50,12 @@ namespace Game.World.Blocks
             get => _Bits[TransparencySection] == 0;
             // value = true is transparent so that the default value of block is transparent
             set => _Bits[TransparencySection] = value ? 0 : 1;
+        }
+
+        public sbyte Damage
+        {
+            get => (sbyte) _Bits[DamageSection];
+            set => _Bits[DamageSection] = value;
         }
 
         public Block(ushort id, sbyte faces = 0)
@@ -81,8 +89,6 @@ namespace Game.World.Blocks
 
         public bool HasAllFaces()
         {
-            // if it is greater than this byte, then 6 or more bits
-            // have been set, so all faces are true
             return _Bits[AllFacesSection] == 63;
         }
 
