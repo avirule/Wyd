@@ -49,7 +49,7 @@ public static class Mathb
         return (a & b) == 0;
     }
 
-    public static int SmallestBitDigit(this byte a)
+    public static int LeastSignificantBit(this byte a)
     {
         return MultiplyDeBruijnBitPosition[(uint) ((a & -a) * 0x077CB531U) >> 27];
     }

@@ -57,7 +57,10 @@ namespace Threading.ThreadedItems
         {
             for (int index = 0; index < blocks.Length; index++)
             {
-                blocks[index].ClearFaces();
+                if (blocks[index].HasAnyFaces())
+                {
+                    blocks[index].ClearFaces();
+                }
             }
         }
     }
