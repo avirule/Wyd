@@ -174,7 +174,7 @@ namespace Controllers.World
                         FlagNeighborsForMeshUpdate(chunkController.Position);
                     }
                 }
-                
+
                 if (IsOnBorrowedUpdateTime())
                 {
                     break;

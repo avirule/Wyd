@@ -229,7 +229,7 @@ namespace Controllers.Entity
         {
             EntityDestroyed?.Invoke(this, this);
         }
-        
+
         #endregion
     }
 }

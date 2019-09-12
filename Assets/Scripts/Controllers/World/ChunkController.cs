@@ -114,7 +114,7 @@ namespace Controllers.World
                     Environment.ProcessorCount / 2);
                 _threadedExecutionQueue.Start();
             }
-            
+
             _SelfTransform = transform;
             Position = _SelfTransform.position;
             UpdateBounds();
