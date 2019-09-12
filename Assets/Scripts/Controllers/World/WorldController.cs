@@ -171,7 +171,7 @@ namespace Controllers.World
                         chunkController.AssignLoader(loader);
 
                         // ensures that neighbours update their meshes to cull newly out of sight faces
-                        FlagNeighborsForMeshUpdate(chunkController.Position);
+                        FlagNeighborsForMeshUpdate(chunkController.Position, ChunkController.CardinalDirectionsVector3);
                     }
                 }
 
@@ -182,12 +182,12 @@ namespace Controllers.World
             }
         }
 
-        private void FlagNeighborsForMeshUpdate(Vector3 chunkPosition)
+        private void FlagNeighborsForMeshUpdate(Vector3 chunkPosition, IEnumerable<Vector3> directions)
         {
-            FlagChunkForUpdateMesh(chunkPosition + (Vector3.forward * ChunkController.Size.z));
-            FlagChunkForUpdateMesh(chunkPosition + (Vector3.right * ChunkController.Size.x));
-            FlagChunkForUpdateMesh(chunkPosition + (Vector3.back * ChunkController.Size.z));
-            FlagChunkForUpdateMesh(chunkPosition + (Vector3.left * ChunkController.Size.x));
+            foreach (Vector3 normal in directions)
+            {
+                FlagChunkForUpdateMesh(chunkPosition + normal.Multiply(ChunkController.Size));
+            }
         }
 
         private void FlagChunkForUpdateMesh(Vector3 chunkPosition)
@@ -257,20 +257,14 @@ namespace Controllers.World
 
         private void OnChunkBlocksChanged(object sender, ChunkChangedEventArgs args)
         {
-            if (args.ShouldUpdateNeighbors)
-            {
-                FlagNeighborsForMeshUpdate(args.ChunkBounds.min);
-            }
+            FlagNeighborsForMeshUpdate(args.ChunkBounds.min, args.NeighborDirectionsToUpdate);
 
             ChunkBlocksChanged?.Invoke(sender, args);
         }
 
         private void OnChunkMeshChanged(object sender, ChunkChangedEventArgs args)
         {
-            if (args.ShouldUpdateNeighbors)
-            {
-                FlagNeighborsForMeshUpdate(args.ChunkBounds.min);
-            }
+            FlagNeighborsForMeshUpdate(args.ChunkBounds.min, args.NeighborDirectionsToUpdate);
 
             ChunkMeshChanged?.Invoke(sender, args);
         }
@@ -279,10 +273,7 @@ namespace Controllers.World
         {
             CacheChunk(args.ChunkBounds.min);
 
-            if (args.ShouldUpdateNeighbors)
-            {
-                FlagNeighborsForMeshUpdate(args.ChunkBounds.min);
-            }
+            FlagNeighborsForMeshUpdate(args.ChunkBounds.min, args.NeighborDirectionsToUpdate);
         }
 
         #endregion

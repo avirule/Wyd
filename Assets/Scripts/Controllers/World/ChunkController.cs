@@ -1,6 +1,9 @@
 #region
 
 using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading;
 using Collections;
 using Controllers.State;
 using Game;
@@ -38,6 +41,14 @@ namespace Controllers.World
 
         public static readonly Vector3Int Size = new Vector3Int(16, 256, 16);
         public static readonly int YIndexStep = Size.x * Size.z;
+
+        public static readonly IEnumerable<Vector3> CardinalDirectionsVector3 = new[]
+        {
+            Vector3.forward,
+            Vector3.right,
+            Vector3.back,
+            Vector3.left
+        };
 
         public static FixedConcurrentQueue<TimeSpan> BuildTimes;
         public static FixedConcurrentQueue<TimeSpan> MeshTimes;
@@ -311,7 +322,7 @@ namespace Controllers.World
 
                 BuildTimes.Enqueue(args.ThreadedItem.ExecutionTime);
 
-                OnBlocksChanged(new ChunkChangedEventArgs(_Bounds, true));
+                OnBlocksChanged(new ChunkChangedEventArgs(_Bounds, CardinalDirectionsVector3));
             }
             else if (args.ThreadedItem.Identity == _MeshingIdentity)
             {
@@ -324,9 +335,14 @@ namespace Controllers.World
 
                 MeshTimes.Enqueue(args.ThreadedItem.ExecutionTime);
 
-                OnMeshChanged(new ChunkChangedEventArgs(_Bounds, false));
+                OnMeshChanged(new ChunkChangedEventArgs(_Bounds, Enumerable.Empty<Vector3>()));
+
+                Interlocked.Increment(ref meshed);
+                Debug.Log(meshed);
             }
         }
+
+        private static int meshed;
 
         private ThreadedItem GetChunkBuildingThreadedItem(bool memoryNegligent = false, float[] noiseValues = null)
         {
@@ -422,7 +438,7 @@ namespace Controllers.World
             _Blocks[localPosition1d].Initialise(id);
             UpdateMesh = true;
 
-            OnBlocksChanged(new ChunkChangedEventArgs(_Bounds, DetermineShouldFlagNeighborsForChange(globalPosition)));
+            OnBlocksChanged(new ChunkChangedEventArgs(_Bounds, DetermineDirectionsForNeighborUpdate(globalPosition)));
         }
 
         public bool TryPlaceBlockAt(Vector3 globalPosition, ushort id)
@@ -437,7 +453,7 @@ namespace Controllers.World
             _Blocks[localPosition1d].Initialise(id);
             UpdateMesh = true;
 
-            OnBlocksChanged(new ChunkChangedEventArgs(_Bounds, DetermineShouldFlagNeighborsForChange(globalPosition)));
+            OnBlocksChanged(new ChunkChangedEventArgs(_Bounds, DetermineDirectionsForNeighborUpdate(globalPosition)));
             return true;
         }
 
@@ -454,7 +470,7 @@ namespace Controllers.World
             _Blocks[localPosition1d].Initialise(BlockController.BLOCK_EMPTY_ID);
             UpdateMesh = true;
 
-            OnBlocksChanged(new ChunkChangedEventArgs(_Bounds, DetermineShouldFlagNeighborsForChange(globalPosition)));
+            OnBlocksChanged(new ChunkChangedEventArgs(_Bounds, DetermineDirectionsForNeighborUpdate(globalPosition)));
         }
 
         public bool TryRemoveBlockAt(Vector3 globalPosition)
@@ -469,14 +485,56 @@ namespace Controllers.World
             _Blocks[localPosition1d].Initialise(BlockController.BLOCK_EMPTY_ID);
             UpdateMesh = true;
 
-            OnBlocksChanged(new ChunkChangedEventArgs(_Bounds, DetermineShouldFlagNeighborsForChange(globalPosition)));
+            OnBlocksChanged(new ChunkChangedEventArgs(_Bounds, DetermineDirectionsForNeighborUpdate(globalPosition)));
             return true;
         }
 
-        private static bool DetermineShouldFlagNeighborsForChange(Vector3 globalPosition)
+        private IEnumerable<Vector3> DetermineDirectionsForNeighborUpdate(Vector3 globalPosition)
         {
-            return (Mathf.Abs((globalPosition.x % Size.x) - (Size.x / 2f)) < 8)
-                   || (Mathf.Abs((globalPosition.z % Size.z) - (Size.z / 2f)) < 8);
+            Vector3 localPosition = globalPosition - Position;
+
+            // topleft & bottomright x computation value
+            float tl_br_x = localPosition.x * Size.x;
+            // topleft & bottomright y computation value
+            float tl_br_y = localPosition.z * Size.z;
+
+            // topright & bottomleft left-side computation value
+            float tr_bl_l = localPosition.x + localPosition.z;
+            // topright & bottomleft right-side computation value
+            float tr_bl_r = (Size.x + Size.z) / 2f;
+
+            bool isInTopLeftQuadrant = tl_br_x > tl_br_y;
+            bool isAlongTLBRQuadrantDivider = Math.Abs(tl_br_x - tl_br_y) < 0.01f;
+            bool isInTopRightQuadrant = tr_bl_l > tr_bl_r;
+            bool isAlongTRBLQuadrantDivider = Math.Abs(tr_bl_l - tr_bl_r) < 0.01f;
+
+            if (isInTopLeftQuadrant && isInTopRightQuadrant)
+            {
+                yield return Vector3.forward;
+            }
+            else if (!isInTopLeftQuadrant && isInTopRightQuadrant)
+            {
+                yield return Vector3.right;
+            }
+            else if (!isInTopLeftQuadrant && !isInTopRightQuadrant)
+            {
+                yield return Vector3.back;
+            }
+            else if (isInTopLeftQuadrant && !isInTopRightQuadrant)
+            {
+                yield return Vector3.left;
+            }
+
+            if (isAlongTRBLQuadrantDivider && isInTopRightQuadrant)
+            {
+                yield return Vector3.forward;
+                yield return Vector3.right;
+            }
+            else if (isAlongTLBRQuadrantDivider && isInTopLeftQuadrant)
+            {
+                yield return Vector3.forward;
+                yield return Vector3.left;
+            } // todo this
         }
 
         private void OnCurrentLoaderChangedChunk(object sender, Vector3 newChunkPosition)
@@ -490,7 +548,7 @@ namespace Controllers.World
 
             if (!IsWithinLoaderRange(difference))
             {
-                DeactivationCallback?.Invoke(this, new ChunkChangedEventArgs(_Bounds, true));
+                DeactivationCallback?.Invoke(this, new ChunkChangedEventArgs(_Bounds, CardinalDirectionsVector3));
                 return;
             }
 

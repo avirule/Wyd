@@ -3,6 +3,7 @@
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Diagnostics;
 using Controllers.State;
 using Controllers.World;
 using Game.Entities;
@@ -16,11 +17,14 @@ namespace Controllers.Entity
     {
         public const int REACH = 5;
 
+        private static readonly TimeSpan MinimumActionInterval = TimeSpan.FromSeconds(1f / 4f);
+
         private Ray _ReachRay;
         private RaycastHit _LastReachRayHit;
         private bool _IsInReachOfValidSurface;
         private Transform _ReachHitSurfaceObjectTransform;
         private Vector3 _Movement;
+        private Stopwatch _ActionCooldown;
 
         public Transform CameraTransform;
         public GameObject ReachHitSurfaceObject;
@@ -46,6 +50,7 @@ namespace Controllers.Entity
             AssignCurrent(this);
 
             _ReachRay = new Ray();
+            _ActionCooldown = Stopwatch.StartNew();
 
             Transform = transform;
             Rigidbody = GetComponent<Rigidbody>();
@@ -84,7 +89,8 @@ namespace Controllers.Entity
             UpdateLastLookAtCubeOrigin();
 
             if (InputController.Current.GetButton("LeftClick")
-                && _IsInReachOfValidSurface)
+                && _IsInReachOfValidSurface
+                && _ActionCooldown.Elapsed > MinimumActionInterval)
             {
                 if (_LastReachRayHit.normal.Sum() > 0f)
                 {
@@ -94,11 +100,14 @@ namespace Controllers.Entity
                 {
                     WorldController.Current.TryRemoveBlockAt(_LastReachRayHit.point.Floor());
                 }
+                
+                _ActionCooldown.Restart();
             }
 
             if (InputController.Current.GetButton("RightClick")
                 && _IsInReachOfValidSurface
-                && !Collider.bounds.Contains(_LastReachRayHit.point))
+                && !Collider.bounds.Contains(_LastReachRayHit.point)
+                && _ActionCooldown.Elapsed > MinimumActionInterval)
             {
                 if (_LastReachRayHit.normal.Sum() > 0f)
                 {
@@ -109,6 +118,8 @@ namespace Controllers.Entity
                     WorldController.Current.TryPlaceBlockAt(_LastReachRayHit.point.Floor() + _LastReachRayHit.normal,
                         9);
                 }
+                
+                _ActionCooldown.Restart();
             }
         }
 
