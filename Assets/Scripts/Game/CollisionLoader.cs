@@ -63,6 +63,8 @@ namespace Game
         private void Start()
         {
             WorldController.Current.ChunkMeshChanged += (sender, bounds) => { _ScheduledRecalculation = true; };
+            // always do an initial pass to create colliders
+            _ScheduledRecalculation = true;
         }
 
         private void Update()

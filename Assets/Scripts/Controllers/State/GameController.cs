@@ -16,10 +16,11 @@ namespace Controllers.State
 {
     public class GameController : SingletonController<GameController>
     {
-        public static int MainThreadId = Thread.CurrentThread.ManagedThreadId;
+        public static readonly int MainThreadId = Thread.CurrentThread.ManagedThreadId;
 
         private void Awake()
         {
+            // todo EntityController with source/subscriber architecture
             AssignCurrent(this);
             DontDestroyOnLoad(this);
             QualitySettings.vSyncCount = 0;

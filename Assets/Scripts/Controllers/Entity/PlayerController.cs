@@ -1,47 +1,61 @@
 #region
 
+using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using Controllers.State;
 using Controllers.World;
-using Game.Entity;
+using Game.Entities;
 using UnityEngine;
 
 #endregion
 
 namespace Controllers.Entity
 {
-    public class PlayerController : SingletonController<PlayerController>
+    public class PlayerController : SingletonController<PlayerController>, IEntity, ICollideable
     {
         public const int REACH = 5;
 
-        private Transform _SelfTransform;
-        private CapsuleCollider _Collider;
         private Ray _ReachRay;
         private RaycastHit _LastReachRayHit;
         private bool _IsInReachOfValidSurface;
         private Transform _ReachHitSurfaceObjectTransform;
         private Vector3 _Movement;
-        private List<IEntityChunkChangedSubscriber> _EntityChangedChunkSubscribers;
 
         public Transform CameraTransform;
-        public Rigidbody Rigidbody;
         public GameObject ReachHitSurfaceObject;
         public LayerMask GroundedMask;
         public LayerMask RaycastLayerMask;
-        public Vector3 CurrentChunk;
         public float RotationSensitivity;
         public float TravelSpeed;
         public float JumpForce;
         public bool Grounded;
 
+        public Transform Transform { get; private set; }
+        public Rigidbody Rigidbody { get; private set; }
+        public Collider Collider { get; private set; }
+        public Vector3 CurrentChunk { get; private set; }
+        public IReadOnlyList<string> Tags { get; private set; }
+
+        public event EventHandler<Vector3> CausedPositionChanged;
+        public event EventHandler<Vector3> ChunkPositionChanged;
+        public event EventHandler<IEntity> EntityDestroyed;
+
         private void Awake()
         {
             AssignCurrent(this);
 
-            _SelfTransform = transform;
-            _Collider = GetComponent<CapsuleCollider>();
             _ReachRay = new Ray();
-            _EntityChangedChunkSubscribers = new List<IEntityChunkChangedSubscriber>();
+
+            Transform = transform;
+            Rigidbody = GetComponent<Rigidbody>();
+            Collider = GetComponent<CapsuleCollider>();
+            Tags = new ReadOnlyCollection<string>(new List<string>
+            {
+                "player",
+                "loader",
+                "collider"
+            });
 
             ReachHitSurfaceObject = Instantiate(ReachHitSurfaceObject);
             _ReachHitSurfaceObjectTransform = ReachHitSurfaceObject.transform;
@@ -52,14 +66,13 @@ namespace Controllers.Entity
         private void Start()
         {
             InputController.Current.ToggleCursorLocked(true);
-            WorldController.Current.RegisterEntity(_SelfTransform, REACH + 1);
+            EntityController.Current.RegisterEntity(GetType(), this);
         }
 
         private void FixedUpdate()
         {
             CalculateRotation();
             CalculateMovement();
-
             CheckChangedChunk();
         }
 
@@ -85,7 +98,7 @@ namespace Controllers.Entity
 
             if (InputController.Current.GetButton("RightClick")
                 && _IsInReachOfValidSurface
-                && !_Collider.bounds.Contains(_LastReachRayHit.point))
+                && !Collider.bounds.Contains(_LastReachRayHit.point))
             {
                 if (_LastReachRayHit.normal.Sum() > 0f)
                 {
@@ -99,25 +112,10 @@ namespace Controllers.Entity
             }
         }
 
-        private void CheckChangedChunk()
+        private void OnDestroy()
         {
-            Vector3 chunkPosition = WorldController.GetChunkOriginFromPosition(_SelfTransform.position);
-            chunkPosition.y = 0;
-
-            if (chunkPosition == CurrentChunk)
-            {
-                return;
-            }
-
-            CurrentChunk = chunkPosition;
-            FlagChangedChunk();
+            OnEntityDestroyed();
         }
-
-        public void RegisterEntityChangedSubscriber(IEntityChunkChangedSubscriber subscriber)
-        {
-            _EntityChangedChunkSubscribers.Add(subscriber);
-        }
-
 
         private void UpdateReachRay()
         {
@@ -159,6 +157,20 @@ namespace Controllers.Entity
             _ReachHitSurfaceObjectTransform.rotation = Quaternion.LookRotation(-normal);
         }
 
+        private void CheckChangedChunk()
+        {
+            Vector3 chunkPosition = WorldController.GetChunkOriginFromPosition(Transform.position);
+            chunkPosition.y = 0;
+
+            if (chunkPosition == CurrentChunk)
+            {
+                return;
+            }
+
+            CurrentChunk = chunkPosition;
+            OnChunkChanged(CurrentChunk);
+        }
+
         #region MOVEMENT
 
         private void UpdateMovement()
@@ -174,13 +186,15 @@ namespace Controllers.Entity
 
         private void CalculateJump()
         {
-            Grounded = Physics.Raycast(_SelfTransform.position, Vector3.down, _SelfTransform.localScale.y + 0.001f,
+            Grounded = Physics.Raycast(Transform.position, Vector3.down, Transform.localScale.y + 0.001f,
                 GroundedMask);
 
             if (Grounded && InputController.Current.GetButton("Jump"))
             {
                 Rigidbody.AddForce(Vector3.up * JumpForce, ForceMode.Impulse);
             }
+
+            OnCausedPositionChanged(Transform.position);
         }
 
         private void CalculateMovement()
@@ -192,22 +206,30 @@ namespace Controllers.Entity
 
             Vector3 modifiedMovement = TravelSpeed * Time.fixedDeltaTime * _Movement;
 
-            Rigidbody.MovePosition(Rigidbody.position + _SelfTransform.TransformDirection(modifiedMovement));
+            Rigidbody.MovePosition(Rigidbody.position + Transform.TransformDirection(modifiedMovement));
+            OnCausedPositionChanged(Transform.position);
         }
 
         #endregion
 
 
-        #region EVENTS
+        #region Event Invocators
 
-        private void FlagChangedChunk()
+        private void OnCausedPositionChanged(Vector3 newPosition)
         {
-            foreach (IEntityChunkChangedSubscriber subscriber in _EntityChangedChunkSubscribers)
-            {
-                subscriber.PrimaryLoaderChangedChunk = true;
-            }
+            CausedPositionChanged?.Invoke(this, newPosition);
         }
 
+        private void OnChunkChanged(Vector3 newChunkPosition)
+        {
+            ChunkPositionChanged?.Invoke(this, newChunkPosition);
+        }
+
+        private void OnEntityDestroyed()
+        {
+            EntityDestroyed?.Invoke(this, this);
+        }
+        
         #endregion
     }
 }

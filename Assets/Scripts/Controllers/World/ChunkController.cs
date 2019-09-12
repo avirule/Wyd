@@ -2,11 +2,11 @@
 
 using System;
 using Collections;
-using Controllers.Entity;
 using Controllers.State;
-using Controllers.World;
-using Game.Entity;
+using Game;
+using Game.Entities;
 using Game.World.Blocks;
+using Game.World.Chunks;
 using Logging;
 using NLog;
 using Threading;
@@ -16,7 +16,7 @@ using UnityEngine.Rendering;
 
 #endregion
 
-namespace Game.World.Chunks
+namespace Controllers.World
 {
     public enum ThreadingMode
     {
@@ -24,7 +24,7 @@ namespace Game.World.Chunks
         Multi = 1
     }
 
-    public class Chunk : MonoBehaviour, IEntityChunkChangedSubscriber
+    public class ChunkController : MonoBehaviour
     {
         private static readonly int Offset = Shader.PropertyToID("_Offset");
 
@@ -38,19 +38,20 @@ namespace Game.World.Chunks
 
         public static readonly Vector3Int Size = new Vector3Int(16, 256, 16);
         public static readonly int YIndexStep = Size.x * Size.z;
-        
+
         public static FixedConcurrentQueue<TimeSpan> BuildTimes;
         public static FixedConcurrentQueue<TimeSpan> MeshTimes;
 
         private Bounds _Bounds;
         private Action _PendingAction;
         private Transform _SelfTransform;
-        private RenderTexture _BuiltTexture;
+        private IEntity _CurrentLoader;
         private Block[] _Blocks;
         private Mesh _Mesh;
         private object _BuildingIdentity;
         private object _MeshingIdentity;
         private bool _OnBorrowedUpdateTime;
+        private bool _UpdateInternalSettingsOnNextFrame;
         private bool _Visible;
         private bool _RenderShadows;
 
@@ -99,7 +100,7 @@ namespace Game.World.Chunks
             }
         }
 
-        public bool PrimaryLoaderChangedChunk { get; set; }
+        // todo chunk load failed event
 
         public event EventHandler<ChunkChangedEventArgs> BlocksChanged;
         public event EventHandler<ChunkChangedEventArgs> MeshChanged;
@@ -153,8 +154,13 @@ namespace Game.World.Chunks
                     .MaximumChunkLoadTimeBufferSize);
             }
 
-            PlayerController.Current.RegisterEntityChangedSubscriber(this);
-            CheckInternalSettings(PlayerController.Current.CurrentChunk);
+            _UpdateInternalSettingsOnNextFrame = true;
+            
+            if (_CurrentLoader == default)
+            {
+                EventLog.Logger.Log(LogLevel.Warn,
+                    $"Chunk at position {Position} has been initialized without a loader. This is possibly an error.");
+            }
         }
 
         private void Update()
@@ -166,9 +172,9 @@ namespace Game.World.Chunks
                 return;
             }
 
-            if (PrimaryLoaderChangedChunk)
+            if (_UpdateInternalSettingsOnNextFrame)
             {
-                CheckInternalSettings(PlayerController.Current.CurrentChunk);
+                OnCurrentLoaderChangedChunk(this, _CurrentLoader.CurrentChunk);
             }
 
             GenerationStateCheckAndStart();
@@ -202,7 +208,7 @@ namespace Game.World.Chunks
             GenerationComputeShader.SetVector("_Offset", Position);
             UpdateBounds();
             Built = Building = Meshed = Meshing = UpdateMesh = false;
-            CheckInternalSettings(PlayerController.Current.CurrentChunk);
+            _UpdateInternalSettingsOnNextFrame = true;
             gameObject.SetActive(true);
         }
 
@@ -213,8 +219,19 @@ namespace Game.World.Chunks
                 _Mesh.Clear();
             }
 
+            if (_CurrentLoader != default)
+            {
+                _CurrentLoader.ChunkPositionChanged -= OnCurrentLoaderChangedChunk;
+            }
+
             StopAllCoroutines();
             gameObject.SetActive(false);
+        }
+
+        public void AssignLoader(IEntity loader)
+        {
+            _CurrentLoader = loader;
+            _CurrentLoader.ChunkPositionChanged += OnCurrentLoaderChangedChunk;
         }
 
         #endregion
@@ -465,14 +482,14 @@ namespace Game.World.Chunks
                    || (Mathf.Abs((globalPosition.z % Size.z) - (Size.z / 2f)) < 8);
         }
 
-        private void CheckInternalSettings(Vector3 loaderChunkPosition)
+        private void OnCurrentLoaderChangedChunk(object sender, Vector3 newChunkPosition)
         {
-            if (Position == loaderChunkPosition)
+            if (Position == newChunkPosition)
             {
                 return;
             }
 
-            Vector3 difference = (Position - loaderChunkPosition).Abs();
+            Vector3 difference = (Position - newChunkPosition).Abs();
 
             if (!IsWithinLoaderRange(difference))
             {
@@ -482,6 +499,7 @@ namespace Game.World.Chunks
 
             Visible = IsWithinRenderDistance(difference);
             RenderShadows = IsWithinDrawShadowsDistance(difference);
+            _UpdateInternalSettingsOnNextFrame = false;
         }
 
         private static bool IsWithinLoaderRange(Vector3 difference)

@@ -1,9 +1,7 @@
 #region
 
 using System.Collections.Generic;
-using Controllers.Entity;
 using Game;
-using Game.Entity;
 using UnityEngine;
 
 #endregion
@@ -11,7 +9,7 @@ using UnityEngine;
 namespace Controllers.World
 {
     [RequireComponent(typeof(MeshCollider))]
-    public class CollisionLoaderController : MonoBehaviour, IEntityChunkChangedSubscriber
+    public class CollisionLoaderController : MonoBehaviour
     {
         private List<CollisionLoader> _CollisionLoaders;
         private Mesh _CombinedColliderMesh;
@@ -20,18 +18,11 @@ namespace Controllers.World
 
         public GameObject CollisionLoaderObject;
 
-        public bool PrimaryLoaderChangedChunk { get; set; }
-
         private void Awake()
         {
             _CollisionLoaders = new List<CollisionLoader>();
             _CombinedColliderMesh = new Mesh();
             _MeshCollider = GetComponent<MeshCollider>();
-        }
-
-        private void Start()
-        {
-            PlayerController.Current.RegisterEntityChangedSubscriber(this);
         }
 
         private void Update()

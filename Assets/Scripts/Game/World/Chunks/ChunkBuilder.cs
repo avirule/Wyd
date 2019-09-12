@@ -86,7 +86,7 @@ namespace Game.World.Chunks
 
             for (int index = 0; (index < noiseValues.Length) && !AbortToken.IsCancellationRequested; index++)
             {
-                (int x, int y, int z) = Mathv.GetVector3IntIndex(index, Chunk.Size);
+                (int x, int y, int z) = Mathv.GetVector3IntIndex(index, ChunkController.Size);
 
                 if ((y < 4) && (y <= Rand.Next(0, 4)))
                 {
@@ -123,7 +123,7 @@ namespace Game.World.Chunks
 
         private void GenerateCheckerBoard(int index)
         {
-            (int x, int y, int z) = Mathv.GetVector3IntIndex(index, Chunk.Size);
+            (int x, int y, int z) = Mathv.GetVector3IntIndex(index, ChunkController.Size);
 
             if (y != 0)
             {
@@ -156,9 +156,9 @@ namespace Game.World.Chunks
 
         private void GenerateRaisedStripes(int index)
         {
-            (int x, int y, int z) = Mathv.GetVector3IntIndex(index, Chunk.Size);
+            (int x, int y, int z) = Mathv.GetVector3IntIndex(index, ChunkController.Size);
 
-            int halfSize = Chunk.Size.y / 2;
+            int halfSize = ChunkController.Size.y / 2;
 
             if (y > halfSize)
             {
@@ -177,9 +177,9 @@ namespace Game.World.Chunks
 
         private void GenerateFlat(int index)
         {
-            (int x, int y, int z) = Mathv.GetVector3IntIndex(index, Chunk.Size);
+            (int x, int y, int z) = Mathv.GetVector3IntIndex(index, ChunkController.Size);
 
-            int halfSize = Chunk.Size.y / 2;
+            int halfSize = ChunkController.Size.y / 2;
 
             if (y > halfSize)
             {
@@ -198,7 +198,7 @@ namespace Game.World.Chunks
 
         private void GenerateFlatStriped(int index)
         {
-            (int x, int y, int z) = Mathv.GetVector3IntIndex(index, Chunk.Size);
+            (int x, int y, int z) = Mathv.GetVector3IntIndex(index, ChunkController.Size);
 
             if (y != 0)
             {
@@ -221,7 +221,7 @@ namespace Game.World.Chunks
 
         private void Generate3DSimplex(int index)
         {
-            (int x, int y, int z) = Mathv.GetVector3IntIndex(index, Chunk.Size);
+            (int x, int y, int z) = Mathv.GetVector3IntIndex(index, ChunkController.Size);
 
             if ((y < 4)
                 && (y <= Rand.Next(0, 4))
@@ -232,7 +232,7 @@ namespace Game.World.Chunks
             else
             {
                 float noiseValue = _noiseFunction.GetSimplex(Position.x + x, Position.y + y, Position.z + z);
-                noiseValue += 3f * (1f - Mathf.InverseLerp(0f, Chunk.Size.y, y));
+                noiseValue += 3f * (1f - Mathf.InverseLerp(0f, ChunkController.Size.y, y));
                 noiseValue /= (y + 1f) * 1.5f;
 
                 if ((noiseValue >= 0.01f) && BlockController.Current.TryGetBlockId("stone", out ushort stoneBlockId))
@@ -248,7 +248,7 @@ namespace Game.World.Chunks
 
         private void GenerateGrass(int index, params ushort[] idsToIgnore)
         {
-            int indexAbove = index + (Chunk.YIndexStep);
+            int indexAbove = index + ChunkController.YIndexStep;
 
             if ((indexAbove >= Blocks.Length)
                 || Blocks[index].Transparent
@@ -263,7 +263,7 @@ namespace Game.World.Chunks
 
             for (int i = 1; i < 4; i++)
             {
-                int currentIndex = index - (i * Chunk.YIndexStep);
+                int currentIndex = index - (i * ChunkController.YIndexStep);
 
                 if ((currentIndex < 0)
                     || Blocks[currentIndex].Transparent

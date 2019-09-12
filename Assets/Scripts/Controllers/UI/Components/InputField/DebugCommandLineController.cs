@@ -50,7 +50,7 @@ namespace Controllers.UI.Components.InputField
                 Focus(false);
             }
         }
-        
+
         private void OnSubmit(string value)
         {
             ParseCommandLineArguments(value.Split(' '));

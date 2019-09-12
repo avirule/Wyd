@@ -27,19 +27,19 @@ namespace Controllers.State
         {
             return IsLockedFor(keyMaster) ? Input.GetAxis(axisName) : 0f;
         }
-        
+
         public float GetAxisRaw(string axisName, object keyMaster = null)
         {
             return IsLockedFor(keyMaster) ? Input.GetAxisRaw(axisName) : 0f;
         }
-        
+
         public void ToggleCursorLocked(bool value, object keyMaster = null)
         {
             if (!IsLockedFor(keyMaster))
             {
                 return;
             }
-            
+
             if (value)
             {
                 Cursor.lockState = CursorLockMode.Locked;
