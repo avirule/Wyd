@@ -135,6 +135,8 @@ namespace Controllers.World
             GenerationComputeShader.SetVector("_MaximumSize", new Vector4(Size.x, Size.y, Size.z));
             GenerationComputeShader.SetVector("_Offset", Position);
             MeshFilter.sharedMesh = _Mesh;
+            MeshRenderer.material.SetTexture(TextureController.Current.MainTex,
+                TextureController.Current.TerrainTexture);
             Built = Building = Meshed = Meshing = UpdateMesh = false;
             AggressiveFaceMerging = true;
 
@@ -161,8 +163,6 @@ namespace Controllers.World
                 MeshTimes = new FixedConcurrentQueue<TimeSpan>(OptionsController.Current
                     .MaximumChunkLoadTimeBufferSize);
             }
-
-            MeshRenderer.material = WorldController.Current.TerrainMaterial;
 
             _UpdateInternalSettingsOnNextFrame = true;
 
@@ -503,48 +503,38 @@ namespace Controllers.World
             // topright & bottomleft right-side computation value
             float tr_bl_r = (Size.x + Size.z) / 2f;
 
-            // `half` refers to the diagonal half of the chunk the point lies in.
-            // If the point does not lie in a diagonal half, its a center block, and we don't need to update chunks.
+            bool isInTopLeftQuadrant = tl_br_x > tl_br_y;
+            bool isAlongTLBRQuadrantDivider = Math.Abs(tl_br_x - tl_br_y) < 0.01f;
+            bool isInTopRightQuadrant = tr_bl_l > tr_bl_r;
+            bool isAlongTRBLQuadrantDivider = Math.Abs(tr_bl_l - tr_bl_r) < 0.01f;
 
-            bool isInTopLeftHalf = tl_br_x > tl_br_y;
-            bool isInBottomRightHalf = tl_br_x < tl_br_y;
-            bool isInTopRightHalf = tr_bl_l > tr_bl_r;
-            bool isInBottomLeftHalf = tr_bl_l < tr_bl_r;
-
-            if (isInTopRightHalf && isInTopLeftHalf)
+            if (isInTopLeftQuadrant && isInTopRightQuadrant)
             {
                 yield return Vector3.forward;
-            } else if (isInTopRightHalf && isInBottomRightHalf)
+            }
+            else if (!isInTopLeftQuadrant && isInTopRightQuadrant)
             {
                 yield return Vector3.right;
-            } else if (isInBottomRightHalf && isInBottomLeftHalf)
+            }
+            else if (!isInTopLeftQuadrant && !isInTopRightQuadrant)
             {
                 yield return Vector3.back;
-            } else if (isInBottomLeftHalf && isInTopLeftHalf)
+            }
+            else if (isInTopLeftQuadrant && !isInTopRightQuadrant)
             {
                 yield return Vector3.left;
             }
-            else if (!isInTopRightHalf && !isInBottomLeftHalf)
+
+            if (isAlongTRBLQuadrantDivider && isInTopRightQuadrant)
             {
-                if (isInTopLeftHalf)
-                {
-                    yield return Vector3.forward;
-                    yield return Vector3.left;
-                } else if (isInBottomRightHalf)
-                {
-                    yield return  Vector3.back;
-                    yield return Vector3.right;
-                }
-            } else if (!isInTopLeftHalf && !isInBottomRightHalf)
-            {
-                if (isInTopRightHalf)
-                {
-                     
-                } else if (isInBottomLeftHalf)
-                {
-                    
-                }
+                yield return Vector3.forward;
+                yield return Vector3.right;
             }
+            else if (isAlongTLBRQuadrantDivider && isInTopLeftQuadrant)
+            {
+                yield return Vector3.forward;
+                yield return Vector3.left;
+            } // todo this
         }
 
         private void OnCurrentLoaderChangedChunk(object sender, Vector3 newChunkPosition)

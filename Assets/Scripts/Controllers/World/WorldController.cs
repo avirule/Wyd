@@ -13,7 +13,6 @@ using Game.World.Chunks;
 using Logging;
 using NLog;
 using UnityEngine;
-using UnityEngine.Assertions;
 using UnityEngine.SceneManagement;
 
 // ReSharper disable UnusedAutoPropertyAccessor.Global
@@ -24,9 +23,6 @@ namespace Controllers.World
 {
     public class WorldController : SingletonController<WorldController>
     {
-        private static readonly int GlobalLightLevelKernel = Shader.PropertyToID("GlobalLightLevel");
-
-        private float _GlobalLightLevel;
         private ChunkController _ChunkControllerObject;
         private Dictionary<Vector3, ChunkController> _Chunks;
         private ObjectCache<ChunkController> _ChunkCache;
@@ -36,12 +32,6 @@ namespace Controllers.World
 
         public CollisionLoaderController CollisionLoaderController;
         public WorldGenerationSettings WorldGenerationSettings;
-        public Color DaySkyColor;
-        public Color NightSkyColor;
-        [Range(0, 1)]
-        public float MaximumLightLevel;
-            [Range(0, 1)]
-        public float MinimumLightLevel;
         public float TicksPerSecond;
 
         public int ChunksActiveCount => _Chunks.Count;
@@ -52,20 +42,6 @@ namespace Controllers.World
 
         public long InitialTick { get; private set; }
         public TimeSpan WorldTickRate { get; private set; }
-        public Material TerrainMaterial { get; private set; }
-
-        public float GlobalLightLevel
-        {
-            get => _GlobalLightLevel;
-            set
-            {
-                value = Mathf.Clamp(value, MinimumLightLevel, MaximumLightLevel);
-                
-                _GlobalLightLevel = value;
-                Shader.SetGlobalFloat(GlobalLightLevelKernel, _GlobalLightLevel);
-                Camera.main.backgroundColor = Color.Lerp(DaySkyColor, NightSkyColor, _GlobalLightLevel);
-            }
-        }
 
         /// <summary>
         ///     X,Z point in the world for spawning the player.
@@ -95,19 +71,13 @@ namespace Controllers.World
             _BuildChunkAroundEntityStack = new Stack<IEntity>();
             _FrameTimer = new Stopwatch();
 
-            GlobalLightLevel = 0.5f;
-
-#if !UNITY_EDITOR
+#if UNITY_EDITOR
             WorldGenerationSettings.Radius = 5;
 #endif
         }
 
         private void Start()
         {
-            TerrainMaterial = Resources.Load<Material>(@"Materials\TerrainMaterial");
-            TerrainMaterial.SetTexture(TextureController.Current.MainTex,
-                TextureController.Current.TerrainTexture);
-            
             EntityController.Current.RegisterWatchForTag(RegisterCollideableEntity, "collider");
             EntityController.Current.RegisterWatchForTag(RegisterLoaderEntity, "loader");
             _ChunkCache.MaximumSize = OptionsController.Current.MaximumChunkCacheSize;
@@ -127,8 +97,6 @@ namespace Controllers.World
         {
             _FrameTimer.Restart();
 
-            GlobalLightLevel += 0.25f * Time.deltaTime;
-            
             if (_BuildChunkAroundEntityStack.Count > 0)
             {
                 ProcessBuildChunkQueue();
