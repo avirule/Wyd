@@ -71,8 +71,6 @@ namespace Threading
         /// <param name="threadSize">Size of internal <see cref="WorkerThread" /> pool</param>
         public ThreadedQueue(int waitTimeout, Func<ThreadingMode> threadingModeReference = null, int threadSize = -1)
         {
-            // todo add variable that decides whether to use single-threaded or multi-threaded execution
-
             if ((threadSize <= 0) || (threadSize > 15))
             {
                 threadSize = 4;

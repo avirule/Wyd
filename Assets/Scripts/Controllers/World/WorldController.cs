@@ -291,7 +291,6 @@ namespace Controllers.World
             return _Chunks.ContainsKey(position);
         }
 
-        // todo this function needs to be made thread-safe
         public ChunkController GetChunkAt(Vector3 position)
         {
             bool trySuccess = _Chunks.TryGetValue(position, out ChunkController chunk);

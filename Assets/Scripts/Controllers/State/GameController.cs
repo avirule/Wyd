@@ -20,7 +20,6 @@ namespace Controllers.State
 
         private void Awake()
         {
-            // todo EntityController with source/subscriber architecture
             AssignCurrent(this);
             DontDestroyOnLoad(this);
             QualitySettings.vSyncCount = 0;

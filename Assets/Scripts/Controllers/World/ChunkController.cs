@@ -336,13 +336,8 @@ namespace Controllers.World
                 MeshTimes.Enqueue(args.ThreadedItem.ExecutionTime);
 
                 OnMeshChanged(new ChunkChangedEventArgs(_Bounds, Enumerable.Empty<Vector3>()));
-
-                Interlocked.Increment(ref meshed);
-                Debug.Log(meshed);
             }
         }
-
-        private static int meshed;
 
         private ThreadedItem GetChunkBuildingThreadedItem(bool memoryNegligent = false, float[] noiseValues = null)
         {
