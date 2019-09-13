@@ -90,7 +90,7 @@ namespace Controllers.Entity
 
             if (InputController.Current.GetButton("LeftClick")
                 && _IsInReachOfValidSurface
-                && _ActionCooldown.Elapsed > MinimumActionInterval)
+                && (_ActionCooldown.Elapsed > MinimumActionInterval))
             {
                 if (_LastReachRayHit.normal.Sum() > 0f)
                 {
@@ -100,14 +100,14 @@ namespace Controllers.Entity
                 {
                     WorldController.Current.TryRemoveBlockAt(_LastReachRayHit.point.Floor());
                 }
-                
+
                 _ActionCooldown.Restart();
             }
 
             if (InputController.Current.GetButton("RightClick")
                 && _IsInReachOfValidSurface
                 && !Collider.bounds.Contains(_LastReachRayHit.point)
-                && _ActionCooldown.Elapsed > MinimumActionInterval)
+                && (_ActionCooldown.Elapsed > MinimumActionInterval))
             {
                 if (_LastReachRayHit.normal.Sum() > 0f)
                 {
@@ -118,7 +118,7 @@ namespace Controllers.Entity
                     WorldController.Current.TryPlaceBlockAt(_LastReachRayHit.point.Floor() + _LastReachRayHit.normal,
                         9);
                 }
-                
+
                 _ActionCooldown.Restart();
             }
         }

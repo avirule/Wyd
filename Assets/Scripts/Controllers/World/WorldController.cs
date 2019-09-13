@@ -42,6 +42,7 @@ namespace Controllers.World
 
         public long InitialTick { get; private set; }
         public TimeSpan WorldTickRate { get; private set; }
+        public Material TerrainMaterial { get; private set; }
 
         /// <summary>
         ///     X,Z point in the world for spawning the player.
@@ -78,6 +79,10 @@ namespace Controllers.World
 
         private void Start()
         {
+            TerrainMaterial = Resources.Load<Material>(@"Materials\TerrainMaterial");
+            TerrainMaterial.SetTexture(TextureController.Current.MainTex,
+                TextureController.Current.TerrainTexture);
+
             EntityController.Current.RegisterWatchForTag(RegisterCollideableEntity, "collider");
             EntityController.Current.RegisterWatchForTag(RegisterLoaderEntity, "loader");
             _ChunkCache.MaximumSize = OptionsController.Current.MaximumChunkCacheSize;
