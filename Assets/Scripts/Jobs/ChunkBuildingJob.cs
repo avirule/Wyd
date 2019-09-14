@@ -9,9 +9,9 @@ using Random = System.Random;
 
 #endregion
 
-namespace Threading.ThreadedItems
+namespace Jobs
 {
-    public class ChunkBuildingThreadedItem : ThreadedItem
+    public class ChunkBuildingJob : Job
     {
         private static readonly ObjectCache<ChunkBuilderNoiseValues> NoiseValuesCache =
             new ObjectCache<ChunkBuilderNoiseValues>(null, null, true);

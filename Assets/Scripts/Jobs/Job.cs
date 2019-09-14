@@ -6,9 +6,9 @@ using System.Threading.Tasks;
 
 #endregion
 
-namespace Threading.ThreadedItems
+namespace Jobs
 {
-    public abstract class ThreadedItem
+    public abstract class Job
     {
         private readonly object _Handle;
         protected bool Done;
@@ -17,7 +17,7 @@ namespace Threading.ThreadedItems
         public DateTime FinishTime { get; private set; }
 
         /// <summary>
-        ///     Identity of <see cref="ThreadedItem" />.
+        ///     Identity of <see cref="Job" />.
         /// </summary>
         public object Identity { get; private set; }
 
@@ -34,9 +34,9 @@ namespace Threading.ThreadedItems
         public event EventHandler Finished;
 
         /// <summary>
-        ///     Instantiates a new instance of the <see cref="ThreadedItem" /> class.
+        ///     Instantiates a new instance of the <see cref="Job" /> class.
         /// </summary>
-        public ThreadedItem()
+        public Job()
         {
             _Handle = new object();
             Done = false;
@@ -74,7 +74,7 @@ namespace Threading.ThreadedItems
         }
 
         /// <summary>
-        ///     Begins executing the <see cref="ThreadedItem" />
+        ///     Begins executing the <see cref="Job" />
         /// </summary>
         public virtual Task Execute()
         {

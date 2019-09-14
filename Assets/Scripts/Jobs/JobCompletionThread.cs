@@ -3,16 +3,15 @@
 using System;
 using System.Collections.Concurrent;
 using System.Threading;
-using Threading.ThreadedItems;
 
 #endregion
 
-namespace Threading
+namespace Jobs
 {
-    public class WorkerThread
+    public class JobCompletionThread
     {
         private readonly Thread _InternalThread;
-        private readonly BlockingCollection<ThreadedItem> _ItemQueue;
+        private readonly BlockingCollection<Job> _ItemQueue;
         private readonly CancellationToken _AbortToken;
 
         public int WaitTimeout;
@@ -21,12 +20,12 @@ namespace Threading
         public bool Processing { get; private set; }
         public int ManagedThreadId => _InternalThread.ManagedThreadId;
 
-        public event EventHandler<ThreadedItemFinishedEventArgs> ThreadedItemFinished;
+        public event EventHandler<JobFinishedEventArgs> ThreadedItemFinished;
 
-        public WorkerThread(int waitTimeout, CancellationToken abortToken)
+        public JobCompletionThread(int waitTimeout, CancellationToken abortToken)
         {
             _InternalThread = new Thread(ProcessItemQueue);
-            _ItemQueue = new BlockingCollection<ThreadedItem>();
+            _ItemQueue = new BlockingCollection<Job>();
             _AbortToken = abortToken;
 
             WaitTimeout = waitTimeout;
@@ -38,9 +37,9 @@ namespace Threading
             Running = true;
         }
 
-        public bool QueueThreadedItem(ThreadedItem threadedItem)
+        public bool QueueThreadedItem(Job job)
         {
-            return _ItemQueue.TryAdd(threadedItem);
+            return _ItemQueue.TryAdd(job);
         }
 
         private void ProcessItemQueue()
@@ -49,7 +48,7 @@ namespace Threading
             {
                 try
                 {
-                    if (_ItemQueue.TryTake(out ThreadedItem threadedItem, WaitTimeout, _AbortToken))
+                    if (_ItemQueue.TryTake(out Job threadedItem, WaitTimeout, _AbortToken))
                     {
                         ProcessThreadedItem(threadedItem);
                     }
@@ -62,17 +61,17 @@ namespace Threading
             }
         }
 
-        private void ProcessThreadedItem(ThreadedItem threadedItem)
+        private void ProcessThreadedItem(Job job)
         {
             Processing = true;
 
-            threadedItem.Execute();
-            OnThreadedItemFinished(this, new ThreadedItemFinishedEventArgs(threadedItem));
+            job.Execute();
+            OnThreadedItemFinished(this, new JobFinishedEventArgs(job));
 
             Processing = false;
         }
 
-        private void OnThreadedItemFinished(object sender, ThreadedItemFinishedEventArgs args)
+        private void OnThreadedItemFinished(object sender, JobFinishedEventArgs args)
         {
             ThreadedItemFinished?.Invoke(sender, args);
         }

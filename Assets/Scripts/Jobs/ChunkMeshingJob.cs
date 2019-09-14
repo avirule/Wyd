@@ -6,9 +6,9 @@ using UnityEngine;
 
 #endregion
 
-namespace Threading.ThreadedItems
+namespace Jobs
 {
-    public class ChunkMeshingThreadedItem : ThreadedItem
+    public class ChunkMeshingJob : Job
     {
         private ChunkMesher _Mesher;
 

@@ -9,9 +9,9 @@ using Game;
 using Game.Entities;
 using Game.World.Blocks;
 using Game.World.Chunks;
+using Jobs;
 using Logging;
 using NLog;
-using Threading.ThreadedItems;
 using UnityEngine;
 using UnityEngine.Rendering;
 
@@ -29,11 +29,11 @@ namespace Controllers.World
     {
         private static bool _computeShaderGlobalsSet;
 
-        private static readonly ObjectCache<ChunkBuildingThreadedItem> ChunkBuildersCache =
-            new ObjectCache<ChunkBuildingThreadedItem>(null, null, true);
+        private static readonly ObjectCache<ChunkBuildingJob> ChunkBuildersCache =
+            new ObjectCache<ChunkBuildingJob>(null, null, true);
 
-        private static readonly ObjectCache<ChunkMeshingThreadedItem> ChunkMeshersCache =
-            new ObjectCache<ChunkMeshingThreadedItem>(null, null, true);
+        private static readonly ObjectCache<ChunkMeshingJob> ChunkMeshersCache =
+            new ObjectCache<ChunkMeshingJob>(null, null, true);
 
 
         public static readonly Vector3Int Size = new Vector3Int(16, 256, 16);
@@ -248,9 +248,9 @@ namespace Controllers.World
                 return;
             }
 
-            ThreadedItem threadedItem = GetChunkBuildingThreadedItem(0.01f, OptionsController.Current.GPUAcceleration);
+            Job job = GetChunkBuildingThreadedItem(0.01f, OptionsController.Current.GPUAcceleration);
 
-            if (threadedItem == default)
+            if (job == default)
             {
                 EventLog.Logger.Log(LogLevel.Error, $"Failed to retrieve building item for chunk at {Position}.");
                 return;
@@ -260,8 +260,8 @@ namespace Controllers.World
             Built = Meshed = Meshing = UpdateMesh = false;
             Building = true;
 
-            GameController.ThreadedExecutionQueue.ThreadedItemFinished += OnThreadedQueueFinishedItem;
-            _BuildingIdentity = GameController.ThreadedExecutionQueue.QueueThreadedItem(threadedItem);
+            GameController.JobExecutionQueue.ThreadedItemFinished += OnThreadedQueueFinishedItem;
+            _BuildingIdentity = GameController.JobExecutionQueue.QueueThreadedItem(job);
         }
 
         private void CheckStateAndStartMeshing()
@@ -275,9 +275,9 @@ namespace Controllers.World
                 return;
             }
 
-            ThreadedItem threadedItem = GetChunkMeshingThreadedItem();
+            Job job = GetChunkMeshingThreadedItem();
 
-            if (threadedItem == default)
+            if (job == default)
             {
                 EventLog.Logger.Log(LogLevel.Error, $"Failed to retrieve meshing item for chunk at {Position}.");
                 return;
@@ -287,40 +287,40 @@ namespace Controllers.World
             Meshed = UpdateMesh = false;
             Meshing = true;
 
-            GameController.ThreadedExecutionQueue.ThreadedItemFinished += OnThreadedQueueFinishedItem;
-            _MeshingIdentity = GameController.ThreadedExecutionQueue.QueueThreadedItem(threadedItem);
+            GameController.JobExecutionQueue.ThreadedItemFinished += OnThreadedQueueFinishedItem;
+            _MeshingIdentity = GameController.JobExecutionQueue.QueueThreadedItem(job);
         }
 
-        private void OnThreadedQueueFinishedItem(object sender, ThreadedItemFinishedEventArgs args)
+        private void OnThreadedQueueFinishedItem(object sender, JobFinishedEventArgs args)
         {
-            if (args.ThreadedItem.Identity == _BuildingIdentity)
+            if (args.Job.Identity == _BuildingIdentity)
             {
                 Building = false;
                 Built = UpdateMesh = true;
-                GameController.ThreadedExecutionQueue.ThreadedItemFinished -= OnThreadedQueueFinishedItem;
+                GameController.JobExecutionQueue.ThreadedItemFinished -= OnThreadedQueueFinishedItem;
 
-                BuildTimes.Enqueue(args.ThreadedItem.ExecutionTime);
+                BuildTimes.Enqueue(args.Job.ExecutionTime);
 
                 OnBlocksChanged(new ChunkChangedEventArgs(_Bounds, CardinalDirectionsVector3));
             }
-            else if (args.ThreadedItem.Identity == _MeshingIdentity)
+            else if (args.Job.Identity == _MeshingIdentity)
             {
                 Meshing = false;
                 Meshed = true;
-                GameController.ThreadedExecutionQueue.ThreadedItemFinished -= OnThreadedQueueFinishedItem;
+                GameController.JobExecutionQueue.ThreadedItemFinished -= OnThreadedQueueFinishedItem;
 
                 // Safely apply mesh when there is free frame time
-                _PendingAction = () => ApplyMesh((ChunkMeshingThreadedItem) args.ThreadedItem);
+                _PendingAction = () => ApplyMesh((ChunkMeshingJob) args.Job);
 
-                MeshTimes.Enqueue(args.ThreadedItem.ExecutionTime);
+                MeshTimes.Enqueue(args.Job.ExecutionTime);
 
                 OnMeshChanged(new ChunkChangedEventArgs(_Bounds, Enumerable.Empty<Vector3>()));
             }
         }
 
-        private ThreadedItem GetChunkBuildingThreadedItem(float frequency = 0.01f, bool gpuAcceleration = false)
+        private Job GetChunkBuildingThreadedItem(float frequency = 0.01f, bool gpuAcceleration = false)
         {
-            ChunkBuildingThreadedItem threadedItem = ChunkBuildersCache.RetrieveItem();
+            ChunkBuildingJob job = ChunkBuildersCache.RetrieveItem();
 
             if (gpuAcceleration)
             {
@@ -332,27 +332,27 @@ namespace Controllers.World
                 // 256 is the value set in the shader's [numthreads(--> 256 <--, 1, 1)]
                 GenerationComputeShader.Dispatch(kernel, Size.Product() / 256, 1, 1);
 
-                threadedItem.Set(Position, _Blocks, frequency, gpuAcceleration, noiseValuesBuffer);
+                job.Set(Position, _Blocks, frequency, gpuAcceleration, noiseValuesBuffer);
             }
             else
             {
-                threadedItem.Set(Position, _Blocks, frequency);
+                job.Set(Position, _Blocks, frequency);
             }
 
-            return threadedItem;
+            return job;
         }
 
-        private ThreadedItem GetChunkMeshingThreadedItem()
+        private Job GetChunkMeshingThreadedItem()
         {
-            ChunkMeshingThreadedItem threadedItem = ChunkMeshersCache.RetrieveItem();
-            threadedItem.Set(Position, _Blocks, AggressiveFaceMerging, Meshed);
+            ChunkMeshingJob job = ChunkMeshersCache.RetrieveItem();
+            job.Set(Position, _Blocks, AggressiveFaceMerging, Meshed);
 
-            return threadedItem;
+            return job;
         }
 
-        private void ApplyMesh(ChunkMeshingThreadedItem threadedItem)
+        private void ApplyMesh(ChunkMeshingJob job)
         {
-            threadedItem.SetMesh(ref _Mesh);
+            job.SetMesh(ref _Mesh);
         }
 
         #endregion
