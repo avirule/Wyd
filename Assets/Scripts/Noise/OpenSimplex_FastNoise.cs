@@ -5,7 +5,6 @@
 #region
 
 #if FN_USE_DOUBLES
-using FN_DECIMAL = System.Double;
 #else
 using FN_DECIMAL = System.Single;
 #endif
@@ -16,39 +15,14 @@ using System.Runtime.CompilerServices;
 
 namespace Noise
 {
-    public class FastNoise
+    public class OpenSimplex_FastNoise
     {
         private const short FN_INLINE = 256; //(Int16)MethodImplOptions.AggressiveInlining;
-
-        public enum NoiseType
-        {
-            Simplex,
-        }
-
-        public enum Interp
-        {
-            Quintic
-        }
-
-        public enum FractalType
-        {
-            FBM,
-        }
-
-        public enum CellularDistanceFunction
-        {
-            Euclidean,
-        }
-
-        public enum CellularReturnType
-        {
-            CellValue,
-        }
 
         private int m_seed = 1337;
         private float m_frequency = (float) 0.01;
 
-        public FastNoise(int seed = 1337)
+        public OpenSimplex_FastNoise(int seed = 1337)
         {
             m_seed = seed;
         }

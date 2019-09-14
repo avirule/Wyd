@@ -25,7 +25,7 @@ namespace Game.World.Chunks
             "bedrock"
         };
 
-        private static FastNoise _noiseFunction;
+        private static OpenSimplex_FastNoise _noiseFunction;
         private static Dictionary<string, ushort> _terrainGenerationIds;
 
         public CancellationToken AbortToken;
@@ -33,6 +33,7 @@ namespace Game.World.Chunks
         public Vector3 Position;
         public Block[] Blocks;
         public float Frequency;
+        public float Persistence;
 
         static ChunkBuilder()
         {
@@ -43,7 +44,7 @@ namespace Game.World.Chunks
         {
             if (_noiseFunction == default)
             {
-                _noiseFunction = new FastNoise(WorldController.Current.WorldGenerationSettings.Seed);
+                _noiseFunction = new OpenSimplex_FastNoise(WorldController.Current.Seed);
             }
         }
 
@@ -56,7 +57,7 @@ namespace Game.World.Chunks
         public ChunkBuilder(Vector3 position, Block[] blocks, CancellationToken abortToken) : this()
         {
             AbortToken = abortToken;
-            Rand = new Random(WorldController.Current.WorldGenerationSettings.Seed.SeedValue);
+            Rand = new Random(WorldController.Current.Seed);
             Position.Set(position.x, position.y, position.z);
             Blocks = blocks;
         }
@@ -77,13 +78,13 @@ namespace Game.World.Chunks
                 useGpu = false;
             }
 
-            Vector3 pos3d = Vector3.zero;
+            Vector3 position = Vector3.zero;
 
             for (int index = Blocks.Length - 1; (index >= 0) && !AbortToken.IsCancellationRequested; index--)
             {
-                (pos3d.x, pos3d.y, pos3d.z) = Mathv.GetVector3IntIndex(index, ChunkController.Size);
+                (position.x, position.y, position.z) = Mathv.GetVector3IntIndex(index, ChunkController.Size);
 
-                if ((pos3d.y < 4) && (pos3d.y <= Rand.Next(0, 4)))
+                if ((position.y < 4) && (position.y <= Rand.Next(0, 4)))
                 {
                     Blocks[index].Initialise(_terrainGenerationIds["bedrock"]);
                 }
@@ -91,21 +92,21 @@ namespace Game.World.Chunks
                 {
                     // these seems inefficient, but the CPU branch predictor will pick up on it pretty quick
                     // so the slowdown from this check is nonexistent, since useGpu shouldn't change in this context.
-                    float noiseValue = useGpu ? noiseValues[index] : GetNoiseValueByVector3(pos3d);
-                    ProcessPreGeneratedNoiseData(index, noiseValue);
+                    float noiseValue = useGpu ? noiseValues[index] : GetNoiseValueByVector3(position);
+                    ProcessPreGeneratedNoiseData(index, position, noiseValue);
                 }
             }
 
             // get list of block ids that should be ignored on second generation pass
         }
 
-        public void ProcessPreGeneratedNoiseData(int index, float noiseValue)
+        public void ProcessPreGeneratedNoiseData(int index, Vector3 position, float noiseValue)
         {
             if (noiseValue >= 0.01f)
             {
                 int indexAbove = index + ChunkController.YIndexStep;
 
-                if (Blocks[indexAbove].Transparent)
+                if ((position.y >= 130) && Blocks[indexAbove].Transparent)
                 {
                     Blocks[index].Initialise(_terrainGenerationIds["grass"]);
                 }
@@ -137,17 +138,17 @@ namespace Game.World.Chunks
 
         private float GetNoiseValueByVector3(Vector3 pos3d)
         {
-            float noiseValue = FastNoise.GetSimplex(WorldController.Current.WorldGenerationSettings.Seed, Frequency,
+            float noiseValue = OpenSimplex_FastNoise.GetSimplex(WorldController.Current.Seed, Frequency,
                 Position.x + pos3d.x, Position.y + pos3d.y, Position.z + pos3d.z);
-            noiseValue += 3f * (1f - Mathf.InverseLerp(0f, ChunkController.Size.y, pos3d.y));
-            noiseValue /= (pos3d.y + 1f) * 1.5f;
+            noiseValue += 5f * (1f - Mathf.InverseLerp(0f, ChunkController.Size.y, pos3d.y));
+            noiseValue /= pos3d.y + (-1f * Persistence);
 
             return noiseValue;
         }
 
         private bool IdExistsAboveWithinRange(int startIndex, int maxSteps, ushort soughtId)
         {
-            for (int i = 0; i < maxSteps; i++)
+            for (int i = 1; i < (maxSteps + 1); i++)
             {
                 int currentIndex = startIndex + (i * ChunkController.YIndexStep);
 

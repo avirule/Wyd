@@ -36,9 +36,13 @@ namespace Controllers.UI
                 }
             }
 
+            _LastPanelOpened = "GeneralOptions";
+
             // disable all objs
             DisablePanelsExcept(null);
             UnstyleTabButtonsExcept(null);
+
+            SetPanelActive(_LastPanelOpened);
         }
 
         public void SetPanelActive(string panelName)

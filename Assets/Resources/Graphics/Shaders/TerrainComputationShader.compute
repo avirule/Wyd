@@ -166,13 +166,14 @@ uniform uint _NoiseSeed;
 uniform float3 _MaximumSize;
 RWStructuredBuffer<float> Result;
 float _Frequency;
+float _Peristence;
 float3 _Offset;
 
 float customSimplexNoise(float3 xyz)
 {
     float noise = singleSimplex(_NoiseSeed, _Frequency, xyz);
-    noise += 3.0 * (1.0 - inverseLerp(0.0, _MaximumSize.y, xyz.y));
-    noise /= (xyz.y + 1.0) * 1.5;
+    noise += 5.0 * (1.0 - inverseLerp(0.0, _MaximumSize.y, xyz.y));
+    noise /= (xyz.y + (-1.0 * _Peristence));
     return noise;
 }
 

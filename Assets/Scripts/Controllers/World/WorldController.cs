@@ -31,7 +31,7 @@ namespace Controllers.World
         private Vector3 _SpawnPoint;
 
         public CollisionLoaderController CollisionLoaderController;
-        public WorldGenerationSettings WorldGenerationSettings;
+        public string SeedString;
         public float TicksPerSecond;
 
         public int ChunksActiveCount => _Chunks.Count;
@@ -40,6 +40,7 @@ namespace Controllers.World
         public bool AllChunksBuilt => _Chunks.All(kvp => kvp.Value.Built);
         public bool AllChunksMeshed => _Chunks.All(kvp => kvp.Value.Meshed);
 
+        public WorldSeed Seed { get; private set; }
         public long InitialTick { get; private set; }
         public TimeSpan WorldTickRate { get; private set; }
         public Material TerrainMaterial { get; private set; }
@@ -72,9 +73,7 @@ namespace Controllers.World
             _BuildChunkAroundEntityStack = new Stack<IEntity>();
             _FrameTimer = new Stopwatch();
 
-#if !UNITY_EDITOR
-            WorldGenerationSettings.Radius = 10;
-#endif
+            Seed = new WorldSeed(SeedString);
         }
 
         private void Start()
@@ -88,11 +87,10 @@ namespace Controllers.World
             _ChunkCache.MaximumSize = OptionsController.Current.MaximumChunkCacheSize;
             // todo fix spawn point to set to useful value
             (_SpawnPoint.x, _SpawnPoint.y, _SpawnPoint.z) =
-                Mathv.GetVector3IntIndex((int)WorldGenerationSettings.Seed.SeedValue,
-                    new Vector3Int(int.MaxValue, int.MaxValue, int.MaxValue));
+                Mathv.GetVector3IntIndex(Seed, new Vector3Int(int.MaxValue, int.MaxValue, int.MaxValue));
 
 
-            if (!OptionsController.Current.PreInitializeChunkCache)
+            if (OptionsController.Current.PreInitializeChunkCache)
             {
                 InitialiseChunkCache();
             }
@@ -142,8 +140,7 @@ namespace Controllers.World
             {
                 IEntity loader = _BuildChunkAroundEntityStack.Pop();
                 int radius = loader.Tags.Contains("player")
-                    ? /* todo create a chunk load radius option */
-                    WorldGenerationSettings.Radius + OptionsController.Current.PreLoadChunkDistance
+                    ? OptionsController.Current.RenderDistance + OptionsController.Current.PreLoadChunkDistance
                     : 2;
 
                 for (int x = -radius; x < (radius + 1); x++)
@@ -182,6 +179,7 @@ namespace Controllers.World
 
                 if (IsOnBorrowedUpdateTime())
                 {
+                    _BuildChunkAroundEntityStack.Push(loader);
                     break;
                 }
             }

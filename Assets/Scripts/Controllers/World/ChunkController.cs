@@ -117,7 +117,7 @@ namespace Controllers.World
         {
             if (!_computeShaderGlobalsSet)
             {
-                GenerationComputeShader.SetInt("_NoiseSeed", (int)WorldController.Current.WorldGenerationSettings.Seed.SeedValue);
+                GenerationComputeShader.SetInt("_NoiseSeed", WorldController.Current.Seed);
                 GenerationComputeShader.SetVector("_MaximumSize", new Vector4(Size.x, Size.y, Size.z, 0f));
 
                 _computeShaderGlobalsSet = true;
@@ -248,7 +248,7 @@ namespace Controllers.World
                 return;
             }
 
-            Job job = GetChunkBuildingThreadedItem(0.01f, OptionsController.Current.GPUAcceleration);
+            Job job = GetChunkBuildingThreadedItem(0.01f, -1f, OptionsController.Current.GPUAcceleration);
 
             if (job == default)
             {
@@ -318,7 +318,8 @@ namespace Controllers.World
             }
         }
 
-        private Job GetChunkBuildingThreadedItem(float frequency = 0.01f, bool gpuAcceleration = false)
+        private Job GetChunkBuildingThreadedItem(
+            float frequency = 0.01f, float persistence = -1f, bool gpuAcceleration = false)
         {
             ChunkBuildingJob job = ChunkBuildersCache.RetrieveItem();
 
@@ -327,16 +328,17 @@ namespace Controllers.World
                 ComputeBuffer noiseValuesBuffer = new ComputeBuffer(Size.Product(), 4);
                 int kernel = GenerationComputeShader.FindKernel("CSMain");
                 GenerationComputeShader.SetVector("_Offset", Position);
+                GenerationComputeShader.SetFloat("_Persistence", -1f);
                 GenerationComputeShader.SetFloat("_Frequency", 0.01f);
                 GenerationComputeShader.SetBuffer(kernel, "Result", noiseValuesBuffer);
                 // 256 is the value set in the shader's [numthreads(--> 256 <--, 1, 1)]
                 GenerationComputeShader.Dispatch(kernel, Size.Product() / 256, 1, 1);
 
-                job.Set(Position, _Blocks, frequency, gpuAcceleration, noiseValuesBuffer);
+                job.Set(Position, _Blocks, frequency, persistence, gpuAcceleration, noiseValuesBuffer);
             }
             else
             {
-                job.Set(Position, _Blocks, frequency);
+                job.Set(Position, _Blocks, frequency, persistence);
             }
 
             return job;
@@ -561,26 +563,25 @@ namespace Controllers.World
             }
 
             Visible = IsWithinRenderDistance(difference);
-            RenderShadows = IsWithinDrawShadowsDistance(difference);
+            RenderShadows = IsWithinShadowsDistance(difference);
             _UpdateInternalSettingsOnNextFrame = false;
         }
 
         private static bool IsWithinLoaderRange(Vector3 difference)
         {
             return difference.AllLessThanOrEqual(Size
-                                                 * (WorldController.Current.WorldGenerationSettings.Radius
+                                                 * (OptionsController.Current.RenderDistance
                                                     + OptionsController.Current.PreLoadChunkDistance));
         }
 
         private static bool IsWithinRenderDistance(Vector3 difference)
         {
-            return difference.AllLessThanOrEqual(Size * WorldController.Current.WorldGenerationSettings.Radius);
+            return difference.AllLessThanOrEqual(Size * OptionsController.Current.RenderDistance);
         }
 
-        private static bool IsWithinDrawShadowsDistance(Vector3 difference)
+        private static bool IsWithinShadowsDistance(Vector3 difference)
         {
-            return (OptionsController.Current.ShadowDistance == 0)
-                   || difference.AllLessThanOrEqual(Size * OptionsController.Current.ShadowDistance);
+            return difference.AllLessThanOrEqual(Size * OptionsController.Current.ShadowDistance);
         }
 
         #endregion

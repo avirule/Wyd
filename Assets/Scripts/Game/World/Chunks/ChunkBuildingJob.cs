@@ -28,8 +28,8 @@ namespace Game.World.Chunks
         /// <param name="gpuAcceleration"></param>
         /// <param name="noiseValuesBuffer"></param>
         public void Set(
-            Vector3 position, Block[] blocks, float frequency, bool gpuAcceleration = false,
-            ComputeBuffer noiseValuesBuffer = null)
+            Vector3 position, Block[] blocks, float frequency, float persistence,
+            bool gpuAcceleration = false, ComputeBuffer noiseValuesBuffer = null)
         {
             if (_Builder == default)
             {
@@ -37,10 +37,11 @@ namespace Game.World.Chunks
             }
 
             _Builder.AbortToken = AbortToken;
-            _Builder.Rand = new Random((int) WorldController.Current.WorldGenerationSettings.Seed.SeedValue);
+            _Builder.Rand = new Random(WorldController.Current.Seed);
             _Builder.Position.Set(position.x, position.y, position.z);
             _Builder.Blocks = blocks;
             _Builder.Frequency = frequency;
+            _Builder.Persistence = persistence;
             _GPUAcceleration = gpuAcceleration;
 
             if (noiseValuesBuffer != null)

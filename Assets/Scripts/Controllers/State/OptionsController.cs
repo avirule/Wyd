@@ -1,8 +1,12 @@
 #region
 
 using System;
+using System.ComponentModel;
 using System.IO;
+using System.Runtime.CompilerServices;
+using System.Text;
 using Controllers.World;
+using JetBrains.Annotations;
 using Logging;
 using NLog;
 using SharpConfig;
@@ -28,19 +32,20 @@ namespace Controllers.State
         Active = 1
     }
 
-    public class OptionsController : SingletonController<OptionsController>
+    public class OptionsController : SingletonController<OptionsController>, INotifyPropertyChanged
     {
         public static class Defaults
         {
             // General
+            public const int MAXIMUM_INTERNAL_FRAMES = 60;
             public const ThreadingMode THREADING_MODE = ThreadingMode.Multi;
             public const bool GPU_ACCELERATION = true;
 
             // Graphics
             public const int MAXIMUM_FRAME_RATE_BUFFER_SIZE = 60;
-            public const int MAXIMUM_INTERNAL_FRAMES = 60;
             public const int VSYNC_LEVEL = 1;
-            public const int SHADOW_DISTANCE = 3;
+            public const int RENDER_DISTANCE = 4;
+            public const int SHADOW_DISTANCE = 4;
 
             // Chunking
             public const bool PRE_INITIALIZE_CHUNK_CACHE = true;
@@ -51,30 +56,174 @@ namespace Controllers.State
 
         private static string _configPath;
 
+
+        #region PRIVATE FIELDS
+
         private Configuration _Configuration;
+        private ThreadingMode _ThreadingMode;
+        private bool _GPUAcceleration;
+        private int _MaximumInternalFrames;
+        private int _MaximumFrameRateBufferSize;
+        private bool _PreInitializeChunkCache;
+        private int _MaximumChunkCacheSize;
+        private int _MaximumChunkLoadTimeBufferSize;
+        private int _PreLoadChunkDistance;
+        private int _ShadowDistance;
+        private int _RenderDistance;
 
-        // General
-        public ThreadingMode ThreadingMode;
-        public bool GPUAcceleration;
+        #endregion
 
-        // Graphics
-        public int MaximumInternalFrames;
-        public TimeSpan MaximumInternalFrameTime;
-        public int MaximumFrameRateBufferSize;
 
-        // Chunking
-        public bool PreInitializeChunkCache;
-        public int MaximumChunkCacheSize;
-        public int MaximumChunkLoadTimeBufferSize;
-        public int PreLoadChunkDistance;
+        #region GENERAL OPTIONS MEMBERS
+
+        public int MaximumInternalFrames
+        {
+            get => _MaximumInternalFrames;
+            set
+            {
+                OnPropertyChanged();
+                _MaximumInternalFrames = value;
+                _Configuration["General"][nameof(MaximumInternalFrames)].IntValue = _MaximumInternalFrames;
+                SaveSettings();
+            }
+        }
+
+        public TimeSpan MaximumInternalFrameTime { get; private set; }
+
+        public ThreadingMode ThreadingMode
+        {
+            get => _ThreadingMode;
+            set
+            {
+                OnPropertyChanged();
+                _ThreadingMode = value;
+                _Configuration["General"][nameof(ThreadingMode)].IntValue = (int) _ThreadingMode;
+                SaveSettings();
+            }
+        }
+
+        public bool GPUAcceleration
+        {
+            get => _GPUAcceleration;
+            set
+            {
+                OnPropertyChanged();
+                _GPUAcceleration = value;
+                _Configuration["General"][nameof(GPUAcceleration)].BoolValue = _GPUAcceleration;
+                SaveSettings();
+            }
+        }
+
+        #endregion
+
+
+        #region GRAPHICS OPTIONS MEMBERS
+
+        public int MaximumFrameRateBufferSize
+        {
+            get => _MaximumFrameRateBufferSize;
+            set
+            {
+                OnPropertyChanged();
+                _MaximumFrameRateBufferSize = value;
+                _Configuration["Graphics"][nameof(MaximumFrameRateBufferSize)].IntValue = _MaximumFrameRateBufferSize;
+                SaveSettings();
+            }
+        }
 
         public int VSyncLevel
         {
             get => QualitySettings.vSyncCount;
-            set => QualitySettings.vSyncCount = value;
+            set
+            {
+                OnPropertyChanged();
+                QualitySettings.vSyncCount = value;
+                _Configuration["Graphics"][nameof(VSyncLevel)].IntValue = QualitySettings.vSyncCount;
+                SaveSettings();
+            }
         }
 
-        public int ShadowDistance;
+        public int RenderDistance
+        {
+            get => _RenderDistance;
+            set
+            {
+                OnPropertyChanged();
+                _RenderDistance = value;
+                _Configuration["Graphics"][nameof(RenderDistance)].IntValue = _RenderDistance;
+                SaveSettings();
+            }
+        }
+
+        public int ShadowDistance
+        {
+            get => _ShadowDistance;
+            set
+            {
+                OnPropertyChanged();
+                _ShadowDistance = value;
+                _Configuration["Graphics"][nameof(ShadowDistance)].IntValue = _ShadowDistance;
+                SaveSettings();
+            }
+        }
+
+        #endregion
+
+
+        #region CHUNKING OPTIONS MEMBERS
+
+        public bool PreInitializeChunkCache
+        {
+            get => _PreInitializeChunkCache;
+            set
+            {
+                OnPropertyChanged();
+                _PreInitializeChunkCache = value;
+                _Configuration["Chunking"][nameof(PreInitializeChunkCache)].BoolValue = _PreInitializeChunkCache;
+                SaveSettings();
+            }
+        }
+
+        public int MaximumChunkCacheSize
+        {
+            get => _MaximumChunkCacheSize;
+            set
+            {
+                OnPropertyChanged();
+                _MaximumChunkCacheSize = value;
+                _Configuration["Chunking"][nameof(MaximumChunkCacheSize)].IntValue = _MaximumChunkCacheSize;
+                SaveSettings();
+            }
+        }
+
+        public int MaximumChunkLoadTimeBufferSize
+        {
+            get => _MaximumChunkLoadTimeBufferSize;
+            set
+            {
+                OnPropertyChanged();
+                _MaximumChunkLoadTimeBufferSize = value;
+                _Configuration["Chunking"][nameof(MaximumChunkLoadTimeBufferSize)].IntValue =
+                    _MaximumChunkLoadTimeBufferSize;
+                SaveSettings();
+            }
+        }
+
+        public int PreLoadChunkDistance
+        {
+            get => _PreLoadChunkDistance;
+            set
+            {
+                OnPropertyChanged();
+                _PreLoadChunkDistance = value;
+                _Configuration["Chunking"][nameof(PreLoadChunkDistance)].IntValue = _PreLoadChunkDistance;
+                SaveSettings();
+            }
+        }
+
+        #endregion
+
+        public event PropertyChangedEventHandler PropertyChanged;
 
         private void Awake()
         {
@@ -95,84 +244,109 @@ namespace Controllers.State
                 : Configuration.LoadFromFile(_configPath);
 
             // General
-            if (!GetSetting("General", nameof(ThreadingMode), out ThreadingMode))
-            {
-                LogSettingLoadError(nameof(ThreadingMode), Defaults.THREADING_MODE);
-                ThreadingMode = Defaults.THREADING_MODE;
-            }
 
-            if (!GetSetting("General", nameof(GPUAcceleration), out GPUAcceleration))
-            {
-                LogSettingLoadError(nameof(GPUAcceleration), Defaults.GPU_ACCELERATION);
-                GPUAcceleration = Defaults.GPU_ACCELERATION;
-            }
-
-
-            // Graphics
-            if (!GetSetting("Graphics", nameof(MaximumInternalFrames), out MaximumInternalFrames)
+            if (!GetSetting("Graphics", nameof(MaximumInternalFrames), out _MaximumInternalFrames)
                 || (MaximumInternalFrames < 0)
                 || (MaximumInternalFrames > 300))
             {
                 LogSettingLoadError(nameof(MaximumInternalFrames), Defaults.MAXIMUM_INTERNAL_FRAMES);
                 MaximumInternalFrames = Defaults.MAXIMUM_INTERNAL_FRAMES;
+                SaveSettings();
             }
 
             MaximumInternalFrameTime = TimeSpan.FromSeconds(1f / MaximumInternalFrames);
 
-            if (!GetSetting("Graphics", nameof(MaximumFrameRateBufferSize), out MaximumFrameRateBufferSize)
+            if (!GetSetting("General", nameof(ThreadingMode), out _ThreadingMode))
+            {
+                LogSettingLoadError(nameof(ThreadingMode), Defaults.THREADING_MODE);
+                ThreadingMode = Defaults.THREADING_MODE;
+                SaveSettings();
+            }
+
+            if (!GetSetting("General", nameof(GPUAcceleration), out _GPUAcceleration))
+            {
+                LogSettingLoadError(nameof(GPUAcceleration), Defaults.GPU_ACCELERATION);
+                GPUAcceleration = Defaults.GPU_ACCELERATION;
+                SaveSettings();
+            }
+
+
+            // Graphics
+
+            if (!GetSetting("Graphics", nameof(MaximumFrameRateBufferSize), out _MaximumFrameRateBufferSize)
                 || (MaximumFrameRateBufferSize < 0)
                 || (MaximumFrameRateBufferSize > 120))
             {
                 LogSettingLoadError(nameof(MaximumFrameRateBufferSize), Defaults.MAXIMUM_FRAME_RATE_BUFFER_SIZE);
                 MaximumFrameRateBufferSize = Defaults.MAXIMUM_FRAME_RATE_BUFFER_SIZE;
+                SaveSettings();
             }
 
             if (!GetSetting("Graphics", nameof(VSyncLevel), out int vSyncLevel) || (vSyncLevel < 0) || (vSyncLevel > 4))
             {
                 LogSettingLoadError(nameof(vSyncLevel), Defaults.VSYNC_LEVEL);
-                vSyncLevel = Defaults.VSYNC_LEVEL;
+                VSyncLevel = Defaults.VSYNC_LEVEL;
+                SaveSettings();
+            }
+            else
+            {
+                VSyncLevel = vSyncLevel;
             }
 
-            VSyncLevel = vSyncLevel;
 
-            if (!GetSetting("Graphics", nameof(ShadowDistance), out ShadowDistance)
+            if (!GetSetting("Graphics", nameof(RenderDistance), out _RenderDistance)
+                || (RenderDistance < 0)
+                || (RenderDistance > 24))
+            {
+                LogSettingLoadError(nameof(RenderDistance), Defaults.RENDER_DISTANCE);
+                RenderDistance = Defaults.RENDER_DISTANCE;
+                SaveSettings();
+            }
+
+            if (!GetSetting("Graphics", nameof(ShadowDistance), out _ShadowDistance)
                 || (ShadowDistance < 0)
-                || (ShadowDistance > 25))
+                || (ShadowDistance > 24))
             {
                 LogSettingLoadError(nameof(ShadowDistance), Defaults.SHADOW_DISTANCE);
                 ShadowDistance = Defaults.SHADOW_DISTANCE;
+                SaveSettings();
             }
 
 
             // Chunking
-            if (!GetSetting("Chunking", nameof(PreInitializeChunkCache), out PreInitializeChunkCache))
+
+            if (!GetSetting("Chunking", nameof(PreInitializeChunkCache), out _PreInitializeChunkCache))
             {
                 LogSettingLoadError(nameof(PreInitializeChunkCache), Defaults.PRE_INITIALIZE_CHUNK_CACHE);
                 PreInitializeChunkCache = Defaults.PRE_INITIALIZE_CHUNK_CACHE;
+                SaveSettings();
             }
 
-            if (!GetSetting("Chunking", nameof(MaximumChunkCacheSize), out MaximumChunkCacheSize)
+            if (!GetSetting("Chunking", nameof(MaximumChunkCacheSize), out _MaximumChunkCacheSize)
                 || (MaximumChunkCacheSize < -1)
                 || (MaximumChunkCacheSize > 625))
             {
                 LogSettingLoadError(nameof(MaximumChunkCacheSize), Defaults.MAXIMUM_CHUNK_CACHE_SIZE);
                 MaximumChunkCacheSize = Defaults.MAXIMUM_CHUNK_CACHE_SIZE;
+                SaveSettings();
             }
 
-            if (!GetSetting("Chunking", nameof(MaximumChunkLoadTimeBufferSize), out MaximumChunkLoadTimeBufferSize)
+            if (!GetSetting("Chunking", nameof(MaximumChunkLoadTimeBufferSize), out _MaximumChunkLoadTimeBufferSize)
                 || (MaximumFrameRateBufferSize < 0)
                 || (MaximumChunkLoadTimeBufferSize > 120))
             {
                 LogSettingLoadError(nameof(MaximumChunkLoadTimeBufferSize),
                     Defaults.MAXIMUM_CHUNK_LOAD_TIME_BUFFER_SIZE);
                 MaximumChunkLoadTimeBufferSize = Defaults.MAXIMUM_CHUNK_LOAD_TIME_BUFFER_SIZE;
+                SaveSettings();
             }
 
-            if (!GetSetting("Chunking", nameof(PreLoadChunkDistance), out PreLoadChunkDistance)
+            if (!GetSetting("Chunking", nameof(PreLoadChunkDistance), out _PreLoadChunkDistance)
                 || (PreLoadChunkDistance < 0))
             {
                 LogSettingLoadError(nameof(PreLoadChunkDistance), Defaults.PRE_LOAD_CHUNK_DISTANCE);
                 PreLoadChunkDistance = Defaults.PRE_LOAD_CHUNK_DISTANCE;
+                SaveSettings();
             }
 
             EventLog.Logger.Log(LogLevel.Info, "Configuration loaded.");
@@ -194,6 +368,7 @@ namespace Controllers.State
             _Configuration["General"][nameof(GPUAcceleration)].PreComment =
                 "Determines whether the GPU will be more heavily utilized to increase overall performance. Turning this off will create more work for the CPU.";
             _Configuration["General"][nameof(GPUAcceleration)].BoolValue = Defaults.GPU_ACCELERATION;
+
 
             // Graphics
             _Configuration["Graphics"][nameof(MaximumInternalFrames)].PreComment =
@@ -269,9 +444,25 @@ namespace Controllers.State
             return true;
         }
 
-        private void LogSettingLoadError(string settingName, object defaultValue)
+        private static void LogSettingLoadError(string settingName, object defaultValue)
         {
             EventLog.Logger.Log(LogLevel.Warn, $"Error loading setting `{settingName}`, defaulting to {defaultValue}.");
         }
+
+
+        [NotifyPropertyChangedInvocator]
+        protected virtual void OnPropertyChanged([CallerMemberName] string propertyName = null)
+        {
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
+        }
+
+        #region PUBLIC METHODS
+
+        public void SaveSettings()
+        {
+            _Configuration.SaveToFile(_configPath, Encoding.ASCII);
+        }
+
+        #endregion
     }
 }

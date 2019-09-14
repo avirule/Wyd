@@ -264,7 +264,7 @@ public static class Mathv
         //int zQuotient = Math.DivRem(xQuotient, size3d.z, out int z);
         //int y = zQuotient % size3d.y;
         int y = index / (size3d.x * size3d.z);
-        index -= (y * size3d.x * size3d.z);
+        index -= y * size3d.x * size3d.z;
         int z = index / size3d.x;
         int x = index % size3d.x;
         return (x, y, z);

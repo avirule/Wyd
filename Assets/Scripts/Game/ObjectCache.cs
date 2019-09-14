@@ -1,7 +1,7 @@
 #region
 
 using System;
-using System.Collections.Generic;
+using System.Collections.Concurrent;
 
 #endregion
 
@@ -9,7 +9,7 @@ namespace Game
 {
     public class ObjectCache<T> where T : new()
     {
-        private readonly LinkedList<T> _InternalCache;
+        private readonly ConcurrentStack<T> _InternalCache;
         private Func<T, T> _PreCachingOperation;
         private Action<T> _ItemCulledOperation;
 
@@ -22,7 +22,7 @@ namespace Game
             Func<T, T> preCachingOperation = default, Action<T> itemCulledOperation = default,
             bool createNewIfEmpty = false, int maximumSize = -1)
         {
-            _InternalCache = new LinkedList<T>();
+            _InternalCache = new ConcurrentStack<T>();
             SetPreCachingOperation(preCachingOperation);
             SetItemCulledOperation(itemCulledOperation);
             CreateNewIfEmpty = createNewIfEmpty;
@@ -61,7 +61,7 @@ namespace Game
                 return;
             }
 
-            _InternalCache.AddFirst(item);
+            _InternalCache.Push(item);
 
             if (MaximumSize > -1)
             {
@@ -71,13 +71,11 @@ namespace Game
 
         public T RetrieveItem()
         {
-            if (_InternalCache.Count == 0)
+            if ((_InternalCache.Count == 0) || !_InternalCache.TryPop(out T lastItem))
             {
                 return CreateNewIfEmpty ? new T() : default;
             }
 
-            T lastItem = _InternalCache.Last.Value;
-            _InternalCache.RemoveLast();
 
             return lastItem;
         }
@@ -91,9 +89,10 @@ namespace Game
 
             while (_InternalCache.Count > MaximumSize)
             {
-                T lastItem = _InternalCache.Last.Value;
-                _ItemCulledOperation(lastItem);
-                _InternalCache.RemoveLast();
+                if (_InternalCache.TryPop(out T lastItem))
+                {
+                    _ItemCulledOperation(lastItem);
+                }
             }
         }
     }
