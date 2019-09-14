@@ -6,6 +6,7 @@ using Controllers.World;
 using Game;
 using Game.World.Blocks;
 using NLog;
+using Threading;
 using UnityEditor;
 using UnityEngine;
 using UnityEngine.SceneManagement;
@@ -18,6 +19,8 @@ namespace Controllers.State
     {
         public static readonly int MainThreadId = Thread.CurrentThread.ManagedThreadId;
 
+        public static ThreadedQueue ThreadedExecutionQueue { get; private set; }
+
         private void Awake()
         {
             AssignCurrent(this);
@@ -27,11 +30,21 @@ namespace Controllers.State
 
         private void Start()
         {
+            if (ThreadedExecutionQueue == default)
+            {
+                // init ThreadedQueue with # of threads matching 1/2 of logical processors
+                ThreadedExecutionQueue = new ThreadedQueue(200, () => OptionsController.Current.ThreadingMode,
+                    Environment.ProcessorCount / 2);
+                ThreadedExecutionQueue.Start();
+            }
+
             RegisterDefaultBlocks();
         }
 
         private void OnApplicationQuit()
         {
+            // Deallocate and destroy ALL NativeCollection / disposable objects
+            ThreadedExecutionQueue.Abort();
             LogManager.Shutdown();
         }
 

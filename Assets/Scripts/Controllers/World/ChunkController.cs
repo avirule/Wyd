@@ -11,7 +11,6 @@ using Game.World.Blocks;
 using Game.World.Chunks;
 using Logging;
 using NLog;
-using Threading;
 using Threading.ThreadedItems;
 using UnityEngine;
 using UnityEngine.Rendering;
@@ -36,7 +35,6 @@ namespace Controllers.World
         private static readonly ObjectCache<ChunkMeshingThreadedItem> ChunkMeshersCache =
             new ObjectCache<ChunkMeshingThreadedItem>(null, null, true);
 
-        private static ThreadedQueue _threadedExecutionQueue;
 
         public static readonly Vector3Int Size = new Vector3Int(16, 256, 16);
         public static readonly int YIndexStep = Size.x * Size.z;
@@ -117,14 +115,6 @@ namespace Controllers.World
 
         private void Awake()
         {
-            if (_threadedExecutionQueue == default)
-            {
-                // init ThreadedQueue with # of threads matching 1/2 of logical processors
-                _threadedExecutionQueue = new ThreadedQueue(200, () => OptionsController.Current.ThreadingMode,
-                    Environment.ProcessorCount / 2);
-                _threadedExecutionQueue.Start();
-            }
-
             if (!_computeShaderGlobalsSet)
             {
                 GenerationComputeShader.SetInt("_NoiseSeed", WorldController.Current.WorldGenerationSettings.Seed);
@@ -206,12 +196,6 @@ namespace Controllers.World
             Destroy(_Mesh);
         }
 
-        private void OnApplicationQuit()
-        {
-            // Deallocate and destroy ALL NativeCollection / disposable objects
-            _threadedExecutionQueue.Abort();
-        }
-
 
         #region ACTIVATION STATE
 
@@ -276,8 +260,8 @@ namespace Controllers.World
             Built = Meshed = Meshing = UpdateMesh = false;
             Building = true;
 
-            _threadedExecutionQueue.ThreadedItemFinished += OnThreadedQueueFinishedItem;
-            _BuildingIdentity = _threadedExecutionQueue.QueueThreadedItem(threadedItem);
+            GameController.ThreadedExecutionQueue.ThreadedItemFinished += OnThreadedQueueFinishedItem;
+            _BuildingIdentity = GameController.ThreadedExecutionQueue.QueueThreadedItem(threadedItem);
         }
 
         private void CheckStateAndStartMeshing()
@@ -303,8 +287,8 @@ namespace Controllers.World
             Meshed = UpdateMesh = false;
             Meshing = true;
 
-            _threadedExecutionQueue.ThreadedItemFinished += OnThreadedQueueFinishedItem;
-            _MeshingIdentity = _threadedExecutionQueue.QueueThreadedItem(threadedItem);
+            GameController.ThreadedExecutionQueue.ThreadedItemFinished += OnThreadedQueueFinishedItem;
+            _MeshingIdentity = GameController.ThreadedExecutionQueue.QueueThreadedItem(threadedItem);
         }
 
         private void OnThreadedQueueFinishedItem(object sender, ThreadedItemFinishedEventArgs args)
@@ -313,7 +297,7 @@ namespace Controllers.World
             {
                 Building = false;
                 Built = UpdateMesh = true;
-                _threadedExecutionQueue.ThreadedItemFinished -= OnThreadedQueueFinishedItem;
+                GameController.ThreadedExecutionQueue.ThreadedItemFinished -= OnThreadedQueueFinishedItem;
 
                 BuildTimes.Enqueue(args.ThreadedItem.ExecutionTime);
 
@@ -323,7 +307,7 @@ namespace Controllers.World
             {
                 Meshing = false;
                 Meshed = true;
-                _threadedExecutionQueue.ThreadedItemFinished -= OnThreadedQueueFinishedItem;
+                GameController.ThreadedExecutionQueue.ThreadedItemFinished -= OnThreadedQueueFinishedItem;
 
                 // Safely apply mesh when there is free frame time
                 _PendingAction = () => ApplyMesh((ChunkMeshingThreadedItem) args.ThreadedItem);
