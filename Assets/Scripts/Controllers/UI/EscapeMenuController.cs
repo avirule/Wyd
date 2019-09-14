@@ -37,9 +37,15 @@ namespace Controllers.UI
             CheckPressedEscapeKey();
         }
 
+        private void OnDisable()
+        {
+            InputController.Current.ToggleCursorLocked(true);
+            InputController.Current.Unlock(this);
+        }
+
         private void OnDestroy()
         {
-            InputController.Current.ToggleCursorLocked(false);
+            InputController.Current.ToggleCursorLocked(true);
             InputController.Current.Unlock(this);
         }
 
