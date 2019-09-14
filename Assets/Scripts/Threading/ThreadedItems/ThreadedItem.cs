@@ -81,6 +81,7 @@ namespace Threading.ThreadedItems
             StartTime = DateTime.UtcNow;
 
             Process();
+            ProcessFinished();
 
             FinishTime = DateTime.UtcNow;
             ExecutionTime = FinishTime - StartTime;
@@ -92,6 +93,10 @@ namespace Threading.ThreadedItems
         }
 
         protected virtual void Process()
+        {
+        }
+
+        protected virtual void ProcessFinished()
         {
         }
     }

@@ -1763,16 +1763,16 @@ namespace Noise
             return sum;
         }
 
-        public float GetSimplex(float x, float y, float z)
+        public static float GetSimplex(int seed, float freq, float x, float y, float z)
         {
-            return SingleSimplex(m_seed, x * m_frequency, y * m_frequency, z * m_frequency);
+            return SingleSimplex(seed, x * freq, y * freq, z * freq);
         }
 
         private const float F3 = (float) (1.0 / 3.0);
         private const float G3 = (float) (1.0 / 6.0);
         private const float G33 = (G3 * 3) - 1;
 
-        private float SingleSimplex(int seed, float x, float y, float z)
+        private static float SingleSimplex(int seed, float x, float y, float z)
         {
             float t = (x + y + z) * F3;
             int i = FastFloor(x + t);

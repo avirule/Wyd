@@ -29,6 +29,7 @@ namespace Game.World.Chunks
         public Random Rand;
         public Vector3 Position;
         public Block[] Blocks;
+        public float Frequency;
 
         public ChunkBuilder()
         {
@@ -52,7 +53,7 @@ namespace Game.World.Chunks
             Blocks = blocks;
         }
 
-        public void GenerateMemorySensitive()
+        public void GenerateCPUBound()
         {
             if (Blocks == default)
             {
@@ -67,12 +68,6 @@ namespace Game.World.Chunks
             }
 
             // get list of block ids that should be ignored on second generation pass
-            ushort[] blockIdsToIgnore = GetBlockIdsToIgnoreFromCachedNames().ToArray();
-
-            for (int index = 0; (index < Blocks.Length) && !AbortToken.IsCancellationRequested; index++)
-            {
-                GenerateGrass(index, blockIdsToIgnore);
-            }
         }
 
         public void ProcessPreGeneratedNoiseData(float[] noiseValues)
@@ -88,21 +83,34 @@ namespace Game.World.Chunks
             {
                 (int x, int y, int z) = Mathv.GetVector3IntIndex(index, ChunkController.Size);
 
-                if ((y < 4) && (y <= Rand.Next(0, 4)))
+                if ((y < 4)
+                    && (y <= Rand.Next(0, 4))
+                    && BlockController.Current.TryGetBlockId("bedrock", out ushort bedrockBlockId))
                 {
-                    if (BlockController.Current.TryGetBlockId("bedrock", out ushort blockId))
-                    {
-                        Blocks[index].Initialise(blockId);
-                    }
+                    Blocks[index].Initialise(bedrockBlockId);
                 }
                 else
                 {
                     if ((noiseValues[index] >= 0.01f)
-                        && BlockController.Current.TryGetBlockId("stone", out ushort blockId))
+                        && BlockController.Current.TryGetBlockId("stone", out ushort stoneBlockId))
                     {
-                        Blocks[index].Initialise(blockId);
+                        Blocks[index].Initialise(stoneBlockId);
+                    }
+                    else
+                    {
+                        Blocks[index] = default;
                     }
                 }
+            }
+        }
+
+        public void TerrainPass1()
+        {
+            ushort[] blockIdsToIgnore = GetBlockIdsToIgnoreFromCachedNames().ToArray();
+
+            for (int index = 0; (index < Blocks.Length) && !AbortToken.IsCancellationRequested; index++)
+            {
+                GenerateGrass(index, blockIdsToIgnore);
             }
         }
 
@@ -231,7 +239,8 @@ namespace Game.World.Chunks
             }
             else
             {
-                float noiseValue = _noiseFunction.GetSimplex(Position.x + x, Position.y + y, Position.z + z);
+                float noiseValue = FastNoise.GetSimplex(WorldController.Current.WorldGenerationSettings.Seed, Frequency,
+                    Position.x + x, Position.y + y, Position.z + z);
                 noiseValue += 3f * (1f - Mathf.InverseLerp(0f, ChunkController.Size.y, y));
                 noiseValue /= (y + 1f) * 1.5f;
 

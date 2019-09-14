@@ -72,7 +72,7 @@ namespace Controllers.World
             _BuildChunkAroundEntityStack = new Stack<IEntity>();
             _FrameTimer = new Stopwatch();
 
-#if UNITY_EDITOR
+#if !UNITY_EDITOR
             WorldGenerationSettings.Radius = 5;
 #endif
         }

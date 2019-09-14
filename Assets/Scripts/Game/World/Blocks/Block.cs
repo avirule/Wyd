@@ -73,12 +73,7 @@ namespace Game.World.Blocks
         public void Initialise(ushort id, sbyte faces = 0)
         {
             _Bits[IdSection] = id;
-            _Bits[FaceSections[0]] = faces & (byte) Direction.North;
-            _Bits[FaceSections[1]] = faces & (byte) Direction.East;
-            _Bits[FaceSections[2]] = faces & (byte) Direction.South;
-            _Bits[FaceSections[3]] = faces & (byte) Direction.West;
-            _Bits[FaceSections[4]] = faces & (byte) Direction.Up;
-            _Bits[FaceSections[5]] = faces & (byte) Direction.Down;
+            _Bits[AllFacesSection] = faces;
             _Bits[TransparencySection] = BlockController.Current.IsBlockDefaultTransparent(Id) ? 0 : 1;
         }
 

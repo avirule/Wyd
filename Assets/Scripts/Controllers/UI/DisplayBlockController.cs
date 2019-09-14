@@ -25,7 +25,7 @@ namespace Controllers.UI
         private void Awake()
         {
             transform.localPosition = Vector3.zero;
-            
+
             _Vertices = new List<Vector3>();
             _Triangles = new List<int>();
             _UVs = new List<Vector3>();
@@ -43,8 +43,8 @@ namespace Controllers.UI
         {
             BlockId = blockId;
 
-           //_Vertices.Clear();
-           //_Triangles.Clear();
+            //_Vertices.Clear();
+            //_Triangles.Clear();
             _UVs.Clear();
 
             // todo make this work with special block forms

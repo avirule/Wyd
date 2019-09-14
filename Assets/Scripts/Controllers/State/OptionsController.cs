@@ -34,6 +34,7 @@ namespace Controllers.State
         {
             // General
             public const ThreadingMode THREADING_MODE = ThreadingMode.Single;
+            public const bool GPU_ACCELERATION = true;
 
             // Graphics
             public const int MAXIMUM_FRAME_RATE_BUFFER_SIZE = 60;
@@ -54,6 +55,7 @@ namespace Controllers.State
 
         // General
         public ThreadingMode ThreadingMode;
+        public bool GPUAcceleration;
 
         // Graphics
         public int MaximumInternalFrames;
@@ -95,8 +97,14 @@ namespace Controllers.State
             // General
             if (!GetSetting("General", nameof(ThreadingMode), out ThreadingMode))
             {
-                SettingLoadError(nameof(ThreadingMode), Defaults.THREADING_MODE);
+                LogSettingLoadError(nameof(ThreadingMode), Defaults.THREADING_MODE);
                 ThreadingMode = Defaults.THREADING_MODE;
+            }
+
+            if (!GetSetting("General", nameof(GPUAcceleration), out GPUAcceleration))
+            {
+                LogSettingLoadError(nameof(GPUAcceleration), Defaults.GPU_ACCELERATION);
+                GPUAcceleration = Defaults.GPU_ACCELERATION;
             }
 
 
@@ -105,7 +113,7 @@ namespace Controllers.State
                 || (MaximumInternalFrames < 0)
                 || (MaximumInternalFrames > 300))
             {
-                SettingLoadError(nameof(MaximumInternalFrames), Defaults.MAXIMUM_INTERNAL_FRAMES);
+                LogSettingLoadError(nameof(MaximumInternalFrames), Defaults.MAXIMUM_INTERNAL_FRAMES);
                 MaximumInternalFrames = Defaults.MAXIMUM_INTERNAL_FRAMES;
             }
 
@@ -115,13 +123,13 @@ namespace Controllers.State
                 || (MaximumFrameRateBufferSize < 0)
                 || (MaximumFrameRateBufferSize > 120))
             {
-                SettingLoadError(nameof(MaximumFrameRateBufferSize), Defaults.MAXIMUM_FRAME_RATE_BUFFER_SIZE);
+                LogSettingLoadError(nameof(MaximumFrameRateBufferSize), Defaults.MAXIMUM_FRAME_RATE_BUFFER_SIZE);
                 MaximumFrameRateBufferSize = Defaults.MAXIMUM_FRAME_RATE_BUFFER_SIZE;
             }
 
             if (!GetSetting("Graphics", nameof(VSyncLevel), out int vSyncLevel) || (vSyncLevel < 0) || (vSyncLevel > 4))
             {
-                SettingLoadError(nameof(vSyncLevel), Defaults.VSYNC_LEVEL);
+                LogSettingLoadError(nameof(vSyncLevel), Defaults.VSYNC_LEVEL);
                 vSyncLevel = Defaults.VSYNC_LEVEL;
             }
 
@@ -131,7 +139,7 @@ namespace Controllers.State
                 || (ShadowDistance < 0)
                 || (ShadowDistance > 25))
             {
-                SettingLoadError(nameof(ShadowDistance), Defaults.SHADOW_DISTANCE);
+                LogSettingLoadError(nameof(ShadowDistance), Defaults.SHADOW_DISTANCE);
                 ShadowDistance = Defaults.SHADOW_DISTANCE;
             }
 
@@ -139,7 +147,7 @@ namespace Controllers.State
             // Chunking
             if (!GetSetting("Chunking", nameof(PreInitializeChunkCache), out PreInitializeChunkCache))
             {
-                SettingLoadError(nameof(PreInitializeChunkCache), Defaults.PRE_INITIALIZE_CHUNK_CACHE);
+                LogSettingLoadError(nameof(PreInitializeChunkCache), Defaults.PRE_INITIALIZE_CHUNK_CACHE);
                 PreInitializeChunkCache = Defaults.PRE_INITIALIZE_CHUNK_CACHE;
             }
 
@@ -147,7 +155,7 @@ namespace Controllers.State
                 || (MaximumChunkCacheSize < -1)
                 || (MaximumChunkCacheSize > 625))
             {
-                SettingLoadError(nameof(MaximumChunkCacheSize), Defaults.MAXIMUM_CHUNK_CACHE_SIZE);
+                LogSettingLoadError(nameof(MaximumChunkCacheSize), Defaults.MAXIMUM_CHUNK_CACHE_SIZE);
                 MaximumChunkCacheSize = Defaults.MAXIMUM_CHUNK_CACHE_SIZE;
             }
 
@@ -155,14 +163,15 @@ namespace Controllers.State
                 || (MaximumFrameRateBufferSize < 0)
                 || (MaximumChunkLoadTimeBufferSize > 120))
             {
-                SettingLoadError(nameof(MaximumChunkLoadTimeBufferSize), Defaults.MAXIMUM_CHUNK_LOAD_TIME_BUFFER_SIZE);
+                LogSettingLoadError(nameof(MaximumChunkLoadTimeBufferSize),
+                    Defaults.MAXIMUM_CHUNK_LOAD_TIME_BUFFER_SIZE);
                 MaximumChunkLoadTimeBufferSize = Defaults.MAXIMUM_CHUNK_LOAD_TIME_BUFFER_SIZE;
             }
 
             if (!GetSetting("Chunking", nameof(PreLoadChunkDistance), out PreLoadChunkDistance)
                 || (PreLoadChunkDistance < 0))
             {
-                SettingLoadError(nameof(PreLoadChunkDistance), Defaults.PRE_LOAD_CHUNK_DISTANCE);
+                LogSettingLoadError(nameof(PreLoadChunkDistance), Defaults.PRE_LOAD_CHUNK_DISTANCE);
                 PreLoadChunkDistance = Defaults.PRE_LOAD_CHUNK_DISTANCE;
             }
 
@@ -182,6 +191,9 @@ namespace Controllers.State
             _Configuration["General"][nameof(ThreadingMode)].IntValue =
                 (int) Defaults.THREADING_MODE;
 
+            _Configuration["General"][nameof(GPUAcceleration)].PreComment =
+                "Determines whether the GPU will be more heavily utilized to increase overall performance. Turning this off will create more work for the CPU.";
+            _Configuration["General"][nameof(GPUAcceleration)].BoolValue = Defaults.GPU_ACCELERATION;
 
             // Graphics
             _Configuration["Graphics"][nameof(MaximumInternalFrames)].PreComment =
@@ -257,7 +269,7 @@ namespace Controllers.State
             return true;
         }
 
-        private void SettingLoadError(string settingName, object defaultValue)
+        private void LogSettingLoadError(string settingName, object defaultValue)
         {
             EventLog.Logger.Log(LogLevel.Warn, $"Error loading setting `{settingName}`, defaulting to {defaultValue}.");
         }

@@ -3,7 +3,6 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Threading;
 using Collections;
 using Controllers.State;
 using Game;
@@ -29,7 +28,7 @@ namespace Controllers.World
 
     public class ChunkController : MonoBehaviour
     {
-        private static readonly int Offset = Shader.PropertyToID("_Offset");
+        private static bool _computeShaderGlobalsSet;
 
         private static readonly ObjectCache<ChunkBuildingThreadedItem> ChunkBuildersCache =
             new ObjectCache<ChunkBuildingThreadedItem>(null, null, true);
@@ -126,14 +125,20 @@ namespace Controllers.World
                 _threadedExecutionQueue.Start();
             }
 
+            if (!_computeShaderGlobalsSet)
+            {
+                GenerationComputeShader.SetInt("_NoiseSeed", WorldController.Current.WorldGenerationSettings.Seed);
+                GenerationComputeShader.SetVector("_MaximumSize", new Vector4(Size.x, Size.y, Size.z, 0f));
+
+                _computeShaderGlobalsSet = true;
+            }
+
             _SelfTransform = transform;
             Position = _SelfTransform.position;
             UpdateBounds();
             _Blocks = new Block[Size.Product()];
             _Mesh = new Mesh();
 
-            GenerationComputeShader.SetVector("_MaximumSize", new Vector4(Size.x, Size.y, Size.z));
-            GenerationComputeShader.SetVector("_Offset", Position);
             MeshFilter.sharedMesh = _Mesh;
             MeshRenderer.material.SetTexture(TextureController.Current.MainTex,
                 TextureController.Current.TerrainTexture);
@@ -213,7 +218,6 @@ namespace Controllers.World
         public void Activate(Vector3 position)
         {
             _SelfTransform.position = Position = position;
-            GenerationComputeShader.SetVector("_Offset", Position);
             UpdateBounds();
             Built = Building = Meshed = Meshing = UpdateMesh = false;
             _UpdateInternalSettingsOnNextFrame = true;
@@ -260,16 +264,7 @@ namespace Controllers.World
                 return;
             }
 
-            // will enable this when I can get the time to get it working
-            // ComputeBuffer buffer = new ComputeBuffer(Size.Product(), 4);
-            // float[] output = new float[Size.Product()];
-            // int kernel = GenerationComputeShader.FindKernel("CSMain");
-            // GenerationComputeShader.SetBuffer(kernel, "Result", buffer);
-            // GenerationComputeShader.Dispatch(kernel, Size.Product() / 256, 1, 1);
-            // buffer.GetData(output);
-            // buffer.Release();
-
-            ThreadedItem threadedItem = GetChunkBuildingThreadedItem();
+            ThreadedItem threadedItem = GetChunkBuildingThreadedItem(0.01f, OptionsController.Current.GPUAcceleration);
 
             if (threadedItem == default)
             {
@@ -339,10 +334,26 @@ namespace Controllers.World
             }
         }
 
-        private ThreadedItem GetChunkBuildingThreadedItem(bool memoryNegligent = false, float[] noiseValues = null)
+        private ThreadedItem GetChunkBuildingThreadedItem(float frequency = 0.01f, bool gpuAcceleration = false)
         {
             ChunkBuildingThreadedItem threadedItem = ChunkBuildersCache.RetrieveItem();
-            threadedItem.Set(Position, _Blocks, memoryNegligent, noiseValues);
+
+            if (gpuAcceleration)
+            {
+                ComputeBuffer noiseValuesBuffer = new ComputeBuffer(Size.Product(), 4);
+                int kernel = GenerationComputeShader.FindKernel("CSMain");
+                GenerationComputeShader.SetVector("_Offset", Position);
+                GenerationComputeShader.SetFloat("_Frequency", 0.01f);
+                GenerationComputeShader.SetBuffer(kernel, "Result", noiseValuesBuffer);
+                // 256 is the value set in the shader's [numthreads(--> 256 <--, 1, 1)]
+                GenerationComputeShader.Dispatch(kernel, Size.Product() / 256, 1, 1);
+
+                threadedItem.Set(Position, _Blocks, frequency, gpuAcceleration, noiseValuesBuffer);
+            }
+            else
+            {
+                threadedItem.Set(Position, _Blocks, frequency);
+            }
 
             return threadedItem;
         }
