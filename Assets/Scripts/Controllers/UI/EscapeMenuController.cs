@@ -1,5 +1,6 @@
 ﻿#region
 
+using System;
 using Controllers.State;
 using UnityEngine;
 using UnityEngine.UI;
@@ -34,6 +35,12 @@ namespace Controllers.UI
         private void Update()
         {
             CheckPressedEscapeKey();
+        }
+
+        private void OnDestroy()
+        {
+            InputController.Current.ToggleCursorLocked(false);
+            InputController.Current.Unlock(this);
         }
 
         private void CheckPressedEscapeKey()

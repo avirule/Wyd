@@ -1,5 +1,6 @@
 #region
 
+using System;
 using Extensions;
 using UnityEngine;
 
@@ -13,7 +14,6 @@ namespace Controllers.State
         {
             AssignCurrent(this);
         }
-
         public bool GetKey(KeyCode keyCode, object keyMaster = null)
         {
             return IsLockedFor(keyMaster) && Input.GetKey(keyCode);
