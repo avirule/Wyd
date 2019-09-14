@@ -73,7 +73,7 @@ namespace Controllers.World
             _FrameTimer = new Stopwatch();
 
 #if !UNITY_EDITOR
-            WorldGenerationSettings.Radius = 5;
+            WorldGenerationSettings.Radius = 10;
 #endif
         }
 

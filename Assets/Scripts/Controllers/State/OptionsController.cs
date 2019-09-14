@@ -33,7 +33,7 @@ namespace Controllers.State
         public static class Defaults
         {
             // General
-            public const ThreadingMode THREADING_MODE = ThreadingMode.Single;
+            public const ThreadingMode THREADING_MODE = ThreadingMode.Multi;
             public const bool GPU_ACCELERATION = true;
 
             // Graphics

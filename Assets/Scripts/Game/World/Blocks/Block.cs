@@ -20,16 +20,16 @@ namespace Game.World.Blocks
         static Block()
         {
             IdSection = BitVector32.CreateSection(short.MaxValue);
-            TransparencySection = BitVector32.CreateSection(1, IdSection);
-            AllFacesSection = BitVector32.CreateSection(63, TransparencySection);
             FaceSections = new BitVector32.Section[6];
-            FaceSections[0] = BitVector32.CreateSection(1, TransparencySection);
+            FaceSections[0] = BitVector32.CreateSection(1, IdSection);
             FaceSections[1] = BitVector32.CreateSection(1, FaceSections[0]);
             FaceSections[2] = BitVector32.CreateSection(1, FaceSections[1]);
             FaceSections[3] = BitVector32.CreateSection(1, FaceSections[2]);
             FaceSections[4] = BitVector32.CreateSection(1, FaceSections[3]);
             FaceSections[5] = BitVector32.CreateSection(1, FaceSections[4]);
-            DamageSection = BitVector32.CreateSection(15, FaceSections[5]);
+            AllFacesSection = BitVector32.CreateSection(63, IdSection);
+            TransparencySection = BitVector32.CreateSection(1, AllFacesSection);
+            DamageSection = BitVector32.CreateSection(15, TransparencySection);
         }
 
         #endregion
@@ -61,12 +61,7 @@ namespace Game.World.Blocks
         public Block(ushort id, sbyte faces = 0)
         {
             _Bits[IdSection] = id;
-            _Bits[FaceSections[0]] = faces & (byte) Direction.North;
-            _Bits[FaceSections[1]] = faces & (byte) Direction.East;
-            _Bits[FaceSections[2]] = faces & (byte) Direction.South;
-            _Bits[FaceSections[3]] = faces & (byte) Direction.West;
-            _Bits[FaceSections[4]] = faces & (byte) Direction.Up;
-            _Bits[FaceSections[5]] = faces & (byte) Direction.Down;
+            _Bits[AllFacesSection] = faces;
             _Bits[TransparencySection] = BlockController.Current.IsBlockDefaultTransparent(Id) ? 0 : 1;
         }
 
@@ -89,12 +84,12 @@ namespace Game.World.Blocks
 
         public bool HasFace(Direction direction)
         {
-            return _Bits[FaceSections[((byte) direction).LeastSignificantBit()]] == 1;
+            return _Bits[FaceSections[((sbyte) direction).LeastSignificantBit()]] == 1;
         }
 
         public void SetFace(Direction direction, bool value)
         {
-            _Bits[FaceSections[((byte) direction).LeastSignificantBit()]] = value ? 1 : 0;
+            _Bits[FaceSections[((sbyte) direction).LeastSignificantBit()]] = value ? 1 : 0;
         }
 
         public void ClearFaces()

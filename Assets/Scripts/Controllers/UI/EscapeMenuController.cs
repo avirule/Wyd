@@ -55,6 +55,9 @@ namespace Controllers.UI
 
         private void SetMainActive(bool active)
         {
+            Backdrop.SetActive(active);
+            Main.SetActive(active);
+
             if (active && InputController.Current.Lock(this))
             {
                 InputController.Current.ToggleCursorLocked(false, this);
@@ -66,20 +69,17 @@ namespace Controllers.UI
                 InputController.Current.ToggleCursorLocked(true, this);
                 InputController.Current.Unlock(this);
             }
-
-            Backdrop.SetActive(active);
-            Main.SetActive(active);
         }
 
         private void SetOptionsActive(bool active)
         {
+            Backdrop.SetActive(active);
+            Options.SetActive(active);
+
             if (active)
             {
                 SetMainActive(false);
             }
-
-            Backdrop.SetActive(active);
-            Options.SetActive(active);
         }
     }
 }

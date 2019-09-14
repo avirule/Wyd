@@ -53,4 +53,9 @@ public static class Mathb
     {
         return MultiplyDeBruijnBitPosition[(uint) ((a & -a) * 0x077CB531U) >> 27];
     }
+
+    public static int LeastSignificantBit(this sbyte a)
+    {
+        return MultiplyDeBruijnBitPosition[(uint) ((a & -a) * 0x077CB531U) >> 27];
+    }
 }
