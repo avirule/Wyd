@@ -1,15 +1,14 @@
 #region
 
 using Controllers.World;
-using Game;
 using Game.World.Blocks;
-using Game.World.Chunks;
+using Jobs;
 using UnityEngine;
 using Random = System.Random;
 
 #endregion
 
-namespace Jobs
+namespace Game.World.Chunks
 {
     public class ChunkBuildingJob : Job
     {

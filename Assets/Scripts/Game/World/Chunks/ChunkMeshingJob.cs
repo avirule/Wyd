@@ -1,12 +1,12 @@
 #region
 
 using Game.World.Blocks;
-using Game.World.Chunks;
+using Jobs;
 using UnityEngine;
 
 #endregion
 
-namespace Jobs
+namespace Game.World.Chunks
 {
     public class ChunkMeshingJob : Job
     {
