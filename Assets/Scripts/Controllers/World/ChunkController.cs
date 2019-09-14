@@ -58,7 +58,6 @@ namespace Controllers.World
         private Mesh _Mesh;
         private object _BuildingIdentity;
         private object _MeshingIdentity;
-        private bool _UpdateInternalSettingsOnNextFrame;
         private bool _Visible;
         private bool _RenderShadows;
 
@@ -159,12 +158,14 @@ namespace Controllers.World
                     .MaximumChunkLoadTimeBufferSize);
             }
 
-            _UpdateInternalSettingsOnNextFrame = true;
-
             if (_CurrentLoader == default)
             {
                 EventLog.Logger.Log(LogLevel.Warn,
                     $"Chunk at position {Position} has been initialized without a loader. This is possibly an error.");
+            }
+            else
+            {
+                OnCurrentLoaderChangedChunk(this, _CurrentLoader.CurrentChunk);
             }
         }
 
@@ -175,20 +176,13 @@ namespace Controllers.World
                 return;
             }
 
-            if (_UpdateInternalSettingsOnNextFrame)
-            {
-                OnCurrentLoaderChangedChunk(this, _CurrentLoader.CurrentChunk);
-            }
-
             GenerationStateCheckAndStart();
 
-            if (_PendingAction == default)
+            if (_PendingAction != default)
             {
-                return;
+                _PendingAction?.Invoke();
+                _PendingAction = default;
             }
-
-            _PendingAction?.Invoke();
-            _PendingAction = default;
         }
 
         private void OnDestroy()
@@ -203,8 +197,6 @@ namespace Controllers.World
         {
             _SelfTransform.position = Position = position;
             UpdateBounds();
-            Built = Building = Meshed = Meshing = UpdateMesh = false;
-            _UpdateInternalSettingsOnNextFrame = true;
             gameObject.SetActive(true);
         }
 
@@ -218,7 +210,12 @@ namespace Controllers.World
             if (_CurrentLoader != default)
             {
                 _CurrentLoader.ChunkPositionChanged -= OnCurrentLoaderChangedChunk;
+                _CurrentLoader = default;
             }
+
+            _BuildingIdentity = _MeshingIdentity = _PendingAction = null;
+            _Bounds = default;
+            _Visible = _RenderShadows = Built = Building = Meshed = Meshing = UpdateMesh = false;
 
             StopAllCoroutines();
             gameObject.SetActive(false);
@@ -226,6 +223,11 @@ namespace Controllers.World
 
         public void AssignLoader(IEntity loader)
         {
+            if (loader == default)
+            {
+                return;
+            }
+
             _CurrentLoader = loader;
             _CurrentLoader.ChunkPositionChanged += OnCurrentLoaderChangedChunk;
         }
@@ -564,7 +566,6 @@ namespace Controllers.World
 
             Visible = IsWithinRenderDistance(difference);
             RenderShadows = IsWithinShadowsDistance(difference);
-            _UpdateInternalSettingsOnNextFrame = false;
         }
 
         private static bool IsWithinLoaderRange(Vector3 difference)

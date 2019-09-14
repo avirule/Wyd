@@ -17,6 +17,7 @@ namespace Controllers.Entity
     {
         public const int REACH = 5;
 
+        private static readonly TimeSpan RegularCheckWaitInterval = TimeSpan.FromSeconds(1d);
         private static readonly TimeSpan MinimumActionInterval = TimeSpan.FromSeconds(1f / 4f);
 
         private Ray _ReachRay;
@@ -25,6 +26,7 @@ namespace Controllers.Entity
         private Transform _ReachHitSurfaceObjectTransform;
         private Vector3 _Movement;
         private Stopwatch _ActionCooldown;
+        private Stopwatch _RegularCheckWait;
 
         public Transform CameraTransform;
         public GameObject ReachHitSurfaceObject;
@@ -51,6 +53,7 @@ namespace Controllers.Entity
 
             _ReachRay = new Ray();
             _ActionCooldown = Stopwatch.StartNew();
+            _RegularCheckWait = Stopwatch.StartNew();
 
             Transform = transform;
             Rigidbody = GetComponent<Rigidbody>();
@@ -120,6 +123,13 @@ namespace Controllers.Entity
                 }
 
                 _ActionCooldown.Restart();
+            }
+
+            if (_RegularCheckWait.Elapsed > RegularCheckWaitInterval)
+            {
+                CheckChangedChunk();
+
+                _RegularCheckWait.Restart();
             }
         }
 

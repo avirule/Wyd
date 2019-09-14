@@ -11,6 +11,7 @@ GameObject:
   - component: {fileID: 5300161025883425987}
   - component: {fileID: 5300161025883425986}
   - component: {fileID: 5300161025883425985}
+  - component: {fileID: 7189539538388290988}
   m_Layer: 0
   m_Name: ReachHitSurfaceObject
   m_TagString: Untagged
@@ -78,3 +79,18 @@ MeshRenderer:
   m_SortingLayerID: 0
   m_SortingLayer: 0
   m_SortingOrder: 0
+--- !u!114 &7189539538388290988
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5300161025883425984}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: dcdc9c91512946e0ae79d916c2f35118, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  StartColor: {r: 1, g: 1, b: 1, a: 0.4}
+  EndColor: {r: 1, g: 1, b: 1, a: 0.101960786}
+  GradientTime: 1.7

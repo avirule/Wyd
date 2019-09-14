@@ -75,7 +75,7 @@ namespace Controllers.UI
 
             //_Mesh.SetVertices(_Vertices);
             //_Mesh.SetTriangles(_Triangles, 0);
-            _Mesh.SetUVs(0, _UVs);
+//            _Mesh.SetUVs(0, _UVs);
         }
 
         private void AddTriangles(Direction direction)
