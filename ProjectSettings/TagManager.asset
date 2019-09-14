@@ -6,6 +6,8 @@ TagManager:
   tags:
   - WorldController
   - EventLog
+  - MenuPanel
+  - TabButton
   layers:
   - Default
   - TransparentFX

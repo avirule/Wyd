@@ -10,14 +10,14 @@ namespace Controllers.UI.Components.Text
 {
     public class ChunksQueuedTextController : MonoBehaviour
     {
+        private string _Format;
         private TextMeshProUGUI _ChunksQueuedText;
         private int _LastQueuedForBuildingCount;
-        private int _LastQueuedForCachingCount;
 
         private void Awake()
         {
             _ChunksQueuedText = GetComponent<TextMeshProUGUI>();
-            _ChunksQueuedText.text = "Chunks Queued: (b0, c0)";
+            _Format = _ChunksQueuedText.text;
         }
 
         private void Update()
@@ -34,7 +34,7 @@ namespace Controllers.UI.Components.Text
         {
             _LastQueuedForBuildingCount = chunksQueuedForBuilding;
 
-            _ChunksQueuedText.text = $"Chunks Queued: (b{chunksQueuedForBuilding})";
+            _ChunksQueuedText.text = string.Format(_Format, _LastQueuedForBuildingCount);
         }
     }
 }

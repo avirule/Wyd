@@ -11,13 +11,14 @@ namespace Controllers.UI.Components.Text
 {
     public class ThreadingModeTextController : MonoBehaviour
     {
+        private string _Format;
         private TextMeshProUGUI _ThreadingModeText;
         private ThreadingMode _LastThreadingMode;
 
         private void Awake()
         {
             _ThreadingModeText = GetComponent<TextMeshProUGUI>();
-            _ThreadingModeText.text = $"Threading Mode: {_LastThreadingMode.ToString()}";
+            _Format = _ThreadingModeText.text;
         }
 
         private void Update()
@@ -32,7 +33,7 @@ namespace Controllers.UI.Components.Text
         {
             _LastThreadingMode = OptionsController.Current.ThreadingMode;
 
-            _ThreadingModeText.text = $"Threading Mode: {_LastThreadingMode.ToString()}";
+            _ThreadingModeText.text = string.Format(_Format, _LastThreadingMode.ToString());
         }
     }
 }

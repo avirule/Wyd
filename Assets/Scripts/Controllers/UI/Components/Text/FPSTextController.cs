@@ -14,6 +14,7 @@ namespace Controllers.UI.Components.Text
 {
     public class FPSTextController : MonoBehaviour
     {
+        private string _Format;
         private List<float> _DeltaTimes;
         private TextMeshProUGUI _FPSText;
         private int _SkippedFrames;
@@ -24,6 +25,7 @@ namespace Controllers.UI.Components.Text
         {
             _DeltaTimes = new List<float>();
             _FPSText = GetComponent<TextMeshProUGUI>();
+            _Format = _FPSText.text;
             _SkippedFrames = 0;
 
             // avoids div by zero
@@ -50,7 +52,7 @@ namespace Controllers.UI.Components.Text
             double averageDeltaTimeAsFrames = 1d / averageDeltaTime;
             double averageDeltaTimeAsMillisecondsRounded = 1000d * averageDeltaTime;
 
-            _FPSText.text = $"({averageDeltaTimeAsFrames:0}fps, {averageDeltaTimeAsMillisecondsRounded:0.00}ms)";
+            _FPSText.text = string.Format(_Format, averageDeltaTimeAsFrames, averageDeltaTimeAsMillisecondsRounded);
             _SkippedFrames = 0;
         }
 

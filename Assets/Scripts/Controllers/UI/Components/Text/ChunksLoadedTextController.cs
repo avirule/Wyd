@@ -10,6 +10,7 @@ namespace Controllers.UI.Components.Text
 {
     public class ChunksLoadedTextController : MonoBehaviour
     {
+        private string _Format;
         private TextMeshProUGUI _ChunksLoadedText;
         private int _LastChunksActiveCount;
         private int _LastChunksCachedCount;
@@ -17,6 +18,7 @@ namespace Controllers.UI.Components.Text
         private void Awake()
         {
             _ChunksLoadedText = GetComponent<TextMeshProUGUI>();
+            _Format = _ChunksLoadedText.text;
         }
 
         private void Start()
@@ -43,7 +45,7 @@ namespace Controllers.UI.Components.Text
             _LastChunksActiveCount = chunksActive;
             _LastChunksCachedCount = chunksCached;
 
-            _ChunksLoadedText.text = $"Chunks Loaded: (a{chunksActive}, c{chunksCached})";
+            _ChunksLoadedText.text = string.Format(_Format, _LastChunksActiveCount, _LastChunksCachedCount);
         }
     }
 }

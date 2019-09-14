@@ -13,6 +13,8 @@ namespace Controllers.UI.Components.Text
     public class ChunkLoadTimeTextController : MonoBehaviour
     {
         private const double _TOLERANCE = 0.001d;
+
+        private string _Format;
         private TextMeshProUGUI _ChunkLoadTimeText;
         private double _LastBuildTime;
         private double _LastMeshTime;
@@ -20,7 +22,7 @@ namespace Controllers.UI.Components.Text
         private void Awake()
         {
             _ChunkLoadTimeText = GetComponent<TextMeshProUGUI>();
-            _ChunkLoadTimeText.text = "Chunk Load Time: (b0ms, m0ms)";
+            _Format = _ChunkLoadTimeText.text;
         }
 
         private void Update()
@@ -39,7 +41,7 @@ namespace Controllers.UI.Components.Text
             _LastBuildTime = buildTime;
             _LastMeshTime = meshTime;
 
-            _ChunkLoadTimeText.text = $"Chunk Load Time: (b{buildTime}ms, m{meshTime}ms)";
+            _ChunkLoadTimeText.text = string.Format(_Format, buildTime, meshTime);
         }
 
         private static (double, double) CalculateBuildAndMeshTimes()

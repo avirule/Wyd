@@ -37,7 +37,7 @@ namespace Game.World.Chunks
             }
 
             _Builder.AbortToken = AbortToken;
-            _Builder.Rand = new Random(WorldController.Current.WorldGenerationSettings.Seed);
+            _Builder.Rand = new Random((int) WorldController.Current.WorldGenerationSettings.Seed.SeedValue);
             _Builder.Position.Set(position.x, position.y, position.z);
             _Builder.Blocks = blocks;
             _Builder.Frequency = frequency;
@@ -53,16 +53,7 @@ namespace Game.World.Chunks
 
         protected override void Process()
         {
-            if (_GPUAcceleration && (_NoiseValues != default))
-            {
-                _Builder.ProcessPreGeneratedNoiseData(_NoiseValues.NoiseValues);
-            }
-            else
-            {
-                _Builder.GenerateCPUBound();
-            }
-
-            _Builder.TerrainPass1();
+            _Builder.Generate(_GPUAcceleration, _NoiseValues?.NoiseValues);
         }
 
         protected override void ProcessFinished()

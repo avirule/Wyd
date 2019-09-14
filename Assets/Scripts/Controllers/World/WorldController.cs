@@ -88,7 +88,7 @@ namespace Controllers.World
             _ChunkCache.MaximumSize = OptionsController.Current.MaximumChunkCacheSize;
             // todo fix spawn point to set to useful value
             (_SpawnPoint.x, _SpawnPoint.y, _SpawnPoint.z) =
-                Mathv.GetVector3IntIndex(WorldGenerationSettings.Seed,
+                Mathv.GetVector3IntIndex((int)WorldGenerationSettings.Seed.SeedValue,
                     new Vector3Int(int.MaxValue, int.MaxValue, int.MaxValue));
 
 

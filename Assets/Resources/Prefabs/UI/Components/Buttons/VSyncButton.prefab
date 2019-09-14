@@ -92,7 +92,7 @@ PrefabInstance:
     - target: {fileID: 7320063415264840478, guid: 3949fdf54f7fc554c96a472ab1521167,
         type: 3}
       propertyPath: m_SizeDelta.x
-      value: 160
+      value: 390
       objectReference: {fileID: 0}
     - target: {fileID: 7320063415264840478, guid: 3949fdf54f7fc554c96a472ab1521167,
         type: 3}
@@ -132,7 +132,7 @@ PrefabInstance:
     - target: {fileID: 5258648300760990741, guid: 3949fdf54f7fc554c96a472ab1521167,
         type: 3}
       propertyPath: m_text
-      value: 'VSync Level: 0'
+      value: 'VSync Level: {0}'
       objectReference: {fileID: 0}
     - target: {fileID: 5258648300760990741, guid: 3949fdf54f7fc554c96a472ab1521167,
         type: 3}
@@ -142,7 +142,7 @@ PrefabInstance:
     - target: {fileID: 5258648300760990741, guid: 3949fdf54f7fc554c96a472ab1521167,
         type: 3}
       propertyPath: m_textInfo.characterCount
-      value: 14
+      value: 16
       objectReference: {fileID: 0}
     - target: {fileID: 5258648300760990741, guid: 3949fdf54f7fc554c96a472ab1521167,
         type: 3}

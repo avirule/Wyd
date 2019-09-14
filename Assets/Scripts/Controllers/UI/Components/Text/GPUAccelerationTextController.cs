@@ -10,14 +10,14 @@ namespace Controllers.UI.Components.Text
 {
     public class GPUAccelerationTextController : MonoBehaviour
     {
-        private readonly string _FormatString = "GPU Acceleration {0}";
-
+        private string _Format;
         private TextMeshProUGUI _GPUAccelerationText;
         private bool _LastGPUAccelerationSetting;
 
         private void Awake()
         {
             _GPUAccelerationText = GetComponent<TextMeshProUGUI>();
+            _Format = _GPUAccelerationText.text;
         }
 
         private void Start()
@@ -35,7 +35,7 @@ namespace Controllers.UI.Components.Text
 
         private void UpdateGPUAcceleration()
         {
-            _GPUAccelerationText.text = string.Format(_FormatString, GetGPUAccelerationAsEnabledStatus());
+            _GPUAccelerationText.text = string.Format(_Format, GetGPUAccelerationAsEnabledStatus());
             _LastGPUAccelerationSetting = OptionsController.Current.GPUAcceleration;
         }
 

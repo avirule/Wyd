@@ -9,13 +9,14 @@ namespace Controllers.UI.Components.Text
 {
     public class VSyncLevelTextController : MonoBehaviour
     {
+        private string _Format;
         private TextMeshProUGUI _VSyncLevelText;
         private int _LastVSyncCount;
 
         private void Awake()
         {
             _VSyncLevelText = GetComponent<TextMeshProUGUI>();
-            _VSyncLevelText.text = "VSync Level: null";
+            _Format = _VSyncLevelText.text;
         }
 
         private void Update()
@@ -30,7 +31,7 @@ namespace Controllers.UI.Components.Text
         {
             _LastVSyncCount = QualitySettings.vSyncCount;
 
-            _VSyncLevelText.text = $"VSync Level: {_LastVSyncCount}";
+            _VSyncLevelText.text = string.Format(_Format, _LastVSyncCount);
         }
     }
 }

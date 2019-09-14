@@ -117,7 +117,7 @@ namespace Controllers.World
         {
             if (!_computeShaderGlobalsSet)
             {
-                GenerationComputeShader.SetInt("_NoiseSeed", WorldController.Current.WorldGenerationSettings.Seed);
+                GenerationComputeShader.SetInt("_NoiseSeed", (int)WorldController.Current.WorldGenerationSettings.Seed.SeedValue);
                 GenerationComputeShader.SetVector("_MaximumSize", new Vector4(Size.x, Size.y, Size.z, 0f));
 
                 _computeShaderGlobalsSet = true;

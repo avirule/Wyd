@@ -1,7 +1,6 @@
 #region
 
 using System.Collections.Generic;
-using System.Linq;
 using System.Threading;
 using Controllers.State;
 using Controllers.World;
@@ -18,18 +17,27 @@ namespace Game.World.Chunks
 {
     public class ChunkBuilder
     {
-        private static readonly string[] BlockNamesToIgnoreWhenGenerating =
+        private static readonly string[] BlocksUsedForTerrainGeneration =
         {
+            "grass",
+            "dirt",
+            "stone",
             "bedrock"
         };
 
         private static FastNoise _noiseFunction;
+        private static Dictionary<string, ushort> _terrainGenerationIds;
 
         public CancellationToken AbortToken;
         public Random Rand;
         public Vector3 Position;
         public Block[] Blocks;
         public float Frequency;
+
+        static ChunkBuilder()
+        {
+            FillTerrainGenerationIds();
+        }
 
         public ChunkBuilder()
         {
@@ -48,12 +56,12 @@ namespace Game.World.Chunks
         public ChunkBuilder(Vector3 position, Block[] blocks, CancellationToken abortToken) : this()
         {
             AbortToken = abortToken;
-            Rand = new Random(WorldController.Current.WorldGenerationSettings.Seed);
+            Rand = new Random(WorldController.Current.WorldGenerationSettings.Seed.SeedValue);
             Position.Set(position.x, position.y, position.z);
             Blocks = blocks;
         }
 
-        public void GenerateCPUBound()
+        public void Generate(bool useGpu = false, float[] noiseValues = null)
         {
             if (Blocks == default)
             {
@@ -62,67 +70,99 @@ namespace Game.World.Chunks
                 return;
             }
 
-            for (int index = 0; (index < Blocks.Length) && !AbortToken.IsCancellationRequested; index++)
+            if (useGpu && (noiseValues == null))
             {
-                Generate3DSimplex(index);
+                EventLog.Logger.Log(LogLevel.Warn,
+                    $"Parameter `{nameof(useGpu)}` was passed as true, but no noise values were provided. Defaulting to CPU-bound generation.");
+                useGpu = false;
+            }
+
+            Vector3 pos3d = Vector3.zero;
+
+            for (int index = Blocks.Length - 1; (index >= 0) && !AbortToken.IsCancellationRequested; index--)
+            {
+                (pos3d.x, pos3d.y, pos3d.z) = Mathv.GetVector3IntIndex(index, ChunkController.Size);
+
+                if ((pos3d.y < 4) && (pos3d.y <= Rand.Next(0, 4)))
+                {
+                    Blocks[index].Initialise(_terrainGenerationIds["bedrock"]);
+                }
+                else
+                {
+                    // these seems inefficient, but the CPU branch predictor will pick up on it pretty quick
+                    // so the slowdown from this check is nonexistent, since useGpu shouldn't change in this context.
+                    float noiseValue = useGpu ? noiseValues[index] : GetNoiseValueByVector3(pos3d);
+                    ProcessPreGeneratedNoiseData(index, noiseValue);
+                }
             }
 
             // get list of block ids that should be ignored on second generation pass
         }
 
-        public void ProcessPreGeneratedNoiseData(float[] noiseValues)
+        public void ProcessPreGeneratedNoiseData(int index, float noiseValue)
         {
-            if (Blocks == default)
+            if (noiseValue >= 0.01f)
             {
-                EventLog.Logger.Log(LogLevel.Error,
-                    $"Field `{nameof(Blocks)}` has not been properly set. Cancelling operation.");
-                return;
-            }
+                int indexAbove = index + ChunkController.YIndexStep;
 
-            for (int index = 0; (index < noiseValues.Length) && !AbortToken.IsCancellationRequested; index++)
-            {
-                (int x, int y, int z) = Mathv.GetVector3IntIndex(index, ChunkController.Size);
-
-                if ((y < 4)
-                    && (y <= Rand.Next(0, 4))
-                    && BlockController.Current.TryGetBlockId("bedrock", out ushort bedrockBlockId))
+                if (Blocks[indexAbove].Transparent)
                 {
-                    Blocks[index].Initialise(bedrockBlockId);
+                    Blocks[index].Initialise(_terrainGenerationIds["grass"]);
+                }
+                else if (IdExistsAboveWithinRange(index, 4, _terrainGenerationIds["grass"]))
+                {
+                    Blocks[index].Initialise(_terrainGenerationIds["dirt"]);
                 }
                 else
                 {
-                    if ((noiseValues[index] >= 0.01f)
-                        && BlockController.Current.TryGetBlockId("stone", out ushort stoneBlockId))
-                    {
-                        Blocks[index].Initialise(stoneBlockId);
-                    }
-                    else
-                    {
-                        Blocks[index] = default;
-                    }
+                    Blocks[index].Initialise(_terrainGenerationIds["stone"]);
                 }
             }
-        }
-
-        public void TerrainPass1()
-        {
-            ushort[] blockIdsToIgnore = GetBlockIdsToIgnoreFromCachedNames().ToArray();
-
-            for (int index = 0; (index < Blocks.Length) && !AbortToken.IsCancellationRequested; index++)
+            else
             {
-                GenerateGrass(index, blockIdsToIgnore);
+                Blocks[index] = default;
             }
         }
 
-        private static IEnumerable<ushort> GetBlockIdsToIgnoreFromCachedNames()
+        private static void FillTerrainGenerationIds()
         {
-            foreach (string blockName in BlockNamesToIgnoreWhenGenerating)
+            _terrainGenerationIds = new Dictionary<string, ushort>();
+
+            foreach (string blockName in BlocksUsedForTerrainGeneration)
             {
-                if (BlockController.Current.TryGetBlockId(blockName, out ushort blockId))
+                BlockController.Current.TryGetBlockId(blockName, out ushort blockId);
+                _terrainGenerationIds.Add(blockName, blockId);
+            }
+        }
+
+        private float GetNoiseValueByVector3(Vector3 pos3d)
+        {
+            float noiseValue = FastNoise.GetSimplex(WorldController.Current.WorldGenerationSettings.Seed, Frequency,
+                Position.x + pos3d.x, Position.y + pos3d.y, Position.z + pos3d.z);
+            noiseValue += 3f * (1f - Mathf.InverseLerp(0f, ChunkController.Size.y, pos3d.y));
+            noiseValue /= (pos3d.y + 1f) * 1.5f;
+
+            return noiseValue;
+        }
+
+        private bool IdExistsAboveWithinRange(int startIndex, int maxSteps, ushort soughtId)
+        {
+            for (int i = 0; i < maxSteps; i++)
+            {
+                int currentIndex = startIndex + (i * ChunkController.YIndexStep);
+
+                if (currentIndex > Blocks.Length)
                 {
-                    yield return blockId;
+                    return false;
+                }
+
+                if (Blocks[currentIndex].Id == soughtId)
+                {
+                    return true;
                 }
             }
+
+            return false;
         }
 
         #region DEBUG GEN MODES
@@ -226,63 +266,5 @@ namespace Game.World.Chunks
 #endif
 
         #endregion
-
-        private void Generate3DSimplex(int index)
-        {
-            (int x, int y, int z) = Mathv.GetVector3IntIndex(index, ChunkController.Size);
-
-            if ((y < 4)
-                && (y <= Rand.Next(0, 4))
-                && BlockController.Current.TryGetBlockId("bedrock", out ushort bedrockBlockId))
-            {
-                Blocks[index].Initialise(bedrockBlockId);
-            }
-            else
-            {
-                float noiseValue = FastNoise.GetSimplex(WorldController.Current.WorldGenerationSettings.Seed, Frequency,
-                    Position.x + x, Position.y + y, Position.z + z);
-                noiseValue += 3f * (1f - Mathf.InverseLerp(0f, ChunkController.Size.y, y));
-                noiseValue /= (y + 1f) * 1.5f;
-
-                if ((noiseValue >= 0.01f) && BlockController.Current.TryGetBlockId("stone", out ushort stoneBlockId))
-                {
-                    Blocks[index].Initialise(stoneBlockId);
-                }
-                else
-                {
-                    Blocks[index] = default;
-                }
-            }
-        }
-
-        private void GenerateGrass(int index, params ushort[] idsToIgnore)
-        {
-            int indexAbove = index + ChunkController.YIndexStep;
-
-            if ((indexAbove >= Blocks.Length)
-                || Blocks[index].Transparent
-                || !Blocks[indexAbove].Transparent
-                || idsToIgnore.Contains(Blocks[index].Id)
-                || !BlockController.Current.TryGetBlockId("grass", out ushort grassBlockId))
-            {
-                return;
-            }
-
-            Blocks[index].Initialise(grassBlockId);
-
-            for (int i = 1; i < 4; i++)
-            {
-                int currentIndex = index - (i * ChunkController.YIndexStep);
-
-                if ((currentIndex < 0)
-                    || Blocks[currentIndex].Transparent
-                    || !BlockController.Current.TryGetBlockId("dirt", out ushort dirtBlockId))
-                {
-                    continue;
-                }
-
-                Blocks[currentIndex].Initialise(dirtBlockId);
-            }
-        }
     }
 }

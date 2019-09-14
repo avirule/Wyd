@@ -12,8 +12,9 @@ namespace Controllers.UI.Components.Text
 {
     public class UsedMemoryTextController : MonoBehaviour
     {
-        private const double _MEGABYTE_VALUE = 1000000d;
+        private const double MEGABYTE_VALUE = 1000000d;
 
+        private string _Format;
         private TextMeshProUGUI _UsedMemoryText;
         private TimeSpan _MaximumDisplayAccuracyUpdateInterval;
         private Stopwatch _LastUpdateTimer;
@@ -25,8 +26,8 @@ namespace Controllers.UI.Components.Text
         private void Awake()
         {
             _UsedMemoryText = GetComponent<TextMeshProUGUI>();
-            _UsedMemoryText.text = "Used Memory: (r0MB, a0MB)";
-            _MaximumDisplayAccuracyUpdateInterval = TimeSpan.FromSeconds(1d / 2);
+            _Format = _UsedMemoryText.text;
+            _MaximumDisplayAccuracyUpdateInterval = TimeSpan.FromSeconds(1d / 2d);
             _LastUpdateTimer = Stopwatch.StartNew();
         }
 
@@ -53,10 +54,10 @@ namespace Controllers.UI.Components.Text
             _LastReservedMemoryTotal = reservedMemory;
             _LastAllocatedMemoryTotal = allocatedMemory;
 
-            double reservedMemoryInMb = Math.Round(reservedMemory / _MEGABYTE_VALUE, Precision);
-            double allocatedMemoryInMb = Math.Round(allocatedMemory / _MEGABYTE_VALUE, Precision);
+            double reservedMemoryInMb = Math.Round(reservedMemory / MEGABYTE_VALUE, Precision);
+            double allocatedMemoryInMb = Math.Round(allocatedMemory / MEGABYTE_VALUE, Precision);
 
-            _UsedMemoryText.text = $"Used Memory: (r{reservedMemoryInMb}MB, a{allocatedMemoryInMb}MB)";
+            _UsedMemoryText.text = string.Format(_Format, reservedMemoryInMb, allocatedMemoryInMb);
         }
 
         private static (long, long) GetUsedMemory()

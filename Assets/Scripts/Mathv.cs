@@ -260,10 +260,13 @@ public static class Mathv
     /// <returns><see cref="T:Tuple{int, int, int}" /> (x, y, z) of 3D coordinates.</returns>
     public static (int, int, int) GetVector3IntIndex(int index, Vector3Int size3d)
     {
-        int xQuotient = Math.DivRem(index, size3d.x, out int x);
-        int zQuotient = Math.DivRem(xQuotient, size3d.z, out int z);
-        int y = zQuotient % size3d.y;
-
+        //int xQuotient = Math.DivRem(index, size3d.x, out int x);
+        //int zQuotient = Math.DivRem(xQuotient, size3d.z, out int z);
+        //int y = zQuotient % size3d.y;
+        int y = index / (size3d.x * size3d.z);
+        index -= (y * size3d.x * size3d.z);
+        int z = index / size3d.x;
+        int x = index % size3d.x;
         return (x, y, z);
     }
 
