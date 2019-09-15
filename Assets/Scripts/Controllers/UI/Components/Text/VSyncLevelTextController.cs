@@ -19,6 +19,11 @@ namespace Controllers.UI.Components.Text
             _Format = _VSyncLevelText.text;
         }
 
+        private void Start()
+        {
+            UpdateVSyncLevelText();
+        }
+
         private void Update()
         {
             if (_LastVSyncCount != QualitySettings.vSyncCount)

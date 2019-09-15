@@ -1,6 +1,5 @@
 ﻿#region
 
-using System;
 using Controllers.State;
 using UnityEngine;
 using UnityEngine.UI;

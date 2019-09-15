@@ -74,6 +74,24 @@ TextureImporter:
   - first:
       213: 7196079105303995997
     second: Bedrock
+  - first:
+      213: -7685494032801857564
+    second: Flower_Weeds
+  - first:
+      213: -4703189766838794804
+    second: Flower_Rose
+  - first:
+      213: -7077578495685720143
+    second: Water
+  - first:
+      213: 7775381558289294699
+    second: Lava
+  - first:
+      213: 8382267945508989558
+    second: Cobblestone
+  - first:
+      213: 4192049387755466348
+    second: Cobblestone_Bricks
   externalObjects: {}
   serializedVersion: 10
   mipmaps:
@@ -636,6 +654,132 @@ TextureImporter:
       bones: []
       spriteID: 71760ff141070df4d81957be5dbd243c
       internalID: 7196079105303995997
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Flower_Weeds
+      rect:
+        serializedVersion: 2
+        x: 0
+        y: 32
+        width: 8
+        height: 8
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: d201966917351344a8bd995ecd326020
+      internalID: -7685494032801857564
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Flower_Rose
+      rect:
+        serializedVersion: 2
+        x: 0
+        y: 40
+        width: 8
+        height: 8
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 4ffc9530bebcece458ddc12d419c8e1e
+      internalID: -4703189766838794804
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Water
+      rect:
+        serializedVersion: 2
+        x: 40
+        y: 0
+        width: 8
+        height: 8
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 9d2b87d1f0d292f41897762ab2c8f3c3
+      internalID: -7077578495685720143
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Lava
+      rect:
+        serializedVersion: 2
+        x: 40
+        y: 8
+        width: 8
+        height: 8
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 8ebe1311ce70c6245abdd16f1062868a
+      internalID: 7775381558289294699
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Cobblestone
+      rect:
+        serializedVersion: 2
+        x: 40
+        y: 16
+        width: 8
+        height: 8
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 78f2e41de2dd89a4a825f83c3a3e2c40
+      internalID: 8382267945508989558
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Cobblestone_Bricks
+      rect:
+        serializedVersion: 2
+        x: 40
+        y: 24
+        width: 8
+        height: 8
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 63491fad79bda154c89003a77efb2b64
+      internalID: 4192049387755466348
       vertices: []
       indices: 
       edges: []

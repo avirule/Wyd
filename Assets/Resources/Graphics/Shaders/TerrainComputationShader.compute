@@ -192,7 +192,7 @@ float3 coordTo3D(uint index)
     return float3(x, y, z);
 }
 
-[numthreads(256, 1, 1)]
+[numthreads(1024, 1, 1)]
 void CSMain (uint3 id : SV_DispatchThreadID)
 {
     float3 coord = coordTo3D(id.x) + _Offset;

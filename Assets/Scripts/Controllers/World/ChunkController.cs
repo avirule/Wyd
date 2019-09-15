@@ -334,7 +334,7 @@ namespace Controllers.World
                 GenerationComputeShader.SetFloat("_Frequency", 0.01f);
                 GenerationComputeShader.SetBuffer(kernel, "Result", noiseValuesBuffer);
                 // 256 is the value set in the shader's [numthreads(--> 256 <--, 1, 1)]
-                GenerationComputeShader.Dispatch(kernel, Size.Product() / 256, 1, 1);
+                GenerationComputeShader.Dispatch(kernel, Size.Product() / 1024, 1, 1);
 
                 job.Set(Position, _Blocks, frequency, persistence, gpuAcceleration, noiseValuesBuffer);
             }
