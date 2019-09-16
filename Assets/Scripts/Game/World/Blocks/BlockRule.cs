@@ -30,7 +30,8 @@ namespace Game.World.Blocks
         public Block.Types Type { get; }
         public bool Transparent { get; }
 
-        public BlockRule(ushort id, string blockName, Block.Types type, bool transparent, RuleEvaluation<Vector3, Direction> uvsRule)
+        public BlockRule(
+            ushort id, string blockName, Block.Types type, bool transparent, RuleEvaluation<Vector3, Direction> uvsRule)
         {
             UVsRule = uvsRule ?? ((position, direction) => string.Empty);
 

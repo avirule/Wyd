@@ -91,7 +91,7 @@ namespace Game.World.Chunks.BuildingJob
                 int indexAbove = index + ChunkController.YIndexStep;
 
                 BlockController.Current.TryGetBlockId("grass", out ushort blockIdGrass);
-                
+
                 if ((position.y >= 130) && Blocks[indexAbove].Transparent)
                 {
                     Blocks[index].Initialise(blockIdGrass);

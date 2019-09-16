@@ -11,13 +11,14 @@ namespace Game.World.Blocks
         public enum Types
         {
             None,
+
             // this basically means that
             // it's placed in the first
             // terrain step
             Raw,
             Ore
         }
-        
+
         public const sbyte TRANSPARENCY_MASK = 0b0100_0000;
         public const sbyte FACES_MASK = 0b0011_1111;
 
@@ -41,7 +42,7 @@ namespace Game.World.Blocks
             Faces = faces;
             Damage = 0;
         }
-        
+
         public void Initialise(ushort id, sbyte faces = 0)
         {
             Id = id;

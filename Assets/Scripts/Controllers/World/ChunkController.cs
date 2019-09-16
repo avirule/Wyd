@@ -354,7 +354,7 @@ namespace Controllers.World
         private IEnumerable<Vector3> DetermineDirectionsForNeighborUpdate(Vector3 globalPosition)
         {
             Vector3 localPosition = globalPosition - Position;
-            
+
             // topleft & bottomright x computation value
             float tl_br_x = localPosition.x * Size.x;
             // topleft & bottomright y computation value

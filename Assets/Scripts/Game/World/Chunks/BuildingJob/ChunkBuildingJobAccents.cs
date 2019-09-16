@@ -1,5 +1,9 @@
+#region
+
 using Game.World.Blocks;
 using UnityEngine;
+
+#endregion
 
 namespace Game.World.Chunks.BuildingJob
 {
@@ -16,7 +20,6 @@ namespace Game.World.Chunks.BuildingJob
 
         public void Generate()
         {
-            
         }
     }
 }
