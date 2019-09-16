@@ -2,7 +2,7 @@
 
 using System;
 using System.Linq;
-using Controllers.World;
+using Game.World.Chunks;
 using TMPro;
 using UnityEngine;
 
@@ -49,14 +49,14 @@ namespace Controllers.UI.Components.Text
             double avgBuildTime = 0d;
             double avgMeshTime = 0d;
 
-            if ((ChunkController.BuildTimes != default) && (ChunkController.BuildTimes.Count > 0))
+            if ((ChunkGenerationDispatcher.BuildTimes != default) && (ChunkGenerationDispatcher.BuildTimes.Count > 0))
             {
-                avgBuildTime = ChunkController.BuildTimes.Average(timeSpan => timeSpan.TotalMilliseconds);
+                avgBuildTime = ChunkGenerationDispatcher.BuildTimes.Average(timeSpan => timeSpan.TotalMilliseconds);
             }
 
-            if ((ChunkController.MeshTimes != default) && (ChunkController.MeshTimes.Count > 0))
+            if ((ChunkGenerationDispatcher.MeshTimes != default) && (ChunkGenerationDispatcher.MeshTimes.Count > 0))
             {
-                avgMeshTime = ChunkController.MeshTimes.Average(timeSpan => timeSpan.TotalMilliseconds);
+                avgMeshTime = ChunkGenerationDispatcher.MeshTimes.Average(timeSpan => timeSpan.TotalMilliseconds);
             }
 
             double buildTime = Math.Round(avgBuildTime, 0);

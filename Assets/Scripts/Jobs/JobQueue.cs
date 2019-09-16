@@ -4,12 +4,17 @@ using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Threading;
-using Controllers.World;
 
 #endregion
 
 namespace Jobs
 {
+    public enum ThreadingMode
+    {
+        Single = 0,
+        Multi = 1
+    }
+
     public class JobQueue
     {
         private readonly Func<ThreadingMode> _ThreadingModeReference;

@@ -36,9 +36,7 @@ namespace Controllers.World
 
         public int ChunksActiveCount => _Chunks.Count;
         public int ChunksCachedCount => _ChunkCache.Size;
-        public int ChunksQueuedForBuilding => _BuildChunkAroundEntityStack.Count;
-        public bool AllChunksBuilt => _Chunks.All(kvp => kvp.Value.Built);
-        public bool AllChunksMeshed => _Chunks.All(kvp => kvp.Value.Meshed);
+        public int ChunksQueuedForCreation => _BuildChunkAroundEntityStack.Count;
 
         public WorldSeed Seed { get; private set; }
         public long InitialTick { get; private set; }
@@ -174,7 +172,7 @@ namespace Controllers.World
                         chunkController.AssignLoader(loader);
 
                         // ensures that neighbours update their meshes to cull newly out of sight faces
-                        FlagNeighborsForMeshUpdate(chunkController.Position, ChunkController.CardinalDirectionsVector3);
+                        FlagNeighborsForMeshUpdate(chunkController.Position, Directions.CardinalDirectionsVector3);
                     }
                 }
 
@@ -186,7 +184,7 @@ namespace Controllers.World
             }
         }
 
-        private void FlagNeighborsForMeshUpdate(Vector3 chunkPosition, IEnumerable<Vector3> directions)
+        public void FlagNeighborsForMeshUpdate(Vector3 chunkPosition, IEnumerable<Vector3> directions)
         {
             foreach (Vector3 normal in directions)
             {
@@ -194,14 +192,14 @@ namespace Controllers.World
             }
         }
 
-        private void FlagChunkForUpdateMesh(Vector3 chunkPosition)
+        public void FlagChunkForUpdateMesh(Vector3 chunkPosition)
         {
-            if (!TryGetChunkAt(chunkPosition, out ChunkController chunkController) || chunkController.UpdateMesh)
+            if (!TryGetChunkAt(chunkPosition, out ChunkController chunkController))
             {
                 return;
             }
 
-            chunkController.UpdateMesh = true;
+            chunkController.RequestMeshUpdate();
         }
 
         #endregion
@@ -331,7 +329,7 @@ namespace Controllers.World
         {
             Vector3 chunkPosition = GetChunkOriginFromPosition(position);
 
-            if (!TryGetChunkAt(chunkPosition, out ChunkController chunkController) || !chunkController.Built)
+            if (!TryGetChunkAt(chunkPosition, out ChunkController chunkController))
             {
                 return false;
             }
@@ -386,14 +384,31 @@ namespace Controllers.World
             return globalPosition.Divide(ChunkController.Size).Floor().Multiply(ChunkController.Size);
         }
 
-        public bool AreNeighborsBuilt(Vector3 position)
+        public ChunkGenerationDispatcher.GenerationStep AggregateNeighborsStep(Vector3 position)
         {
-            bool northBuilt = GetChunkAt(position + (Vector3.forward * ChunkController.Size.z))?.Built ?? true;
-            bool eastBuilt = GetChunkAt(position + (Vector3.right * ChunkController.Size.x))?.Built ?? true;
-            bool southBuilt = GetChunkAt(position + (Vector3.back * ChunkController.Size.z))?.Built ?? true;
-            bool westBuilt = GetChunkAt(position + (Vector3.left * ChunkController.Size.x))?.Built ?? true;
+            ChunkGenerationDispatcher.GenerationStep generationStep = ChunkGenerationDispatcher.GenerationStep.Complete;
 
-            return northBuilt && eastBuilt && southBuilt && westBuilt;
+            if (TryGetChunkAt(position + (Vector3.forward * ChunkController.Size.z), out ChunkController northChunk))
+            {
+                generationStep &= northChunk.GenerationStep;
+            }
+
+            if (TryGetChunkAt(position + (Vector3.right * ChunkController.Size.x), out ChunkController eastChunk))
+            {
+                generationStep &= eastChunk.GenerationStep;
+            }
+
+            if (TryGetChunkAt(position + (Vector3.back * ChunkController.Size.z), out ChunkController southChunk))
+            {
+                generationStep &= southChunk.GenerationStep;
+            }
+
+            if (TryGetChunkAt(position + (Vector3.left * ChunkController.Size.x), out ChunkController westChunk))
+            {
+                generationStep &= westChunk.GenerationStep;
+            }
+
+            return generationStep;
         }
 
         #endregion

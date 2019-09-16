@@ -2,14 +2,11 @@
 
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using Collections;
 using Controllers.State;
 using Game;
 using Game.Entities;
 using Game.World.Blocks;
 using Game.World.Chunks;
-using Jobs;
 using Logging;
 using NLog;
 using UnityEngine;
@@ -19,36 +16,16 @@ using UnityEngine.Rendering;
 
 namespace Controllers.World
 {
-    public enum ThreadingMode
-    {
-        Single = 0,
-        Multi = 1
-    }
-
     public class ChunkController : MonoBehaviour
     {
-        private static bool _computeShaderGlobalsSet;
-
-        private static readonly ObjectCache<ChunkBuildingJob> ChunkBuildersCache =
-            new ObjectCache<ChunkBuildingJob>(null, null, true);
-
-        private static readonly ObjectCache<ChunkMeshingJob> ChunkMeshersCache =
-            new ObjectCache<ChunkMeshingJob>(null, null, true);
-
+        private static readonly ObjectCache<ChunkGenerationDispatcher> ChunkGenerationDispatcherCache =
+            new ObjectCache<ChunkGenerationDispatcher>(null, null, true);
 
         public static readonly Vector3Int Size = new Vector3Int(16, 256, 16);
         public static readonly int YIndexStep = Size.x * Size.z;
 
-        public static readonly IEnumerable<Vector3> CardinalDirectionsVector3 = new[]
-        {
-            Vector3.forward,
-            Vector3.right,
-            Vector3.back,
-            Vector3.left
-        };
 
-        public static FixedConcurrentQueue<TimeSpan> BuildTimes;
-        public static FixedConcurrentQueue<TimeSpan> MeshTimes;
+        #region INSTANCE MEMBERS
 
         private Bounds _Bounds;
         private Action _PendingAction;
@@ -56,22 +33,17 @@ namespace Controllers.World
         private IEntity _CurrentLoader;
         private Block[] _Blocks;
         private Mesh _Mesh;
-        private object _BuildingIdentity;
-        private object _MeshingIdentity;
         private bool _Visible;
         private bool _RenderShadows;
+        private ChunkGenerationDispatcher _ChunkGenerationDispatcher;
 
-        public ComputeShader GenerationComputeShader;
         public MeshFilter MeshFilter;
         public MeshRenderer MeshRenderer;
-        public bool Built;
-        public bool Building;
-        public bool Meshed;
-        public bool Meshing;
-        public bool UpdateMesh;
-        public bool AggressiveFaceMerging;
+        public bool CodeInspect;
 
         public Vector3 Position { get; private set; }
+
+        public ChunkGenerationDispatcher.GenerationStep GenerationStep => _ChunkGenerationDispatcher.CurrentStep;
 
         public bool RenderShadows
         {
@@ -89,8 +61,6 @@ namespace Controllers.World
             }
         }
 
-        public bool Active => gameObject.activeSelf;
-
         public bool Visible
         {
             get => _Visible;
@@ -106,34 +76,23 @@ namespace Controllers.World
             }
         }
 
-        // todo chunk load failed event
+        #endregion
 
-        public event EventHandler<ChunkChangedEventArgs> BlocksChanged;
-        public event EventHandler<ChunkChangedEventArgs> MeshChanged;
-        public event EventHandler<ChunkChangedEventArgs> DeactivationCallback;
+
+        #region UNITY BUILT-INS
 
         private void Awake()
         {
-            if (!_computeShaderGlobalsSet)
-            {
-                GenerationComputeShader.SetInt("_NoiseSeed", WorldController.Current.Seed);
-                GenerationComputeShader.SetVector("_MaximumSize", new Vector4(Size.x, Size.y, Size.z, 0f));
-
-                _computeShaderGlobalsSet = true;
-            }
-
             _SelfTransform = transform;
             Position = _SelfTransform.position;
             UpdateBounds();
             _Blocks = new Block[Size.Product()];
             _Mesh = new Mesh();
+            ConfigureDispatcher();
 
             MeshFilter.sharedMesh = _Mesh;
             MeshRenderer.material.SetTexture(TextureController.Current.MainTex,
                 TextureController.Current.TerrainTexture);
-            Built = Building = Meshed = Meshing = UpdateMesh = false;
-            AggressiveFaceMerging = true;
-
             _Visible = MeshRenderer.enabled;
 
             // todo implement chunk ticks
@@ -146,18 +105,6 @@ namespace Controllers.World
 
         private void Start()
         {
-            if (BuildTimes == default)
-            {
-                BuildTimes =
-                    new FixedConcurrentQueue<TimeSpan>(OptionsController.Current.MaximumChunkLoadTimeBufferSize);
-            }
-
-            if (MeshTimes == default)
-            {
-                MeshTimes = new FixedConcurrentQueue<TimeSpan>(OptionsController.Current
-                    .MaximumChunkLoadTimeBufferSize);
-            }
-
             if (_CurrentLoader == default)
             {
                 EventLog.Logger.Log(LogLevel.Warn,
@@ -176,18 +123,24 @@ namespace Controllers.World
                 return;
             }
 
-            GenerationStateCheckAndStart();
-
-            if (_PendingAction != default)
+            if (CodeInspect)
             {
-                _PendingAction?.Invoke();
-                _PendingAction = default;
             }
+
+            _ChunkGenerationDispatcher.SynchronousContextUpdate();
         }
 
         private void OnDestroy()
         {
             Destroy(_Mesh);
+        }
+
+        #endregion
+
+
+        public void RequestMeshUpdate()
+        {
+            _ChunkGenerationDispatcher.RequestMeshUpdate();
         }
 
 
@@ -197,6 +150,7 @@ namespace Controllers.World
         {
             _SelfTransform.position = Position = position;
             UpdateBounds();
+            ConfigureDispatcher();
             gameObject.SetActive(true);
         }
 
@@ -213,9 +167,13 @@ namespace Controllers.World
                 _CurrentLoader = default;
             }
 
-            _BuildingIdentity = _MeshingIdentity = _PendingAction = null;
+            if (_ChunkGenerationDispatcher != default)
+            {
+                CacheDispatcher();
+            }
+
             _Bounds = default;
-            _Visible = _RenderShadows = Built = Building = Meshed = Meshing = UpdateMesh = false;
+            _Visible = _RenderShadows = false;
 
             StopAllCoroutines();
             gameObject.SetActive(false);
@@ -232,148 +190,26 @@ namespace Controllers.World
             _CurrentLoader.ChunkPositionChanged += OnCurrentLoaderChangedChunk;
         }
 
-        #endregion
-
-
-        #region CHUNK GENERATION
-
-        private void GenerationStateCheckAndStart()
+        private void ConfigureDispatcher()
         {
-            CheckStateAndStartBuilding();
-            CheckStateAndStartMeshing();
+            _ChunkGenerationDispatcher = ChunkGenerationDispatcherCache.RetrieveItem();
+            _ChunkGenerationDispatcher.Set(_Bounds, ref _Blocks, ref _Mesh);
+            _ChunkGenerationDispatcher.BlocksChanged += OnBlocksChanged;
+            _ChunkGenerationDispatcher.MeshChanged += OnMeshChanged;
         }
 
-        private void CheckStateAndStartBuilding()
+        private void CacheDispatcher()
         {
-            if (Built || Building)
-            {
-                return;
-            }
-
-            Job job = GetChunkBuildingThreadedItem(0.01f, -1f, OptionsController.Current.GPUAcceleration);
-
-            if (job == default)
-            {
-                EventLog.Logger.Log(LogLevel.Error, $"Failed to retrieve building item for chunk at {Position}.");
-                return;
-            }
-
-            // do a full update of state booleans
-            Built = Meshed = Meshing = UpdateMesh = false;
-            Building = true;
-
-            GameController.JobExecutionQueue.ThreadedItemFinished += OnThreadedQueueFinishedItem;
-            _BuildingIdentity = GameController.JobExecutionQueue.QueueThreadedItem(job);
-        }
-
-        private void CheckStateAndStartMeshing()
-        {
-            if (!Built
-                || Meshing
-                || (!UpdateMesh && Meshed)
-                || !Visible
-                || !WorldController.Current.AreNeighborsBuilt(Position))
-            {
-                return;
-            }
-
-            Job job = GetChunkMeshingThreadedItem();
-
-            if (job == default)
-            {
-                EventLog.Logger.Log(LogLevel.Error, $"Failed to retrieve meshing item for chunk at {Position}.");
-                return;
-            }
-
-            // do a full update of state booleans
-            Meshed = UpdateMesh = false;
-            Meshing = true;
-
-            GameController.JobExecutionQueue.ThreadedItemFinished += OnThreadedQueueFinishedItem;
-            _MeshingIdentity = GameController.JobExecutionQueue.QueueThreadedItem(job);
-        }
-
-        private void OnThreadedQueueFinishedItem(object sender, JobFinishedEventArgs args)
-        {
-            if (args.Job.Identity == _BuildingIdentity)
-            {
-                Building = false;
-                Built = UpdateMesh = true;
-                GameController.JobExecutionQueue.ThreadedItemFinished -= OnThreadedQueueFinishedItem;
-
-                BuildTimes.Enqueue(args.Job.ExecutionTime);
-
-                OnBlocksChanged(new ChunkChangedEventArgs(_Bounds, CardinalDirectionsVector3));
-            }
-            else if (args.Job.Identity == _MeshingIdentity)
-            {
-                Meshing = false;
-                Meshed = true;
-                GameController.JobExecutionQueue.ThreadedItemFinished -= OnThreadedQueueFinishedItem;
-
-                // Safely apply mesh when there is free frame time
-                _PendingAction = () => ApplyMesh((ChunkMeshingJob) args.Job);
-
-                MeshTimes.Enqueue(args.Job.ExecutionTime);
-
-                OnMeshChanged(new ChunkChangedEventArgs(_Bounds, Enumerable.Empty<Vector3>()));
-            }
-        }
-
-        private Job GetChunkBuildingThreadedItem(
-            float frequency = 0.01f, float persistence = -1f, bool gpuAcceleration = false)
-        {
-            ChunkBuildingJob job = ChunkBuildersCache.RetrieveItem();
-
-            if (gpuAcceleration)
-            {
-                ComputeBuffer noiseValuesBuffer = new ComputeBuffer(Size.Product(), 4);
-                int kernel = GenerationComputeShader.FindKernel("CSMain");
-                GenerationComputeShader.SetVector("_Offset", Position);
-                GenerationComputeShader.SetFloat("_Persistence", -1f);
-                GenerationComputeShader.SetFloat("_Frequency", 0.01f);
-                GenerationComputeShader.SetBuffer(kernel, "Result", noiseValuesBuffer);
-                // 256 is the value set in the shader's [numthreads(--> 256 <--, 1, 1)]
-                GenerationComputeShader.Dispatch(kernel, Size.Product() / 1024, 1, 1);
-
-                job.Set(Position, _Blocks, frequency, persistence, gpuAcceleration, noiseValuesBuffer);
-            }
-            else
-            {
-                job.Set(Position, _Blocks, frequency, persistence);
-            }
-
-            return job;
-        }
-
-        private Job GetChunkMeshingThreadedItem()
-        {
-            ChunkMeshingJob job = ChunkMeshersCache.RetrieveItem();
-            job.Set(Position, _Blocks, AggressiveFaceMerging, Meshed);
-
-            return job;
-        }
-
-        private void ApplyMesh(ChunkMeshingJob job)
-        {
-            job.SetMesh(ref _Mesh);
+            _ChunkGenerationDispatcher.BlocksChanged -= OnBlocksChanged;
+            _ChunkGenerationDispatcher.MeshChanged -= OnMeshChanged;
+            _ChunkGenerationDispatcher.Reset();
+            ChunkGenerationDispatcherCache.CacheItem(ref _ChunkGenerationDispatcher);
         }
 
         #endregion
 
 
-        #region MISC
-
-        private void UpdateBounds()
-        {
-            _Bounds = new Bounds(Position + Size.Divide(2), Size);
-        }
-
-        private int ConvertGlobalPositionToLocal1D(Vector3 position)
-        {
-            Vector3 localPosition = (position - Position).Abs();
-            return localPosition.To1D(Size);
-        }
+        #region TRY GET / PLACE / REMOVE BLOCKS
 
         public Block GetBlockAt(Vector3 globalPosition)
         {
@@ -384,11 +220,6 @@ namespace Controllers.World
             }
 
             int localPosition1d = ConvertGlobalPositionToLocal1D(globalPosition);
-
-            if (!Built)
-            {
-                throw new Exception("Requested block present in chunk that hasn't finished building.'");
-            }
 
             return _Blocks[localPosition1d];
         }
@@ -430,9 +261,10 @@ namespace Controllers.World
             int localPosition1d = ConvertGlobalPositionToLocal1D(globalPosition);
 
             _Blocks[localPosition1d].Initialise(id);
-            UpdateMesh = true;
+            RequestMeshUpdate();
 
-            OnBlocksChanged(new ChunkChangedEventArgs(_Bounds, DetermineDirectionsForNeighborUpdate(globalPosition)));
+            OnBlocksChanged(this,
+                new ChunkChangedEventArgs(_Bounds, DetermineDirectionsForNeighborUpdate(globalPosition)));
         }
 
         public bool TryPlaceBlockAt(Vector3 globalPosition, ushort id)
@@ -445,9 +277,10 @@ namespace Controllers.World
             int localPosition1d = ConvertGlobalPositionToLocal1D(globalPosition);
 
             _Blocks[localPosition1d].Initialise(id);
-            UpdateMesh = true;
+            RequestMeshUpdate();
 
-            OnBlocksChanged(new ChunkChangedEventArgs(_Bounds, DetermineDirectionsForNeighborUpdate(globalPosition)));
+            OnBlocksChanged(this,
+                new ChunkChangedEventArgs(_Bounds, DetermineDirectionsForNeighborUpdate(globalPosition)));
             return true;
         }
 
@@ -462,9 +295,10 @@ namespace Controllers.World
             int localPosition1d = ConvertGlobalPositionToLocal1D(globalPosition);
 
             _Blocks[localPosition1d].Initialise(BlockController.BLOCK_EMPTY_ID);
-            UpdateMesh = true;
+            RequestMeshUpdate();
 
-            OnBlocksChanged(new ChunkChangedEventArgs(_Bounds, DetermineDirectionsForNeighborUpdate(globalPosition)));
+            OnBlocksChanged(this,
+                new ChunkChangedEventArgs(_Bounds, DetermineDirectionsForNeighborUpdate(globalPosition)));
         }
 
         public bool TryRemoveBlockAt(Vector3 globalPosition)
@@ -477,10 +311,49 @@ namespace Controllers.World
             int localPosition1d = ConvertGlobalPositionToLocal1D(globalPosition);
 
             _Blocks[localPosition1d].Initialise(BlockController.BLOCK_EMPTY_ID);
-            UpdateMesh = true;
+            RequestMeshUpdate();
 
-            OnBlocksChanged(new ChunkChangedEventArgs(_Bounds, DetermineDirectionsForNeighborUpdate(globalPosition)));
+            OnBlocksChanged(this,
+                new ChunkChangedEventArgs(_Bounds, DetermineDirectionsForNeighborUpdate(globalPosition)));
             return true;
+        }
+
+        #endregion
+
+
+        #region INTERNAL STATE CHECKS
+
+        private static bool IsWithinLoaderRange(Vector3 difference)
+        {
+            return difference.AllLessThanOrEqual(Size
+                                                 * (OptionsController.Current.RenderDistance
+                                                    + OptionsController.Current.PreLoadChunkDistance));
+        }
+
+        private static bool IsWithinRenderDistance(Vector3 difference)
+        {
+            return difference.AllLessThanOrEqual(Size * OptionsController.Current.RenderDistance);
+        }
+
+        private static bool IsWithinShadowsDistance(Vector3 difference)
+        {
+            return difference.AllLessThanOrEqual(Size * OptionsController.Current.ShadowDistance);
+        }
+
+        #endregion
+
+
+        #region HELPER METHODS
+
+        private void UpdateBounds()
+        {
+            _Bounds = new Bounds(Position + Size.Divide(2), Size);
+        }
+
+        private int ConvertGlobalPositionToLocal1D(Vector3 position)
+        {
+            Vector3 localPosition = (position - Position).Abs();
+            return localPosition.To1D(Size);
         }
 
         private IEnumerable<Vector3> DetermineDirectionsForNeighborUpdate(Vector3 globalPosition)
@@ -549,44 +422,6 @@ namespace Controllers.World
             }
         }
 
-        private void OnCurrentLoaderChangedChunk(object sender, Vector3 newChunkPosition)
-        {
-            if (Position == newChunkPosition)
-            {
-                return;
-            }
-
-            Vector3 difference = (Position - newChunkPosition).Abs();
-
-            if (!IsWithinLoaderRange(difference))
-            {
-                DeactivationCallback?.Invoke(this, new ChunkChangedEventArgs(_Bounds, CardinalDirectionsVector3));
-                return;
-            }
-
-            Visible = IsWithinRenderDistance(difference);
-            RenderShadows = IsWithinShadowsDistance(difference);
-        }
-
-        private static bool IsWithinLoaderRange(Vector3 difference)
-        {
-            return difference.AllLessThanOrEqual(Size
-                                                 * (OptionsController.Current.RenderDistance
-                                                    + OptionsController.Current.PreLoadChunkDistance));
-        }
-
-        private static bool IsWithinRenderDistance(Vector3 difference)
-        {
-            return difference.AllLessThanOrEqual(Size * OptionsController.Current.RenderDistance);
-        }
-
-        private static bool IsWithinShadowsDistance(Vector3 difference)
-        {
-            return difference.AllLessThanOrEqual(Size * OptionsController.Current.ShadowDistance);
-        }
-
-        #endregion
-
         /// <summary>
         ///     Scans the block array and returns the highest index that is non-air
         /// </summary>
@@ -619,14 +454,47 @@ namespace Controllers.World
             return highestNonAirIndex;
         }
 
-        protected virtual void OnBlocksChanged(ChunkChangedEventArgs args)
+        #endregion
+
+
+        #region EVENTS
+
+        // todo chunk load failed event
+
+        public event EventHandler<ChunkChangedEventArgs> BlocksChanged;
+        public event EventHandler<ChunkChangedEventArgs> MeshChanged;
+        public event EventHandler<ChunkChangedEventArgs> DeactivationCallback;
+
+        protected virtual void OnBlocksChanged(object sender, ChunkChangedEventArgs args)
         {
-            BlocksChanged?.Invoke(this, args);
+            BlocksChanged?.Invoke(sender, args);
         }
 
-        protected virtual void OnMeshChanged(ChunkChangedEventArgs args)
+        protected virtual void OnMeshChanged(object sender, ChunkChangedEventArgs args)
         {
-            MeshChanged?.Invoke(this, args);
+            MeshChanged?.Invoke(sender, args);
         }
+
+        private void OnCurrentLoaderChangedChunk(object sender, Vector3 newChunkPosition)
+        {
+            if (Position == newChunkPosition)
+            {
+                return;
+            }
+
+            Vector3 difference = (Position - newChunkPosition).Abs();
+
+            if (!IsWithinLoaderRange(difference))
+            {
+                DeactivationCallback?.Invoke(this,
+                    new ChunkChangedEventArgs(_Bounds, Directions.CardinalDirectionsVector3));
+                return;
+            }
+
+            Visible = IsWithinRenderDistance(difference);
+            RenderShadows = IsWithinShadowsDistance(difference);
+        }
+
+        #endregion
     }
 }

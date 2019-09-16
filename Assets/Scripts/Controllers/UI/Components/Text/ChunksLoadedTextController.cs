@@ -12,6 +12,7 @@ namespace Controllers.UI.Components.Text
     {
         private string _Format;
         private TextMeshProUGUI _ChunksLoadedText;
+        private int _LastQueuedForCreationCount;
         private int _LastChunksActiveCount;
         private int _LastChunksCachedCount;
 
@@ -23,29 +24,35 @@ namespace Controllers.UI.Components.Text
 
         private void Start()
         {
+            int chunksQueuedForCreation = WorldController.Current.ChunksQueuedForCreation;
             int chunksActive = WorldController.Current.ChunksActiveCount;
             int chunksCached = WorldController.Current.ChunksCachedCount;
 
-            UpdateChunksLoadedText(chunksActive, chunksCached);
+            UpdateChunksLoadedText(chunksQueuedForCreation, chunksActive, chunksCached);
         }
 
         private void Update()
         {
+            int chunksQueuedForCreation = WorldController.Current.ChunksQueuedForCreation;
             int chunksActive = WorldController.Current.ChunksActiveCount;
             int chunksCached = WorldController.Current.ChunksCachedCount;
 
-            if ((chunksActive != _LastChunksActiveCount) || (chunksCached != _LastChunksCachedCount))
+            if ((chunksQueuedForCreation != _LastQueuedForCreationCount)
+                || (chunksActive != _LastChunksActiveCount)
+                || (chunksCached != _LastChunksCachedCount))
             {
-                UpdateChunksLoadedText(chunksActive, chunksCached);
+                UpdateChunksLoadedText(chunksQueuedForCreation, chunksActive, chunksCached);
             }
         }
 
-        private void UpdateChunksLoadedText(int chunksActive, int chunksCached)
+        private void UpdateChunksLoadedText(int chunksQueuedForCreation, int chunksActive, int chunksCached)
         {
+            _LastQueuedForCreationCount = chunksQueuedForCreation;
             _LastChunksActiveCount = chunksActive;
             _LastChunksCachedCount = chunksCached;
 
-            _ChunksLoadedText.text = string.Format(_Format, _LastChunksActiveCount, _LastChunksCachedCount);
+            _ChunksLoadedText.text = string.Format(_Format, _LastQueuedForCreationCount, _LastChunksActiveCount,
+                _LastChunksCachedCount);
         }
     }
 }

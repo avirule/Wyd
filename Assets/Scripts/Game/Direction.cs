@@ -44,6 +44,17 @@ namespace Game
         All = 0b00111111
     }
 
+    public static class Directions
+    {
+        public static readonly Vector3[] CardinalDirectionsVector3 =
+        {
+            Vector3.forward,
+            Vector3.right,
+            Vector3.back,
+            Vector3.left
+        };
+    }
+
     public static class DirectionExtensions
     {
         public static Vector3 AsVector3(this Direction direction)

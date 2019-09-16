@@ -917,17 +917,22 @@ PrefabInstance:
     - target: {fileID: 2495951377516217425, guid: 3b5ae1844b32dde48a21f0f210183c1c,
         type: 3}
       propertyPath: m_text
-      value: 'Chunks Loaded: (a{0}, c{1})'
+      value: 'Chunks Loaded: (q{0}, a{1}, c{2})'
       objectReference: {fileID: 0}
     - target: {fileID: 2495951377516217425, guid: 3b5ae1844b32dde48a21f0f210183c1c,
         type: 3}
       propertyPath: m_textInfo.characterCount
-      value: 27
+      value: 32
       objectReference: {fileID: 0}
     - target: {fileID: 2495951377516217425, guid: 3b5ae1844b32dde48a21f0f210183c1c,
         type: 3}
       propertyPath: m_textInfo.wordCount
-      value: 6
+      value: 7
+      objectReference: {fileID: 0}
+    - target: {fileID: 2495951377516217425, guid: 3b5ae1844b32dde48a21f0f210183c1c,
+        type: 3}
+      propertyPath: m_textInfo.spaceCount
+      value: 4
       objectReference: {fileID: 0}
     - target: {fileID: 2495951378275730223, guid: 3b5ae1844b32dde48a21f0f210183c1c,
         type: 3}
@@ -1088,6 +1093,16 @@ PrefabInstance:
         type: 3}
       propertyPath: m_Color.b
       value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 3311265274832696907, guid: 3b5ae1844b32dde48a21f0f210183c1c,
+        type: 3}
+      propertyPath: m_AnchoredPosition.y
+      value: -56
+      objectReference: {fileID: 0}
+    - target: {fileID: 7943420136193287628, guid: 3b5ae1844b32dde48a21f0f210183c1c,
+        type: 3}
+      propertyPath: m_SizeDelta.y
+      value: 80
       objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 3b5ae1844b32dde48a21f0f210183c1c, type: 3}

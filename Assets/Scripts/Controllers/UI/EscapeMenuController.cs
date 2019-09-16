@@ -38,13 +38,21 @@ namespace Controllers.UI
 
         private void OnDisable()
         {
-            InputController.Current.ToggleCursorLocked(true);
+            if (InputController.Current == default)
+            {
+                return;
+            }
+
             InputController.Current.Unlock(this);
         }
 
         private void OnDestroy()
         {
-            InputController.Current.ToggleCursorLocked(true);
+            if (InputController.Current == default)
+            {
+                return;
+            }
+
             InputController.Current.Unlock(this);
         }
 
