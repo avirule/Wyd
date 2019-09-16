@@ -18,21 +18,7 @@ namespace Game.World.Chunks.BuildingJob
         protected static readonly ObjectCache<ChunkBuilderNoiseValues> NoiseValuesCache =
             new ObjectCache<ChunkBuilderNoiseValues>(null, null, true);
 
-        protected static readonly string[] BlocksUsedForTerrainGeneration =
-        {
-            "grass",
-            "dirt",
-            "stone",
-            "bedrock"
-        };
-
         protected static OpenSimplex_FastNoise NoiseFunction;
-        protected static Dictionary<string, ushort> TerrainGenerationIds;
-
-        static ChunkBuildingJob()
-        {
-            FillTerrainGenerationIds();
-        }
 
         protected Random Rand;
         protected Vector3 Position;
@@ -48,17 +34,6 @@ namespace Game.World.Chunks.BuildingJob
             Rand = new Random(WorldController.Current.Seed);
             Position.Set(position.x, position.y, position.z);
             Blocks = blocks;
-        }
-
-        protected static void FillTerrainGenerationIds()
-        {
-            TerrainGenerationIds = new Dictionary<string, ushort>();
-
-            foreach (string blockName in BlocksUsedForTerrainGeneration)
-            {
-                BlockController.Current.TryGetBlockId(blockName, out ushort blockId);
-                TerrainGenerationIds.Add(blockName, blockId);
-            }
         }
 
         protected bool IdExistsAboveWithinRange(int startIndex, int maxSteps, ushort soughtId)

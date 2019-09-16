@@ -1,6 +1,7 @@
 #region
 
 using UnityEngine;
+using Random = System.Random;
 
 // ReSharper disable TypeParameterCanBeVariant
 
@@ -20,24 +21,26 @@ namespace Game.World.Blocks
 
     public delegate string RuleEvaluation<T1, T2, T3, T4, T5, T6>(T1 arg1, T2 arg2, T3 arg3, T4 arg4, T5 arg5, T6 arg6);
 
-    public struct BlockRule : IBlockRule
+    public class BlockRule : IBlockRule
     {
         private RuleEvaluation<Vector3, Direction> UVsRule { get; }
 
         public ushort Id { get; }
         public string BlockName { get; }
+        public Block.Types Type { get; }
         public bool Transparent { get; }
 
-        public BlockRule(ushort id, string blockName, bool transparent, RuleEvaluation<Vector3, Direction> uvsRule)
+        public BlockRule(ushort id, string blockName, Block.Types type, bool transparent, RuleEvaluation<Vector3, Direction> uvsRule)
         {
             UVsRule = uvsRule ?? ((position, direction) => string.Empty);
 
             Id = id;
             BlockName = blockName;
+            Type = type;
             Transparent = transparent;
         }
 
-        public bool ReadUVsRule(ushort blockId, Vector3 position, Direction direction, out string spriteName)
+        public virtual bool ReadUVsRule(ushort blockId, Vector3 position, Direction direction, out string spriteName)
         {
             if (Id != blockId)
             {
@@ -49,6 +52,12 @@ namespace Game.World.Blocks
 
             spriteName = UVsRule(position, direction);
             return true;
+        }
+
+        public virtual bool ShouldPlaceAt(Random rand, int index, Vector3 position, Block[] blocks)
+        {
+            // todo implement placement choicing
+            return false;
         }
     }
 }

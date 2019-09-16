@@ -8,6 +8,16 @@ namespace Game.World.Blocks
 {
     public struct Block
     {
+        public enum Types
+        {
+            None,
+            // this basically means that
+            // it's placed in the first
+            // terrain step
+            Raw,
+            Ore
+        }
+        
         public const sbyte TRANSPARENCY_MASK = 0b0100_0000;
         public const sbyte FACES_MASK = 0b0011_1111;
 

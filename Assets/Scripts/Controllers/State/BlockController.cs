@@ -28,7 +28,7 @@ namespace Controllers.State
         }
 
         public ushort RegisterBlockRules(
-            string blockName, bool isTransparent,
+            string blockName, Block.Types type, bool isTransparent,
             RuleEvaluation<Vector3, Direction> uvsRule = default)
         {
             ushort blockId = 0;
@@ -50,7 +50,7 @@ namespace Controllers.State
 
             if (!Blocks.ContainsKey(blockId))
             {
-                Blocks.Add(blockId, new BlockRule(blockId, blockName, isTransparent, uvsRule));
+                Blocks.Add(blockId, new BlockRule(blockId, blockName, type, isTransparent, uvsRule));
                 BlockNameIds.Add(blockName, blockId);
             }
 
@@ -153,6 +153,11 @@ namespace Controllers.State
             }
 
             return blockRule.Transparent;
+        }
+
+        public IEnumerable<IBlockRule> GetBlocksOfType(Block.Types type)
+        {
+            return Blocks.Values.Where(block => block.Type == type);
         }
     }
 }

@@ -117,7 +117,7 @@ namespace Game.World.Chunks
                   && block.Transparent)
                  // however if we're inside the chunk, use the proper Blocks[] array index for check 
                  || ((z < (ChunkController.Size.z - 1)) && Blocks[index + ChunkController.Size.x].Transparent))
-                // ensure this block hasn't already been traversed
+                // ensure this block face hasn't already been traversed
                 && !Blocks[index].HasFace(Direction.North))
             {
                 // set face of current block so it isn't traversed over
@@ -160,7 +160,7 @@ namespace Game.World.Chunks
                 }
                 else
                 {
-                    // no traversals found, so just mesh a regular 1x1 face
+                    // no traversals found, so just add vertices for a regular 1x1 face
                     AddVertices(Direction.North, localPosition);
                 }
 

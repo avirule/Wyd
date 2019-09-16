@@ -39,7 +39,6 @@ namespace Controllers.World
 
         public MeshFilter MeshFilter;
         public MeshRenderer MeshRenderer;
-        public bool CodeInspect;
 
         public Vector3 Position { get; private set; }
 
@@ -121,10 +120,6 @@ namespace Controllers.World
             if (WorldController.Current.IsOnBorrowedUpdateTime())
             {
                 return;
-            }
-
-            if (CodeInspect)
-            {
             }
 
             _ChunkGenerationDispatcher.SynchronousContextUpdate();
@@ -359,7 +354,7 @@ namespace Controllers.World
         private IEnumerable<Vector3> DetermineDirectionsForNeighborUpdate(Vector3 globalPosition)
         {
             Vector3 localPosition = globalPosition - Position;
-
+            
             // topleft & bottomright x computation value
             float tl_br_x = localPosition.x * Size.x;
             // topleft & bottomright y computation value
@@ -403,7 +398,7 @@ namespace Controllers.World
                 }
                 else if (isInBottomRightHalf)
                 {
-                    yield return Vector3.forward;
+                    yield return Vector3.back;
                     yield return Vector3.right;
                 }
             }
@@ -411,7 +406,7 @@ namespace Controllers.World
             {
                 if (isInTopRightHalf)
                 {
-                    yield return Vector3.back;
+                    yield return Vector3.forward;
                     yield return Vector3.right;
                 }
                 else if (isInBottomLeftHalf)

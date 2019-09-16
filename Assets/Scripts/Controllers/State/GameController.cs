@@ -50,8 +50,8 @@ namespace Controllers.State
 
         private void RegisterDefaultBlocks()
         {
-            BlockController.Current.RegisterBlockRules("bedrock", false);
-            BlockController.Current.RegisterBlockRules("grass", false, (position, direction) =>
+            BlockController.Current.RegisterBlockRules("bedrock", Block.Types.None, false);
+            BlockController.Current.RegisterBlockRules("grass", Block.Types.Raw, false, (position, direction) =>
             {
                 Vector3 positionAbove = position + Vector3.up;
                 WorldController.Current.TryGetBlockAt(positionAbove, out Block block);
@@ -94,13 +94,13 @@ namespace Controllers.State
                         throw new ArgumentOutOfRangeException(nameof(direction), direction, null);
                 }
             });
-            BlockController.Current.RegisterBlockRules("dirt", false);
-            BlockController.Current.RegisterBlockRules("stone", false);
-            BlockController.Current.RegisterBlockRules("glass", true);
-            BlockController.Current.RegisterBlockRules("coal_ore", false);
-            BlockController.Current.RegisterBlockRules("gold_ore", false);
-            BlockController.Current.RegisterBlockRules("diamond_ore", false);
-            BlockController.Current.RegisterBlockRules("oak_log", false, (vector3, direction) =>
+            BlockController.Current.RegisterBlockRules("dirt", Block.Types.Raw, false);
+            BlockController.Current.RegisterBlockRules("stone", Block.Types.None, false);
+            BlockController.Current.RegisterBlockRules("glass", Block.Types.Raw, true);
+            BlockController.Current.RegisterBlockRules("coal_ore", Block.Types.Ore, false);
+            BlockController.Current.RegisterBlockRules("gold_ore", Block.Types.Ore, false);
+            BlockController.Current.RegisterBlockRules("diamond_ore", Block.Types.Ore, false);
+            BlockController.Current.RegisterBlockRules("oak_log", Block.Types.None, false, (vector3, direction) =>
             {
                 switch (direction)
                 {
@@ -116,8 +116,8 @@ namespace Controllers.State
                         throw new ArgumentOutOfRangeException(nameof(direction), direction, null);
                 }
             });
-            BlockController.Current.RegisterBlockRules("oak_leaf", false);
-            BlockController.Current.RegisterBlockRules("oak_leaf_apple", false);
+            BlockController.Current.RegisterBlockRules("oak_leaf", Block.Types.None, false);
+            BlockController.Current.RegisterBlockRules("oak_leaf_apple", Block.Types.None, false);
         }
 
         public void QuitToMainMenu()

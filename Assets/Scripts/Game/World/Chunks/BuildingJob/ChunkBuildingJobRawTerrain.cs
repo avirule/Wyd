@@ -1,5 +1,6 @@
 #region
 
+using Controllers.State;
 using Controllers.World;
 using Game.World.Blocks;
 using Logging;
@@ -70,7 +71,8 @@ namespace Game.World.Chunks.BuildingJob
 
                 if ((position.y < 4) && (position.y <= Rand.Next(0, 4)))
                 {
-                    Blocks[index].Initialise(TerrainGenerationIds["bedrock"]);
+                    BlockController.Current.TryGetBlockId("bedrock", out ushort blockId);
+                    Blocks[index].Initialise(blockId);
                 }
                 else
                 {
@@ -88,17 +90,23 @@ namespace Game.World.Chunks.BuildingJob
             {
                 int indexAbove = index + ChunkController.YIndexStep;
 
+                BlockController.Current.TryGetBlockId("grass", out ushort blockIdGrass);
+                
                 if ((position.y >= 130) && Blocks[indexAbove].Transparent)
                 {
-                    Blocks[index].Initialise(TerrainGenerationIds["grass"]);
+                    Blocks[index].Initialise(blockIdGrass);
                 }
-                else if (IdExistsAboveWithinRange(index, 4, TerrainGenerationIds["grass"]))
+                else if (IdExistsAboveWithinRange(index, 2, blockIdGrass))
                 {
-                    Blocks[index].Initialise(TerrainGenerationIds["dirt"]);
+                    BlockController.Current.TryGetBlockId("dirt", out ushort blockIdDirt);
+
+                    Blocks[index].Initialise(blockIdDirt);
                 }
                 else
                 {
-                    Blocks[index].Initialise(TerrainGenerationIds["stone"]);
+                    BlockController.Current.TryGetBlockId("stone", out ushort blockIdStone);
+
+                    Blocks[index].Initialise(blockIdStone);
                 }
             }
             else
