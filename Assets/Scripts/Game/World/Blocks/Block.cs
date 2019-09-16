@@ -1,6 +1,5 @@
 #region
 
-using System.Collections.Specialized;
 using Controllers.State;
 
 #endregion
@@ -9,92 +8,80 @@ namespace Game.World.Blocks
 {
     public struct Block
     {
-        #region Static Members
-
-        public static readonly BitVector32.Section IdSection;
-        public static readonly BitVector32.Section TransparencySection;
-        public static readonly BitVector32.Section AllFacesSection;
-        public static readonly BitVector32.Section[] FaceSections;
-        public static readonly BitVector32.Section DamageSection;
-
-        static Block()
-        {
-            IdSection = BitVector32.CreateSection(short.MaxValue);
-            FaceSections = new BitVector32.Section[6];
-            FaceSections[0] = BitVector32.CreateSection(1, IdSection);
-            FaceSections[1] = BitVector32.CreateSection(1, FaceSections[0]);
-            FaceSections[2] = BitVector32.CreateSection(1, FaceSections[1]);
-            FaceSections[3] = BitVector32.CreateSection(1, FaceSections[2]);
-            FaceSections[4] = BitVector32.CreateSection(1, FaceSections[3]);
-            FaceSections[5] = BitVector32.CreateSection(1, FaceSections[4]);
-            AllFacesSection = BitVector32.CreateSection(63, IdSection);
-            TransparencySection = BitVector32.CreateSection(1, AllFacesSection);
-            DamageSection = BitVector32.CreateSection(15, TransparencySection);
-        }
-
-        #endregion
-
-        private BitVector32 _Bits;
-
-        public ushort Id
-        {
-            get => (ushort) _Bits[IdSection];
-            private set => _Bits[IdSection] = (short) value;
-        }
+        public const sbyte TRANSPARENCY_MASK = 0b0100_0000;
+        public const sbyte FACES_MASK = 0b0011_1111;
 
         /// <summary>
         ///     Determines whether the block is transparent.
         /// </summary>
         public bool Transparent
         {
-            get => _Bits[TransparencySection] == 0;
+            get => (Faces & TRANSPARENCY_MASK) == 0;
             // value = true is transparent so that the default value of block is transparent
-            set => _Bits[TransparencySection] = value ? 0 : 1;
+            private set => SetTransparency(value);
         }
 
-        public sbyte Damage
-        {
-            get => (sbyte) _Bits[DamageSection];
-            set => _Bits[DamageSection] = value;
-        }
+        public ushort Id { get; private set; }
+        public sbyte Faces { get; private set; }
+        public sbyte Damage { get; private set; }
 
         public Block(ushort id, sbyte faces = 0)
         {
-            _Bits[IdSection] = id;
-            _Bits[AllFacesSection] = faces;
-            _Bits[TransparencySection] = BlockController.Current.IsBlockDefaultTransparent(Id) ? 0 : 1;
+            Id = id;
+            Faces = faces;
+            Damage = 0;
         }
-
+        
         public void Initialise(ushort id, sbyte faces = 0)
         {
-            _Bits[IdSection] = id;
-            _Bits[AllFacesSection] = faces;
-            _Bits[TransparencySection] = BlockController.Current.IsBlockDefaultTransparent(Id) ? 0 : 1;
+            Id = id;
+            Faces = faces;
+            Transparent = BlockController.Current.IsBlockDefaultTransparent(Id);
+        }
+
+        public void SetTransparency(bool transparent)
+        {
+            if (transparent)
+            {
+                Faces &= ~TRANSPARENCY_MASK;
+            }
+            else
+            {
+                Faces |= TRANSPARENCY_MASK;
+            }
         }
 
         public bool HasAnyFaces()
         {
-            return _Bits[AllFacesSection] > 0;
+            return (Faces & FACES_MASK) > 0;
         }
 
         public bool HasAllFaces()
         {
-            return _Bits[AllFacesSection] == 63;
+            return (Faces & FACES_MASK) == FACES_MASK;
         }
 
         public bool HasFace(Direction direction)
         {
-            return _Bits[FaceSections[((sbyte) direction).LeastSignificantBit()]] == 1;
+            return (Faces & (sbyte) direction) > 0;
         }
 
         public void SetFace(Direction direction, bool value)
         {
-            _Bits[FaceSections[((sbyte) direction).LeastSignificantBit()]] = value ? 1 : 0;
+            if (value)
+            {
+                Faces |= (sbyte) direction;
+            }
+            else
+            {
+                // for the record, this is stupid.
+                Faces &= (sbyte) ~(sbyte) direction;
+            }
         }
 
         public void ClearFaces()
         {
-            _Bits[AllFacesSection] = 0;
+            Faces &= ~FACES_MASK;
         }
     }
 }
