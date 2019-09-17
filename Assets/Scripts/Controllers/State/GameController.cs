@@ -118,6 +118,8 @@ namespace Controllers.State
             });
             BlockController.Current.RegisterBlockRules("oak_leaf", Block.Types.None, false);
             BlockController.Current.RegisterBlockRules("oak_leaf_apple", Block.Types.None, false);
+            BlockController.Current.RegisterBlockRules("sand", Block.Types.Raw, false);
+            BlockController.Current.RegisterBlockRules("water", Block.Types.Raw, true);
         }
 
         public void QuitToMainMenu()
