@@ -121,7 +121,8 @@ namespace Game
 
                         if (!WorldController.Current.TryGetBlockAt(globalPosition, out Block block)
                             || (block.Id == BlockController.BLOCK_EMPTY_ID)
-                            || !block.HasAnyFaces())
+                            //|| !block.HasAnyFaces()
+                            )
                         {
                             if (_ColliderCubes.ContainsKey(trueCenterGlobalPosition))
                             {

@@ -11,7 +11,7 @@
  
     SubShader
     {
-        Tags { "Queue"="Transparent" "RenderType" = "Opaque" }
+        Tags {  "RenderType" = "Opaque" }
         LOD 200
         Offset[_ZOffset],[_ZOffset]
  
@@ -57,6 +57,9 @@
         {
             // Albedo comes from a texture tinted by color
             fixed4 c = UNITY_SAMPLE_TEX2DARRAY(_MainTex, float3(IN.uv_MainTex, IN.arrayIndex)) * _Color;
+            
+            clip(c.a - 1);
+            
             o.Albedo = c.rgb * IN.color; // Combine normal color with the vertex color
  
             // Metallic and smoothness come from slider variables

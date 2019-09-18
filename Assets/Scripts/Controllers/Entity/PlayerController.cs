@@ -114,12 +114,12 @@ namespace Controllers.Entity
             {
                 if (_LastReachRayHit.normal.Sum() > 0f)
                 {
-                    WorldController.Current.TryPlaceBlockAt(_LastReachRayHit.point.Floor(), 9);
+                    WorldController.Current.TryPlaceBlockAt(_LastReachRayHit.point.Floor(), 5);
                 }
                 else
                 {
                     WorldController.Current.TryPlaceBlockAt(_LastReachRayHit.point.Floor() + _LastReachRayHit.normal,
-                        9);
+                        5);
                 }
 
                 _ActionCooldown.Restart();

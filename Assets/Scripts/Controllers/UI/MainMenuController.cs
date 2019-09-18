@@ -50,7 +50,7 @@ namespace Controllers.UI
                 return;
             }
 
-            if (_EscapeKeyPressed)
+            if (_EscapeKeyPressed || MainMenu.activeSelf)
             {
                 return;
             }
