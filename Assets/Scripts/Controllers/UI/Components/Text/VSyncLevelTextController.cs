@@ -1,42 +1,20 @@
 #region
 
-using TMPro;
-using UnityEngine;
+using System.ComponentModel;
+using Controllers.State;
 
 #endregion
 
 namespace Controllers.UI.Components.Text
 {
-    public class VSyncLevelTextController : MonoBehaviour
+    public class VSyncLevelTextController : OptionDisplayTextController
     {
-        private string _Format;
-        private TextMeshProUGUI _VSyncLevelText;
-        private int _LastVSyncCount;
-
-        private void Awake()
+        protected override void UpdateTextObjectText(PropertyChangedEventArgs args, bool force = false)
         {
-            _VSyncLevelText = GetComponent<TextMeshProUGUI>();
-            _Format = _VSyncLevelText.text;
-        }
-
-        private void Start()
-        {
-            UpdateVSyncLevelText();
-        }
-
-        private void Update()
-        {
-            if (_LastVSyncCount != QualitySettings.vSyncCount)
+            if (force || args.PropertyName.Equals(nameof(OptionsController.Current.VSyncLevel)))
             {
-                UpdateVSyncLevelText();
+                _TextObject.text = string.Format(_Format, OptionsController.Current.VSyncLevel);
             }
-        }
-
-        private void UpdateVSyncLevelText()
-        {
-            _LastVSyncCount = QualitySettings.vSyncCount;
-
-            _VSyncLevelText.text = string.Format(_Format, _LastVSyncCount);
         }
     }
 }

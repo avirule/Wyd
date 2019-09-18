@@ -196,8 +196,8 @@ namespace Game.World.Chunks
         private void QueueJob(Job job)
         {
             Generating = true;
-            GameController.JobExecutionQueue.ThreadedItemFinished += OnJobQueueFinishedJob;
-            _JobIdentity = GameController.JobExecutionQueue.QueueThreadedItem(job);
+            GameController.Current.JobFinished += OnJobQueueFinishedJob;
+            _JobIdentity = GameController.QueueJob(job);
         }
 
         public void RequestMeshUpdate()
@@ -265,7 +265,7 @@ namespace Game.World.Chunks
             Generating = false;
             _StepForward = true;
             _JobIdentity = null;
-            GameController.JobExecutionQueue.ThreadedItemFinished -= OnJobQueueFinishedJob;
+            GameController.Current.JobFinished -= OnJobQueueFinishedJob;
         }
 
         #endregion

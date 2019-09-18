@@ -20,8 +20,8 @@ namespace Jobs
         private readonly Func<ThreadingMode> _ThreadingModeReference;
 
         private bool _Disposed;
+        private int _WaitTimeout;
 
-        protected readonly int ThreadSize;
         protected readonly Thread ProcessingThread;
         protected readonly List<JobCompletionThread> InternalThreads;
         protected readonly BlockingCollection<Job> JobWaitingQueue;
@@ -29,7 +29,7 @@ namespace Jobs
         protected CancellationToken AbortToken;
         protected int LastThreadIndexQueuedInto;
 
-        private int _WaitTimeout;
+        protected int ThreadPoolSize;
 
         /// <summary>
         ///     Determines whether the <see cref="JobQueue" /> executes <see cref="Job" /> on
@@ -62,7 +62,7 @@ namespace Jobs
             }
         }
 
-        public event EventHandler<JobFinishedEventArgs> ThreadedItemFinished;
+        public event EventHandler<JobFinishedEventArgs> JobFinished;
 
         /// <summary>
         ///     Initializes a new instance of <see cref="JobQueue" /> class.
@@ -72,25 +72,19 @@ namespace Jobs
         ///     queue.
         /// </param>
         /// <param name="threadingModeReference"></param>
-        /// <param name="threadSize">Size of internal <see cref="JobCompletionThread" /> pool</param>
-        public JobQueue(int waitTimeout, Func<ThreadingMode> threadingModeReference = null, int threadSize = -1)
+        /// <param name="threadPoolSize">Size of internal <see cref="JobCompletionThread" /> pool</param>
+        public JobQueue(int waitTimeout, Func<ThreadingMode> threadingModeReference = null, int threadPoolSize = -1)
         {
-            if ((threadSize <= 0) || (threadSize > 15))
-            {
-                threadSize = 4;
-            }
-
             WaitTimeout = waitTimeout;
-            ThreadSize = threadSize;
+            ModifyThreadPoolSize(threadPoolSize);
             _ThreadingModeReference = threadingModeReference ?? (() => ThreadingMode.Single);
-            ProcessingThread = new Thread(ProcessThreadedItems);
-            InternalThreads = new List<JobCompletionThread>(threadSize);
+            ProcessingThread = new Thread(ProcessJobs);
+            InternalThreads = new List<JobCompletionThread>(ThreadPoolSize);
             JobWaitingQueue = new BlockingCollection<Job>();
             AbortTokenSource = new CancellationTokenSource();
             AbortToken = AbortTokenSource.Token;
-            LastThreadIndexQueuedInto = 0;
-
-            InitialiseWorkerThreads();
+            // set to -1 increment in first run of process queue
+            LastThreadIndexQueuedInto = -1;
 
             Running = false;
         }
@@ -114,33 +108,30 @@ namespace Jobs
             Running = false;
         }
 
-        private void InitialiseWorkerThreads()
+        private void SpawnWorkerThread()
         {
-            for (int i = 0; i < ThreadSize; i++)
-            {
-                JobCompletionThread jobCompletionThread = new JobCompletionThread(WaitTimeout, AbortToken);
-                jobCompletionThread.ThreadedItemFinished += OnThreadedItemFinished;
-                jobCompletionThread.Start();
-                InternalThreads.Add(jobCompletionThread);
-            }
+            JobCompletionThread jobCompletionThread = new JobCompletionThread(WaitTimeout, AbortToken);
+            jobCompletionThread.JobFinished += OnJobFinished;
+            jobCompletionThread.Start();
+            InternalThreads.Add(jobCompletionThread);
         }
 
-        private void OnThreadedItemFinished(object sender, JobFinishedEventArgs args)
+        private void OnJobFinished(object sender, JobFinishedEventArgs args)
         {
-            ThreadedItemFinished?.Invoke(sender, args);
+            JobFinished?.Invoke(sender, args);
         }
 
         /// <summary>
         ///     Begins internal loop for processing <see cref="Job" />s from internal queue.
         /// </summary>
-        protected virtual void ProcessThreadedItems()
+        protected virtual void ProcessJobs()
         {
             while (!AbortToken.IsCancellationRequested)
             {
                 try
                 {
-                    if (!JobWaitingQueue.TryTake(out Job threadedItem, WaitTimeout, AbortToken)
-                        || (threadedItem == default))
+                    if (!JobWaitingQueue.TryTake(out Job job, WaitTimeout, AbortToken)
+                        || (job == default))
                     {
                         continue;
                     }
@@ -151,12 +142,20 @@ namespace Jobs
                         ThreadingMode = _ThreadingModeReference();
                     }
 
-                    ProcessThreadedItem(threadedItem);
+                    while (InternalThreads.Count < ThreadPoolSize)
+                    {
+                        SpawnWorkerThread();
+                    }
+
+                    ProcessJob(job);
                 }
                 catch (OperationCanceledException)
                 {
                     // thread aborted
                     return;
+                }
+                catch (Exception ex)
+                {
                 }
             }
 
@@ -168,19 +167,19 @@ namespace Jobs
         ///     <see cref="Job" />s.
         /// </summary>
         /// <param name="job"><see cref="Job" /> to be processed.</param>
-        protected virtual async void ProcessThreadedItem(Job job)
+        protected virtual async void ProcessJob(Job job)
         {
             switch (ThreadingMode)
             {
                 case ThreadingMode.Single:
                     await job.Execute();
 
-                    OnThreadedItemFinished(this, new JobFinishedEventArgs(job));
+                    OnJobFinished(this, new JobFinishedEventArgs(job));
                     break;
                 case ThreadingMode.Multi:
-                    LastThreadIndexQueuedInto = (LastThreadIndexQueuedInto + 1) % ThreadSize;
+                    LastThreadIndexQueuedInto = (LastThreadIndexQueuedInto + 1) % ThreadPoolSize;
 
-                    InternalThreads[LastThreadIndexQueuedInto].QueueThreadedItem(job);
+                    InternalThreads[LastThreadIndexQueuedInto].QueueJob(job);
                     break;
                 default:
                     throw new ArgumentOutOfRangeException();
@@ -192,7 +191,7 @@ namespace Jobs
         /// </summary>
         /// <param name="job"><see cref="Job" /> to be added.</param>
         /// <returns>A unique <see cref="System.Object" /> identity.</returns>
-        public virtual object QueueThreadedItem(Job job)
+        public virtual object QueueJob(Job job)
         {
             if (!Running)
             {
@@ -204,6 +203,12 @@ namespace Jobs
 
             return job.Identity;
         }
+
+        public void ModifyThreadPoolSize(int modification)
+        {
+            Interlocked.Exchange(ref ThreadPoolSize, Math.Max(modification, 1));
+        }
+
 
         /// <summary>
         ///     Disposes of <see cref="JobQueue" /> instance.

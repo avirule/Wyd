@@ -1,43 +1,20 @@
 #region
 
+using System.ComponentModel;
 using Controllers.State;
-using TMPro;
-using UnityEngine;
 
 #endregion
 
 namespace Controllers.UI.Components.Text
 {
-    public class RenderDistanceTextController : MonoBehaviour
+    public class RenderDistanceTextController : OptionDisplayTextController
     {
-        private string _Format;
-        private TextMeshProUGUI _RenderDistanceText;
-        private int _LastRenderDistanceValueChecked;
-
-        private void Awake()
+        protected override void UpdateTextObjectText(PropertyChangedEventArgs args, bool force = false)
         {
-            _RenderDistanceText = GetComponent<TextMeshProUGUI>();
-            _Format = _RenderDistanceText.text;
-        }
-
-        private void Start()
-        {
-            UpdateShadowDistanceText();
-        }
-
-        private void Update()
-        {
-            if (_LastRenderDistanceValueChecked != OptionsController.Current.RenderDistance)
+            if (force || args.PropertyName.Equals(nameof(OptionsController.Current.RenderDistance)))
             {
-                UpdateShadowDistanceText();
+                _TextObject.text = string.Format(_Format, OptionsController.Current.RenderDistance);
             }
-        }
-
-        private void UpdateShadowDistanceText()
-        {
-            _LastRenderDistanceValueChecked = OptionsController.Current.RenderDistance;
-
-            _RenderDistanceText.text = string.Format(_Format, _LastRenderDistanceValueChecked);
         }
     }
 }

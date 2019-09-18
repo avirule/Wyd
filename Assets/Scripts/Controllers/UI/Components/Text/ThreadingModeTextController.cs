@@ -1,39 +1,20 @@
 #region
 
+using System.ComponentModel;
 using Controllers.State;
-using Jobs;
-using TMPro;
-using UnityEngine;
 
 #endregion
 
 namespace Controllers.UI.Components.Text
 {
-    public class ThreadingModeTextController : MonoBehaviour
+    public class ThreadingModeTextController : OptionDisplayTextController
     {
-        private string _Format;
-        private TextMeshProUGUI _ThreadingModeText;
-        private ThreadingMode _LastThreadingMode;
-
-        private void Awake()
+        protected override void UpdateTextObjectText(PropertyChangedEventArgs args, bool force = false)
         {
-            _ThreadingModeText = GetComponent<TextMeshProUGUI>();
-            _Format = _ThreadingModeText.text;
-        }
-
-        private void Update()
-        {
-            if (OptionsController.Current.ThreadingMode != _LastThreadingMode)
+            if (force || args.PropertyName.Equals(nameof(OptionsController.Current.ThreadingMode)))
             {
-                UpdateThreadingModeText();
+                _TextObject.text = string.Format(_Format, OptionsController.Current.ThreadingMode);
             }
-        }
-
-        private void UpdateThreadingModeText()
-        {
-            _LastThreadingMode = OptionsController.Current.ThreadingMode;
-
-            _ThreadingModeText.text = string.Format(_Format, _LastThreadingMode.ToString());
         }
     }
 }

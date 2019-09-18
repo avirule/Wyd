@@ -10,7 +10,6 @@ namespace Controllers.UI.Components.Slider
     public class RenderDistanceSliderController : MonoBehaviour
     {
         private UnityEngine.UI.Slider _RenderDistanceSlider;
-        private int _LastRenderDistanceValueChecked;
 
         private void Awake()
         {
@@ -18,17 +17,9 @@ namespace Controllers.UI.Components.Slider
             _RenderDistanceSlider.onValueChanged.AddListener(RenderDistanceSliderValueChanged);
         }
 
-        private void Start()
+        private void OnEnable()
         {
             UpdateSliderValue();
-        }
-
-        private void Update()
-        {
-            if (_LastRenderDistanceValueChecked != OptionsController.Current.RenderDistance)
-            {
-                UpdateSliderValue();
-            }
         }
 
         private static void RenderDistanceSliderValueChanged(float newValue)
@@ -38,9 +29,7 @@ namespace Controllers.UI.Components.Slider
 
         private void UpdateSliderValue()
         {
-            _LastRenderDistanceValueChecked = OptionsController.Current.RenderDistance;
-
-            _RenderDistanceSlider.value = _LastRenderDistanceValueChecked;
+            _RenderDistanceSlider.value = OptionsController.Current.RenderDistance;
         }
     }
 }

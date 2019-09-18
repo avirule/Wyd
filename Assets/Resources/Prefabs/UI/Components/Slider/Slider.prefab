@@ -46,7 +46,6 @@ GameObject:
   m_Component:
   - component: {fileID: 3737941603171004446}
   - component: {fileID: 1523827751333758769}
-  - component: {fileID: 4010709931253615210}
   m_Layer: 5
   m_Name: Slider
   m_TagString: Untagged
@@ -127,18 +126,6 @@ MonoBehaviour:
       m_Calls: []
     m_TypeName: UnityEngine.UI.Slider+SliderEvent, UnityEngine.UI, Version=1.0.0.0,
       Culture=neutral, PublicKeyToken=null
---- !u!114 &4010709931253615210
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 2538750575774792847}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: cb4e60afc3224115b16b99c7a5787309, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
 --- !u!1 &2757595705480635201
 GameObject:
   m_ObjectHideFlags: 0
@@ -150,7 +137,6 @@ GameObject:
   - component: {fileID: 2146241429598506524}
   - component: {fileID: 8740607398762794311}
   - component: {fileID: 5426176906749821284}
-  - component: {fileID: 4355034122421653954}
   m_Layer: 5
   m_Name: Text
   m_TagString: Untagged
@@ -298,18 +284,6 @@ MonoBehaviour:
   - {fileID: 0}
   m_baseMaterial: {fileID: 0}
   m_maskOffset: {x: 0, y: 0, z: 0, w: 0}
---- !u!114 &4355034122421653954
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 2757595705480635201}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: bd7e7344965e4507a83f13e4e8f6eee1, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
 --- !u!1 &3460867150668912523
 GameObject:
   m_ObjectHideFlags: 0

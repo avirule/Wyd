@@ -20,7 +20,7 @@ namespace Jobs
         public bool Processing { get; private set; }
         public int ManagedThreadId => _InternalThread.ManagedThreadId;
 
-        public event EventHandler<JobFinishedEventArgs> ThreadedItemFinished;
+        public event EventHandler<JobFinishedEventArgs> JobFinished;
 
         public JobCompletionThread(int waitTimeout, CancellationToken abortToken)
         {
@@ -37,7 +37,7 @@ namespace Jobs
             Running = true;
         }
 
-        public bool QueueThreadedItem(Job job)
+        public bool QueueJob(Job job)
         {
             return _ItemQueue.TryAdd(job);
         }
@@ -48,9 +48,9 @@ namespace Jobs
             {
                 try
                 {
-                    if (_ItemQueue.TryTake(out Job threadedItem, WaitTimeout, _AbortToken))
+                    if (_ItemQueue.TryTake(out Job job, WaitTimeout, _AbortToken))
                     {
-                        ProcessThreadedItem(threadedItem);
+                        ProcessJob(job);
                     }
                 }
                 catch (OperationCanceledException)
@@ -61,19 +61,19 @@ namespace Jobs
             }
         }
 
-        private void ProcessThreadedItem(Job job)
+        private void ProcessJob(Job job)
         {
             Processing = true;
 
             job.Execute();
-            OnThreadedItemFinished(this, new JobFinishedEventArgs(job));
+            OnJobFinished(this, new JobFinishedEventArgs(job));
 
             Processing = false;
         }
 
-        private void OnThreadedItemFinished(object sender, JobFinishedEventArgs args)
+        private void OnJobFinished(object sender, JobFinishedEventArgs args)
         {
-            ThreadedItemFinished?.Invoke(sender, args);
+            JobFinished?.Invoke(sender, args);
         }
     }
 }

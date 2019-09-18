@@ -1,7 +1,6 @@
 ﻿#region
 
 using Controllers.State;
-using Extensions;
 using UnityEngine;
 using UnityEngine.EventSystems;
 
@@ -13,15 +12,16 @@ namespace Controllers.UI.Components.Button
     {
         public void OnPointerClick(PointerEventData eventData)
         {
-            int step = eventData.GetButtonAsInt();
+            switch (eventData.button)
+            {
+                case PointerEventData.InputButton.Left:
+                    int final = OptionsController.Current.VSyncLevel - 1;
 
-            if ((step == -1) && (OptionsController.Current.VSyncLevel == 0))
-            {
-                OptionsController.Current.VSyncLevel = 4;
-            }
-            else
-            {
-                OptionsController.Current.VSyncLevel = (OptionsController.Current.VSyncLevel + step) % 5;
+                    OptionsController.Current.VSyncLevel = final >= 0 ? final : 4;
+                    break;
+                case PointerEventData.InputButton.Right:
+                    OptionsController.Current.VSyncLevel = (OptionsController.Current.VSyncLevel + 1) % 5;
+                    break;
             }
         }
     }

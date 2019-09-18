@@ -10,7 +10,6 @@ namespace Controllers.UI.Components.Slider
     public class ShadowDistanceSliderController : MonoBehaviour
     {
         private UnityEngine.UI.Slider _ShadowDistanceSlider;
-        private int _LastShadowDistanceValueChecked;
 
         private void Awake()
         {
@@ -18,17 +17,9 @@ namespace Controllers.UI.Components.Slider
             _ShadowDistanceSlider.onValueChanged.AddListener(ShadowDistanceSliderValueChanged);
         }
 
-        private void Start()
+        private void OnEnable()
         {
             UpdateSliderValue();
-        }
-
-        private void Update()
-        {
-            if (_LastShadowDistanceValueChecked != OptionsController.Current.ShadowDistance)
-            {
-                UpdateSliderValue();
-            }
         }
 
         private static void ShadowDistanceSliderValueChanged(float newValue)
@@ -38,9 +29,7 @@ namespace Controllers.UI.Components.Slider
 
         private void UpdateSliderValue()
         {
-            _LastShadowDistanceValueChecked = OptionsController.Current.ShadowDistance;
-
-            _ShadowDistanceSlider.value = _LastShadowDistanceValueChecked;
+            _ShadowDistanceSlider.value = OptionsController.Current.ShadowDistance;
         }
     }
 }

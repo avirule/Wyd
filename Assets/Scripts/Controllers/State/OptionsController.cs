@@ -39,7 +39,7 @@ namespace Controllers.State
             // General
             public const int MAXIMUM_INTERNAL_FRAMES = 60;
             public const ThreadingMode THREADING_MODE = ThreadingMode.Multi;
-            public const float CPU_CORE_UTILIZATION = 0.5f;
+            public const int CPU_CORE_UTILIZATION = 4;
             public const bool GPU_ACCELERATION = true;
 
             // Graphics
@@ -62,7 +62,7 @@ namespace Controllers.State
 
         private Configuration _Configuration;
         private ThreadingMode _ThreadingMode;
-        private float _CPUCoreUtilization;
+        private int _CPUCoreUtilization;
         private bool _GPUAcceleration;
         private int _MaximumInternalFrames;
         private int _MaximumFrameRateBufferSize;
@@ -83,10 +83,10 @@ namespace Controllers.State
             get => _MaximumInternalFrames;
             set
             {
-                OnPropertyChanged();
                 _MaximumInternalFrames = value;
                 _Configuration["General"][nameof(MaximumInternalFrames)].IntValue = _MaximumInternalFrames;
                 SaveSettings();
+                OnPropertyChanged();
             }
         }
 
@@ -97,26 +97,34 @@ namespace Controllers.State
             get => _ThreadingMode;
             set
             {
-                OnPropertyChanged();
                 _ThreadingMode = value;
                 _Configuration["General"][nameof(ThreadingMode)].IntValue = (int) _ThreadingMode;
                 SaveSettings();
+                OnPropertyChanged();
             }
         }
 
-public float CPUCoreUtilization {
-
-}
+        public int CPUCoreUtilization
+        {
+            get => _CPUCoreUtilization;
+            set
+            {
+                _CPUCoreUtilization = Math.Max(value, 1) % (Environment.ProcessorCount + 1);
+                _Configuration["General"][nameof(CPUCoreUtilization)].IntValue = _CPUCoreUtilization;
+                SaveSettings();
+                OnPropertyChanged();
+            }
+        }
 
         public bool GPUAcceleration
         {
             get => _GPUAcceleration;
             set
             {
-                OnPropertyChanged();
                 _GPUAcceleration = value;
                 _Configuration["General"][nameof(GPUAcceleration)].BoolValue = _GPUAcceleration;
                 SaveSettings();
+                OnPropertyChanged();
             }
         }
 
@@ -130,10 +138,10 @@ public float CPUCoreUtilization {
             get => _MaximumFrameRateBufferSize;
             set
             {
-                OnPropertyChanged();
                 _MaximumFrameRateBufferSize = value;
                 _Configuration["Graphics"][nameof(MaximumFrameRateBufferSize)].IntValue = _MaximumFrameRateBufferSize;
                 SaveSettings();
+                OnPropertyChanged();
             }
         }
 
@@ -142,10 +150,10 @@ public float CPUCoreUtilization {
             get => QualitySettings.vSyncCount;
             set
             {
-                OnPropertyChanged();
                 QualitySettings.vSyncCount = value;
                 _Configuration["Graphics"][nameof(VSyncLevel)].IntValue = QualitySettings.vSyncCount;
                 SaveSettings();
+                OnPropertyChanged();
             }
         }
 
@@ -154,10 +162,10 @@ public float CPUCoreUtilization {
             get => _RenderDistance;
             set
             {
-                OnPropertyChanged();
                 _RenderDistance = value;
                 _Configuration["Graphics"][nameof(RenderDistance)].IntValue = _RenderDistance;
                 SaveSettings();
+                OnPropertyChanged();
             }
         }
 
@@ -166,10 +174,10 @@ public float CPUCoreUtilization {
             get => _ShadowDistance;
             set
             {
-                OnPropertyChanged();
                 _ShadowDistance = value;
                 _Configuration["Graphics"][nameof(ShadowDistance)].IntValue = _ShadowDistance;
                 SaveSettings();
+                OnPropertyChanged();
             }
         }
 
@@ -183,10 +191,10 @@ public float CPUCoreUtilization {
             get => _PreInitializeChunkCache;
             set
             {
-                OnPropertyChanged();
                 _PreInitializeChunkCache = value;
                 _Configuration["Chunking"][nameof(PreInitializeChunkCache)].BoolValue = _PreInitializeChunkCache;
                 SaveSettings();
+                OnPropertyChanged();
             }
         }
 
@@ -195,10 +203,10 @@ public float CPUCoreUtilization {
             get => _MaximumChunkCacheSize;
             set
             {
-                OnPropertyChanged();
                 _MaximumChunkCacheSize = value;
                 _Configuration["Chunking"][nameof(MaximumChunkCacheSize)].IntValue = _MaximumChunkCacheSize;
                 SaveSettings();
+                OnPropertyChanged();
             }
         }
 
@@ -207,11 +215,11 @@ public float CPUCoreUtilization {
             get => _MaximumChunkLoadTimeBufferSize;
             set
             {
-                OnPropertyChanged();
                 _MaximumChunkLoadTimeBufferSize = value;
                 _Configuration["Chunking"][nameof(MaximumChunkLoadTimeBufferSize)].IntValue =
                     _MaximumChunkLoadTimeBufferSize;
                 SaveSettings();
+                OnPropertyChanged();
             }
         }
 
@@ -220,10 +228,10 @@ public float CPUCoreUtilization {
             get => _PreLoadChunkDistance;
             set
             {
-                OnPropertyChanged();
                 _PreLoadChunkDistance = value;
                 _Configuration["Chunking"][nameof(PreLoadChunkDistance)].IntValue = _PreLoadChunkDistance;
                 SaveSettings();
+                OnPropertyChanged();
             }
         }
 
@@ -266,6 +274,14 @@ public float CPUCoreUtilization {
             {
                 LogSettingLoadError(nameof(ThreadingMode), Defaults.THREADING_MODE);
                 ThreadingMode = Defaults.THREADING_MODE;
+                SaveSettings();
+            }
+
+            if (!GetSetting("General", nameof(CPUCoreUtilization), out _CPUCoreUtilization)
+                || (_CPUCoreUtilization < 0))
+            {
+                LogSettingLoadError(nameof(CPUCoreUtilization), Defaults.CPU_CORE_UTILIZATION);
+                _CPUCoreUtilization = Defaults.CPU_CORE_UTILIZATION;
                 SaveSettings();
             }
 
@@ -370,6 +386,10 @@ public float CPUCoreUtilization {
             _Configuration["General"][nameof(ThreadingMode)].Comment = "(0 = single, 1 = multi, 2 = variable)";
             _Configuration["General"][nameof(ThreadingMode)].IntValue =
                 (int) Defaults.THREADING_MODE;
+
+            _Configuration["General"][nameof(CPUCoreUtilization)].PreComment =
+                "Loosely defines the total number of CPU cores the game will utilize with threading.";
+            _Configuration["General"][nameof(CPUCoreUtilization)].IntValue = Defaults.CPU_CORE_UTILIZATION;
 
             _Configuration["General"][nameof(GPUAcceleration)].PreComment =
                 "Determines whether the GPU will be more heavily utilized to increase overall performance. Turning this off will create more work for the CPU.";

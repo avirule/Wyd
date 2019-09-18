@@ -1,47 +1,21 @@
 #region
 
+using System.ComponentModel;
 using Controllers.State;
-using TMPro;
-using UnityEngine;
 
 #endregion
 
 namespace Controllers.UI.Components.Text
 {
-    public class GPUAccelerationTextController : MonoBehaviour
+    public class GPUAccelerationTextController : OptionDisplayTextController
     {
-        private string _Format;
-        private TextMeshProUGUI _GPUAccelerationText;
-        private bool _LastGPUAccelerationSetting;
-
-        private void Awake()
+        protected override void UpdateTextObjectText(PropertyChangedEventArgs args, bool force = false)
         {
-            _GPUAccelerationText = GetComponent<TextMeshProUGUI>();
-            _Format = _GPUAccelerationText.text;
-        }
-
-        private void Start()
-        {
-            UpdateGPUAcceleration();
-        }
-
-        private void Update()
-        {
-            if (OptionsController.Current.GPUAcceleration != _LastGPUAccelerationSetting)
+            if (force || args.PropertyName.Equals(nameof(OptionsController.Current.GPUAcceleration)))
             {
-                UpdateGPUAcceleration();
+                _TextObject.text = string.Format(_Format,
+                    OptionsController.Current.GPUAcceleration ? "Enabled" : "Disabled");
             }
-        }
-
-        private void UpdateGPUAcceleration()
-        {
-            _GPUAccelerationText.text = string.Format(_Format, GetGPUAccelerationAsEnabledStatus());
-            _LastGPUAccelerationSetting = OptionsController.Current.GPUAcceleration;
-        }
-
-        private static string GetGPUAccelerationAsEnabledStatus()
-        {
-            return OptionsController.Current.GPUAcceleration ? "Enabled" : "Disabled";
         }
     }
 }

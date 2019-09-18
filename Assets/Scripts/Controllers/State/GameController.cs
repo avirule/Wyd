@@ -17,9 +17,11 @@ namespace Controllers.State
 {
     public class GameController : SingletonController<GameController>
     {
+        private static JobQueue JobExecutionQueue { get; set; }
+
         public static readonly int MainThreadId = Thread.CurrentThread.ManagedThreadId;
 
-        public static JobQueue JobExecutionQueue { get; private set; }
+        public event EventHandler<JobFinishedEventArgs> JobFinished;
 
         private void Awake()
         {
@@ -33,12 +35,21 @@ namespace Controllers.State
             if (JobExecutionQueue == default)
             {
                 // init ThreadedQueue with # of threads matching 1/2 of logical processors
-                JobExecutionQueue = new JobQueue(200, () => OptionsController.Current.ThreadingMode,
-                    Environment.ProcessorCount / 2);
+                JobExecutionQueue = new JobQueue(200, () => OptionsController.Current.ThreadingMode);
                 JobExecutionQueue.Start();
             }
 
             RegisterDefaultBlocks();
+
+            JobExecutionQueue.JobFinished += (sender, args) => { JobFinished?.Invoke(sender, args); };
+            JobExecutionQueue.ModifyThreadPoolSize(OptionsController.Current.CPUCoreUtilization);
+            OptionsController.Current.PropertyChanged += (sender, args) =>
+            {
+                if (args.PropertyName.Equals(nameof(OptionsController.Current.CPUCoreUtilization)))
+                {
+                    JobExecutionQueue.ModifyThreadPoolSize(OptionsController.Current.CPUCoreUtilization);
+                }
+            };
         }
 
         private void OnApplicationQuit()
@@ -134,6 +145,11 @@ namespace Controllers.State
 #if UNITY_EDITOR
             EditorApplication.ExitPlaymode();
 #endif
+        }
+
+        public static object QueueJob(Job job)
+        {
+            return JobExecutionQueue.QueueJob(job);
         }
     }
 }
