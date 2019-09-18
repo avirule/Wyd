@@ -15,13 +15,23 @@ namespace Controllers.UI.Components.Slider
         private void Awake()
         {
             _CPUCoreUtilizationSlider = GetComponent<UnityEngine.UI.Slider>();
-            _CPUCoreUtilizationSlider.onValueChanged.AddListener(OnSliderValueChanged);
             _CPUCoreUtilizationSlider.maxValue = Environment.ProcessorCount;
             _CPUCoreUtilizationSlider.minValue = 1;
         }
 
+        private void Start()
+        {
+            _CPUCoreUtilizationSlider.onValueChanged.AddListener(OnSliderValueChanged);
+            UpdateSliderValue();
+        }
+
         private void OnEnable()
         {
+            if (OptionsController.Current == default)
+            {
+                return;
+            }
+
             UpdateSliderValue();
         }
 

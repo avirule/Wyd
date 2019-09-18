@@ -124,7 +124,7 @@ namespace Game.World.Chunks
                         && (Blocks[index + ChunkController.YIndexStep].Id != Blocks[index].Id))))
             {
                 // todo fix northern transparent faces sometimes not culling inner faces
-                
+
                 // set face of current block so it isn't traversed over
                 Blocks[index].SetFace(Direction.North, true);
                 // add triangles for this block face

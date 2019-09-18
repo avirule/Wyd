@@ -6,6 +6,7 @@ using Controllers.World;
 using Game;
 using Game.World.Blocks;
 using Jobs;
+using Logging.Targets;
 using NLog;
 using UnityEditor;
 using UnityEngine;
@@ -50,6 +51,11 @@ namespace Controllers.State
                     JobExecutionQueue.ModifyThreadPoolSize(OptionsController.Current.CPUCoreUtilization);
                 }
             };
+        }
+
+        private void LateUpdate()
+        {
+            UnityDebuggerTarget.Flush();
         }
 
         private void OnApplicationQuit()

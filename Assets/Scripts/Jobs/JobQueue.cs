@@ -4,6 +4,8 @@ using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Threading;
+using Logging;
+using NLog;
 
 #endregion
 
@@ -156,6 +158,7 @@ namespace Jobs
                 }
                 catch (Exception ex)
                 {
+                    EventLog.Logger.Log(LogLevel.Warn, $"Error occurred in threading daemon: {ex.Message}");
                 }
             }
 

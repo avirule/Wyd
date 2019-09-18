@@ -98,7 +98,10 @@ namespace Controllers.World
         private void Update()
         {
             _FrameTimer.Restart();
+        }
 
+        private void LateUpdate()
+        {
             if (_BuildChunkAroundEntityStack.Count > 0)
             {
                 ProcessBuildChunkQueue();

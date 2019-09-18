@@ -1,5 +1,6 @@
 #region
 
+using System.Collections.Concurrent;
 using NLog;
 using NLog.Config;
 using NLog.Targets;
@@ -12,6 +13,13 @@ namespace Logging.Targets
     [Target("UnityDebuggerTarget")]
     public sealed class UnityDebuggerTarget : TargetWithLayout
     {
+        private static readonly ConcurrentQueue<string> LogEvents;
+
+        static UnityDebuggerTarget()
+        {
+            LogEvents = new ConcurrentQueue<string>();
+        }
+
         public UnityDebuggerTarget()
         {
             Host = "localhost";
@@ -32,15 +40,24 @@ namespace Logging.Targets
         {
             if (logEvent.Level == LogLevel.Info)
             {
-                Debug.Log(logEventMessage);
+                LogEvents.Enqueue(logEventMessage);
             }
             else if (logEvent.Level == LogLevel.Warn)
             {
-                Debug.LogWarning(logEventMessage);
+                LogEvents.Enqueue(logEventMessage);
             }
             else if ((logEvent.Level == LogLevel.Error) || (logEvent.Level == LogLevel.Fatal))
             {
-                Debug.LogError(logEventMessage);
+                LogEvents.Enqueue(logEventMessage);
+            }
+        }
+
+        public static void Flush()
+        {
+            while (LogEvents.Count > 0)
+            {
+                LogEvents.TryDequeue(out string logMessage);
+                Debug.Log(logMessage);
             }
         }
     }
