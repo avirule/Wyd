@@ -11,12 +11,7 @@ namespace Game.World.Chunks.BuildingJob
     {
         private Vector3 _Position;
         private Block[] _Blocks;
-
-        public void Set(Vector3 position, Block[] blocks)
-        {
-            _Position = position;
-            _Blocks = blocks;
-        }
+        
 
         public void Generate()
         {

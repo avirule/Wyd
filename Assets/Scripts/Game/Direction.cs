@@ -1,6 +1,8 @@
 #region
 
 using System;
+using System.Collections.Generic;
+using Controllers.World;
 using UnityEngine;
 
 #endregion
@@ -57,25 +59,41 @@ namespace Game
 
     public static class DirectionExtensions
     {
+        static DirectionExtensions()
+        {
+            DirectionsAsVector3 = new Dictionary<Direction, Vector3>
+            {
+                { Direction.North, Vector3.forward },
+                { Direction.East, Vector3.right },
+                { Direction.South, Vector3.back },
+                { Direction.West, Vector3.left },
+                { Direction.Up, Vector3.up },
+                { Direction.Down, Vector3.down },
+                { Direction.All, Vector3.zero }
+            };
+
+            DirectionsAsIndexStep = new Dictionary<Direction, int>
+            {
+                { Direction.North, ChunkController.Size.x },
+                { Direction.East, 1 },
+                { Direction.South, -ChunkController.Size.x },
+                { Direction.West, -1 },
+                { Direction.Up, ChunkController.YIndexStep },
+                { Direction.Down, -ChunkController.YIndexStep }
+            };
+        }
+
+        private static readonly IReadOnlyDictionary<Direction, Vector3> DirectionsAsVector3;
+        private static readonly IReadOnlyDictionary<Direction, int> DirectionsAsIndexStep;
+
         public static Vector3 AsVector3(this Direction direction)
         {
-            switch (direction)
-            {
-                case Direction.North:
-                    return Vector3.forward;
-                case Direction.East:
-                    return Vector3.right;
-                case Direction.South:
-                    return Vector3.back;
-                case Direction.West:
-                    return Vector3.left;
-                case Direction.Up:
-                    return Vector3.up;
-                case Direction.Down:
-                    return Vector3.down;
-                default:
-                    throw new ArgumentOutOfRangeException(nameof(direction), direction, null);
-            }
+            return DirectionsAsVector3[direction];
+        }
+
+        public static int AsIndexStep(this Direction direction)
+        {
+            return DirectionsAsIndexStep[direction];
         }
 
         public static bool IsPositive(this Direction direction)

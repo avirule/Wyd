@@ -206,7 +206,7 @@ namespace Controllers.World
 
         #region TRY GET / PLACE / REMOVE BLOCKS
 
-        public Block GetBlockAt(Vector3 globalPosition)
+        public ref Block GetBlockAt(Vector3 globalPosition)
         {
             if (!_Bounds.Contains(globalPosition))
             {
@@ -214,9 +214,7 @@ namespace Controllers.World
                     $"Given position `{globalPosition}` exists outside of local bounds.");
             }
 
-            int localPosition1d = ConvertGlobalPositionToLocal1D(globalPosition);
-
-            return _Blocks[localPosition1d];
+            return ref _Blocks[ConvertGlobalPositionToLocal1D(globalPosition)];
         }
 
         public bool TryGetBlockAt(Vector3 globalPosition, out Block block)
@@ -227,8 +225,7 @@ namespace Controllers.World
                 return false;
             }
 
-            int localPosition1d = ConvertGlobalPositionToLocal1D(globalPosition);
-            block = _Blocks[localPosition1d];
+            block = _Blocks[ConvertGlobalPositionToLocal1D(globalPosition)];
             return true;
         }
 
@@ -342,12 +339,12 @@ namespace Controllers.World
 
         private void UpdateBounds()
         {
-            _Bounds = new Bounds(Position + Size.Divide(2), Size);
+            _Bounds.SetMinMax(Position, Position + Size);
         }
 
-        private int ConvertGlobalPositionToLocal1D(Vector3 position)
+        private int ConvertGlobalPositionToLocal1D(Vector3 globalPosition)
         {
-            Vector3 localPosition = (position - Position).Abs();
+            Vector3 localPosition = (globalPosition - Position).Abs();
             return localPosition.To1D(Size);
         }
 

@@ -15,11 +15,11 @@ namespace Game.World.Chunks
         /// <summary>
         ///     Prepares item for new execution.
         /// </summary>
-        /// <param name="position"><see cref="UnityEngine.Vector3" /> position of chunk being meshed.</param>
+        /// <param name="bounds"></param>
         /// <param name="blocks">Pre-initialized and built <see cref="T:ushort[]" /> to iterate through.</param>
         /// <param name="aggressiveFaceMerging"></param>
         /// <param name="isRemesh"></param>
-        public void Set(Vector3 position, Block[] blocks, bool aggressiveFaceMerging, bool isRemesh = false)
+        public void Set(Bounds bounds, Block[] blocks, bool aggressiveFaceMerging, bool isRemesh = false)
         {
             if (_Mesher == default)
             {
@@ -33,7 +33,7 @@ namespace Game.World.Chunks
 
             _Mesher.ClearInternalData();
             _Mesher.AbortToken = AbortToken;
-            _Mesher.Position.Set(position.x, position.y, position.z);
+            _Mesher.Bounds = bounds;
             _Mesher.Blocks = blocks;
             _Mesher.AggressiveFaceMerging = aggressiveFaceMerging;
         }

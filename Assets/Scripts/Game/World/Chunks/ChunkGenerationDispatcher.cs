@@ -186,7 +186,7 @@ namespace Game.World.Chunks
         private void BeginGeneratingMesh()
         {
             ChunkMeshingJob job = ChunkMeshersCache.RetrieveItem();
-            job.Set(_Bounds.min, _Blocks, true, _Meshed);
+            job.Set(_Bounds, _Blocks, true, _Meshed);
 
             _MeshUpdateRequested = false;
 

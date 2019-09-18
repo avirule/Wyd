@@ -1,7 +1,6 @@
 #region
 
 using System.Collections.Generic;
-using System.Collections.ObjectModel;
 using UnityEngine;
 
 #endregion
@@ -12,7 +11,7 @@ namespace Game.World.Blocks
     {
         public static class Vertices
         {
-            public static readonly ReadOnlyDictionary<Direction, Vector3[]> FaceVertices;
+            public static readonly IReadOnlyDictionary<Direction, Vector3[]> FaceVertices;
 
             public static readonly Vector3[] North =
             {
@@ -64,7 +63,7 @@ namespace Game.World.Blocks
 
             static Vertices()
             {
-                Dictionary<Direction, Vector3[]> faceVertices = new Dictionary<Direction, Vector3[]>
+                FaceVertices = new Dictionary<Direction, Vector3[]>
                 {
                     { Direction.North, North },
                     { Direction.East, East },
@@ -73,14 +72,12 @@ namespace Game.World.Blocks
                     { Direction.Up, Up },
                     { Direction.Down, Down }
                 };
-
-                FaceVertices = new ReadOnlyDictionary<Direction, Vector3[]>(faceVertices);
             }
         }
 
         public static class Triangles
         {
-            public static readonly ReadOnlyDictionary<Direction, int[]> FaceTriangles;
+            public static readonly IReadOnlyDictionary<Direction, int[]> FaceTriangles;
 
             public static readonly int[] North =
             {
@@ -144,7 +141,7 @@ namespace Game.World.Blocks
 
             static Triangles()
             {
-                Dictionary<Direction, int[]> faceTriangles = new Dictionary<Direction, int[]>
+                FaceTriangles = new Dictionary<Direction, int[]>
                 {
                     { Direction.North, North },
                     { Direction.East, East },
@@ -153,8 +150,6 @@ namespace Game.World.Blocks
                     { Direction.Up, Up },
                     { Direction.Down, Down }
                 };
-
-                FaceTriangles = new ReadOnlyDictionary<Direction, int[]>(faceTriangles);
             }
         }
     }

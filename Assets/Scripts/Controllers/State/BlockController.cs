@@ -16,6 +16,8 @@ namespace Controllers.State
     public class BlockController : SingletonController<BlockController>
     {
         public const ushort BLOCK_EMPTY_ID = 0;
+        
+        public static Block Air = new Block(0, 0);
 
         public Dictionary<string, ushort> BlockNameIds;
         public Dictionary<ushort, IBlockRule> Blocks;

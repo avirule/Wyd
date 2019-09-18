@@ -3,7 +3,7 @@
     Properties
     {
         _Color("Color", Color) = (1,1,1,1)
-        _MainTex("Albedo (RGB)", 2DArray) = "white" {}
+        _MainTex("Albedo (RGB) Alpha (A)", 2DArray) = "white" {}
         _Glossiness("Smoothness", Range(0,1)) = 0.5
         _Metallic("Metallic", Range(0,1)) = 0.0
         _ZOffset("Z Buffer Offset", Float) = 0
@@ -11,7 +11,7 @@
  
     SubShader
     {
-        Tags { "RenderType" = "Opaque" }
+        Tags { "Queue"="Transparent" "RenderType" = "Opaque" }
         LOD 200
         Offset[_ZOffset],[_ZOffset]
  
