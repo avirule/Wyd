@@ -314,7 +314,7 @@ namespace Controllers.World
 
             return ref chunkController.GetBlockAt(globalPosition);
         }
-        
+
         public bool TryGetBlockAt(Vector3 globalPosition, out Block block)
         {
             block = default;

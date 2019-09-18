@@ -123,6 +123,8 @@ namespace Game.World.Chunks
                     || ((z < (ChunkController.Size.z - 1))
                         && (Blocks[index + ChunkController.YIndexStep].Id != Blocks[index].Id))))
             {
+                // todo fix northern transparent faces sometimes not culling inner faces
+                
                 // set face of current block so it isn't traversed over
                 Blocks[index].SetFace(Direction.North, true);
                 // add triangles for this block face
@@ -774,9 +776,10 @@ namespace Game.World.Chunks
         {
             foreach (int triangleValue in BlockFaces.Triangles.FaceTriangles[direction])
             {
-                    _Triangles.Add(_Vertices.Count + triangleValue);
+                _Triangles.Add(_Vertices.Count + triangleValue);
             }
         }
+
         private void AddVertices(Direction direction, Vector3 localPosition)
         {
             Vector3[] vertices = BlockFaces.Vertices.FaceVertices[direction];
@@ -826,7 +829,7 @@ namespace Game.World.Chunks
                 && WorldController.Current.TryGetBlockAt(
                     globalPosition + (traversals * traversalDirection.AsVector3()) + faceDirection.AsVector3(),
                     out Block block)
-                && ((id == -1 && block.Transparent) || (id > -1 && id == block.Id)))
+                && (((id == -1) && block.Transparent) || ((id > -1) && (id != block.Id))))
             {
                 Blocks[traversalIndex].SetFace(faceDirection, true);
 

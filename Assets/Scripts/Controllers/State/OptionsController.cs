@@ -39,6 +39,7 @@ namespace Controllers.State
             // General
             public const int MAXIMUM_INTERNAL_FRAMES = 60;
             public const ThreadingMode THREADING_MODE = ThreadingMode.Multi;
+            public const float CPU_CORE_UTILIZATION = 0.5f;
             public const bool GPU_ACCELERATION = true;
 
             // Graphics
@@ -61,6 +62,7 @@ namespace Controllers.State
 
         private Configuration _Configuration;
         private ThreadingMode _ThreadingMode;
+        private float _CPUCoreUtilization;
         private bool _GPUAcceleration;
         private int _MaximumInternalFrames;
         private int _MaximumFrameRateBufferSize;
@@ -101,6 +103,10 @@ namespace Controllers.State
                 SaveSettings();
             }
         }
+
+public float CPUCoreUtilization {
+
+}
 
         public bool GPUAcceleration
         {

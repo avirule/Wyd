@@ -119,9 +119,9 @@ namespace Game.World.Chunks.BuildingJob
             }
             else if ((position.y <= 155) && (position.y > 135))
             {
-                    BlockController.Current.TryGetBlockId("water", out ushort blockIdWater);
+                BlockController.Current.TryGetBlockId("water", out ushort blockIdWater);
 
-                    Blocks[index].Initialise(blockIdWater);
+                Blocks[index].Initialise(blockIdWater);
             }
             else
             {
