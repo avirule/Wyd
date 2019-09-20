@@ -162,11 +162,13 @@ namespace Controllers.UI.Components.InputField
                         out ChunkController chunkController2))
                     {
                         EventLog.Logger.Log(LogLevel.Warn, $"No chunk at coordinates {chunkPosition2}.");
-                        break;
                     }
 
-                    WorldController.Current._SaveFileProvider.CompressAndCommitThreaded(chunkPosition2,
-                        chunkController2.Serialize());
+                    //WorldController.Current._SaveFileProvider.CompressAndCommitThreaded(chunkPosition2,
+                    //    chunkController2.Serialize());
+                    break;
+                case "load":
+                    //WorldController.Current._SaveFileProvider.TryGetSavedDataFromPosition(Vector3.zero, out byte[] data);
                     break;
                 default:
                     EventLog.Logger.Log(LogLevel.Warn, "Command invalid.");

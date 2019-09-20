@@ -10,7 +10,6 @@ using Game.Entities;
 using Game.World;
 using Game.World.Blocks;
 using Game.World.Chunks;
-using Jobs;
 using Logging;
 using NLog;
 using UnityEngine;
@@ -28,7 +27,7 @@ namespace Controllers.World
         private Dictionary<Vector3, ChunkController> _Chunks;
         private ObjectCache<ChunkController> _ChunkCache;
         private Stack<IEntity> _BuildChunkAroundEntityStack;
-        public WorldSaveFileProvider _SaveFileProvider;
+        private WorldSaveFileProvider _SaveFileProvider;
         private Stopwatch _FrameTimer;
         private Vector3 _SpawnPoint;
 
@@ -97,8 +96,6 @@ namespace Controllers.World
             {
                 InitialiseChunkCache();
             }
-
-            _SaveFileProvider.CheckEntryExistsForPosition(Vector3.zero);
         }
 
         private void Update()
@@ -183,13 +180,13 @@ namespace Controllers.World
                             chunkController.Activate(position);
                         }
 
+
+//                        if (_SaveFileProvider.TryGetSavedDataFromPosition(position, out byte[] data))
+//                        {
+//                            chunkController.BuildFromByteData(data);
+//                        }
+
                         chunkController.AssignLoader(loader);
-
-                        if (_SaveFileProvider.TryGetSavedDataFromPosition(position, out byte[] data))
-                        {
-                            chunkController.BuildFromByteData(data);
-                        }
-
                         _Chunks.Add(chunkController.Position, chunkController);
 
                         // ensures that neighbours update their meshes to cull newly out of sight faces
@@ -241,23 +238,28 @@ namespace Controllers.World
 
         private ChunkController DeactivateChunk(ChunkController chunkController)
         {
-            GeneralExecutionJob job = new GeneralExecutionJob(() =>
+//            GeneralExecutionJob job = new GeneralExecutionJob(() =>
+//            {
+//                if (!_Chunks.ContainsKey(chunkController.Position))
+//                {
+//                    return;
+//                }
+//
+//                FlagNeighborsForMeshUpdate(chunkController.Position,
+//                    Directions.CardinalDirectionsVector3);
+//                _SaveFileProvider.CompressAndCommit(chunkController.Position,
+//                    chunkController.Serialize());
+//
+//                _Chunks.Remove(chunkController.Position);
+//            });
+
+            if (!_Chunks.ContainsKey(chunkController.Position))
             {
-                if (!_Chunks.ContainsKey(chunkController.Position))
-                {
-                    return;
-                }
-
-                FlagNeighborsForMeshUpdate(chunkController.Position,
-                    Directions.CardinalDirectionsVector3);
-                _SaveFileProvider.CompressAndCommit(chunkController.Position,
-                    chunkController.Serialize());
-
-                _Chunks.Remove(chunkController.Position);
-            });
+                return default;
+            }
 
             chunkController.Deactivate();
-            GameController.QueueJob(job);
+            //GameController.QueueJob(job);
 
             return chunkController;
         }

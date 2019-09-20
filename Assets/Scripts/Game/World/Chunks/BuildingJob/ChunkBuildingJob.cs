@@ -54,7 +54,7 @@ namespace Game.World.Chunks.BuildingJob
 
             return false;
         }
-        
+
         /// <summary>
         ///     Scans the block array and returns the highest index that is non-air
         /// </summary>

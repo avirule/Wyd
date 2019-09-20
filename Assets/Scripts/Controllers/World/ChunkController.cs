@@ -461,7 +461,7 @@ namespace Controllers.World
 
         public IEnumerable<RunLengthCompression.Node<ushort>> GetCompressed()
         {
-            return RunLengthCompression.Compress(GetBlocksAsIds(), _Blocks[0]);
+            return RunLengthCompression.Compress(GetBlocksAsIds(), _Blocks[0].Id);
         }
 
         private IEnumerable<ushort> GetBlocksAsIds()
@@ -495,7 +495,7 @@ namespace Controllers.World
         {
             Destroyed?.Invoke(sender, args);
         }
-        
+
         private void OnCurrentLoaderChangedChunk(object sender, Vector3 newChunkPosition)
         {
             if (Position == newChunkPosition)

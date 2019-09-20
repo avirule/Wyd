@@ -1,9 +1,9 @@
 #region
 
 using System;
+using System.Data;
 using System.Data.SQLite;
 using System.IO;
-using System.Text;
 using System.Threading.Tasks;
 using Extensions;
 using Jobs;
@@ -114,12 +114,16 @@ namespace Game.World
                         command.Parameters.AddWithValue("@position", position.ToString());
                         command.CommandText = @"SELECT chunk_data FROM world_data WHERE coordinates=@position;";
 
-                        using (SQLiteDataReader reader = command.ExecuteReader())
+                        using (SQLiteDataReader reader = command.ExecuteReader(CommandBehavior.KeyInfo))
                         {
                             if (reader.Read())
                             {
-                                object rawData = reader["chunk_data"];
-                                data = Encoding.ASCII.GetBytes((string) rawData).Decompress();
+                                SQLiteBlob blob = reader.GetBlob(0, true);
+
+                                int count = blob.GetCount();
+                                data = new byte[count];
+
+                                blob.Read(data, count, 0);
                                 return true;
                             }
 

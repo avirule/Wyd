@@ -1,6 +1,8 @@
-using System;
+#region
+
 using System.Collections.Generic;
-using UnityEngine;
+
+#endregion
 
 namespace Compression
 {
@@ -33,14 +35,14 @@ namespace Compression
 
             foreach (ushort value in initialArray)
             {
-                if (value == lastUnmatchedValue && currentRun < ushort.MaxValue)
+                if ((value == lastUnmatchedValue) && (currentRun < ushort.MaxValue))
                 {
                     currentRun += 1;
                     continue;
                 }
-                
+
                 yield return new Node<ushort>(currentRun, lastUnmatchedValue);
-                
+
                 lastUnmatchedValue = value;
                 currentRun = 0;
             }

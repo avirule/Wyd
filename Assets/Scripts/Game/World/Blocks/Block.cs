@@ -94,14 +94,5 @@ namespace Game.World.Blocks
         {
             Faces &= ~FACES_MASK;
         }
-
-        #region CASTS
-
-        public static implicit operator ushort(Block block)
-        {
-            return block.Id;
-        } 
-
-        #endregion
     }
 }

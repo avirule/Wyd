@@ -213,7 +213,7 @@ namespace Game.World.Chunks
                 CurrentStep = GenerationStep.Meshing;
             }
         }
-        
+
         public void RequestMeshUpdate()
         {
             _MeshUpdateRequested = true;

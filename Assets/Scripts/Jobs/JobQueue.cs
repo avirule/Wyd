@@ -144,8 +144,8 @@ namespace Jobs
                         ThreadingMode = _ThreadingModeReference();
                     }
 
-                    while (ThreadingMode == ThreadingMode.Multi
-                           && InternalThreads.Count < ThreadPoolSize)
+                    while ((ThreadingMode == ThreadingMode.Multi)
+                           && (InternalThreads.Count < ThreadPoolSize))
                     {
                         SpawnWorkerThread();
                     }
