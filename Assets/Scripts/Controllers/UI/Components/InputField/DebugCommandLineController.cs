@@ -131,15 +131,42 @@ namespace Controllers.UI.Components.InputField
                     }
 
                     Vector3 chunkPosition = new Vector3(x1, y1, z1);
-                    
+
                     if (!WorldController.Current.TryGetChunkAt(chunkPosition,
                         out ChunkController chunkController))
                     {
                         EventLog.Logger.Log(LogLevel.Warn, $"No chunk at coordinates {chunkPosition}.");
                         break;
                     }
-                    
+
                     EventLog.Logger.Log(LogLevel.Info, chunkController.GetCompressed().Count());
+                    break;
+                case "testsave":
+                    if (args.Length < 4)
+                    {
+                        EventLog.Logger.Log(LogLevel.Warn, "Not enough arguments.");
+                        break;
+                    }
+
+                    if (!int.TryParse(args[1], out int x2)
+                        || !int.TryParse(args[2], out int y2)
+                        || !int.TryParse(args[3], out int z2))
+                    {
+                        EventLog.Logger.Log(LogLevel.Warn, "Invalid coordinates.");
+                        break;
+                    }
+
+                    Vector3 chunkPosition2 = new Vector3(x2, y2, z2);
+
+                    if (!WorldController.Current.TryGetChunkAt(chunkPosition2,
+                        out ChunkController chunkController2))
+                    {
+                        EventLog.Logger.Log(LogLevel.Warn, $"No chunk at coordinates {chunkPosition2}.");
+                        break;
+                    }
+
+                    WorldController.Current._SaveFileProvider.CompressAndCommitThreaded(chunkPosition2,
+                        chunkController2.Serialize());
                     break;
                 default:
                     EventLog.Logger.Log(LogLevel.Warn, "Command invalid.");

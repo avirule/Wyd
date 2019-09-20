@@ -130,6 +130,7 @@ namespace Controllers.World
         private void OnDestroy()
         {
             Destroy(_Mesh);
+            OnDestroyed(this, new ChunkChangedEventArgs(_Bounds, Directions.CardinalDirectionsVector3));
         }
 
         #endregion
@@ -416,6 +417,48 @@ namespace Controllers.World
             }
         }
 
+        public byte[] Serialize()
+        {
+            // 4 bytes for runlength and value
+            List<RunLengthCompression.Node<ushort>> nodes = GetCompressed().ToList();
+            byte[] bytes = new byte[nodes.Count * 4];
+
+            for (int i = 0; i < bytes.Length; i += 4)
+            {
+                int nodesIndex = i / 4;
+
+                // copy runlength (ushort, 2 bytes) to position of i
+                Array.Copy(BitConverter.GetBytes(nodes[nodesIndex].RunLength), 0, bytes, i, 2);
+                // copy node value, also 2 bytes, to position of i + 2 bytes from runlength
+                Array.Copy(BitConverter.GetBytes(nodes[nodesIndex].Value), 0, bytes, i + 2, 2);
+            }
+
+            return bytes;
+        }
+
+        public void BuildFromByteData(byte[] data)
+        {
+            if ((data.Length % 4) != 0)
+            {
+                return;
+            }
+
+            int blocksIndex = 0;
+            for (int i = 0; i < data.Length; i += 4)
+            {
+                ushort runLength = BitConverter.ToUInt16(data, i);
+                ushort value = BitConverter.ToUInt16(data, i + 2);
+
+                for (int run = 0; run < runLength; run++)
+                {
+                    _Blocks[blocksIndex].Initialise(value);
+                    blocksIndex += 1;
+                }
+            }
+
+            _ChunkGenerationDispatcher.SkipBuilding(true);
+        }
+
         public IEnumerable<RunLengthCompression.Node<ushort>> GetCompressed()
         {
             return RunLengthCompression.Compress(GetBlocksAsIds(), _Blocks[0]);
@@ -425,7 +468,7 @@ namespace Controllers.World
         {
             return _Blocks.Select(block => block.Id);
         }
-        
+
         #endregion
 
 
@@ -436,6 +479,7 @@ namespace Controllers.World
         public event EventHandler<ChunkChangedEventArgs> BlocksChanged;
         public event EventHandler<ChunkChangedEventArgs> MeshChanged;
         public event EventHandler<ChunkChangedEventArgs> DeactivationCallback;
+        public event EventHandler<ChunkChangedEventArgs> Destroyed;
 
         protected virtual void OnBlocksChanged(object sender, ChunkChangedEventArgs args)
         {
@@ -447,6 +491,11 @@ namespace Controllers.World
             MeshChanged?.Invoke(sender, args);
         }
 
+        protected virtual void OnDestroyed(object sender, ChunkChangedEventArgs args)
+        {
+            Destroyed?.Invoke(sender, args);
+        }
+        
         private void OnCurrentLoaderChangedChunk(object sender, Vector3 newChunkPosition)
         {
             if (Position == newChunkPosition)

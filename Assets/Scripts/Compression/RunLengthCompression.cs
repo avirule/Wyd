@@ -38,12 +38,11 @@ namespace Compression
                     currentRun += 1;
                     continue;
                 }
-
-                ushort lastMatchedTemp = lastUnmatchedValue;
+                
+                yield return new Node<ushort>(currentRun, lastUnmatchedValue);
+                
                 lastUnmatchedValue = value;
                 currentRun = 0;
-                
-                yield return new Node<ushort>(currentRun, lastMatchedTemp);
             }
         }
     }

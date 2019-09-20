@@ -10,6 +10,7 @@ using Game.Entities;
 using Game.World;
 using Game.World.Blocks;
 using Game.World.Chunks;
+using Jobs;
 using Logging;
 using NLog;
 using UnityEngine;
@@ -27,7 +28,7 @@ namespace Controllers.World
         private Dictionary<Vector3, ChunkController> _Chunks;
         private ObjectCache<ChunkController> _ChunkCache;
         private Stack<IEntity> _BuildChunkAroundEntityStack;
-        private WorldSaveFileProvider _SaveFileProvider;
+        public WorldSaveFileProvider _SaveFileProvider;
         private Stopwatch _FrameTimer;
         private Vector3 _SpawnPoint;
 
@@ -96,6 +97,8 @@ namespace Controllers.World
             {
                 InitialiseChunkCache();
             }
+
+            _SaveFileProvider.CheckEntryExistsForPosition(Vector3.zero);
         }
 
         private void Update()
@@ -109,6 +112,12 @@ namespace Controllers.World
             {
                 ProcessBuildChunkQueue();
             }
+        }
+
+        private void OnApplicationQuit()
+        {
+            WorldSaveFileProvider.ApplicationQuit();
+            _SaveFileProvider.Dispose();
         }
 
 
@@ -174,8 +183,14 @@ namespace Controllers.World
                             chunkController.Activate(position);
                         }
 
-                        _Chunks.Add(chunkController.Position, chunkController);
                         chunkController.AssignLoader(loader);
+
+                        if (_SaveFileProvider.TryGetSavedDataFromPosition(position, out byte[] data))
+                        {
+                            chunkController.BuildFromByteData(data);
+                        }
+
+                        _Chunks.Add(chunkController.Position, chunkController);
 
                         // ensures that neighbours update their meshes to cull newly out of sight faces
                         FlagNeighborsForMeshUpdate(chunkController.Position, Directions.CardinalDirectionsVector3);
@@ -226,13 +241,23 @@ namespace Controllers.World
 
         private ChunkController DeactivateChunk(ChunkController chunkController)
         {
-            if (!_Chunks.ContainsKey(chunkController.Position))
+            GeneralExecutionJob job = new GeneralExecutionJob(() =>
             {
-                return default;
-            }
+                if (!_Chunks.ContainsKey(chunkController.Position))
+                {
+                    return;
+                }
 
-            _Chunks.Remove(chunkController.Position);
+                FlagNeighborsForMeshUpdate(chunkController.Position,
+                    Directions.CardinalDirectionsVector3);
+                _SaveFileProvider.CompressAndCommit(chunkController.Position,
+                    chunkController.Serialize());
+
+                _Chunks.Remove(chunkController.Position);
+            });
+
             chunkController.Deactivate();
+            GameController.QueueJob(job);
 
             return chunkController;
         }

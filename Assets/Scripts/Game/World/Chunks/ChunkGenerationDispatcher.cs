@@ -200,6 +200,20 @@ namespace Game.World.Chunks
             _JobIdentity = GameController.QueueJob(job);
         }
 
+        /// <summary>
+        ///     BE VERY CAREFUL USING THIS. INTERRUPTING GENERATION
+        ///     STEPS CAN CAUSE UNPREDICTABLE RESULTS DUE TO
+        ///     THREADED CONTEXTS.
+        /// </summary>
+        /// <param name="skip"></param>
+        public void SkipBuilding(bool skip)
+        {
+            if (skip)
+            {
+                CurrentStep = GenerationStep.Meshing;
+            }
+        }
+        
         public void RequestMeshUpdate()
         {
             _MeshUpdateRequested = true;
