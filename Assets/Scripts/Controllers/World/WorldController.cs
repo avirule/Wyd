@@ -27,6 +27,7 @@ namespace Controllers.World
         private Dictionary<Vector3, ChunkController> _Chunks;
         private ObjectCache<ChunkController> _ChunkCache;
         private Stack<IEntity> _BuildChunkAroundEntityStack;
+        private WorldSaveFileProvider _SaveFileProvider;
         private Stopwatch _FrameTimer;
         private Vector3 _SpawnPoint;
 
@@ -70,9 +71,11 @@ namespace Controllers.World
             _ChunkCache = new ObjectCache<ChunkController>(DeactivateChunk,
                 chunkController => Destroy(chunkController.gameObject));
             _BuildChunkAroundEntityStack = new Stack<IEntity>();
+            _SaveFileProvider = new WorldSaveFileProvider("world");
             _FrameTimer = new Stopwatch();
 
             Seed = new WorldSeed(SeedString);
+            _SaveFileProvider.Initialise().ConfigureAwait(false);
         }
 
         private void Start()
