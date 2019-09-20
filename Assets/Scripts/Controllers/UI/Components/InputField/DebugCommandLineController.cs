@@ -1,5 +1,6 @@
 #region
 
+using System.Linq;
 using Controllers.State;
 using Controllers.World;
 using Game.World.Blocks;
@@ -73,7 +74,7 @@ namespace Controllers.UI.Components.InputField
 
         private static void ParseCommandLineArguments(params string[] args)
         {
-            if ((args.Length == 0) || string.IsNullOrWhiteSpace(args[1]))
+            if ((args.Length == 0) || string.IsNullOrWhiteSpace(args[0]))
             {
                 return;
             }
@@ -113,6 +114,32 @@ namespace Controllers.UI.Components.InputField
                         }
                     }
 
+                    break;
+                case "testcompress":
+                    if (args.Length < 4)
+                    {
+                        EventLog.Logger.Log(LogLevel.Warn, "Not enough arguments.");
+                        break;
+                    }
+
+                    if (!int.TryParse(args[1], out int x1)
+                        || !int.TryParse(args[2], out int y1)
+                        || !int.TryParse(args[3], out int z1))
+                    {
+                        EventLog.Logger.Log(LogLevel.Warn, "Invalid coordinates.");
+                        break;
+                    }
+
+                    Vector3 chunkPosition = new Vector3(x1, y1, z1);
+                    
+                    if (!WorldController.Current.TryGetChunkAt(chunkPosition,
+                        out ChunkController chunkController))
+                    {
+                        EventLog.Logger.Log(LogLevel.Warn, $"No chunk at coordinates {chunkPosition}.");
+                        break;
+                    }
+                    
+                    EventLog.Logger.Log(LogLevel.Info, chunkController.GetCompressed().Count());
                     break;
                 default:
                     EventLog.Logger.Log(LogLevel.Warn, "Command invalid.");

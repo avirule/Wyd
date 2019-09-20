@@ -2,6 +2,8 @@
 
 using System;
 using System.Collections.Generic;
+using System.Linq;
+using Compression;
 using Controllers.State;
 using Game;
 using Game.Entities;
@@ -414,38 +416,16 @@ namespace Controllers.World
             }
         }
 
-        /// <summary>
-        ///     Scans the block array and returns the highest index that is non-air
-        /// </summary>
-        /// <param name="blocks">Array of blocks to scan</param>
-        /// <param name="startIndex"></param>
-        /// <param name="strideSize">Number of indexes to jump each iteration</param>
-        /// <param name="maxHeight">Maximum amount of iterations to stride</param>
-        /// <returns></returns>
-        public static int GetTopmostBlockIndex(Block[] blocks, int startIndex, int strideSize, int maxHeight)
+        public IEnumerable<RunLengthCompression.Node<ushort>> GetCompressed()
         {
-            int highestNonAirIndex = 0;
-
-            for (int y = 0; y < maxHeight; y++)
-            {
-                int currentIndex = startIndex + (y * strideSize);
-
-                if (currentIndex >= blocks.Length)
-                {
-                    break;
-                }
-
-                if (blocks[currentIndex].Id == BlockController.BLOCK_EMPTY_ID)
-                {
-                    continue;
-                }
-
-                highestNonAirIndex = currentIndex;
-            }
-
-            return highestNonAirIndex;
+            return RunLengthCompression.Compress(GetBlocksAsIds(), _Blocks[0]);
         }
 
+        private IEnumerable<ushort> GetBlocksAsIds()
+        {
+            return _Blocks.Select(block => block.Id);
+        }
+        
         #endregion
 
 
