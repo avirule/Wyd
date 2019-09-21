@@ -4,7 +4,9 @@ using System.Collections.Generic;
 using Controllers.State;
 using Controllers.World;
 using Game;
+using Game.Entities.Inventory;
 using Game.World.Blocks;
+using TMPro;
 using UnityEngine;
 
 #endregion
@@ -17,11 +19,13 @@ namespace Controllers.UI
         private List<int> _Triangles;
         private List<Vector3> _UVs;
         private Mesh _Mesh;
-        
+
         public MeshFilter MeshFilter;
         public MeshRenderer MeshRenderer;
-        
+        public TextMeshProUGUI AmountText;
+
         public ushort BlockId { get; private set; }
+        public int Amount { get; private set; }
 
         private void Awake()
         {
@@ -40,9 +44,9 @@ namespace Controllers.UI
             MeshRenderer.material = WorldController.Current.TerrainMaterial;
         }
 
-        public void InitializeAs(ushort blockId)
+        public void InitializeAs(ItemStack itemStack)
         {
-            BlockId = blockId;
+            BlockId = itemStack.BlockId;
 
             _Vertices.Clear();
             _Triangles.Clear();
@@ -86,6 +90,8 @@ namespace Controllers.UI
             _Mesh.SetVertices(_Vertices);
             _Mesh.SetTriangles(_Triangles, 0);
             _Mesh.SetUVs(0, _UVs);
+
+            AmountText.text = itemStack.Amount.ToString();
         }
 
         private void AddTriangles(Direction direction)

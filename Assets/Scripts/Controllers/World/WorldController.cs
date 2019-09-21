@@ -81,7 +81,7 @@ namespace Controllers.World
         private void Start()
         {
             TerrainMaterial = Resources.Load<Material>(@"Materials\TerrainMaterial");
-            TerrainMaterial.SetTexture(TextureController.Current.MainTex,
+            TerrainMaterial.SetTexture(TextureController.MainTexPropertyID,
                 TextureController.Current.TerrainTexture);
 
             EntityController.Current.RegisterWatchForTag(RegisterCollideableEntity, "collider");

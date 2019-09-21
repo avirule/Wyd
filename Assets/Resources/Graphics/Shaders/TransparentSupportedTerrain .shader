@@ -1,9 +1,9 @@
-﻿Shader "Wyd/Standard Terrain"
+﻿Shader "Wyd/Transparent Terrain"
 {
     Properties
     {
         _Color("Color", Color) = (1,1,1,1)
-        _MainTex("Albedo (RGB)", 2DArray) = "white" {}
+        _MainTex("Albedo (RGB) Alpha (A)", 2DArray) = "white" {}
         _Glossiness("Smoothness", Range(0,1)) = 0.5
         _Metallic("Metallic", Range(0,1)) = 0.0
         _ZOffset("Z Buffer Offset", Float) = 0
@@ -11,9 +11,12 @@
  
     SubShader
     {
-        Tags {  "RenderType" = "Opaque" }
+        Tags { "Queue"="Transparent" "RenderType"="Transparent" }
         Offset[_ZOffset],[_ZOffset]
         LOD 200
+        
+        ZWrite Off
+        Blend SrcAlpha OneMinusSrcAlpha
  
         CGPROGRAM
         // Physically based Standard lighting model, and enable shadows on all light types
@@ -57,13 +60,13 @@
         {
             // Albedo comes from a texture tinted by color
             fixed4 c = UNITY_SAMPLE_TEX2DARRAY(_MainTex, float3(IN.uv_MainTex, IN.arrayIndex)) * _Color;
-            
-            o.Albedo = c.rgb * IN.color; // Combine normal color with the vertex color
+           
+            o.Albedo = c.rgb * IN.color * 3; // Combine normal color with the vertex color
  
             // Metallic and smoothness come from slider variables
             o.Metallic = _Metallic;
             o.Smoothness = _Glossiness;
-            o.Alpha = c.a;
+            o.Alpha = 0.01;
         }
         ENDCG
     }

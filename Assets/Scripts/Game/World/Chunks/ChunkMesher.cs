@@ -17,6 +17,7 @@ namespace Game.World.Chunks
     public class ChunkMesher
     {
         private readonly List<int> _Triangles;
+        private readonly List<int> _TransparentTriangles;
         private readonly List<Vector3> _Vertices;
         private readonly List<Vector3> _UVs;
 
@@ -28,6 +29,8 @@ namespace Game.World.Chunks
         public ChunkMesher()
         {
             _Triangles = new List<int>();
+            _TransparentTriangles = new List<int>();
+
             _Vertices = new List<Vector3>();
             _UVs = new List<Vector3>();
         }
@@ -46,6 +49,7 @@ namespace Game.World.Chunks
         {
             _Vertices.Clear();
             _Triangles.Clear();
+            _TransparentTriangles.Clear();
             _UVs.Clear();
         }
 
@@ -90,6 +94,7 @@ namespace Game.World.Chunks
                 mesh.Clear();
             }
 
+            mesh.subMeshCount = 2;
             mesh.indexFormat = _Vertices.Count > 65000
                 ? IndexFormat.UInt32
                 : IndexFormat.UInt16;
@@ -97,6 +102,7 @@ namespace Game.World.Chunks
             mesh.MarkDynamic();
             mesh.SetVertices(_Vertices);
             mesh.SetTriangles(_Triangles, 0);
+            mesh.SetTriangles(_TransparentTriangles, 1);
 
             // check uvs count in case of no UVs to apply to mesh
             if (_UVs.Count > 0)
@@ -121,14 +127,14 @@ namespace Game.World.Chunks
                      && WorldController.Current.TryGetBlockAt(globalPosition + Vector3.forward, out Block block)
                      && (block.Id != Blocks[index].Id))
                     || ((z < (ChunkController.Size.z - 1))
-                        && (Blocks[index + ChunkController.YIndexStep].Id != Blocks[index].Id))))
+                        && (Blocks[index + ChunkController.Size.x].Id != Blocks[index].Id))))
             {
                 // todo fix northern transparent faces sometimes not culling inner faces
 
                 // set face of current block so it isn't traversed over
                 Blocks[index].SetFace(Direction.North, true);
                 // add triangles for this block face
-                AddTriangles(Direction.North);
+                AddTriangles(Direction.North, true);
 
                 int traversals;
                 Vector3 uvSize = Vector3.one;
@@ -184,10 +190,10 @@ namespace Game.World.Chunks
                 && (((x == (ChunkController.Size.x - 1))
                      && WorldController.Current.TryGetBlockAt(globalPosition + Vector3.right, out block)
                      && (Blocks[index].Id != block.Id))
-                    || ((x < (ChunkController.Size.x - 1)) && (Blocks[index].Id != Blocks[index + 1].Id))))
+                    || ((x < (ChunkController.Size.x - 1)) && (Blocks[index + 1].Id != Blocks[index].Id))))
             {
                 Blocks[index].SetFace(Direction.East, true);
-                AddTriangles(Direction.East);
+                AddTriangles(Direction.East, true);
 
                 int traversals;
                 Vector3 uvSize = Vector3.one;
@@ -236,10 +242,10 @@ namespace Game.World.Chunks
                 && (((z == 0)
                      && WorldController.Current.TryGetBlockAt(globalPosition + Vector3.back, out block)
                      && (Blocks[index].Id != block.Id))
-                    || ((z > 0) && (Blocks[index].Id != Blocks[index - ChunkController.Size.x].Id))))
+                    || ((z > 0) && (Blocks[index - ChunkController.Size.x].Id != Blocks[index].Id))))
             {
                 Blocks[index].SetFace(Direction.South, true);
-                AddTriangles(Direction.South);
+                AddTriangles(Direction.South, true);
 
                 int traversals;
                 Vector3 uvSize = Vector3.one;
@@ -289,10 +295,10 @@ namespace Game.World.Chunks
                 && (((x == 0)
                      && WorldController.Current.TryGetBlockAt(globalPosition + Vector3.left, out block)
                      && (Blocks[index].Id != block.Id))
-                    || ((x > 0) && (Blocks[index].Id != Blocks[index - 1].Id))))
+                    || ((x > 0) && (Blocks[index - 1].Id != Blocks[index].Id))))
             {
                 Blocks[index].SetFace(Direction.West, true);
-                AddTriangles(Direction.West);
+                AddTriangles(Direction.West, true);
 
                 int traversals;
                 Vector3 uvSize = Vector3.one;
@@ -345,7 +351,7 @@ namespace Game.World.Chunks
                         && (Blocks[index + ChunkController.YIndexStep].Id != Blocks[index].Id))))
             {
                 Blocks[index].SetFace(Direction.Up, true);
-                AddTriangles(Direction.Up);
+                AddTriangles(Direction.Up, true);
 
                 int traversals;
                 Vector3 uvSize = Vector3.one;
@@ -393,10 +399,10 @@ namespace Game.World.Chunks
             // ignore the very bottom face of the world to reduce verts/tris
             if (!Blocks[index].HasFace(Direction.Down)
                 && (y > 0)
-                && (Blocks[index].Id != Blocks[index - ChunkController.YIndexStep].Id))
+                && (Blocks[index - ChunkController.YIndexStep].Id != Blocks[index].Id))
             {
                 Blocks[index].SetFace(Direction.Down, true);
-                AddTriangles(Direction.Down);
+                AddTriangles(Direction.Down, true);
 
                 int traversals;
                 Vector3 uvSize = Vector3.one;
@@ -772,11 +778,18 @@ namespace Game.World.Chunks
             }
         }
 
-        private void AddTriangles(Direction direction)
+        private void AddTriangles(Direction direction, bool transparent = false)
         {
             foreach (int triangleValue in BlockFaces.Triangles.FaceTriangles[direction])
             {
-                _Triangles.Add(_Vertices.Count + triangleValue);
+                if (transparent)
+                {
+                    _TransparentTriangles.Add(_Vertices.Count + triangleValue);
+                }
+                else
+                {
+                    _Triangles.Add(_Vertices.Count + triangleValue);
+                }
             }
         }
 

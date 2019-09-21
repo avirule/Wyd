@@ -4,6 +4,7 @@ using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Diagnostics;
+using Controllers.Entity.Inventory;
 using Controllers.State;
 using Controllers.World;
 using Game.Entities;
@@ -58,11 +59,11 @@ namespace Controllers.Entity
             _RegularCheckWait = Stopwatch.StartNew();
 
             Transform = transform;
-            Inventory = GetComponent<InventoryController>();
             Rigidbody = GetComponent<Rigidbody>();
             Collider = GetComponent<CapsuleCollider>();
-            Tags = new ReadOnlyCollection<string>(new List<string>
+            Tags = new ReadOnlyCollection<string>(new []
             {
+                "primary",
                 "player",
                 "loader",
                 "collider"
@@ -99,15 +100,15 @@ namespace Controllers.Entity
                 && (_ActionCooldown.Elapsed > MinimumActionInterval))
             {
                 Block destroyedBlock;
-                
-                if ((_LastReachRayHit.normal.Sum() > 0f
+
+                if (((_LastReachRayHit.normal.Sum() > 0f)
                      && WorldController.Current.TryRemoveBlockAt(
                          _LastReachRayHit.point.Floor() - _LastReachRayHit.normal, out destroyedBlock))
                     || WorldController.Current.TryRemoveBlockAt(_LastReachRayHit.point.Floor(), out destroyedBlock))
                 {
                     Inventory.AddItem(destroyedBlock.Id, 1);
                 }
-                
+
                 _ActionCooldown.Restart();
             }
 

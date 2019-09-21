@@ -61,6 +61,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   MeshFilter: {fileID: 6087989794468345845}
   MeshRenderer: {fileID: 6087989794468345802}
+  AmountText: {fileID: 3146522296038999759}
 --- !u!1 &6087989794468345803
 GameObject:
   m_ObjectHideFlags: 0
@@ -111,7 +112,7 @@ MeshRenderer:
   m_Enabled: 1
   m_CastShadows: 0
   m_ReceiveShadows: 0
-  m_DynamicOccludee: 1
+  m_DynamicOccludee: 0
   m_MotionVectors: 2
   m_LightProbeUsage: 0
   m_ReflectionProbeUsage: 0

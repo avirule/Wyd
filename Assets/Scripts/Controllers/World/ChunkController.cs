@@ -92,8 +92,12 @@ namespace Controllers.World
             ConfigureDispatcher();
 
             MeshFilter.sharedMesh = _Mesh;
-            MeshRenderer.material.SetTexture(TextureController.Current.MainTex,
-                TextureController.Current.TerrainTexture);
+
+            foreach (Material material in MeshRenderer.materials)
+            {
+                material.SetTexture(TextureController.MainTexPropertyID, TextureController.Current.TerrainTexture);
+            }
+
             _Visible = MeshRenderer.enabled;
 
             // todo implement chunk ticks
@@ -307,7 +311,7 @@ namespace Controllers.World
         public bool TryRemoveBlockAt(Vector3 globalPosition, out Block block)
         {
             block = default;
-            
+
             if (!_Bounds.Contains(globalPosition))
             {
                 return false;
@@ -319,7 +323,7 @@ namespace Controllers.World
             {
                 return false;
             }
-            
+
             // this should create a copy of the item
             block = _Blocks[localPosition1d];
             _Blocks[localPosition1d].Initialise(BlockController.BLOCK_EMPTY_ID);

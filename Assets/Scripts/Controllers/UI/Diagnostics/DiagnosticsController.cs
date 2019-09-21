@@ -1,7 +1,6 @@
 #region
 
 using Controllers.State;
-using TMPro;
 using UnityEngine;
 
 #endregion
@@ -13,7 +12,11 @@ namespace Controllers.UI.Diagnostics
         private bool _DiagnosticKeyPressed;
 
         public GameObject DiagnosticPanel;
-        public TextMeshProUGUI VersionText;
+
+        private void Awake()
+        {
+            DiagnosticPanel.SetActive(Debug.isDebugBuild);
+        }
 
         private void Update()
         {
@@ -35,7 +38,6 @@ namespace Controllers.UI.Diagnostics
 
             _DiagnosticKeyPressed = true;
             DiagnosticPanel.SetActive(!DiagnosticPanel.activeSelf);
-            VersionText.enabled = DiagnosticPanel.activeSelf;
         }
     }
 }

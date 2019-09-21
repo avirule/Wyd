@@ -117,12 +117,12 @@ namespace Game.World.Chunks.BuildingJob
                     Blocks[index].Initialise(blockIdStone);
                 }
             }
-//            else if ((position.y <= 155) && (position.y > 135))
-//            {
-//                BlockController.Current.TryGetBlockId("water", out ushort blockIdWater);
-//
-//                Blocks[index].Initialise(blockIdWater);
-//            }
+            else if ((position.y <= 155) && (position.y > 135))
+            {
+                BlockController.Current.TryGetBlockId("water", out ushort blockIdWater);
+
+                Blocks[index].Initialise(blockIdWater);
+            }
             else
             {
                 Blocks[index] = default;
