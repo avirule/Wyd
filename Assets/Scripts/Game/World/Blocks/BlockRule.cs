@@ -1,5 +1,6 @@
 #region
 
+using System;
 using UnityEngine;
 using Random = System.Random;
 
@@ -9,29 +10,19 @@ using Random = System.Random;
 
 namespace Game.World.Blocks
 {
-    public delegate string RuleEvaluation<T1>(T1 arg1);
-
-    public delegate string RuleEvaluation<T1, T2>(T1 arg1, T2 arg2);
-
-    public delegate string RuleEvaluation<T1, T2, T3>(T1 arg1, T2 arg2, T3 arg3);
-
-    public delegate string RuleEvaluation<T1, T2, T3, T4>(T1 arg1, T2 arg2, T3 arg3, T4 arg4);
-
-    public delegate string RuleEvaluation<T1, T2, T3, T4, T5>(T1 arg1, T2 arg2, T3 arg3, T4 arg4, T5 arg5);
-
-    public delegate string RuleEvaluation<T1, T2, T3, T4, T5, T6>(T1 arg1, T2 arg2, T3 arg3, T4 arg4, T5 arg5, T6 arg6);
-
     public class BlockRule : IBlockRule
     {
-        private RuleEvaluation<Vector3, Direction> UVsRule { get; }
+        private Func<Vector3, Direction, string> UVsRule { get; }
 
         public ushort Id { get; }
         public string BlockName { get; }
         public Block.Types Type { get; }
         public bool Transparent { get; }
+        public bool Collideable { get; }
+        public bool Destroyable { get; }
 
         public BlockRule(
-            ushort id, string blockName, Block.Types type, bool transparent, RuleEvaluation<Vector3, Direction> uvsRule)
+            ushort id, string blockName, Block.Types type, bool transparent, bool collideable, bool destroyable, Func<Vector3, Direction, string> uvsRule)
         {
             UVsRule = uvsRule ?? ((position, direction) => string.Empty);
 
@@ -39,6 +30,8 @@ namespace Game.World.Blocks
             BlockName = blockName;
             Type = type;
             Transparent = transparent;
+            Collideable = collideable;
+            Destroyable = destroyable;
         }
 
         public virtual bool ReadUVsRule(ushort blockId, Vector3 position, Direction direction, out string spriteName)

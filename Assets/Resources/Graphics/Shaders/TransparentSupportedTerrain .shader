@@ -20,7 +20,7 @@
  
         CGPROGRAM
         // Physically based Standard lighting model, and enable shadows on all light types
-        #pragma surface surf Standard fullforwardshadows vertex:vert
+        #pragma surface surf Standard fullforwardshadows vertex:vert alpha
  
         // Use shader model 3.5 target, to get nicer looking lighting and texture array support
         #pragma target 3.5
@@ -61,12 +61,12 @@
             // Albedo comes from a texture tinted by color
             fixed4 c = UNITY_SAMPLE_TEX2DARRAY(_MainTex, float3(IN.uv_MainTex, IN.arrayIndex)) * _Color;
            
-            o.Albedo = c.rgb * IN.color * 3; // Combine normal color with the vertex color
+            o.Albedo = c.rgb * IN.color; // Combine normal color with the vertex color
  
             // Metallic and smoothness come from slider variables
             o.Metallic = _Metallic;
             o.Smoothness = _Glossiness;
-            o.Alpha = 0.01;
+            o.Alpha = c.a;
         }
         ENDCG
     }

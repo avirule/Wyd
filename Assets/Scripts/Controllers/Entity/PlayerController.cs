@@ -61,7 +61,7 @@ namespace Controllers.Entity
             Transform = transform;
             Rigidbody = GetComponent<Rigidbody>();
             Collider = GetComponent<CapsuleCollider>();
-            Tags = new ReadOnlyCollection<string>(new []
+            Tags = new ReadOnlyCollection<string>(new[]
             {
                 "primary",
                 "player",
@@ -151,7 +151,9 @@ namespace Controllers.Entity
 
         private void UpdateLastLookAtCubeOrigin()
         {
-            if (!Physics.Raycast(_ReachRay, out _LastReachRayHit, REACH, RaycastLayerMask))
+            if (!Physics.Raycast(_ReachRay, out _LastReachRayHit, REACH, RaycastLayerMask)
+                || !WorldController.Current.TryGetBlockAt(_LastReachRayHit.point.Floor(), out Block block)
+                || !BlockController.Current.IsBlockDefaultDestroyable(block.Id))
             {
                 ReachHitSurfaceObject.SetActive(false);
                 _IsInReachOfValidSurface = false;

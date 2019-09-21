@@ -29,9 +29,7 @@ namespace Controllers.State
             Blocks = new Dictionary<ushort, IBlockRule>();
         }
 
-        public ushort RegisterBlockRules(
-            string blockName, Block.Types type, bool isTransparent,
-            RuleEvaluation<Vector3, Direction> uvsRule = default)
+        public ushort RegisterBlockRules(string blockName, Block.Types type, bool transparent, bool collideable, bool destroyable, Func<Vector3, Direction, string> uvsRule = default)
         {
             ushort blockId = 0;
 
@@ -52,7 +50,7 @@ namespace Controllers.State
 
             if (!Blocks.ContainsKey(blockId))
             {
-                Blocks.Add(blockId, new BlockRule(blockId, blockName, type, isTransparent, uvsRule));
+                Blocks.Add(blockId, new BlockRule(blockId, blockName, type, transparent, collideable, destroyable, uvsRule));
                 BlockNameIds.Add(blockName, blockId);
             }
 
@@ -157,6 +155,40 @@ namespace Controllers.State
             return blockRule.Transparent;
         }
 
+        public bool IsBlockDefaultCollideable(ushort blockId)
+        {
+            if (blockId == BLOCK_EMPTY_ID)
+            {
+                return false;
+            }
+
+            if (!Blocks.TryGetValue(blockId, out IBlockRule blockRule))
+            {
+                EventLog.Logger.Log(LogLevel.Error,
+                    $"Failed to return block rule for block with id `{blockId}`: block does not exist.");
+                return false;
+            }
+
+            return blockRule.Collideable;
+        }
+
+        public bool IsBlockDefaultDestroyable(ushort blockId)
+        {
+            if (blockId == BLOCK_EMPTY_ID)
+            {
+                return false;
+            }
+
+            if (!Blocks.TryGetValue(blockId, out IBlockRule blockRule))
+            {
+                EventLog.Logger.Log(LogLevel.Error,
+                    $"Failed to return block rule for block with id `{blockId}`: block does not exist.");
+                return false;
+            }
+
+            return blockRule.Destroyable;
+        }
+        
         public IEnumerable<IBlockRule> GetBlocksOfType(Block.Types type)
         {
             return Blocks.Values.Where(block => block.Type == type);
