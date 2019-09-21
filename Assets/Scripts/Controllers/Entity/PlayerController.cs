@@ -152,7 +152,10 @@ namespace Controllers.Entity
         private void UpdateLastLookAtCubeOrigin()
         {
             if (!Physics.Raycast(_ReachRay, out _LastReachRayHit, REACH, RaycastLayerMask)
-                || !WorldController.Current.TryGetBlockAt(_LastReachRayHit.point.Floor(), out Block block)
+                || !WorldController.Current.TryGetBlockAt(
+                    _LastReachRayHit.normal.Sum() > 0f
+                        ? _LastReachRayHit.point.Floor() - _LastReachRayHit.normal
+                        : _LastReachRayHit.point.Floor(), out Block block)
                 || !BlockController.Current.IsBlockDefaultDestroyable(block.Id))
             {
                 ReachHitSurfaceObject.SetActive(false);
