@@ -96,14 +96,14 @@ namespace Game.World.Chunks.BuildingJob
                 {
                     Blocks[index].Initialise(blockIdGrass);
                 }
-                else if ((position.y <= 155)
-                         && (position.y > 135)
-                         && IdExistsAboveWithinRange(index, 4, BlockController.BLOCK_EMPTY_ID))
-                {
-                    BlockController.Current.TryGetBlockId("sand", out ushort blockIdSand);
-
-                    Blocks[index].Initialise(blockIdSand);
-                }
+//                else if ((position.y <= 155)
+//                         && (position.y > 135)
+//                         && IdExistsAboveWithinRange(index, 4, BlockController.BLOCK_EMPTY_ID))
+//                {
+//                    BlockController.Current.TryGetBlockId("sand", out ushort blockIdSand);
+//
+//                    Blocks[index].Initialise(blockIdSand);
+//                }
                 else if (IdExistsAboveWithinRange(index, 2, blockIdGrass))
                 {
                     BlockController.Current.TryGetBlockId("dirt", out ushort blockIdDirt);
@@ -117,12 +117,12 @@ namespace Game.World.Chunks.BuildingJob
                     Blocks[index].Initialise(blockIdStone);
                 }
             }
-            else if ((position.y <= 155) && (position.y > 135))
-            {
-                BlockController.Current.TryGetBlockId("water", out ushort blockIdWater);
-
-                Blocks[index].Initialise(blockIdWater);
-            }
+//            else if ((position.y <= 155) && (position.y > 135))
+//            {
+//                BlockController.Current.TryGetBlockId("water", out ushort blockIdWater);
+//
+//                Blocks[index].Initialise(blockIdWater);
+//            }
             else
             {
                 Blocks[index] = default;

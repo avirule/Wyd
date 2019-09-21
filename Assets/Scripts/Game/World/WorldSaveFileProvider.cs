@@ -173,7 +173,7 @@ namespace Game.World
                             command.Parameters.AddWithValue("@chunkData", chunkData);
 
                             command.CommandText =
-                                @"INSERT OR IGNORE INTO world_data (coordinates, chunk_data) VALUES (@position, '');";
+                                @"INSERT OR IGNORE INTO world_data (coordinates) VALUES (@position);";
                             command.ExecuteNonQuery();
 
                             command.CommandText =

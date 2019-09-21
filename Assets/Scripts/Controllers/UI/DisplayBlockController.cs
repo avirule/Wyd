@@ -11,15 +11,16 @@ using UnityEngine;
 
 namespace Controllers.UI
 {
-    [RequireComponent(typeof(MeshFilter), typeof(MeshRenderer))]
     public class DisplayBlockController : MonoBehaviour
     {
-        private MeshFilter _MeshFilter;
         private List<Vector3> _Vertices;
         private List<int> _Triangles;
         private List<Vector3> _UVs;
         private Mesh _Mesh;
-
+        
+        public MeshFilter MeshFilter;
+        public MeshRenderer MeshRenderer;
+        
         public ushort BlockId { get; private set; }
 
         private void Awake()
@@ -29,22 +30,22 @@ namespace Controllers.UI
             _Vertices = new List<Vector3>();
             _Triangles = new List<int>();
             _UVs = new List<Vector3>();
+            _Mesh = new Mesh();
 
-            _MeshFilter = GetComponent<MeshFilter>();
-            _Mesh = _MeshFilter.sharedMesh;
+            MeshFilter.sharedMesh = _Mesh;
         }
 
         private void Start()
         {
-            GetComponent<MeshRenderer>().material = WorldController.Current.TerrainMaterial;
+            MeshRenderer.material = WorldController.Current.TerrainMaterial;
         }
 
         public void InitializeAs(ushort blockId)
         {
             BlockId = blockId;
 
-            //_Vertices.Clear();
-            //_Triangles.Clear();
+            _Vertices.Clear();
+            _Triangles.Clear();
             _UVs.Clear();
 
             // todo make this work with special block forms
@@ -54,7 +55,10 @@ namespace Controllers.UI
             if (BlockController.Current.GetBlockSpriteUVs(BlockId, Vector3.positiveInfinity, Direction.Up, Vector3.one,
                 out Vector3[] uvs))
             {
-                _UVs.AddRange(uvs);
+                _UVs.Add(uvs[0]);
+                _UVs.Add(uvs[2]);
+                _UVs.Add(uvs[1]);
+                _UVs.Add(uvs[3]);
             }
 
             AddTriangles(Direction.North);
@@ -62,7 +66,10 @@ namespace Controllers.UI
             if (BlockController.Current.GetBlockSpriteUVs(BlockId, Vector3.positiveInfinity, Direction.North,
                 Vector3.one, out uvs))
             {
-                _UVs.AddRange(uvs);
+                _UVs.Add(uvs[1]);
+                _UVs.Add(uvs[3]);
+                _UVs.Add(uvs[0]);
+                _UVs.Add(uvs[2]);
             }
 
             AddTriangles(Direction.East);
@@ -70,12 +77,15 @@ namespace Controllers.UI
             if (BlockController.Current.GetBlockSpriteUVs(BlockId, Vector3.positiveInfinity, Direction.East,
                 Vector3.one, out uvs))
             {
-                _UVs.AddRange(uvs);
+                _UVs.Add(uvs[0]);
+                _UVs.Add(uvs[1]);
+                _UVs.Add(uvs[2]);
+                _UVs.Add(uvs[3]);
             }
 
-            //_Mesh.SetVertices(_Vertices);
-            //_Mesh.SetTriangles(_Triangles, 0);
-//            _Mesh.SetUVs(0, _UVs);
+            _Mesh.SetVertices(_Vertices);
+            _Mesh.SetTriangles(_Triangles, 0);
+            _Mesh.SetUVs(0, _UVs);
         }
 
         private void AddTriangles(Direction direction)

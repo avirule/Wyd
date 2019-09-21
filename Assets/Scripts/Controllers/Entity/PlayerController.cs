@@ -7,6 +7,7 @@ using System.Diagnostics;
 using Controllers.State;
 using Controllers.World;
 using Game.Entities;
+using Game.World.Blocks;
 using UnityEngine;
 
 #endregion
@@ -29,6 +30,7 @@ namespace Controllers.Entity
         private Stopwatch _RegularCheckWait;
 
         public Transform CameraTransform;
+        public InventoryController Inventory;
         public GameObject ReachHitSurfaceObject;
         public LayerMask GroundedMask;
         public LayerMask RaycastLayerMask;
@@ -56,6 +58,7 @@ namespace Controllers.Entity
             _RegularCheckWait = Stopwatch.StartNew();
 
             Transform = transform;
+            Inventory = GetComponent<InventoryController>();
             Rigidbody = GetComponent<Rigidbody>();
             Collider = GetComponent<CapsuleCollider>();
             Tags = new ReadOnlyCollection<string>(new List<string>
@@ -95,15 +98,16 @@ namespace Controllers.Entity
                 && _IsInReachOfValidSurface
                 && (_ActionCooldown.Elapsed > MinimumActionInterval))
             {
-                if (_LastReachRayHit.normal.Sum() > 0f)
+                Block destroyedBlock;
+                
+                if ((_LastReachRayHit.normal.Sum() > 0f
+                     && WorldController.Current.TryRemoveBlockAt(
+                         _LastReachRayHit.point.Floor() - _LastReachRayHit.normal, out destroyedBlock))
+                    || WorldController.Current.TryRemoveBlockAt(_LastReachRayHit.point.Floor(), out destroyedBlock))
                 {
-                    WorldController.Current.TryRemoveBlockAt(_LastReachRayHit.point.Floor() - _LastReachRayHit.normal);
+                    Inventory.AddItem(destroyedBlock.Id, 1);
                 }
-                else
-                {
-                    WorldController.Current.TryRemoveBlockAt(_LastReachRayHit.point.Floor());
-                }
-
+                
                 _ActionCooldown.Restart();
             }
 
@@ -207,7 +211,7 @@ namespace Controllers.Entity
 
         private void CalculateJump()
         {
-            Grounded = Physics.Raycast(Transform.position, Vector3.down, Transform.localScale.y + 0.001f,
+            Grounded = Physics.Raycast(Transform.position, Vector3.down, Transform.localScale.y + 0.00001f,
                 GroundedMask);
 
             if (Grounded && InputController.Current.GetButton("Jump"))

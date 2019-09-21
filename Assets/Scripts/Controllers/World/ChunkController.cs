@@ -23,7 +23,7 @@ namespace Controllers.World
         private static readonly ObjectCache<ChunkGenerationDispatcher> ChunkGenerationDispatcherCache =
             new ObjectCache<ChunkGenerationDispatcher>(null, null, true);
 
-        public static readonly Vector3Int Size = new Vector3Int(16, 256, 16);
+        public static readonly Vector3Int Size = new Vector3Int(32, 256, 32);
         public static readonly int YIndexStep = Size.x * Size.z;
 
 
@@ -115,6 +115,14 @@ namespace Controllers.World
             {
                 OnCurrentLoaderChangedChunk(this, _CurrentLoader.CurrentChunk);
             }
+
+            OptionsController.Current.PropertyChanged += (sender, args) =>
+            {
+                if (args.PropertyName.Equals(nameof(OptionsController.Current.ShadowDistance)))
+                {
+                    RenderShadows = IsWithinShadowsDistance((Position - _CurrentLoader.CurrentChunk).Abs());
+                }
+            };
         }
 
         private void Update()
@@ -296,8 +304,10 @@ namespace Controllers.World
                 new ChunkChangedEventArgs(_Bounds, DetermineDirectionsForNeighborUpdate(globalPosition)));
         }
 
-        public bool TryRemoveBlockAt(Vector3 globalPosition)
+        public bool TryRemoveBlockAt(Vector3 globalPosition, out Block block)
         {
+            block = default;
+            
             if (!_Bounds.Contains(globalPosition))
             {
                 return false;
@@ -305,6 +315,13 @@ namespace Controllers.World
 
             int localPosition1d = ConvertGlobalPositionToLocal1D(globalPosition);
 
+            if (_Blocks[localPosition1d].Id == BlockController.BLOCK_EMPTY_ID)
+            {
+                return false;
+            }
+            
+            // this should create a copy of the item
+            block = _Blocks[localPosition1d];
             _Blocks[localPosition1d].Initialise(BlockController.BLOCK_EMPTY_ID);
             RequestMeshUpdate();
 

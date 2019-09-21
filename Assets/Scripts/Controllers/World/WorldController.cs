@@ -238,20 +238,20 @@ namespace Controllers.World
 
         private ChunkController DeactivateChunk(ChunkController chunkController)
         {
-//            GeneralExecutionJob job = new GeneralExecutionJob(() =>
-//            {
-//                if (!_Chunks.ContainsKey(chunkController.Position))
-//                {
-//                    return;
-//                }
-//
-//                FlagNeighborsForMeshUpdate(chunkController.Position,
-//                    Directions.CardinalDirectionsVector3);
-//                _SaveFileProvider.CompressAndCommit(chunkController.Position,
-//                    chunkController.Serialize());
-//
-//                _Chunks.Remove(chunkController.Position);
-//            });
+            //GeneralExecutionJob job = new GeneralExecutionJob(() =>
+            //{
+            //    if (!_Chunks.ContainsKey(chunkController.Position))
+            //    {
+            //        return;
+            //    }
+
+            //    FlagNeighborsForMeshUpdate(chunkController.Position,
+            //        Directions.CardinalDirectionsVector3);
+            //    _SaveFileProvider.CompressAndCommit(chunkController.Position,
+            //        chunkController.Serialize());
+
+            //    _Chunks.Remove(chunkController.Position);
+            //});
 
             if (!_Chunks.ContainsKey(chunkController.Position))
             {
@@ -403,13 +403,14 @@ namespace Controllers.World
             chunkController.RemoveBlockAt(globalPosition);
         }
 
-        public bool TryRemoveBlockAt(Vector3 globalPosition)
+        public bool TryRemoveBlockAt(Vector3 globalPosition, out Block block)
         {
+            block = default;
             Vector3 chunkPosition = GetChunkOriginFromPosition(globalPosition);
 
             return TryGetChunkAt(chunkPosition, out ChunkController chunkController)
                    && (chunkController != default)
-                   && chunkController.TryRemoveBlockAt(globalPosition);
+                   && chunkController.TryRemoveBlockAt(globalPosition, out block);
         }
 
         public static Vector3 GetChunkOriginFromPosition(Vector3 globalPosition)

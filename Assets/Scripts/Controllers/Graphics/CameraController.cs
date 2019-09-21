@@ -10,12 +10,15 @@ namespace Controllers.Graphics
 {
     public class CameraController : MonoBehaviour
     {
+        private Camera _Camera;
         private float _Pitch;
         private float _RotationSensitivity;
         private float _Yaw;
 
         private void Start()
         {
+            _Camera = GetComponent<Camera>();
+            _Camera.depthTextureMode = DepthTextureMode.None;
             _RotationSensitivity = PlayerController.Current.RotationSensitivity;
         }
 
