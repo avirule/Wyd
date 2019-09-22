@@ -29,7 +29,9 @@ namespace Controllers.State
             Blocks = new Dictionary<ushort, IBlockRule>();
         }
 
-        public ushort RegisterBlockRules(string blockName, Block.Types type, bool transparent, bool collideable, bool destroyable, Func<Vector3, Direction, string> uvsRule = default)
+        public ushort RegisterBlockRules(
+            string blockName, Block.Types type, bool transparent, bool collideable, bool destroyable,
+            Func<Vector3, Direction, string> uvsRule = default)
         {
             ushort blockId = 0;
 
@@ -50,7 +52,8 @@ namespace Controllers.State
 
             if (!Blocks.ContainsKey(blockId))
             {
-                Blocks.Add(blockId, new BlockRule(blockId, blockName, type, transparent, collideable, destroyable, uvsRule));
+                Blocks.Add(blockId,
+                    new BlockRule(blockId, blockName, type, transparent, collideable, destroyable, uvsRule));
                 BlockNameIds.Add(blockName, blockId);
             }
 
@@ -188,7 +191,7 @@ namespace Controllers.State
 
             return blockRule.Destroyable;
         }
-        
+
         public IEnumerable<IBlockRule> GetBlocksOfType(Block.Types type)
         {
             return Blocks.Values.Where(block => block.Type == type);

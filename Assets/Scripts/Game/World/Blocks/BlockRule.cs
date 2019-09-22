@@ -22,7 +22,8 @@ namespace Game.World.Blocks
         public bool Destroyable { get; }
 
         public BlockRule(
-            ushort id, string blockName, Block.Types type, bool transparent, bool collideable, bool destroyable, Func<Vector3, Direction, string> uvsRule)
+            ushort id, string blockName, Block.Types type, bool transparent, bool collideable, bool destroyable,
+            Func<Vector3, Direction, string> uvsRule)
         {
             UVsRule = uvsRule ?? ((position, direction) => string.Empty);
 

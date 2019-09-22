@@ -57,7 +57,8 @@ namespace Controllers.UI.Components.Text
             double reservedMemoryInMb = Math.Round(reservedMemory / MEGABYTE_VALUE, Precision);
             double allocatedMemoryInMb = Math.Round(allocatedMemory / MEGABYTE_VALUE, Precision);
 
-            _UsedMemoryText.text = string.Format(_Format, reservedMemoryInMb, allocatedMemoryInMb, (allocatedMemoryInMb / reservedMemoryInMb) * 100d);
+            _UsedMemoryText.text = string.Format(_Format, reservedMemoryInMb, allocatedMemoryInMb,
+                (allocatedMemoryInMb / reservedMemoryInMb) * 100d);
         }
 
         private static (long, long) GetUsedMemory()

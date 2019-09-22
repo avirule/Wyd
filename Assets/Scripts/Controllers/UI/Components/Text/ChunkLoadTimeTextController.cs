@@ -12,12 +12,15 @@ namespace Controllers.UI.Components.Text
 {
     public class ChunkLoadTimeTextController : MonoBehaviour
     {
-        private const double _TOLERANCE = 0.001d;
+        private const double TOLERANCE = 0.001d;
 
         private string _Format;
         private TextMeshProUGUI _ChunkLoadTimeText;
+        private int _SkippedFrames;
         private double _LastBuildTime;
         private double _LastMeshTime;
+
+        public int SkipFrames = 30;
 
         private void Awake()
         {
@@ -27,10 +30,18 @@ namespace Controllers.UI.Components.Text
 
         private void Update()
         {
+            if (_SkippedFrames < SkipFrames)
+            {
+                _SkippedFrames += 1;
+                return;
+            }
+
+            _SkippedFrames = 0;
+
             (double buildTime, double meshTime) = CalculateBuildAndMeshTimes();
 
-            if ((Math.Abs(buildTime - _LastBuildTime) > _TOLERANCE)
-                || (Math.Abs(meshTime - _LastMeshTime) > _TOLERANCE))
+            if ((Math.Abs(buildTime - _LastBuildTime) > TOLERANCE)
+                || (Math.Abs(meshTime - _LastMeshTime) > TOLERANCE))
             {
                 UpdateChunkLoadTimeText(buildTime, meshTime);
             }
@@ -59,10 +70,7 @@ namespace Controllers.UI.Components.Text
                 avgMeshTime = ChunkGenerationDispatcher.MeshTimes.Average(timeSpan => timeSpan.TotalMilliseconds);
             }
 
-            double buildTime = Math.Round(avgBuildTime, 0);
-            double meshTime = Math.Round(avgMeshTime, 0);
-
-            return (buildTime, meshTime);
+            return (avgBuildTime, avgMeshTime);
         }
     }
 }
