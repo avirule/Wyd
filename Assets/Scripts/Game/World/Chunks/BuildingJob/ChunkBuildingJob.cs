@@ -2,6 +2,7 @@
 
 using Controllers.State;
 using Controllers.World;
+using Extensions;
 using Game.World.Blocks;
 using Jobs;
 using Noise;
@@ -20,18 +21,18 @@ namespace Game.World.Chunks.BuildingJob
         protected static OpenSimplex_FastNoise NoiseFunction;
 
         protected Random Rand;
-        protected Vector3 Position;
+        protected Bounds Bounds;
         protected Block[] Blocks;
 
         /// <summary>
         ///     Prepares item for new execution.
         /// </summary>
-        /// <param name="position"><see cref="UnityEngine.Vector3" /> position of chunk being meshed.</param>
+        /// <param name="bounds"></param>
         /// <param name="blocks">Pre-initialized and built <see cref="T:ushort[]" /> to iterate through.</param>
-        public void Set(Vector3 position, Block[] blocks)
+        public void Set(Bounds bounds, Block[] blocks)
         {
             Rand = new Random(WorldController.Current.Seed);
-            Position.Set(position.x, position.y, position.z);
+            Bounds = bounds;
             Blocks = blocks;
         }
 
@@ -49,6 +50,27 @@ namespace Game.World.Chunks.BuildingJob
                 if (Blocks[currentIndex].Id == soughtId)
                 {
                     return true;
+                }
+            }
+
+            return false;
+        }
+
+        protected bool IdExistsWithinRadius(int startIndex, int radius, ushort soughtId)
+        {
+            for (int x = -radius; x < (radius + 1); x++)
+            {
+                for (int y = radius; y < (radius + 1); y++)
+                {
+                    for (int z = -radius; z < (radius + 1); z++)
+                    {
+                        int index = (x, y, z).To1D(ChunkController.Size);
+
+                        if ((index < Blocks.Length) && (Blocks[index].Id == soughtId))
+                        {
+                            return true;
+                        }
+                    }
                 }
             }
 

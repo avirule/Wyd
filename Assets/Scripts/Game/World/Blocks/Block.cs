@@ -33,14 +33,15 @@ namespace Game.World.Blocks
         }
 
         public ushort Id { get; private set; }
+
         public sbyte Faces { get; private set; }
-        public sbyte Damage { get; private set; }
+        //public sbyte Damage { get; private set; }
 
         public Block(ushort id, sbyte faces = 0)
         {
             Id = id;
             Faces = faces;
-            Damage = 0;
+            //Damage = 0;
         }
 
         public void Initialise(ushort id, sbyte faces = 0)

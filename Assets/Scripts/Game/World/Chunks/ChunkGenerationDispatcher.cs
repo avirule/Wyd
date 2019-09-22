@@ -21,17 +21,19 @@ namespace Game.World.Chunks
         public enum GenerationStep : ushort
         {
             RawTerrain = 0b0000_0000_0000_0000,
-
-            //FoliagePass = 2,
-            Meshing = 0b0000_0000_0000_00001,
+            Accents = 0b0000_0000_0000_0001,
+            Meshing = 0b0000_0001_0000_0000,
             Complete = 0b1111_1111_1111_1111
         }
 
         public const GenerationStep MINIMUM_STEP = GenerationStep.RawTerrain;
         public const GenerationStep LAST_BUILDING_STEP = GenerationStep.RawTerrain;
 
-        private static readonly ObjectCache<ChunkBuildingJobRawTerrain> ChunkBuildersCache =
+        private static readonly ObjectCache<ChunkBuildingJobRawTerrain> ChunkRawTerrainBuilderCache =
             new ObjectCache<ChunkBuildingJobRawTerrain>(null, null, true);
+
+        private static readonly ObjectCache<ChunkBuildingJobAccents> ChunkAccentsBuilderCache =
+            new ObjectCache<ChunkBuildingJobAccents>(null, null, true);
 
         private static readonly ObjectCache<ChunkMeshingJob> ChunkMeshersCache =
             new ObjectCache<ChunkMeshingJob>(null, null, true);
@@ -146,6 +148,9 @@ namespace Game.World.Chunks
                 case GenerationStep.RawTerrain:
                     BeginGeneratingRawTerrain();
                     break;
+                case GenerationStep.Accents:
+                    BeginGeneratingAccents();
+                    break;
                 case GenerationStep.Meshing:
                     BeginGeneratingMesh();
                     break;
@@ -159,7 +164,7 @@ namespace Game.World.Chunks
             const float frequency = 0.01f;
             const float persistence = -1f;
 
-            ChunkBuildingJobRawTerrain job = ChunkBuildersCache.RetrieveItem();
+            ChunkBuildingJobRawTerrain job = ChunkRawTerrainBuilderCache.RetrieveItem();
 
             if (OptionsController.Current.GPUAcceleration)
             {
@@ -172,13 +177,21 @@ namespace Game.World.Chunks
                 // 256 is the value set in the shader's [numthreads(--> 256 <--, 1, 1)]
                 _NoiseShader.Dispatch(kernel, ChunkController.Size.Product() / 1024, 1, 1);
 
-                job.Set(_Bounds.min, _Blocks, frequency, persistence, OptionsController.Current.GPUAcceleration,
+                job.Set(_Bounds, _Blocks, frequency, persistence, OptionsController.Current.GPUAcceleration,
                     noiseBuffer);
             }
             else
             {
-                job.Set(_Bounds.min, _Blocks, frequency, persistence);
+                job.Set(_Bounds, _Blocks, frequency, persistence);
             }
+
+            QueueJob(job);
+        }
+
+        public void BeginGeneratingAccents()
+        {
+            ChunkBuildingJobAccents job = ChunkAccentsBuilderCache.RetrieveItem();
+            job.Set(_Bounds, _Blocks);
 
             QueueJob(job);
         }
@@ -253,6 +266,10 @@ namespace Game.World.Chunks
             switch (CurrentStep)
             {
                 case GenerationStep.RawTerrain:
+                    _AggregateBuildTimeSpan += args.Job.ExecutionTime;
+                    OnBlocksChanged(new ChunkChangedEventArgs(_Bounds, Enumerable.Empty<Vector3>()));
+                    break;
+                case GenerationStep.Accents:
                     _AggregateBuildTimeSpan += args.Job.ExecutionTime;
                     OnBlocksChanged(new ChunkChangedEventArgs(_Bounds, Directions.CardinalDirectionsVector3));
                     break;
