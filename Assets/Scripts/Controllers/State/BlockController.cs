@@ -20,29 +20,33 @@ namespace Controllers.State
         public static Block Air = new Block(0);
 
         public Dictionary<string, ushort> BlockNameIds;
-        public Dictionary<ushort, IBlockRule> Blocks;
+        public List<IBlockRule> Blocks;
 
         private void Awake()
         {
             AssignCurrent(this);
-            BlockNameIds = new Dictionary<string, ushort>();
-            Blocks = new Dictionary<ushort, IBlockRule>();
+            BlockNameIds = new Dictionary<string, ushort>(sbyte.MaxValue);
+            Blocks = new List<IBlockRule>(sbyte.MaxValue);
+
+            // default 'nothing' block
+            RegisterBlockRules("air", Block.Types.None, true, false, false);
         }
 
-        public ushort RegisterBlockRules(
+        public int RegisterBlockRules(
             string blockName, Block.Types type, bool transparent, bool collideable, bool destroyable,
             Func<Vector3, Direction, string> uvsRule = default)
         {
-            ushort blockId = 0;
+            ushort assignedBlockId = 0;
 
             try
             {
-                blockId = Blocks.Count == 0 ? (ushort) 1 : Convert.ToUInt16(Blocks.Max(kvp => kvp.Key) + 1);
+                assignedBlockId = (ushort) Blocks.Count;
             }
             catch (OverflowException)
             {
                 EventLog.Logger.Log(LogLevel.Error,
                     "BlockController has registered too many blocks and is out of valid block ids.");
+                return -1;
             }
 
             if (uvsRule == default)
@@ -50,17 +54,13 @@ namespace Controllers.State
                 uvsRule = (position, direction) => blockName;
             }
 
-            if (!Blocks.ContainsKey(blockId))
-            {
-                Blocks.Add(blockId,
-                    new BlockRule(blockId, blockName, type, transparent, collideable, destroyable, uvsRule));
-                BlockNameIds.Add(blockName, blockId);
-            }
+            Blocks.Add(new BlockRule(assignedBlockId, blockName, type, transparent, collideable, destroyable, uvsRule));
+            BlockNameIds.Add(blockName, assignedBlockId);
 
             EventLog.Logger.Log(LogLevel.Info,
-                $"Successfully added block `{blockName}` with ID: {blockId}");
+                $"Successfully added block `{blockName}` with ID: {assignedBlockId}");
 
-            return blockId;
+            return assignedBlockId;
         }
 
         public bool GetBlockSpriteUVs(
@@ -69,36 +69,36 @@ namespace Controllers.State
         {
             uvs = null;
 
-            if (!Blocks.ContainsKey(blockId))
+            if (BlockIdExists(blockId))
             {
-                EventLog.Logger.Log(LogLevel.Error,
-                    $"Failed to return block sprite UVs for direction `{direction}` of block with id `{blockId}`: block id does not exist.");
-                return false;
+                Blocks[blockId].ReadUVsRule(blockId, position, direction, out string textureName);
+
+                if (!TextureController.Current.TryGetTextureId(textureName, out int textureId))
+                {
+                    EventLog.Logger.Log(LogLevel.Error,
+                        $"Failed to return block sprite UVs for direction `{direction}` of block with id `{blockId}`: texture does not exist for block.");
+                    return false;
+                }
+
+                uvs = new[]
+                {
+                    new Vector3(0, 0, textureId),
+                    new Vector3(size2d.x, 0, textureId),
+                    new Vector3(0, size2d.z, textureId),
+                    new Vector3(size2d.x, size2d.z, textureId)
+                };
+
+                return true;
             }
 
-            Blocks[blockId].ReadUVsRule(blockId, position, direction, out string textureName);
-
-            if (!TextureController.Current.TryGetTextureId(textureName, out int textureId))
-            {
-                EventLog.Logger.Log(LogLevel.Error,
-                    $"Failed to return block sprite UVs for direction `{direction}` of block with id `{blockId}`: texture does not exist for block.");
-                return false;
-            }
-
-            uvs = new[]
-            {
-                new Vector3(0, 0, textureId),
-                new Vector3(size2d.x, 0, textureId),
-                new Vector3(0, size2d.z, textureId),
-                new Vector3(size2d.x, size2d.z, textureId)
-            };
-
-            return true;
+            EventLog.Logger.Log(LogLevel.Error,
+                $"Failed to return block sprite UVs for direction `{direction}` of block with id `{blockId}`: block id does not exist.");
+            return false;
         }
 
         public bool BlockIdExists(ushort blockId)
         {
-            return Blocks.ContainsKey(blockId);
+            return blockId < Blocks.Count;
         }
 
         public ushort GetBlockId(string blockName)
@@ -126,75 +126,55 @@ namespace Controllers.State
 
         public string GetBlockName(ushort blockId)
         {
-            if (blockId == BLOCK_EMPTY_ID)
+            if (BlockIdExists(blockId))
             {
-                return "air";
+                return Blocks[blockId].BlockName;
             }
 
-            if (!Blocks.TryGetValue(blockId, out IBlockRule blockRule))
-            {
-                EventLog.Logger.Log(LogLevel.Warn,
-                    $"Failed to return block name for block id `{blockId}`: block does not exist.");
-                return "null";
-            }
-
-            return blockRule.BlockName;
+            EventLog.Logger.Log(LogLevel.Warn,
+                $"Failed to return block name for block id `{blockId}`: block does not exist.");
+            return "null";
         }
 
         public bool IsBlockDefaultTransparent(ushort blockId)
         {
-            if (blockId == BLOCK_EMPTY_ID)
+            if (BlockIdExists(blockId))
             {
-                return true;
+                return Blocks[blockId].Transparent;
             }
 
-            if (!Blocks.TryGetValue(blockId, out IBlockRule blockRule))
-            {
-                EventLog.Logger.Log(LogLevel.Error,
-                    $"Failed to return block rule for block with id `{blockId}`: block does not exist.");
-                return false;
-            }
-
-            return blockRule.Transparent;
+            EventLog.Logger.Log(LogLevel.Error,
+                $"Failed to return block rule for block with id `{blockId}`: block does not exist.");
+            return false;
         }
 
         public bool IsBlockDefaultCollideable(ushort blockId)
         {
-            if (blockId == BLOCK_EMPTY_ID)
+            if (BlockIdExists(blockId))
             {
-                return false;
+                return Blocks[blockId].Collideable;
             }
 
-            if (!Blocks.TryGetValue(blockId, out IBlockRule blockRule))
-            {
-                EventLog.Logger.Log(LogLevel.Error,
-                    $"Failed to return block rule for block with id `{blockId}`: block does not exist.");
-                return false;
-            }
-
-            return blockRule.Collideable;
+            EventLog.Logger.Log(LogLevel.Error,
+                $"Failed to return block rule for block with id `{blockId}`: block does not exist.");
+            return false;
         }
 
         public bool IsBlockDefaultDestroyable(ushort blockId)
         {
-            if (blockId == BLOCK_EMPTY_ID)
+            if (BlockIdExists(blockId))
             {
-                return false;
+                return Blocks[blockId].Destroyable;
             }
 
-            if (!Blocks.TryGetValue(blockId, out IBlockRule blockRule))
-            {
-                EventLog.Logger.Log(LogLevel.Error,
-                    $"Failed to return block rule for block with id `{blockId}`: block does not exist.");
-                return false;
-            }
-
-            return blockRule.Destroyable;
+            EventLog.Logger.Log(LogLevel.Error,
+                $"Failed to return block rule for block with id `{blockId}`: block does not exist.");
+            return false;
         }
 
         public IEnumerable<IBlockRule> GetBlocksOfType(Block.Types type)
         {
-            return Blocks.Values.Where(block => block.Type == type);
+            return Blocks.Where(block => block.Type == type);
         }
     }
 }
