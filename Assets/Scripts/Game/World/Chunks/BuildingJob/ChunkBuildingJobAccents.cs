@@ -21,23 +21,25 @@ namespace Game.World.Chunks.BuildingJob
             BlockController.Current.TryGetBlockId("water", out ushort blockIdWater);
             BlockController.Current.TryGetBlockId("sand", out ushort blockIdSand);
 
+            Vector3 localPosition = Vector3.zero;
+
             for (int index = 0; index < Blocks.Length; index++)
             {
-                if (Blocks[index].Id == blockIdWater)
+                if (Blocks[index].Id != blockIdWater)
                 {
-                    GenerateSandAroundWater(index, blockIdWater, blockIdSand);
+                    continue;
                 }
+
+                (localPosition.x, localPosition.y, localPosition.z) =
+                    Mathv.GetVector3IntIndex(index, ChunkController.Size);
+                    
+                GenerateSandAroundPosition(localPosition, index, blockIdWater, blockIdSand);
             }
         }
 
-        private void GenerateSandAroundWater(int index, ushort blockIdWater, ushort blockIdSand)
+        private void GenerateSandAroundPosition(Vector3 localPosition, int index, ushort blockIdWater, ushort blockIdSand)
         {
             const int sand_radius = 3;
-
-            if (Blocks[index].Id != blockIdWater)
-            {
-                return;
-            }
 
             for (int x = -sand_radius; x < (sand_radius + 1); x++)
             {
@@ -45,13 +47,10 @@ namespace Game.World.Chunks.BuildingJob
                 {
                     for (int z = -sand_radius; z < (sand_radius + 1); z++)
                     {
-                        Vector3 localPosition;
-                        (localPosition.x, localPosition.y, localPosition.z) =
-                            Mathv.GetVector3IntIndex(index, ChunkController.Size);
                         localPosition += new Vector3(x, y, z);
                         Vector3 globalPosition = Bounds.min + localPosition;
 
-                        if (localPosition.y < 0)
+                        if ((globalPosition.y < 0) || (globalPosition.y > ChunkController.Size.y))
                         {
                             continue;
                         }
@@ -59,7 +58,6 @@ namespace Game.World.Chunks.BuildingJob
                         if (!Bounds.Contains(globalPosition))
                         {
                             if (!WorldController.Current.TryGetBlockAt(globalPosition, out Block queriedBlock)
-                                || (queriedBlock.Id == BlockController.BLOCK_EMPTY_ID)
                                 || (queriedBlock.Id == blockIdWater)
                                 || (queriedBlock.Id == blockIdSand))
                             {
@@ -72,16 +70,14 @@ namespace Game.World.Chunks.BuildingJob
                         {
                             // todo fix this 
                             int queriedIndex = localPosition.To1D(ChunkController.Size);
-                            ushort queriedId = Blocks[queriedIndex].Id;
 
-                            if ((queriedId == BlockController.BLOCK_EMPTY_ID)
-                                || (queriedId == blockIdWater)
-                                || (queriedId == blockIdSand))
+                            if ((Blocks[queriedIndex].Id == blockIdWater)
+                                || (Blocks[queriedIndex].Id == blockIdSand))
                             {
                                 continue;
                             }
 
-                            Blocks[queriedId].Initialise(blockIdSand);
+                            Blocks[queriedIndex].Initialise(blockIdSand);
                         }
                     }
                 }

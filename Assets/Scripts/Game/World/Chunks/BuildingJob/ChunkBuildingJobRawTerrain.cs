@@ -65,6 +65,13 @@ namespace Game.World.Chunks.BuildingJob
 
             Vector3 position = Vector3.zero;
 
+            BlockController.Current.TryGetBlockId("grass", out ushort blockIdGrass);
+            BlockController.Current.TryGetBlockId("dirt", out ushort blockIdDirt);
+            BlockController.Current.TryGetBlockId("stone", out ushort blockIdStone);
+            BlockController.Current.TryGetBlockId("water", out ushort blockIdWater);
+            BlockController.Current.TryGetBlockId("sand", out ushort blockIdSand);
+
+
             for (int index = Blocks.Length - 1; (index >= 0) && !AbortToken.IsCancellationRequested; index--)
             {
                 (position.x, position.y, position.z) = Mathv.GetVector3IntIndex(index, ChunkController.Size);
@@ -79,45 +86,34 @@ namespace Game.World.Chunks.BuildingJob
                     // these seems inefficient, but the CPU branch predictor will pick up on it pretty quick
                     // so the slowdown from this check is nonexistent, since useGpu shouldn't change in this context.
                     float noiseValue = useGpu ? noiseValues[index] : GetNoiseValueByVector3(position);
-                    ProcessPreGeneratedNoiseData(index, position, noiseValue);
+
+                    if (noiseValue >= 0.01f)
+                    {
+                        int indexAbove = index + ChunkController.YIndexStep;
+
+
+                        if ((position.y > 135) && ((indexAbove > Blocks.Length) || Blocks[indexAbove].Transparent))
+                        {
+                            Blocks[index].Initialise(blockIdGrass);
+                        }
+                        else if (IdExistsAboveWithinRange(index, 2, blockIdGrass))
+                        {
+                            Blocks[index].Initialise(blockIdDirt);
+                        }
+                        else
+                        {
+                            Blocks[index].Initialise(blockIdStone);
+                        }
+                    }
+                    else if ((position.y <= 155) && (position.y > 135))
+                    {
+                        Blocks[index].Initialise(blockIdWater);
+                    }
+                    else
+                    {
+                        Blocks[index] = default;
+                    }
                 }
-            }
-        }
-
-        public void ProcessPreGeneratedNoiseData(int index, Vector3 position, float noiseValue)
-        {
-            if (noiseValue >= 0.01f)
-            {
-                int indexAbove = index + ChunkController.YIndexStep;
-
-                BlockController.Current.TryGetBlockId("grass", out ushort blockIdGrass);
-
-                if ((position.y > 135) && ((indexAbove > Blocks.Length) || Blocks[indexAbove].Transparent))
-                {
-                    Blocks[index].Initialise(blockIdGrass);
-                }
-                else if (IdExistsAboveWithinRange(index, 2, blockIdGrass))
-                {
-                    BlockController.Current.TryGetBlockId("dirt", out ushort blockIdDirt);
-
-                    Blocks[index].Initialise(blockIdDirt);
-                }
-                else
-                {
-                    BlockController.Current.TryGetBlockId("stone", out ushort blockIdStone);
-
-                    Blocks[index].Initialise(blockIdStone);
-                }
-            }
-            else if ((position.y <= 155) && (position.y > 135))
-            {
-                BlockController.Current.TryGetBlockId("water", out ushort blockIdWater);
-
-                Blocks[index].Initialise(blockIdWater);
-            }
-            else
-            {
-                Blocks[index] = default;
             }
         }
 

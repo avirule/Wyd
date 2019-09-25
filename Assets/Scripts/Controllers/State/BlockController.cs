@@ -17,7 +17,7 @@ namespace Controllers.State
     {
         public const ushort BLOCK_EMPTY_ID = 0;
 
-        public static Block Air = new Block(0);
+        public static Block Air;
 
         public Dictionary<string, ushort> BlockNameIds;
         public List<IBlockRule> Blocks;
@@ -30,6 +30,7 @@ namespace Controllers.State
 
             // default 'nothing' block
             RegisterBlockRules("air", Block.Types.None, true, false, false);
+            Air = new Block(BLOCK_EMPTY_ID);
         }
 
         public int RegisterBlockRules(
