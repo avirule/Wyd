@@ -3,30 +3,20 @@
 using System;
 using System.Linq;
 using Game.World.Chunks;
-using TMPro;
-using UnityEngine;
 
 #endregion
 
 namespace Controllers.UI.Components.Text
 {
-    public class ChunkLoadTimeTextController : MonoBehaviour
+    public class ChunkLoadTimeTextController : FormattedTextController
     {
         private const double TOLERANCE = 0.001d;
 
-        private string _Format;
-        private TextMeshProUGUI _ChunkLoadTimeText;
         private int _SkippedFrames;
         private double _LastBuildTime;
         private double _LastMeshTime;
 
         public int SkipFrames = 30;
-
-        private void Awake()
-        {
-            _ChunkLoadTimeText = GetComponent<TextMeshProUGUI>();
-            _Format = _ChunkLoadTimeText.text;
-        }
 
         private void Update()
         {
@@ -52,7 +42,7 @@ namespace Controllers.UI.Components.Text
             _LastBuildTime = buildTime;
             _LastMeshTime = meshTime;
 
-            _ChunkLoadTimeText.text = string.Format(_Format, buildTime, meshTime);
+            _TextObject.text = string.Format(_Format, buildTime, meshTime);
         }
 
         private static (double, double) CalculateBuildAndMeshTimes()

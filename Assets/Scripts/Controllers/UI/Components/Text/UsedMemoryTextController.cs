@@ -2,20 +2,16 @@
 
 using System;
 using System.Diagnostics;
-using TMPro;
-using UnityEngine;
 using UnityEngine.Profiling;
 
 #endregion
 
 namespace Controllers.UI.Components.Text
 {
-    public class UsedMemoryTextController : MonoBehaviour
+    public class UsedMemoryTextController : FormattedTextController
     {
         private const double MEGABYTE_VALUE = 1000000d;
 
-        private string _Format;
-        private TextMeshProUGUI _UsedMemoryText;
         private TimeSpan _MaximumDisplayAccuracyUpdateInterval;
         private Stopwatch _LastUpdateTimer;
         private long _LastReservedMemoryTotal;
@@ -23,10 +19,10 @@ namespace Controllers.UI.Components.Text
 
         public int Precision = 1;
 
-        private void Awake()
+        protected override void Awake()
         {
-            _UsedMemoryText = GetComponent<TextMeshProUGUI>();
-            _Format = _UsedMemoryText.text;
+            base.Awake();
+
             _MaximumDisplayAccuracyUpdateInterval = TimeSpan.FromSeconds(1d / 2d);
             _LastUpdateTimer = Stopwatch.StartNew();
         }
@@ -57,7 +53,7 @@ namespace Controllers.UI.Components.Text
             double reservedMemoryInMb = Math.Round(reservedMemory / MEGABYTE_VALUE, Precision);
             double allocatedMemoryInMb = Math.Round(allocatedMemory / MEGABYTE_VALUE, Precision);
 
-            _UsedMemoryText.text = string.Format(_Format, reservedMemoryInMb, allocatedMemoryInMb,
+            _TextObject.text = string.Format(_Format, reservedMemoryInMb, allocatedMemoryInMb,
                 (allocatedMemoryInMb / reservedMemoryInMb) * 100d);
         }
 

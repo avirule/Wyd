@@ -258,16 +258,20 @@ public static class Mathv
     /// <param name="index">1D <see cref="System.Int32" /> index.</param>
     /// <param name="size3d"><see cref="UnityEngine.Vector3Int" /> size in 3D space.</param>
     /// <returns><see cref="T:Tuple{int, int, int}" /> (x, y, z) of 3D coordinates.</returns>
-    public static (int, int, int) GetVector3IntIndex(int index, Vector3Int size3d)
+    public static (int, int, int) GetIndexAs3D(int index, Vector3Int size3d)
     {
-        //int xQuotient = Math.DivRem(index, size3d.x, out int x);
-        //int zQuotient = Math.DivRem(xQuotient, size3d.z, out int z);
-        //int y = zQuotient % size3d.y;
-        int y = index / (size3d.x * size3d.z);
-        index -= y * size3d.x * size3d.z;
-        int z = index / size3d.x;
-        int x = index % size3d.x;
+        int xQuotient = Math.DivRem(index, size3d.x, out int x);
+        int zQuotient = Math.DivRem(xQuotient, size3d.z, out int z);
+        int y = zQuotient % size3d.y;
         return (x, y, z);
+    }
+
+    public static Vector3Int GetIndexAsVector3Int(int index, Vector3Int size3d)
+    {
+        // todo optimize this a little?
+        Vector3Int a = Vector3Int.zero;
+        (a.x, a.y, a.z) = GetIndexAs3D(index, size3d);
+        return a;
     }
 
     /// <summary>

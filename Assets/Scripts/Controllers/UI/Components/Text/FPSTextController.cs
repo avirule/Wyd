@@ -3,7 +3,6 @@
 using System.Collections.Generic;
 using System.Linq;
 using Controllers.State;
-using TMPro;
 using UnityEngine;
 
 // ReSharper disable InconsistentNaming
@@ -12,20 +11,18 @@ using UnityEngine;
 
 namespace Controllers.UI.Components.Text
 {
-    public class FPSTextController : MonoBehaviour
+    public class FPSTextController : FormattedTextController
     {
-        private string _Format;
         private List<float> _DeltaTimes;
-        private TextMeshProUGUI _FPSText;
         private int _SkippedFrames;
 
         public int SkipFrames = 4;
 
-        private void Awake()
+        protected override void Awake()
         {
+            base.Awake();
+
             _DeltaTimes = new List<float>();
-            _FPSText = GetComponent<TextMeshProUGUI>();
-            _Format = _FPSText.text;
             _SkippedFrames = 0;
 
             // avoids div by zero
@@ -52,7 +49,7 @@ namespace Controllers.UI.Components.Text
             double averageDeltaTimeAsFrames = 1d / averageDeltaTime;
             double averageDeltaTimeAsMillisecondsRounded = 1000d * averageDeltaTime;
 
-            _FPSText.text = string.Format(_Format, averageDeltaTimeAsFrames, averageDeltaTimeAsMillisecondsRounded);
+            _TextObject.text = string.Format(_Format, averageDeltaTimeAsFrames, averageDeltaTimeAsMillisecondsRounded);
             _SkippedFrames = 0;
         }
 

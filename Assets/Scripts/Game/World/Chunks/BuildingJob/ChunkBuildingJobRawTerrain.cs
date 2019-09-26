@@ -74,7 +74,7 @@ namespace Game.World.Chunks.BuildingJob
 
             for (int index = Blocks.Length - 1; (index >= 0) && !AbortToken.IsCancellationRequested; index--)
             {
-                (position.x, position.y, position.z) = Mathv.GetVector3IntIndex(index, ChunkController.Size);
+                (position.x, position.y, position.z) = Mathv.GetIndexAs3D(index, ChunkController.Size);
 
                 if ((position.y < 4) && (position.y <= Rand.Next(0, 4)))
                 {

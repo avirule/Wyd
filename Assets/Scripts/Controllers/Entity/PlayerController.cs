@@ -29,6 +29,8 @@ namespace Controllers.Entity
         private Vector3 _Movement;
         private Stopwatch _ActionCooldown;
         private Stopwatch _RegularCheckWait;
+        private Vector3 _Position;
+        private Vector3 _CurrentChunk;
 
         public Transform CameraTransform;
         public InventoryController Inventory;
@@ -43,10 +45,30 @@ namespace Controllers.Entity
         public Transform Transform { get; private set; }
         public Rigidbody Rigidbody { get; private set; }
         public Collider Collider { get; private set; }
-        public Vector3 CurrentChunk { get; private set; }
+
+        public Vector3 CurrentChunk
+        {
+            get => _CurrentChunk;
+            private set
+            {
+                _CurrentChunk = value;
+                OnChunkChanged(_CurrentChunk);
+            }
+        }
+
+        public Vector3 Position
+        {
+            get => _Position;
+            private set
+            {
+                _Position = value;
+                OnPositionChanged(_Position);
+            }
+        }
+
         public IReadOnlyList<string> Tags { get; private set; }
 
-        public event EventHandler<Vector3> CausedPositionChanged;
+        public event EventHandler<Vector3> PositionChanged;
         public event EventHandler<Vector3> ChunkPositionChanged;
         public event EventHandler<IEntity> EntityDestroyed;
 
@@ -73,6 +95,26 @@ namespace Controllers.Entity
             _ReachHitSurfaceObjectTransform = ReachHitSurfaceObject.transform;
 
             CurrentChunk.Set(int.MaxValue, 0, int.MaxValue);
+
+            PositionChanged += (sender, position) =>
+            {
+                const int destructRadius = 2;
+                for (int x = -destructRadius; x < (destructRadius + 1); x++)
+                {
+                    for (int y = -destructRadius; y < (destructRadius + 1); y++)
+                    {
+                        for (int z = -destructRadius; z < (destructRadius + 1); z++)
+                        {
+                            Vector3 relativePosition = position + new Vector3(x, y, z);
+
+                            if (WorldController.Current.TryGetBlockAt(relativePosition, out Block block))
+                            {
+                                WorldController.Current.TryRemoveBlockAt(relativePosition, out block);
+                            }
+                        }
+                    }
+                }
+            };
         }
 
         private void Start()
@@ -85,6 +127,7 @@ namespace Controllers.Entity
         {
             CalculateRotation();
             CalculateMovement();
+            CheckChangedPosition();
             CheckChangedChunk();
         }
 
@@ -94,42 +137,7 @@ namespace Controllers.Entity
             CalculateJump();
             UpdateReachRay();
             UpdateLastLookAtCubeOrigin();
-
-            if (InputController.Current.GetButton("LeftClick")
-                && _IsInReachOfValidSurface
-                && (_ActionCooldown.Elapsed > MinimumActionInterval))
-            {
-                Block destroyedBlock;
-
-                if (((_LastReachRayHit.normal.Sum() > 0f)
-                     && WorldController.Current.TryRemoveBlockAt(
-                         _LastReachRayHit.point.Floor() - _LastReachRayHit.normal, out destroyedBlock))
-                    || WorldController.Current.TryRemoveBlockAt(_LastReachRayHit.point.Floor(), out destroyedBlock))
-                {
-                    Inventory.AddItem(destroyedBlock.Id, 1);
-                }
-
-                _ActionCooldown.Restart();
-            }
-
-            if (InputController.Current.GetButton("RightClick")
-                && _IsInReachOfValidSurface
-                && !Collider.bounds.Contains(_LastReachRayHit.point)
-                && (_ActionCooldown.Elapsed > MinimumActionInterval))
-            {
-                if (_LastReachRayHit.normal.Sum() > 0f)
-                {
-                    WorldController.Current.TryPlaceBlockAt(_LastReachRayHit.point.Floor(),
-                        HotbarController.Current.SelectedId);
-                }
-                else
-                {
-                    WorldController.Current.TryPlaceBlockAt(_LastReachRayHit.point.Floor() + _LastReachRayHit.normal,
-                        HotbarController.Current.SelectedId);
-                }
-
-                _ActionCooldown.Restart();
-            }
+            CheckMouseClickActions();
 
             if (_RegularCheckWait.Elapsed > RegularCheckWaitInterval)
             {
@@ -143,6 +151,8 @@ namespace Controllers.Entity
         {
             OnEntityDestroyed();
         }
+
+        #region UPDATE
 
         private void UpdateReachRay()
         {
@@ -189,6 +199,59 @@ namespace Controllers.Entity
             _ReachHitSurfaceObjectTransform.rotation = Quaternion.LookRotation(-normal);
         }
 
+        public void CheckMouseClickActions()
+        {
+            if (InputController.Current.GetButton("LeftClick")
+                && _IsInReachOfValidSurface
+                && (_ActionCooldown.Elapsed > MinimumActionInterval))
+            {
+                Block destroyedBlock;
+
+                if (((_LastReachRayHit.normal.Sum() > 0f)
+                     && WorldController.Current.TryRemoveBlockAt(
+                         _LastReachRayHit.point.Floor() - _LastReachRayHit.normal, out destroyedBlock))
+                    || WorldController.Current.TryRemoveBlockAt(_LastReachRayHit.point.Floor(), out destroyedBlock))
+                {
+                    Inventory.AddItem(destroyedBlock.Id, 1);
+                }
+
+                _ActionCooldown.Restart();
+            }
+
+            if (InputController.Current.GetButton("RightClick")
+                && _IsInReachOfValidSurface
+                && !Collider.bounds.Contains(_LastReachRayHit.point)
+                && (_ActionCooldown.Elapsed > MinimumActionInterval))
+            {
+                if (_LastReachRayHit.normal.Sum() > 0f)
+                {
+                    WorldController.Current.TryPlaceBlockAt(_LastReachRayHit.point.Floor(),
+                        HotbarController.Current.SelectedId);
+                }
+                else
+                {
+                    WorldController.Current.TryPlaceBlockAt(_LastReachRayHit.point.Floor() + _LastReachRayHit.normal,
+                        HotbarController.Current.SelectedId);
+                }
+
+                _ActionCooldown.Restart();
+            }
+        }
+
+        #endregion
+
+        #region FIXED UPDATE
+
+        private void CheckChangedPosition()
+        {
+            Vector3 position = Transform.position;
+
+            if (Position != position)
+            {
+                Position = position;
+            }
+        }
+
         private void CheckChangedChunk()
         {
             Vector3 chunkPosition = WorldController.GetChunkOriginFromPosition(Transform.position);
@@ -200,8 +263,9 @@ namespace Controllers.Entity
             }
 
             CurrentChunk = chunkPosition;
-            OnChunkChanged(CurrentChunk);
         }
+
+        #endregion
 
         #region MOVEMENT
 
@@ -225,8 +289,6 @@ namespace Controllers.Entity
             {
                 Rigidbody.AddForce(Vector3.up * JumpForce, ForceMode.Impulse);
             }
-
-            OnCausedPositionChanged(Transform.position);
         }
 
         private void CalculateMovement()
@@ -239,7 +301,6 @@ namespace Controllers.Entity
             Vector3 modifiedMovement = TravelSpeed * Time.fixedDeltaTime * _Movement;
 
             Rigidbody.MovePosition(Rigidbody.position + Transform.TransformDirection(modifiedMovement));
-            OnCausedPositionChanged(Transform.position);
         }
 
         #endregion
@@ -247,9 +308,9 @@ namespace Controllers.Entity
 
         #region Event Invocators
 
-        private void OnCausedPositionChanged(Vector3 newPosition)
+        private void OnPositionChanged(Vector3 newPosition)
         {
-            CausedPositionChanged?.Invoke(this, newPosition);
+            PositionChanged?.Invoke(this, newPosition);
         }
 
         private void OnChunkChanged(Vector3 newChunkPosition)

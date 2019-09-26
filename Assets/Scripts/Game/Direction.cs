@@ -119,5 +119,23 @@ namespace Game
         {
             return (direction == Direction.North) || (direction == Direction.East) || (direction == Direction.Up);
         }
+
+        public static float FromVector3Axis(this Direction direction, Vector3Int a)
+        {
+            switch (direction)
+            {
+                case Direction.North:
+                case Direction.South:
+                    return a.z;
+                case Direction.East:
+                case Direction.West:
+                    return a.x;
+                case Direction.Up:
+                case Direction.Down:
+                    return a.y;
+            }
+
+            return 0f;
+        }
     }
 }

@@ -2,24 +2,13 @@
 
 using System.ComponentModel;
 using Controllers.State;
-using TMPro;
-using UnityEngine;
 
 #endregion
 
 namespace Controllers.UI.Components.Text
 {
-    public abstract class OptionDisplayTextController : MonoBehaviour
+    public abstract class OptionDisplayTextController : FormattedTextController
     {
-        protected TextMeshProUGUI _TextObject;
-        protected string _Format;
-
-        protected void Awake()
-        {
-            _TextObject = GetComponent<TextMeshProUGUI>();
-            _Format = _TextObject.text;
-        }
-
         protected void Start()
         {
             OptionsController.Current.PropertyChanged += OnOptionControllerChangedProperty;

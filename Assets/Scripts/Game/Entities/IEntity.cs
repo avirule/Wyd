@@ -15,7 +15,7 @@ namespace Game.Entities
         Vector3 CurrentChunk { get; }
         IReadOnlyList<string> Tags { get; }
 
-        event EventHandler<Vector3> CausedPositionChanged;
+        event EventHandler<Vector3> PositionChanged;
         event EventHandler<Vector3> ChunkPositionChanged;
         event EventHandler<IEntity> EntityDestroyed;
     }

@@ -32,7 +32,7 @@ namespace Game.World.Chunks.BuildingJob
                 }
 
                 (localPosition.x, localPosition.y, localPosition.z) =
-                    Mathv.GetVector3IntIndex(index, ChunkController.Size);
+                    Mathv.GetIndexAs3D(index, ChunkController.Size);
 
                 GenerateSandAroundPosition(localPosition, blockIdWater, blockIdSand);
             }
