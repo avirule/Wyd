@@ -20,7 +20,7 @@ namespace Game.World.Blocks
         private static readonly BitVector32.Section DestroyableSection;
 
         private static readonly Func<Vector3, Direction, string> DefaultUVsRule;
-        
+
         static BlockRule()
         {
             IdSection = BitVector32.CreateSection(short.MaxValue);
@@ -31,7 +31,7 @@ namespace Game.World.Blocks
 
             DefaultUVsRule = (position, direction) => string.Empty;
         }
-        
+
         private Func<Vector3, Direction, string> UVsRule { get; }
 
         private BitVector32 _Bits;
@@ -39,24 +39,29 @@ namespace Game.World.Blocks
         public ushort Id
         {
             get => (ushort) _Bits[IdSection];
-            private set => _Bits[IdSection] = (short)value;
+            private set => _Bits[IdSection] = (short) value;
         }
+
         public string BlockName { get; }
+
         public Block.Types Type
         {
             get => (Block.Types) _Bits[TypeSection];
-            private set => _Bits[TypeSection] = (short)value;
+            private set => _Bits[TypeSection] = (short) value;
         }
+
         public bool Transparent
         {
             get => _Bits[TransparencySection] == 1;
             private set => _Bits[TransparencySection] = value ? 1 : 0;
         }
+
         public bool Collideable
         {
             get => _Bits[CollideableSection] == 1;
             private set => _Bits[CollideableSection] = value ? 1 : 0;
         }
+
         public bool Destroyable
         {
             get => _Bits[DestroyableSection] == 1;
@@ -68,14 +73,14 @@ namespace Game.World.Blocks
             Func<Vector3, Direction, string> uvsRule)
         {
             _Bits = new BitVector32(0);
-            
+
             Id = id;
             BlockName = blockName;
             Type = type;
             Transparent = transparent;
             Collideable = collideable;
             Destroyable = destroyable;
-            
+
             UVsRule = uvsRule ?? DefaultUVsRule;
         }
 

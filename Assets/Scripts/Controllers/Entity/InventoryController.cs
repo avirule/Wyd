@@ -5,17 +5,16 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Collections.Specialized;
 using System.Linq;
+using Controllers.UI;
 using Game.Entities.Inventory;
 using UnityEngine;
 
 #endregion
 
-namespace Controllers.Entity.Inventory
+namespace Controllers.Entity
 {
     public class InventoryController : MonoBehaviour
     {
-        public const int MAXIMUM_HOTBAR_STACKS = 5;
-
         private ObservableCollection<ItemStack> _InternalInventory;
         private ObservableCollection<ItemStack> _InternalHotbar;
 
@@ -43,7 +42,7 @@ namespace Controllers.Entity.Inventory
                 {
                     itemStack = new ItemStack(0, blockId);
 
-                    if (_InternalHotbar.Count < MAXIMUM_HOTBAR_STACKS)
+                    if (_InternalHotbar.Count < HotbarController.MAXIMUM_HOTBAR_STACKS)
                     {
                         itemStack.InventoryIndex = _InternalHotbar.Count;
                         _InternalHotbar.Add(itemStack);
@@ -56,7 +55,7 @@ namespace Controllers.Entity.Inventory
                         _InternalInventory.Add(itemStack);
                         InventoryChanged?.Invoke(this,
                             new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Add, itemStack,
-                                MAXIMUM_HOTBAR_STACKS + _InternalInventory.Count));
+                                HotbarController.MAXIMUM_HOTBAR_STACKS + _InternalInventory.Count));
                     }
                 }
 

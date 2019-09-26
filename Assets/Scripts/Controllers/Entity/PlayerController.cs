@@ -4,8 +4,8 @@ using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Diagnostics;
-using Controllers.Entity.Inventory;
 using Controllers.State;
+using Controllers.UI;
 using Controllers.World;
 using Game.Entities;
 using Game.World.Blocks;
@@ -119,12 +119,13 @@ namespace Controllers.Entity
             {
                 if (_LastReachRayHit.normal.Sum() > 0f)
                 {
-                    WorldController.Current.TryPlaceBlockAt(_LastReachRayHit.point.Floor(), 5);
+                    WorldController.Current.TryPlaceBlockAt(_LastReachRayHit.point.Floor(),
+                        HotbarController.Current.SelectedId);
                 }
                 else
                 {
                     WorldController.Current.TryPlaceBlockAt(_LastReachRayHit.point.Floor() + _LastReachRayHit.normal,
-                        5);
+                        HotbarController.Current.SelectedId);
                 }
 
                 _ActionCooldown.Restart();

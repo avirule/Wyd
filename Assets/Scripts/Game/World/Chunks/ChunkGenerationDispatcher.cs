@@ -27,7 +27,7 @@ namespace Game.World.Chunks
         }
 
         public const GenerationStep MINIMUM_STEP = GenerationStep.RawTerrain;
-        public const GenerationStep LAST_BUILDING_STEP = GenerationStep.RawTerrain;
+        public const GenerationStep LAST_BUILDING_STEP = GenerationStep.Accents;
 
         private static readonly ObjectCache<ChunkBuildingJobRawTerrain> ChunkRawTerrainBuilderCache =
             new ObjectCache<ChunkBuildingJobRawTerrain>(null, null, true);

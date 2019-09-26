@@ -73,7 +73,7 @@ public class BitVector64
         {
             value <<= section.Offset;
             int num = (ushort.MaxValue & section.Mask) << section.Offset;
-            _Data = (ulong) ((long) _Data & ~num | value & num);
+            _Data = (ulong) (((long) _Data & ~num) | (value & num));
         }
     }
 }

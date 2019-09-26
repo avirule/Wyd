@@ -18,6 +18,7 @@ namespace Game.World.Chunks.BuildingJob
 
         private void Generate()
         {
+            return;
             BlockController.Current.TryGetBlockId("water", out ushort blockIdWater);
             BlockController.Current.TryGetBlockId("sand", out ushort blockIdSand);
 
@@ -32,7 +33,7 @@ namespace Game.World.Chunks.BuildingJob
 
                 (localPosition.x, localPosition.y, localPosition.z) =
                     Mathv.GetVector3IntIndex(index, ChunkController.Size);
-                    
+
                 GenerateSandAroundPosition(localPosition, blockIdWater, blockIdSand);
             }
         }

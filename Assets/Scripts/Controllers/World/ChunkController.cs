@@ -23,6 +23,7 @@ namespace Controllers.World
         private static readonly ObjectCache<ChunkGenerationDispatcher> ChunkGenerationDispatcherCache =
             new ObjectCache<ChunkGenerationDispatcher>(null, null, true);
 
+        public static readonly Vector3Int BiomeNoiseSize = new Vector3Int(32 * 16, 256, 32 * 16);
         public static readonly Vector3Int Size = new Vector3Int(32, 256, 32);
         public static readonly int YIndexStep = Size.x * Size.z;
 
