@@ -1,6 +1,8 @@
 #region
 
+using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using Controllers.World;
 using UnityEngine;
 
@@ -60,6 +62,18 @@ namespace Game
     {
         static DirectionExtensions()
         {
+            Dictionary<Direction, int> directionAsOrderPlacement = new Dictionary<Direction, int>();
+
+            int index = 0;
+            foreach (Direction direction in (Direction[]) Enum.GetValues(typeof(Direction)))
+            {
+                directionAsOrderPlacement.Add(direction, index);
+                index += 1;
+            }
+
+            DirectionAsOrderPlacement = new ReadOnlyDictionary<Direction, int>(directionAsOrderPlacement);
+
+
             DirectionsAsVector3 = new Dictionary<Direction, Vector3>
             {
                 { Direction.North, Vector3.forward },
@@ -82,8 +96,14 @@ namespace Game
             };
         }
 
+        private static readonly IReadOnlyDictionary<Direction, int> DirectionAsOrderPlacement;
         private static readonly IReadOnlyDictionary<Direction, Vector3> DirectionsAsVector3;
         private static readonly IReadOnlyDictionary<Direction, int> DirectionsAsIndexStep;
+
+        public static int OrderPlacement(this Direction direction)
+        {
+            return DirectionAsOrderPlacement[direction];
+        }
 
         public static Vector3 AsVector3(this Direction direction)
         {
@@ -95,7 +115,7 @@ namespace Game
             return DirectionsAsIndexStep[direction];
         }
 
-        public static bool IsPositive(this Direction direction)
+        public static bool IsPositiveNormal(this Direction direction)
         {
             return (direction == Direction.North) || (direction == Direction.East) || (direction == Direction.Up);
         }

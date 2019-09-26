@@ -33,11 +33,11 @@ namespace Game.World.Chunks.BuildingJob
                 (localPosition.x, localPosition.y, localPosition.z) =
                     Mathv.GetVector3IntIndex(index, ChunkController.Size);
                     
-                GenerateSandAroundPosition(localPosition, index, blockIdWater, blockIdSand);
+                GenerateSandAroundPosition(localPosition, blockIdWater, blockIdSand);
             }
         }
 
-        private void GenerateSandAroundPosition(Vector3 localPosition, int index, ushort blockIdWater, ushort blockIdSand)
+        private void GenerateSandAroundPosition(Vector3 localPosition, ushort blockIdWater, ushort blockIdSand)
         {
             const int sand_radius = 3;
 

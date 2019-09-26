@@ -1,6 +1,5 @@
 #region
 
-using System;
 using System.Collections.Generic;
 using System.Linq;
 using Controllers.State;
@@ -49,9 +48,6 @@ namespace Game
                 _ScheduledRecalculation = true;
             }
         }
-
-
-        public event EventHandler<Mesh> UpdatedMesh;
 
         private void Awake()
         {

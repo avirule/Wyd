@@ -87,7 +87,7 @@ namespace Game.World.Blocks
             else
             {
                 // for the record, this is stupid.
-                Faces &= (sbyte) ~(sbyte) direction;
+                Faces &= (sbyte) ~direction;
             }
         }
 
