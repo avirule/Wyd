@@ -17,6 +17,7 @@ namespace Controllers.UI
         public const int MAXIMUM_HOTBAR_STACKS = 7;
 
         private List<DisplayBlockController> _DisplayBlocks;
+        private float _InitialSelectedCellPositionX;
         private float _ScrollValue;
         private int _CurrentIndex;
 
@@ -55,6 +56,7 @@ namespace Controllers.UI
             AssignCurrent(this);
 
             _DisplayBlocks = new List<DisplayBlockController>(new DisplayBlockController[MAXIMUM_HOTBAR_STACKS]);
+            _InitialSelectedCellPositionX = SelectedCell.localPosition.x;
         }
 
         private void Start()
@@ -76,7 +78,7 @@ namespace Controllers.UI
         {
             int scrollValueInt =
                 _ScrollValue < 0 ? Mathf.FloorToInt(_ScrollValue) : Mathf.CeilToInt(_ScrollValue);
-            scrollValueInt *= -1; // flip polarity for better game feel
+            scrollValueInt = -scrollValueInt; // flip polarity for better game feel
 
             CurrentIndex += scrollValueInt;
 
@@ -85,7 +87,7 @@ namespace Controllers.UI
             SelectedBlockChanged?.Invoke(this, CurrentIndex);
 
             Vector3 selectedCellPos = SelectedCell.localPosition;
-            selectedCellPos.x = CurrentIndex * SelectedCell.sizeDelta.x;
+            selectedCellPos.x = _InitialSelectedCellPositionX + (CurrentIndex * SelectedCell.sizeDelta.x);
             SelectedCell.localPosition = selectedCellPos;
         }
 
