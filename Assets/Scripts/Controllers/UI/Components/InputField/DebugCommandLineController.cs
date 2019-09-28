@@ -1,5 +1,6 @@
 #region
 
+using System;
 using System.Linq;
 using Controllers.State;
 using Controllers.World;
@@ -86,6 +87,32 @@ namespace Controllers.UI.Components.InputField
 
             switch (args[0])
             {
+                case "set":
+                    if ((args.Length >= 4)
+                        && args[1].Equals("resolution", StringComparison.OrdinalIgnoreCase)
+                        && int.TryParse(args[2], out int width)
+                        && int.TryParse(args[3], out int height))
+                    {
+                        if (args.Length >= 5)
+                        {
+                            if (bool.TryParse(args[4], out bool fullscreen))
+                            {
+                                Screen.SetResolution(width, height, fullscreen);
+                            }
+                            else if (Enum.TryParse(args[4], out FullScreenMode fullScreenMode))
+                            {
+                                Screen.SetResolution(width, height, fullScreenMode);
+                            }
+                            else
+                            {
+                                Screen.SetResolution(width, height, Screen.fullScreenMode);
+                            }
+                        }
+
+                        EventLog.Logger.Log(LogLevel.Info, $"Screen resolution set to (w{width}, h{height}) with fullscreen mode '{Screen.fullScreenMode}'");
+                    }
+
+                    break;
                 case "get":
                     if (args[1].Equals("block") && args[2].Equals("at"))
                     {
@@ -139,7 +166,7 @@ namespace Controllers.UI.Components.InputField
                         break;
                     }
 
-                    EventLog.Logger.Log(LogLevel.Info, chunkController.GetCompressed().Count());
+                    EventLog.Logger.Log(LogLevel.Info, chunkController.GetCompressedRaw().Count());
                     break;
                 case "testsave":
                     if (args.Length < 4)

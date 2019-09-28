@@ -20,9 +20,9 @@ namespace Game.World.Chunks
         [Flags]
         public enum GenerationStep : ushort
         {
-            RawTerrain = 0b0000_0000_0000_0000,
-            Accents = 0b0000_0000_0000_0001,
-            Meshing = 0b0000_0001_0000_0000,
+            RawTerrain = 0b0000_0000_0000_0001,
+            Accents = 0b0000_0000_0000_0011,
+            Meshing = 0b0000_0001_1111_1111,
             Complete = 0b1111_1111_1111_1111
         }
 
@@ -30,13 +30,13 @@ namespace Game.World.Chunks
         public const GenerationStep LAST_BUILDING_STEP = GenerationStep.Accents;
 
         private static readonly ObjectCache<ChunkBuildingJobRawTerrain> ChunkRawTerrainBuilderCache =
-            new ObjectCache<ChunkBuildingJobRawTerrain>(null, null, true);
+            new ObjectCache<ChunkBuildingJobRawTerrain>(true);
 
         private static readonly ObjectCache<ChunkBuildingJobAccents> ChunkAccentsBuilderCache =
-            new ObjectCache<ChunkBuildingJobAccents>(null, null, true);
+            new ObjectCache<ChunkBuildingJobAccents>(true);
 
         private static readonly ObjectCache<ChunkMeshingJob> ChunkMeshersCache =
-            new ObjectCache<ChunkMeshingJob>(null, null, true);
+            new ObjectCache<ChunkMeshingJob>(true);
 
         private static bool _hasSetupTimeAggregators;
 
@@ -63,14 +63,14 @@ namespace Game.World.Chunks
             _IsSet = false;
         }
 
-        public void Set(Bounds bounds, ref Block[] blocks, ref Mesh mesh)
+        public void Set(Bounds bounds, Block[] blocks, ref Mesh mesh)
         {
             if (!_hasSetupTimeAggregators)
             {
                 BuildTimes =
                     new FixedConcurrentQueue<TimeSpan>(OptionsController.Current.MaximumChunkLoadTimeBufferSize);
-                MeshTimes = new FixedConcurrentQueue<TimeSpan>(OptionsController.Current
-                    .MaximumChunkLoadTimeBufferSize);
+                MeshTimes =
+                    new FixedConcurrentQueue<TimeSpan>(OptionsController.Current.MaximumChunkLoadTimeBufferSize);
 
                 _hasSetupTimeAggregators = true;
             }
@@ -91,13 +91,13 @@ namespace Game.World.Chunks
             _JobIdentity = null;
             _AggregateBuildTimeSpan = TimeSpan.Zero;
             CurrentStep = MINIMUM_STEP;
-            _StepForward = _Meshed = Generating = false;
-
+            _StepForward = _Meshed = _MeshUpdateRequested = Generating = false;
             _IsSet = true;
         }
 
-        public void Reset()
+        public void Unset()
         {
+            _JobIdentity = null;
             _IsSet = false;
         }
 
@@ -164,7 +164,10 @@ namespace Game.World.Chunks
             const float frequency = 0.01f;
             const float persistence = -1f;
 
-            ChunkBuildingJobRawTerrain job = ChunkRawTerrainBuilderCache.RetrieveItem();
+            if (Generating || !ChunkRawTerrainBuilderCache.TryRetrieveItem(out ChunkBuildingJobRawTerrain job))
+            {
+                return;
+            }
 
             if (OptionsController.Current.GPUAcceleration)
             {
@@ -190,7 +193,11 @@ namespace Game.World.Chunks
 
         public void BeginGeneratingAccents()
         {
-            ChunkBuildingJobAccents job = ChunkAccentsBuilderCache.RetrieveItem();
+            if (Generating || !ChunkAccentsBuilderCache.TryRetrieveItem(out ChunkBuildingJobAccents job))
+            {
+                return;
+            }
+
             job.Set(_Bounds, _Blocks);
 
             QueueJob(job);
@@ -198,7 +205,11 @@ namespace Game.World.Chunks
 
         private void BeginGeneratingMesh()
         {
-            ChunkMeshingJob job = ChunkMeshersCache.RetrieveItem();
+            if (Generating || !ChunkMeshersCache.TryRetrieveItem(out ChunkMeshingJob job))
+            {
+                return;
+            }
+
             job.Set(_Bounds, _Blocks, true, _Meshed);
 
             _MeshUpdateRequested = false;
@@ -267,11 +278,11 @@ namespace Game.World.Chunks
             {
                 case GenerationStep.RawTerrain:
                     _AggregateBuildTimeSpan += args.Job.ExecutionTime;
-                    OnBlocksChanged(new ChunkChangedEventArgs(_Bounds, Enumerable.Empty<Vector3>()));
+                    OnBlocksChanged(new ChunkChangedEventArgs(_Bounds, Directions.CardinalDirectionsVector3));
                     break;
                 case GenerationStep.Accents:
                     _AggregateBuildTimeSpan += args.Job.ExecutionTime;
-                    OnBlocksChanged(new ChunkChangedEventArgs(_Bounds, Directions.CardinalDirectionsVector3));
+                    OnBlocksChanged(new ChunkChangedEventArgs(_Bounds, Enumerable.Empty<Vector3>()));
                     break;
                 case GenerationStep.Meshing:
                     if (!(args.Job is ChunkMeshingJob job))

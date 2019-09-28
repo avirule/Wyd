@@ -7,15 +7,8 @@ using Random = System.Random;
 
 namespace Game.World.Blocks
 {
-    public interface IBlockRule
+    public interface IBlockRule : IReadOnlyBlockRule
     {
-        ushort Id { get; }
-        Block.Types Type { get; }
-        string BlockName { get; }
-        bool Transparent { get; }
-        bool Collideable { get; }
-        bool Destroyable { get; }
-
         bool ReadUVsRule(ushort blockId, Vector3 position, Direction direction, out string spriteName);
         bool ShouldPlaceAt(Random rand, int index, Vector3 position, Block[] blocks);
     }

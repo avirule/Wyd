@@ -56,6 +56,18 @@ namespace Controllers.World
         public event EventHandler<ChunkChangedEventArgs> ChunkBlocksChanged;
         public event EventHandler<ChunkChangedEventArgs> ChunkMeshChanged;
 
+        #region DEBUG
+
+#if UNITY_EDITOR
+
+        public bool IgnoreInternalFrameLimit;
+        public bool StepIntoSelectedChunkStep;
+        public ChunkGenerationDispatcher.GenerationStep SelectedStep;
+
+#endif
+
+        #endregion
+
         private void Awake()
         {
             if (GameController.Current == default)
@@ -68,8 +80,7 @@ namespace Controllers.World
 
             _ChunkControllerObject = Resources.Load<ChunkController>(@"Prefabs/Chunk");
             _Chunks = new Dictionary<Vector3, ChunkController>();
-            _ChunkCache = new ObjectCache<ChunkController>(DeactivateChunk,
-                chunkController => Destroy(chunkController.gameObject));
+            _ChunkCache = new ObjectCache<ChunkController>(false, false, -1, DeactivateChunk, DestroyCulledChunk);
             _BuildChunkAroundEntityStack = new Stack<IEntity>();
             _SaveFileProvider = new WorldSaveFileProvider("world");
             _FrameTimer = new Stopwatch();
@@ -135,9 +146,14 @@ namespace Controllers.World
             InitialTick = DateTime.Now.Ticks;
         }
 
-        public bool IsOnBorrowedUpdateTime()
+        public bool IsInSafeFrameTime()
         {
             return _FrameTimer.Elapsed > OptionsController.Current.MaximumInternalFrameTime;
+        }
+
+        public void GetRemainingSafeFrameTime(out TimeSpan remainingTime)
+        {
+            remainingTime = OptionsController.Current.MaximumInternalFrameTime - _FrameTimer.Elapsed;
         }
 
         #endregion
@@ -165,9 +181,7 @@ namespace Controllers.World
                             continue;
                         }
 
-                        ChunkController chunkController = _ChunkCache.RetrieveItem();
-
-                        if (chunkController == default)
+                        if (!_ChunkCache.TryRetrieveItem(out ChunkController chunkController))
                         {
                             chunkController = Instantiate(_ChunkControllerObject, position, Quaternion.identity,
                                 transform);
@@ -194,7 +208,7 @@ namespace Controllers.World
                     }
                 }
 
-                if (IsOnBorrowedUpdateTime())
+                if (IsInSafeFrameTime())
                 {
                     _BuildChunkAroundEntityStack.Push(loader);
                     break;
@@ -236,7 +250,7 @@ namespace Controllers.World
             _ChunkCache.CacheItem(ref chunkController);
         }
 
-        private ChunkController DeactivateChunk(ChunkController chunkController)
+        private static ref ChunkController DeactivateChunk(ref ChunkController chunkController)
         {
             //GeneralExecutionJob job = new GeneralExecutionJob(() =>
             //{
@@ -253,15 +267,19 @@ namespace Controllers.World
             //    _Chunks.Remove(chunkController.Position);
             //});
 
-            if (!_Chunks.ContainsKey(chunkController.Position))
+            if (chunkController != default)
             {
-                return default;
+                chunkController.Deactivate();
             }
 
-            chunkController.Deactivate();
             //GameController.QueueJob(job);
 
-            return chunkController;
+            return ref chunkController;
+        }
+
+        private void DestroyCulledChunk(ref ChunkController chunkController)
+        {
+            Destroy(chunkController.gameObject);
         }
 
         #endregion
@@ -379,7 +397,7 @@ namespace Controllers.World
                 throw new ArgumentOutOfRangeException($"Chunk containing position {globalPosition} does not exist.");
             }
 
-            chunkController.PlaceBlockAt(globalPosition, id);
+            chunkController.ImmediatePlaceBlockAt(globalPosition, id);
         }
 
         public bool TryPlaceBlockAt(Vector3 globalPosition, ushort id)
@@ -400,17 +418,16 @@ namespace Controllers.World
                 throw new ArgumentOutOfRangeException($"Chunk containing position {globalPosition} does not exist.");
             }
 
-            chunkController.RemoveBlockAt(globalPosition);
+            chunkController.ImmediateRemoveBlockAt(globalPosition);
         }
 
-        public bool TryRemoveBlockAt(Vector3 globalPosition, out Block block)
+        public bool TryRemoveBlockAt(Vector3 globalPosition)
         {
-            block = default;
             Vector3 chunkPosition = GetChunkOriginFromPosition(globalPosition);
 
             return TryGetChunkAt(chunkPosition, out ChunkController chunkController)
                    && (chunkController != default)
-                   && chunkController.TryRemoveBlockAt(globalPosition, out block);
+                   && chunkController.TryRemoveBlockAt(globalPosition);
         }
 
         public static Vector3 GetChunkOriginFromPosition(Vector3 globalPosition)

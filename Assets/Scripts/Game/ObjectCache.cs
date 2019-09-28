@@ -1,17 +1,20 @@
 #region
 
-using System;
 using System.Collections.Concurrent;
 
 #endregion
 
 namespace Game
 {
+    public delegate ref T PreCachingOperation<T>(ref T item);
+
+    public delegate void ItemCulledOperation<T>(ref T item);
+
     public class ObjectCache<T> where T : new()
     {
         private readonly ConcurrentStack<T> _InternalCache;
-        private Func<T, T> _PreCachingOperation;
-        private Action<T> _ItemCulledOperation;
+        private PreCachingOperation<T> _PreCachingOperation;
+        private ItemCulledOperation<T> _ItemCulledOperation;
 
         public bool CreateNewIfEmpty;
         public int MaximumSize;
@@ -19,17 +22,26 @@ namespace Game
         public int Size => _InternalCache.Count;
 
         public ObjectCache(
-            Func<T, T> preCachingOperation = default, Action<T> itemCulledOperation = default,
-            bool createNewIfEmpty = false, int maximumSize = -1)
+            bool createNewIfEmpty, bool preInitialize = false, int maximumSize = -1,
+            PreCachingOperation<T> preCachingOperation = default,
+            ItemCulledOperation<T> itemCulledOperation = default)
         {
             _InternalCache = new ConcurrentStack<T>();
             SetPreCachingOperation(preCachingOperation);
             SetItemCulledOperation(itemCulledOperation);
             CreateNewIfEmpty = createNewIfEmpty;
             MaximumSize = maximumSize;
+
+            if (preInitialize && (maximumSize > -1))
+            {
+                for (int i = 0; i < maximumSize; i++)
+                {
+                    _InternalCache.Push(new T());
+                }
+            }
         }
 
-        public void SetPreCachingOperation(Func<T, T> preCachingOperation)
+        public void SetPreCachingOperation(PreCachingOperation<T> preCachingOperation)
         {
             if (preCachingOperation == default)
             {
@@ -39,7 +51,7 @@ namespace Game
             _PreCachingOperation = preCachingOperation;
         }
 
-        public void SetItemCulledOperation(Action<T> itemCulledOperation)
+        public void SetItemCulledOperation(ItemCulledOperation<T> itemCulledOperation)
         {
             if (itemCulledOperation == default)
             {
@@ -53,10 +65,10 @@ namespace Game
         {
             if (_PreCachingOperation != default)
             {
-                item = _PreCachingOperation(item);
+                item = ref _PreCachingOperation(ref item);
             }
 
-            if (item == null)
+            if (!(item is object))
             {
                 return;
             }
@@ -65,22 +77,31 @@ namespace Game
 
             if (MaximumSize > -1)
             {
-                CullCache();
+                AttemptCullCache();
             }
         }
 
-        public T RetrieveItem()
+        public bool TryRetrieveItem(out T item)
         {
-            if ((_InternalCache.Count == 0) || !_InternalCache.TryPop(out T lastItem))
+            if ((_InternalCache.Count == 0)
+                || !_InternalCache.TryPop(out item)
+                || !(item is object))
             {
-                return CreateNewIfEmpty ? new T() : default;
+                if (CreateNewIfEmpty)
+                {
+                    item = new T();
+                }
+                else
+                {
+                    item = default;
+                    return false;
+                }
             }
 
-
-            return lastItem;
+            return true;
         }
 
-        private void CullCache()
+        private void AttemptCullCache()
         {
             if (MaximumSize == -1)
             {
@@ -89,9 +110,10 @@ namespace Game
 
             while (_InternalCache.Count > MaximumSize)
             {
-                if (_InternalCache.TryPop(out T lastItem))
+                if (_InternalCache.TryPop(out T lastItem)
+                    && lastItem is object) // null check without boxing
                 {
-                    _ItemCulledOperation(lastItem);
+                    _ItemCulledOperation?.Invoke(ref lastItem);
                 }
             }
         }

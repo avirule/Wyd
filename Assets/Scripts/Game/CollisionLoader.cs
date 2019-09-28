@@ -14,12 +14,16 @@ namespace Game
     public class CollisionLoader : MonoBehaviour
     {
         private static readonly ObjectCache<GameObject> ColliderCubeCache =
-            new ObjectCache<GameObject>(DeactivateGameObject);
+            new ObjectCache<GameObject>(false, false, -1, DeactivateGameObject);
 
-        private static GameObject DeactivateGameObject(GameObject obj)
+        private static ref GameObject DeactivateGameObject(ref GameObject obj)
         {
-            obj.SetActive(false);
-            return obj;
+            if (obj != default)
+            {
+                obj.SetActive(false);
+            }
+
+            return ref obj;
         }
 
         private Transform _SelfTransform;
@@ -117,7 +121,7 @@ namespace Game
 
                         if (!WorldController.Current.TryGetBlockAt(globalPosition, out Block block)
                             || (block.Id == BlockController.BLOCK_EMPTY_ID)
-                            || !BlockController.Current.IsBlockDefaultCollideable(block.Id))
+                            || (!BlockController.Current.GetBlockRule(block.Id)?.Collideable ?? false))
                         {
                             if (_ColliderCubes.ContainsKey(trueCenterGlobalPosition))
                             {
@@ -159,7 +163,11 @@ namespace Game
 
         private GameObject GetCollisionCube(Vector3 position)
         {
-            GameObject surfaceCollider = ColliderCubeCache.RetrieveItem() ?? Instantiate(CollisionCubeObject);
+            if (!ColliderCubeCache.TryRetrieveItem(out GameObject surfaceCollider))
+            {
+                surfaceCollider = Instantiate(CollisionCubeObject);
+            }
+
             Transform surfaceColliderTransform = surfaceCollider.transform;
             surfaceCollider.transform.parent = _SelfTransform;
             surfaceColliderTransform.position = position;

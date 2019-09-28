@@ -21,7 +21,10 @@ namespace Controllers.World
     public class ChunkController : MonoBehaviour
     {
         private static readonly ObjectCache<ChunkGenerationDispatcher> ChunkGenerationDispatcherCache =
-            new ObjectCache<ChunkGenerationDispatcher>(null, null, true);
+            new ObjectCache<ChunkGenerationDispatcher>(true);
+
+        private static readonly ObjectCache<BlockAction> BlockActionsCache =
+            new ObjectCache<BlockAction>(true, true, 1024);
 
         public static readonly Vector3Int BiomeNoiseSize = new Vector3Int(32 * 16, 256, 32 * 16);
         public static readonly Vector3Int Size = new Vector3Int(32, 256, 32);
@@ -31,7 +34,6 @@ namespace Controllers.World
         #region INSTANCE MEMBERS
 
         private Bounds _Bounds;
-        private Action _PendingAction;
         private Transform _SelfTransform;
         private IEntity _CurrentLoader;
         private Block[] _Blocks;
@@ -39,6 +41,8 @@ namespace Controllers.World
         private bool _Visible;
         private bool _RenderShadows;
         private ChunkGenerationDispatcher _ChunkGenerationDispatcher;
+        private Stack<BlockAction> _BlockActions;
+        private TimeSpan _SafeFrameTime; // this value changes often, try to don't set it
 
         public MeshFilter MeshFilter;
         public MeshRenderer MeshRenderer;
@@ -78,6 +82,15 @@ namespace Controllers.World
             }
         }
 
+#if UNITY_EDITOR
+
+        public bool PopulatePublicBlocks;
+        public bool Remesh;
+        public ushort[] Blocks;
+        public int VertexCount;
+
+#endif
+
         #endregion
 
 
@@ -89,6 +102,7 @@ namespace Controllers.World
             Position = _SelfTransform.position;
             UpdateBounds();
             _Blocks = new Block[Size.Product()];
+            _BlockActions = new Stack<BlockAction>(8);
             _Mesh = new Mesh();
             ConfigureDispatcher();
 
@@ -132,12 +146,54 @@ namespace Controllers.World
 
         private void Update()
         {
-            if (WorldController.Current.IsOnBorrowedUpdateTime())
+#if UNITY_EDITOR
+
+            if (PopulatePublicBlocks)
+            {
+                Blocks = _Blocks.Select(block => block.Id).ToArray();
+
+                PopulatePublicBlocks = false;
+            }
+
+            if (Remesh)
+            {
+                _ChunkGenerationDispatcher.RequestMeshUpdate();
+
+                Remesh = false;
+            }
+
+            if (_Mesh.vertexCount != VertexCount)
+            {
+                VertexCount = _Mesh.vertexCount;
+            }
+
+            if (WorldController.Current.StepIntoSelectedChunkStep
+                && (GenerationStep == WorldController.Current.SelectedStep))
+            {
+            }
+
+            if (!WorldController.Current.IgnoreInternalFrameLimit
+                && WorldController.Current.IsInSafeFrameTime())
             {
                 return;
             }
 
-            _ChunkGenerationDispatcher.SynchronousContextUpdate();
+            if (!ProcessBlockActions())
+            {
+                _ChunkGenerationDispatcher.SynchronousContextUpdate();
+            }
+
+#else
+            if (WorldController.Current.IsInSafeFrameTime())
+            {
+                return;
+            }
+
+            if (!ProcessBlockActions())
+            {
+                _ChunkGenerationDispatcher.SynchronousContextUpdate();
+            }
+#endif
         }
 
         private void OnDestroy()
@@ -148,6 +204,36 @@ namespace Controllers.World
 
         #endregion
 
+
+        private bool ProcessBlockActions()
+        {
+            if (_BlockActions.Count > 0)
+            {
+                do
+                {
+                    WorldController.Current.GetRemainingSafeFrameTime(out _SafeFrameTime);
+
+                    BlockAction blockAction = _BlockActions.Pop();
+
+                    int localPosition1d = ConvertGlobalPositionToLocal1D(blockAction.GlobalPosition);
+
+                    if (localPosition1d < _Blocks.Length)
+                    {
+                        _Blocks[localPosition1d].Initialise(blockAction.Id);
+                        RequestMeshUpdate();
+                        OnBlocksChanged(this,
+                            new ChunkChangedEventArgs(_Bounds,
+                                DetermineDirectionsForNeighborUpdate(blockAction.GlobalPosition)));
+                    }
+
+                    BlockActionsCache.CacheItem(ref blockAction);
+                } while ((_SafeFrameTime > TimeSpan.Zero) && (_BlockActions.Count > 0));
+
+                return true;
+            }
+
+            return false;
+        }
 
         public void RequestMeshUpdate()
         {
@@ -162,6 +248,7 @@ namespace Controllers.World
             _SelfTransform.position = Position = position;
             UpdateBounds();
             ConfigureDispatcher();
+            _Visible = MeshRenderer.enabled;
             gameObject.SetActive(true);
         }
 
@@ -184,8 +271,6 @@ namespace Controllers.World
             }
 
             _Bounds = default;
-            _Visible = _RenderShadows = false;
-
             StopAllCoroutines();
             gameObject.SetActive(false);
         }
@@ -203,8 +288,13 @@ namespace Controllers.World
 
         private void ConfigureDispatcher()
         {
-            _ChunkGenerationDispatcher = ChunkGenerationDispatcherCache.RetrieveItem();
-            _ChunkGenerationDispatcher.Set(_Bounds, ref _Blocks, ref _Mesh);
+            if (!ChunkGenerationDispatcherCache.TryRetrieveItem(out _ChunkGenerationDispatcher))
+            {
+                EventLog.Logger.Log(LogLevel.Warn,
+                    $"Chunk at position {Position} unable to retrieve a ChunkGenerationDispatcher from cache. This is most likely a serious error.");
+            }
+
+            _ChunkGenerationDispatcher.Set(_Bounds, _Blocks, ref _Mesh);
             _ChunkGenerationDispatcher.BlocksChanged += OnBlocksChanged;
             _ChunkGenerationDispatcher.MeshChanged += OnMeshChanged;
         }
@@ -213,7 +303,7 @@ namespace Controllers.World
         {
             _ChunkGenerationDispatcher.BlocksChanged -= OnBlocksChanged;
             _ChunkGenerationDispatcher.MeshChanged -= OnMeshChanged;
-            _ChunkGenerationDispatcher.Reset();
+            _ChunkGenerationDispatcher.Unset();
             ChunkGenerationDispatcherCache.CacheItem(ref _ChunkGenerationDispatcher);
         }
 
@@ -258,7 +348,7 @@ namespace Controllers.World
             return _Blocks[localPosition1d].Id != BlockController.BLOCK_EMPTY_ID;
         }
 
-        public void PlaceBlockAt(Vector3 globalPosition, ushort id)
+        public void ImmediatePlaceBlockAt(Vector3 globalPosition, ushort id)
         {
             if (!_Bounds.Contains(globalPosition))
             {
@@ -277,22 +367,10 @@ namespace Controllers.World
 
         public bool TryPlaceBlockAt(Vector3 globalPosition, ushort id)
         {
-            if (!_Bounds.Contains(globalPosition))
-            {
-                return false;
-            }
-
-            int localPosition1d = ConvertGlobalPositionToLocal1D(globalPosition);
-
-            _Blocks[localPosition1d].Initialise(id);
-            RequestMeshUpdate();
-
-            OnBlocksChanged(this,
-                new ChunkChangedEventArgs(_Bounds, DetermineDirectionsForNeighborUpdate(globalPosition)));
-            return true;
+            return TryAllocateBlockAction(globalPosition, id);
         }
 
-        public void RemoveBlockAt(Vector3 globalPosition)
+        public void ImmediateRemoveBlockAt(Vector3 globalPosition)
         {
             if (!_Bounds.Contains(globalPosition))
             {
@@ -309,29 +387,21 @@ namespace Controllers.World
                 new ChunkChangedEventArgs(_Bounds, DetermineDirectionsForNeighborUpdate(globalPosition)));
         }
 
-        public bool TryRemoveBlockAt(Vector3 globalPosition, out Block block)
+        public bool TryRemoveBlockAt(Vector3 globalPosition)
         {
-            block = default;
+            return TryAllocateBlockAction(globalPosition, BlockController.BLOCK_EMPTY_ID);
+        }
 
-            if (!_Bounds.Contains(globalPosition))
+        private bool TryAllocateBlockAction(Vector3 globalPosition, ushort id)
+        {
+            if (!_Bounds.Contains(globalPosition)
+                || !BlockActionsCache.TryRetrieveItem(out BlockAction blockAction))
             {
                 return false;
             }
 
-            int localPosition1d = ConvertGlobalPositionToLocal1D(globalPosition);
-
-            if (_Blocks[localPosition1d].Id == BlockController.BLOCK_EMPTY_ID)
-            {
-                return false;
-            }
-
-            // this should create a copy of the item
-            block = _Blocks[localPosition1d];
-            _Blocks[localPosition1d].Initialise(BlockController.BLOCK_EMPTY_ID);
-            RequestMeshUpdate();
-
-            OnBlocksChanged(this,
-                new ChunkChangedEventArgs(_Bounds, DetermineDirectionsForNeighborUpdate(globalPosition)));
+            blockAction.Initialise(globalPosition, id);
+            _BlockActions.Push(blockAction);
             return true;
         }
 
@@ -439,10 +509,10 @@ namespace Controllers.World
             }
         }
 
-        public byte[] Serialize()
+        public byte[] GetCompressedAsByteArray()
         {
             // 4 bytes for runlength and value
-            List<RunLengthCompression.Node<ushort>> nodes = GetCompressed().ToList();
+            List<RunLengthCompression.Node<ushort>> nodes = GetCompressedRaw().ToList();
             byte[] bytes = new byte[nodes.Count * 4];
 
             for (int i = 0; i < bytes.Length; i += 4)
@@ -481,7 +551,7 @@ namespace Controllers.World
             _ChunkGenerationDispatcher.SkipBuilding(true);
         }
 
-        public IEnumerable<RunLengthCompression.Node<ushort>> GetCompressed()
+        public IEnumerable<RunLengthCompression.Node<ushort>> GetCompressedRaw()
         {
             return RunLengthCompression.Compress(GetBlocksAsIds(), _Blocks[0].Id);
         }

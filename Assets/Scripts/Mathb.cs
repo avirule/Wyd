@@ -41,21 +41,30 @@ public static class Mathb
 
     public static bool MatchesAny(this byte a, byte b)
     {
-        return (a & b) != 0;
+        return (a & b) > 0;
     }
 
-    public static bool MatchesNone(this byte a, byte b)
+    public static bool MatchesAll(this byte a, byte b)
     {
-        return (a & b) == 0;
+        return (a & b) == b;
     }
 
-    public static int LeastSignificantBit(this byte a)
+    public static int LeastSigBitDigit(this byte a)
+    {
+        return MultiplyDeBruijnBitPosition[(uint) ((a & -a) * 0x077CB531U) >> 27];
+    }
+
+    public static int LeastSigBitDigit(this sbyte a)
     {
         return MultiplyDeBruijnBitPosition[(uint) ((a & -a) * 0x077CB531U) >> 27];
     }
 
-    public static int LeastSignificantBit(this sbyte a)
+    public static byte SetBitByValueWithMask(this byte a, byte mask, bool value)
     {
-        return MultiplyDeBruijnBitPosition[(uint) ((a & -a) * 0x077CB531U) >> 27];
+        unsafe
+        {
+            // avoids probable branch prediction slowdown on the cpu
+            return (byte) ((a & ~mask) | (*(byte*) &value << mask.LeastSigBitDigit()));
+        }
     }
 }

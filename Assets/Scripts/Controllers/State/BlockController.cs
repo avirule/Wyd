@@ -25,16 +25,17 @@ namespace Controllers.State
         private void Awake()
         {
             AssignCurrent(this);
-            BlockNameIds = new Dictionary<string, ushort>(sbyte.MaxValue);
-            Blocks = new List<IBlockRule>(sbyte.MaxValue);
+            BlockNameIds = new Dictionary<string, ushort>(byte.MaxValue);
+            Blocks = new List<IBlockRule>(byte.MaxValue);
 
             // default 'nothing' block
-            RegisterBlockRules("air", Block.Types.None, true, false, false);
+            RegisterBlockRules("air", Block.Types.None, true, false, false, false);
             Air = new Block(BLOCK_EMPTY_ID);
         }
 
         public int RegisterBlockRules(
-            string blockName, Block.Types type, bool transparent, bool collideable, bool destroyable,
+            string blockName, Block.Types type,
+            bool transparent, bool collideable, bool destroyable, bool collectible,
             Func<Vector3, Direction, string> uvsRule = default)
         {
             ushort assignedBlockId = 0;
@@ -55,7 +56,8 @@ namespace Controllers.State
                 uvsRule = (position, direction) => blockName;
             }
 
-            Blocks.Add(new BlockRule(assignedBlockId, blockName, type, transparent, collideable, destroyable, uvsRule));
+            Blocks.Add(new BlockRule(assignedBlockId, blockName, type, transparent, collideable, destroyable,
+                collectible, uvsRule));
             BlockNameIds.Add(blockName, assignedBlockId);
 
             EventLog.Logger.Log(LogLevel.Info,
@@ -137,39 +139,30 @@ namespace Controllers.State
             return "null";
         }
 
-        public bool IsBlockDefaultTransparent(ushort blockId)
+        public IReadOnlyBlockRule GetBlockRule(ushort blockId)
         {
             if (BlockIdExists(blockId))
             {
-                return Blocks[blockId].Transparent;
+                return Blocks[blockId];
             }
 
             EventLog.Logger.Log(LogLevel.Error,
                 $"Failed to return block rule for block with id `{blockId}`: block does not exist.");
-            return false;
+            return null;
         }
 
-        public bool IsBlockDefaultCollideable(ushort blockId)
+        public bool TryGetBlockRule(ushort blockId, out IReadOnlyBlockRule blockRule)
         {
             if (BlockIdExists(blockId))
             {
-                return Blocks[blockId].Collideable;
+                blockRule = Blocks[blockId];
+                return true;
             }
 
             EventLog.Logger.Log(LogLevel.Error,
                 $"Failed to return block rule for block with id `{blockId}`: block does not exist.");
-            return false;
-        }
 
-        public bool IsBlockDefaultDestroyable(ushort blockId)
-        {
-            if (BlockIdExists(blockId))
-            {
-                return Blocks[blockId].Destroyable;
-            }
-
-            EventLog.Logger.Log(LogLevel.Error,
-                $"Failed to return block rule for block with id `{blockId}`: block does not exist.");
+            blockRule = default;
             return false;
         }
 

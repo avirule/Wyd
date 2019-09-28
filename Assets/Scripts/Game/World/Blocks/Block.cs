@@ -19,81 +19,66 @@ namespace Game.World.Blocks
             Ore
         }
 
-        public const sbyte TRANSPARENCY_MASK = 0b0100_0000;
-        public const sbyte FACES_MASK = 0b0011_1111;
+        public const byte TRANSPARENCY_MASK = 0b0100_0000;
+        public const byte FACES_MASK = 0b0011_1111;
 
         /// <summary>
         ///     Determines whether the block is transparent.
         /// </summary>
         public bool Transparent
         {
-            get => (Faces & TRANSPARENCY_MASK) == 0;
+            get => !Faces.MatchesAny(TRANSPARENCY_MASK);
             // value = true is transparent so that the default value of block is transparent
             private set => SetTransparency(value);
         }
 
         public ushort Id { get; private set; }
 
-        public sbyte Faces { get; private set; }
+        public byte Faces { get; private set; }
         //public sbyte Damage { get; private set; }
 
-        public Block(ushort id, sbyte faces = 0)
+        public Block(ushort id, byte faces = 0)
         {
             Id = id;
             Faces = faces;
             //Damage = 0;
         }
 
-        public void Initialise(ushort id, sbyte faces = 0)
+        public void Initialise(ushort id, byte faces = 0)
         {
             Id = id;
             Faces = faces;
-            Transparent = BlockController.Current.IsBlockDefaultTransparent(Id);
-        }
-
-        public void SetTransparency(bool transparent)
-        {
-            if (transparent)
-            {
-                Faces &= ~TRANSPARENCY_MASK;
-            }
-            else
-            {
-                Faces |= TRANSPARENCY_MASK;
-            }
+            Transparent = BlockController.Current.GetBlockRule(Id)?.Transparent ?? true;
         }
 
         public bool HasAnyFaces()
         {
-            return (Faces & FACES_MASK) > 0;
+            return Faces.MatchesAny(FACES_MASK);
         }
 
         public bool HasAllFaces()
         {
-            return (Faces & FACES_MASK) == FACES_MASK;
+            return Faces.MatchesAll(FACES_MASK);
         }
 
         public bool HasFace(Direction direction)
         {
-            return (Faces & (sbyte) direction) > 0;
+            return Faces.MatchesAny((byte) direction);
         }
 
         public void SetFace(Direction direction, bool value)
         {
-            if (value)
-            {
-                Faces |= (sbyte) direction;
-            }
-            else
-            {
-                // for the record, this is stupid.
-                Faces &= (sbyte) ~direction;
-            }
+            Faces = Faces.SetBitByValueWithMask((byte) direction, value);
+        }
+
+        public void SetTransparency(bool transparent)
+        {
+            Faces = Faces.SetBitByValueWithMask(TRANSPARENCY_MASK, !transparent);
         }
 
         public void ClearFaces()
         {
-            Faces &= ~FACES_MASK;
+            Faces &= FACES_MASK ^ byte.MaxValue;
         }
     }
 }

@@ -13,38 +13,38 @@ namespace Game
     /// <summary>
     ///     6-way cardinal directions in byte values.
     /// </summary>
-    public enum Direction : sbyte
+    public enum Direction : byte
     {
         /// <summary>
         ///     Positive on Z axis
         /// </summary>
-        North = 0b00000001,
+        North = 0b0000_0001,
 
         /// <summary>
         ///     Positive on X axis
         /// </summary>
-        East = 0b00000010,
+        East = 0b0000_0010,
 
         /// <summary>
         ///     Negative on Z axis
         /// </summary>
-        South = 0b00000100,
+        South = 0b0000_0100,
 
         /// <summary>
         ///     Negative on X axis
         /// </summary>
-        West = 0b00001000,
+        West = 0b0000_1000,
 
         /// <summary>
         ///     Positive on Y axis
         /// </summary>
-        Up = 0b00010000,
+        Up = 0b0001_0000,
 
         /// <summary>
         ///     Negative on Y axis
         /// </summary>
-        Down = 0b00100000,
-        All = 0b00111111
+        Down = 0b0010_0000,
+        All = 0b0011_1111
     }
 
     public static class Directions

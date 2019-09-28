@@ -11,13 +11,14 @@ using Random = System.Random;
 
 namespace Game.World.Blocks
 {
-    public class BlockRule : IBlockRule
+    public class BlockRule : IReadOnlyBlockRule, IBlockRule
     {
         private static readonly BitVector32.Section IdSection;
         private static readonly BitVector32.Section TypeSection;
         private static readonly BitVector32.Section TransparencySection;
         private static readonly BitVector32.Section CollideableSection;
         private static readonly BitVector32.Section DestroyableSection;
+        private static readonly BitVector32.Section CollectibleSection;
 
         private static readonly Func<Vector3, Direction, string> DefaultUVsRule;
 
@@ -28,6 +29,7 @@ namespace Game.World.Blocks
             TransparencySection = BitVector32.CreateSection(1, TypeSection);
             CollideableSection = BitVector32.CreateSection(1, TransparencySection);
             DestroyableSection = BitVector32.CreateSection(1, CollideableSection);
+            CollectibleSection = BitVector32.CreateSection(1, DestroyableSection);
 
             DefaultUVsRule = (position, direction) => string.Empty;
         }
@@ -68,8 +70,15 @@ namespace Game.World.Blocks
             private set => _Bits[DestroyableSection] = value ? 1 : 0;
         }
 
+        public bool Collectible
+        {
+            get => _Bits[CollectibleSection] == 1;
+            private set => _Bits[CollectibleSection] = value ? 1 : 0;
+        }
+
         public BlockRule(
-            ushort id, string blockName, Block.Types type, bool transparent, bool collideable, bool destroyable,
+            ushort id, string blockName, Block.Types type,
+            bool transparent, bool collideable, bool destroyable, bool collectible,
             Func<Vector3, Direction, string> uvsRule)
         {
             _Bits = new BitVector32(0);
@@ -80,6 +89,7 @@ namespace Game.World.Blocks
             Transparent = transparent;
             Collideable = collideable;
             Destroyable = destroyable;
+            Collectible = collectible;
 
             UVsRule = uvsRule ?? DefaultUVsRule;
         }

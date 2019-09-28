@@ -199,7 +199,7 @@ namespace Jobs
         {
             if (!Running)
             {
-                return default;
+                return null;
             }
 
             job.Initialize(Guid.NewGuid().ToString(), AbortToken);

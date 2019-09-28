@@ -2,6 +2,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.Collections.Specialized;
 using Controllers.Entity;
 using Controllers.State;
@@ -14,9 +15,9 @@ namespace Controllers.UI
 {
     public class HotbarController : SingletonController<HotbarController>
     {
-        public const int MAXIMUM_HOTBAR_STACKS = 7;
+        public const int MAXIMUM_HOTBAR_STACKS = 8;
 
-        private List<DisplayBlockController> _DisplayBlocks;
+        private ObservableCollection<DisplayBlockController> _InternalInventory;
         private float _InitialSelectedCellPositionX;
         private float _ScrollValue;
         private int _CurrentIndex;
@@ -25,7 +26,7 @@ namespace Controllers.UI
         public RectTransform CellsContainer;
         public RectTransform SelectedCell;
 
-        public IReadOnlyList<DisplayBlockController> Blocks => _DisplayBlocks;
+        public IReadOnlyList<DisplayBlockController> Blocks => _InternalInventory;
 
         public int CurrentIndex
         {
@@ -36,7 +37,7 @@ namespace Controllers.UI
 
                 if (value < 0)
                 {
-                    newValue = MAXIMUM_HOTBAR_STACKS - (value % (MAXIMUM_HOTBAR_STACKS - 1));
+                    newValue = MAXIMUM_HOTBAR_STACKS - ((value % MAXIMUM_HOTBAR_STACKS) + 2);
                 }
                 else
                 {
@@ -49,14 +50,21 @@ namespace Controllers.UI
 
         public ushort SelectedId { get; private set; }
 
+        public event NotifyCollectionChangedEventHandler HotbarChanged;
         public event EventHandler<int> SelectedBlockChanged;
 
         private void Awake()
         {
             AssignCurrent(this);
 
-            _DisplayBlocks = new List<DisplayBlockController>(new DisplayBlockController[MAXIMUM_HOTBAR_STACKS]);
+            _InternalInventory =
+                new ObservableCollection<DisplayBlockController>(new DisplayBlockController[MAXIMUM_HOTBAR_STACKS]);
             _InitialSelectedCellPositionX = SelectedCell.localPosition.x;
+
+            _InternalInventory.CollectionChanged += (sender, args) => { HotbarChanged?.Invoke(sender, args); };
+
+
+            // todo move hotbar logic to hotbar and remove from inventory
         }
 
         private void Start()
@@ -82,7 +90,7 @@ namespace Controllers.UI
 
             CurrentIndex += scrollValueInt;
 
-            SelectedId = _DisplayBlocks[CurrentIndex]?.BlockId ?? 0;
+            SelectedId = _InternalInventory[CurrentIndex]?.BlockId ?? 0;
 
             SelectedBlockChanged?.Invoke(this, CurrentIndex);
 
@@ -109,7 +117,7 @@ namespace Controllers.UI
                             displayBlockGameObject.GetComponent<DisplayBlockController>();
                         displayBlock.InitializeAs(itemStack);
 
-                        _DisplayBlocks.Insert(itemStack.InventoryIndex, displayBlock);
+                        _InternalInventory.Insert(itemStack.InventoryIndex, displayBlock);
                     }
 
                     break;
@@ -122,7 +130,13 @@ namespace Controllers.UI
                             continue;
                         }
 
-                        DisplayBlockController displayBlock = _DisplayBlocks[itemStack.InventoryIndex];
+                        DisplayBlockController displayBlock = _InternalInventory[itemStack.InventoryIndex];
+
+                        if (displayBlock == default)
+                        {
+                            return;
+                        }
+
                         displayBlock.AmountText.text = itemStack.Amount.ToString();
                     }
 

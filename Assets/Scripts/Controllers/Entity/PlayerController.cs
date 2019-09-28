@@ -88,7 +88,8 @@ namespace Controllers.Entity
                 "primary",
                 "player",
                 "loader",
-                "collider"
+                "collider",
+                "collector"
             });
 
             ReachHitSurfaceObject = Instantiate(ReachHitSurfaceObject);
@@ -98,18 +99,22 @@ namespace Controllers.Entity
 
             PositionChanged += (sender, position) =>
             {
-                const int destructRadius = 2;
-                for (int x = -destructRadius; x < (destructRadius + 1); x++)
+                const int destruct_radius = 2;
+                for (int x = -destruct_radius; x < (destruct_radius + 1); x++)
                 {
-                    for (int y = -destructRadius; y < (destructRadius + 1); y++)
+                    for (int y = -destruct_radius; y < (destruct_radius + 1); y++)
                     {
-                        for (int z = -destructRadius; z < (destructRadius + 1); z++)
+                        for (int z = -destruct_radius; z < (destruct_radius + 1); z++)
                         {
                             Vector3 relativePosition = position + new Vector3(x, y, z);
 
-                            if (WorldController.Current.TryGetBlockAt(relativePosition, out Block block))
+                            if (WorldController.Current.TryGetBlockAt(relativePosition, out Block block)
+                                && BlockController.Current.TryGetBlockRule(block.Id, out IReadOnlyBlockRule blockRule)
+                                && blockRule.Destroyable
+                                && WorldController.Current.TryRemoveBlockAt(relativePosition)
+                                && blockRule.Collectible)
                             {
-                                WorldController.Current.TryRemoveBlockAt(relativePosition, out block);
+                                Inventory.AddItem(block.Id, 1);
                             }
                         }
                     }
@@ -167,7 +172,7 @@ namespace Controllers.Entity
                     _LastReachRayHit.normal.Sum() > 0f
                         ? _LastReachRayHit.point.Floor() - _LastReachRayHit.normal
                         : _LastReachRayHit.point.Floor(), out Block block)
-                || !BlockController.Current.IsBlockDefaultDestroyable(block.Id))
+                || (!BlockController.Current.GetBlockRule(block.Id)?.Destroyable ?? false))
             {
                 ReachHitSurfaceObject.SetActive(false);
                 _IsInReachOfValidSurface = false;
@@ -205,14 +210,20 @@ namespace Controllers.Entity
                 && _IsInReachOfValidSurface
                 && (_ActionCooldown.Elapsed > MinimumActionInterval))
             {
-                Block destroyedBlock;
+                Vector3 position;
 
                 if (((_LastReachRayHit.normal.Sum() > 0f)
                      && WorldController.Current.TryRemoveBlockAt(
-                         _LastReachRayHit.point.Floor() - _LastReachRayHit.normal, out destroyedBlock))
-                    || WorldController.Current.TryRemoveBlockAt(_LastReachRayHit.point.Floor(), out destroyedBlock))
+                         position = _LastReachRayHit.point.Floor() - _LastReachRayHit.normal))
+                    || WorldController.Current.TryRemoveBlockAt(
+                        position = _LastReachRayHit.point.Floor()))
                 {
-                    Inventory.AddItem(destroyedBlock.Id, 1);
+                    WorldController.Current.TryGetBlockAt(position, out Block destroyedBlock);
+
+                    if (BlockController.Current.GetBlockRule(destroyedBlock.Id)?.Collectible ?? false)
+                    {
+                        Inventory.AddItem(destroyedBlock.Id, 1);
+                    }
                 }
 
                 _ActionCooldown.Restart();

@@ -1,6 +1,5 @@
 #region
 
-using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Collections.Specialized;
@@ -21,8 +20,8 @@ namespace Controllers.Entity
         public IReadOnlyCollection<ItemStack> Inventory => _InternalInventory;
         public IReadOnlyCollection<ItemStack> Hotbar => _InternalHotbar;
 
-        public event EventHandler<NotifyCollectionChangedEventArgs> InventoryChanged;
-        public event EventHandler<NotifyCollectionChangedEventArgs> HotbarChanged;
+        public event NotifyCollectionChangedEventHandler InventoryChanged;
+        public event NotifyCollectionChangedEventHandler HotbarChanged;
 
         private void Awake()
         {
@@ -34,7 +33,9 @@ namespace Controllers.Entity
         {
             int remainingAmount = amount;
 
-            while (remainingAmount > 0)
+            while ((_InternalHotbar.Count
+                    <= HotbarController.MAXIMUM_HOTBAR_STACKS) /* todo remove this, make it more... dynamic */
+                   && (remainingAmount > 0))
             {
                 ItemStack itemStack = GetFirstNonFullItemStackWithId(blockId);
 
@@ -42,7 +43,7 @@ namespace Controllers.Entity
                 {
                     itemStack = new ItemStack(0, blockId);
 
-                    if (_InternalHotbar.Count < HotbarController.MAXIMUM_HOTBAR_STACKS)
+                    if (_InternalHotbar.Count <= HotbarController.MAXIMUM_HOTBAR_STACKS)
                     {
                         itemStack.InventoryIndex = _InternalHotbar.Count;
                         _InternalHotbar.Add(itemStack);

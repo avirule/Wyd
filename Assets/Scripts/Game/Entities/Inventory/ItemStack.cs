@@ -8,7 +8,7 @@ namespace Game.Entities.Inventory
 {
     public class ItemStack
     {
-        public const int MAXIMUM_STACK_SIZE = sbyte.MaxValue;
+        public const int MAXIMUM_STACK_SIZE = sbyte.MaxValue + 1;
 
         public int InventoryIndex { get; set; }
         public ushort BlockId { get; private set; }
@@ -28,6 +28,11 @@ namespace Game.Entities.Inventory
         public int AllocateAmount(int amount)
         {
             Amount += amount;
+
+            if (Amount < 0)
+            {
+                // todo destroy
+            }
 
             if (Amount <= MAXIMUM_STACK_SIZE)
             {

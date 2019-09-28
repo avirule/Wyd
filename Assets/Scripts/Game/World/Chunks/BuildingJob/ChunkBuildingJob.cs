@@ -16,7 +16,7 @@ namespace Game.World.Chunks.BuildingJob
     public class ChunkBuildingJob : Job
     {
         protected static readonly ObjectCache<ChunkBuilderNoiseValues> NoiseValuesCache =
-            new ObjectCache<ChunkBuilderNoiseValues>(null, null, true);
+            new ObjectCache<ChunkBuilderNoiseValues>(true);
 
         protected static OpenSimplex_FastNoise NoiseFunction;
 
