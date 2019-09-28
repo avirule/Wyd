@@ -27,7 +27,7 @@ namespace Game.World.Blocks
         /// </summary>
         public bool Transparent
         {
-            get => !Faces.MatchesAny(TRANSPARENCY_MASK);
+            get => !Faces.ContainsAnyBits(TRANSPARENCY_MASK);
             // value = true is transparent so that the default value of block is transparent
             private set => SetTransparency(value);
         }
@@ -53,17 +53,17 @@ namespace Game.World.Blocks
 
         public bool HasAnyFaces()
         {
-            return Faces.MatchesAny(FACES_MASK);
+            return Faces.ContainsAnyBits(FACES_MASK);
         }
 
         public bool HasAllFaces()
         {
-            return Faces.MatchesAll(FACES_MASK);
+            return Faces.ContainsAllBits(FACES_MASK);
         }
 
         public bool HasFace(Direction direction)
         {
-            return Faces.MatchesAny((byte) direction);
+            return Faces.ContainsAnyBits((byte) direction);
         }
 
         public void SetFace(Direction direction, bool value)

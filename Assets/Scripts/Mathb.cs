@@ -1,3 +1,9 @@
+#region
+
+using Extensions;
+
+#endregion
+
 /// <summary>
 ///     Byte math
 /// </summary>
@@ -39,12 +45,12 @@ public static class Mathb
         9
     };
 
-    public static bool MatchesAny(this byte a, byte b)
+    public static bool ContainsAnyBits(this byte a, byte b)
     {
         return (a & b) > 0;
     }
 
-    public static bool MatchesAll(this byte a, byte b)
+    public static bool ContainsAllBits(this byte a, byte b)
     {
         return (a & b) == b;
     }
@@ -54,17 +60,9 @@ public static class Mathb
         return MultiplyDeBruijnBitPosition[(uint) ((a & -a) * 0x077CB531U) >> 27];
     }
 
-    public static int LeastSigBitDigit(this sbyte a)
-    {
-        return MultiplyDeBruijnBitPosition[(uint) ((a & -a) * 0x077CB531U) >> 27];
-    }
-
     public static byte SetBitByValueWithMask(this byte a, byte mask, bool value)
     {
-        unsafe
-        {
-            // avoids probable branch prediction slowdown on the cpu
-            return (byte) ((a & ~mask) | (*(byte*) &value << mask.LeastSigBitDigit()));
-        }
+        // avoids probable branch prediction slowdown on the cpu
+        return (byte) ((a & ~mask) | (value.ToByte() << mask.LeastSigBitDigit()));
     }
 }

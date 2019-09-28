@@ -109,7 +109,8 @@ namespace Controllers.UI.Components.InputField
                             }
                         }
 
-                        EventLog.Logger.Log(LogLevel.Info, $"Screen resolution set to (w{width}, h{height}) with fullscreen mode '{Screen.fullScreenMode}'");
+                        EventLog.Logger.Log(LogLevel.Info,
+                            $"Screen resolution set to (w{width}, h{height}) with fullscreen mode '{Screen.fullScreenMode}'");
                     }
 
                     break;
