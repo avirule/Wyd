@@ -42,6 +42,7 @@ namespace Controllers.World
         private bool _RenderShadows;
         private ChunkGenerationDispatcher _ChunkGenerationDispatcher;
         private Stack<BlockAction> _BlockActions;
+        private HashSet<Vector3> _BlockActionGlobalPositions;
         private TimeSpan _SafeFrameTime; // this value changes often, try to don't set it
 
         public MeshFilter MeshFilter;
@@ -102,7 +103,8 @@ namespace Controllers.World
             Position = _SelfTransform.position;
             UpdateBounds();
             _Blocks = new Block[Size.Product()];
-            _BlockActions = new Stack<BlockAction>(8);
+            _BlockActions = new Stack<BlockAction>();
+            _BlockActionGlobalPositions = new HashSet<Vector3>();
             _Mesh = new Mesh();
             ConfigureDispatcher();
 
@@ -214,6 +216,7 @@ namespace Controllers.World
                     WorldController.Current.GetRemainingSafeFrameTime(out _SafeFrameTime);
 
                     BlockAction blockAction = _BlockActions.Pop();
+                    _BlockActionGlobalPositions.Remove(blockAction.GlobalPosition);
 
                     int localPosition1d = ConvertGlobalPositionToLocal1D(blockAction.GlobalPosition);
 
@@ -394,7 +397,9 @@ namespace Controllers.World
 
         private bool TryAllocateBlockAction(Vector3 globalPosition, ushort id)
         {
-            if (!_Bounds.Contains(globalPosition)
+            // todo this vvvv
+            if (_BlockActionGlobalPositions.Contains(globalPosition)
+                || !_Bounds.Contains(globalPosition)
                 || !BlockActionsCache.TryRetrieveItem(out BlockAction blockAction))
             {
                 return false;
@@ -402,6 +407,7 @@ namespace Controllers.World
 
             blockAction.Initialise(globalPosition, id);
             _BlockActions.Push(blockAction);
+            _BlockActionGlobalPositions.Add(globalPosition);
             return true;
         }
 
