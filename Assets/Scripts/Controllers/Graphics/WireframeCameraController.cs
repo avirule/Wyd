@@ -5,6 +5,9 @@ using UnityEngine;
 
 #endregion
 
+// disable this functionality if not editor build
+#if UNITY_EDITOR
+
 namespace Controllers.Graphics
 {
     [RequireComponent(typeof(Camera))]
@@ -82,3 +85,5 @@ namespace Controllers.Graphics
         }
     }
 }
+
+#endif
