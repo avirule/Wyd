@@ -1,5 +1,6 @@
 #region
 
+using System;
 using Controllers.State;
 using Extensions;
 using Jobs;
@@ -12,6 +13,8 @@ namespace Controllers.UI.Components.Button
 {
     public class ThreadingModeButtonController : MonoBehaviour, IPointerClickHandler
     {
+        private static readonly int ThreadingModeEnumLength = Enum.GetNames(typeof(ThreadingMode)).Length;
+        
         public void OnPointerClick(PointerEventData eventData)
         {
             int step = eventData.GetButtonAsInt();
@@ -23,7 +26,7 @@ namespace Controllers.UI.Components.Button
             else
             {
                 OptionsController.Current.ThreadingMode =
-                    (ThreadingMode) ((int) (OptionsController.Current.ThreadingMode + step) % 2);
+                    (ThreadingMode) ((int) (OptionsController.Current.ThreadingMode - step) % ThreadingModeEnumLength);
             }
         }
     }

@@ -35,22 +35,26 @@ namespace Controllers.State
         {
             if (JobExecutionQueue == default)
             {
-                // init ThreadedQueue with # of threads matching 1/2 of logical processors
-                JobExecutionQueue = new JobQueue(200, () => OptionsController.Current.ThreadingMode);
+                JobExecutionQueue = new JobQueue(200);
+                OptionsController.Current.PropertyChanged += (sender, args) =>
+                {
+                    if (args.PropertyName.Equals(nameof(OptionsController.Current.ThreadingMode)))
+                    {
+                        JobExecutionQueue.ThreadingMode = OptionsController.Current.ThreadingMode;
+                    }
+                    else if (args.PropertyName.Equals(nameof(OptionsController.Current.CPUCoreUtilization)))
+                    {
+                        JobExecutionQueue.ModifyThreadPoolSize(OptionsController.Current.CPUCoreUtilization);
+                    }
+                };
+
+                JobExecutionQueue.JobFinished += (sender, args) => { JobFinished?.Invoke(sender, args); };
+                JobExecutionQueue.ModifyThreadPoolSize(OptionsController.Current.CPUCoreUtilization);
+
                 JobExecutionQueue.Start();
             }
 
             RegisterDefaultBlocks();
-
-            JobExecutionQueue.JobFinished += (sender, args) => { JobFinished?.Invoke(sender, args); };
-            JobExecutionQueue.ModifyThreadPoolSize(OptionsController.Current.CPUCoreUtilization);
-            OptionsController.Current.PropertyChanged += (sender, args) =>
-            {
-                if (args.PropertyName.Equals(nameof(OptionsController.Current.CPUCoreUtilization)))
-                {
-                    JobExecutionQueue.ModifyThreadPoolSize(OptionsController.Current.CPUCoreUtilization);
-                }
-            };
         }
 
         private void LateUpdate()

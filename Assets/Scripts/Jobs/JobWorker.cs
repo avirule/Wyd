@@ -8,23 +8,23 @@ using System.Threading;
 
 namespace Jobs
 {
-    public class JobCompletionThread
+    public class JobWorker
     {
-        private readonly Thread _InternalThread;
+        private readonly Thread _Thread;
         private readonly BlockingCollection<Job> _ItemQueue;
         private readonly CancellationToken _AbortToken;
 
-        public int WaitTimeout;
+        public readonly int WaitTimeout;
 
         public bool Running { get; private set; }
         public bool Processing { get; private set; }
-        public int ManagedThreadId => _InternalThread.ManagedThreadId;
+        public int ManagedThreadId => _Thread.ManagedThreadId;
 
         public event EventHandler<JobFinishedEventArgs> JobFinished;
 
-        public JobCompletionThread(int waitTimeout, CancellationToken abortToken)
+        public JobWorker(int waitTimeout, CancellationToken abortToken)
         {
-            _InternalThread = new Thread(ProcessItemQueue);
+            _Thread = new Thread(ProcessItemQueue);
             _ItemQueue = new BlockingCollection<Job>();
             _AbortToken = abortToken;
 
@@ -33,7 +33,7 @@ namespace Jobs
 
         public void Start()
         {
-            _InternalThread.Start();
+            _Thread.Start();
             Running = true;
         }
 
@@ -56,6 +56,7 @@ namespace Jobs
                 catch (OperationCanceledException)
                 {
                     // Thread aborted
+                    Running = false;
                     return;
                 }
             }

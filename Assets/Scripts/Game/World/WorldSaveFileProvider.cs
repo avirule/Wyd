@@ -36,7 +36,7 @@ namespace Game.World
         {
             WorldSaveFileDirectory = $@"{Application.persistentDataPath}\Saves\\";
 
-            QueryExecutionQueue = new JobQueue(200, () => ThreadingMode.Single);
+            QueryExecutionQueue = new JobQueue(200);
             QueryExecutionQueue.Start();
         }
 

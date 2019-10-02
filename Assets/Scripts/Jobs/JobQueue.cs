@@ -13,20 +13,19 @@ namespace Jobs
 {
     public enum ThreadingMode
     {
-        Single = 0,
-        Multi = 1
+        Single,
+        Multi,
+        Adaptive
     }
 
     public class JobQueue
     {
-        private readonly Func<ThreadingMode> _ThreadingModeReference;
-
         private bool _Disposed;
         private int _WaitTimeout;
 
         protected readonly Thread ProcessingThread;
-        protected readonly List<JobCompletionThread> InternalThreads;
-        protected readonly BlockingCollection<Job> JobWaitingQueue;
+        protected readonly List<JobWorker> Workers;
+        protected readonly BlockingCollection<Job> ProcessQueue;
         protected readonly CancellationTokenSource AbortTokenSource;
         protected CancellationToken AbortToken;
         protected int LastThreadIndexQueuedInto;
@@ -38,7 +37,7 @@ namespace Jobs
         ///     the
         ///     internal thread, or uses the internal thread pool.
         /// </summary>
-        public ThreadingMode ThreadingMode { get; private set; }
+        public ThreadingMode ThreadingMode { get; set; }
 
 
         /// <summary>
@@ -73,16 +72,16 @@ namespace Jobs
         ///     Time in milliseconds to wait between attempts to process an item in internal
         ///     queue.
         /// </param>
-        /// <param name="threadingModeReference"></param>
-        /// <param name="threadPoolSize">Size of internal <see cref="JobCompletionThread" /> pool</param>
-        public JobQueue(int waitTimeout, Func<ThreadingMode> threadingModeReference = null, int threadPoolSize = -1)
+        /// <param name="threadingMode"></param>
+        /// <param name="threadPoolSize">Size of internal <see cref="JobWorker" /> pool</param>
+        public JobQueue(int waitTimeout, ThreadingMode threadingMode = ThreadingMode.Single, int threadPoolSize = -1)
         {
             WaitTimeout = waitTimeout;
+            ThreadingMode = threadingMode;
             ModifyThreadPoolSize(threadPoolSize);
-            _ThreadingModeReference = threadingModeReference ?? (() => ThreadingMode.Single);
             ProcessingThread = new Thread(ProcessJobs);
-            InternalThreads = new List<JobCompletionThread>(ThreadPoolSize);
-            JobWaitingQueue = new BlockingCollection<Job>();
+            ProcessQueue = new BlockingCollection<Job>();
+            Workers = new List<JobWorker>(ThreadPoolSize);
             AbortTokenSource = new CancellationTokenSource();
             AbortToken = AbortTokenSource.Token;
             // set to -1 increment in first run of process queue
@@ -110,12 +109,12 @@ namespace Jobs
             Running = false;
         }
 
-        private void SpawnWorkerThread()
+        private void SpawnJobWorker()
         {
-            JobCompletionThread jobCompletionThread = new JobCompletionThread(WaitTimeout, AbortToken);
-            jobCompletionThread.JobFinished += OnJobFinished;
-            jobCompletionThread.Start();
-            InternalThreads.Add(jobCompletionThread);
+            JobWorker jobWorker = new JobWorker(WaitTimeout, AbortToken);
+            jobWorker.JobFinished += OnJobFinished;
+            jobWorker.Start();
+            Workers.Add(jobWorker);
         }
 
         private void OnJobFinished(object sender, JobFinishedEventArgs args)
@@ -132,22 +131,16 @@ namespace Jobs
             {
                 try
                 {
-                    if (!JobWaitingQueue.TryTake(out Job job, WaitTimeout, AbortToken)
+                    if (!ProcessQueue.TryTake(out Job job, WaitTimeout, AbortToken)
                         || (job == default))
                     {
                         continue;
                     }
 
-                    // update threading mode if object is taken
-                    if (ThreadingMode != _ThreadingModeReference())
+                    while ((Workers.Count < ThreadPoolSize)
+                           && (ThreadingMode > ThreadingMode.Single))
                     {
-                        ThreadingMode = _ThreadingModeReference();
-                    }
-
-                    while ((ThreadingMode == ThreadingMode.Multi)
-                           && (InternalThreads.Count < ThreadPoolSize))
-                    {
-                        SpawnWorkerThread();
+                        SpawnJobWorker();
                     }
 
                     ProcessJob(job);
@@ -159,7 +152,7 @@ namespace Jobs
                 }
                 catch (Exception ex)
                 {
-                    EventLog.Logger.Log(LogLevel.Warn, $"Error occurred in threading daemon: {ex.Message}");
+                    EventLog.Logger.Log(LogLevel.Warn, $"Error occurred in job queue: {ex.Message}");
                 }
             }
 
@@ -181,13 +174,49 @@ namespace Jobs
                     OnJobFinished(this, new JobFinishedEventArgs(job));
                     break;
                 case ThreadingMode.Multi:
-                    LastThreadIndexQueuedInto = (LastThreadIndexQueuedInto + 1) % ThreadPoolSize;
 
-                    InternalThreads[LastThreadIndexQueuedInto].QueueJob(job);
+                    if (TryGetFirstFreeWorker(out int jobWorkerIndex))
+                    {
+                        Workers[jobWorkerIndex].QueueJob(job);
+                    }
+                    else
+                    {
+                        LastThreadIndexQueuedInto = (LastThreadIndexQueuedInto + 1) % ThreadPoolSize;
+
+                        Workers[LastThreadIndexQueuedInto].QueueJob(job);
+                    }
+
+                    break;
+                case ThreadingMode.Adaptive:
+                    if (TryGetFirstFreeWorker(out jobWorkerIndex))
+                    {
+                        Workers[jobWorkerIndex].QueueJob(job);
+                    }
+                    else
+                    {
+                        await job.Execute();
+                    }
+
                     break;
                 default:
                     throw new ArgumentOutOfRangeException();
             }
+        }
+
+        private bool TryGetFirstFreeWorker(out int jobWorkerIndex)
+        {
+            jobWorkerIndex = -1;
+
+            for (int index = 0; index < Workers.Count; index++)
+            {
+                if (!Workers[index].Processing)
+                {
+                    jobWorkerIndex = index;
+                    return true;
+                }
+            }
+
+            return false;
         }
 
         /// <summary>
@@ -203,7 +232,7 @@ namespace Jobs
             }
 
             job.Initialize(Guid.NewGuid().ToString(), AbortToken);
-            JobWaitingQueue.Add(job, AbortToken);
+            ProcessQueue.Add(job, AbortToken);
 
             return job.Identity;
         }
@@ -232,7 +261,7 @@ namespace Jobs
 
             if (disposing)
             {
-                JobWaitingQueue?.Dispose();
+                ProcessQueue?.Dispose();
             }
 
             _Disposed = true;
