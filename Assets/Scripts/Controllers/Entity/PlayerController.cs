@@ -9,15 +9,13 @@ using Controllers.UI;
 using Controllers.World;
 using Game.Entities;
 using Game.World.Blocks;
-using Logging;
-using NLog;
 using UnityEngine;
 
 #endregion
 
 namespace Controllers.Entity
 {
-    public class PlayerController : SingletonController<PlayerController>, IEntity, ICollideable, ICollector
+    public class PlayerController : SingletonController<PlayerController>, IEntity, ICollideable
     {
         public const int REACH = 5;
 
@@ -101,7 +99,7 @@ namespace Controllers.Entity
 
             PositionChanged += (sender, position) =>
             {
-                const int destruct_radius = 1;
+                const int destruct_radius = 2;
                 for (int x = -destruct_radius; x < (destruct_radius + 1); x++)
                 {
                     for (int y = -destruct_radius; y < (destruct_radius + 1); y++)
@@ -113,9 +111,10 @@ namespace Controllers.Entity
                             if (WorldController.Current.TryGetBlockAt(relativePosition, out Block block)
                                 && BlockController.Current.TryGetBlockRule(block.Id, out IReadOnlyBlockRule blockRule)
                                 && blockRule.Destroyable
+                                && WorldController.Current.TryRemoveBlockAt(relativePosition)
                                 && blockRule.Collectible)
                             {
-                                WorldController.Current.RemoveBlockAt(relativePosition.FloorToInt(), this);
+                                Inventory.AddItem(block.Id, 1);
                             }
                         }
                     }
@@ -134,7 +133,7 @@ namespace Controllers.Entity
             CalculateRotation();
             CalculateMovement();
             CheckChangedPosition();
-            CheckChangedChunkPosition();
+            CheckChangedChunk();
         }
 
         private void Update()
@@ -147,7 +146,7 @@ namespace Controllers.Entity
 
             if (_RegularCheckWait.Elapsed > RegularCheckWaitInterval)
             {
-                CheckChangedChunkPosition();
+                CheckChangedChunk();
 
                 _RegularCheckWait.Restart();
             }
@@ -213,15 +212,18 @@ namespace Controllers.Entity
             {
                 Vector3 position;
 
-                if (_LastReachRayHit.normal.Sum() > 0f)
+                if (((_LastReachRayHit.normal.Sum() > 0f)
+                     && WorldController.Current.TryRemoveBlockAt(
+                         position = _LastReachRayHit.point.Floor() - _LastReachRayHit.normal))
+                    || WorldController.Current.TryRemoveBlockAt(
+                        position = _LastReachRayHit.point.Floor()))
                 {
-                    position = _LastReachRayHit.point.Floor() - _LastReachRayHit.normal;
-                    WorldController.Current.RemoveBlockAt(position.FloorToInt(), this);
-                }
-                else
-                {
-                    position = _LastReachRayHit.point.Floor();
-                    WorldController.Current.RemoveBlockAt(position.FloorToInt(), this);
+                    WorldController.Current.TryGetBlockAt(position, out Block destroyedBlock);
+
+                    if (BlockController.Current.GetBlockRule(destroyedBlock.Id)?.Collectible ?? false)
+                    {
+                        Inventory.AddItem(destroyedBlock.Id, 1);
+                    }
                 }
 
                 _ActionCooldown.Restart();
@@ -234,12 +236,12 @@ namespace Controllers.Entity
             {
                 if (_LastReachRayHit.normal.Sum() > 0f)
                 {
-                    WorldController.Current.PlaceBlockAt(_LastReachRayHit.point.FloorToInt(),
+                    WorldController.Current.TryPlaceBlockAt(_LastReachRayHit.point.Floor(),
                         HotbarController.Current.SelectedId);
                 }
                 else
                 {
-                    WorldController.Current.PlaceBlockAt((_LastReachRayHit.point.Floor() + _LastReachRayHit.normal).FloorToInt(),
+                    WorldController.Current.TryPlaceBlockAt(_LastReachRayHit.point.Floor() + _LastReachRayHit.normal,
                         HotbarController.Current.SelectedId);
                 }
 
@@ -261,7 +263,7 @@ namespace Controllers.Entity
             }
         }
 
-        private void CheckChangedChunkPosition()
+        private void CheckChangedChunk()
         {
             Vector3 chunkPosition = WorldController.GetChunkOriginFromPosition(Transform.position);
             chunkPosition.y = 0;
@@ -333,15 +335,5 @@ namespace Controllers.Entity
         }
 
         #endregion
-
-        public void AddItem(ushort id, int amount)
-        {
-            Inventory.AddItem(id, amount);
-        }
-
-        public void RemoveItem(ushort id, int amount)
-        {
-            throw new NotImplementedException();
-        }
     }
 }

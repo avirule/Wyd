@@ -11,7 +11,6 @@ using Game.World.Blocks;
 using Game.World.Chunks;
 using Logging;
 using NLog;
-using Unity.Mathematics;
 using UnityEngine;
 using UnityEngine.Rendering;
 
@@ -49,7 +48,7 @@ namespace Controllers.World
         public MeshFilter MeshFilter;
         public MeshRenderer MeshRenderer;
 
-        public int3 Position { get; private set; }
+        public Vector3 Position { get; private set; }
 
         public ChunkGenerationDispatcher.GenerationStep GenerationStep => _ChunkGenerationDispatcher.CurrentStep;
 
@@ -101,7 +100,7 @@ namespace Controllers.World
         private void Awake()
         {
             _SelfTransform = transform;
-            Position = _SelfTransform.position.FloorToInt3();
+            Position = _SelfTransform.position;
             UpdateBounds();
             _Blocks = new Block[Size.Product()];
             _BlockActions = new Stack<BlockAction>();
@@ -181,14 +180,7 @@ namespace Controllers.World
                 return;
             }
 
-            if (_BlockActions.Count > 0)
-            {
-                if (GenerationStep > ChunkGenerationDispatcher.LAST_BUILDING_STEP)
-                {
-                    ProcessBlockActions();
-                }
-            }
-            else
+            if (!ProcessBlockActions())
             {
                 _ChunkGenerationDispatcher.SynchronousContextUpdate();
             }
@@ -214,62 +206,36 @@ namespace Controllers.World
 
         #endregion
 
-        private void ProcessBlockActions()
+
+        private bool ProcessBlockActions()
         {
-            if (_BlockActions.Count <= 0)
+            if (_BlockActions.Count > 0)
             {
-                return;
-            }
-
-            do
-            {
-                WorldController.Current.GetRemainingSafeFrameTime(out _SafeFrameTime);
-
-                BlockAction blockAction = _BlockActions.Pop();
-                _BlockActionGlobalPositions.Remove(blockAction.GlobalPosition);
-
-                int localPosition1d = ConvertGlobalPositionToLocal1D(blockAction.GlobalPosition);
-
-                if (localPosition1d < _Blocks.Length)
+                do
                 {
-                    switch (blockAction.ActionType)
+                    WorldController.Current.GetRemainingSafeFrameTime(out _SafeFrameTime);
+
+                    BlockAction blockAction = _BlockActions.Pop();
+                    _BlockActionGlobalPositions.Remove(blockAction.GlobalPosition);
+
+                    int localPosition1d = ConvertGlobalPositionToLocal1D(blockAction.GlobalPosition);
+
+                    if (localPosition1d < _Blocks.Length)
                     {
-                        case BlockAction.Type.Add:
-                            blockAction.Sender?.RemoveItem(blockAction.Id, 1);
-                            _Blocks[localPosition1d].Initialise(blockAction.Id);
-                            break;
-                        case BlockAction.Type.Remove:
-                            ushort initialId = _Blocks[localPosition1d].Id;
-
-                            if (BlockController.Current.TryGetBlockRule(initialId, out IReadOnlyBlockRule blockRule)
-                                && blockRule.Destroyable)
-                            {
-                                _Blocks[localPosition1d].Initialise(BlockController.BLOCK_EMPTY_ID);
-
-                                if (blockRule.Collectible)
-                                {
-                                    blockAction.Sender?.AddItem(initialId, 1);
-                                }
-                            }
-
-                            break;
-                        default:
-                            throw new ArgumentOutOfRangeException();
+                        _Blocks[localPosition1d].Initialise(blockAction.Id);
+                        RequestMeshUpdate();
+                        OnBlocksChanged(this,
+                            new ChunkChangedEventArgs(_Bounds,
+                                DetermineDirectionsForNeighborUpdate(blockAction.GlobalPosition)));
                     }
 
-                    OnBlocksChanged(this,
-                        new ChunkChangedEventArgs(_Bounds,
-                            DetermineDirectionsForNeighborUpdate(blockAction.GlobalPosition)));
-                }
+                    BlockActionsCache.CacheItem(ref blockAction);
+                } while ((_SafeFrameTime > TimeSpan.Zero) && (_BlockActions.Count > 0));
 
-                BlockActionsCache.CacheItem(ref blockAction);
-            } while ((_SafeFrameTime > TimeSpan.Zero) && (_BlockActions.Count > 0));
-
-            if (_BlockActions.Count == 0)
-            {
-                // determine whether all block actions have been processed, so mesh update should proceed
-                RequestMeshUpdate();
+                return true;
             }
+
+            return false;
         }
 
         public void RequestMeshUpdate()
@@ -360,7 +326,7 @@ namespace Controllers.World
             return ref _Blocks[ConvertGlobalPositionToLocal1D(globalPosition)];
         }
 
-        public bool TryGetBlockAt(int3 globalPosition, out Block block)
+        public bool TryGetBlockAt(Vector3 globalPosition, out Block block)
         {
             if (!_Bounds.Contains(globalPosition))
             {
@@ -372,7 +338,7 @@ namespace Controllers.World
             return true;
         }
 
-        public bool BlockExistsAt(int3 globalPosition)
+        public bool BlockExistsAt(Vector3 globalPosition)
         {
             if (!_Bounds.Contains(globalPosition))
             {
@@ -385,7 +351,7 @@ namespace Controllers.World
             return _Blocks[localPosition1d].Id != BlockController.BLOCK_EMPTY_ID;
         }
 
-        public void ImmediatePlaceBlockAt(int3 globalPosition, ushort id)
+        public void ImmediatePlaceBlockAt(Vector3 globalPosition, ushort id)
         {
             if (!_Bounds.Contains(globalPosition))
             {
@@ -402,12 +368,12 @@ namespace Controllers.World
                 new ChunkChangedEventArgs(_Bounds, DetermineDirectionsForNeighborUpdate(globalPosition)));
         }
 
-        public void PlaceBlockAt(int3 globalPosition, ushort id, ICollector sender = null)
+        public bool TryPlaceBlockAt(Vector3 globalPosition, ushort id)
         {
-            TryAllocateBlockAction(BlockAction.Type.Add, globalPosition, id, sender);
+            return TryAllocateBlockAction(globalPosition, id);
         }
 
-        public void ImmediateRemoveBlockAt(int3 globalPosition)
+        public void ImmediateRemoveBlockAt(Vector3 globalPosition)
         {
             if (!_Bounds.Contains(globalPosition))
             {
@@ -424,25 +390,25 @@ namespace Controllers.World
                 new ChunkChangedEventArgs(_Bounds, DetermineDirectionsForNeighborUpdate(globalPosition)));
         }
 
-        public void RemoveBlockAt(Vector3Int globalPosition, ICollector sender = null)
+        public bool TryRemoveBlockAt(Vector3 globalPosition)
         {
-            TryAllocateBlockAction(BlockAction.Type.Remove, globalPosition, BlockController.BLOCK_EMPTY_ID, sender);
+            return TryAllocateBlockAction(globalPosition, BlockController.BLOCK_EMPTY_ID);
         }
 
-        private void TryAllocateBlockAction(
-            BlockAction.Type actionType, Vector3Int globalPosition, ushort id, ICollector sender = null)
+        private bool TryAllocateBlockAction(Vector3 globalPosition, ushort id)
         {
+            // todo this vvvv
             if (_BlockActionGlobalPositions.Contains(globalPosition)
                 || !_Bounds.Contains(globalPosition)
                 || !BlockActionsCache.TryRetrieveItem(out BlockAction blockAction))
             {
-                return;
+                return false;
             }
 
-            EventLog.Logger.Log(LogLevel.Info, $"Allocated block action ({actionType}) at position: {globalPosition}");
-            blockAction.Initialise(actionType, globalPosition, id, sender);
+            blockAction.Initialise(globalPosition, id);
             _BlockActions.Push(blockAction);
             _BlockActionGlobalPositions.Add(globalPosition);
+            return true;
         }
 
         #endregion
@@ -450,19 +416,19 @@ namespace Controllers.World
 
         #region INTERNAL STATE CHECKS
 
-        private static bool IsWithinLoaderRange(Vector3Int difference)
+        private static bool IsWithinLoaderRange(Vector3 difference)
         {
             return difference.AllLessThanOrEqual(Size
                                                  * (OptionsController.Current.RenderDistance
                                                     + OptionsController.Current.PreLoadChunkDistance));
         }
 
-        private static bool IsWithinRenderDistance(int3 difference)
+        private static bool IsWithinRenderDistance(Vector3 difference)
         {
             return difference.AllLessThanOrEqual(Size * OptionsController.Current.RenderDistance);
         }
 
-        private static bool IsWithinShadowsDistance(int3 difference)
+        private static bool IsWithinShadowsDistance(Vector3 difference)
         {
             return difference.AllLessThanOrEqual(Size * OptionsController.Current.ShadowDistance);
         }
@@ -477,15 +443,15 @@ namespace Controllers.World
             _Bounds.SetMinMax(Position, Position + Size);
         }
 
-        private int ConvertGlobalPositionToLocal1D(int3 globalPosition)
+        private int ConvertGlobalPositionToLocal1D(Vector3 globalPosition)
         {
-            int3 localPosition = math.abs(globalPosition - Position);
+            Vector3 localPosition = (globalPosition - Position).Abs();
             return localPosition.To1D(Size);
         }
 
-        private IEnumerable<Vector3Int> DetermineDirectionsForNeighborUpdate(Vector3Int globalPosition)
+        private IEnumerable<Vector3> DetermineDirectionsForNeighborUpdate(Vector3 globalPosition)
         {
-            Vector3Int localPosition = globalPosition - Position;
+            Vector3 localPosition = globalPosition - Position;
 
             // topleft & bottomright x computation value
             float tl_br_x = localPosition.x * Size.x;
@@ -507,44 +473,44 @@ namespace Controllers.World
 
             if (isInTopRightHalf && isInTopLeftHalf)
             {
-                yield return Vector3Int.right;
+                yield return Vector3.right;
             }
             else if (isInTopRightHalf && isInBottomRightHalf)
             {
-                yield return new Vector3Int(0, 0, 1);
+                yield return Vector3.forward;
             }
             else if (isInBottomRightHalf && isInBottomLeftHalf)
             {
-                yield return Vector3Int.right;
+                yield return Vector3.left;
             }
             else if (isInBottomLeftHalf && isInTopLeftHalf)
             {
-                //yield return Vector3Int.back;
+                yield return Vector3.back;
             }
             else if (!isInTopRightHalf && !isInBottomLeftHalf)
             {
                 if (isInTopLeftHalf)
                 {
-                    yield return new Vector3Int(0, 0, -1);
-                    yield return Vector3Int.left;
+                    yield return Vector3.back;
+                    yield return Vector3.left;
                 }
                 else if (isInBottomRightHalf)
                 {
-                    yield return new Vector3Int(0, 0, -1);
-                    //yield ;
+                    yield return Vector3.back;
+                    yield return Vector3.right;
                 }
             }
             else if (!isInTopLeftHalf && !isInBottomRightHalf)
             {
                 if (isInTopRightHalf)
                 {
-                    //yield return Vector3.forward;
-                    yield return Vector3Int.right;
+                    yield return Vector3.forward;
+                    yield return Vector3.right;
                 }
                 else if (isInBottomLeftHalf)
                 {
-                    //yield return Vector3.forward;
-                    yield return Vector3Int.left;
+                    yield return Vector3.forward;
+                    yield return Vector3.left;
                 }
             }
         }

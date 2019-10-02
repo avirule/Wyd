@@ -388,7 +388,7 @@ namespace Controllers.World
             return chunkController.BlockExistsAt(position);
         }
 
-        public void ImmediatePlaceBlockAt(Vector3 globalPosition, ushort id)
+        public void PlaceBlockAt(Vector3 globalPosition, ushort id)
         {
             Vector3 chunkPosition = GetChunkOriginFromPosition(globalPosition);
 
@@ -400,17 +400,16 @@ namespace Controllers.World
             chunkController.ImmediatePlaceBlockAt(globalPosition, id);
         }
 
-        public void PlaceBlockAt(Vector3Int globalPosition, ushort id, ICollector sender = null)
+        public bool TryPlaceBlockAt(Vector3 globalPosition, ushort id)
         {
             Vector3 chunkPosition = GetChunkOriginFromPosition(globalPosition);
 
-            if (TryGetChunkAt(chunkPosition, out ChunkController chunkController) && (chunkController != default))
-            {
-                chunkController.PlaceBlockAt(globalPosition, id, sender);
-            }
+            return TryGetChunkAt(chunkPosition, out ChunkController chunkController)
+                   && (chunkController != default)
+                   && chunkController.TryPlaceBlockAt(globalPosition, id);
         }
 
-        public void ImmediateRemoveBlockAt(Vector3 globalPosition)
+        public void RemoveBlockAt(Vector3 globalPosition)
         {
             Vector3 chunkPosition = GetChunkOriginFromPosition(globalPosition);
 
@@ -422,14 +421,13 @@ namespace Controllers.World
             chunkController.ImmediateRemoveBlockAt(globalPosition);
         }
 
-        public void RemoveBlockAt(Vector3Int globalPosition, ICollector sender = null)
+        public bool TryRemoveBlockAt(Vector3 globalPosition)
         {
             Vector3 chunkPosition = GetChunkOriginFromPosition(globalPosition);
 
-            if (TryGetChunkAt(chunkPosition, out ChunkController chunkController) && (chunkController != default))
-            {
-                chunkController.RemoveBlockAt(globalPosition, sender);
-            }
+            return TryGetChunkAt(chunkPosition, out ChunkController chunkController)
+                   && (chunkController != default)
+                   && chunkController.TryRemoveBlockAt(globalPosition);
         }
 
         public static Vector3 GetChunkOriginFromPosition(Vector3 globalPosition)
