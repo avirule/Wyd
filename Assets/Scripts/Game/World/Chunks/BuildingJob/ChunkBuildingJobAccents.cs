@@ -65,7 +65,7 @@ namespace Game.World.Chunks.BuildingJob
                                 continue;
                             }
 
-                            WorldController.Current.TryPlaceBlockAt(globalPosition, blockIdSand);
+                            WorldController.Current.PlaceBlockAt(globalPosition.FloorToInt(), blockIdSand);
                         }
                         else
                         {
