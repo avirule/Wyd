@@ -1,7 +1,6 @@
 #region
 
 using System;
-using Unity.Mathematics;
 using UnityEngine;
 
 #endregion
@@ -113,11 +112,6 @@ public static class Mathv
         return new Vector3(Mathf.Floor(a.x), Mathf.Floor(a.y), Mathf.Floor(a.z));
     }
 
-    public static Vector3Int FloorToInt(this Vector3 a)
-    {
-        return new Vector3Int(Mathf.FloorToInt(a.x), Mathf.FloorToInt(a.y), Mathf.FloorToInt(a.z));
-    }
-
     public static Vector3 Ceil(this Vector3 a)
     {
         return new Vector3(Mathf.Ceil(a.x), Mathf.Ceil(a.y), Mathf.Ceil(a.z));
@@ -163,11 +157,6 @@ public static class Mathv
         return Mathf.Max(a.x, a.y, a.z);
     }
 
-    public static int3 FloorToInt3(this Vector3 a)
-    {
-        return (int3)math.floor(a);
-    }
-    
     /// <summary>
     ///     Calculates 1D <see cref="System.Int32" /> index from 3D <see cref="UnityEngine.Vector3Int" />, given a
     ///     <see cref="UnityEngine.Vector3Int" /> size in 3D space.
@@ -289,26 +278,6 @@ public static class Mathv
         return a;
     }
 
-    public static bool AllLessThan(this Vector3Int a, Vector3Int b)
-    {
-        return (a.x < b.x) && (a.y < b.y) && (a.z < b.z);
-    }
-
-    public static bool AllLessThanOrEqual(this Vector3Int a, Vector3Int b)
-    {
-        return (a.x <= b.x) && (a.y <= b.y) && (a.z <= b.z);
-    }
-
-    public static bool AllGreaterThan(this Vector3Int a, Vector3Int b)
-    {
-        return (a.x > b.x) && (a.y > b.y) && (a.z > b.z);
-    }
-
-    public static bool AllGreaterThanOrEqual(this Vector3Int a, Vector3Int b)
-    {
-        return (a.x >= b.x) && (a.y >= b.y) && (a.z >= b.z);
-    }
-    
     /// <summary>
     ///     Calculates 1D <see cref="System.Int32" /> index from 3D <see cref="UnityEngine.Vector3Int" />, given a
     ///     <see cref="UnityEngine.Vector3Int" /> size in 3D space.

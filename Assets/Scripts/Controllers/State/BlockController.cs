@@ -17,6 +17,8 @@ namespace Controllers.State
     {
         public const ushort BLOCK_EMPTY_ID = 0;
 
+        public static Block Air;
+
         public Dictionary<string, ushort> BlockNameIds;
         public List<IBlockRule> Blocks;
 
@@ -28,6 +30,7 @@ namespace Controllers.State
 
             // default 'nothing' block
             RegisterBlockRules("air", Block.Types.None, true, false, false, false);
+            Air = new Block(BLOCK_EMPTY_ID);
         }
 
         public int RegisterBlockRules(
@@ -35,7 +38,7 @@ namespace Controllers.State
             bool transparent, bool collideable, bool destroyable, bool collectible,
             Func<Vector3, Direction, string> uvsRule = default)
         {
-            ushort assignedBlockId;
+            ushort assignedBlockId = 0;
 
             try
             {
