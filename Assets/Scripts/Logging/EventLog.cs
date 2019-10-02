@@ -4,8 +4,6 @@ using Logging.Targets;
 using NLog;
 using NLog.Config;
 using NLog.Targets;
-using UnityEngine;
-using Logger = NLog.Logger;
 
 #endregion
 
@@ -27,14 +25,13 @@ namespace Logging
             ConsoleTarget consoleTarget = new ConsoleTarget("logConsole");
             InGameDebugLogTarget inGameDebugLogTarget = new InGameDebugLogTarget();
 
-            if (Debug.isDebugBuild)
-            {
-                Target.Register<UnityDebuggerTarget>("UnityDebuggerTarget");
+#if UNITY_EDITOR
+            Target.Register<UnityDebuggerTarget>("UnityDebuggerTarget");
 
-                UnityDebuggerTarget unityDebuggerTarget = new UnityDebuggerTarget();
+            UnityDebuggerTarget unityDebuggerTarget = new UnityDebuggerTarget();
 
-                config.AddRule(LogLevel.Info, LogLevel.Fatal, unityDebuggerTarget);
-            }
+            config.AddRule(LogLevel.Info, LogLevel.Fatal, unityDebuggerTarget);
+#endif
 
             config.AddRule(LogLevel.Info, LogLevel.Fatal, consoleTarget);
             config.AddRule(LogLevel.Info, LogLevel.Fatal, inGameDebugLogTarget);
