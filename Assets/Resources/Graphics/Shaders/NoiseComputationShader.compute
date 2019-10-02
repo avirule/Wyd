@@ -164,6 +164,8 @@ float singleSimplex(uint seed, float frequency, float3 xyz)
 
 uniform uint _NoiseSeed;
 uniform float3 _MaximumSize;
+uniform uint _BasicWorldId;
+uniform float _Threshold;
 RWStructuredBuffer<float> Result;
 float _Frequency;
 float _Peristence;

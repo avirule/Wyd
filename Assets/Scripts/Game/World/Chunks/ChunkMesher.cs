@@ -108,23 +108,24 @@ namespace Game.World.Chunks
                 {
                     continue;
                 }
+                
+                Vector3Int localPosition = Mathv.GetIndexAsVector3Int(index, ChunkController.Size);
 
                 if (Blocks[index].Transparent)
                 {
-                    TraverseIndexTransparent(index);
+                    TraverseIndexTransparent(index, localPosition);
                 }
                 else
                 {
-                    TraverseIndex(index);
+                    TraverseIndex(index, localPosition);
                 }
             }
         }
 
         #region SIMPLER MESHING
 
-        private void TraverseIndexTransparent(int index)
+        private void TraverseIndexTransparent(int index, Vector3Int localPosition)
         {
-            Vector3Int localPosition = Mathv.GetIndexAsVector3Int(index, ChunkController.Size);
             Vector3 globalPosition = _Position + localPosition;
 
             if (!Blocks[index].HasFace(Direction.North)
@@ -460,9 +461,8 @@ namespace Game.World.Chunks
             }
         }
 
-        private void TraverseIndex(int index)
+        private void TraverseIndex(int index, Vector3Int localPosition)
         {
-            Vector3Int localPosition = Mathv.GetIndexAsVector3Int(index, ChunkController.Size);
             Vector3 globalPosition = _Position + localPosition;
 
             // ensure this block face hasn't already been traversed

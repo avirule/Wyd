@@ -48,7 +48,7 @@ namespace Controllers.World
         public MeshFilter MeshFilter;
         public MeshRenderer MeshRenderer;
 
-        public Vector3 Position { get; private set; }
+        public Vector3 Position => _Bounds.min;
 
         public ChunkGenerationDispatcher.GenerationStep GenerationStep => _ChunkGenerationDispatcher.CurrentStep;
 
@@ -100,7 +100,6 @@ namespace Controllers.World
         private void Awake()
         {
             _SelfTransform = transform;
-            Position = _SelfTransform.position;
             UpdateBounds();
             _Blocks = new Block[Size.Product()];
             _BlockActions = new Stack<BlockAction>();
@@ -248,7 +247,7 @@ namespace Controllers.World
 
         public void Activate(Vector3 position)
         {
-            _SelfTransform.position = Position = position;
+            _SelfTransform.position = position;
             UpdateBounds();
             ConfigureDispatcher();
             _Visible = MeshRenderer.enabled;
@@ -414,33 +413,12 @@ namespace Controllers.World
         #endregion
 
 
-        #region INTERNAL STATE CHECKS
-
-        private static bool IsWithinLoaderRange(Vector3 difference)
-        {
-            return difference.AllLessThanOrEqual(Size
-                                                 * (OptionsController.Current.RenderDistance
-                                                    + OptionsController.Current.PreLoadChunkDistance));
-        }
-
-        private static bool IsWithinRenderDistance(Vector3 difference)
-        {
-            return difference.AllLessThanOrEqual(Size * OptionsController.Current.RenderDistance);
-        }
-
-        private static bool IsWithinShadowsDistance(Vector3 difference)
-        {
-            return difference.AllLessThanOrEqual(Size * OptionsController.Current.ShadowDistance);
-        }
-
-        #endregion
-
-
         #region HELPER METHODS
 
         private void UpdateBounds()
         {
-            _Bounds.SetMinMax(Position, Position + Size);
+            Vector3 position = _SelfTransform.position;
+            _Bounds.SetMinMax(position, position + Size);
         }
 
         private int ConvertGlobalPositionToLocal1D(Vector3 globalPosition)
@@ -568,8 +546,30 @@ namespace Controllers.World
         }
 
         #endregion
+        
+        
+        #region INTERNAL STATE CHECKS
 
+        private static bool IsWithinLoaderRange(Vector3 difference)
+        {
+            return difference.AllLessThanOrEqual(Size
+                                                 * (OptionsController.Current.RenderDistance
+                                                    + OptionsController.Current.PreLoadChunkDistance));
+        }
 
+        private static bool IsWithinRenderDistance(Vector3 difference)
+        {
+            return difference.AllLessThanOrEqual(Size * OptionsController.Current.RenderDistance);
+        }
+
+        private static bool IsWithinShadowsDistance(Vector3 difference)
+        {
+            return difference.AllLessThanOrEqual(Size * OptionsController.Current.ShadowDistance);
+        }
+
+        #endregion
+        
+        
         #region EVENTS
 
         // todo chunk load failed event

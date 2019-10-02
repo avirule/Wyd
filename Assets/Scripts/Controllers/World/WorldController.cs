@@ -208,7 +208,7 @@ namespace Controllers.World
                     }
                 }
 
-                if (IsInSafeFrameTime())
+                if (!IsInSafeFrameTime())
                 {
                     _BuildChunkAroundEntityStack.Push(loader);
                     break;

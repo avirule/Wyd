@@ -4,6 +4,7 @@ using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Threading;
+using System.Threading.Tasks;
 using Logging;
 using NLog;
 
@@ -164,14 +165,12 @@ namespace Jobs
         ///     <see cref="Job" />s.
         /// </summary>
         /// <param name="job"><see cref="Job" /> to be processed.</param>
-        protected virtual async void ProcessJob(Job job)
+        protected virtual async Task ProcessJob(Job job)
         {
             switch (ThreadingMode)
             {
                 case ThreadingMode.Single:
-                    await job.Execute();
-
-                    OnJobFinished(this, new JobFinishedEventArgs(job));
+                    await ExecuteJob(job);
                     break;
                 case ThreadingMode.Multi:
 
@@ -194,7 +193,7 @@ namespace Jobs
                     }
                     else
                     {
-                        await job.Execute();
+                        await ExecuteJob(job);
                     }
 
                     break;
@@ -217,6 +216,12 @@ namespace Jobs
             }
 
             return false;
+        }
+
+        protected async Task ExecuteJob(Job job)
+        {
+            await job.Execute();
+            OnJobFinished(this, new JobFinishedEventArgs(job));
         }
 
         /// <summary>
