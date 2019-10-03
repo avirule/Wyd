@@ -19,19 +19,18 @@ namespace Jobs
         Adaptive
     }
 
-    public class JobQueue
+    public sealed class JobQueue
     {
         private bool _Disposed;
         private int _WaitTimeout;
 
-        protected readonly Thread ProcessingThread;
-        protected readonly List<JobWorker> Workers;
-        protected readonly BlockingCollection<Job> ProcessQueue;
-        protected readonly CancellationTokenSource AbortTokenSource;
-        protected CancellationToken AbortToken;
-        protected int LastThreadIndexQueuedInto;
+        private readonly List<JobWorker> _Workers;
+        private readonly BlockingCollection<Job> _ProcessQueue;
+        private readonly CancellationTokenSource _AbortTokenSource;
+        private CancellationToken _AbortToken;
+        private int _LastThreadIndexQueuedInto;
 
-        protected int ThreadPoolSize;
+        private int _ThreadPoolSize;
 
         /// <summary>
         ///     Determines whether the <see cref="JobQueue" /> executes <see cref="Job" /> on
@@ -47,8 +46,7 @@ namespace Jobs
         public bool Running { get; private set; }
 
         /// <summary>
-        ///     Time in milliseconds to wait between attempts to process an item in internal
-        ///     queue.
+        ///     Time in milliseconds to wait between failed attempts to retrieve item from internal queue.
         /// </summary>
         public int WaitTimeout
         {
@@ -80,13 +78,12 @@ namespace Jobs
             WaitTimeout = waitTimeout;
             ThreadingMode = threadingMode;
             ModifyThreadPoolSize(threadPoolSize);
-            ProcessingThread = new Thread(ProcessJobs);
-            ProcessQueue = new BlockingCollection<Job>();
-            Workers = new List<JobWorker>(ThreadPoolSize);
-            AbortTokenSource = new CancellationTokenSource();
-            AbortToken = AbortTokenSource.Token;
+            _ProcessQueue = new BlockingCollection<Job>();
+            _Workers = new List<JobWorker>(_ThreadPoolSize);
+            _AbortTokenSource = new CancellationTokenSource();
+            _AbortToken = _AbortTokenSource.Token;
             // set to -1 increment in first run of process queue
-            LastThreadIndexQueuedInto = -1;
+            _LastThreadIndexQueuedInto = -1;
 
             Running = false;
         }
@@ -94,28 +91,29 @@ namespace Jobs
         /// <summary>
         ///     Begins execution of internal threaded process.
         /// </summary>
-        public virtual void Start()
+        public void Start()
         {
-            ProcessingThread.Start();
+            Task.Factory.StartNew(ProcessJobs, null,
+                TaskCreationOptions.LongRunning | TaskCreationOptions.DenyChildAttach);
             Running = true;
         }
 
         /// <summary>
         ///     Aborts execution of internal threaded process.
         /// </summary>
-        public virtual void Abort()
+        public void Abort()
         {
-            AbortTokenSource.Cancel();
+            _AbortTokenSource.Cancel();
             WaitTimeout = 1;
             Running = false;
         }
 
         private void SpawnJobWorker()
         {
-            JobWorker jobWorker = new JobWorker(WaitTimeout, AbortToken);
+            JobWorker jobWorker = new JobWorker(WaitTimeout, _AbortToken);
             jobWorker.JobFinished += OnJobFinished;
             jobWorker.Start();
-            Workers.Add(jobWorker);
+            _Workers.Add(jobWorker);
         }
 
         private void OnJobFinished(object sender, JobFinishedEventArgs args)
@@ -126,25 +124,25 @@ namespace Jobs
         /// <summary>
         ///     Begins internal loop for processing <see cref="Job" />s from internal queue.
         /// </summary>
-        protected virtual void ProcessJobs()
+        private async Task ProcessJobs(object state)
         {
-            while (!AbortToken.IsCancellationRequested)
+            while (!_AbortToken.IsCancellationRequested)
             {
                 try
                 {
-                    if (!ProcessQueue.TryTake(out Job job, WaitTimeout, AbortToken)
+                    if (!_ProcessQueue.TryTake(out Job job, WaitTimeout, _AbortToken)
                         || (job == default))
                     {
                         continue;
                     }
 
-                    while ((Workers.Count < ThreadPoolSize)
+                    while ((_Workers.Count < _ThreadPoolSize)
                            && (ThreadingMode > ThreadingMode.Single))
                     {
                         SpawnJobWorker();
                     }
 
-                    ProcessJob(job);
+                    await ProcessJob(job);
                 }
                 catch (OperationCanceledException)
                 {
@@ -165,7 +163,7 @@ namespace Jobs
         ///     <see cref="Job" />s.
         /// </summary>
         /// <param name="job"><see cref="Job" /> to be processed.</param>
-        protected virtual async Task ProcessJob(Job job)
+        private async Task ProcessJob(Job job)
         {
             switch (ThreadingMode)
             {
@@ -176,20 +174,20 @@ namespace Jobs
 
                     if (TryGetFirstFreeWorker(out int jobWorkerIndex))
                     {
-                        Workers[jobWorkerIndex].QueueJob(job);
+                        _Workers[jobWorkerIndex].QueueJob(job);
                     }
                     else
                     {
-                        LastThreadIndexQueuedInto = (LastThreadIndexQueuedInto + 1) % ThreadPoolSize;
+                        _LastThreadIndexQueuedInto = (_LastThreadIndexQueuedInto + 1) % _ThreadPoolSize;
 
-                        Workers[LastThreadIndexQueuedInto].QueueJob(job);
+                        _Workers[_LastThreadIndexQueuedInto].QueueJob(job);
                     }
 
                     break;
                 case ThreadingMode.Adaptive:
                     if (TryGetFirstFreeWorker(out jobWorkerIndex))
                     {
-                        Workers[jobWorkerIndex].QueueJob(job);
+                        _Workers[jobWorkerIndex].QueueJob(job);
                     }
                     else
                     {
@@ -206,9 +204,9 @@ namespace Jobs
         {
             jobWorkerIndex = -1;
 
-            for (int index = 0; index < Workers.Count; index++)
+            for (int index = 0; index < _Workers.Count; index++)
             {
-                if (!Workers[index].Processing)
+                if (!_Workers[index].Processing)
                 {
                     jobWorkerIndex = index;
                     return true;
@@ -229,22 +227,22 @@ namespace Jobs
         /// </summary>
         /// <param name="job"><see cref="Job" /> to be added.</param>
         /// <returns>A unique <see cref="System.Object" /> identity.</returns>
-        public virtual object QueueJob(Job job)
+        public object QueueJob(Job job)
         {
             if (!Running)
             {
                 return null;
             }
 
-            job.Initialize(Guid.NewGuid().ToString(), AbortToken);
-            ProcessQueue.Add(job, AbortToken);
+            job.Initialize(Guid.NewGuid().ToString(), _AbortToken);
+            _ProcessQueue.Add(job, _AbortToken);
 
             return job.Identity;
         }
 
         public void ModifyThreadPoolSize(int modification)
         {
-            Interlocked.Exchange(ref ThreadPoolSize, Math.Max(modification, 1));
+            Interlocked.Exchange(ref _ThreadPoolSize, Math.Max(modification, 1));
         }
 
 
@@ -257,7 +255,7 @@ namespace Jobs
             GC.SuppressFinalize(this);
         }
 
-        protected virtual void Dispose(bool disposing)
+        protected void Dispose(bool disposing)
         {
             if (_Disposed)
             {
@@ -266,7 +264,7 @@ namespace Jobs
 
             if (disposing)
             {
-                ProcessQueue?.Dispose();
+                _ProcessQueue?.Dispose();
             }
 
             _Disposed = true;

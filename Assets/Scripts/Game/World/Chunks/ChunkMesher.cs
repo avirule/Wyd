@@ -98,6 +98,8 @@ namespace Game.World.Chunks
 
             mesh.RecalculateNormals();
             mesh.RecalculateTangents();
+            
+            //mesh.UploadMeshData(true);
         }
 
         public void GenerateMesh()
