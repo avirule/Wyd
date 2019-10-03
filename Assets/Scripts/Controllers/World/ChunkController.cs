@@ -85,6 +85,7 @@ namespace Controllers.World
 
 #if UNITY_EDITOR
 
+        public bool StepInto;
         public bool PopulatePublicBlocks;
         public bool Remesh;
         public ushort[] Blocks;
@@ -148,6 +149,10 @@ namespace Controllers.World
         private void Update()
         {
 #if UNITY_EDITOR
+
+            if (StepInto)
+            {
+            }
 
             if (PopulatePublicBlocks)
             {
@@ -367,10 +372,7 @@ namespace Controllers.World
                 new ChunkChangedEventArgs(_Bounds, DetermineDirectionsForNeighborUpdate(globalPosition)));
         }
 
-        public bool TryPlaceBlockAt(Vector3 globalPosition, ushort id)
-        {
-            return TryAllocateBlockAction(globalPosition, id);
-        }
+        public bool TryPlaceBlockAt(Vector3 globalPosition, ushort id) => TryAllocateBlockAction(globalPosition, id);
 
         public void ImmediateRemoveBlockAt(Vector3 globalPosition)
         {
@@ -389,10 +391,8 @@ namespace Controllers.World
                 new ChunkChangedEventArgs(_Bounds, DetermineDirectionsForNeighborUpdate(globalPosition)));
         }
 
-        public bool TryRemoveBlockAt(Vector3 globalPosition)
-        {
-            return TryAllocateBlockAction(globalPosition, BlockController.BLOCK_EMPTY_ID);
-        }
+        public bool TryRemoveBlockAt(Vector3 globalPosition) =>
+            TryAllocateBlockAction(globalPosition, BlockController.BLOCK_EMPTY_ID);
 
         private bool TryAllocateBlockAction(Vector3 globalPosition, ushort id)
         {
@@ -535,10 +535,8 @@ namespace Controllers.World
             _ChunkGenerationDispatcher.SkipBuilding(true);
         }
 
-        public IEnumerable<RunLengthCompression.Node<ushort>> GetCompressedRaw()
-        {
-            return RunLengthCompression.Compress(GetBlocksAsIds(), _Blocks[0].Id);
-        }
+        public IEnumerable<RunLengthCompression.Node<ushort>> GetCompressedRaw() =>
+            RunLengthCompression.Compress(GetBlocksAsIds(), _Blocks[0].Id);
 
         private IEnumerable<ushort> GetBlocksAsIds()
         {
@@ -546,30 +544,24 @@ namespace Controllers.World
         }
 
         #endregion
-        
-        
+
+
         #region INTERNAL STATE CHECKS
 
-        private static bool IsWithinLoaderRange(Vector3 difference)
-        {
-            return difference.AllLessThanOrEqual(Size
-                                                 * (OptionsController.Current.RenderDistance
-                                                    + OptionsController.Current.PreLoadChunkDistance));
-        }
+        private static bool IsWithinLoaderRange(Vector3 difference) =>
+            difference.AllLessThanOrEqual(Size
+                                          * (OptionsController.Current.RenderDistance
+                                             + OptionsController.Current.PreLoadChunkDistance));
 
-        private static bool IsWithinRenderDistance(Vector3 difference)
-        {
-            return difference.AllLessThanOrEqual(Size * OptionsController.Current.RenderDistance);
-        }
+        private static bool IsWithinRenderDistance(Vector3 difference) =>
+            difference.AllLessThanOrEqual(Size * OptionsController.Current.RenderDistance);
 
-        private static bool IsWithinShadowsDistance(Vector3 difference)
-        {
-            return difference.AllLessThanOrEqual(Size * OptionsController.Current.ShadowDistance);
-        }
+        private static bool IsWithinShadowsDistance(Vector3 difference) =>
+            difference.AllLessThanOrEqual(Size * OptionsController.Current.ShadowDistance);
 
         #endregion
-        
-        
+
+
         #region EVENTS
 
         // todo chunk load failed event
