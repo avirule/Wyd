@@ -14,6 +14,7 @@ namespace Controllers.UI.Components.Slider
         private void Awake()
         {
             _RenderDistanceSlider = GetComponent<UnityEngine.UI.Slider>();
+            _RenderDistanceSlider.maxValue = OptionsController.MAXIMUM_RENDER_DISTANCE;
             _RenderDistanceSlider.onValueChanged.AddListener(RenderDistanceSliderValueChanged);
         }
 

@@ -20,8 +20,6 @@ namespace Controllers.UI.Components.Text
             UpdateTextObjectText(args);
         }
 
-        protected virtual void UpdateTextObjectText(PropertyChangedEventArgs args, bool force = false)
-        {
-        }
+        protected abstract void UpdateTextObjectText(PropertyChangedEventArgs args, bool force = false);
     }
 }

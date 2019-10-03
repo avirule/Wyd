@@ -27,7 +27,7 @@ namespace Controllers.World
             new ObjectCache<BlockAction>(true, true, 1024);
 
         public static readonly Vector3Int BiomeNoiseSize = new Vector3Int(32 * 16, 256, 32 * 16);
-        public static readonly Vector3Int Size = new Vector3Int(16, 256, 16);
+        public static readonly Vector3Int Size = new Vector3Int(32, 256, 32);
         public static readonly int YIndexStep = Size.x * Size.z;
 
 
@@ -168,7 +168,7 @@ namespace Controllers.World
                 Remesh = false;
             }
 
-            if (_Mesh.vertexCount != VertexCount)
+            if (VertexCount != _Mesh.vertexCount)
             {
                 VertexCount = _Mesh.vertexCount;
             }

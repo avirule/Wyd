@@ -92,7 +92,7 @@ namespace Game
         private void Recalculate()
         {
             RecalculateBoundingBox();
-            TryCalculateLocalMeshData();
+            CalculateColliders();
             CullOutOfBoundsSurfaces();
 
             //UpdatedMesh?.Invoke(this, Mesh);
@@ -107,7 +107,7 @@ namespace Game
             BoundingBox = new Bounds(_LastCalculatedPosition, new Vector3(size, size, size));
         }
 
-        private void TryCalculateLocalMeshData()
+        private void CalculateColliders()
         {
             for (int x = -Radius; x < (Radius + 1); x++)
             {
@@ -169,7 +169,7 @@ namespace Game
             }
 
             Transform surfaceColliderTransform = surfaceCollider.transform;
-            surfaceCollider.transform.parent = _SelfTransform;
+            surfaceColliderTransform.parent = _SelfTransform;
             surfaceColliderTransform.position = position;
             surfaceCollider.SetActive(true);
 

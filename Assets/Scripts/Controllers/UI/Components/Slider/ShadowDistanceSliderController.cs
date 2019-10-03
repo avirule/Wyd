@@ -14,6 +14,7 @@ namespace Controllers.UI.Components.Slider
         private void Awake()
         {
             _ShadowDistanceSlider = GetComponent<UnityEngine.UI.Slider>();
+            _ShadowDistanceSlider.maxValue = OptionsController.MAXIMUM_RENDER_DISTANCE;
             _ShadowDistanceSlider.onValueChanged.AddListener(ShadowDistanceSliderValueChanged);
         }
 

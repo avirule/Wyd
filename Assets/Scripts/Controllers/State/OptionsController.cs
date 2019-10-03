@@ -3,8 +3,10 @@
 using System;
 using System.ComponentModel;
 using System.IO;
+using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Text;
+using Graphics;
 using JetBrains.Annotations;
 using Jobs;
 using Logging;
@@ -45,6 +47,7 @@ namespace Controllers.State
             // Graphics
             public const int MAXIMUM_FRAME_RATE_BUFFER_SIZE = 60;
             public const int VSYNC_LEVEL = 1;
+            public const int WINDOW_MODE = (int) WindowMode.Fullscreen;
             public const int RENDER_DISTANCE = 4;
             public const int SHADOW_DISTANCE = 4;
 
@@ -55,8 +58,12 @@ namespace Controllers.State
             public const int PRE_LOAD_CHUNK_DISTANCE = 2;
         }
 
+        public const int MAXIMUM_RENDER_DISTANCE = 32;
+
         private static string _configPath;
 
+        public static readonly WindowMode MaximumWindowModeValue =
+            Enum.GetValues(typeof(WindowMode)).Cast<WindowMode>().Last();
 
         #region PRIVATE FIELDS
 
@@ -72,6 +79,7 @@ namespace Controllers.State
         private int _PreLoadChunkDistance;
         private int _ShadowDistance;
         private int _RenderDistance;
+        private WindowMode _WindowMode;
 
         #endregion
 
@@ -157,12 +165,45 @@ namespace Controllers.State
             }
         }
 
+        public WindowMode WindowMode
+        {
+            get => _WindowMode;
+            set
+            {
+                if (_WindowMode == value)
+                {
+                    return;
+                }
+
+                _WindowMode = value;
+
+                switch (_WindowMode)
+                {
+                    case WindowMode.Fullscreen:
+                        Screen.fullScreenMode = FullScreenMode.ExclusiveFullScreen;
+                        break;
+                    case WindowMode.BorderlessWindowed:
+                        Screen.fullScreenMode = FullScreenMode.FullScreenWindow;
+                        break;
+                    case WindowMode.Windowed:
+                        Screen.fullScreenMode = FullScreenMode.Windowed;
+                        break;
+                    default:
+                        throw new ArgumentOutOfRangeException(nameof(value), value, null);
+                }
+
+                _Configuration["Graphics"][nameof(WindowMode)].IntValue = (int) _WindowMode;
+                SaveSettings();
+                OnPropertyChanged();
+            }
+        }
+
         public int RenderDistance
         {
             get => _RenderDistance;
             set
             {
-                _RenderDistance = value;
+                _RenderDistance = value % (MAXIMUM_RENDER_DISTANCE + 1);
                 _Configuration["Graphics"][nameof(RenderDistance)].IntValue = _RenderDistance;
                 SaveSettings();
                 OnPropertyChanged();
@@ -174,7 +215,7 @@ namespace Controllers.State
             get => _ShadowDistance;
             set
             {
-                _ShadowDistance = value;
+                _ShadowDistance = value % (MAXIMUM_RENDER_DISTANCE + 1);
                 _Configuration["Graphics"][nameof(ShadowDistance)].IntValue = _ShadowDistance;
                 SaveSettings();
                 OnPropertyChanged();
@@ -315,6 +356,18 @@ namespace Controllers.State
                 VSyncLevel = vSyncLevel;
             }
 
+            if (!GetSetting("Graphics", nameof(WindowMode), out int windowMode)
+                || (windowMode < 0)
+                || (windowMode > (int) MaximumWindowModeValue))
+            {
+                LogSettingLoadError(nameof(WindowMode), Defaults.WINDOW_MODE);
+                WindowMode = Defaults.WINDOW_MODE;
+                SaveSettings();
+            }
+            else
+            {
+                WindowMode = (WindowMode) windowMode;
+            }
 
             if (!GetSetting("Graphics", nameof(RenderDistance), out _RenderDistance)
                 || (RenderDistance < 0)
@@ -416,6 +469,10 @@ namespace Controllers.State
             _Configuration["Graphics"][nameof(VSyncLevel)].Comment = "Maximum value of 4";
             _Configuration["Graphics"][nameof(VSyncLevel)].IntValue =
                 Defaults.VSYNC_LEVEL;
+
+            _Configuration["Graphics"][nameof(WindowMode)].Comment =
+                "(0 = Fullscreen, 1 = BorderlessWindowed, 2 = Windowed)";
+            _Configuration["Graphics"][nameof(WindowMode)].IntValue = Defaults.WINDOW_MODE;
 
             _Configuration["Graphics"][nameof(ShadowDistance)].PreComment =
                 "Defines radius in chunks around player to draw shadows.";
