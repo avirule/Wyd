@@ -7,7 +7,7 @@ using System.Runtime.CompilerServices;
 
 namespace NumericsExtended
 {
-    public class int4
+    public struct int4
     {
         #region DEFAULT STATIC MEMBERS
 

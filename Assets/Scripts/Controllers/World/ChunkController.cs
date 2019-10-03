@@ -592,7 +592,7 @@ namespace Controllers.World
             {
                 return;
             }
-
+            
             Vector3 difference = (Position - newChunkPosition).Abs();
 
             if (!IsWithinLoaderRange(difference))

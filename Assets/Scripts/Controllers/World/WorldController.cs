@@ -146,10 +146,7 @@ namespace Controllers.World
             InitialTick = DateTime.Now.Ticks;
         }
 
-        public bool IsInSafeFrameTime()
-        {
-            return _FrameTimer.Elapsed > OptionsController.Current.MaximumInternalFrameTime;
-        }
+        public bool IsInSafeFrameTime() => _FrameTimer.Elapsed > OptionsController.Current.MaximumInternalFrameTime;
 
         public void GetRemainingSafeFrameTime(out TimeSpan remainingTime)
         {
@@ -185,20 +182,15 @@ namespace Controllers.World
                         {
                             chunkController = Instantiate(_ChunkControllerObject, position, Quaternion.identity,
                                 transform);
-                            chunkController.BlocksChanged += OnChunkBlocksChanged;
-                            chunkController.MeshChanged += OnChunkMeshChanged;
-                            chunkController.DeactivationCallback += OnChunkDeactivationCallback;
                         }
                         else
                         {
                             chunkController.Activate(position);
                         }
 
-
-//                        if (_SaveFileProvider.TryGetSavedDataFromPosition(position, out byte[] data))
-//                        {
-//                            chunkController.BuildFromByteData(data);
-//                        }
+                        chunkController.BlocksChanged += OnChunkBlocksChanged;
+                        chunkController.MeshChanged += OnChunkMeshChanged;
+                        chunkController.DeactivationCallback += OnChunkDeactivationCallback;
 
                         chunkController.AssignLoader(loader);
                         _Chunks.Add(chunkController.Position, chunkController);
@@ -245,6 +237,10 @@ namespace Controllers.World
             {
                 return;
             }
+
+            chunkController.BlocksChanged -= OnChunkBlocksChanged;
+            chunkController.MeshChanged -= OnChunkMeshChanged;
+            chunkController.DeactivationCallback -= OnChunkDeactivationCallback;
 
             // Chunk is automatically deactivated by ObjectCache
             _ChunkCache.CacheItem(ref chunkController);
@@ -334,10 +330,7 @@ namespace Controllers.World
 
         #region GET / EXISTS
 
-        public bool ChunkExistsAt(Vector3 position)
-        {
-            return _Chunks.ContainsKey(position);
-        }
+        public bool ChunkExistsAt(Vector3 position) => _Chunks.ContainsKey(position);
 
         public ChunkController GetChunkAt(Vector3 position)
         {
@@ -346,10 +339,8 @@ namespace Controllers.World
             return trySuccess ? chunkController : default;
         }
 
-        public bool TryGetChunkAt(Vector3 position, out ChunkController chunkController)
-        {
-            return _Chunks.TryGetValue(position, out chunkController);
-        }
+        public bool TryGetChunkAt(Vector3 position, out ChunkController chunkController) =>
+            _Chunks.TryGetValue(position, out chunkController);
 
         public ref Block GetBlockAt(Vector3 globalPosition)
         {
@@ -430,10 +421,8 @@ namespace Controllers.World
                    && chunkController.TryRemoveBlockAt(globalPosition);
         }
 
-        public static Vector3 GetChunkOriginFromPosition(Vector3 globalPosition)
-        {
-            return globalPosition.Divide(ChunkController.Size).Floor().Multiply(ChunkController.Size);
-        }
+        public static Vector3 GetChunkOriginFromPosition(Vector3 globalPosition) =>
+            globalPosition.Divide(ChunkController.Size).Floor().Multiply(ChunkController.Size);
 
         public ChunkGenerationDispatcher.GenerationStep AggregateNeighborsStep(Vector3 position)
         {
