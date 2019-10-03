@@ -166,7 +166,9 @@ uniform uint _NoiseSeed;
 uniform float3 _MaximumSize;
 uniform uint _BasicWorldId;
 uniform float _Threshold;
+
 RWStructuredBuffer<float> Result;
+
 float _Frequency;
 float _Peristence;
 float3 _Offset;

@@ -13,7 +13,7 @@ namespace Game.Entities
         Transform Transform { get; }
         Rigidbody Rigidbody { get; }
         Vector3 CurrentChunk { get; }
-        IReadOnlyList<string> Tags { get; }
+        HashSet<string> Tags { get; }
 
         event EventHandler<Vector3> PositionChanged;
         event EventHandler<Vector3> ChunkPositionChanged;

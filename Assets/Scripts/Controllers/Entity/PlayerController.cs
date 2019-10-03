@@ -2,7 +2,6 @@
 
 using System;
 using System.Collections.Generic;
-using System.Collections.ObjectModel;
 using System.Diagnostics;
 using Controllers.State;
 using Controllers.UI;
@@ -66,7 +65,7 @@ namespace Controllers.Entity
             }
         }
 
-        public IReadOnlyList<string> Tags { get; private set; }
+        public HashSet<string> Tags { get; private set; }
 
         public event EventHandler<Vector3> PositionChanged;
         public event EventHandler<Vector3> ChunkPositionChanged;
@@ -83,7 +82,7 @@ namespace Controllers.Entity
             Transform = transform;
             Rigidbody = GetComponent<Rigidbody>();
             Collider = GetComponent<CapsuleCollider>();
-            Tags = new ReadOnlyCollection<string>(new[]
+            Tags = new HashSet<string>(new[]
             {
                 "primary",
                 "player",
