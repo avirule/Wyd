@@ -14,25 +14,16 @@ namespace Controllers.State
             AssignCurrent(this);
         }
 
-        public bool GetKey(KeyCode keyCode, object keyMaster = null)
-        {
-            return IsLockedFor(keyMaster) && Input.GetKey(keyCode);
-        }
+        public bool GetKey(KeyCode keyCode, object keyMaster = null) => IsLockedFor(keyMaster) && Input.GetKey(keyCode);
 
-        public bool GetButton(string button, object keyMaster = null)
-        {
-            return IsLockedFor(keyMaster) && Input.GetButton(button);
-        }
+        public bool GetButton(string button, object keyMaster = null) =>
+            IsLockedFor(keyMaster) && Input.GetButton(button);
 
-        public float GetAxis(string axisName, object keyMaster = null)
-        {
-            return IsLockedFor(keyMaster) ? Input.GetAxis(axisName) : 0f;
-        }
+        public float GetAxis(string axisName, object keyMaster = null) =>
+            IsLockedFor(keyMaster) ? Input.GetAxis(axisName) : 0f;
 
-        public float GetAxisRaw(string axisName, object keyMaster = null)
-        {
-            return IsLockedFor(keyMaster) ? Input.GetAxisRaw(axisName) : 0f;
-        }
+        public float GetAxisRaw(string axisName, object keyMaster = null) =>
+            IsLockedFor(keyMaster) ? Input.GetAxisRaw(axisName) : 0f;
 
         public void ToggleCursorLocked(bool value, object keyMaster = null)
         {

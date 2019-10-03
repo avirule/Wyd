@@ -61,8 +61,7 @@ namespace Game.World.Blocks
                 new Vector3(1f, 0f, 1f)
             };
 
-            static Vertices()
-            {
+            static Vertices() =>
                 FaceVertices = new Dictionary<Direction, Vector3[]>
                 {
                     { Direction.North, North },
@@ -72,7 +71,6 @@ namespace Game.World.Blocks
                     { Direction.Up, Up },
                     { Direction.Down, Down }
                 };
-            }
         }
 
         public static class Triangles
@@ -139,8 +137,7 @@ namespace Game.World.Blocks
                 1
             };
 
-            static Triangles()
-            {
+            static Triangles() =>
                 FaceTriangles = new Dictionary<Direction, int[]>
                 {
                     { Direction.North, North },
@@ -150,7 +147,6 @@ namespace Game.World.Blocks
                     { Direction.Up, Up },
                     { Direction.Down, Down }
                 };
-            }
         }
     }
 }

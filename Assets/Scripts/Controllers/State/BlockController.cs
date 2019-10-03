@@ -99,10 +99,7 @@ namespace Controllers.State
             return false;
         }
 
-        public bool BlockIdExists(ushort blockId)
-        {
-            return blockId < Blocks.Count;
-        }
+        public bool BlockIdExists(ushort blockId) => blockId < Blocks.Count;
 
         public ushort GetBlockId(string blockName)
         {

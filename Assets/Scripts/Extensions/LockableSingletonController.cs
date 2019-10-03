@@ -11,10 +11,7 @@ namespace Extensions
         protected object KeyMaster;
         protected bool Locked;
 
-        public virtual bool IsLockedFor(object keyMaster)
-        {
-            return !Locked || (KeyMaster == keyMaster);
-        }
+        public virtual bool IsLockedFor(object keyMaster) => !Locked || (KeyMaster == keyMaster);
 
         public virtual bool Lock(object keyMaster)
         {

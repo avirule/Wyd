@@ -53,10 +53,8 @@ namespace Controllers.State
             TerrainTexture.Apply();
         }
 
-        public bool TryGetTextureId(string textureName, out int textureId)
-        {
-            return _TextureIDs.TryGetValue(textureName, out textureId);
-        }
+        public bool TryGetTextureId(string textureName, out int textureId) =>
+            _TextureIDs.TryGetValue(textureName, out textureId);
 
         public static Color[] GetPixels(Sprite sprite)
         {

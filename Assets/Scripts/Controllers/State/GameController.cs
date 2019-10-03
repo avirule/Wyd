@@ -159,9 +159,6 @@ namespace Controllers.State
 #endif
         }
 
-        public static object QueueJob(Job job)
-        {
-            return JobExecutionQueue.QueueJob(job);
-        }
+        public static object QueueJob(Job job) => JobExecutionQueue.QueueJob(job);
     }
 }

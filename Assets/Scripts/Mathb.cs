@@ -45,24 +45,13 @@ public static class Mathb
         9
     };
 
-    public static bool ContainsAnyBits(this byte a, byte b)
-    {
-        return (a & b) > 0;
-    }
+    public static bool ContainsAnyBits(this byte a, byte b) => (a & b) > 0;
 
-    public static bool ContainsAllBits(this byte a, byte b)
-    {
-        return (a & b) == b;
-    }
+    public static bool ContainsAllBits(this byte a, byte b) => (a & b) == b;
 
-    public static int LeastSigBitDigit(this byte a)
-    {
-        return MultiplyDeBruijnBitPosition[(uint) ((a & -a) * 0x077CB531U) >> 27];
-    }
+    public static int LeastSigBitDigit(this byte a) =>
+        MultiplyDeBruijnBitPosition[(uint) ((a & -a) * 0x077CB531U) >> 27];
 
-    public static byte SetBitByValueWithMask(this byte a, byte mask, bool value)
-    {
-        // avoids probable branch prediction slowdown on the cpu
-        return (byte) ((a & ~mask) | (value.ToByte() << mask.LeastSigBitDigit()));
-    }
+    public static byte SetBitByValueWithMask(this byte a, byte mask, bool value) =>
+        (byte) ((a & ~mask) | (value.ToByte() << mask.LeastSigBitDigit()));
 }

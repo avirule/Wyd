@@ -100,25 +100,14 @@ namespace Game
         private static readonly IReadOnlyDictionary<Direction, Vector3> DirectionsAsVector3;
         private static readonly IReadOnlyDictionary<Direction, int> DirectionsAsIndexStep;
 
-        public static int OrderPlacement(this Direction direction)
-        {
-            return DirectionAsOrderPlacement[direction];
-        }
+        public static int OrderPlacement(this Direction direction) => DirectionAsOrderPlacement[direction];
 
-        public static Vector3 AsVector3(this Direction direction)
-        {
-            return DirectionsAsVector3[direction];
-        }
+        public static Vector3 AsVector3(this Direction direction) => DirectionsAsVector3[direction];
 
-        public static int AsIndexStep(this Direction direction)
-        {
-            return DirectionsAsIndexStep[direction];
-        }
+        public static int AsIndexStep(this Direction direction) => DirectionsAsIndexStep[direction];
 
-        public static bool IsPositiveNormal(this Direction direction)
-        {
-            return (direction == Direction.North) || (direction == Direction.East) || (direction == Direction.Up);
-        }
+        public static bool IsPositiveNormal(this Direction direction) =>
+            (direction == Direction.North) || (direction == Direction.East) || (direction == Direction.Up);
 
         public static float FromVector3Axis(this Direction direction, Vector3Int a)
         {

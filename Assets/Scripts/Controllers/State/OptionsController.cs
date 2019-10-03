@@ -318,7 +318,7 @@ namespace Controllers.State
 
             if (!GetSetting("Graphics", nameof(RenderDistance), out _RenderDistance)
                 || (RenderDistance < 0)
-                || (RenderDistance > 24))
+                || (RenderDistance > 48))
             {
                 LogSettingLoadError(nameof(RenderDistance), Defaults.RENDER_DISTANCE);
                 RenderDistance = Defaults.RENDER_DISTANCE;
@@ -327,7 +327,7 @@ namespace Controllers.State
 
             if (!GetSetting("Graphics", nameof(ShadowDistance), out _ShadowDistance)
                 || (ShadowDistance < 0)
-                || (ShadowDistance > 24))
+                || (ShadowDistance > 48))
             {
                 LogSettingLoadError(nameof(ShadowDistance), Defaults.SHADOW_DISTANCE);
                 ShadowDistance = Defaults.SHADOW_DISTANCE;

@@ -10,9 +10,6 @@ namespace Game.World.Chunks
     {
         public float[] NoiseValues { get; set; }
 
-        public ChunkBuilderNoiseValues()
-        {
-            NoiseValues = new float[ChunkController.Size.Product()];
-        }
+        public ChunkBuilderNoiseValues() => NoiseValues = new float[ChunkController.Size.Product()];
     }
 }

@@ -15,10 +15,7 @@ namespace Logging.Targets
     {
         private static readonly ConcurrentQueue<string> LogEvents;
 
-        static UnityDebuggerTarget()
-        {
-            LogEvents = new ConcurrentQueue<string>();
-        }
+        static UnityDebuggerTarget() => LogEvents = new ConcurrentQueue<string>();
 
         public UnityDebuggerTarget()
         {

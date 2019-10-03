@@ -58,10 +58,7 @@ namespace Game.World.Chunks
         public GenerationStep CurrentStep { get; private set; }
         public bool Generating { get; private set; }
 
-        public ChunkGenerationDispatcher()
-        {
-            _IsSet = false;
-        }
+        public ChunkGenerationDispatcher() => _IsSet = false;
 
         public void Set(Bounds bounds, Block[] blocks, ref Mesh mesh)
         {

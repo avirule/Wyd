@@ -108,10 +108,6 @@ namespace Game.World.Blocks
             return true;
         }
 
-        public virtual bool ShouldPlaceAt(Random rand, int index, Vector3 position, Block[] blocks)
-        {
-            // todo implement placement choicing
-            return false;
-        }
+        public virtual bool ShouldPlaceAt(Random rand, int index, Vector3 position, Block[] blocks) => false;
     }
 }

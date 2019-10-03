@@ -10,9 +10,6 @@ namespace Jobs
     {
         public readonly Job Job;
 
-        public JobFinishedEventArgs(Job job)
-        {
-            Job = job;
-        }
+        public JobFinishedEventArgs(Job job) => Job = job;
     }
 }

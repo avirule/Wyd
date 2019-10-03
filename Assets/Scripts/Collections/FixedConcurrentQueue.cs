@@ -53,30 +53,15 @@ namespace Collections
             }
         }
 
-        private bool TryDequeue(out T item)
-        {
-            return _InternalQueue.TryDequeue(out item);
-        }
+        private bool TryDequeue(out T item) => _InternalQueue.TryDequeue(out item);
 
-        public bool TryPeek(out T item)
-        {
-            return _InternalQueue.TryPeek(out item);
-        }
+        public bool TryPeek(out T item) => _InternalQueue.TryPeek(out item);
 
-        public IEnumerator<T> GetEnumerator()
-        {
-            return _InternalQueue.GetEnumerator();
-        }
+        public IEnumerator<T> GetEnumerator() => _InternalQueue.GetEnumerator();
 
-        IEnumerator IEnumerable.GetEnumerator()
-        {
-            return GetEnumerator();
-        }
+        IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
 
-        public T[] ToArray()
-        {
-            return _InternalQueue.ToArray();
-        }
+        public T[] ToArray() => _InternalQueue.ToArray();
 
         bool IProducerConsumerCollection<T>.TryAdd(T item)
         {
@@ -85,10 +70,7 @@ namespace Collections
             return true;
         }
 
-        bool IProducerConsumerCollection<T>.TryTake(out T item)
-        {
-            return TryDequeue(out item);
-        }
+        bool IProducerConsumerCollection<T>.TryTake(out T item) => TryDequeue(out item);
 
         void ICollection.CopyTo(Array array, int index)
         {

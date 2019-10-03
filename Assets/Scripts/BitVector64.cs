@@ -32,23 +32,14 @@ public class BitVector64
         }
 
 
-        public override int GetHashCode()
-        {
-            return base.GetHashCode();
-        }
+        public override int GetHashCode() => base.GetHashCode();
     }
 
     private ulong _Data;
 
-    public BitVector64(long data)
-    {
-        _Data = (ulong) data;
-    }
+    public BitVector64(long data) => _Data = (ulong) data;
 
-    public BitVector64(BitVector64 value)
-    {
-        _Data = value._Data;
-    }
+    public BitVector64(BitVector64 value) => _Data = value._Data;
 
     public bool this[long bit]
     {

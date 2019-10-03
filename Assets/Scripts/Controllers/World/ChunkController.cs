@@ -27,7 +27,7 @@ namespace Controllers.World
             new ObjectCache<BlockAction>(true, true, 1024);
 
         public static readonly Vector3Int BiomeNoiseSize = new Vector3Int(32 * 16, 256, 32 * 16);
-        public static readonly Vector3Int Size = new Vector3Int(64, 256, 64);
+        public static readonly Vector3Int Size = new Vector3Int(16, 256, 16);
         public static readonly int YIndexStep = Size.x * Size.z;
 
 
@@ -592,7 +592,7 @@ namespace Controllers.World
             {
                 return;
             }
-            
+
             Vector3 difference = (Position - newChunkPosition).Abs();
 
             if (!IsWithinLoaderRange(difference))

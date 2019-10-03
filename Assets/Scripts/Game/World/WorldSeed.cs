@@ -34,9 +34,6 @@ namespace Game.World
             Normalized = Mathf.InverseLerp(int.MinValue, int.MaxValue, SeedValue);
         }
 
-        public static implicit operator int(WorldSeed seed)
-        {
-            return seed.SeedValue;
-        }
+        public static implicit operator int(WorldSeed seed) => seed.SeedValue;
     }
 }

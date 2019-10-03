@@ -98,7 +98,7 @@ namespace Game.World.Chunks
 
             mesh.RecalculateNormals();
             mesh.RecalculateTangents();
-            
+
             //mesh.UploadMeshData(true);
         }
 
@@ -110,7 +110,7 @@ namespace Game.World.Chunks
                 {
                     continue;
                 }
-                
+
                 Vector3Int localPosition = Mathv.GetIndexAsVector3Int(index, ChunkController.Size);
 
                 if (Blocks[index].Transparent)

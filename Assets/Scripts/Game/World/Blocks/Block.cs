@@ -51,20 +51,11 @@ namespace Game.World.Blocks
             Transparent = BlockController.Current.GetBlockRule(Id)?.Transparent ?? true;
         }
 
-        public bool HasAnyFaces()
-        {
-            return Faces.ContainsAnyBits(FACES_MASK);
-        }
+        public bool HasAnyFaces() => Faces.ContainsAnyBits(FACES_MASK);
 
-        public bool HasAllFaces()
-        {
-            return Faces.ContainsAllBits(FACES_MASK);
-        }
+        public bool HasAllFaces() => Faces.ContainsAllBits(FACES_MASK);
 
-        public bool HasFace(Direction direction)
-        {
-            return Faces.ContainsAnyBits((byte) direction);
-        }
+        public bool HasFace(Direction direction) => Faces.ContainsAnyBits((byte) direction);
 
         public void SetFace(Direction direction, bool value)
         {

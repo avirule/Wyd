@@ -57,9 +57,7 @@ namespace Controllers.UI.Components.Text
                 (allocatedMemoryInMb / reservedMemoryInMb) * 100d);
         }
 
-        private static (long, long) GetUsedMemory()
-        {
-            return (Profiler.GetTotalReservedMemoryLong(), Profiler.GetTotalAllocatedMemoryLong());
-        }
+        private static (long, long) GetUsedMemory() =>
+            (Profiler.GetTotalReservedMemoryLong(), Profiler.GetTotalAllocatedMemoryLong());
     }
 }

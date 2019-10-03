@@ -14,7 +14,7 @@ namespace Controllers.UI.Components.Button
     public class ThreadingModeButtonController : MonoBehaviour, IPointerClickHandler
     {
         private static readonly int ThreadingModeEnumLength = Enum.GetNames(typeof(ThreadingMode)).Length;
-        
+
         public void OnPointerClick(PointerEventData eventData)
         {
             int step = eventData.GetButtonAsInt();

@@ -10,10 +10,7 @@ namespace Jobs
     {
         private readonly Action _ExecutionAction;
 
-        public GeneralExecutionJob(Action action)
-        {
-            _ExecutionAction = action;
-        }
+        public GeneralExecutionJob(Action action) => _ExecutionAction = action;
 
         protected override void Process()
         {

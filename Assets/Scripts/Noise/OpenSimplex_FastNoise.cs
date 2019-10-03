@@ -22,10 +22,7 @@ namespace Noise
         private int m_seed = 1337;
         private float m_frequency = (float) 0.01;
 
-        public OpenSimplex_FastNoise(int seed = 1337)
-        {
-            m_seed = seed;
-        }
+        public OpenSimplex_FastNoise(int seed = 1337) => m_seed = seed;
 
         private struct Float2
         {
@@ -83,10 +80,7 @@ namespace Noise
         };
 
         [MethodImpl(FN_INLINE)]
-        private static int FastFloor(float f)
-        {
-            return f >= 0 ? (int) f : (int) f - 1;
-        }
+        private static int FastFloor(float f) => f >= 0 ? (int) f : (int) f - 1;
 
         // Hashing
         private const int X_PRIME = 1619;
@@ -171,10 +165,8 @@ namespace Noise
             return (int) (i ^ (i >> 32));
         }
 
-        public static float GetSimplex(int seed, float freq, float x, float y, float z)
-        {
-            return SingleSimplex(seed, x * freq, y * freq, z * freq);
-        }
+        public static float GetSimplex(int seed, float freq, float x, float y, float z) =>
+            SingleSimplex(seed, x * freq, y * freq, z * freq);
 
         private const float F3 = (float) (1.0 / 3.0);
         private const float G3 = (float) (1.0 / 6.0);
@@ -315,10 +307,7 @@ namespace Noise
             return 32 * (n0 + n1 + n2 + n3);
         }
 
-        public float GetSimplex(float x, float y)
-        {
-            return SingleSimplex(m_seed, x * m_frequency, y * m_frequency);
-        }
+        public float GetSimplex(float x, float y) => SingleSimplex(m_seed, x * m_frequency, y * m_frequency);
 
         private const float F2 = (float) (1.0 / 2.0);
         private const float G2 = (float) (1.0 / 4.0);
@@ -391,10 +380,8 @@ namespace Noise
             return 50 * (n0 + n1 + n2);
         }
 
-        public float GetSimplex(float x, float y, float z, float w)
-        {
-            return SingleSimplex(m_seed, x * m_frequency, y * m_frequency, z * m_frequency, w * m_frequency);
-        }
+        public float GetSimplex(float x, float y, float z, float w) => SingleSimplex(m_seed, x * m_frequency,
+            y * m_frequency, z * m_frequency, w * m_frequency);
 
         private static readonly byte[] SIMPLEX_4D =
         {

@@ -37,10 +37,7 @@ namespace Jobs
             Running = true;
         }
 
-        public bool QueueJob(Job job)
-        {
-            return _ItemQueue.TryAdd(job);
-        }
+        public bool QueueJob(Job job) => _ItemQueue.TryAdd(job);
 
         private void ProcessItemQueue()
         {
