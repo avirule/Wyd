@@ -309,7 +309,7 @@ namespace Controllers.State
                 SaveSettings();
             }
 
-            MaximumInternalFrameTime = TimeSpan.FromSeconds(1f / MaximumInternalFrames);
+            MaximumInternalFrameTime = TimeSpan.FromSeconds(1d / MaximumInternalFrames);
 
             if (!GetSetting("General", nameof(ThreadingMode), out _ThreadingMode))
             {

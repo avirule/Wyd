@@ -81,16 +81,6 @@ namespace Controllers.World
             }
         }
 
-#if UNITY_EDITOR
-
-        public bool StepInto;
-        public bool PopulatePublicBlocks;
-        public bool Remesh;
-        public ushort[] Blocks;
-        public int VertexCount;
-
-#endif
-
         #endregion
 
 
@@ -147,54 +137,17 @@ namespace Controllers.World
 
         private void Update()
         {
-#if UNITY_EDITOR
-
-            if (StepInto)
-            {
-            }
-
-            if (PopulatePublicBlocks)
-            {
-                Blocks = _Blocks.Select(block => block.Id).ToArray();
-
-                PopulatePublicBlocks = false;
-            }
-
-            if (Remesh)
-            {
-                Remesh = false;
-            }
-
-            if (VertexCount != _Mesh.vertexCount)
-            {
-                VertexCount = _Mesh.vertexCount;
-            }
-
-            if (WorldController.Current.StepIntoSelectedChunkStep
-                && (AggregateGenerationStep == WorldController.Current.SelectedStep))
-            {
-            }
-
-            if (!WorldController.Current.IgnoreInternalFrameLimit
-                && WorldController.Current.IsInSafeFrameTime())
+            if (!WorldController.Current.IsInSafeFrameTime())
             {
                 return;
             }
 
-#else
-            if (WorldController.Current.IsInSafeFrameTime())
-            {
-                return;
-            }
-
-#endif
-
-            UpdateContainedChunks();
+            UpdateChunks();
 
             if (_AwaitingMeshCombining
                 && (AggregateGenerationStep == ChunkGenerationDispatcher.GenerationStep.Complete))
             {
-                CreateAggregateMesh(ref _Mesh);
+                ApplyAggregateMesh(ref _Mesh);
                 _AwaitingMeshCombining = false;
             }
         }
@@ -231,15 +184,10 @@ namespace Controllers.World
             }
         }
 
-        private void UpdateContainedChunks()
+        private void UpdateChunks()
         {
-            foreach ((Vector3 _, Chunk chunk) in _Chunks)
+            foreach ((Vector3 _, Chunk chunk) in _Chunks.TakeWhile(kvp => WorldController.Current.IsInSafeFrameTime()))
             {
-                if (!WorldController.Current.IsInSafeFrameTime())
-                {
-                    break;
-                }
-
                 chunk.Update();
             }
         }
@@ -256,7 +204,7 @@ namespace Controllers.World
             return step;
         }
 
-        private Mesh CreateAggregateMesh(ref Mesh mesh)
+        private Mesh ApplyAggregateMesh(ref Mesh mesh)
         {
             MeshData meshData = new MeshData();
 

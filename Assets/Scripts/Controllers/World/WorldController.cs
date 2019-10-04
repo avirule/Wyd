@@ -145,7 +145,7 @@ namespace Controllers.World
             InitialTick = DateTime.Now.Ticks;
         }
 
-        public bool IsInSafeFrameTime() => _FrameTimer.Elapsed > OptionsController.Current.MaximumInternalFrameTime;
+        public bool IsInSafeFrameTime() => _FrameTimer.Elapsed <= OptionsController.Current.MaximumInternalFrameTime;
 
         public void GetRemainingSafeFrameTime(out TimeSpan remainingTime)
         {
