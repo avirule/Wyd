@@ -18,7 +18,7 @@ namespace Controllers.State
 {
     public class GameController : SingletonController<GameController>
     {
-        private static JobQueue JobExecutionQueue { get; set; }
+        private JobQueue JobExecutionQueue { get; set; }
 
         public static readonly int MainThreadId = Thread.CurrentThread.ManagedThreadId;
 
@@ -36,28 +36,25 @@ namespace Controllers.State
 
         private void Start()
         {
-            if (JobExecutionQueue == default)
+            JobExecutionQueue = new JobQueue(200);
+            JobExecutionQueue.JobCountChanged += (sender, i) => JobCountChanged?.Invoke(sender, i);
+
+            OptionsController.Current.PropertyChanged += (sender, args) =>
             {
-                JobExecutionQueue = new JobQueue(200);
-                JobExecutionQueue.JobCountChanged += (sender, i) => JobCountChanged?.Invoke(sender, i);
-                
-                OptionsController.Current.PropertyChanged += (sender, args) =>
+                if (args.PropertyName.Equals(nameof(OptionsController.Current.ThreadingMode)))
                 {
-                    if (args.PropertyName.Equals(nameof(OptionsController.Current.ThreadingMode)))
-                    {
-                        JobExecutionQueue.ThreadingMode = OptionsController.Current.ThreadingMode;
-                    }
-                    else if (args.PropertyName.Equals(nameof(OptionsController.Current.CPUCoreUtilization)))
-                    {
-                        JobExecutionQueue.ModifyThreadPoolSize(OptionsController.Current.CPUCoreUtilization);
-                    }
-                };
+                    JobExecutionQueue.ThreadingMode = OptionsController.Current.ThreadingMode;
+                }
+                else if (args.PropertyName.Equals(nameof(OptionsController.Current.CPUCoreUtilization)))
+                {
+                    JobExecutionQueue.ModifyThreadPoolSize(OptionsController.Current.CPUCoreUtilization);
+                }
+            };
 
-                JobExecutionQueue.JobFinished += (sender, args) => { JobFinished?.Invoke(sender, args); };
-                JobExecutionQueue.ModifyThreadPoolSize(OptionsController.Current.CPUCoreUtilization);
+            JobExecutionQueue.JobFinished += (sender, args) => { JobFinished?.Invoke(sender, args); };
+            JobExecutionQueue.ModifyThreadPoolSize(OptionsController.Current.CPUCoreUtilization);
 
-                JobExecutionQueue.Start();
-            }
+            JobExecutionQueue.Start();
 
             RegisterDefaultBlocks();
         }
@@ -164,6 +161,6 @@ namespace Controllers.State
 #endif
         }
 
-        public static object QueueJob(Job job) => JobExecutionQueue.QueueJob(job);
+        public object QueueJob(Job job) => JobExecutionQueue.QueueJob(job);
     }
 }

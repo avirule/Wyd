@@ -218,7 +218,7 @@ namespace Game.World.Chunks
         {
             Generating = true;
             GameController.Current.JobFinished += OnJobQueueFinishedJob;
-            _JobIdentity = GameController.QueueJob(job);
+            _JobIdentity = GameController.Current.QueueJob(job);
         }
 
         /// <summary>

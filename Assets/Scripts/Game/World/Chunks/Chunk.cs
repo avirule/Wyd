@@ -1,21 +1,22 @@
+#region
+
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using Compression;
 using Controllers.State;
 using Controllers.World;
-using Game.Entities;
 using Game.World.Blocks;
 using Logging;
 using NLog;
 using UnityEngine;
-using UnityEngine.Rendering;
+
+#endregion
 
 namespace Game.World.Chunks
 {
     public class Chunk
     {
-        
         private static readonly ObjectCache<ChunkGenerationDispatcher> ChunkGenerationDispatcherCache =
             new ObjectCache<ChunkGenerationDispatcher>(true);
 
@@ -28,8 +29,8 @@ namespace Game.World.Chunks
 
         #region INSTANCE MEMBERS
 
-        private Bounds _Bounds;
         private readonly Block[] _Blocks;
+        private Bounds _Bounds;
         private MeshData _MeshData;
         private ChunkGenerationDispatcher _ChunkGenerationDispatcher;
         private readonly Stack<BlockAction> _BlockActions;
@@ -42,19 +43,9 @@ namespace Game.World.Chunks
 
         public ChunkGenerationDispatcher.GenerationStep GenerationStep => _ChunkGenerationDispatcher.CurrentStep;
 
-#if UNITY_EDITOR
-
-        public bool StepInto;
-        public bool PopulatePublicBlocks;
-        public bool Remesh;
-        public ushort[] Blocks;
-        public int VertexCount;
-
-#endif
-
         #endregion
-        
-        
+
+
         public Chunk(Vector3 position)
         {
             _Bounds.SetMinMax(position, position + Size);
@@ -72,63 +63,15 @@ namespace Game.World.Chunks
             //     .TotalSeconds;
             // InvokeRepeating(nameof(Tick), (float) waitTime, (float) WorldController.Current.WorldTickRate.TotalSeconds);
         }
-        
+
         #region UNITY BUILT-INS
 
         public void Update()
         {
-#if UNITY_EDITOR
-
-            if (StepInto)
-            {
-            }
-
-            if (PopulatePublicBlocks)
-            {
-                Blocks = _Blocks.Select(block => block.Id).ToArray();
-
-                PopulatePublicBlocks = false;
-            }
-
-            if (Remesh)
-            {
-                _ChunkGenerationDispatcher.RequestMeshUpdate();
-
-                Remesh = false;
-            }
-
-            if (VertexCount != _MeshData.Vertices.Count)
-            {
-                VertexCount = _MeshData.Vertices.Count;
-            }
-
-            if (WorldController.Current.StepIntoSelectedChunkStep
-                && (GenerationStep == WorldController.Current.SelectedStep))
-            {
-            }
-
-            if (!WorldController.Current.IgnoreInternalFrameLimit
-                && WorldController.Current.IsInSafeFrameTime())
-            {
-                return;
-            }
-
             if (!ProcessBlockActions())
             {
                 _ChunkGenerationDispatcher.SynchronousContextUpdate();
             }
-
-#else
-            if (WorldController.Current.IsInSafeFrameTime())
-            {
-                return;
-            }
-
-            if (!ProcessBlockActions())
-            {
-                _ChunkGenerationDispatcher.SynchronousContextUpdate();
-            }
-#endif
         }
 
         #endregion
@@ -173,7 +116,7 @@ namespace Game.World.Chunks
         #region ACTIVATION STATE
 
         public void Activate(Vector3 position)
-        {           
+        {
             _Bounds.SetMinMax(position, position + Size);
             ConfigureDispatcher();
             Active = true;
@@ -185,7 +128,7 @@ namespace Game.World.Chunks
             {
                 CacheDispatcher();
             }
-            
+
             _MeshData?.Clear();
             _BlockActions?.Clear();
             _BlockActionLocalPositions?.Clear();
@@ -225,11 +168,11 @@ namespace Game.World.Chunks
         {
             int localPosition1d = localPosition.To1D(Size);
 
-            if (localPosition1d >= Blocks.Length)
+            if (localPosition1d >= _Blocks.Length)
             {
                 throw new ArgumentException($"Parameter `{nameof(localPosition)}` must be within bounds.");
             }
-            
+
             return ref _Blocks[localPosition1d];
         }
 
@@ -237,12 +180,12 @@ namespace Game.World.Chunks
         {
             int localPosition1d = localPosition.To1D(Size);
 
-            if (localPosition1d >= Blocks.Length)
+            if (localPosition1d >= _Blocks.Length)
             {
                 block = default;
                 return false;
             }
-            
+
             block = _Blocks[localPosition1d];
             return true;
         }
@@ -251,7 +194,7 @@ namespace Game.World.Chunks
         {
             int localPosition1d = localPosition.To1D(Size);
 
-            if (localPosition1d >= Blocks.Length)
+            if (localPosition1d >= _Blocks.Length)
             {
                 throw new ArgumentException($"Parameter `{nameof(localPosition)}` must be within bounds.");
             }
@@ -263,7 +206,7 @@ namespace Game.World.Chunks
         {
             int localPosition1d = localPosition.To1D(Size);
 
-            if (localPosition1d >= Blocks.Length)
+            if (localPosition1d >= _Blocks.Length)
             {
                 throw new ArgumentException($"Parameter `{nameof(localPosition)}` must be within bounds.");
             }
@@ -281,7 +224,7 @@ namespace Game.World.Chunks
         {
             int localPosition1d = localPosition.To1D(Size);
 
-            if (localPosition1d >= Blocks.Length)
+            if (localPosition1d >= _Blocks.Length)
             {
                 throw new ArgumentException($"Parameter `{nameof(localPosition)}` must be within bounds.");
             }
@@ -454,4 +397,3 @@ namespace Game.World.Chunks
         #endregion
     }
 }
-

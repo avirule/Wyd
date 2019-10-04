@@ -1057,7 +1057,7 @@ PrefabInstance:
     - target: {fileID: 5830996186003970320, guid: c0f2168d6c4ca2843aa6ba7bdce7b97d,
         type: 3}
       propertyPath: m_SizeDelta.y
-      value: 80
+      value: 162
       objectReference: {fileID: 0}
     - target: {fileID: 5830996186003970320, guid: c0f2168d6c4ca2843aa6ba7bdce7b97d,
         type: 3}
@@ -1381,16 +1381,6 @@ PrefabInstance:
   m_Modification:
     m_TransformParent: {fileID: 7943420135858397396}
     m_Modifications:
-    - target: {fileID: 3980670016248479640, guid: b56babbc0bf686f4c9d02360481bb3f4,
-        type: 3}
-      propertyPath: m_Name
-      value: QuitMainMenuButton
-      objectReference: {fileID: 0}
-    - target: {fileID: 3980670016248479640, guid: b56babbc0bf686f4c9d02360481bb3f4,
-        type: 3}
-      propertyPath: m_StaticEditorFlags
-      value: 4294967295
-      objectReference: {fileID: 0}
     - target: {fileID: 6079141059709706801, guid: b56babbc0bf686f4c9d02360481bb3f4,
         type: 3}
       propertyPath: m_LocalPosition.x
@@ -1496,6 +1486,16 @@ PrefabInstance:
       propertyPath: m_Pivot.y
       value: 0.5
       objectReference: {fileID: 0}
+    - target: {fileID: 3980670016248479640, guid: b56babbc0bf686f4c9d02360481bb3f4,
+        type: 3}
+      propertyPath: m_Name
+      value: QuitMainMenuButton
+      objectReference: {fileID: 0}
+    - target: {fileID: 3980670016248479640, guid: b56babbc0bf686f4c9d02360481bb3f4,
+        type: 3}
+      propertyPath: m_StaticEditorFlags
+      value: 4294967295
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: b56babbc0bf686f4c9d02360481bb3f4, type: 3}
 --- !u!224 &4206854714383888484 stripped
@@ -1511,16 +1511,6 @@ PrefabInstance:
   m_Modification:
     m_TransformParent: {fileID: 7943420135858397396}
     m_Modifications:
-    - target: {fileID: 5896171944199831550, guid: e3a6c79efb0045f4691df0d88b4ddaf8,
-        type: 3}
-      propertyPath: m_Name
-      value: ExitButton
-      objectReference: {fileID: 0}
-    - target: {fileID: 5896171944199831550, guid: e3a6c79efb0045f4691df0d88b4ddaf8,
-        type: 3}
-      propertyPath: m_StaticEditorFlags
-      value: 4294967295
-      objectReference: {fileID: 0}
     - target: {fileID: 3652478650375430743, guid: e3a6c79efb0045f4691df0d88b4ddaf8,
         type: 3}
       propertyPath: m_LocalPosition.x
@@ -1626,6 +1616,16 @@ PrefabInstance:
       propertyPath: m_Pivot.y
       value: 0.5
       objectReference: {fileID: 0}
+    - target: {fileID: 5896171944199831550, guid: e3a6c79efb0045f4691df0d88b4ddaf8,
+        type: 3}
+      propertyPath: m_Name
+      value: ExitButton
+      objectReference: {fileID: 0}
+    - target: {fileID: 5896171944199831550, guid: e3a6c79efb0045f4691df0d88b4ddaf8,
+        type: 3}
+      propertyPath: m_StaticEditorFlags
+      value: 4294967295
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: e3a6c79efb0045f4691df0d88b4ddaf8, type: 3}
 --- !u!224 &6668854116013828175 stripped
@@ -1641,16 +1641,6 @@ PrefabInstance:
   m_Modification:
     m_TransformParent: {fileID: 7943420135858397396}
     m_Modifications:
-    - target: {fileID: 5819838807742632154, guid: 265da867df4d26d458620d8af805020d,
-        type: 3}
-      propertyPath: m_Name
-      value: OptionsButton
-      objectReference: {fileID: 0}
-    - target: {fileID: 5819838807742632154, guid: 265da867df4d26d458620d8af805020d,
-        type: 3}
-      propertyPath: m_StaticEditorFlags
-      value: 4294967295
-      objectReference: {fileID: 0}
     - target: {fileID: 3722053913222614387, guid: 265da867df4d26d458620d8af805020d,
         type: 3}
       propertyPath: m_LocalPosition.x
@@ -1755,6 +1745,16 @@ PrefabInstance:
         type: 3}
       propertyPath: m_Pivot.y
       value: 0.5
+      objectReference: {fileID: 0}
+    - target: {fileID: 5819838807742632154, guid: 265da867df4d26d458620d8af805020d,
+        type: 3}
+      propertyPath: m_Name
+      value: OptionsButton
+      objectReference: {fileID: 0}
+    - target: {fileID: 5819838807742632154, guid: 265da867df4d26d458620d8af805020d,
+        type: 3}
+      propertyPath: m_StaticEditorFlags
+      value: 4294967295
       objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 265da867df4d26d458620d8af805020d, type: 3}
