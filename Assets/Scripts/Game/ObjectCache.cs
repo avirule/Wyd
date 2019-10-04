@@ -1,5 +1,6 @@
 #region
 
+using System;
 using System.Collections.Concurrent;
 
 #endregion
@@ -10,13 +11,13 @@ namespace Game
 
     public delegate void ItemCulledOperation<T>(ref T item);
 
-    public class ObjectCache<T> where T : new()
+    public class ObjectCache<T>
     {
+        private readonly bool _CreateNewIfEmpty;
         private readonly ConcurrentStack<T> _InternalCache;
         private PreCachingOperation<T> _PreCachingOperation;
         private ItemCulledOperation<T> _ItemCulledOperation;
-
-        public bool CreateNewIfEmpty;
+        
         public int MaximumSize;
 
         public int Size => _InternalCache.Count;
@@ -29,14 +30,22 @@ namespace Game
             _InternalCache = new ConcurrentStack<T>();
             SetPreCachingOperation(preCachingOperation);
             SetItemCulledOperation(itemCulledOperation);
-            CreateNewIfEmpty = createNewIfEmpty;
+
+            if (createNewIfEmpty && (typeof(T).GetConstructor(Type.EmptyTypes) == null) && !typeof(T).IsValueType)
+            {
+                throw new ArgumentException(
+                    $"Type T ({typeof(T)}) must have an empty constructor if `{nameof(_CreateNewIfEmpty)}` flag is true.",
+                    nameof(_CreateNewIfEmpty));
+            }
+
+            _CreateNewIfEmpty = createNewIfEmpty;
             MaximumSize = maximumSize;
 
-            if (preInitialize && (maximumSize > -1))
+            if (preInitialize && (maximumSize > -1) && createNewIfEmpty)
             {
                 for (int i = 0; i < maximumSize; i++)
                 {
-                    _InternalCache.Push(new T());
+                    _InternalCache.Push(Activator.CreateInstance<T>());
                 }
             }
         }
@@ -87,9 +96,9 @@ namespace Game
                 || !_InternalCache.TryPop(out item)
                 || !(item is object))
             {
-                if (CreateNewIfEmpty)
+                if (_CreateNewIfEmpty)
                 {
-                    item = new T();
+                    item = Activator.CreateInstance<T>();
                 }
                 else
                 {

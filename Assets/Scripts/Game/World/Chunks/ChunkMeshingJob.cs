@@ -17,9 +17,10 @@ namespace Game.World.Chunks
         /// </summary>
         /// <param name="bounds"></param>
         /// <param name="blocks">Pre-initialized and built <see cref="T:ushort[]" /> to iterate through.</param>
+        /// <param name="meshData"></param>
         /// <param name="aggressiveFaceMerging"></param>
         /// <param name="isRemesh"></param>
-        public void Set(Bounds bounds, Block[] blocks, bool aggressiveFaceMerging, bool isRemesh = false)
+        public void Set(Bounds bounds, Block[] blocks, ref MeshData meshData, bool aggressiveFaceMerging, bool isRemesh = false)
         {
             if (_Mesher == default)
             {
@@ -31,10 +32,10 @@ namespace Game.World.Chunks
                 ClearAllFaces(blocks);
             }
 
-            _Mesher.ClearInternalData();
             _Mesher.AbortToken = AbortToken;
             _Mesher.Bounds = bounds;
             _Mesher.Blocks = blocks;
+            _Mesher.MeshData = meshData;
             _Mesher.AggressiveFaceMerging = aggressiveFaceMerging;
         }
 
@@ -48,9 +49,9 @@ namespace Game.World.Chunks
             _Mesher.GenerateMesh();
         }
 
-        public void SetMesh(ref Mesh mesh)
+        public void SetMesh(ref MeshData meshData)
         {
-            _Mesher.SetMesh(ref mesh);
+            //_Mesher.SetMesh(ref mesh);
         }
 
         private static void ClearAllFaces(Block[] blocks)

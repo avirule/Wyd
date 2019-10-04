@@ -32,7 +32,7 @@ namespace Game.World.Chunks.BuildingJob
                 }
 
                 (localPosition.x, localPosition.y, localPosition.z) =
-                    Mathv.GetIndexAs3D(index, ChunkController.Size);
+                    Mathv.GetIndexAs3D(index, ChunkRegionController.Size);
 
                 GenerateSandAroundPosition(localPosition, blockIdWater, blockIdSand);
             }
@@ -51,7 +51,7 @@ namespace Game.World.Chunks.BuildingJob
                         localPosition += new Vector3(x, y, z);
                         Vector3 globalPosition = Bounds.min + localPosition;
 
-                        if ((globalPosition.y < 0) || (globalPosition.y > ChunkController.Size.y))
+                        if ((globalPosition.y < 0) || (globalPosition.y > ChunkRegionController.Size.y))
                         {
                             continue;
                         }
@@ -70,7 +70,7 @@ namespace Game.World.Chunks.BuildingJob
                         else
                         {
                             // todo fix this 
-                            int queriedIndex = localPosition.To1D(ChunkController.Size);
+                            int queriedIndex = localPosition.To1D(ChunkRegionController.Size);
 
                             if ((Blocks[queriedIndex].Id == blockIdWater)
                                 || (Blocks[queriedIndex].Id == blockIdSand))

@@ -13,7 +13,7 @@ namespace Controllers.UI.Components.Text
         {
             if (force || args.PropertyName.Equals(nameof(OptionsController.Current.ThreadingMode)))
             {
-                _TextObject.text = string.Format(_Format, OptionsController.Current.ThreadingMode);
+                TextObject.text = string.Format(Format, OptionsController.Current.ThreadingMode);
             }
         }
     }

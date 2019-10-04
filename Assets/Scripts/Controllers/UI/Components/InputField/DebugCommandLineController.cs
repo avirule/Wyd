@@ -161,7 +161,7 @@ namespace Controllers.UI.Components.InputField
                     Vector3 chunkPosition = new Vector3(x1, y1, z1);
 
                     if (!WorldController.Current.TryGetChunkAt(chunkPosition,
-                        out ChunkController chunkController))
+                        out ChunkRegionController chunkController))
                     {
                         EventLog.Logger.Log(LogLevel.Warn, $"No chunk at coordinates {chunkPosition}.");
                         break;
@@ -187,7 +187,7 @@ namespace Controllers.UI.Components.InputField
                     Vector3 chunkPosition2 = new Vector3(x2, y2, z2);
 
                     if (!WorldController.Current.TryGetChunkAt(chunkPosition2,
-                        out ChunkController chunkController2))
+                        out ChunkRegionController chunkController2))
                     {
                         EventLog.Logger.Log(LogLevel.Warn, $"No chunk at coordinates {chunkPosition2}.");
                     }

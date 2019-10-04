@@ -42,7 +42,7 @@ namespace Controllers.UI.Components.Text
             _LastBuildTime = buildTime;
             _LastMeshTime = meshTime;
 
-            _TextObject.text = string.Format(_Format, buildTime, meshTime);
+            TextObject.text = string.Format(Format, buildTime, meshTime);
         }
 
         private static (double, double) CalculateBuildAndMeshTimes()

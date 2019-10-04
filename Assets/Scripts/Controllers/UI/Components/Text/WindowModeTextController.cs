@@ -14,9 +14,9 @@ namespace Controllers.UI.Components.Text
         {
             if (force || args.PropertyName.Equals(nameof(OptionsController.Current.WindowMode)))
             {
-                _TextObject.text = OptionsController.Current.WindowMode == WindowMode.BorderlessWindowed
-                    ? string.Format(_Format, "Borderless Windowed")
-                    : string.Format(_Format, OptionsController.Current.WindowMode);
+                TextObject.text = OptionsController.Current.WindowMode == WindowMode.BorderlessWindowed
+                    ? string.Format(Format, "Borderless Windowed")
+                    : string.Format(Format, OptionsController.Current.WindowMode);
             }
         }
     }

@@ -13,7 +13,7 @@ namespace Controllers.UI.Components.Text
         {
             if (force || args.PropertyName.Equals(nameof(OptionsController.Current.CPUCoreUtilization)))
             {
-                _TextObject.text = string.Format(_Format, OptionsController.Current.CPUCoreUtilization);
+                TextObject.text = string.Format(Format, OptionsController.Current.CPUCoreUtilization);
             }
         }
     }

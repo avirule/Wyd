@@ -31,6 +31,7 @@ namespace Jobs
         private int _LastThreadIndexQueuedInto;
 
         private int _ThreadPoolSize;
+        private int _JobCount;
 
         /// <summary>
         ///     Determines whether the <see cref="JobQueue" /> executes <see cref="Job" /> on
@@ -62,7 +63,18 @@ namespace Jobs
             }
         }
 
+        public int JobCount
+        {
+            get => _JobCount;
+            private set
+            {
+                _JobCount = value;
+                JobCountChanged?.Invoke(this, _JobCount);
+            }
+        }
+
         public event EventHandler<JobFinishedEventArgs> JobFinished;
+        public event EventHandler<int> JobCountChanged;
 
         /// <summary>
         ///     Initializes a new instance of <see cref="JobQueue" /> class.
@@ -114,11 +126,6 @@ namespace Jobs
             jobWorker.JobFinished += OnJobFinished;
             jobWorker.Start();
             _Workers.Add(jobWorker);
-        }
-
-        private void OnJobFinished(object sender, JobFinishedEventArgs args)
-        {
-            JobFinished?.Invoke(sender, args);
         }
 
         /// <summary>
@@ -236,6 +243,7 @@ namespace Jobs
 
             job.Initialize(Guid.NewGuid().ToString(), _AbortToken);
             _ProcessQueue.Add(job, _AbortToken);
+            JobCount += 1;
 
             return job.Identity;
         }
@@ -245,6 +253,11 @@ namespace Jobs
             Interlocked.Exchange(ref _ThreadPoolSize, Math.Max(modification, 1));
         }
 
+        private void OnJobFinished(object sender, JobFinishedEventArgs args)
+        {
+            JobCount -= 1;
+            JobFinished?.Invoke(sender, args);
+        }
 
         /// <summary>
         ///     Disposes of <see cref="JobQueue" /> instance.

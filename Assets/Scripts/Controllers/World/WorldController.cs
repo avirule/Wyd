@@ -22,9 +22,9 @@ namespace Controllers.World
 {
     public class WorldController : SingletonController<WorldController>
     {
-        private ChunkController _ChunkControllerObject;
-        private Dictionary<Vector3, ChunkController> _Chunks;
-        private ObjectCache<ChunkController> _ChunkCache;
+        private ChunkRegionController _ChunkRegionControllerObject;
+        private Dictionary<Vector3, ChunkRegionController> _ChunkRegions;
+        private ObjectCache<ChunkRegionController> _ChunkCache;
         private Stack<IEntity> _BuildChunkAroundEntityStack;
         private WorldSaveFileProvider _SaveFileProvider;
         private Stopwatch _FrameTimer;
@@ -34,7 +34,7 @@ namespace Controllers.World
         public string SeedString;
         public float TicksPerSecond;
 
-        public int ChunksActiveCount => _Chunks.Count;
+        public int ChunksActiveCount => _ChunkRegions.Count;
         public int ChunksCachedCount => _ChunkCache.Size;
         public int ChunksQueuedForCreation => _BuildChunkAroundEntityStack.Count;
 
@@ -77,9 +77,9 @@ namespace Controllers.World
             AssignCurrent(this);
             SetTickRate();
 
-            _ChunkControllerObject = Resources.Load<ChunkController>(@"Prefabs/Chunk");
-            _Chunks = new Dictionary<Vector3, ChunkController>();
-            _ChunkCache = new ObjectCache<ChunkController>(false, false, -1, DeactivateChunk, DestroyCulledChunk);
+            _ChunkRegionControllerObject = Resources.Load<ChunkRegionController>(@"Prefabs/Chunk");
+            _ChunkRegions = new Dictionary<Vector3, ChunkRegionController>();
+            _ChunkCache = new ObjectCache<ChunkRegionController>(false, false, -1, DeactivateChunk, DestroyCulledChunk);
             _BuildChunkAroundEntityStack = new Stack<IEntity>();
             _SaveFileProvider = new WorldSaveFileProvider("world");
             _FrameTimer = new Stopwatch();
@@ -170,16 +170,17 @@ namespace Controllers.World
                 {
                     for (int z = -radius; z < (radius + 1); z++)
                     {
-                        Vector3 position = loader.CurrentChunk + new Vector3(x, 0f, z).Multiply(ChunkController.Size);
+                        Vector3 position = loader.CurrentChunk
+                                           + new Vector3(x, 0f, z).Multiply(ChunkRegionController.Size);
 
                         if (ChunkExistsAt(position))
                         {
                             continue;
                         }
 
-                        if (!_ChunkCache.TryRetrieveItem(out ChunkController chunkController))
+                        if (!_ChunkCache.TryRetrieveItem(out ChunkRegionController chunkController))
                         {
-                            chunkController = Instantiate(_ChunkControllerObject, position, Quaternion.identity,
+                            chunkController = Instantiate(_ChunkRegionControllerObject, position, Quaternion.identity,
                                 transform);
                         }
                         else
@@ -192,7 +193,7 @@ namespace Controllers.World
                         chunkController.DeactivationCallback += OnChunkDeactivationCallback;
 
                         chunkController.AssignLoader(loader);
-                        _Chunks.Add(chunkController.Position, chunkController);
+                        _ChunkRegions.Add(chunkController.Position, chunkController);
 
                         // ensures that neighbours update their meshes to cull newly out of sight faces
                         FlagNeighborsForMeshUpdate(chunkController.Position, Directions.CardinalDirectionsVector3);
@@ -207,22 +208,21 @@ namespace Controllers.World
             }
         }
 
-        public void FlagNeighborsForMeshUpdate(Vector3 chunkPosition, IEnumerable<Vector3> directions)
+        public void FlagNeighborsForMeshUpdate(Vector3 globalChunkPosition, IEnumerable<Vector3> directions)
         {
             foreach (Vector3 normal in directions)
             {
-                FlagChunkForUpdateMesh(chunkPosition + normal.Multiply(ChunkController.Size));
+                FlagChunkForUpdateMesh(globalChunkPosition + normal.Multiply(Chunk.Size));
             }
         }
 
-        public void FlagChunkForUpdateMesh(Vector3 chunkPosition)
+        public void FlagChunkForUpdateMesh(Vector3 globalChunkPosition)
         {
-            if (!TryGetChunkAt(chunkPosition, out ChunkController chunkController))
+            if (TryGetChunkAt(GetNearestVector3RoundedBy(globalChunkPosition, ChunkRegionController.Size),
+                out ChunkRegionController chunkController))
             {
-                return;
+                chunkController.RequestMeshUpdate(globalChunkPosition);
             }
-
-            chunkController.RequestMeshUpdate();
         }
 
         #endregion
@@ -230,9 +230,9 @@ namespace Controllers.World
 
         #region CHUNK DISABLING
 
-        private void CacheChunk(Vector3 chunkPosition)
+        private void CacheChunk(Vector3 chunkRegionPosition)
         {
-            if (!_Chunks.TryGetValue(chunkPosition, out ChunkController chunkController))
+            if (!_ChunkRegions.TryGetValue(chunkRegionPosition, out ChunkRegionController chunkController))
             {
                 return;
             }
@@ -245,7 +245,7 @@ namespace Controllers.World
             _ChunkCache.CacheItem(ref chunkController);
         }
 
-        private static ref ChunkController DeactivateChunk(ref ChunkController chunkController)
+        private static ref ChunkRegionController DeactivateChunk(ref ChunkRegionController chunkRegionController)
         {
             //GeneralExecutionJob job = new GeneralExecutionJob(() =>
             //{
@@ -262,19 +262,19 @@ namespace Controllers.World
             //    _Chunks.Remove(chunkController.Position);
             //});
 
-            if (chunkController != default)
+            if (chunkRegionController != default)
             {
-                chunkController.Deactivate();
+                chunkRegionController.Deactivate();
             }
 
             //GameController.QueueJob(job);
 
-            return ref chunkController;
+            return ref chunkRegionController;
         }
 
-        private void DestroyCulledChunk(ref ChunkController chunkController)
+        private static void DestroyCulledChunk(ref ChunkRegionController chunkRegionController)
         {
-            Destroy(chunkController.gameObject);
+            Destroy(chunkRegionController.gameObject);
         }
 
         #endregion
@@ -329,60 +329,60 @@ namespace Controllers.World
 
         #region GET / EXISTS
 
-        public bool ChunkExistsAt(Vector3 position) => _Chunks.ContainsKey(position);
+        public bool ChunkExistsAt(Vector3 position) => _ChunkRegions.ContainsKey(position);
 
-        public ChunkController GetChunkAt(Vector3 position)
+        public ChunkRegionController GetChunkAt(Vector3 position)
         {
-            bool trySuccess = _Chunks.TryGetValue(position, out ChunkController chunkController);
+            bool trySuccess = _ChunkRegions.TryGetValue(position, out ChunkRegionController chunkController);
 
             return trySuccess ? chunkController : default;
         }
 
-        public bool TryGetChunkAt(Vector3 position, out ChunkController chunkController) =>
-            _Chunks.TryGetValue(position, out chunkController);
+        public bool TryGetChunkAt(Vector3 position, out ChunkRegionController chunkRegionController) =>
+            _ChunkRegions.TryGetValue(position, out chunkRegionController);
 
         public ref Block GetBlockAt(Vector3 globalPosition)
         {
-            Vector3 chunkPosition = GetChunkOriginFromPosition(globalPosition);
+            Vector3 chunkRegionPosition = GetNearestVector3RoundedBy(globalPosition, ChunkRegionController.Size);
 
-            ChunkController chunkController = GetChunkAt(chunkPosition);
+            ChunkRegionController chunkRegionController = GetChunkAt(chunkRegionPosition);
 
-            if (chunkController == default)
+            if (chunkRegionController == default)
             {
                 throw new ArgumentOutOfRangeException(
                     $"Position `{globalPosition}` outside of current loaded radius.");
             }
 
-            return ref chunkController.GetBlockAt(globalPosition);
+            return ref chunkRegionController.GetBlockAt(globalPosition);
         }
 
         public bool TryGetBlockAt(Vector3 globalPosition, out Block block)
         {
             block = default;
-            Vector3 chunkPosition = GetChunkOriginFromPosition(globalPosition);
+            Vector3 chunkRegionPosition = GetNearestVector3RoundedBy(globalPosition, ChunkRegionController.Size);
 
-            return TryGetChunkAt(chunkPosition, out ChunkController chunkController)
+            return TryGetChunkAt(chunkRegionPosition, out ChunkRegionController chunkController)
                    && (chunkController != default)
                    && chunkController.TryGetBlockAt(globalPosition, out block);
         }
 
-        public bool BlockExistsAt(Vector3 position)
+        public bool BlockExistsAt(Vector3 globalPosition)
         {
-            Vector3 chunkPosition = GetChunkOriginFromPosition(position);
+            Vector3 chunkRegionPosition = GetNearestVector3RoundedBy(globalPosition, ChunkRegionController.Size);
 
-            if (!TryGetChunkAt(chunkPosition, out ChunkController chunkController))
+            if (!TryGetChunkAt(chunkRegionPosition, out ChunkRegionController chunkController))
             {
                 return false;
             }
 
-            return chunkController.BlockExistsAt(position);
+            return chunkController.BlockExistsAt(globalPosition);
         }
 
         public void PlaceBlockAt(Vector3 globalPosition, ushort id)
         {
-            Vector3 chunkPosition = GetChunkOriginFromPosition(globalPosition);
+            Vector3 chunkRegionPosition = GetNearestVector3RoundedBy(globalPosition, ChunkRegionController.Size);
 
-            if (!TryGetChunkAt(chunkPosition, out ChunkController chunkController))
+            if (!TryGetChunkAt(chunkRegionPosition, out ChunkRegionController chunkController))
             {
                 throw new ArgumentOutOfRangeException($"Chunk containing position {globalPosition} does not exist.");
             }
@@ -392,18 +392,18 @@ namespace Controllers.World
 
         public bool TryPlaceBlockAt(Vector3 globalPosition, ushort id)
         {
-            Vector3 chunkPosition = GetChunkOriginFromPosition(globalPosition);
+            Vector3 chunkRegionPosition = GetNearestVector3RoundedBy(globalPosition, ChunkRegionController.Size);
 
-            return TryGetChunkAt(chunkPosition, out ChunkController chunkController)
+            return TryGetChunkAt(chunkRegionPosition, out ChunkRegionController chunkController)
                    && (chunkController != default)
                    && chunkController.TryPlaceBlockAt(globalPosition, id);
         }
 
         public void RemoveBlockAt(Vector3 globalPosition)
         {
-            Vector3 chunkPosition = GetChunkOriginFromPosition(globalPosition);
+            Vector3 chunkRegionPosition = GetNearestVector3RoundedBy(globalPosition, ChunkRegionController.Size);
 
-            if (!TryGetChunkAt(chunkPosition, out ChunkController chunkController))
+            if (!TryGetChunkAt(chunkRegionPosition, out ChunkRegionController chunkController))
             {
                 throw new ArgumentOutOfRangeException($"Chunk containing position {globalPosition} does not exist.");
             }
@@ -413,38 +413,42 @@ namespace Controllers.World
 
         public bool TryRemoveBlockAt(Vector3 globalPosition)
         {
-            Vector3 chunkPosition = GetChunkOriginFromPosition(globalPosition);
+            Vector3 chunkRegionPosition = GetNearestVector3RoundedBy(globalPosition, ChunkRegionController.Size);
 
-            return TryGetChunkAt(chunkPosition, out ChunkController chunkController)
+            return TryGetChunkAt(chunkRegionPosition, out ChunkRegionController chunkController)
                    && (chunkController != default)
                    && chunkController.TryRemoveBlockAt(globalPosition);
         }
 
-        public static Vector3 GetChunkOriginFromPosition(Vector3 globalPosition) =>
-            globalPosition.Divide(ChunkController.Size).Floor().Multiply(ChunkController.Size);
+        public static Vector3 GetNearestVector3RoundedBy(Vector3 position, Vector3Int roundBy) =>
+            position.Divide(roundBy).Floor().Multiply(roundBy);
 
         public ChunkGenerationDispatcher.GenerationStep AggregateNeighborsStep(Vector3 position)
         {
             ChunkGenerationDispatcher.GenerationStep generationStep = ChunkGenerationDispatcher.GenerationStep.Complete;
 
-            if (TryGetChunkAt(position + (Vector3.forward * ChunkController.Size.z), out ChunkController northChunk))
+            if (TryGetChunkAt(position + (Vector3.forward * ChunkRegionController.Size.z),
+                out ChunkRegionController northChunk))
             {
-                generationStep &= northChunk.GenerationStep;
+                generationStep &= northChunk.AggregateGenerationStep;
             }
 
-            if (TryGetChunkAt(position + (Vector3.right * ChunkController.Size.x), out ChunkController eastChunk))
+            if (TryGetChunkAt(position + (Vector3.right * ChunkRegionController.Size.x),
+                out ChunkRegionController eastChunk))
             {
-                generationStep &= eastChunk.GenerationStep;
+                generationStep &= eastChunk.AggregateGenerationStep;
             }
 
-            if (TryGetChunkAt(position + (Vector3.back * ChunkController.Size.z), out ChunkController southChunk))
+            if (TryGetChunkAt(position + (Vector3.back * ChunkRegionController.Size.z),
+                out ChunkRegionController southChunk))
             {
-                generationStep &= southChunk.GenerationStep;
+                generationStep &= southChunk.AggregateGenerationStep;
             }
 
-            if (TryGetChunkAt(position + (Vector3.left * ChunkController.Size.x), out ChunkController westChunk))
+            if (TryGetChunkAt(position + (Vector3.left * ChunkRegionController.Size.x),
+                out ChunkRegionController westChunk))
             {
-                generationStep &= westChunk.GenerationStep;
+                generationStep &= westChunk.AggregateGenerationStep;
             }
 
             return generationStep;
@@ -459,10 +463,10 @@ namespace Controllers.World
         {
             for (int i = 0; i < (OptionsController.Current.MaximumChunkCacheSize / 2); i++)
             {
-                ChunkController chunkController =
-                    Instantiate(_ChunkControllerObject, Vector3.zero, Quaternion.identity, transform);
-                chunkController.gameObject.SetActive(false);
-                _ChunkCache.CacheItem(ref chunkController);
+                ChunkRegionController chunkRegionController =
+                    Instantiate(_ChunkRegionControllerObject, Vector3.zero, Quaternion.identity, transform);
+                chunkRegionController.gameObject.SetActive(false);
+                _ChunkCache.CacheItem(ref chunkRegionController);
             }
         }
 

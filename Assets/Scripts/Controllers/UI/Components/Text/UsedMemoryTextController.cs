@@ -53,7 +53,7 @@ namespace Controllers.UI.Components.Text
             double reservedMemoryInMb = Math.Round(reservedMemory / MEGABYTE_VALUE, Precision);
             double allocatedMemoryInMb = Math.Round(allocatedMemory / MEGABYTE_VALUE, Precision);
 
-            _TextObject.text = string.Format(_Format, reservedMemoryInMb, allocatedMemoryInMb,
+            TextObject.text = string.Format(Format, reservedMemoryInMb, allocatedMemoryInMb,
                 (allocatedMemoryInMb / reservedMemoryInMb) * 100d);
         }
 

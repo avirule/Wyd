@@ -13,7 +13,7 @@ namespace Controllers.UI.Components.Text
         {
             if (force || args.PropertyName.Equals(nameof(OptionsController.Current.GPUAcceleration)))
             {
-                _TextObject.text = string.Format(_Format,
+                TextObject.text = string.Format(Format,
                     OptionsController.Current.GPUAcceleration ? "Enabled" : "Disabled");
             }
         }

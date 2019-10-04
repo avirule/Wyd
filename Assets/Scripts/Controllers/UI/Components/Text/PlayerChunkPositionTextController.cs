@@ -21,7 +21,7 @@ namespace Controllers.UI.Components.Text
 
         private void UpdateText(Vector3 position)
         {
-            _TextObject.text = string.Format(_Format, position.x, position.y, position.z);
+            TextObject.text = string.Format(Format, position.x, position.y, position.z);
         }
     }
 }

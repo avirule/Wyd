@@ -49,7 +49,7 @@ namespace Controllers.UI.Components.Text
             double averageDeltaTimeAsFrames = 1d / averageDeltaTime;
             double averageDeltaTimeAsMillisecondsRounded = 1000d * averageDeltaTime;
 
-            _TextObject.text = string.Format(_Format, averageDeltaTimeAsFrames, averageDeltaTimeAsMillisecondsRounded);
+            TextObject.text = string.Format(Format, averageDeltaTimeAsFrames, averageDeltaTimeAsMillisecondsRounded);
             _SkippedFrames = 0;
         }
 

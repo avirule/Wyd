@@ -22,7 +22,10 @@ namespace Controllers.State
 
         public static readonly int MainThreadId = Thread.CurrentThread.ManagedThreadId;
 
+        public int JobCount => JobExecutionQueue.JobCount;
+
         public event EventHandler<JobFinishedEventArgs> JobFinished;
+        public event EventHandler<int> JobCountChanged;
 
         private void Awake()
         {
@@ -36,6 +39,8 @@ namespace Controllers.State
             if (JobExecutionQueue == default)
             {
                 JobExecutionQueue = new JobQueue(200);
+                JobExecutionQueue.JobCountChanged += (sender, i) => JobCountChanged?.Invoke(sender, i);
+                
                 OptionsController.Current.PropertyChanged += (sender, args) =>
                 {
                     if (args.PropertyName.Equals(nameof(OptionsController.Current.ThreadingMode)))

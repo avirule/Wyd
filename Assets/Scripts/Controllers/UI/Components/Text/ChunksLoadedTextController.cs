@@ -41,7 +41,7 @@ namespace Controllers.UI.Components.Text
             _LastChunksActiveCount = chunksActive;
             _LastChunksCachedCount = chunksCached;
 
-            _TextObject.text = string.Format(_Format, _LastQueuedForCreationCount, _LastChunksActiveCount,
+            TextObject.text = string.Format(Format, _LastQueuedForCreationCount, _LastChunksActiveCount,
                 _LastChunksCachedCount);
         }
     }

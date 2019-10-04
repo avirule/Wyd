@@ -8,6 +8,7 @@ using Controllers.UI;
 using Controllers.World;
 using Game.Entities;
 using Game.World.Blocks;
+using Game.World.Chunks;
 using UnityEngine;
 
 #endregion
@@ -265,15 +266,15 @@ namespace Controllers.Entity
 
         private void CheckChangedChunk()
         {
-            Vector3 chunkPosition = WorldController.GetChunkOriginFromPosition(Transform.position);
-            chunkPosition.y = 0;
+            Vector3 chunkRegionPosition = WorldController.GetNearestVector3RoundedBy(Transform.position, ChunkRegionController.Size);
+            chunkRegionPosition.y = 0;
 
-            if (chunkPosition == CurrentChunk)
+            if (chunkRegionPosition == CurrentChunk)
             {
                 return;
             }
 
-            CurrentChunk = chunkPosition;
+            CurrentChunk = chunkRegionPosition;
         }
 
         #endregion
