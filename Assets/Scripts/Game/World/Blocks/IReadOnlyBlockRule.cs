@@ -8,5 +8,7 @@ namespace Game.World.Blocks
         bool Collideable { get; }
         bool Destroyable { get; }
         bool Collectible { get; }
+        bool LightSource { get; }
+        byte LightLevel { get; }
     }
 }

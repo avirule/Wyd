@@ -1,6 +1,7 @@
 #region
 
 using Controllers.State;
+using UnityEditor.U2D;
 
 #endregion
 
@@ -19,9 +20,13 @@ namespace Game.World.Blocks
             Ore
         }
 
-        public const byte TRANSPARENCY_MASK = 0b0100_0000;
         public const byte FACES_MASK = 0b0011_1111;
+        public const byte TRANSPARENCY_MASK = 0b0100_0000;
+        public const byte DAMAGE_MASK = 0b0000_1111;
+        public const byte LIGHT_LEVEL_MASK = 0b1111_0000;
 
+        private byte _DamageLightLevel;
+        
         /// <summary>
         ///     Determines whether the block is transparent.
         /// </summary>
@@ -35,20 +40,36 @@ namespace Game.World.Blocks
         public ushort Id { get; private set; }
 
         public byte Faces { get; private set; }
-        //public sbyte Damage { get; private set; }
-
-        public Block(ushort id, byte faces = 0)
+        public byte Damage
         {
-            Id = id;
-            Faces = faces;
-            //Damage = 0;
+            get => (byte)(DAMAGE_MASK & _DamageLightLevel);
+            private set => _DamageLightLevel |= (byte)(value & DAMAGE_MASK);
+        }
+        
+        public byte LightLevel
+        {
+            get => (byte)((_DamageLightLevel & LIGHT_LEVEL_MASK) >> 4);
+            set => _DamageLightLevel |= (byte)((value << 4) & LIGHT_LEVEL_MASK);
         }
 
-        public void Initialise(ushort id, byte faces = 0)
+        public Block(ushort id, byte faces = 0, byte damage = 0)
         {
             Id = id;
             Faces = faces;
-            Transparent = BlockController.Current.GetBlockRule(Id)?.Transparent ?? true;
+            _DamageLightLevel = damage;
+        }
+
+        public void Initialise(ushort id, byte faces = 0, byte damage = 0)
+        {
+            Id = id;
+            Faces = faces;
+            Damage = damage;
+
+            if (BlockController.Current.TryGetBlockRule(id, out IReadOnlyBlockRule blockRule))
+            {
+                Transparent = blockRule.Transparent;
+                LightLevel = blockRule.LightLevel;
+            }
         }
 
         public bool HasAnyFaces() => Faces.ContainsAnyBits(FACES_MASK);
