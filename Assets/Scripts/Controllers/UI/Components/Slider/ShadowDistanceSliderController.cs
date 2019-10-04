@@ -30,6 +30,11 @@ namespace Controllers.UI.Components.Slider
 
         private void UpdateSliderValue()
         {
+            if (OptionsController.Current == null)
+            {
+                return;
+            }
+
             _ShadowDistanceSlider.value = OptionsController.Current.ShadowDistance;
         }
     }

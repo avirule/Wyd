@@ -44,6 +44,13 @@ public static class Mathb
         10,
         9
     };
+    
+    public static byte CountSetBits(uint i)
+    {
+        i -= (i >> 1) & 0x55555555;
+        i = (i & 0x33333333) + ((i >> 2) & 0x33333333);
+        return (byte) ((((i + (i >> 4)) & 0x0F0F0F0F) * 0x01010101) >> 24);
+    }
 
     public static bool ContainsAnyBits(this byte a, byte b) => (a & b) > 0;
 
@@ -51,7 +58,13 @@ public static class Mathb
 
     public static int LeastSigBitDigit(this byte a) =>
         MultiplyDeBruijnBitPosition[(uint) ((a & -a) * 0x077CB531U) >> 27];
+    
+    public static int LeastSigBitDigit(this int a) =>
+        MultiplyDeBruijnBitPosition[(uint) ((a & -a) * 0x077CB531U) >> 27];
 
-    public static byte SetBitByValueWithMask(this byte a, byte mask, bool value) =>
+    public static byte SetBitByBoolWithMask(this byte a, byte mask, bool value) =>
         (byte) ((a & ~mask) | (value.ToByte() << mask.LeastSigBitDigit()));
+    
+    public static int SetBitByBoolWithMask(this int a, int mask, bool value) =>
+        (a & ~mask) | (value.ToByte() << mask.LeastSigBitDigit());
 }

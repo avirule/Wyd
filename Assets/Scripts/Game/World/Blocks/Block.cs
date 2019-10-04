@@ -1,7 +1,7 @@
 #region
 
+using System.Collections.Specialized;
 using Controllers.State;
-using UnityEditor.U2D;
 
 #endregion
 
@@ -20,43 +20,50 @@ namespace Game.World.Blocks
             Ore
         }
 
-        public const byte FACES_MASK = 0b0011_1111;
-        public const byte TRANSPARENCY_MASK = 0b0100_0000;
-        public const byte DAMAGE_MASK = 0b0000_1111;
-        public const byte LIGHT_LEVEL_MASK = 0b1111_0000;
+        private const int ID_MASK = 0b0000_0000_0000_0000_1111_1111_1111_1111;
+        private const int ID_PASS_BITSHIFT = 16;
+        private const byte SHIFTED_FACES_MASK = 0b0011_1111;
+        private const int FACES_MASK = 0b0000_0000_0011_1111_0000_0000_0000_0000;
+        private const int FACES_PASS_BITSHIFT = 22;
+        private const byte SHIFTED_TRANSPARENCY_MASK = 0b0100_0000;
+        private const int TRANSPARENCY_MASK = 0b_0000_0000_0100_0000_0000_0000_0000;
+        private const int TRANSPARENCY_PASS_BITSHIFT = 23;
+        private const int DAMAGE_MASK = 0b000_0111_1000_0000_0000_0000_0000_0000;
+        private const int DAMAGE_PASS_BITSHIFT = 27;
+        private const int LIGHT_LEVEL_MASK = 0b111_1000_0000_0000_0000_0000_0000_0000;
+        private const int LIGHT_LEVEL_PASS_BITSHIFT = 31;
 
-        private byte _DamageLightLevel;
-        
-        /// <summary>
-        ///     Determines whether the block is transparent.
-        /// </summary>
+        public int Value;
+
+        public ushort Id
+        {
+            get => (ushort) (Value & ID_MASK);
+            private set => Value |= value & ID_MASK;
+        }
+
+        public byte Faces
+        {
+            get => (byte) ((Value & FACES_MASK) >> ID_PASS_BITSHIFT);
+            set => Value |= (value << ID_PASS_BITSHIFT) & FACES_MASK;
+        }
+
         public bool Transparent
         {
-            get => !Faces.ContainsAnyBits(TRANSPARENCY_MASK);
+            get => ((Value & TRANSPARENCY_MASK) >> FACES_PASS_BITSHIFT) == 0;
             // value = true is transparent so that the default value of block is transparent
             private set => SetTransparency(value);
         }
 
-        public ushort Id { get; private set; }
-
-        public byte Faces { get; private set; }
         public byte Damage
         {
-            get => (byte)(DAMAGE_MASK & _DamageLightLevel);
-            private set => _DamageLightLevel |= (byte)(value & DAMAGE_MASK);
-        }
-        
-        public byte LightLevel
-        {
-            get => (byte)((_DamageLightLevel & LIGHT_LEVEL_MASK) >> 4);
-            set => _DamageLightLevel |= (byte)((value << 4) & LIGHT_LEVEL_MASK);
+            get => (byte) (Value & (DAMAGE_MASK >> TRANSPARENCY_PASS_BITSHIFT));
+            private set => Value |= (value << FACES_PASS_BITSHIFT) & DAMAGE_MASK;
         }
 
-        public Block(ushort id, byte faces = 0, byte damage = 0)
+        public byte LightLevel
         {
-            Id = id;
-            Faces = faces;
-            _DamageLightLevel = damage;
+            get => (byte) ((Value & LIGHT_LEVEL_MASK) >> DAMAGE_PASS_BITSHIFT);
+            set => Value |= (value << DAMAGE_PASS_BITSHIFT) & LIGHT_LEVEL_MASK;
         }
 
         public void Initialise(ushort id, byte faces = 0, byte damage = 0)
@@ -72,25 +79,25 @@ namespace Game.World.Blocks
             }
         }
 
-        public bool HasAnyFaces() => Faces.ContainsAnyBits(FACES_MASK);
+        public bool HasAnyFaces() => Faces > 0;
 
-        public bool HasAllFaces() => Faces.ContainsAllBits(FACES_MASK);
+        public bool HasAllFaces() => Faces == SHIFTED_FACES_MASK;
 
-        public bool HasFace(Direction direction) => Faces.ContainsAnyBits((byte) direction);
+        public bool HasFace(Direction direction) => (Faces & (byte) direction) > 0;
 
-        public void SetFace(Direction direction, bool value)
+        public void SetFace(Direction direction, bool boolean)
         {
-            Faces = Faces.SetBitByValueWithMask((byte) direction, value);
+            Faces = Faces.SetBitByBoolWithMask((byte) direction, boolean);
         }
 
         public void SetTransparency(bool transparent)
         {
-            Faces = Faces.SetBitByValueWithMask(TRANSPARENCY_MASK, !transparent);
+            Value = Value.SetBitByBoolWithMask(TRANSPARENCY_MASK, !transparent);
         }
 
         public void ClearFaces()
         {
-            Faces &= FACES_MASK ^ byte.MaxValue;
+            Faces = 0;
         }
     }
 }

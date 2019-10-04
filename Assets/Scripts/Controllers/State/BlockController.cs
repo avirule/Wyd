@@ -30,7 +30,7 @@ namespace Controllers.State
 
             // default 'nothing' block
             RegisterBlockRules("air", Block.Types.None, true, false, false, false);
-            Air = new Block(BLOCK_EMPTY_ID);
+            Air = new Block();
         }
 
         public int RegisterBlockRules(

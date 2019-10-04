@@ -19,7 +19,9 @@ namespace Game.World.Blocks
         private static readonly BitVector32.Section CollideableSection;
         private static readonly BitVector32.Section DestroyableSection;
         private static readonly BitVector32.Section CollectibleSection;
-
+        private static readonly BitVector32.Section LightSourceSection;
+        private static readonly BitVector32.Section LightLevelSection;
+        
         private static readonly Func<Vector3, Direction, string> DefaultUVsRule;
 
         static BlockRule()
@@ -30,6 +32,8 @@ namespace Game.World.Blocks
             CollideableSection = BitVector32.CreateSection(1, TransparencySection);
             DestroyableSection = BitVector32.CreateSection(1, CollideableSection);
             CollectibleSection = BitVector32.CreateSection(1, DestroyableSection);
+            LightSourceSection = BitVector32.CreateSection(1, CollectibleSection);
+            LightLevelSection = BitVector32.CreateSection(15, LightSourceSection);
 
             DefaultUVsRule = (position, direction) => string.Empty;
         }
@@ -75,6 +79,9 @@ namespace Game.World.Blocks
             get => _Bits[CollectibleSection] == 1;
             private set => _Bits[CollectibleSection] = value ? 1 : 0;
         }
+
+        public bool LightSource { get; }
+        public byte LightLevel { get; }
 
         public BlockRule(
             ushort id, string blockName, Block.Types type,
