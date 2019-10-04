@@ -20,7 +20,8 @@ namespace Game.World.Chunks
         /// <param name="meshData"></param>
         /// <param name="aggressiveFaceMerging"></param>
         /// <param name="isRemesh"></param>
-        public void Set(Bounds bounds, Block[] blocks, ref MeshData meshData, bool aggressiveFaceMerging, bool isRemesh = false)
+        public void Set(Bounds bounds, Block[] blocks, ref MeshData meshData, bool aggressiveFaceMerging,
+            bool isRemesh = false)
         {
             if (_Mesher == default)
             {

@@ -19,8 +19,8 @@ namespace Noise
     {
         private const short FN_INLINE = 256; //(Int16)MethodImplOptions.AggressiveInlining;
 
-        private int m_seed = 1337;
-        private float m_frequency = (float) 0.01;
+        private readonly int m_seed = 1337;
+        private const float m_frequency = (float) 0.01;
 
         public OpenSimplex_FastNoise(int seed = 1337) => m_seed = seed;
 
@@ -154,15 +154,6 @@ namespace Noise
             }
 
             return ((hash & 4) == 0 ? -a : a) + ((hash & 2) == 0 ? -b : b) + ((hash & 1) == 0 ? -c : c);
-        }
-
-        // White Noise
-        [MethodImpl(FN_INLINE)]
-        private int FloatCast2Int(float f)
-        {
-            long i = BitConverter.DoubleToInt64Bits(f);
-
-            return (int) (i ^ (i >> 32));
         }
 
         public static float GetSimplex(int seed, float freq, float x, float y, float z) =>

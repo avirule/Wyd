@@ -68,6 +68,7 @@ namespace Controllers.State
         {
             // Deallocate and destroy ALL NativeCollection / disposable objects
             JobExecutionQueue.Abort();
+            JobExecutionQueue.Dispose();
             LogManager.Shutdown();
         }
 

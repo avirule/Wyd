@@ -19,7 +19,7 @@ namespace Jobs
         Adaptive
     }
 
-    public sealed class JobQueue
+    public sealed class JobQueue : IDisposable
     {
         private bool _Disposed;
         private int _WaitTimeout;
@@ -223,7 +223,7 @@ namespace Jobs
             return false;
         }
 
-        protected async Task ExecuteJob(Job job)
+        private async Task ExecuteJob(Job job)
         {
             await job.Execute();
             OnJobFinished(this, new JobFinishedEventArgs(job));
@@ -265,10 +265,9 @@ namespace Jobs
         public void Dispose()
         {
             Dispose(true);
-            GC.SuppressFinalize(this);
         }
 
-        protected void Dispose(bool disposing)
+        private void Dispose(bool disposing)
         {
             if (_Disposed)
             {

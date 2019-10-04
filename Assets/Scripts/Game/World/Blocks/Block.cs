@@ -1,6 +1,5 @@
 #region
 
-using System.Collections.Specialized;
 using Controllers.State;
 
 #endregion
@@ -25,13 +24,11 @@ namespace Game.World.Blocks
         private const byte SHIFTED_FACES_MASK = 0b0011_1111;
         private const int FACES_MASK = 0b0000_0000_0011_1111_0000_0000_0000_0000;
         private const int FACES_PASS_BITSHIFT = 22;
-        private const byte SHIFTED_TRANSPARENCY_MASK = 0b0100_0000;
         private const int TRANSPARENCY_MASK = 0b_0000_0000_0100_0000_0000_0000_0000;
         private const int TRANSPARENCY_PASS_BITSHIFT = 23;
         private const int DAMAGE_MASK = 0b000_0111_1000_0000_0000_0000_0000_0000;
         private const int DAMAGE_PASS_BITSHIFT = 27;
         private const int LIGHT_LEVEL_MASK = 0b111_1000_0000_0000_0000_0000_0000_0000;
-        private const int LIGHT_LEVEL_PASS_BITSHIFT = 31;
 
         public int Value;
 

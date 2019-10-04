@@ -11,7 +11,7 @@ using Random = System.Random;
 
 namespace Game.World.Blocks
 {
-    public class BlockRule : IReadOnlyBlockRule, IBlockRule
+    public class BlockRule : IBlockRule
     {
         private static readonly BitVector32.Section IdSection;
         private static readonly BitVector32.Section TypeSection;
@@ -21,7 +21,7 @@ namespace Game.World.Blocks
         private static readonly BitVector32.Section CollectibleSection;
         private static readonly BitVector32.Section LightSourceSection;
         private static readonly BitVector32.Section LightLevelSection;
-        
+
         private static readonly Func<Vector3, Direction, string> DefaultUVsRule;
 
         static BlockRule()

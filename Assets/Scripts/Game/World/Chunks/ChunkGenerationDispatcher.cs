@@ -81,7 +81,8 @@ namespace Game.World.Chunks
                 _NoiseShader = Resources.Load<ComputeShader>(@"Graphics\Shaders\NoiseComputationShader");
                 _NoiseShader.SetInt("_NoiseSeed", WorldController.Current.Seed);
                 _NoiseShader.SetVector("_MaximumSize",
-                    new Vector4(ChunkRegionController.Size.x, ChunkRegionController.Size.y, ChunkRegionController.Size.z, 0f));
+                    new Vector4(ChunkRegionController.Size.x, ChunkRegionController.Size.y,
+                        ChunkRegionController.Size.z, 0f));
             }
 
             _PendingAction = null;

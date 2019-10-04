@@ -237,7 +237,8 @@ namespace Game.World.Chunks
                 && (((localPosition.z == 0)
                      && WorldController.Current.TryGetBlockAt(globalPosition + Vector3.back, out block)
                      && (Blocks[index].Id != block.Id))
-                    || ((localPosition.z > 0) && (Blocks[index - ChunkRegionController.Size.x].Id != Blocks[index].Id))))
+                    || ((localPosition.z > 0)
+                        && (Blocks[index - ChunkRegionController.Size.x].Id != Blocks[index].Id))))
             {
                 Blocks[index].SetFace(Direction.South, true);
                 AddTriangles(Direction.South, true);

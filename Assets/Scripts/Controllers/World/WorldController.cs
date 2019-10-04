@@ -370,12 +370,8 @@ namespace Controllers.World
         {
             Vector3 chunkRegionPosition = GetNearestVector3RoundedBy(globalPosition, ChunkRegionController.Size);
 
-            if (!TryGetChunkAt(chunkRegionPosition, out ChunkRegionController chunkController))
-            {
-                return false;
-            }
-
-            return chunkController.BlockExistsAt(globalPosition);
+            return TryGetChunkAt(chunkRegionPosition, out ChunkRegionController chunkController)
+                   && chunkController.BlockExistsAt(globalPosition);
         }
 
         public void PlaceBlockAt(Vector3 globalPosition, ushort id)

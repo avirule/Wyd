@@ -17,7 +17,7 @@ namespace Game
         private readonly ConcurrentStack<T> _InternalCache;
         private PreCachingOperation<T> _PreCachingOperation;
         private ItemCulledOperation<T> _ItemCulledOperation;
-        
+
         public int MaximumSize;
 
         public int Size => _InternalCache.Count;
