@@ -9,7 +9,7 @@ using Extensions;
 /// </summary>
 public static class Mathb
 {
-    private static readonly int[] MultiplyDeBruijnBitPosition =
+    private static readonly byte[] MultiplyDeBruijnBitPosition =
     {
         0,
         1,
@@ -44,7 +44,7 @@ public static class Mathb
         10,
         9
     };
-    
+
     public static byte CountSetBits(uint i)
     {
         i -= (i >> 1) & 0x55555555;
@@ -56,15 +56,18 @@ public static class Mathb
 
     public static bool ContainsAllBits(this byte a, byte b) => (a & b) == b;
 
+    public static int MostSigBitDigit(this int a) => MultiplyDeBruijnBitPosition[(a * 0x077CB531U) >> 27];
+    public static int MostSigBitDigit(this uint a) => MultiplyDeBruijnBitPosition[(a * 0x077CB531U) >> 27];
+
     public static int LeastSigBitDigit(this byte a) =>
         MultiplyDeBruijnBitPosition[(uint) ((a & -a) * 0x077CB531U) >> 27];
-    
+
     public static int LeastSigBitDigit(this int a) =>
         MultiplyDeBruijnBitPosition[(uint) ((a & -a) * 0x077CB531U) >> 27];
 
     public static byte SetBitByBoolWithMask(this byte a, byte mask, bool value) =>
         (byte) ((a & ~mask) | (value.ToByte() << mask.LeastSigBitDigit()));
-    
+
     public static int SetBitByBoolWithMask(this int a, int mask, bool value) =>
         (a & ~mask) | (value.ToByte() << mask.LeastSigBitDigit());
 }
