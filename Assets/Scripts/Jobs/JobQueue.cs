@@ -40,13 +40,13 @@ namespace Jobs
 
         private CancellationToken _AbortToken;
         private int _LastThreadIndexQueuedInto;
-        private int _WorkerThreads;
+        private int _WorkerThreadCount;
         private int _WaitTimeout;
 
         /// <summary>
         ///     Total number of worker threads JobQueue is managing.
         /// </summary>
-        public int WorkerThreads => _WorkerThreads;
+        public int WorkerThreadCount => _WorkerThreadCount;
 
         /// <summary>
         ///     Determines whether the <see cref="JobQueue" /> executes <see cref="Job" />s on
@@ -81,26 +81,6 @@ namespace Jobs
         public int ActiveJobCount { get; private set; }
 
         /// <summary>
-        ///     Called when a job is queued.
-        /// </summary>
-        /// <remarks>This event will not necessarily happen synchronously with the main thread.</remarks>
-        public event JobQueuedEventHandler JobQueued;
-
-        /// <summary>
-        ///     Called when a job starts execution.
-        /// </summary>
-        /// <remarks>This event will not necessarily happen synchronously with the main thread.</remarks>
-        public event JobStartedEventHandler JobStarted;
-
-        /// <summary>
-        ///     Called when a job finishes execution.
-        /// </summary>
-        /// <remarks>This event will not necessarily happen synchronously with the main thread.</remarks>
-        public event JobFinishedEventHandler JobFinished;
-
-        public event WorkerCountChangedEventHandler WorkerCountChanged;
-
-        /// <summary>
         ///     Initializes a new instance of <see cref="JobQueue" /> class.
         /// </summary>
         /// <param name="waitTimeout">
@@ -114,7 +94,7 @@ namespace Jobs
             ThreadingMode = threadingMode;
             ModifyWorkerThreadCount(threadPoolSize);
             _ProcessQueue = new BlockingCollection<Job>();
-            _Workers = new List<JobWorker>(WorkerThreads);
+            _Workers = new List<JobWorker>(WorkerThreadCount);
             _AbortTokenSource = new CancellationTokenSource();
             _AbortToken = _AbortTokenSource.Token;
             // set to -1 increment in first run of process queue
@@ -137,8 +117,8 @@ namespace Jobs
         /// <param name="modification"></param>
         public void ModifyWorkerThreadCount(int modification)
         {
-            Interlocked.Exchange(ref _WorkerThreads, Math.Max(modification, 1));
-            OnWorkerCountChanged(this, WorkerThreads);
+            Interlocked.Exchange(ref _WorkerThreadCount, Math.Max(modification, 1));
+            OnWorkerCountChanged(this, WorkerThreadCount);
         }
 
         #region STATE
@@ -201,7 +181,7 @@ namespace Jobs
                         continue;
                     }
 
-                    while ((_Workers.Count < WorkerThreads)
+                    while ((_Workers.Count < WorkerThreadCount)
                            && (ThreadingMode > ThreadingMode.Single))
                     {
                         SpawnJobWorker();
@@ -252,7 +232,7 @@ namespace Jobs
                     }
                     else
                     {
-                        _LastThreadIndexQueuedInto = (_LastThreadIndexQueuedInto + 1) % WorkerThreads;
+                        _LastThreadIndexQueuedInto = (_LastThreadIndexQueuedInto + 1) % WorkerThreadCount;
 
                         _Workers[_LastThreadIndexQueuedInto].QueueJob(job);
                     }
@@ -313,6 +293,26 @@ namespace Jobs
 
         #region EVENTS
 
+        /// <summary>
+        ///     Called when a job is queued.
+        /// </summary>
+        /// <remarks>This event will not necessarily happen synchronously with the main thread.</remarks>
+        public event JobQueuedEventHandler JobQueued;
+
+        /// <summary>
+        ///     Called when a job starts execution.
+        /// </summary>
+        /// <remarks>This event will not necessarily happen synchronously with the main thread.</remarks>
+        public event JobStartedEventHandler JobStarted;
+
+        /// <summary>
+        ///     Called when a job finishes execution.
+        /// </summary>
+        /// <remarks>This event will not necessarily happen synchronously with the main thread.</remarks>
+        public event JobFinishedEventHandler JobFinished;
+
+        public event WorkerCountChangedEventHandler WorkerCountChanged;
+
         private void OnJobQueued(object sender, JobEventArgs args)
         {
             JobQueued?.Invoke(sender, args);
@@ -332,7 +332,7 @@ namespace Jobs
         {
             WorkerCountChanged?.Invoke(sender, newCount);
         }
-        
+
         #endregion
 
         #region DISPOSE

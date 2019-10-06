@@ -23,9 +23,13 @@ namespace Controllers.State
         public static readonly int MainThreadId = Thread.CurrentThread.ManagedThreadId;
 
         public int JobCount => JobExecutionQueue.JobCount;
-
-        public event EventHandler<JobEventArgs> JobFinished;
+        public int ActiveJobCount => JobExecutionQueue.ActiveJobCount;
+        public int WorkerThreadCount => JobExecutionQueue.WorkerThreadCount;
+        
+        public event JobFinishedEventHandler JobFinished;
         public event EventHandler<int> JobCountChanged;
+        public event EventHandler<int> ActiveJobCountChanged;
+        public event EventHandler<int> WorkerThreadCountChanged; 
 
         private void Awake()
         {
@@ -37,8 +41,22 @@ namespace Controllers.State
         private void Start()
         {
             JobExecutionQueue = new JobQueue(200);
-            JobExecutionQueue.JobQueued += (sender, i) => JobCountChanged?.Invoke(sender, JobExecutionQueue.JobCount);
-            JobExecutionQueue.JobFinished += (sender, i) => JobCountChanged?.Invoke(sender, JobExecutionQueue.JobCount);
+            JobExecutionQueue.JobQueued += (sender, args) =>
+                JobCountChanged?.Invoke(sender, JobExecutionQueue.JobCount);
+            JobExecutionQueue.JobStarted += (sender, args) =>
+            {
+                JobCountChanged?.Invoke(sender, JobExecutionQueue.JobCount);
+                ActiveJobCountChanged?.Invoke(sender, JobExecutionQueue.ActiveJobCount);
+            };
+            JobExecutionQueue.JobFinished += (sender, args) =>
+            {
+                JobCountChanged?.Invoke(sender, JobExecutionQueue.JobCount);
+                ActiveJobCountChanged?.Invoke(sender, JobExecutionQueue.ActiveJobCount);
+            };
+            JobExecutionQueue.WorkerCountChanged += (sender, count) =>
+            {
+                WorkerThreadCountChanged?.Invoke(sender, count);
+            };
 
             OptionsController.Current.PropertyChanged += (sender, args) =>
             {
