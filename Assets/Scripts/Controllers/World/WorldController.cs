@@ -34,9 +34,9 @@ namespace Controllers.World
         public string SeedString;
         public float TicksPerSecond;
 
-        public int ChunksActiveCount => _ChunkRegions.Count;
-        public int ChunksCachedCount => _ChunkCache.Size;
-        public int ChunksQueuedForCreation => _BuildChunkAroundEntityStack.Count;
+        public int ChunkRegionsActiveCount => _ChunkRegions.Count;
+        public int ChunkRegionsCachedCount => _ChunkCache.Size;
+        public int ChunkRegionsQueuedForCreation => _BuildChunkAroundEntityStack.Count;
 
         public WorldSeed Seed { get; private set; }
         public long InitialTick { get; private set; }
