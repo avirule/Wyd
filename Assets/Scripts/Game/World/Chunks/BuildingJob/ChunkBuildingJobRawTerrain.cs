@@ -5,8 +5,9 @@ using UnityEngine;
 using Wyd.Controllers.State;
 using Wyd.Controllers.World;
 using Wyd.Game.World.Blocks;
-using Wyd.Logging;
-using Wyd.Noise;
+using Wyd.System;
+using Wyd.System.Logging;
+using Wyd.System.Noise;
 
 #endregion
 

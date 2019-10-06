@@ -3,8 +3,8 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using Wyd.Extensions;
 using Wyd.Game.Entities;
+using Wyd.System.Extensions;
 
 #endregion
 

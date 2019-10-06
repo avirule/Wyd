@@ -1,7 +1,7 @@
 #region
 
 using UnityEngine;
-using Wyd.Extensions;
+using Wyd.System.Extensions;
 
 #endregion
 

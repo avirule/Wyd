@@ -12,7 +12,8 @@ using Wyd.Game.Entities;
 using Wyd.Game.World;
 using Wyd.Game.World.Blocks;
 using Wyd.Game.World.Chunks;
-using Wyd.Logging;
+using Wyd.System;
+using Wyd.System.Logging;
 
 // ReSharper disable UnusedAutoPropertyAccessor.Global
 

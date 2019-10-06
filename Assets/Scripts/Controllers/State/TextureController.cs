@@ -3,7 +3,7 @@
 using System.Collections.Generic;
 using NLog;
 using UnityEngine;
-using Wyd.Logging;
+using Wyd.System.Logging;
 
 #endregion
 

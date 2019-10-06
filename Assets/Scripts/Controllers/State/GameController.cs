@@ -9,8 +9,8 @@ using UnityEngine.SceneManagement;
 using Wyd.Controllers.World;
 using Wyd.Game;
 using Wyd.Game.World.Blocks;
-using Wyd.Jobs;
-using Wyd.Logging.Targets;
+using Wyd.System.Jobs;
+using Wyd.System.Logging.Targets;
 
 #endregion
 
@@ -79,10 +79,12 @@ namespace Wyd.Controllers.State
             RegisterDefaultBlocks();
         }
 
+#if UNITY_EDITOR
         private void LateUpdate()
         {
             UnityDebuggerTarget.Flush();
         }
+#endif
 
         private void OnApplicationQuit()
         {

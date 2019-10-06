@@ -3,7 +3,7 @@
 using UnityEngine;
 using Wyd.Controllers.World;
 using Wyd.Game.World.Blocks;
-using Wyd.Jobs;
+using Wyd.System.Jobs;
 
 #endregion
 

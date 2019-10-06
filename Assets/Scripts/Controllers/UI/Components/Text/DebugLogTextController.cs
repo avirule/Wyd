@@ -7,7 +7,7 @@ using NLog;
 using TMPro;
 using UnityEngine;
 using Wyd.Controllers.World;
-using Wyd.Logging.Targets;
+using Wyd.System.Logging.Targets;
 
 #endregion
 

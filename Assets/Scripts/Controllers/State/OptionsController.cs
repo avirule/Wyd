@@ -11,8 +11,8 @@ using NLog;
 using SharpConfig;
 using UnityEngine;
 using Wyd.Graphics;
-using Wyd.Jobs;
-using Wyd.Logging;
+using Wyd.System.Jobs;
+using Wyd.System.Logging;
 
 #endregion
 

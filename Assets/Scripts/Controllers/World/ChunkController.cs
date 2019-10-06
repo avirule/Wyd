@@ -7,13 +7,14 @@ using System.Linq;
 using NLog;
 using UnityEngine;
 using UnityEngine.Rendering;
-using Wyd.Compression;
 using Wyd.Controllers.State;
 using Wyd.Game;
 using Wyd.Game.Entities;
 using Wyd.Game.World.Blocks;
 using Wyd.Game.World.Chunks;
-using Wyd.Logging;
+using Wyd.System;
+using Wyd.System.Compression;
+using Wyd.System.Logging;
 
 #endregion
 

@@ -7,9 +7,9 @@ using System.IO;
 using System.Threading.Tasks;
 using NLog;
 using UnityEngine;
-using Wyd.Extensions;
-using Wyd.Jobs;
-using Wyd.Logging;
+using Wyd.System.Extensions;
+using Wyd.System.Jobs;
+using Wyd.System.Logging;
 
 #endregion
 

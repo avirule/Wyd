@@ -7,7 +7,7 @@ using NLog;
 using UnityEngine;
 using Wyd.Game;
 using Wyd.Game.World.Blocks;
-using Wyd.Logging;
+using Wyd.System.Logging;
 
 #endregion
 

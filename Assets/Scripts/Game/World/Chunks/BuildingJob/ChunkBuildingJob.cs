@@ -3,9 +3,9 @@
 using UnityEngine;
 using Wyd.Controllers.State;
 using Wyd.Controllers.World;
-using Wyd.Extensions;
 using Wyd.Game.World.Blocks;
-using Wyd.Jobs;
+using Wyd.System.Extensions;
+using Wyd.System.Jobs;
 using Random = System.Random;
 
 #endregion
