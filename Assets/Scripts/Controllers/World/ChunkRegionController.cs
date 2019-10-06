@@ -25,8 +25,8 @@ namespace Controllers.World
             new ObjectCache<BlockAction>(true, true, 1024);
 
         public static readonly Vector3Int BiomeNoiseSize = new Vector3Int(32 * 16, 256, 32 * 16);
-        public static readonly Vector3Int ChunkSize = new Vector3Int(8, 8, 8);
-        public static readonly Vector3Int Size = ChunkSize * Chunk.Size;
+        public static readonly Vector3Int SizeInChunks = new Vector3Int(8, 8, 8);
+        public static readonly Vector3Int Size = SizeInChunks * Chunk.Size;
         public static readonly int YIndexStep = Size.x * Size.z;
 
 
@@ -164,9 +164,9 @@ namespace Controllers.World
         private void BuildChunks()
         {
             // todo job this
-            for (int index = 0; index < ChunkSize.Product(); index++)
+            for (int index = 0; index < SizeInChunks.Product(); index++)
             {
-                Vector3Int position = Mathv.GetIndexAsVector3Int(index, ChunkSize) * Chunk.Size;
+                Vector3Int position = Mathv.GetIndexAsVector3Int(index, SizeInChunks) * Chunk.Size;
 
                 if (_Chunks.ContainsKey(position))
                 {

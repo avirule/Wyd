@@ -42,6 +42,8 @@ namespace Jobs
         private int _LastThreadIndexQueuedInto;
         private int _WorkerThreadCount;
         private int _WaitTimeout;
+        private int _ActiveJobCount;
+        private int _JobCount;
 
         /// <summary>
         ///     Total number of worker threads JobQueue is managing.
@@ -77,8 +79,8 @@ namespace Jobs
             }
         }
 
-        public int JobCount { get; private set; }
-        public int ActiveJobCount { get; private set; }
+        public int JobCount => _JobCount;
+        public int ActiveJobCount => _ActiveJobCount;
 
         /// <summary>
         ///     Initializes a new instance of <see cref="JobQueue" /> class.
@@ -102,9 +104,13 @@ namespace Jobs
 
             Running = false;
 
-            JobQueued += (sender, args) => { JobCount += 1; };
-            JobStarted += (sender, args) => { ActiveJobCount += 1; };
-            JobFinished += (sender, args) => { JobCount = ActiveJobCount -= 1; };
+            JobQueued += (sender, args) => Interlocked.Increment(ref _JobCount);
+            JobStarted += (sender, args) => Interlocked.Increment(ref _ActiveJobCount);
+            JobFinished += (sender, args) =>
+            {
+                Interlocked.Decrement(ref _JobCount);
+                Interlocked.Decrement(ref _ActiveJobCount);
+            };
         }
 
         /// <summary>
@@ -225,21 +231,12 @@ namespace Jobs
                     await ExecuteJob(job);
                     break;
                 case ThreadingMode.Multi:
+                    _LastThreadIndexQueuedInto = (_LastThreadIndexQueuedInto + 1) % WorkerThreadCount;
 
-                    if (TryGetFirstFreeWorker(out int jobWorkerIndex))
-                    {
-                        _Workers[jobWorkerIndex].QueueJob(job);
-                    }
-                    else
-                    {
-                        _LastThreadIndexQueuedInto = (_LastThreadIndexQueuedInto + 1) % WorkerThreadCount;
-
-                        _Workers[_LastThreadIndexQueuedInto].QueueJob(job);
-                    }
-
+                    _Workers[_LastThreadIndexQueuedInto].QueueJob(job);
                     break;
                 case ThreadingMode.Adaptive:
-                    if (TryGetFirstFreeWorker(out jobWorkerIndex))
+                    if (TryGetFirstFreeWorker(out int jobWorkerIndex))
                     {
                         _Workers[jobWorkerIndex].QueueJob(job);
                     }
@@ -272,11 +269,13 @@ namespace Jobs
 
             for (int index = 0; index < _Workers.Count; index++)
             {
-                if (!_Workers[index].Processing)
+                if (_Workers[index].Processing)
                 {
-                    jobWorkerIndex = index;
-                    return true;
+                    continue;
                 }
+
+                jobWorkerIndex = index;
+                return true;
             }
 
             return false;

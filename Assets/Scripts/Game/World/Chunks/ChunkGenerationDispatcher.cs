@@ -45,6 +45,7 @@ namespace Game.World.Chunks
 
         private bool _IsSet;
         private Bounds _Bounds;
+        private Vector3 _Position;
         private Block[] _Blocks;
         private MeshData _MeshData;
         private ComputeShader _NoiseShader;
@@ -73,6 +74,7 @@ namespace Game.World.Chunks
             }
 
             _Bounds = bounds;
+            _Position = _Bounds.min;
             _Blocks = blocks;
             _MeshData = meshData;
 
@@ -106,7 +108,7 @@ namespace Game.World.Chunks
                 return;
             }
 
-            // required, as stepping forward in a threaded context causes issues.
+            // required, as stepping forward in a threaded context (i.e. the job finished callback) causes issues.
             if (_StepForward)
             {
                 CurrentStep = CurrentStep.Next();
@@ -126,13 +128,18 @@ namespace Game.World.Chunks
 
             if (Generating
                 || (CurrentStep == GenerationStep.Complete)
-                || (WorldController.Current.AggregateNeighborsStep(_Bounds.min) < CurrentStep))
+                || (AggregateChunkRegionGenerationStep() < CurrentStep))
             {
                 return;
             }
 
             ExecuteStep(CurrentStep);
         }
+
+        private GenerationStep AggregateChunkRegionGenerationStep() =>
+            WorldController.Current.TryGetChunkAt(_Position, out ChunkRegionController chunkRegionController)
+                ? chunkRegionController.AggregateGenerationStep
+                : GenerationStep.Complete;
 
         private void ExecuteStep(GenerationStep step)
         {
@@ -171,7 +178,7 @@ namespace Game.World.Chunks
             {
                 ComputeBuffer noiseBuffer = new ComputeBuffer(ChunkRegionController.Size.Product(), 4);
                 int kernel = _NoiseShader.FindKernel("CSMain");
-                _NoiseShader.SetVector("_Offset", _Bounds.min);
+                _NoiseShader.SetVector("_Offset", _Position);
                 _NoiseShader.SetFloat("_Frequency", frequency);
                 _NoiseShader.SetFloat("_Persistence", persistence);
                 _NoiseShader.SetBuffer(kernel, "Result", noiseBuffer);

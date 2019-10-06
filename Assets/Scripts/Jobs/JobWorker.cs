@@ -10,14 +10,38 @@ namespace Jobs
 {
     public class JobWorker
     {
+        private readonly object _Handle;
         private readonly Thread _Thread;
         private readonly BlockingCollection<Job> _ItemQueue;
         private readonly CancellationToken _AbortToken;
 
         public readonly int WaitTimeout;
+        private bool _Processing;
 
         public bool Running { get; private set; }
-        public bool Processing { get; private set; }
+
+        public bool Processing
+        {
+            get
+            {
+                bool tmp;
+
+                lock (_Handle)
+                {
+                    tmp = _Processing;
+                }
+
+                return tmp;
+            }
+            private set
+            {
+                lock (_Handle)
+                {
+                    _Processing = value;
+                }
+            }
+        }
+
         public int ManagedThreadId => _Thread.ManagedThreadId;
 
         public event JobStartedEventHandler JobStarted;
@@ -25,11 +49,12 @@ namespace Jobs
 
         public JobWorker(int waitTimeout, CancellationToken abortToken)
         {
+            _Handle = new object();
             _Thread = new Thread(ProcessItemQueue);
             _ItemQueue = new BlockingCollection<Job>();
-            _AbortToken = abortToken;
 
             WaitTimeout = waitTimeout;
+            _AbortToken = abortToken;
         }
 
         public void Start()
@@ -58,6 +83,8 @@ namespace Jobs
                     return;
                 }
             }
+
+            Running = false;
         }
 
         private void ProcessJob(Job job)
