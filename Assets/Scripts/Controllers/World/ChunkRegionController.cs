@@ -39,6 +39,7 @@ namespace Controllers.World
         private Mesh _Mesh;
         private bool _Visible;
         private bool _RenderShadows;
+        private bool _Initialized;
         private TimeSpan _SafeFrameTime; // this value changes often, try to don't set it
         private Dictionary<Vector3, Chunk> _Chunks;
         private bool _AwaitingMeshCombining;
@@ -94,9 +95,8 @@ namespace Controllers.World
             _Mesh = new Mesh();
             _Chunks = new Dictionary<Vector3, Chunk>();
             _AwaitingMeshCombining = true;
-
-            BuildChunks();
-
+            _Initialized = false;
+            
             MeshFilter.sharedMesh = _Mesh;
 
             foreach (Material material in MeshRenderer.materials)
@@ -142,6 +142,11 @@ namespace Controllers.World
                 return;
             }
 
+            if (!_Initialized)
+            {
+                InitializeChunks();
+            }
+            
             UpdateChunks();
 
             if (_AwaitingMeshCombining
@@ -161,11 +166,16 @@ namespace Controllers.World
         #endregion
 
 
-        private void BuildChunks()
+        private void InitializeChunks()
         {
             // todo job this
             for (int index = 0; index < SizeInChunks.Product(); index++)
             {
+                if (!WorldController.Current.IsInSafeFrameTime())
+                {
+                    return;
+                }
+
                 Vector3Int position = Mathv.GetIndexAsVector3Int(index, SizeInChunks) * Chunk.Size;
 
                 if (_Chunks.ContainsKey(position))
@@ -183,6 +193,8 @@ namespace Controllers.World
                 chunk.MeshChanged += OnMeshChanged;
                 _Chunks.Add(position, chunk);
             }
+
+            _Initialized = true;
         }
 
         private void UpdateChunks()

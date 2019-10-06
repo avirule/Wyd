@@ -4,7 +4,6 @@ using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Threading;
-using System.Threading.Tasks;
 using Logging;
 using NLog;
 
@@ -34,6 +33,7 @@ namespace Jobs
     {
         private bool _Disposed;
 
+        private readonly Thread _OperationThread;
         private readonly List<JobWorker> _Workers;
         private readonly BlockingCollection<Job> _ProcessQueue;
         private readonly CancellationTokenSource _AbortTokenSource;
@@ -100,6 +100,7 @@ namespace Jobs
             ModifyWorkerThreadCount(threadPoolSize);
             MaximumQueuedJobs = maximumQueuedJobs;
 
+            _OperationThread = new Thread(ProcessJobs);
             _ProcessQueue = new BlockingCollection<Job>();
             _Workers = new List<JobWorker>(WorkerThreadCount);
             _AbortTokenSource = new CancellationTokenSource();
@@ -139,8 +140,8 @@ namespace Jobs
         /// </summary>
         public void Start()
         {
-            Task.Factory.StartNew(ProcessJobs, null, TaskCreationOptions.LongRunning);
             Running = true;
+            _OperationThread.Start();
         }
 
         /// <summary>
@@ -166,8 +167,8 @@ namespace Jobs
             identifier = null;
 
             if (!Running
-                || ((MaximumQueuedJobs > 0) && (JobCount >= MaximumQueuedJobs))
-                || _AbortToken.IsCancellationRequested)
+                || _AbortToken.IsCancellationRequested
+                || ((MaximumQueuedJobs > 0) && (JobCount >= MaximumQueuedJobs)))
             {
                 return false;
             }
@@ -182,7 +183,7 @@ namespace Jobs
         /// <summary>
         ///     Begins internal loop for processing <see cref="Job" />s from internal queue.
         /// </summary>
-        private async Task ProcessJobs(object state)
+        private void ProcessJobs()
         {
             while (!_AbortToken.IsCancellationRequested)
             {
@@ -196,7 +197,7 @@ namespace Jobs
 
                     if (_ProcessQueue.TryTake(out Job job, WaitTimeout, _AbortToken))
                     {
-                        await ProcessJob(job);
+                        ProcessJob(job);
                     }
                 }
                 catch (OperationCanceledException)
@@ -229,12 +230,12 @@ namespace Jobs
         ///     <see cref="Job" />s.
         /// </summary>
         /// <param name="job"><see cref="Job" /> to be processed.</param>
-        private async Task ProcessJob(Job job)
+        private void ProcessJob(Job job)
         {
             switch (ThreadingMode)
             {
                 case ThreadingMode.Single:
-                    await ExecuteJob(job);
+                    ExecuteJob(job);
                     break;
                 case ThreadingMode.Multi:
                     _LastThreadIndexQueuedInto = (_LastThreadIndexQueuedInto + 1) % WorkerThreadCount;
@@ -248,7 +249,7 @@ namespace Jobs
                     }
                     else
                     {
-                        await ExecuteJob(job);
+                        ExecuteJob(job);
                     }
 
                     break;
@@ -287,10 +288,10 @@ namespace Jobs
             return false;
         }
 
-        private async Task ExecuteJob(Job job)
+        private void ExecuteJob(Job job)
         {
             OnJobStarted(this, new JobEventArgs(job));
-            await job.Execute();
+            job.Execute();
             OnJobFinished(this, new JobEventArgs(job));
         }
 

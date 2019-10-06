@@ -75,7 +75,7 @@ namespace Jobs
         /// <summary>
         ///     Begins executing the <see cref="Job" />
         /// </summary>
-        public virtual Task Execute()
+        public void Execute()
         {
             StartTime = DateTime.UtcNow;
 
@@ -87,8 +87,6 @@ namespace Jobs
 
             IsDone = true;
             Finished?.Invoke(this, EventArgs.Empty);
-
-            return Task.CompletedTask;
         }
 
         protected virtual void Process()
