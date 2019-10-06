@@ -233,8 +233,8 @@ namespace Controllers.World
                 _CurrentLoader = default;
             }
 
-            _BlockActions?.Clear();
-            _BlockActionLocalPositions?.Clear();
+            _BlockActions.Clear();
+            _BlockActionLocalPositions.Clear();
             _Bounds = default;
 
             CacheGenerator();

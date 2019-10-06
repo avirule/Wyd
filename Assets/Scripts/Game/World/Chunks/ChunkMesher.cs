@@ -53,8 +53,10 @@ namespace Game.World.Chunks
 
         public ChunkMesher()
         {
-            _Vertices = _UVs = new List<Vector3>();
-            _Triangles = _TransparentTriangles = new List<int>();
+            _Vertices = new List<Vector3>();
+            _UVs = new List<Vector3>();
+            _Triangles = new List<int>();
+            _TransparentTriangles = new List<int>();
         }
 
         public void ClearInternalData()
@@ -69,7 +71,8 @@ namespace Game.World.Chunks
         ///     Applies and returns processed <see cref="UnityEngine.Mesh" />.
         /// </summary>
         /// <param name="mesh">Given <see cref="UnityEngine.Mesh" /> to apply processed data to.</param>
-        /// <returns>Processed <see cref="UnityEngine.Mesh" />.</returns>
+        /// <param name="immediateUpload"></param>
+        /// <param name="readOnlyData"></param>
         public void SetMesh(ref Mesh mesh, bool immediateUpload = false, bool readOnlyData = false)
         {
             if ((_Vertices.Count == 0) || ((_Triangles.Count == 0) && (_TransparentTriangles.Count == 0)))
