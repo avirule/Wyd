@@ -48,12 +48,12 @@ namespace Controllers.State
                 }
                 else if (args.PropertyName.Equals(nameof(OptionsController.Current.CPUCoreUtilization)))
                 {
-                    JobExecutionQueue.ModifyThreadPoolSize(OptionsController.Current.CPUCoreUtilization);
+                    JobExecutionQueue.ModifyWorkerThreadCount(OptionsController.Current.CPUCoreUtilization);
                 }
             };
 
             JobExecutionQueue.JobFinished += (sender, args) => { JobFinished?.Invoke(sender, args); };
-            JobExecutionQueue.ModifyThreadPoolSize(OptionsController.Current.CPUCoreUtilization);
+            JobExecutionQueue.ModifyWorkerThreadCount(OptionsController.Current.CPUCoreUtilization);
 
             JobExecutionQueue.Start();
 
