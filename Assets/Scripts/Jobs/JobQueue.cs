@@ -56,6 +56,7 @@ namespace Jobs
         /// </summary>
         public ThreadingMode ThreadingMode { get; set; }
 
+        public int MaximumQueuedJobs { get; private set; }
 
         /// <summary>
         ///     Whether or not the <see cref="JobQueue" /> is currently executing incoming jobs.
@@ -90,11 +91,15 @@ namespace Jobs
         /// </param>
         /// <param name="threadingMode"></param>
         /// <param name="threadPoolSize">Size of internal <see cref="JobWorker" /> pool</param>
-        public JobQueue(int waitTimeout, ThreadingMode threadingMode = ThreadingMode.Single, int threadPoolSize = -1)
+        /// <param name="maximumQueuedJobs"></param>
+        public JobQueue(int waitTimeout, ThreadingMode threadingMode = ThreadingMode.Single, int threadPoolSize = 0,
+            int maximumQueuedJobs = 0)
         {
             WaitTimeout = waitTimeout;
             ThreadingMode = threadingMode;
             ModifyWorkerThreadCount(threadPoolSize);
+            MaximumQueuedJobs = maximumQueuedJobs;
+
             _ProcessQueue = new BlockingCollection<Job>();
             _Workers = new List<JobWorker>(WorkerThreadCount);
             _AbortTokenSource = new CancellationTokenSource();
@@ -160,7 +165,9 @@ namespace Jobs
         {
             identifier = null;
 
-            if (!Running)
+            if (!Running
+                || ((MaximumQueuedJobs > 0) && (JobCount >= MaximumQueuedJobs))
+                || _AbortToken.IsCancellationRequested)
             {
                 return false;
             }
@@ -168,7 +175,6 @@ namespace Jobs
             job.Initialize(Guid.NewGuid().ToString(), _AbortToken);
             _ProcessQueue.Add(job, _AbortToken);
             OnJobQueued(this, new JobEventArgs(job));
-
             identifier = job.Identity;
             return true;
         }

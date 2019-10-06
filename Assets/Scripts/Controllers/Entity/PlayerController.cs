@@ -265,8 +265,7 @@ namespace Controllers.Entity
 
         private void CheckChangedChunk()
         {
-            Vector3 chunkRegionPosition =
-                WorldController.GetNearestVector3RoundedBy(Transform.position, ChunkRegionController.Size);
+            Vector3 chunkRegionPosition = Transform.position.RoundBy(ChunkRegionController.Size);
             chunkRegionPosition.y = 0;
 
             if (chunkRegionPosition == CurrentChunk)

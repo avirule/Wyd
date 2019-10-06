@@ -16,8 +16,14 @@ namespace Game.World.Chunks
     {
         private Bounds _Bounds;
         private Vector3 _Position;
+        private Vector3Int _Size;
+        private int _YIndexStep;
 
         public CancellationToken AbortToken;
+
+        public Block[] Blocks { get; set; }
+        public MeshData MeshData { get; set; }
+        public bool AggressiveFaceMerging { get; set; }
 
         public Bounds Bounds
         {
@@ -28,24 +34,30 @@ namespace Game.World.Chunks
                 _Position = _Bounds.min;
             }
         }
-
-        public Block[] Blocks { get; set; }
-        public MeshData MeshData { get; set; }
-
-        public bool AggressiveFaceMerging;
-
+        
+        public Vector3Int Size
+        {
+            get => _Size;
+            set
+            {
+                _Size = value;
+                _YIndexStep = _Size.x * _Size.z;
+            }
+        }
+        
         public ChunkMesher()
         {
         }
 
         public ChunkMesher(
-            Bounds bounds, Block[] blocks, ref MeshData meshData, bool aggressiveFaceMerging,
+            Bounds bounds, Block[] blocks, ref MeshData meshData, Vector3Int size, bool aggressiveFaceMerging,
             CancellationToken abortToken)
         {
             AbortToken = abortToken;
             Bounds = bounds;
             Blocks = blocks;
             MeshData = meshData;
+            Size = size;
             AggressiveFaceMerging = aggressiveFaceMerging;
             _Position = Bounds.min;
         }
@@ -95,7 +107,7 @@ namespace Game.World.Chunks
                     continue;
                 }
 
-                Vector3Int localPosition = Mathv.GetIndexAsVector3Int(index, ChunkRegionController.Size);
+                Vector3Int localPosition = Mathv.GetIndexAsVector3Int(index, Size);
 
                 if (Blocks[index].Transparent)
                 {
@@ -115,11 +127,11 @@ namespace Game.World.Chunks
             Vector3 globalPosition = _Position + localPosition;
 
             if (!Blocks[index].HasFace(Direction.North)
-                && (((localPosition.z == (ChunkRegionController.Size.z - 1))
+                && (((localPosition.z == (Size.z - 1))
                      && WorldController.Current.TryGetBlockAt(globalPosition + Vector3.forward, out Block block)
                      && (block.Id != Blocks[index].Id))
-                    || ((localPosition.z < (ChunkRegionController.Size.z - 1))
-                        && (Blocks[index + ChunkRegionController.Size.x].Id != Blocks[index].Id))))
+                    || ((localPosition.z < (Size.z - 1))
+                        && (Blocks[index + Size.x].Id != Blocks[index].Id))))
             {
                 // todo fix northern transparent faces sometimes not culling inner faces
 
@@ -135,7 +147,7 @@ namespace Game.World.Chunks
                 {
                     traversals = GetTraversals(index, globalPosition, localPosition.x, Direction.North, Direction.East,
                         1,
-                        ChunkRegionController.Size.x, Blocks[index].Id);
+                        Size.x, Blocks[index].Id);
 
                     if (traversals > 1)
                     {
@@ -153,8 +165,7 @@ namespace Game.World.Chunks
                     {
                         // if traversal failed (no blocks found in probed direction) then look on next axis
                         traversals = GetTraversals(index, globalPosition, localPosition.y, Direction.North,
-                            Direction.Up,
-                            ChunkRegionController.YIndexStep, ChunkRegionController.Size.y, Blocks[index].Id);
+                            Direction.Up, _YIndexStep, Size.y, Blocks[index].Id);
 
                         MeshData.Vertices.Add(localPosition + new Vector3(0f, 0f, 1f));
                         MeshData.Vertices.Add(localPosition + new Vector3(0f, traversals, 1f));
@@ -181,10 +192,10 @@ namespace Game.World.Chunks
             }
 
             if (!Blocks[index].HasFace(Direction.East)
-                && (((localPosition.x == (ChunkRegionController.Size.x - 1))
+                && (((localPosition.x == (Size.x - 1))
                      && WorldController.Current.TryGetBlockAt(globalPosition + Vector3.right, out block)
                      && (Blocks[index].Id != block.Id))
-                    || ((localPosition.x < (ChunkRegionController.Size.x - 1))
+                    || ((localPosition.x < (Size.x - 1))
                         && (Blocks[index + 1].Id != Blocks[index].Id))))
             {
                 Blocks[index].SetFace(Direction.East, true);
@@ -196,7 +207,7 @@ namespace Game.World.Chunks
                 if (AggressiveFaceMerging)
                 {
                     traversals = GetTraversals(index, globalPosition, localPosition.z, Direction.East, Direction.North,
-                        ChunkRegionController.Size.x, ChunkRegionController.Size.z, Blocks[index].Id);
+                        Size.x, Size.z, Blocks[index].Id);
 
                     if (traversals > 1)
                     {
@@ -209,7 +220,7 @@ namespace Game.World.Chunks
                     else
                     {
                         traversals = GetTraversals(index, globalPosition, localPosition.y, Direction.East, Direction.Up,
-                            ChunkRegionController.YIndexStep, ChunkRegionController.Size.y, Blocks[index].Id);
+                            _YIndexStep, Size.y, Blocks[index].Id);
 
                         MeshData.Vertices.Add(localPosition + new Vector3(1f, 0f, 0f));
                         MeshData.Vertices.Add(localPosition + new Vector3(1f, 0f, 1f));
@@ -238,7 +249,7 @@ namespace Game.World.Chunks
                      && WorldController.Current.TryGetBlockAt(globalPosition + Vector3.back, out block)
                      && (Blocks[index].Id != block.Id))
                     || ((localPosition.z > 0)
-                        && (Blocks[index - ChunkRegionController.Size.x].Id != Blocks[index].Id))))
+                        && (Blocks[index - Size.x].Id != Blocks[index].Id))))
             {
                 Blocks[index].SetFace(Direction.South, true);
                 AddTriangles(Direction.South, true);
@@ -250,7 +261,7 @@ namespace Game.World.Chunks
                 {
                     traversals = GetTraversals(index, globalPosition, localPosition.x, Direction.South, Direction.East,
                         1,
-                        ChunkRegionController.Size.x, Blocks[index].Id);
+                        Size.x, Blocks[index].Id);
 
                     if (traversals > 1)
                     {
@@ -264,7 +275,7 @@ namespace Game.World.Chunks
                     {
                         traversals = GetTraversals(index, globalPosition, localPosition.y, Direction.South,
                             Direction.Up,
-                            ChunkRegionController.YIndexStep, ChunkRegionController.Size.y, Blocks[index].Id);
+                            _YIndexStep, Size.y, Blocks[index].Id);
 
                         MeshData.Vertices.Add(localPosition + new Vector3(0f, 0f, 0f));
                         MeshData.Vertices.Add(localPosition + new Vector3(1f, 0f, 0f));
@@ -304,7 +315,7 @@ namespace Game.World.Chunks
                 if (AggressiveFaceMerging)
                 {
                     traversals = GetTraversals(index, globalPosition, localPosition.z, Direction.West, Direction.North,
-                        ChunkRegionController.Size.x, ChunkRegionController.Size.z, Blocks[index].Id);
+                        Size.x, Size.z, Blocks[index].Id);
 
                     if (traversals > 1)
                     {
@@ -317,7 +328,7 @@ namespace Game.World.Chunks
                     else
                     {
                         traversals = GetTraversals(index, globalPosition, localPosition.y, Direction.West, Direction.Up,
-                            ChunkRegionController.YIndexStep, ChunkRegionController.Size.y, Blocks[index].Id);
+                            _YIndexStep, Size.y, Blocks[index].Id);
 
                         MeshData.Vertices.Add(localPosition + new Vector3(0f, 0f, 0f));
                         MeshData.Vertices.Add(localPosition + new Vector3(0f, traversals, 0f));
@@ -342,11 +353,11 @@ namespace Game.World.Chunks
             }
 
             if (!Blocks[index].HasFace(Direction.Up)
-                && (((localPosition.y == (ChunkRegionController.Size.y - 1))
+                && (((localPosition.y == (Size.y - 1))
                      && WorldController.Current.TryGetBlockAt(globalPosition + Vector3.up, out block)
                      && (block.Id != Blocks[index].Id))
-                    || ((localPosition.y < (ChunkRegionController.Size.y - 1))
-                        && (Blocks[index + ChunkRegionController.YIndexStep].Id != Blocks[index].Id))))
+                    || ((localPosition.y < (Size.y - 1))
+                        && (Blocks[index + _YIndexStep].Id != Blocks[index].Id))))
             {
                 Blocks[index].SetFace(Direction.Up, true);
                 AddTriangles(Direction.Up, true);
@@ -357,7 +368,7 @@ namespace Game.World.Chunks
                 if (AggressiveFaceMerging)
                 {
                     traversals = GetTraversals(index, globalPosition, localPosition.z, Direction.Up, Direction.North,
-                        ChunkRegionController.Size.x, ChunkRegionController.Size.z, Blocks[index].Id);
+                        Size.x, Size.z, Blocks[index].Id);
 
                     if (traversals > 1)
                     {
@@ -371,7 +382,7 @@ namespace Game.World.Chunks
                     {
                         traversals = GetTraversals(index, globalPosition, localPosition.x, Direction.Up, Direction.East,
                             1,
-                            ChunkRegionController.Size.x, Blocks[index].Id);
+                            Size.x, Blocks[index].Id);
 
                         MeshData.Vertices.Add(localPosition + new Vector3(0f, 1f, 0f));
                         MeshData.Vertices.Add(localPosition + new Vector3(traversals, 1f, 0f));
@@ -398,7 +409,7 @@ namespace Game.World.Chunks
             // ignore the very bottom face of the world to reduce verts/tris
             if (!Blocks[index].HasFace(Direction.Down)
                 && (localPosition.y > 0)
-                && (Blocks[index - ChunkRegionController.YIndexStep].Id != Blocks[index].Id))
+                && (Blocks[index - _YIndexStep].Id != Blocks[index].Id))
             {
                 Blocks[index].SetFace(Direction.Down, true);
                 AddTriangles(Direction.Down, true);
@@ -409,7 +420,7 @@ namespace Game.World.Chunks
                 if (AggressiveFaceMerging)
                 {
                     traversals = GetTraversals(index, globalPosition, localPosition.z, Direction.Down, Direction.North,
-                        ChunkRegionController.Size.x, ChunkRegionController.Size.z, Blocks[index].Id);
+                        Size.x, Size.z, Blocks[index].Id);
 
                     if (traversals > 1)
                     {
@@ -423,7 +434,7 @@ namespace Game.World.Chunks
                     {
                         traversals = GetTraversals(index, globalPosition, localPosition.x, Direction.Down,
                             Direction.East, 1,
-                            ChunkRegionController.Size.x, Blocks[index].Id);
+                            Size.x, Blocks[index].Id);
 
                         MeshData.Vertices.Add(localPosition + new Vector3(0f, 0f, 0f));
                         MeshData.Vertices.Add(localPosition + new Vector3(0f, 0f, 1f));
@@ -455,12 +466,12 @@ namespace Game.World.Chunks
             // ensure this block face hasn't already been traversed
             if (!Blocks[index].HasFace(Direction.North)
                 // check if we're on the far edge of the chunk, and if so, query WorldController for blocks in adjacent chunk
-                && (((localPosition.z == (ChunkRegionController.Size.z - 1))
+                && (((localPosition.z == (Size.z - 1))
                      && WorldController.Current.TryGetBlockAt(globalPosition + Vector3.forward, out Block block)
                      && block.Transparent)
                     // however if we're inside the chunk, use the proper Blocks[] array index for check 
-                    || ((localPosition.z < (ChunkRegionController.Size.z - 1))
-                        && Blocks[index + ChunkRegionController.Size.x].Transparent)))
+                    || ((localPosition.z < (Size.z - 1))
+                        && Blocks[index + Size.x].Transparent)))
             {
                 // set face of current block so it isn't traversed over
                 Blocks[index].SetFace(Direction.North, true);
@@ -474,7 +485,7 @@ namespace Game.World.Chunks
                 {
                     traversals = GetTraversals(index, globalPosition, localPosition.x, Direction.North, Direction.East,
                         1,
-                        ChunkRegionController.Size.x);
+                        Size.x);
 
                     if (traversals > 1)
                     {
@@ -493,7 +504,7 @@ namespace Game.World.Chunks
                         // if traversal failed (no blocks found in probed direction) then look on next axis
                         traversals = GetTraversals(index, globalPosition, localPosition.y, Direction.North,
                             Direction.Up,
-                            ChunkRegionController.YIndexStep, ChunkRegionController.Size.y);
+                            _YIndexStep, Size.y);
 
                         MeshData.Vertices.Add(localPosition + new Vector3(0f, 0f, 1f));
                         MeshData.Vertices.Add(localPosition + new Vector3(0f, traversals, 1f));
@@ -520,10 +531,10 @@ namespace Game.World.Chunks
             }
 
             if (!Blocks[index].HasFace(Direction.East)
-                && (((localPosition.x == (ChunkRegionController.Size.x - 1))
+                && (((localPosition.x == (Size.x - 1))
                      && WorldController.Current.TryGetBlockAt(globalPosition + Vector3.right, out block)
                      && block.Transparent)
-                    || ((localPosition.x < (ChunkRegionController.Size.x - 1)) && Blocks[index + 1].Transparent)))
+                    || ((localPosition.x < (Size.x - 1)) && Blocks[index + 1].Transparent)))
             {
                 Blocks[index].SetFace(Direction.East, true);
                 AddTriangles(Direction.East);
@@ -534,7 +545,7 @@ namespace Game.World.Chunks
                 if (AggressiveFaceMerging)
                 {
                     traversals = GetTraversals(index, globalPosition, localPosition.z, Direction.East, Direction.North,
-                        ChunkRegionController.Size.x, ChunkRegionController.Size.z);
+                        Size.x, Size.z);
 
                     if (traversals > 1)
                     {
@@ -547,7 +558,7 @@ namespace Game.World.Chunks
                     else
                     {
                         traversals = GetTraversals(index, globalPosition, localPosition.y, Direction.East, Direction.Up,
-                            ChunkRegionController.YIndexStep, ChunkRegionController.Size.y);
+                            _YIndexStep, Size.y);
 
                         MeshData.Vertices.Add(localPosition + new Vector3(1f, 0f, 0f));
                         MeshData.Vertices.Add(localPosition + new Vector3(1f, 0f, 1f));
@@ -575,7 +586,7 @@ namespace Game.World.Chunks
                 && (((localPosition.z == 0)
                      && WorldController.Current.TryGetBlockAt(globalPosition + Vector3.back, out block)
                      && block.Transparent)
-                    || ((localPosition.z > 0) && Blocks[index - ChunkRegionController.Size.x].Transparent)))
+                    || ((localPosition.z > 0) && Blocks[index - Size.x].Transparent)))
             {
                 Blocks[index].SetFace(Direction.South, true);
                 AddTriangles(Direction.South);
@@ -587,7 +598,7 @@ namespace Game.World.Chunks
                 {
                     traversals = GetTraversals(index, globalPosition, localPosition.x, Direction.South, Direction.East,
                         1,
-                        ChunkRegionController.Size.x);
+                        Size.x);
 
                     if (traversals > 1)
                     {
@@ -601,7 +612,7 @@ namespace Game.World.Chunks
                     {
                         traversals = GetTraversals(index, globalPosition, localPosition.y, Direction.South,
                             Direction.Up,
-                            ChunkRegionController.YIndexStep, ChunkRegionController.Size.y);
+                            _YIndexStep, Size.y);
 
                         MeshData.Vertices.Add(localPosition + new Vector3(0f, 0f, 0f));
                         MeshData.Vertices.Add(localPosition + new Vector3(1f, 0f, 0f));
@@ -640,7 +651,7 @@ namespace Game.World.Chunks
                 if (AggressiveFaceMerging)
                 {
                     traversals = GetTraversals(index, globalPosition, localPosition.z, Direction.West, Direction.North,
-                        ChunkRegionController.Size.x, ChunkRegionController.Size.z);
+                        Size.x, Size.z);
 
                     if (traversals > 1)
                     {
@@ -653,7 +664,7 @@ namespace Game.World.Chunks
                     else
                     {
                         traversals = GetTraversals(index, globalPosition, localPosition.y, Direction.West, Direction.Up,
-                            ChunkRegionController.YIndexStep, ChunkRegionController.Size.y);
+                            _YIndexStep, Size.y);
 
                         MeshData.Vertices.Add(localPosition + new Vector3(0f, 0f, 0f));
                         MeshData.Vertices.Add(localPosition + new Vector3(0f, traversals, 0f));
@@ -678,11 +689,11 @@ namespace Game.World.Chunks
             }
 
             if (!Blocks[index].HasFace(Direction.Up)
-                && (((localPosition.y == (ChunkRegionController.Size.y - 1))
+                && (((localPosition.y == (Size.y - 1))
                      && WorldController.Current.TryGetBlockAt(globalPosition + Vector3.up, out block)
                      && block.Transparent)
-                    || ((localPosition.y < (ChunkRegionController.Size.y - 1))
-                        && Blocks[index + ChunkRegionController.YIndexStep].Transparent)))
+                    || ((localPosition.y < (Size.y - 1))
+                        && Blocks[index + _YIndexStep].Transparent)))
             {
                 Blocks[index].SetFace(Direction.Up, true);
                 AddTriangles(Direction.Up);
@@ -693,7 +704,7 @@ namespace Game.World.Chunks
                 if (AggressiveFaceMerging)
                 {
                     traversals = GetTraversals(index, globalPosition, localPosition.z, Direction.Up, Direction.North,
-                        ChunkRegionController.Size.x, ChunkRegionController.Size.z);
+                        Size.x, Size.z);
 
                     if (traversals > 1)
                     {
@@ -707,7 +718,7 @@ namespace Game.World.Chunks
                     {
                         traversals = GetTraversals(index, globalPosition, localPosition.x, Direction.Up, Direction.East,
                             1,
-                            ChunkRegionController.Size.x);
+                            Size.x);
 
                         MeshData.Vertices.Add(localPosition + new Vector3(0f, 1f, 0f));
                         MeshData.Vertices.Add(localPosition + new Vector3(traversals, 1f, 0f));
@@ -734,7 +745,7 @@ namespace Game.World.Chunks
             // ignore the very bottom face of the world to reduce verts/tris
             if (!Blocks[index].HasFace(Direction.Down)
                 && (localPosition.y > 0)
-                && Blocks[index - ChunkRegionController.YIndexStep].Transparent)
+                && Blocks[index - _YIndexStep].Transparent)
             {
                 Blocks[index].SetFace(Direction.Down, true);
                 AddTriangles(Direction.Down);
@@ -745,7 +756,7 @@ namespace Game.World.Chunks
                 if (AggressiveFaceMerging)
                 {
                     traversals = GetTraversals(index, globalPosition, localPosition.z, Direction.Down, Direction.North,
-                        ChunkRegionController.Size.x, ChunkRegionController.Size.z);
+                        Size.x, Size.z);
 
                     if (traversals > 1)
                     {
@@ -759,7 +770,7 @@ namespace Game.World.Chunks
                     {
                         traversals = GetTraversals(index, globalPosition, localPosition.x, Direction.Down,
                             Direction.East, 1,
-                            ChunkRegionController.Size.x);
+                            Size.x);
 
                         MeshData.Vertices.Add(localPosition + new Vector3(0f, 0f, 0f));
                         MeshData.Vertices.Add(localPosition + new Vector3(0f, 0f, 1f));

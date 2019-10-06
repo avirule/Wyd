@@ -143,11 +143,6 @@ namespace Game.World.Chunks
 
         private void ExecuteStep(GenerationStep step)
         {
-            if (Generating || (CurrentStep == GenerationStep.Complete))
-            {
-                return;
-            }
-
             switch (step)
             {
                 case GenerationStep.RawTerrain:

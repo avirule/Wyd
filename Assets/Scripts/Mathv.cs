@@ -97,6 +97,8 @@ public static class Mathv
 
     public static float Max(this Vector3 a) => Mathf.Max(a.x, a.y, a.z);
 
+    public static Vector3 RoundBy(this Vector3 a, Vector3 roundBy) => a.Divide(roundBy).Floor().Multiply(roundBy);
+
     /// <summary>
     ///     Calculates 1D <see cref="System.Int32" /> index from 3D <see cref="UnityEngine.Vector3Int" />, given a
     ///     <see cref="UnityEngine.Vector3Int" /> size in 3D space.

@@ -37,6 +37,7 @@ namespace Game.World.Chunks
             _Mesher.Bounds = bounds;
             _Mesher.Blocks = blocks;
             _Mesher.MeshData = meshData;
+            _Mesher.Size = Chunk.Size;
             _Mesher.AggressiveFaceMerging = aggressiveFaceMerging;
         }
 

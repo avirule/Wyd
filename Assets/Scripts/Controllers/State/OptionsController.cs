@@ -39,12 +39,12 @@ namespace Controllers.State
         public static class Defaults
         {
             // General
-            public const int MINIMUM_INTERNAL_FRAMES = 60;
             public const ThreadingMode THREADING_MODE = ThreadingMode.Multi;
             public const int CPU_CORE_UTILIZATION = 4;
             public const bool GPU_ACCELERATION = true;
 
             // Graphics
+            public const int MINIMUM_INTERNAL_FRAMES = 60;
             public const int MAXIMUM_FRAME_RATE_BUFFER_SIZE = 60;
             public const int VSYNC_LEVEL = 1;
             public const int WINDOW_MODE = (int) WindowMode.Fullscreen;
@@ -52,10 +52,10 @@ namespace Controllers.State
             public const int SHADOW_DISTANCE = 4;
 
             // Chunking
-            public const bool PRE_INITIALIZE_CHUNK_CACHE = true;
-            public const int MAXIMUM_CHUNK_CACHE_SIZE = 20;
-            public const int MAXIMUM_CHUNK_LOAD_TIME_BUFFER_SIZE = 60;
-            public const int PRE_LOAD_CHUNK_DISTANCE = 2;
+            public const bool PRE_INITIALIZE_CHUNK_CACHE = false;
+            public const int MAXIMUM_CHUNK_CACHE_SIZE = -1;
+            public const int MAXIMUM_CHUNK_LOAD_TIME_BUFFER_SIZE = 120;
+            public const int PRE_LOAD_CHUNK_DISTANCE = 0;
         }
 
         public const int MAXIMUM_RENDER_DISTANCE = 32;
@@ -140,7 +140,7 @@ namespace Controllers.State
         }
 
         public TimeSpan MaximumInternalFrameTime { get; private set; }
-        
+
         public int MaximumFrameRateBufferSize
         {
             get => _MaximumFrameRateBufferSize;
@@ -299,7 +299,7 @@ namespace Controllers.State
                 : Configuration.LoadFromFile(_configPath);
 
             // General
-            
+
             if (!GetSetting("General", nameof(ThreadingMode), out _ThreadingMode))
             {
                 LogSettingLoadError(nameof(ThreadingMode), Defaults.THREADING_MODE);
@@ -333,8 +333,8 @@ namespace Controllers.State
                 MinimumInternalFrames = Defaults.MINIMUM_INTERNAL_FRAMES;
                 SaveSettings();
             }
-            
-            MaximumInternalFrameTime = TimeSpan.FromSeconds(1d / MinimumInternalFrames);
+
+            MaximumInternalFrameTime = TimeSpan.FromSeconds(1d / (MinimumInternalFrames * 2));
 
             if (!GetSetting("Graphics", nameof(MaximumFrameRateBufferSize), out _MaximumFrameRateBufferSize)
                 || (MaximumFrameRateBufferSize < 0)
@@ -435,22 +435,23 @@ namespace Controllers.State
 
             // General
             _Configuration["General"][nameof(ThreadingMode)].PreComment =
-                "Determines whether the threading mode the game will use when generating chunk data and meshes.";
+                "Determines whether the threading mode the game will use when\r\n"
+                + "generating chunk data and meshes.";
             _Configuration["General"][nameof(ThreadingMode)].Comment = "(0 = single, 1 = multi, 2 = variable)";
-            _Configuration["General"][nameof(ThreadingMode)].IntValue =
-                (int) Defaults.THREADING_MODE;
+            _Configuration["General"][nameof(ThreadingMode)].IntValue = (int) Defaults.THREADING_MODE;
 
             _Configuration["General"][nameof(CPUCoreUtilization)].PreComment =
                 "Loosely defines the total number of CPU cores the game will utilize with threading.";
             _Configuration["General"][nameof(CPUCoreUtilization)].IntValue = Defaults.CPU_CORE_UTILIZATION;
 
             _Configuration["General"][nameof(GPUAcceleration)].PreComment =
-                "Determines whether the GPU will be more heavily utilized to increase overall performance. Turning this off will create more work for the CPU.";
+                "Determines whether the GPU will be more heavily utilized to increase overall performance.\r\n"
+                + "Turning this off will create more work for the CPU.";
             _Configuration["General"][nameof(GPUAcceleration)].BoolValue = Defaults.GPU_ACCELERATION;
 
 
             // Graphics
-            
+
             _Configuration["Graphics"][nameof(MinimumInternalFrames)].PreComment =
                 "Minimum number of frames internal systems will target to lapse during updates.";
             _Configuration["Graphics"][nameof(MinimumInternalFrames)].Comment =
@@ -468,8 +469,7 @@ namespace Controllers.State
             _Configuration["Graphics"][nameof(VSyncLevel)].PreComment =
                 "Each level increases the number of screen updates to wait before rendering to the screen.";
             _Configuration["Graphics"][nameof(VSyncLevel)].Comment = "Maximum value of 4";
-            _Configuration["Graphics"][nameof(VSyncLevel)].IntValue =
-                Defaults.VSYNC_LEVEL;
+            _Configuration["Graphics"][nameof(VSyncLevel)].IntValue = Defaults.VSYNC_LEVEL;
 
             _Configuration["Graphics"][nameof(WindowMode)].Comment =
                 "(0 = Fullscreen, 1 = BorderlessWindowed, 2 = Windowed)";
@@ -477,8 +477,12 @@ namespace Controllers.State
 
             _Configuration["Graphics"][nameof(ShadowDistance)].PreComment =
                 "Defines radius in chunks around player to draw shadows.";
-            _Configuration["Graphics"][nameof(ShadowDistance)].IntValue =
-                Defaults.SHADOW_DISTANCE;
+            _Configuration["Graphics"][nameof(ShadowDistance)].IntValue = Defaults.SHADOW_DISTANCE;
+
+            _Configuration["Graphics"][nameof(RenderDistance)].PreComment =
+                "Defines radius in regions around player to draw shadows.";
+            _Configuration["Graphics"][nameof(RenderDistance)].Comment = "(min 1, max 48)";
+            _Configuration["Graphics"][nameof(RenderDistance)].IntValue = Defaults.RENDER_DISTANCE;
 
 
             // Chunking
@@ -494,13 +498,15 @@ namespace Controllers.State
                 Defaults.MAXIMUM_CHUNK_CACHE_SIZE;
 
             _Configuration["Chunking"][nameof(MaximumChunkLoadTimeBufferSize)].PreComment =
-                "Lower values give a more accurate frame-to-frame reading, with higher values giving more long-term accuracy.";
+                "Lower values give a more accurate frame-to-frame reading, with higher\r\n"
+                + "values giving more long-term accuracy.";
             _Configuration["Chunking"][nameof(MaximumChunkLoadTimeBufferSize)].Comment = "(min 0, max 120)";
             _Configuration["Chunking"][nameof(MaximumChunkLoadTimeBufferSize)].IntValue =
                 Defaults.MAXIMUM_CHUNK_LOAD_TIME_BUFFER_SIZE;
 
             _Configuration["Chunking"][nameof(PreLoadChunkDistance)].PreComment =
-                "Defines extra radius of chunks to pre-load (build).";
+                "Defines radius of chunks to pre-load.\r\n"
+                + "This distance begins at the edge of the render distance.";
             _Configuration["Chunking"][nameof(PreLoadChunkDistance)].IntValue =
                 Defaults.PRE_LOAD_CHUNK_DISTANCE;
 

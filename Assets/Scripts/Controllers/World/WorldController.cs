@@ -159,7 +159,7 @@ namespace Controllers.World
 
         public void ProcessBuildChunkQueue()
         {
-            while (_BuildChunkAroundEntityStack.Count > 0)
+            while ((_BuildChunkAroundEntityStack.Count > 0) && IsInSafeFrameTime())
             {
                 IEntity loader = _BuildChunkAroundEntityStack.Pop();
                 int radius = loader.Tags.Contains("player")
@@ -170,6 +170,12 @@ namespace Controllers.World
                 {
                     for (int z = -radius; z < (radius + 1); z++)
                     {
+                        if (!IsInSafeFrameTime())
+                        {
+                            _BuildChunkAroundEntityStack.Push(loader);
+                            return;
+                        }
+
                         Vector3 position = loader.CurrentChunk
                                            + new Vector3(x, 0f, z).Multiply(ChunkRegionController.Size);
 
@@ -199,12 +205,6 @@ namespace Controllers.World
                         FlagNeighborsForMeshUpdate(chunkController.Position, Directions.CardinalDirectionsVector3);
                     }
                 }
-
-                if (!IsInSafeFrameTime())
-                {
-                    _BuildChunkAroundEntityStack.Push(loader);
-                    break;
-                }
             }
         }
 
@@ -218,7 +218,7 @@ namespace Controllers.World
 
         public void FlagChunkForUpdateMesh(Vector3 globalChunkPosition)
         {
-            if (TryGetChunkAt(GetNearestVector3RoundedBy(globalChunkPosition, ChunkRegionController.Size),
+            if (TryGetChunkAt(globalChunkPosition.RoundBy(ChunkRegionController.Size),
                 out ChunkRegionController chunkController))
             {
                 chunkController.RequestMeshUpdate(globalChunkPosition);
@@ -343,7 +343,7 @@ namespace Controllers.World
 
         public ref Block GetBlockAt(Vector3 globalPosition)
         {
-            Vector3 chunkRegionPosition = GetNearestVector3RoundedBy(globalPosition, ChunkRegionController.Size);
+            Vector3 chunkRegionPosition = globalPosition.RoundBy(ChunkRegionController.Size);
 
             ChunkRegionController chunkRegionController = GetChunkAt(chunkRegionPosition);
 
@@ -359,7 +359,7 @@ namespace Controllers.World
         public bool TryGetBlockAt(Vector3 globalPosition, out Block block)
         {
             block = default;
-            Vector3 chunkRegionPosition = GetNearestVector3RoundedBy(globalPosition, ChunkRegionController.Size);
+            Vector3 chunkRegionPosition = globalPosition.RoundBy(ChunkRegionController.Size);
 
             return TryGetChunkAt(chunkRegionPosition, out ChunkRegionController chunkController)
                    && (chunkController != default)
@@ -368,7 +368,7 @@ namespace Controllers.World
 
         public bool BlockExistsAt(Vector3 globalPosition)
         {
-            Vector3 chunkRegionPosition = GetNearestVector3RoundedBy(globalPosition, ChunkRegionController.Size);
+            Vector3 chunkRegionPosition = globalPosition.RoundBy(ChunkRegionController.Size);
 
             return TryGetChunkAt(chunkRegionPosition, out ChunkRegionController chunkController)
                    && chunkController.BlockExistsAt(globalPosition);
@@ -376,7 +376,7 @@ namespace Controllers.World
 
         public void PlaceBlockAt(Vector3 globalPosition, ushort id)
         {
-            Vector3 chunkRegionPosition = GetNearestVector3RoundedBy(globalPosition, ChunkRegionController.Size);
+            Vector3 chunkRegionPosition = globalPosition.RoundBy(ChunkRegionController.Size);
 
             if (!TryGetChunkAt(chunkRegionPosition, out ChunkRegionController chunkController))
             {
@@ -388,7 +388,7 @@ namespace Controllers.World
 
         public bool TryPlaceBlockAt(Vector3 globalPosition, ushort id)
         {
-            Vector3 chunkRegionPosition = GetNearestVector3RoundedBy(globalPosition, ChunkRegionController.Size);
+            Vector3 chunkRegionPosition = globalPosition.RoundBy(ChunkRegionController.Size);
 
             return TryGetChunkAt(chunkRegionPosition, out ChunkRegionController chunkController)
                    && (chunkController != default)
@@ -397,7 +397,7 @@ namespace Controllers.World
 
         public void RemoveBlockAt(Vector3 globalPosition)
         {
-            Vector3 chunkRegionPosition = GetNearestVector3RoundedBy(globalPosition, ChunkRegionController.Size);
+            Vector3 chunkRegionPosition = globalPosition.RoundBy(ChunkRegionController.Size);
 
             if (!TryGetChunkAt(chunkRegionPosition, out ChunkRegionController chunkController))
             {
@@ -409,15 +409,12 @@ namespace Controllers.World
 
         public bool TryRemoveBlockAt(Vector3 globalPosition)
         {
-            Vector3 chunkRegionPosition = GetNearestVector3RoundedBy(globalPosition, ChunkRegionController.Size);
+            Vector3 chunkRegionPosition = globalPosition.RoundBy(ChunkRegionController.Size);
 
             return TryGetChunkAt(chunkRegionPosition, out ChunkRegionController chunkController)
                    && (chunkController != default)
                    && chunkController.TryRemoveBlockAt(globalPosition);
         }
-
-        public static Vector3 GetNearestVector3RoundedBy(Vector3 position, Vector3Int roundBy) =>
-            position.Divide(roundBy).Floor().Multiply(roundBy);
 
         public ChunkGenerationDispatcher.GenerationStep AggregateNeighborsStep(Vector3 position)
         {
