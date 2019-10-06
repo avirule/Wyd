@@ -5,7 +5,6 @@ using Controllers.World;
 using Extensions;
 using Game.World.Blocks;
 using Jobs;
-using Noise;
 using UnityEngine;
 using Random = System.Random;
 
