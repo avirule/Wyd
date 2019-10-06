@@ -8,9 +8,10 @@ using System.Threading.Tasks;
 
 namespace Jobs
 {
-    public abstract class Job
+    public class Job
     {
-        private readonly object _Handle;
+        protected readonly object Handle;
+        protected readonly Action ExecutionAction;
         protected bool Done;
 
         public DateTime StartTime { get; private set; }
@@ -36,11 +37,9 @@ namespace Jobs
         /// <summary>
         ///     Instantiates a new instance of the <see cref="Job" /> class.
         /// </summary>
-        public Job()
-        {
-            _Handle = new object();
-            Done = false;
-        }
+        public Job() => (Handle, Done) = (new object(), false);
+
+        public Job(Action action) : this() => ExecutionAction = action;
 
         /// <summary>
         ///     Thread-safe determination of execution status.
@@ -51,7 +50,7 @@ namespace Jobs
             {
                 bool tmp;
 
-                lock (_Handle)
+                lock (Handle)
                 {
                     tmp = Done;
                 }
@@ -60,7 +59,7 @@ namespace Jobs
             }
             protected set
             {
-                lock (_Handle)
+                lock (Handle)
                 {
                     Done = value;
                 }
@@ -94,6 +93,7 @@ namespace Jobs
 
         protected virtual void Process()
         {
+            ExecutionAction?.Invoke();
         }
 
         protected virtual void ProcessFinished()

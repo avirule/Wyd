@@ -152,7 +152,7 @@ namespace Game.World
         public void CompressAndCommitThreaded(Vector3 position, byte[] data)
         {
             // todo cache the jobs
-            QueryExecutionQueue.QueueJob(new GeneralExecutionJob(() => CompressAndCommit(position, data)));
+            QueryExecutionQueue.QueueJob(new Job(() => CompressAndCommit(position, data)));
         }
 
         public void Commit(Vector3 position, byte[] chunkData)
