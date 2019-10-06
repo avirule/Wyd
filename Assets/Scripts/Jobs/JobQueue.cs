@@ -134,8 +134,7 @@ namespace Jobs
         /// </summary>
         public void Start()
         {
-            Task.Factory.StartNew(ProcessJobs, null,
-                TaskCreationOptions.LongRunning | TaskCreationOptions.DenyChildAttach);
+            Task.Factory.StartNew(ProcessJobs, null, TaskCreationOptions.LongRunning);
             Running = true;
         }
 
@@ -145,8 +144,7 @@ namespace Jobs
         public void Abort()
         {
             _AbortTokenSource.Cancel();
-            WaitTimeout = 1;
-            Running = false;
+            Interlocked.Exchange(ref _WaitTimeout, 1);
         }
 
         #endregion
@@ -157,19 +155,22 @@ namespace Jobs
         ///     Adds specified <see cref="Job" /> to internal queue and returns a unique identity.
         /// </summary>
         /// <param name="job"><see cref="Job" /> to be added.</param>
-        /// <returns>A unique <see cref="System.Object" /> identity.</returns>
-        public object QueueJob(Job job)
+        /// <param name="identifier">A unique <see cref="System.Object" /> identity.</param>
+        public bool TryQueueJob(Job job, out object identifier)
         {
+            identifier = null;
+
             if (!Running)
             {
-                return null;
+                return false;
             }
 
             job.Initialize(Guid.NewGuid().ToString(), _AbortToken);
             _ProcessQueue.Add(job, _AbortToken);
             OnJobQueued(this, new JobEventArgs(job));
 
-            return job.Identity;
+            identifier = job.Identity;
+            return true;
         }
 
         /// <summary>
@@ -181,31 +182,30 @@ namespace Jobs
             {
                 try
                 {
-                    if (!_ProcessQueue.TryTake(out Job job, WaitTimeout, _AbortToken)
-                        || (job == default))
-                    {
-                        continue;
-                    }
-
                     while ((_Workers.Count < WorkerThreadCount)
                            && (ThreadingMode > ThreadingMode.Single))
                     {
                         SpawnJobWorker();
                     }
 
-                    await ProcessJob(job);
+                    if (_ProcessQueue.TryTake(out Job job, WaitTimeout, _AbortToken))
+                    {
+                        await ProcessJob(job);
+                    }
                 }
                 catch (OperationCanceledException)
                 {
                     // thread aborted
-                    return;
+                    break;
                 }
                 catch (Exception ex)
                 {
                     EventLog.Logger.Log(LogLevel.Warn, $"Error occurred in job queue: {ex.Message}");
+                    break;
                 }
             }
 
+            Running = false;
             Dispose();
         }
 

@@ -39,7 +39,7 @@ namespace Controllers.State
         public static class Defaults
         {
             // General
-            public const int MAXIMUM_INTERNAL_FRAMES = 60;
+            public const int MINIMUM_INTERNAL_FRAMES = 60;
             public const ThreadingMode THREADING_MODE = ThreadingMode.Multi;
             public const int CPU_CORE_UTILIZATION = 4;
             public const bool GPU_ACCELERATION = true;
@@ -71,7 +71,7 @@ namespace Controllers.State
         private ThreadingMode _ThreadingMode;
         private int _CPUCoreUtilization;
         private bool _GPUAcceleration;
-        private int _MaximumInternalFrames;
+        private int _MinimumInternalFrames;
         private int _MaximumFrameRateBufferSize;
         private bool _PreInitializeChunkCache;
         private int _MaximumChunkCacheSize;
@@ -85,20 +85,6 @@ namespace Controllers.State
 
 
         #region GENERAL OPTIONS MEMBERS
-
-        public int MaximumInternalFrames
-        {
-            get => _MaximumInternalFrames;
-            set
-            {
-                _MaximumInternalFrames = value;
-                _Configuration["General"][nameof(MaximumInternalFrames)].IntValue = _MaximumInternalFrames;
-                SaveSettings();
-                OnPropertyChanged();
-            }
-        }
-
-        public TimeSpan MaximumInternalFrameTime { get; private set; }
 
         public ThreadingMode ThreadingMode
         {
@@ -141,6 +127,20 @@ namespace Controllers.State
 
         #region GRAPHICS OPTIONS MEMBERS
 
+        public int MinimumInternalFrames
+        {
+            get => _MinimumInternalFrames;
+            set
+            {
+                _MinimumInternalFrames = value;
+                _Configuration["General"][nameof(MinimumInternalFrames)].IntValue = _MinimumInternalFrames;
+                SaveSettings();
+                OnPropertyChanged();
+            }
+        }
+
+        public TimeSpan MaximumInternalFrameTime { get; private set; }
+        
         public int MaximumFrameRateBufferSize
         {
             get => _MaximumFrameRateBufferSize;
@@ -299,18 +299,7 @@ namespace Controllers.State
                 : Configuration.LoadFromFile(_configPath);
 
             // General
-
-            if (!GetSetting("Graphics", nameof(MaximumInternalFrames), out _MaximumInternalFrames)
-                || (MaximumInternalFrames < 0)
-                || (MaximumInternalFrames > 300))
-            {
-                LogSettingLoadError(nameof(MaximumInternalFrames), Defaults.MAXIMUM_INTERNAL_FRAMES);
-                MaximumInternalFrames = Defaults.MAXIMUM_INTERNAL_FRAMES;
-                SaveSettings();
-            }
-
-            MaximumInternalFrameTime = TimeSpan.FromSeconds(1d / MaximumInternalFrames);
-
+            
             if (!GetSetting("General", nameof(ThreadingMode), out _ThreadingMode))
             {
                 LogSettingLoadError(nameof(ThreadingMode), Defaults.THREADING_MODE);
@@ -335,6 +324,17 @@ namespace Controllers.State
 
 
             // Graphics
+
+            if (!GetSetting("Graphics", nameof(MinimumInternalFrames), out _MinimumInternalFrames)
+                || (MinimumInternalFrames < 0)
+                || (MinimumInternalFrames > 120))
+            {
+                LogSettingLoadError(nameof(MinimumInternalFrames), Defaults.MINIMUM_INTERNAL_FRAMES);
+                MinimumInternalFrames = Defaults.MINIMUM_INTERNAL_FRAMES;
+                SaveSettings();
+            }
+            
+            MaximumInternalFrameTime = TimeSpan.FromSeconds(1d / MinimumInternalFrames);
 
             if (!GetSetting("Graphics", nameof(MaximumFrameRateBufferSize), out _MaximumFrameRateBufferSize)
                 || (MaximumFrameRateBufferSize < 0)
@@ -450,12 +450,13 @@ namespace Controllers.State
 
 
             // Graphics
-            _Configuration["Graphics"][nameof(MaximumInternalFrames)].PreComment =
-                "Maximum number of frames internal systems will allow to lapse during updates.";
-            _Configuration["Graphics"][nameof(MaximumInternalFrames)].Comment =
-                "Higher values decrease overall CPU stress (min 15, max 150).";
-            _Configuration["Graphics"][nameof(MaximumInternalFrames)].IntValue =
-                Defaults.MAXIMUM_INTERNAL_FRAMES;
+            
+            _Configuration["Graphics"][nameof(MinimumInternalFrames)].PreComment =
+                "Minimum number of frames internal systems will target to lapse during updates.";
+            _Configuration["Graphics"][nameof(MinimumInternalFrames)].Comment =
+                "Higher values decrease overall CPU stress (min 15, max 120).";
+            _Configuration["Graphics"][nameof(MinimumInternalFrames)].IntValue =
+                Defaults.MINIMUM_INTERNAL_FRAMES;
 
             _Configuration["Graphics"][nameof(MaximumFrameRateBufferSize)].PreComment =
                 "Maximum size of buffer for reporting average frame rate.";

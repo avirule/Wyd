@@ -20,7 +20,7 @@ namespace Controllers.UI.Components.Text
 
         private void Update()
         {
-            if (_SkippedFrames < SkipFrames)
+            if (_SkippedFrames <= SkipFrames)
             {
                 _SkippedFrames += 1;
                 return;

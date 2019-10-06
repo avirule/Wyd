@@ -224,9 +224,13 @@ namespace Game.World.Chunks
 
         private void QueueJob(Job job)
         {
-            Generating = true;
+            if (!GameController.Current.TryQueueJob(job, out _JobIdentity))
+            {
+                return;
+            }
+
             GameController.Current.JobFinished += OnJobQueueFinishedJob;
-            _JobIdentity = GameController.Current.QueueJob(job);
+            Generating = true;
         }
 
         /// <summary>

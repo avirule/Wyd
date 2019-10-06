@@ -40,22 +40,26 @@ namespace Controllers.State
 
         private void Start()
         {
-            JobExecutionQueue = new JobQueue(200);
+            JobExecutionQueue = new JobQueue(200, OptionsController.Current.ThreadingMode,
+                OptionsController.Current.CPUCoreUtilization);
+
+            JobExecutionQueue.WorkerCountChanged += (sender, count) =>
+                WorkerThreadCountChanged?.Invoke(sender, count);
+
             JobExecutionQueue.JobQueued += (sender, args) =>
                 JobCountChanged?.Invoke(sender, JobExecutionQueue.JobCount);
+
             JobExecutionQueue.JobStarted += (sender, args) =>
             {
                 JobCountChanged?.Invoke(sender, JobExecutionQueue.JobCount);
                 ActiveJobCountChanged?.Invoke(sender, JobExecutionQueue.ActiveJobCount);
             };
+
             JobExecutionQueue.JobFinished += (sender, args) =>
             {
+                JobFinished?.Invoke(sender, args);
                 JobCountChanged?.Invoke(sender, JobExecutionQueue.JobCount);
                 ActiveJobCountChanged?.Invoke(sender, JobExecutionQueue.ActiveJobCount);
-            };
-            JobExecutionQueue.WorkerCountChanged += (sender, count) =>
-            {
-                WorkerThreadCountChanged?.Invoke(sender, count);
             };
 
             OptionsController.Current.PropertyChanged += (sender, args) =>
@@ -69,9 +73,6 @@ namespace Controllers.State
                     JobExecutionQueue.ModifyWorkerThreadCount(OptionsController.Current.CPUCoreUtilization);
                 }
             };
-
-            JobExecutionQueue.JobFinished += (sender, args) => { JobFinished?.Invoke(sender, args); };
-            JobExecutionQueue.ModifyWorkerThreadCount(OptionsController.Current.CPUCoreUtilization);
 
             JobExecutionQueue.Start();
 
@@ -181,6 +182,6 @@ namespace Controllers.State
 #endif
         }
 
-        public object QueueJob(Job job) => JobExecutionQueue.QueueJob(job);
+        public bool TryQueueJob(Job job, out object identity) => JobExecutionQueue.TryQueueJob(job, out identity);
     }
 }

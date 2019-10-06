@@ -68,7 +68,11 @@ namespace Game.World.Chunks
 
         public void Update()
         {
-            if (!ProcessBlockActions())
+            if (_BlockActions.Count > 0)
+            {
+                ProcessBlockActions();
+            }
+            else
             {
                 _ChunkGenerationDispatcher.SynchronousContextUpdate();
             }
@@ -77,34 +81,27 @@ namespace Game.World.Chunks
         #endregion
 
 
-        private bool ProcessBlockActions()
+        private void ProcessBlockActions()
         {
-            if (_BlockActions.Count > 0)
+            while ((_BlockActions.Count > 0) && (_SafeFrameTime > TimeSpan.Zero))
             {
-                do
+                WorldController.Current.GetRemainingSafeFrameTime(out _SafeFrameTime);
+
+                BlockAction blockAction = _BlockActions.Pop();
+                _BlockActionLocalPositions.Remove(blockAction.LocalPosition);
+                int localPosition1d = blockAction.LocalPosition.To1D(Size);
+
+                if (localPosition1d < _Blocks.Length)
                 {
-                    WorldController.Current.GetRemainingSafeFrameTime(out _SafeFrameTime);
+                    _Blocks[localPosition1d].Initialise(blockAction.Id);
+                    RequestMeshUpdate();
+                    OnBlocksChanged(this,
+                        new ChunkChangedEventArgs(_Bounds,
+                            DetermineDirectionsForNeighborUpdate(blockAction.LocalPosition)));
+                }
 
-                    BlockAction blockAction = _BlockActions.Pop();
-                    _BlockActionLocalPositions.Remove(blockAction.LocalPosition);
-                    int localPosition1d = blockAction.LocalPosition.To1D(Size);
-
-                    if (localPosition1d < _Blocks.Length)
-                    {
-                        _Blocks[localPosition1d].Initialise(blockAction.Id);
-                        RequestMeshUpdate();
-                        OnBlocksChanged(this,
-                            new ChunkChangedEventArgs(_Bounds,
-                                DetermineDirectionsForNeighborUpdate(blockAction.LocalPosition)));
-                    }
-
-                    BlockActionsCache.CacheItem(ref blockAction);
-                } while ((_BlockActions.Count > 0) && (_SafeFrameTime > TimeSpan.Zero));
-
-                return true;
+                BlockActionsCache.CacheItem(ref blockAction);
             }
-
-            return false;
         }
 
         public void RequestMeshUpdate()

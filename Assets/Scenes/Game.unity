@@ -1457,27 +1457,32 @@ PrefabInstance:
     - target: {fileID: 3112263522298782410, guid: 3b5ae1844b32dde48a21f0f210183c1c,
         type: 3}
       propertyPath: m_textInfo.characterCount
-      value: 33
+      value: 40
       objectReference: {fileID: 0}
     - target: {fileID: 3112263522298782410, guid: 3b5ae1844b32dde48a21f0f210183c1c,
         type: 3}
       propertyPath: m_textInfo.spaceCount
-      value: 4
+      value: 5
       objectReference: {fileID: 0}
     - target: {fileID: 3112263522298782410, guid: 3b5ae1844b32dde48a21f0f210183c1c,
         type: 3}
       propertyPath: m_textInfo.wordCount
-      value: 8
+      value: 9
       objectReference: {fileID: 0}
     - target: {fileID: 3112263522298782410, guid: 3b5ae1844b32dde48a21f0f210183c1c,
         type: 3}
       propertyPath: m_textInfo.lineCount
-      value: 1
+      value: 2
       objectReference: {fileID: 0}
     - target: {fileID: 3112263522298782410, guid: 3b5ae1844b32dde48a21f0f210183c1c,
         type: 3}
       propertyPath: m_textInfo.pageCount
       value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 3112263522298782410, guid: 3b5ae1844b32dde48a21f0f210183c1c,
+        type: 3}
+      propertyPath: m_text
+      value: 'Chunk Regions Loaded: (q{0}, a{1}, c{2})'
       objectReference: {fileID: 0}
     - target: {fileID: 3112263521856651576, guid: 3b5ae1844b32dde48a21f0f210183c1c,
         type: 3}
@@ -2113,6 +2118,11 @@ PrefabInstance:
         type: 3}
       propertyPath: m_textInfo.pageCount
       value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 7311323860066771775, guid: 3b5ae1844b32dde48a21f0f210183c1c,
+        type: 3}
+      propertyPath: m_Name
+      value: ChunkRegionsLoaded
       objectReference: {fileID: 0}
     - target: {fileID: 2819606859925628228, guid: 3b5ae1844b32dde48a21f0f210183c1c,
         type: 3}
