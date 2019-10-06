@@ -34,6 +34,7 @@ namespace Controllers.World
         public string SeedString;
         public float TicksPerSecond;
 
+        public bool ReadyForGeneration => _BuildChunkAroundEntityStack.Count == 0;
         public int ChunkRegionsActiveCount => _ChunkRegions.Count;
         public int ChunkRegionsCachedCount => _ChunkCache.Size;
         public int ChunkRegionsQueuedForCreation => _BuildChunkAroundEntityStack.Count;

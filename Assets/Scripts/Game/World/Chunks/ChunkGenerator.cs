@@ -208,20 +208,22 @@ namespace Game.World.Chunks
 
             job.Set(_Bounds, ref _Blocks, true, _Meshed);
 
-            _MeshUpdateRequested = false;
-
-            QueueJob(job);
+            if (QueueJob(job))
+            {
+                _MeshUpdateRequested = false;
+            }
         }
 
-        private void QueueJob(Job job)
+        private bool QueueJob(Job job)
         {
             if (!GameController.Current.TryQueueJob(job, out _JobIdentity))
             {
-                return;
+                return false;
             }
 
             GameController.Current.JobFinished += OnJobQueueFinishedJob;
             Generating = true;
+            return true;
         }
 
         /// <summary>

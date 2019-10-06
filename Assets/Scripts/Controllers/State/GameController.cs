@@ -168,7 +168,7 @@ namespace Controllers.State
             BlockController.Current.RegisterBlockRules("water", Block.Types.Raw, true, false, false, false);
         }
 
-        public void QuitToMainMenu()
+        public static void QuitToMainMenu()
         {
             SceneManager.LoadSceneAsync("Scenes/MainMenu", LoadSceneMode.Single);
         }

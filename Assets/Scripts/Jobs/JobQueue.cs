@@ -44,11 +44,7 @@ namespace Jobs
         private int _WaitTimeout;
         private int _ActiveJobCount;
         private int _JobCount;
-
-        /// <summary>
-        ///     Total number of worker threads JobQueue is managing.
-        /// </summary>
-        public int WorkerThreadCount => _WorkerThreadCount;
+        private int _MaximumJobCount;
 
         /// <summary>
         ///     Determines whether the <see cref="JobQueue" /> executes <see cref="Job" />s on
@@ -56,7 +52,6 @@ namespace Jobs
         /// </summary>
         public ThreadingMode ThreadingMode { get; set; }
 
-        public int MaximumQueuedJobs { get; private set; }
 
         /// <summary>
         ///     Whether or not the <see cref="JobQueue" /> is currently executing incoming jobs.
@@ -80,8 +75,15 @@ namespace Jobs
             }
         }
 
+        /// <summary>
+        ///     Total number of worker threads JobQueue is managing.
+        /// </summary>
+        public int WorkerThreadCount => _WorkerThreadCount;
+
         public int JobCount => _JobCount;
         public int ActiveJobCount => _ActiveJobCount;
+        public int MaximumJobCount => _MaximumJobCount;
+
 
         /// <summary>
         ///     Initializes a new instance of <see cref="JobQueue" /> class.
@@ -92,13 +94,11 @@ namespace Jobs
         /// <param name="threadingMode"></param>
         /// <param name="threadPoolSize">Size of internal <see cref="JobWorker" /> pool</param>
         /// <param name="maximumQueuedJobs"></param>
-        public JobQueue(int waitTimeout, ThreadingMode threadingMode = ThreadingMode.Single, int threadPoolSize = 0,
-            int maximumQueuedJobs = 0)
+        public JobQueue(int waitTimeout, ThreadingMode threadingMode = ThreadingMode.Single, int threadPoolSize = 0)
         {
             WaitTimeout = waitTimeout;
             ThreadingMode = threadingMode;
             ModifyWorkerThreadCount(threadPoolSize);
-            MaximumQueuedJobs = maximumQueuedJobs;
 
             _OperationThread = new Thread(ProcessJobs);
             _ProcessQueue = new BlockingCollection<Job>();
@@ -130,6 +130,7 @@ namespace Jobs
         public void ModifyWorkerThreadCount(int modification)
         {
             Interlocked.Exchange(ref _WorkerThreadCount, Math.Max(modification, 1));
+            Interlocked.Exchange(ref _MaximumJobCount, _WorkerThreadCount * 5);
             OnWorkerCountChanged(this, WorkerThreadCount);
         }
 
@@ -168,7 +169,7 @@ namespace Jobs
 
             if (!Running
                 || _AbortToken.IsCancellationRequested
-                || ((MaximumQueuedJobs > 0) && (JobCount >= MaximumQueuedJobs)))
+                || ((MaximumJobCount > 0) && (JobCount >= MaximumJobCount)))
             {
                 return false;
             }

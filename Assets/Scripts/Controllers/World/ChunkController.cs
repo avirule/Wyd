@@ -146,7 +146,7 @@ namespace Controllers.World
             {
                 ProcessBlockActions();
             }
-            else
+            else if (WorldController.Current.ReadyForGeneration)
             {
                 _ChunkGenerator.SynchronousContextUpdate();
             }

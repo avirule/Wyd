@@ -14,7 +14,7 @@ namespace Controllers.UI.Components.Button
         {
             if (eventData.button == PointerEventData.InputButton.Left)
             {
-                GameController.Current.QuitToMainMenu();
+                GameController.QuitToMainMenu();
             }
         }
     }
