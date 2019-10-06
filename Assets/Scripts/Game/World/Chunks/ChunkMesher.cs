@@ -1,10 +1,12 @@
 #region
 
+using System.Collections.Generic;
 using System.Threading;
 using Controllers.State;
 using Controllers.World;
 using Game.World.Blocks;
 using UnityEngine;
+using UnityEngine.Rendering;
 
 // ReSharper disable TooWideLocalVariableScope
 
@@ -14,6 +16,11 @@ namespace Game.World.Chunks
 {
     public class ChunkMesher
     {
+        private readonly List<Vector3> _Vertices;
+        private readonly List<int> _Triangles;
+        private readonly List<int> _TransparentTriangles;
+        private readonly List<Vector3> _UVs;
+        
         private Bounds _Bounds;
         private Vector3 _Position;
         private Vector3Int _Size;
@@ -22,7 +29,6 @@ namespace Game.World.Chunks
         public CancellationToken AbortToken;
 
         public Block[] Blocks { get; set; }
-        public MeshData MeshData { get; set; }
         public bool AggressiveFaceMerging { get; set; }
 
         public Bounds Bounds
@@ -47,19 +53,28 @@ namespace Game.World.Chunks
         
         public ChunkMesher()
         {
+            _Vertices = _UVs = new List<Vector3>();
+            _Triangles = _TransparentTriangles = new List<int>();
         }
 
         public ChunkMesher(
-            Bounds bounds, Block[] blocks, ref MeshData meshData, Vector3Int size, bool aggressiveFaceMerging,
-            CancellationToken abortToken)
+            Bounds bounds, Block[] blocks, Vector3Int size, bool aggressiveFaceMerging,
+            CancellationToken abortToken) : this()
         {
             AbortToken = abortToken;
             Bounds = bounds;
             Blocks = blocks;
-            MeshData = meshData;
             Size = size;
             AggressiveFaceMerging = aggressiveFaceMerging;
             _Position = Bounds.min;
+        }
+
+        public void ClearInternalData()
+        {
+            _Vertices.Clear();
+            _Triangles.Clear();
+            _TransparentTriangles.Clear();
+            _UVs.Clear();
         }
 
         /// <summary>
@@ -69,33 +84,33 @@ namespace Game.World.Chunks
         /// <returns>Processed <see cref="UnityEngine.Mesh" />.</returns>
         public void SetMesh(ref Mesh mesh)
         {
-//            if ((_Vertices.Count == 0) || (_Triangles.Count == 0))
-//            {
-//                return;
-//            }
-//
-//            mesh.Clear();
-//
-//            mesh.subMeshCount = 2;
-//            mesh.indexFormat = _Vertices.Count > 65000
-//                ? IndexFormat.UInt32
-//                : IndexFormat.UInt16;
-//
-//            mesh.MarkDynamic();
-//            mesh.SetVertices(_Vertices);
-//            mesh.SetTriangles(_Triangles, 0);
-//            mesh.SetTriangles(_TransparentTriangles, 1);
-//
-//            // check uvs count in case of no UVs to apply to mesh
-//            if (_UVs.Count > 0)
-//            {
-//                mesh.SetUVs(0, _UVs);
-//            }
-//
-//            mesh.RecalculateNormals();
-//            mesh.RecalculateTangents();
-//
-//            //mesh.UploadMeshData(true);
+           if ((_Vertices.Count == 0) || (_Triangles.Count == 0))
+           {
+               return;
+           }
+
+           mesh.Clear();
+
+           mesh.subMeshCount = 2;
+           mesh.indexFormat = _Vertices.Count > 65000
+               ? IndexFormat.UInt32
+               : IndexFormat.UInt16;
+
+           mesh.MarkDynamic();
+           mesh.SetVertices(_Vertices);
+           mesh.SetTriangles(_Triangles, 0);
+           mesh.SetTriangles(_TransparentTriangles, 1);
+
+           // check uvs count in case of no UVs to apply to mesh
+           if (_UVs.Count > 0)
+           {
+               mesh.SetUVs(0, _UVs);
+           }
+
+           mesh.RecalculateNormals();
+           mesh.RecalculateTangents();
+
+           //mesh.UploadMeshData(true);
         }
 
         public void GenerateMesh()
@@ -155,10 +170,10 @@ namespace Game.World.Chunks
                         // on the same axis as your slice value.
                         // So for instance, we were traversing on the x, so we'll be extending the x point of our
                         // vertices by the number of successful traversals.
-                        MeshData.Vertices.Add(localPosition + new Vector3(0f, 0f, 1f));
-                        MeshData.Vertices.Add(localPosition + new Vector3(0f, 1f, 1f));
-                        MeshData.Vertices.Add(localPosition + new Vector3(traversals, 0f, 1f));
-                        MeshData.Vertices.Add(localPosition + new Vector3(traversals, 1f, 1f));
+                        _Vertices.Add(localPosition + new Vector3(0f, 0f, 1f));
+                        _Vertices.Add(localPosition + new Vector3(0f, 1f, 1f));
+                        _Vertices.Add(localPosition + new Vector3(traversals, 0f, 1f));
+                        _Vertices.Add(localPosition + new Vector3(traversals, 1f, 1f));
                         uvSize.x = traversals;
                     }
                     else
@@ -167,10 +182,10 @@ namespace Game.World.Chunks
                         traversals = GetTraversals(index, globalPosition, localPosition.y, Direction.North,
                             Direction.Up, _YIndexStep, Size.y, Blocks[index].Id);
 
-                        MeshData.Vertices.Add(localPosition + new Vector3(0f, 0f, 1f));
-                        MeshData.Vertices.Add(localPosition + new Vector3(0f, traversals, 1f));
-                        MeshData.Vertices.Add(localPosition + new Vector3(1f, 0f, 1f));
-                        MeshData.Vertices.Add(localPosition + new Vector3(1f, traversals, 1f));
+                        _Vertices.Add(localPosition + new Vector3(0f, 0f, 1f));
+                        _Vertices.Add(localPosition + new Vector3(0f, traversals, 1f));
+                        _Vertices.Add(localPosition + new Vector3(1f, 0f, 1f));
+                        _Vertices.Add(localPosition + new Vector3(1f, traversals, 1f));
                         uvSize.z = traversals;
                     }
                 }
@@ -184,10 +199,10 @@ namespace Game.World.Chunks
                 if (BlockController.Current.GetBlockSpriteUVs(Blocks[index].Id, globalPosition,
                     Direction.North, uvSize, out Vector3[] uvs))
                 {
-                    MeshData.UVs.Add(uvs[1]);
-                    MeshData.UVs.Add(uvs[3]);
-                    MeshData.UVs.Add(uvs[0]);
-                    MeshData.UVs.Add(uvs[2]);
+                    _UVs.Add(uvs[1]);
+                    _UVs.Add(uvs[3]);
+                    _UVs.Add(uvs[0]);
+                    _UVs.Add(uvs[2]);
                 }
             }
 
@@ -211,10 +226,10 @@ namespace Game.World.Chunks
 
                     if (traversals > 1)
                     {
-                        MeshData.Vertices.Add(localPosition + new Vector3(1f, 0f, 0f));
-                        MeshData.Vertices.Add(localPosition + new Vector3(1f, 0f, traversals));
-                        MeshData.Vertices.Add(localPosition + new Vector3(1f, 1f, 0f));
-                        MeshData.Vertices.Add(localPosition + new Vector3(1f, 1f, traversals));
+                        _Vertices.Add(localPosition + new Vector3(1f, 0f, 0f));
+                        _Vertices.Add(localPosition + new Vector3(1f, 0f, traversals));
+                        _Vertices.Add(localPosition + new Vector3(1f, 1f, 0f));
+                        _Vertices.Add(localPosition + new Vector3(1f, 1f, traversals));
                         uvSize.x = traversals;
                     }
                     else
@@ -222,10 +237,10 @@ namespace Game.World.Chunks
                         traversals = GetTraversals(index, globalPosition, localPosition.y, Direction.East, Direction.Up,
                             _YIndexStep, Size.y, Blocks[index].Id);
 
-                        MeshData.Vertices.Add(localPosition + new Vector3(1f, 0f, 0f));
-                        MeshData.Vertices.Add(localPosition + new Vector3(1f, 0f, 1f));
-                        MeshData.Vertices.Add(localPosition + new Vector3(1f, traversals, 0f));
-                        MeshData.Vertices.Add(localPosition + new Vector3(1f, traversals, 1f));
+                        _Vertices.Add(localPosition + new Vector3(1f, 0f, 0f));
+                        _Vertices.Add(localPosition + new Vector3(1f, 0f, 1f));
+                        _Vertices.Add(localPosition + new Vector3(1f, traversals, 0f));
+                        _Vertices.Add(localPosition + new Vector3(1f, traversals, 1f));
                         uvSize.z = traversals;
                     }
                 }
@@ -237,10 +252,10 @@ namespace Game.World.Chunks
                 if (BlockController.Current.GetBlockSpriteUVs(Blocks[index].Id, globalPosition,
                     Direction.East, uvSize, out Vector3[] uvs))
                 {
-                    MeshData.UVs.Add(uvs[0]);
-                    MeshData.UVs.Add(uvs[1]);
-                    MeshData.UVs.Add(uvs[2]);
-                    MeshData.UVs.Add(uvs[3]);
+                    _UVs.Add(uvs[0]);
+                    _UVs.Add(uvs[1]);
+                    _UVs.Add(uvs[2]);
+                    _UVs.Add(uvs[3]);
                 }
             }
 
@@ -265,10 +280,10 @@ namespace Game.World.Chunks
 
                     if (traversals > 1)
                     {
-                        MeshData.Vertices.Add(localPosition + new Vector3(0f, 0f, 0f));
-                        MeshData.Vertices.Add(localPosition + new Vector3(traversals, 0f, 0f));
-                        MeshData.Vertices.Add(localPosition + new Vector3(0f, 1f, 0f));
-                        MeshData.Vertices.Add(localPosition + new Vector3(traversals, 1f, 0f));
+                        _Vertices.Add(localPosition + new Vector3(0f, 0f, 0f));
+                        _Vertices.Add(localPosition + new Vector3(traversals, 0f, 0f));
+                        _Vertices.Add(localPosition + new Vector3(0f, 1f, 0f));
+                        _Vertices.Add(localPosition + new Vector3(traversals, 1f, 0f));
                         uvSize.x = traversals;
                     }
                     else
@@ -277,10 +292,10 @@ namespace Game.World.Chunks
                             Direction.Up,
                             _YIndexStep, Size.y, Blocks[index].Id);
 
-                        MeshData.Vertices.Add(localPosition + new Vector3(0f, 0f, 0f));
-                        MeshData.Vertices.Add(localPosition + new Vector3(1f, 0f, 0f));
-                        MeshData.Vertices.Add(localPosition + new Vector3(0f, traversals, 0f));
-                        MeshData.Vertices.Add(localPosition + new Vector3(1f, traversals, 0f));
+                        _Vertices.Add(localPosition + new Vector3(0f, 0f, 0f));
+                        _Vertices.Add(localPosition + new Vector3(1f, 0f, 0f));
+                        _Vertices.Add(localPosition + new Vector3(0f, traversals, 0f));
+                        _Vertices.Add(localPosition + new Vector3(1f, traversals, 0f));
                         uvSize.z = traversals;
                     }
                 }
@@ -292,10 +307,10 @@ namespace Game.World.Chunks
                 if (BlockController.Current.GetBlockSpriteUVs(Blocks[index].Id, globalPosition,
                     Direction.South, uvSize, out Vector3[] uvs))
                 {
-                    MeshData.UVs.Add(uvs[0]);
-                    MeshData.UVs.Add(uvs[1]);
-                    MeshData.UVs.Add(uvs[2]);
-                    MeshData.UVs.Add(uvs[3]);
+                    _UVs.Add(uvs[0]);
+                    _UVs.Add(uvs[1]);
+                    _UVs.Add(uvs[2]);
+                    _UVs.Add(uvs[3]);
                 }
             }
 
@@ -319,10 +334,10 @@ namespace Game.World.Chunks
 
                     if (traversals > 1)
                     {
-                        MeshData.Vertices.Add(localPosition + new Vector3(0f, 0f, 0f));
-                        MeshData.Vertices.Add(localPosition + new Vector3(0f, 1f, 0f));
-                        MeshData.Vertices.Add(localPosition + new Vector3(0f, 0f, traversals));
-                        MeshData.Vertices.Add(localPosition + new Vector3(0f, 1f, traversals));
+                        _Vertices.Add(localPosition + new Vector3(0f, 0f, 0f));
+                        _Vertices.Add(localPosition + new Vector3(0f, 1f, 0f));
+                        _Vertices.Add(localPosition + new Vector3(0f, 0f, traversals));
+                        _Vertices.Add(localPosition + new Vector3(0f, 1f, traversals));
                         uvSize.x = traversals;
                     }
                     else
@@ -330,10 +345,10 @@ namespace Game.World.Chunks
                         traversals = GetTraversals(index, globalPosition, localPosition.y, Direction.West, Direction.Up,
                             _YIndexStep, Size.y, Blocks[index].Id);
 
-                        MeshData.Vertices.Add(localPosition + new Vector3(0f, 0f, 0f));
-                        MeshData.Vertices.Add(localPosition + new Vector3(0f, traversals, 0f));
-                        MeshData.Vertices.Add(localPosition + new Vector3(0f, 0f, 1f));
-                        MeshData.Vertices.Add(localPosition + new Vector3(0f, traversals, 1f));
+                        _Vertices.Add(localPosition + new Vector3(0f, 0f, 0f));
+                        _Vertices.Add(localPosition + new Vector3(0f, traversals, 0f));
+                        _Vertices.Add(localPosition + new Vector3(0f, 0f, 1f));
+                        _Vertices.Add(localPosition + new Vector3(0f, traversals, 1f));
                         uvSize.z = traversals;
                     }
                 }
@@ -345,10 +360,10 @@ namespace Game.World.Chunks
                 if (BlockController.Current.GetBlockSpriteUVs(Blocks[index].Id, globalPosition,
                     Direction.West, uvSize, out Vector3[] uvs))
                 {
-                    MeshData.UVs.Add(uvs[1]);
-                    MeshData.UVs.Add(uvs[3]);
-                    MeshData.UVs.Add(uvs[0]);
-                    MeshData.UVs.Add(uvs[2]);
+                    _UVs.Add(uvs[1]);
+                    _UVs.Add(uvs[3]);
+                    _UVs.Add(uvs[0]);
+                    _UVs.Add(uvs[2]);
                 }
             }
 
@@ -372,10 +387,10 @@ namespace Game.World.Chunks
 
                     if (traversals > 1)
                     {
-                        MeshData.Vertices.Add(localPosition + new Vector3(0f, 1f, 0f));
-                        MeshData.Vertices.Add(localPosition + new Vector3(1f, 1f, 0f));
-                        MeshData.Vertices.Add(localPosition + new Vector3(0f, 1f, traversals));
-                        MeshData.Vertices.Add(localPosition + new Vector3(1f, 1f, traversals));
+                        _Vertices.Add(localPosition + new Vector3(0f, 1f, 0f));
+                        _Vertices.Add(localPosition + new Vector3(1f, 1f, 0f));
+                        _Vertices.Add(localPosition + new Vector3(0f, 1f, traversals));
+                        _Vertices.Add(localPosition + new Vector3(1f, 1f, traversals));
                         uvSize.x = traversals;
                     }
                     else
@@ -384,10 +399,10 @@ namespace Game.World.Chunks
                             1,
                             Size.x, Blocks[index].Id);
 
-                        MeshData.Vertices.Add(localPosition + new Vector3(0f, 1f, 0f));
-                        MeshData.Vertices.Add(localPosition + new Vector3(traversals, 1f, 0f));
-                        MeshData.Vertices.Add(localPosition + new Vector3(0f, 1f, 1f));
-                        MeshData.Vertices.Add(localPosition + new Vector3(traversals, 1f, 1f));
+                        _Vertices.Add(localPosition + new Vector3(0f, 1f, 0f));
+                        _Vertices.Add(localPosition + new Vector3(traversals, 1f, 0f));
+                        _Vertices.Add(localPosition + new Vector3(0f, 1f, 1f));
+                        _Vertices.Add(localPosition + new Vector3(traversals, 1f, 1f));
                         uvSize.z = traversals;
                     }
                 }
@@ -399,10 +414,10 @@ namespace Game.World.Chunks
                 if (BlockController.Current.GetBlockSpriteUVs(Blocks[index].Id, globalPosition,
                     Direction.Up, uvSize, out Vector3[] uvs))
                 {
-                    MeshData.UVs.Add(uvs[0]);
-                    MeshData.UVs.Add(uvs[2]);
-                    MeshData.UVs.Add(uvs[1]);
-                    MeshData.UVs.Add(uvs[3]);
+                    _UVs.Add(uvs[0]);
+                    _UVs.Add(uvs[2]);
+                    _UVs.Add(uvs[1]);
+                    _UVs.Add(uvs[3]);
                 }
             }
 
@@ -424,10 +439,10 @@ namespace Game.World.Chunks
 
                     if (traversals > 1)
                     {
-                        MeshData.Vertices.Add(localPosition + new Vector3(0f, 0f, 0f));
-                        MeshData.Vertices.Add(localPosition + new Vector3(0f, 0f, traversals));
-                        MeshData.Vertices.Add(localPosition + new Vector3(1f, 0f, 0f));
-                        MeshData.Vertices.Add(localPosition + new Vector3(1f, 0f, traversals));
+                        _Vertices.Add(localPosition + new Vector3(0f, 0f, 0f));
+                        _Vertices.Add(localPosition + new Vector3(0f, 0f, traversals));
+                        _Vertices.Add(localPosition + new Vector3(1f, 0f, 0f));
+                        _Vertices.Add(localPosition + new Vector3(1f, 0f, traversals));
                         uvSize.x = traversals;
                     }
                     else
@@ -436,10 +451,10 @@ namespace Game.World.Chunks
                             Direction.East, 1,
                             Size.x, Blocks[index].Id);
 
-                        MeshData.Vertices.Add(localPosition + new Vector3(0f, 0f, 0f));
-                        MeshData.Vertices.Add(localPosition + new Vector3(0f, 0f, 1f));
-                        MeshData.Vertices.Add(localPosition + new Vector3(traversals, 0f, 0f));
-                        MeshData.Vertices.Add(localPosition + new Vector3(traversals, 0f, 1f));
+                        _Vertices.Add(localPosition + new Vector3(0f, 0f, 0f));
+                        _Vertices.Add(localPosition + new Vector3(0f, 0f, 1f));
+                        _Vertices.Add(localPosition + new Vector3(traversals, 0f, 0f));
+                        _Vertices.Add(localPosition + new Vector3(traversals, 0f, 1f));
                         uvSize.z = traversals;
                     }
                 }
@@ -451,10 +466,10 @@ namespace Game.World.Chunks
                 if (BlockController.Current.GetBlockSpriteUVs(Blocks[index].Id, globalPosition,
                     Direction.Down, uvSize, out Vector3[] uvs))
                 {
-                    MeshData.UVs.Add(uvs[0]);
-                    MeshData.UVs.Add(uvs[1]);
-                    MeshData.UVs.Add(uvs[2]);
-                    MeshData.UVs.Add(uvs[3]);
+                    _UVs.Add(uvs[0]);
+                    _UVs.Add(uvs[1]);
+                    _UVs.Add(uvs[2]);
+                    _UVs.Add(uvs[3]);
                 }
             }
         }
@@ -493,10 +508,10 @@ namespace Game.World.Chunks
                         // on the same axis as your slice value.
                         // So for instance, we were traversing on the x, so we'll be extending the x point of our
                         // vertices by the number of successful traversals.
-                        MeshData.Vertices.Add(localPosition + new Vector3(0f, 0f, 1f));
-                        MeshData.Vertices.Add(localPosition + new Vector3(0f, 1f, 1f));
-                        MeshData.Vertices.Add(localPosition + new Vector3(traversals, 0f, 1f));
-                        MeshData.Vertices.Add(localPosition + new Vector3(traversals, 1f, 1f));
+                        _Vertices.Add(localPosition + new Vector3(0f, 0f, 1f));
+                        _Vertices.Add(localPosition + new Vector3(0f, 1f, 1f));
+                        _Vertices.Add(localPosition + new Vector3(traversals, 0f, 1f));
+                        _Vertices.Add(localPosition + new Vector3(traversals, 1f, 1f));
                         uvSize.x = traversals;
                     }
                     else
@@ -506,10 +521,10 @@ namespace Game.World.Chunks
                             Direction.Up,
                             _YIndexStep, Size.y);
 
-                        MeshData.Vertices.Add(localPosition + new Vector3(0f, 0f, 1f));
-                        MeshData.Vertices.Add(localPosition + new Vector3(0f, traversals, 1f));
-                        MeshData.Vertices.Add(localPosition + new Vector3(1f, 0f, 1f));
-                        MeshData.Vertices.Add(localPosition + new Vector3(1f, traversals, 1f));
+                        _Vertices.Add(localPosition + new Vector3(0f, 0f, 1f));
+                        _Vertices.Add(localPosition + new Vector3(0f, traversals, 1f));
+                        _Vertices.Add(localPosition + new Vector3(1f, 0f, 1f));
+                        _Vertices.Add(localPosition + new Vector3(1f, traversals, 1f));
                         uvSize.z = traversals;
                     }
                 }
@@ -523,10 +538,10 @@ namespace Game.World.Chunks
                 if (BlockController.Current.GetBlockSpriteUVs(Blocks[index].Id, globalPosition,
                     Direction.North, uvSize, out Vector3[] uvs))
                 {
-                    MeshData.UVs.Add(uvs[1]);
-                    MeshData.UVs.Add(uvs[3]);
-                    MeshData.UVs.Add(uvs[0]);
-                    MeshData.UVs.Add(uvs[2]);
+                    _UVs.Add(uvs[1]);
+                    _UVs.Add(uvs[3]);
+                    _UVs.Add(uvs[0]);
+                    _UVs.Add(uvs[2]);
                 }
             }
 
@@ -549,10 +564,10 @@ namespace Game.World.Chunks
 
                     if (traversals > 1)
                     {
-                        MeshData.Vertices.Add(localPosition + new Vector3(1f, 0f, 0f));
-                        MeshData.Vertices.Add(localPosition + new Vector3(1f, 0f, traversals));
-                        MeshData.Vertices.Add(localPosition + new Vector3(1f, 1f, 0f));
-                        MeshData.Vertices.Add(localPosition + new Vector3(1f, 1f, traversals));
+                        _Vertices.Add(localPosition + new Vector3(1f, 0f, 0f));
+                        _Vertices.Add(localPosition + new Vector3(1f, 0f, traversals));
+                        _Vertices.Add(localPosition + new Vector3(1f, 1f, 0f));
+                        _Vertices.Add(localPosition + new Vector3(1f, 1f, traversals));
                         uvSize.x = traversals;
                     }
                     else
@@ -560,10 +575,10 @@ namespace Game.World.Chunks
                         traversals = GetTraversals(index, globalPosition, localPosition.y, Direction.East, Direction.Up,
                             _YIndexStep, Size.y);
 
-                        MeshData.Vertices.Add(localPosition + new Vector3(1f, 0f, 0f));
-                        MeshData.Vertices.Add(localPosition + new Vector3(1f, 0f, 1f));
-                        MeshData.Vertices.Add(localPosition + new Vector3(1f, traversals, 0f));
-                        MeshData.Vertices.Add(localPosition + new Vector3(1f, traversals, 1f));
+                        _Vertices.Add(localPosition + new Vector3(1f, 0f, 0f));
+                        _Vertices.Add(localPosition + new Vector3(1f, 0f, 1f));
+                        _Vertices.Add(localPosition + new Vector3(1f, traversals, 0f));
+                        _Vertices.Add(localPosition + new Vector3(1f, traversals, 1f));
                         uvSize.z = traversals;
                     }
                 }
@@ -575,10 +590,10 @@ namespace Game.World.Chunks
                 if (BlockController.Current.GetBlockSpriteUVs(Blocks[index].Id, globalPosition,
                     Direction.East, uvSize, out Vector3[] uvs))
                 {
-                    MeshData.UVs.Add(uvs[0]);
-                    MeshData.UVs.Add(uvs[1]);
-                    MeshData.UVs.Add(uvs[2]);
-                    MeshData.UVs.Add(uvs[3]);
+                    _UVs.Add(uvs[0]);
+                    _UVs.Add(uvs[1]);
+                    _UVs.Add(uvs[2]);
+                    _UVs.Add(uvs[3]);
                 }
             }
 
@@ -602,10 +617,10 @@ namespace Game.World.Chunks
 
                     if (traversals > 1)
                     {
-                        MeshData.Vertices.Add(localPosition + new Vector3(0f, 0f, 0f));
-                        MeshData.Vertices.Add(localPosition + new Vector3(traversals, 0f, 0f));
-                        MeshData.Vertices.Add(localPosition + new Vector3(0f, 1f, 0f));
-                        MeshData.Vertices.Add(localPosition + new Vector3(traversals, 1f, 0f));
+                        _Vertices.Add(localPosition + new Vector3(0f, 0f, 0f));
+                        _Vertices.Add(localPosition + new Vector3(traversals, 0f, 0f));
+                        _Vertices.Add(localPosition + new Vector3(0f, 1f, 0f));
+                        _Vertices.Add(localPosition + new Vector3(traversals, 1f, 0f));
                         uvSize.x = traversals;
                     }
                     else
@@ -614,10 +629,10 @@ namespace Game.World.Chunks
                             Direction.Up,
                             _YIndexStep, Size.y);
 
-                        MeshData.Vertices.Add(localPosition + new Vector3(0f, 0f, 0f));
-                        MeshData.Vertices.Add(localPosition + new Vector3(1f, 0f, 0f));
-                        MeshData.Vertices.Add(localPosition + new Vector3(0f, traversals, 0f));
-                        MeshData.Vertices.Add(localPosition + new Vector3(1f, traversals, 0f));
+                        _Vertices.Add(localPosition + new Vector3(0f, 0f, 0f));
+                        _Vertices.Add(localPosition + new Vector3(1f, 0f, 0f));
+                        _Vertices.Add(localPosition + new Vector3(0f, traversals, 0f));
+                        _Vertices.Add(localPosition + new Vector3(1f, traversals, 0f));
                         uvSize.z = traversals;
                     }
                 }
@@ -629,10 +644,10 @@ namespace Game.World.Chunks
                 if (BlockController.Current.GetBlockSpriteUVs(Blocks[index].Id, globalPosition,
                     Direction.South, uvSize, out Vector3[] uvs))
                 {
-                    MeshData.UVs.Add(uvs[0]);
-                    MeshData.UVs.Add(uvs[1]);
-                    MeshData.UVs.Add(uvs[2]);
-                    MeshData.UVs.Add(uvs[3]);
+                    _UVs.Add(uvs[0]);
+                    _UVs.Add(uvs[1]);
+                    _UVs.Add(uvs[2]);
+                    _UVs.Add(uvs[3]);
                 }
             }
 
@@ -655,10 +670,10 @@ namespace Game.World.Chunks
 
                     if (traversals > 1)
                     {
-                        MeshData.Vertices.Add(localPosition + new Vector3(0f, 0f, 0f));
-                        MeshData.Vertices.Add(localPosition + new Vector3(0f, 1f, 0f));
-                        MeshData.Vertices.Add(localPosition + new Vector3(0f, 0f, traversals));
-                        MeshData.Vertices.Add(localPosition + new Vector3(0f, 1f, traversals));
+                        _Vertices.Add(localPosition + new Vector3(0f, 0f, 0f));
+                        _Vertices.Add(localPosition + new Vector3(0f, 1f, 0f));
+                        _Vertices.Add(localPosition + new Vector3(0f, 0f, traversals));
+                        _Vertices.Add(localPosition + new Vector3(0f, 1f, traversals));
                         uvSize.x = traversals;
                     }
                     else
@@ -666,10 +681,10 @@ namespace Game.World.Chunks
                         traversals = GetTraversals(index, globalPosition, localPosition.y, Direction.West, Direction.Up,
                             _YIndexStep, Size.y);
 
-                        MeshData.Vertices.Add(localPosition + new Vector3(0f, 0f, 0f));
-                        MeshData.Vertices.Add(localPosition + new Vector3(0f, traversals, 0f));
-                        MeshData.Vertices.Add(localPosition + new Vector3(0f, 0f, 1f));
-                        MeshData.Vertices.Add(localPosition + new Vector3(0f, traversals, 1f));
+                        _Vertices.Add(localPosition + new Vector3(0f, 0f, 0f));
+                        _Vertices.Add(localPosition + new Vector3(0f, traversals, 0f));
+                        _Vertices.Add(localPosition + new Vector3(0f, 0f, 1f));
+                        _Vertices.Add(localPosition + new Vector3(0f, traversals, 1f));
                         uvSize.z = traversals;
                     }
                 }
@@ -681,10 +696,10 @@ namespace Game.World.Chunks
                 if (BlockController.Current.GetBlockSpriteUVs(Blocks[index].Id, globalPosition,
                     Direction.West, uvSize, out Vector3[] uvs))
                 {
-                    MeshData.UVs.Add(uvs[1]);
-                    MeshData.UVs.Add(uvs[3]);
-                    MeshData.UVs.Add(uvs[0]);
-                    MeshData.UVs.Add(uvs[2]);
+                    _UVs.Add(uvs[1]);
+                    _UVs.Add(uvs[3]);
+                    _UVs.Add(uvs[0]);
+                    _UVs.Add(uvs[2]);
                 }
             }
 
@@ -708,10 +723,10 @@ namespace Game.World.Chunks
 
                     if (traversals > 1)
                     {
-                        MeshData.Vertices.Add(localPosition + new Vector3(0f, 1f, 0f));
-                        MeshData.Vertices.Add(localPosition + new Vector3(1f, 1f, 0f));
-                        MeshData.Vertices.Add(localPosition + new Vector3(0f, 1f, traversals));
-                        MeshData.Vertices.Add(localPosition + new Vector3(1f, 1f, traversals));
+                        _Vertices.Add(localPosition + new Vector3(0f, 1f, 0f));
+                        _Vertices.Add(localPosition + new Vector3(1f, 1f, 0f));
+                        _Vertices.Add(localPosition + new Vector3(0f, 1f, traversals));
+                        _Vertices.Add(localPosition + new Vector3(1f, 1f, traversals));
                         uvSize.x = traversals;
                     }
                     else
@@ -720,10 +735,10 @@ namespace Game.World.Chunks
                             1,
                             Size.x);
 
-                        MeshData.Vertices.Add(localPosition + new Vector3(0f, 1f, 0f));
-                        MeshData.Vertices.Add(localPosition + new Vector3(traversals, 1f, 0f));
-                        MeshData.Vertices.Add(localPosition + new Vector3(0f, 1f, 1f));
-                        MeshData.Vertices.Add(localPosition + new Vector3(traversals, 1f, 1f));
+                        _Vertices.Add(localPosition + new Vector3(0f, 1f, 0f));
+                        _Vertices.Add(localPosition + new Vector3(traversals, 1f, 0f));
+                        _Vertices.Add(localPosition + new Vector3(0f, 1f, 1f));
+                        _Vertices.Add(localPosition + new Vector3(traversals, 1f, 1f));
                         uvSize.z = traversals;
                     }
                 }
@@ -735,10 +750,10 @@ namespace Game.World.Chunks
                 if (BlockController.Current.GetBlockSpriteUVs(Blocks[index].Id, globalPosition,
                     Direction.Up, uvSize, out Vector3[] uvs))
                 {
-                    MeshData.UVs.Add(uvs[0]);
-                    MeshData.UVs.Add(uvs[2]);
-                    MeshData.UVs.Add(uvs[1]);
-                    MeshData.UVs.Add(uvs[3]);
+                    _UVs.Add(uvs[0]);
+                    _UVs.Add(uvs[2]);
+                    _UVs.Add(uvs[1]);
+                    _UVs.Add(uvs[3]);
                 }
             }
 
@@ -760,10 +775,10 @@ namespace Game.World.Chunks
 
                     if (traversals > 1)
                     {
-                        MeshData.Vertices.Add(localPosition + new Vector3(0f, 0f, 0f));
-                        MeshData.Vertices.Add(localPosition + new Vector3(0f, 0f, traversals));
-                        MeshData.Vertices.Add(localPosition + new Vector3(1f, 0f, 0f));
-                        MeshData.Vertices.Add(localPosition + new Vector3(1f, 0f, traversals));
+                        _Vertices.Add(localPosition + new Vector3(0f, 0f, 0f));
+                        _Vertices.Add(localPosition + new Vector3(0f, 0f, traversals));
+                        _Vertices.Add(localPosition + new Vector3(1f, 0f, 0f));
+                        _Vertices.Add(localPosition + new Vector3(1f, 0f, traversals));
                         uvSize.x = traversals;
                     }
                     else
@@ -772,10 +787,10 @@ namespace Game.World.Chunks
                             Direction.East, 1,
                             Size.x);
 
-                        MeshData.Vertices.Add(localPosition + new Vector3(0f, 0f, 0f));
-                        MeshData.Vertices.Add(localPosition + new Vector3(0f, 0f, 1f));
-                        MeshData.Vertices.Add(localPosition + new Vector3(traversals, 0f, 0f));
-                        MeshData.Vertices.Add(localPosition + new Vector3(traversals, 0f, 1f));
+                        _Vertices.Add(localPosition + new Vector3(0f, 0f, 0f));
+                        _Vertices.Add(localPosition + new Vector3(0f, 0f, 1f));
+                        _Vertices.Add(localPosition + new Vector3(traversals, 0f, 0f));
+                        _Vertices.Add(localPosition + new Vector3(traversals, 0f, 1f));
                         uvSize.z = traversals;
                     }
                 }
@@ -787,10 +802,10 @@ namespace Game.World.Chunks
                 if (BlockController.Current.GetBlockSpriteUVs(Blocks[index].Id, globalPosition,
                     Direction.Down, uvSize, out Vector3[] uvs))
                 {
-                    MeshData.UVs.Add(uvs[0]);
-                    MeshData.UVs.Add(uvs[1]);
-                    MeshData.UVs.Add(uvs[2]);
-                    MeshData.UVs.Add(uvs[3]);
+                    _UVs.Add(uvs[0]);
+                    _UVs.Add(uvs[1]);
+                    _UVs.Add(uvs[2]);
+                    _UVs.Add(uvs[3]);
                 }
             }
         }
@@ -801,11 +816,11 @@ namespace Game.World.Chunks
             {
                 if (transparent)
                 {
-                    MeshData.TransparentTriangles.Add(MeshData.Vertices.Count + triangleValue);
+                    _TransparentTriangles.Add(_Vertices.Count + triangleValue);
                 }
                 else
                 {
-                    MeshData.Triangles.Add(MeshData.Vertices.Count + triangleValue);
+                    _Triangles.Add(_Vertices.Count + triangleValue);
                 }
             }
         }
@@ -816,7 +831,7 @@ namespace Game.World.Chunks
 
             foreach (Vector3 vertex in vertices)
             {
-                MeshData.Vertices.Add(vertex + localPosition);
+                _Vertices.Add(vertex + localPosition);
             }
         }
 
@@ -830,6 +845,7 @@ namespace Game.World.Chunks
         /// <param name="faceDirection">Direction to check faces while traversing.</param>
         /// <param name="traversalFactor">Amount of indexes to move forwards for each successful traversal in given direction.</param>
         /// <param name="limitingSliceValue">Maximum amount of traversals in given traversal direction.</param>
+        /// <param name="id">Block ID of current block.</param>
         /// <returns><see cref="int" /> representing how many successful traversals were made in the given direction.</returns>
         private int GetTraversals(
             int index, Vector3 globalPosition, int slice, Direction faceDirection,

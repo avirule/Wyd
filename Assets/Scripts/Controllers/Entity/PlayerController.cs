@@ -265,15 +265,15 @@ namespace Controllers.Entity
 
         private void CheckChangedChunk()
         {
-            Vector3 chunkRegionPosition = Transform.position.RoundBy(ChunkRegionController.Size);
-            chunkRegionPosition.y = 0;
+            Vector3 chunkPosition = Transform.position.RoundBy(ChunkController.Size);
+            chunkPosition.y = 0;
 
-            if (chunkRegionPosition == CurrentChunk)
+            if (chunkPosition == CurrentChunk)
             {
                 return;
             }
 
-            CurrentChunk = chunkRegionPosition;
+            CurrentChunk = chunkPosition;
         }
 
         #endregion

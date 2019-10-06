@@ -47,7 +47,7 @@ namespace Game.World.Chunks
         private Bounds _Bounds;
         private Vector3 _Position;
         private Block[] _Blocks;
-        private MeshData _MeshData;
+        private Mesh _MeshData;
         private ComputeShader _NoiseShader;
         private Action _PendingAction;
         private object _JobIdentity;
@@ -61,7 +61,7 @@ namespace Game.World.Chunks
 
         public ChunkGenerationDispatcher() => _IsSet = false;
 
-        public void Set(Bounds bounds, Block[] blocks, ref MeshData meshData)
+        public void Set(Bounds bounds, Block[] blocks, ref Mesh mesh)
         {
             if (!_hasSetupTimeAggregators)
             {
@@ -76,15 +76,15 @@ namespace Game.World.Chunks
             _Bounds = bounds;
             _Position = _Bounds.min;
             _Blocks = blocks;
-            _MeshData = meshData;
+            _MeshData = mesh;
 
             if (_NoiseShader == default)
             {
                 _NoiseShader = Resources.Load<ComputeShader>(@"Graphics\Shaders\NoiseComputationShader");
                 _NoiseShader.SetInt("_NoiseSeed", WorldController.Current.Seed);
                 _NoiseShader.SetVector("_MaximumSize",
-                    new Vector4(ChunkRegionController.Size.x, ChunkRegionController.Size.y,
-                        ChunkRegionController.Size.z, 0f));
+                    new Vector4(ChunkController.Size.x, ChunkController.Size.y,
+                        ChunkController.Size.z, 0f));
             }
 
             _PendingAction = null;
@@ -137,8 +137,8 @@ namespace Game.World.Chunks
         }
 
         private GenerationStep AggregateChunkRegionGenerationStep() =>
-            WorldController.Current.TryGetChunkAt(_Position, out ChunkRegionController chunkRegionController)
-                ? chunkRegionController.AggregateGenerationStep
+            WorldController.Current.TryGetChunkAt(_Position, out ChunkController chunkController)
+                ? chunkController.AggregateGenerationStep
                 : GenerationStep.Complete;
 
         private void ExecuteStep(GenerationStep step)
@@ -171,14 +171,14 @@ namespace Game.World.Chunks
 
             if (OptionsController.Current.GPUAcceleration)
             {
-                ComputeBuffer noiseBuffer = new ComputeBuffer(ChunkRegionController.Size.Product(), 4);
+                ComputeBuffer noiseBuffer = new ComputeBuffer(ChunkController.Size.Product(), 4);
                 int kernel = _NoiseShader.FindKernel("CSMain");
                 _NoiseShader.SetVector("_Offset", _Position);
                 _NoiseShader.SetFloat("_Frequency", frequency);
                 _NoiseShader.SetFloat("_Persistence", persistence);
                 _NoiseShader.SetBuffer(kernel, "Result", noiseBuffer);
                 // 256 is the value set in the shader's [numthreads(--> 256 <--, 1, 1)]
-                _NoiseShader.Dispatch(kernel, ChunkRegionController.Size.Product() / 1024, 1, 1);
+                _NoiseShader.Dispatch(kernel, ChunkController.Size.Product() / 1024, 1, 1);
 
                 job.Set(_Bounds, _Blocks, frequency, persistence, OptionsController.Current.GPUAcceleration,
                     noiseBuffer);
@@ -210,7 +210,7 @@ namespace Game.World.Chunks
                 return;
             }
 
-            job.Set(_Bounds, _Blocks, ref _MeshData, true, _Meshed);
+            job.Set(_Bounds, _Blocks, true, _Meshed);
 
             _MeshUpdateRequested = false;
 

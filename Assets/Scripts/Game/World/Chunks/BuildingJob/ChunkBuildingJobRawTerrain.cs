@@ -73,7 +73,7 @@ namespace Game.World.Chunks.BuildingJob
 
             for (int index = Blocks.Length - 1; (index >= 0) && !AbortToken.IsCancellationRequested; index--)
             {
-                (position.x, position.y, position.z) = Mathv.GetIndexAs3D(index, ChunkRegionController.Size);
+                (position.x, position.y, position.z) = Mathv.GetIndexAs3D(index, ChunkController.Size);
 
                 if ((position.y < 4) && (position.y <= Rand.Next(0, 4)))
                 {
@@ -88,7 +88,7 @@ namespace Game.World.Chunks.BuildingJob
 
                     if (noiseValue >= 0.01f)
                     {
-                        int indexAbove = index + ChunkRegionController.YIndexStep;
+                        int indexAbove = index + ChunkController.YIndexStep;
 
 
                         if ((position.y > 135) && ((indexAbove > Blocks.Length) || Blocks[indexAbove].Transparent))
@@ -120,7 +120,7 @@ namespace Game.World.Chunks.BuildingJob
         {
             float noiseValue = OpenSimplex_FastNoise.GetSimplex(WorldController.Current.Seed, Frequency,
                 Bounds.min.x + pos3d.x, Bounds.min.y + pos3d.y, Bounds.min.z + pos3d.z);
-            noiseValue += 5f * (1f - Mathf.InverseLerp(0f, ChunkRegionController.Size.y, pos3d.y));
+            noiseValue += 5f * (1f - Mathf.InverseLerp(0f, ChunkController.Size.y, pos3d.y));
             noiseValue /= pos3d.y + (-1f * Persistence);
 
             return noiseValue;

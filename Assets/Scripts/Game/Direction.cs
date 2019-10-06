@@ -87,12 +87,12 @@ namespace Game
 
             DirectionsAsIndexStep = new Dictionary<Direction, int>
             {
-                { Direction.North, ChunkRegionController.Size.x },
+                { Direction.North, ChunkController.Size.x },
                 { Direction.East, 1 },
-                { Direction.South, -ChunkRegionController.Size.x },
+                { Direction.South, -ChunkController.Size.x },
                 { Direction.West, -1 },
-                { Direction.Up, ChunkRegionController.YIndexStep },
-                { Direction.Down, -ChunkRegionController.YIndexStep }
+                { Direction.Up, ChunkController.YIndexStep },
+                { Direction.Down, -ChunkController.YIndexStep }
             };
         }
 

@@ -14,11 +14,11 @@ namespace Controllers.UI.Components.Text
 
         private void Start()
         {
-            int chunkRegionsQueuedForCreation = WorldController.Current.ChunkRegionsQueuedForCreation;
-            int chunkRegionsActive = WorldController.Current.ChunkRegionsActiveCount;
-            int chunkRegionsCached = WorldController.Current.ChunkRegionsCachedCount;
+            int chunksQueuedForCreation = WorldController.Current.ChunkRegionsQueuedForCreation;
+            int chunksActive = WorldController.Current.ChunkRegionsActiveCount;
+            int chunksCached = WorldController.Current.ChunkRegionsCachedCount;
 
-            UpdateChunkRegionsLoadedText(chunkRegionsQueuedForCreation, chunkRegionsActive, chunkRegionsCached);
+            UpdateChunkRegionsLoadedText(chunksQueuedForCreation, chunksActive, chunksCached);
         }
 
         private void Update()
@@ -35,12 +35,12 @@ namespace Controllers.UI.Components.Text
             }
         }
 
-        private void UpdateChunkRegionsLoadedText(int chunkRegionsQueuedForCreation, int chunkRegionsActive,
-            int chunkRegionsCached)
+        private void UpdateChunkRegionsLoadedText(int chunksQueuedForCreation, int chunksActive,
+            int chunksCached)
         {
-            _LastQueuedForCreationCount = chunkRegionsQueuedForCreation;
-            _LastChunkRegionsActiveCount = chunkRegionsActive;
-            _LastChunkRegionsCachedCount = chunkRegionsCached;
+            _LastQueuedForCreationCount = chunksQueuedForCreation;
+            _LastChunkRegionsActiveCount = chunksActive;
+            _LastChunkRegionsCachedCount = chunksCached;
 
             TextObject.text = string.Format(Format,
                 _LastQueuedForCreationCount,

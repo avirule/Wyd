@@ -40,7 +40,7 @@ namespace Game.World.Chunks.BuildingJob
         {
             for (int i = 1; i < (maxSteps + 1); i++)
             {
-                int currentIndex = startIndex + (i * ChunkRegionController.YIndexStep);
+                int currentIndex = startIndex + (i * ChunkController.YIndexStep);
 
                 if (currentIndex > Blocks.Length)
                 {
@@ -64,7 +64,7 @@ namespace Game.World.Chunks.BuildingJob
                 {
                     for (int z = -radius; z < (radius + 1); z++)
                     {
-                        int index = (x, y, z).To1D(ChunkRegionController.Size);
+                        int index = (x, y, z).To1D(ChunkController.Size);
 
                         if ((index < Blocks.Length) && (Blocks[index].Id == soughtId))
                         {
