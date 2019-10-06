@@ -19,12 +19,12 @@ namespace Game.World.Blocks
             Ore
         }
 
-        private const int ID_MASK = 0b0000_0000_0000_0000_1111_1111_1111_1111;
+        private const int ID_MASK = 0b000_0000_0000_0000_1111_1111_1111_1111;
         private const int ID_PASS_BITSHIFT = 16;
-        private const byte SHIFTED_FACES_MASK = 0b0011_1111;
-        private const int FACES_MASK = 0b0000_0000_0011_1111_0000_0000_0000_0000;
+        private const int SHIFTED_FACES_MASK = 0b0011_1111;
+        private const int FACES_MASK = 0b000_0000_0011_1111_0000_0000_0000_0000;
         private const int FACES_PASS_BITSHIFT = 22;
-        private const int TRANSPARENCY_MASK = 0b_0000_0000_0100_0000_0000_0000_0000;
+        private const int TRANSPARENCY_MASK = 0b000_0000_0100_0000_0000_0000_0000_0000;
         private const int TRANSPARENCY_PASS_BITSHIFT = 23;
         private const int DAMAGE_MASK = 0b000_0111_1000_0000_0000_0000_0000_0000;
         private const int DAMAGE_PASS_BITSHIFT = 27;
@@ -78,7 +78,7 @@ namespace Game.World.Blocks
 
         public bool HasAnyFaces() => Faces > 0;
 
-        public bool HasAllFaces() => Faces == SHIFTED_FACES_MASK;
+        public bool HasAllFaces() => Faces >= SHIFTED_FACES_MASK;
 
         public bool HasFace(Direction direction) => (Faces & (byte) direction) > 0;
 

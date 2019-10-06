@@ -15,7 +15,7 @@ using UnityEngine;
 
 namespace Game.World.Chunks
 {
-    public class ChunkGenerationDispatcher
+    public class ChunkGenerator
     {
         [Flags]
         public enum GenerationStep : ushort
@@ -47,7 +47,7 @@ namespace Game.World.Chunks
         private Bounds _Bounds;
         private Vector3 _Position;
         private Block[] _Blocks;
-        private Mesh _MeshData;
+        private Mesh _Mesh;
         private ComputeShader _NoiseShader;
         private Action _PendingAction;
         private object _JobIdentity;
@@ -59,9 +59,9 @@ namespace Game.World.Chunks
         public GenerationStep CurrentStep { get; private set; }
         public bool Generating { get; private set; }
 
-        public ChunkGenerationDispatcher() => _IsSet = false;
+        public ChunkGenerator() => _IsSet = false;
 
-        public void Set(Bounds bounds, Block[] blocks, ref Mesh mesh)
+        public void Set(Bounds bounds, ref Block[] blocks, ref Mesh mesh)
         {
             if (!_hasSetupTimeAggregators)
             {
@@ -74,9 +74,10 @@ namespace Game.World.Chunks
             }
 
             _Bounds = bounds;
+            // cache value to avoid dll calls
             _Position = _Bounds.min;
             _Blocks = blocks;
-            _MeshData = mesh;
+            _Mesh = mesh;
 
             if (_NoiseShader == default)
             {
@@ -128,18 +129,13 @@ namespace Game.World.Chunks
 
             if (Generating
                 || (CurrentStep == GenerationStep.Complete)
-                || (AggregateChunkRegionGenerationStep() < CurrentStep))
+                || (WorldController.Current.AggregateNeighborsStep(_Position) < CurrentStep))
             {
                 return;
             }
 
             ExecuteStep(CurrentStep);
         }
-
-        private GenerationStep AggregateChunkRegionGenerationStep() =>
-            WorldController.Current.TryGetChunkAt(_Position, out ChunkController chunkController)
-                ? chunkController.AggregateGenerationStep
-                : GenerationStep.Complete;
 
         private void ExecuteStep(GenerationStep step)
         {
@@ -210,7 +206,7 @@ namespace Game.World.Chunks
                 return;
             }
 
-            job.Set(_Bounds, _Blocks, true, _Meshed);
+            job.Set(_Bounds, ref _Blocks, true, _Meshed);
 
             _MeshUpdateRequested = false;
 
@@ -251,7 +247,7 @@ namespace Game.World.Chunks
 
         private void ApplyMesh(ChunkMeshingJob job)
         {
-            job.SetMesh(ref _MeshData);
+            job.SetMesh(ref _Mesh);
         }
 
         #endregion

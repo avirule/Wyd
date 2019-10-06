@@ -12,8 +12,6 @@ namespace Controllers.State
     public class TextureController : SingletonController<TextureController>
     {
         public static int MainTexPropertyID => Shader.PropertyToID("_MainTex");
-        public Shader TerrainShader { get; private set; }
-        public Shader TransparentTerrainShader { get; private set; }
         public Texture2DArray TerrainTexture { get; private set; }
         private Dictionary<string, int> _TextureIDs;
 
@@ -22,7 +20,6 @@ namespace Controllers.State
             AssignCurrent(this);
 
             _TextureIDs = new Dictionary<string, int>();
-            TerrainShader = Resources.Load<Shader>(@"Graphics\Shaders\StandardTerrain");
         }
 
         private void Start()

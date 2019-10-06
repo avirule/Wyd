@@ -2,6 +2,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using Compression;
 using Controllers.State;
@@ -20,8 +21,8 @@ namespace Controllers.World
 {
     public class ChunkController : MonoBehaviour
     {
-        private static readonly ObjectCache<ChunkGenerationDispatcher> ChunkGenerationDispatcherCache =
-            new ObjectCache<ChunkGenerationDispatcher>(true);
+        private static readonly ObjectCache<ChunkGenerator> ChunkGeneratorsCache =
+            new ObjectCache<ChunkGenerator>(true);
 
         private static readonly ObjectCache<BlockAction> BlockActionsCache =
             new ObjectCache<BlockAction>(true, true, 1024);
@@ -39,18 +40,15 @@ namespace Controllers.World
         private Mesh _Mesh;
         private bool _Visible;
         private bool _RenderShadows;
-        private ChunkGenerationDispatcher _ChunkGenerationDispatcher;
+        private ChunkGenerator _ChunkGenerator;
         private Stack<BlockAction> _BlockActions;
         private HashSet<Vector3> _BlockActionLocalPositions;
-        private TimeSpan _SafeFrameTime; // this value changes often, try to don't set it
 
         public MeshFilter MeshFilter;
         public MeshRenderer MeshRenderer;
 
         public Vector3 Position => _Bounds.min;
-
-        public ChunkGenerationDispatcher.GenerationStep AggregateGenerationStep =>
-            _ChunkGenerationDispatcher.CurrentStep;
+        public ChunkGenerator.GenerationStep GenerationStep => _ChunkGenerator.CurrentStep;
 
         public bool RenderShadows
         {
@@ -106,7 +104,7 @@ namespace Controllers.World
 
             _Visible = MeshRenderer.enabled;
 
-            ConfigureDispatcher();
+            ConfigureGenerator();
 
             // todo implement chunk ticks
 //            double waitTime = TimeSpan
@@ -150,7 +148,7 @@ namespace Controllers.World
             }
             else
             {
-                _ChunkGenerationDispatcher.SynchronousContextUpdate();
+                _ChunkGenerator.SynchronousContextUpdate();
             }
         }
 
@@ -162,39 +160,37 @@ namespace Controllers.World
 
         #endregion
 
-        private void ConfigureDispatcher()
+        private void ConfigureGenerator()
         {
-            if (!ChunkGenerationDispatcherCache.TryRetrieveItem(out _ChunkGenerationDispatcher))
+            if (!ChunkGeneratorsCache.TryRetrieveItem(out _ChunkGenerator))
             {
                 EventLog.Logger.Log(LogLevel.Warn,
-                    $"Chunk at position {Position} unable to retrieve a ChunkGenerationDispatcher from cache. This is most likely a serious error.");
+                    $"Chunk at position {Position} unable to retrieve a {nameof(ChunkGenerator)} from cache. This is most likely a serious error.");
             }
 
-            _ChunkGenerationDispatcher.Set(_Bounds, _Blocks, ref _Mesh);
-            _ChunkGenerationDispatcher.BlocksChanged += OnBlocksChanged;
-            _ChunkGenerationDispatcher.MeshChanged += OnMeshChanged;
+            _ChunkGenerator.Set(_Bounds, ref _Blocks, ref _Mesh);
+            _ChunkGenerator.BlocksChanged += OnBlocksChanged;
+            _ChunkGenerator.MeshChanged += OnMeshChanged;
         }
 
 
-        private void CacheDispatcher()
+        private void CacheGenerator()
         {
-            _ChunkGenerationDispatcher.BlocksChanged -= OnBlocksChanged;
-            _ChunkGenerationDispatcher.MeshChanged -= OnMeshChanged;
-            _ChunkGenerationDispatcher.Unset();
-            ChunkGenerationDispatcherCache.CacheItem(ref _ChunkGenerationDispatcher);
+            _ChunkGenerator.BlocksChanged -= OnBlocksChanged;
+            _ChunkGenerator.MeshChanged -= OnMeshChanged;
+            _ChunkGenerator.Unset();
+            ChunkGeneratorsCache.CacheItem(ref _ChunkGenerator);
         }
 
         public void RequestMeshUpdate()
         {
-            _ChunkGenerationDispatcher.RequestMeshUpdate();
+            _ChunkGenerator.RequestMeshUpdate();
         }
 
         private void ProcessBlockActions()
         {
-            while ((_BlockActions.Count > 0) && (_SafeFrameTime > TimeSpan.Zero))
+            while ((_BlockActions.Count > 0) && WorldController.Current.IsInSafeFrameTime())
             {
-                WorldController.Current.GetRemainingSafeFrameTime(out _SafeFrameTime);
-
                 BlockAction blockAction = _BlockActions.Pop();
                 _BlockActionLocalPositions.Remove(blockAction.LocalPosition);
                 int localPosition1d = blockAction.LocalPosition.To1D(Size);
@@ -220,7 +216,7 @@ namespace Controllers.World
             _SelfTransform.position = position;
             UpdateBounds();
             _Visible = MeshRenderer.enabled;
-            ConfigureDispatcher();
+            ConfigureGenerator();
             gameObject.SetActive(true);
         }
 
@@ -239,10 +235,9 @@ namespace Controllers.World
 
             _BlockActions?.Clear();
             _BlockActionLocalPositions?.Clear();
-            _SafeFrameTime = TimeSpan.Zero;
             _Bounds = default;
 
-            CacheDispatcher();
+            CacheGenerator();
             StopAllCoroutines();
             gameObject.SetActive(false);
         }
@@ -333,7 +328,7 @@ namespace Controllers.World
             }
 
             Vector3 localPosition = globalPosition - Position;
-            _Blocks[localPosition.To1D(Size, true)].Initialise(BlockController.BLOCK_EMPTY_ID);
+            _Blocks[localPosition.To1D(Size, true)] = BlockController.Air;
             RequestMeshUpdate();
 
             OnBlocksChanged(this,
@@ -377,7 +372,8 @@ namespace Controllers.World
             _Bounds.SetMinMax(position, position + Size);
         }
 
-        private IEnumerable<Vector3> DetermineDirectionsForNeighborUpdate(Vector3 localPosition)
+        [SuppressMessage("ReSharper", "InconsistentNaming")]
+        private static IEnumerable<Vector3> DetermineDirectionsForNeighborUpdate(Vector3 localPosition)
         {
             // topleft & bottomright x computation value
             float tl_br_x = localPosition.x * Size.x;
@@ -480,7 +476,7 @@ namespace Controllers.World
                 }
             }
 
-            _ChunkGenerationDispatcher.SkipBuilding(true);
+            _ChunkGenerator.SkipBuilding(true);
         }
 
         public IEnumerable<RunLengthCompression.Node<ushort>> GetCompressedRaw() =>

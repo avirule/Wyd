@@ -6,7 +6,7 @@ using Controllers.World;
 
 namespace Controllers.UI.Components.Text
 {
-    public class ChunkRegionsLoadedTextController : FormattedTextController
+    public class ChunksLoadedTextController : FormattedTextController
     {
         private int _LastQueuedForCreationCount;
         private int _LastChunkRegionsActiveCount;

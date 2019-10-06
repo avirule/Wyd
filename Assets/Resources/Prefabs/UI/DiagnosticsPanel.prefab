@@ -200,6 +200,11 @@ PrefabInstance:
   m_Modification:
     m_TransformParent: {fileID: 5830996186003970320}
     m_Modifications:
+    - target: {fileID: 204954971320578263, guid: 522502ab0fcea204c846d784c30e0957,
+        type: 3}
+      propertyPath: m_Name
+      value: JobInfo
+      objectReference: {fileID: 0}
     - target: {fileID: 4886204102832702264, guid: 522502ab0fcea204c846d784c30e0957,
         type: 3}
       propertyPath: m_LocalPosition.x
@@ -305,20 +310,15 @@ PrefabInstance:
       propertyPath: m_Pivot.y
       value: 1
       objectReference: {fileID: 0}
-    - target: {fileID: 204954971320578263, guid: 522502ab0fcea204c846d784c30e0957,
-        type: 3}
-      propertyPath: m_Name
-      value: JobCount
-      objectReference: {fileID: 0}
     - target: {fileID: 5521364810674680098, guid: 522502ab0fcea204c846d784c30e0957,
         type: 3}
       propertyPath: m_textInfo.characterCount
-      value: 14
+      value: 24
       objectReference: {fileID: 0}
     - target: {fileID: 5521364810674680098, guid: 522502ab0fcea204c846d784c30e0957,
         type: 3}
       propertyPath: m_textInfo.wordCount
-      value: 3
+      value: 7
       objectReference: {fileID: 0}
     - target: {fileID: 5521364810674680098, guid: 522502ab0fcea204c846d784c30e0957,
         type: 3}
@@ -333,12 +333,12 @@ PrefabInstance:
     - target: {fileID: 5521364810674680098, guid: 522502ab0fcea204c846d784c30e0957,
         type: 3}
       propertyPath: m_text
-      value: 'Job Count: {0}'
+      value: 'Jobs: w{0}, (q{1}, a{2})'
       objectReference: {fileID: 0}
     - target: {fileID: 5521364810674680098, guid: 522502ab0fcea204c846d784c30e0957,
         type: 3}
       propertyPath: m_textInfo.spaceCount
-      value: 2
+      value: 3
       objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 522502ab0fcea204c846d784c30e0957, type: 3}
@@ -361,6 +361,11 @@ PrefabInstance:
   m_Modification:
     m_TransformParent: {fileID: 5830996186003970320}
     m_Modifications:
+    - target: {fileID: 204954971320578263, guid: 522502ab0fcea204c846d784c30e0957,
+        type: 3}
+      propertyPath: m_Name
+      value: PlayerPosition
+      objectReference: {fileID: 0}
     - target: {fileID: 4886204102832702264, guid: 522502ab0fcea204c846d784c30e0957,
         type: 3}
       propertyPath: m_LocalPosition.x
@@ -466,11 +471,6 @@ PrefabInstance:
       propertyPath: m_Pivot.y
       value: 1
       objectReference: {fileID: 0}
-    - target: {fileID: 204954971320578263, guid: 522502ab0fcea204c846d784c30e0957,
-        type: 3}
-      propertyPath: m_Name
-      value: PlayerPosition
-      objectReference: {fileID: 0}
     - target: {fileID: 5521364810674680098, guid: 522502ab0fcea204c846d784c30e0957,
         type: 3}
       propertyPath: m_textInfo.characterCount
@@ -522,6 +522,11 @@ PrefabInstance:
   m_Modification:
     m_TransformParent: {fileID: 5830996186003970320}
     m_Modifications:
+    - target: {fileID: 204954971320578263, guid: 522502ab0fcea204c846d784c30e0957,
+        type: 3}
+      propertyPath: m_Name
+      value: Version
+      objectReference: {fileID: 0}
     - target: {fileID: 4886204102832702264, guid: 522502ab0fcea204c846d784c30e0957,
         type: 3}
       propertyPath: m_LocalPosition.x
@@ -627,11 +632,6 @@ PrefabInstance:
       propertyPath: m_Pivot.y
       value: 1
       objectReference: {fileID: 0}
-    - target: {fileID: 204954971320578263, guid: 522502ab0fcea204c846d784c30e0957,
-        type: 3}
-      propertyPath: m_Name
-      value: Version
-      objectReference: {fileID: 0}
     - target: {fileID: 5521364810674680098, guid: 522502ab0fcea204c846d784c30e0957,
         type: 3}
       propertyPath: m_textInfo.characterCount
@@ -673,6 +673,11 @@ PrefabInstance:
   m_Modification:
     m_TransformParent: {fileID: 5830996186003970320}
     m_Modifications:
+    - target: {fileID: 204954971320578263, guid: 522502ab0fcea204c846d784c30e0957,
+        type: 3}
+      propertyPath: m_Name
+      value: PlayerChunkPosition
+      objectReference: {fileID: 0}
     - target: {fileID: 4886204102832702264, guid: 522502ab0fcea204c846d784c30e0957,
         type: 3}
       propertyPath: m_LocalPosition.x
@@ -778,11 +783,6 @@ PrefabInstance:
       propertyPath: m_Pivot.y
       value: 1
       objectReference: {fileID: 0}
-    - target: {fileID: 204954971320578263, guid: 522502ab0fcea204c846d784c30e0957,
-        type: 3}
-      propertyPath: m_Name
-      value: PlayerChunkPosition
-      objectReference: {fileID: 0}
     - target: {fileID: 5521364810674680098, guid: 522502ab0fcea204c846d784c30e0957,
         type: 3}
       propertyPath: m_textInfo.characterCount
@@ -834,6 +834,11 @@ PrefabInstance:
   m_Modification:
     m_TransformParent: {fileID: 5830996186003970320}
     m_Modifications:
+    - target: {fileID: 204954971320578263, guid: 522502ab0fcea204c846d784c30e0957,
+        type: 3}
+      propertyPath: m_Name
+      value: ChunkLoadTime
+      objectReference: {fileID: 0}
     - target: {fileID: 4886204102832702264, guid: 522502ab0fcea204c846d784c30e0957,
         type: 3}
       propertyPath: m_LocalPosition.x
@@ -884,11 +889,6 @@ PrefabInstance:
       propertyPath: m_SizeDelta.x
       value: -5
       objectReference: {fileID: 0}
-    - target: {fileID: 204954971320578263, guid: 522502ab0fcea204c846d784c30e0957,
-        type: 3}
-      propertyPath: m_Name
-      value: ChunkLoadTime
-      objectReference: {fileID: 0}
     - target: {fileID: 5521364810674680098, guid: 522502ab0fcea204c846d784c30e0957,
         type: 3}
       propertyPath: m_text
@@ -935,6 +935,11 @@ PrefabInstance:
   m_Modification:
     m_TransformParent: {fileID: 5830996186003970320}
     m_Modifications:
+    - target: {fileID: 204954971320578263, guid: 522502ab0fcea204c846d784c30e0957,
+        type: 3}
+      propertyPath: m_Name
+      value: FPS
+      objectReference: {fileID: 0}
     - target: {fileID: 4886204102832702264, guid: 522502ab0fcea204c846d784c30e0957,
         type: 3}
       propertyPath: m_LocalPosition.x
@@ -1010,11 +1015,6 @@ PrefabInstance:
       propertyPath: m_SizeDelta.x
       value: -5
       objectReference: {fileID: 0}
-    - target: {fileID: 204954971320578263, guid: 522502ab0fcea204c846d784c30e0957,
-        type: 3}
-      propertyPath: m_Name
-      value: FPS
-      objectReference: {fileID: 0}
     - target: {fileID: 5521364810674680098, guid: 522502ab0fcea204c846d784c30e0957,
         type: 3}
       propertyPath: m_text
@@ -1061,6 +1061,11 @@ PrefabInstance:
   m_Modification:
     m_TransformParent: {fileID: 5830996186003970320}
     m_Modifications:
+    - target: {fileID: 204954971320578263, guid: 522502ab0fcea204c846d784c30e0957,
+        type: 3}
+      propertyPath: m_Name
+      value: ChunksLoaded
+      objectReference: {fileID: 0}
     - target: {fileID: 4886204102832702264, guid: 522502ab0fcea204c846d784c30e0957,
         type: 3}
       propertyPath: m_LocalPosition.x
@@ -1136,11 +1141,6 @@ PrefabInstance:
       propertyPath: m_SizeDelta.x
       value: -5
       objectReference: {fileID: 0}
-    - target: {fileID: 204954971320578263, guid: 522502ab0fcea204c846d784c30e0957,
-        type: 3}
-      propertyPath: m_Name
-      value: ChunksLoaded
-      objectReference: {fileID: 0}
     - target: {fileID: 5521364810674680098, guid: 522502ab0fcea204c846d784c30e0957,
         type: 3}
       propertyPath: m_text
@@ -1187,6 +1187,11 @@ PrefabInstance:
   m_Modification:
     m_TransformParent: {fileID: 5830996186003970320}
     m_Modifications:
+    - target: {fileID: 204954971320578263, guid: 522502ab0fcea204c846d784c30e0957,
+        type: 3}
+      propertyPath: m_Name
+      value: UsedMemory
+      objectReference: {fileID: 0}
     - target: {fileID: 4886204102832702264, guid: 522502ab0fcea204c846d784c30e0957,
         type: 3}
       propertyPath: m_LocalPosition.x
@@ -1267,11 +1272,6 @@ PrefabInstance:
       propertyPath: m_SizeDelta.x
       value: -5
       objectReference: {fileID: 0}
-    - target: {fileID: 204954971320578263, guid: 522502ab0fcea204c846d784c30e0957,
-        type: 3}
-      propertyPath: m_Name
-      value: UsedMemory
-      objectReference: {fileID: 0}
     - target: {fileID: 5521364810674680098, guid: 522502ab0fcea204c846d784c30e0957,
         type: 3}
       propertyPath: m_text
@@ -1318,6 +1318,11 @@ PrefabInstance:
   m_Modification:
     m_TransformParent: {fileID: 5830996186003970320}
     m_Modifications:
+    - target: {fileID: 204954971320578263, guid: 522502ab0fcea204c846d784c30e0957,
+        type: 3}
+      propertyPath: m_Name
+      value: VSyncLevel
+      objectReference: {fileID: 0}
     - target: {fileID: 4886204102832702264, guid: 522502ab0fcea204c846d784c30e0957,
         type: 3}
       propertyPath: m_LocalPosition.x
@@ -1392,11 +1397,6 @@ PrefabInstance:
         type: 3}
       propertyPath: m_SizeDelta.x
       value: -240
-      objectReference: {fileID: 0}
-    - target: {fileID: 204954971320578263, guid: 522502ab0fcea204c846d784c30e0957,
-        type: 3}
-      propertyPath: m_Name
-      value: VSyncLevel
       objectReference: {fileID: 0}
     - target: {fileID: 5521364810674680098, guid: 522502ab0fcea204c846d784c30e0957,
         type: 3}

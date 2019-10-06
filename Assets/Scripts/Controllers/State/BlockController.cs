@@ -15,8 +15,6 @@ namespace Controllers.State
 {
     public class BlockController : SingletonController<BlockController>
     {
-        public const ushort BLOCK_EMPTY_ID = 0;
-
         public static Block Air;
 
         public Dictionary<string, ushort> BlockNameIds;
@@ -107,7 +105,7 @@ namespace Controllers.State
             {
                 EventLog.Logger.Log(LogLevel.Warn,
                     $"Failed to return block id for block `{blockName}`: block does not exist.");
-                return BLOCK_EMPTY_ID;
+                return Air.Id;
             }
 
             return blockId;

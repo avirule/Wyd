@@ -133,9 +133,7 @@ namespace Controllers.UI.Components.InputField
                                 EventLog.Logger.Log(LogLevel.Warn, $"Failed to get block at position: {position}");
                             }
 
-                            string blockName = block.Id == BlockController.BLOCK_EMPTY_ID
-                                ? "Air"
-                                : BlockController.Current.GetBlockName(block.Id);
+                            string blockName = BlockController.Current.GetBlockName(block.Id);
 
                             EventLog.Logger.Log(LogLevel.Info,
                                 $"Request for block at position {position} returned `{blockName}`.");

@@ -120,7 +120,7 @@ namespace Game
                         Vector3 trueCenterGlobalPosition = globalPosition + Mathv.Half;
 
                         if (!WorldController.Current.TryGetBlockAt(globalPosition, out Block block)
-                            || (block.Id == BlockController.BLOCK_EMPTY_ID)
+                            || (block.Id == BlockController.Air.Id)
                             || (!BlockController.Current.GetBlockRule(block.Id)?.Collideable ?? false))
                         {
                             if (_ColliderCubes.ContainsKey(trueCenterGlobalPosition))

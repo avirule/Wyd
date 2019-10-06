@@ -20,7 +20,7 @@ namespace Game.World.Chunks
         /// <param name="blocks">Pre-initialized and built <see cref="T:ushort[]" /> to iterate through.</param>
         /// <param name="aggressiveFaceMerging"></param>
         /// <param name="isRemesh"></param>
-        public void Set(Bounds bounds, Block[] blocks, bool aggressiveFaceMerging, bool isRemesh = false)
+        public void Set(Bounds bounds, ref Block[] blocks, bool aggressiveFaceMerging, bool isRemesh = false)
         {
             if (_Mesher == default)
             {

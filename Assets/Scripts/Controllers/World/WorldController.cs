@@ -61,7 +61,7 @@ namespace Controllers.World
 
         public bool IgnoreInternalFrameLimit;
         public bool StepIntoSelectedChunkStep;
-        public ChunkGenerationDispatcher.GenerationStep SelectedStep;
+        public ChunkGenerator.GenerationStep SelectedStep;
 
 #endif
 
@@ -416,32 +416,32 @@ namespace Controllers.World
                    && chunkController.TryRemoveBlockAt(globalPosition);
         }
 
-        public ChunkGenerationDispatcher.GenerationStep AggregateNeighborsStep(Vector3 position)
+        public ChunkGenerator.GenerationStep AggregateNeighborsStep(Vector3 position)
         {
-            ChunkGenerationDispatcher.GenerationStep generationStep = ChunkGenerationDispatcher.GenerationStep.Complete;
+            ChunkGenerator.GenerationStep generationStep = ChunkGenerator.GenerationStep.Complete;
 
             if (TryGetChunkAt(position + (Vector3.forward * ChunkController.Size.z),
                 out ChunkController northChunk))
             {
-                generationStep &= northChunk.AggregateGenerationStep;
+                generationStep &= northChunk.GenerationStep;
             }
 
             if (TryGetChunkAt(position + (Vector3.right * ChunkController.Size.x),
                 out ChunkController eastChunk))
             {
-                generationStep &= eastChunk.AggregateGenerationStep;
+                generationStep &= eastChunk.GenerationStep;
             }
 
             if (TryGetChunkAt(position + (Vector3.back * ChunkController.Size.z),
                 out ChunkController southChunk))
             {
-                generationStep &= southChunk.AggregateGenerationStep;
+                generationStep &= southChunk.GenerationStep;
             }
 
             if (TryGetChunkAt(position + (Vector3.left * ChunkController.Size.x),
                 out ChunkController westChunk))
             {
-                generationStep &= westChunk.AggregateGenerationStep;
+                generationStep &= westChunk.GenerationStep;
             }
 
             return generationStep;

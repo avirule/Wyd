@@ -20,7 +20,7 @@ namespace Game.World.Chunks
         private readonly List<int> _Triangles;
         private readonly List<int> _TransparentTriangles;
         private readonly List<Vector3> _UVs;
-        
+
         private Bounds _Bounds;
         private Vector3 _Position;
         private Vector3Int _Size;
@@ -40,7 +40,7 @@ namespace Game.World.Chunks
                 _Position = _Bounds.min;
             }
         }
-        
+
         public Vector3Int Size
         {
             get => _Size;
@@ -50,23 +50,11 @@ namespace Game.World.Chunks
                 _YIndexStep = _Size.x * _Size.z;
             }
         }
-        
+
         public ChunkMesher()
         {
             _Vertices = _UVs = new List<Vector3>();
             _Triangles = _TransparentTriangles = new List<int>();
-        }
-
-        public ChunkMesher(
-            Bounds bounds, Block[] blocks, Vector3Int size, bool aggressiveFaceMerging,
-            CancellationToken abortToken) : this()
-        {
-            AbortToken = abortToken;
-            Bounds = bounds;
-            Blocks = blocks;
-            Size = size;
-            AggressiveFaceMerging = aggressiveFaceMerging;
-            _Position = Bounds.min;
         }
 
         public void ClearInternalData()
@@ -82,42 +70,45 @@ namespace Game.World.Chunks
         /// </summary>
         /// <param name="mesh">Given <see cref="UnityEngine.Mesh" /> to apply processed data to.</param>
         /// <returns>Processed <see cref="UnityEngine.Mesh" />.</returns>
-        public void SetMesh(ref Mesh mesh)
+        public void SetMesh(ref Mesh mesh, bool immediateUpload = false, bool readOnlyData = false)
         {
-           if ((_Vertices.Count == 0) || (_Triangles.Count == 0))
-           {
-               return;
-           }
+            if ((_Vertices.Count == 0) || ((_Triangles.Count == 0) && (_TransparentTriangles.Count == 0)))
+            {
+                return;
+            }
 
-           mesh.Clear();
+            mesh.Clear();
 
-           mesh.subMeshCount = 2;
-           mesh.indexFormat = _Vertices.Count > 65000
-               ? IndexFormat.UInt32
-               : IndexFormat.UInt16;
+            mesh.subMeshCount = 2;
+            mesh.indexFormat = _Vertices.Count > 65000
+                ? IndexFormat.UInt32
+                : IndexFormat.UInt16;
 
-           mesh.MarkDynamic();
-           mesh.SetVertices(_Vertices);
-           mesh.SetTriangles(_Triangles, 0);
-           mesh.SetTriangles(_TransparentTriangles, 1);
+            mesh.MarkDynamic();
+            mesh.SetVertices(_Vertices);
+            mesh.SetTriangles(_Triangles, 0);
+            mesh.SetTriangles(_TransparentTriangles, 1);
 
-           // check uvs count in case of no UVs to apply to mesh
-           if (_UVs.Count > 0)
-           {
-               mesh.SetUVs(0, _UVs);
-           }
+            // check uvs count in case of no UVs to apply to mesh
+            if (_UVs.Count > 0)
+            {
+                mesh.SetUVs(0, _UVs);
+            }
 
-           mesh.RecalculateNormals();
-           mesh.RecalculateTangents();
+            mesh.RecalculateNormals();
+            mesh.RecalculateTangents();
 
-           //mesh.UploadMeshData(true);
+            if (immediateUpload)
+            {
+                mesh.UploadMeshData(readOnlyData);
+            }
         }
 
         public void GenerateMesh()
         {
             for (int index = 0; (index < Blocks.Length) && !AbortToken.IsCancellationRequested; index++)
             {
-                if (Blocks[index].Id == BlockController.BLOCK_EMPTY_ID)
+                if (Blocks[index].Id == BlockController.Air.Id)
                 {
                     continue;
                 }
@@ -161,8 +152,7 @@ namespace Game.World.Chunks
                 if (AggressiveFaceMerging)
                 {
                     traversals = GetTraversals(index, globalPosition, localPosition.x, Direction.North, Direction.East,
-                        1,
-                        Size.x, Blocks[index].Id);
+                        1, Size.x, Blocks[index].Id);
 
                     if (traversals > 1)
                     {
@@ -275,8 +265,7 @@ namespace Game.World.Chunks
                 if (AggressiveFaceMerging)
                 {
                     traversals = GetTraversals(index, globalPosition, localPosition.x, Direction.South, Direction.East,
-                        1,
-                        Size.x, Blocks[index].Id);
+                        1, Size.x, Blocks[index].Id);
 
                     if (traversals > 1)
                     {
@@ -396,8 +385,7 @@ namespace Game.World.Chunks
                     else
                     {
                         traversals = GetTraversals(index, globalPosition, localPosition.x, Direction.Up, Direction.East,
-                            1,
-                            Size.x, Blocks[index].Id);
+                            1, Size.x, Blocks[index].Id);
 
                         _Vertices.Add(localPosition + new Vector3(0f, 1f, 0f));
                         _Vertices.Add(localPosition + new Vector3(traversals, 1f, 0f));
@@ -448,8 +436,7 @@ namespace Game.World.Chunks
                     else
                     {
                         traversals = GetTraversals(index, globalPosition, localPosition.x, Direction.Down,
-                            Direction.East, 1,
-                            Size.x, Blocks[index].Id);
+                            Direction.East, 1, Size.x, Blocks[index].Id);
 
                         _Vertices.Add(localPosition + new Vector3(0f, 0f, 0f));
                         _Vertices.Add(localPosition + new Vector3(0f, 0f, 1f));
@@ -518,8 +505,7 @@ namespace Game.World.Chunks
                     {
                         // if traversal failed (no blocks found in probed direction) then look on next axis
                         traversals = GetTraversals(index, globalPosition, localPosition.y, Direction.North,
-                            Direction.Up,
-                            _YIndexStep, Size.y);
+                            Direction.Up, _YIndexStep, Size.y);
 
                         _Vertices.Add(localPosition + new Vector3(0f, 0f, 1f));
                         _Vertices.Add(localPosition + new Vector3(0f, traversals, 1f));
@@ -612,8 +598,7 @@ namespace Game.World.Chunks
                 if (AggressiveFaceMerging)
                 {
                     traversals = GetTraversals(index, globalPosition, localPosition.x, Direction.South, Direction.East,
-                        1,
-                        Size.x);
+                        1, Size.x);
 
                     if (traversals > 1)
                     {
@@ -626,8 +611,7 @@ namespace Game.World.Chunks
                     else
                     {
                         traversals = GetTraversals(index, globalPosition, localPosition.y, Direction.South,
-                            Direction.Up,
-                            _YIndexStep, Size.y);
+                            Direction.Up, _YIndexStep, Size.y);
 
                         _Vertices.Add(localPosition + new Vector3(0f, 0f, 0f));
                         _Vertices.Add(localPosition + new Vector3(1f, 0f, 0f));
@@ -732,8 +716,7 @@ namespace Game.World.Chunks
                     else
                     {
                         traversals = GetTraversals(index, globalPosition, localPosition.x, Direction.Up, Direction.East,
-                            1,
-                            Size.x);
+                            1, Size.x);
 
                         _Vertices.Add(localPosition + new Vector3(0f, 1f, 0f));
                         _Vertices.Add(localPosition + new Vector3(traversals, 1f, 0f));
@@ -784,8 +767,7 @@ namespace Game.World.Chunks
                     else
                     {
                         traversals = GetTraversals(index, globalPosition, localPosition.x, Direction.Down,
-                            Direction.East, 1,
-                            Size.x);
+                            Direction.East, 1, Size.x);
 
                         _Vertices.Add(localPosition + new Vector3(0f, 0f, 0f));
                         _Vertices.Add(localPosition + new Vector3(0f, 0f, 1f));

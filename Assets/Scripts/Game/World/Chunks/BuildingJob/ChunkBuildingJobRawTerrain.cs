@@ -90,7 +90,6 @@ namespace Game.World.Chunks.BuildingJob
                     {
                         int indexAbove = index + ChunkController.YIndexStep;
 
-
                         if ((position.y > 135) && ((indexAbove > Blocks.Length) || Blocks[indexAbove].Transparent))
                         {
                             Blocks[index].Initialise(blockIdGrass);

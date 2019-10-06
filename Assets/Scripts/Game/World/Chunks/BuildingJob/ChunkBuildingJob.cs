@@ -18,8 +18,6 @@ namespace Game.World.Chunks.BuildingJob
         protected static readonly ObjectCache<ChunkBuilderNoiseValues> NoiseValuesCache =
             new ObjectCache<ChunkBuilderNoiseValues>(true);
 
-        protected static OpenSimplex_FastNoise NoiseFunction;
-
         protected Random Rand;
         protected Bounds Bounds;
         protected Block[] Blocks;
@@ -98,7 +96,7 @@ namespace Game.World.Chunks.BuildingJob
                     break;
                 }
 
-                if (blocks[currentIndex].Id == BlockController.BLOCK_EMPTY_ID)
+                if (blocks[currentIndex].Id == BlockController.Air.Id)
                 {
                     continue;
                 }

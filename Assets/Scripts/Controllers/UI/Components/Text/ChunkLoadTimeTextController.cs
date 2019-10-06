@@ -50,14 +50,14 @@ namespace Controllers.UI.Components.Text
             double avgBuildTime = 0d;
             double avgMeshTime = 0d;
 
-            if ((ChunkGenerationDispatcher.BuildTimes != default) && (ChunkGenerationDispatcher.BuildTimes.Count > 0))
+            if ((ChunkGenerator.BuildTimes != default) && (ChunkGenerator.BuildTimes.Count > 0))
             {
-                avgBuildTime = ChunkGenerationDispatcher.BuildTimes.Average(timeSpan => timeSpan.TotalMilliseconds);
+                avgBuildTime = ChunkGenerator.BuildTimes.Average(timeSpan => timeSpan.TotalMilliseconds);
             }
 
-            if ((ChunkGenerationDispatcher.MeshTimes != default) && (ChunkGenerationDispatcher.MeshTimes.Count > 0))
+            if ((ChunkGenerator.MeshTimes != default) && (ChunkGenerator.MeshTimes.Count > 0))
             {
-                avgMeshTime = ChunkGenerationDispatcher.MeshTimes.Average(timeSpan => timeSpan.TotalMilliseconds);
+                avgMeshTime = ChunkGenerator.MeshTimes.Average(timeSpan => timeSpan.TotalMilliseconds);
             }
 
             return (avgBuildTime, avgMeshTime);
