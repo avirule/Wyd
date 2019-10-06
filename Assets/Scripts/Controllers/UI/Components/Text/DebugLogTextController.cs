@@ -1,10 +1,12 @@
 #region
 
+using System.Collections.Concurrent;
 using System.Linq;
 using System.Text;
 using NLog;
 using TMPro;
 using UnityEngine;
+using Wyd.Controllers.World;
 using Wyd.Logging.Targets;
 
 #endregion
@@ -13,10 +15,13 @@ namespace Wyd.Controllers.UI.Components.Text
 {
     public class DebugLogTextController : MonoBehaviour
     {
+        private ConcurrentQueue<string> _LogMessageQueue;
         private TextMeshProUGUI _DebugLogText;
 
         private void Awake()
         {
+            _LogMessageQueue = new ConcurrentQueue<string>();
+
             _DebugLogText = GetComponent<TextMeshProUGUI>();
             _DebugLogText.richText = true;
             _DebugLogText.text = string.Empty;
@@ -26,18 +31,16 @@ namespace Wyd.Controllers.UI.Components.Text
             InGameDebugLogTarget.EventLogged += OnEventLogged;
         }
 
-        private void CheckSetDebugEventsLogged()
+        private void Update()
         {
-            if ((InGameDebugLogTarget.DebugEntries == default) || (InGameDebugLogTarget.DebugEntries.Count <= 0))
-            {
-                return;
-            }
+            bool worldControllerInstanced = WorldController.Current != null;
 
-            // .ToList() to capture copy of list in case of threaded access
-            foreach (LogEventInfo logEventInfo in InGameDebugLogTarget.DebugEntries.Skip(
-                InGameDebugLogTarget.DebugEntries.Count - 30))
+            while ((_LogMessageQueue.Count > 0)
+                   && worldControllerInstanced
+                   && WorldController.Current.IsInSafeFrameTime())
             {
-                OnEventLogged(this, logEventInfo);
+                _LogMessageQueue.TryDequeue(out string result);
+                AppendDebugText(result);
             }
         }
 
@@ -74,7 +77,22 @@ namespace Wyd.Controllers.UI.Components.Text
                     $"<color={InGameDebugLogTarget.ERROR_COLOR}>[{timeStampFormatted}] {logEventInfo.Message}</color> ";
             }
 
-            AppendDebugText(finalText);
+            _LogMessageQueue.Enqueue(finalText);
+        }
+
+        private void CheckSetDebugEventsLogged()
+        {
+            if ((InGameDebugLogTarget.DebugEntries == default) || (InGameDebugLogTarget.DebugEntries.Count <= 0))
+            {
+                return;
+            }
+
+            // .ToList() to capture copy of list in case of threaded access
+            foreach (LogEventInfo logEventInfo in InGameDebugLogTarget.DebugEntries.Skip(
+                InGameDebugLogTarget.DebugEntries.Count - 30))
+            {
+                OnEventLogged(this, logEventInfo);
+            }
         }
     }
 }
