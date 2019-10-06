@@ -27,12 +27,12 @@ namespace Controllers.State
             Blocks = new List<IBlockRule>(byte.MaxValue);
 
             // default 'nothing' block
-            RegisterBlockRules("air", Block.Types.None, true, false, false, false);
+            ushort airId = RegisterBlockRules("air", Block.Types.None, true, false, false, false);
             Air = new Block();
+            Air.Initialise(airId);
         }
 
-        public int RegisterBlockRules(
-            string blockName, Block.Types type,
+        public ushort RegisterBlockRules(string blockName, Block.Types type,
             bool transparent, bool collideable, bool destroyable, bool collectible,
             Func<Vector3, Direction, string> uvsRule = default)
         {
@@ -46,7 +46,7 @@ namespace Controllers.State
             {
                 EventLog.Logger.Log(LogLevel.Error,
                     "BlockController has registered too many blocks and is out of valid block ids.");
-                return -1;
+                return ushort.MaxValue;
             }
 
             if (uvsRule == default)
@@ -64,8 +64,7 @@ namespace Controllers.State
             return assignedBlockId;
         }
 
-        public bool GetBlockSpriteUVs(
-            ushort blockId, Vector3 position, Direction direction, Vector3 size2d,
+        public bool GetBlockSpriteUVs(ushort blockId, Vector3 position, Direction direction, Vector3 size2d,
             out Vector3[] uvs)
         {
             uvs = null;

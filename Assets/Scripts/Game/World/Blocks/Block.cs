@@ -84,7 +84,7 @@ namespace Game.World.Blocks
 
         public void SetFace(Direction direction, bool boolean)
         {
-            Faces = Faces.SetBitByBoolWithMask((byte) direction, boolean);
+            Value = Value.SetBitByBoolWithMask((byte) direction << ID_PASS_BITSHIFT, boolean);
         }
 
         public void SetTransparency(bool transparent)
