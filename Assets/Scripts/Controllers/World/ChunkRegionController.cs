@@ -163,6 +163,7 @@ namespace Controllers.World
 
         private void BuildChunks()
         {
+            // todo job this
             for (int index = 0; index < ChunkSize.Product(); index++)
             {
                 Vector3Int position = Mathv.GetIndexAsVector3Int(index, ChunkSize) * Chunk.Size;

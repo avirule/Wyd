@@ -98,6 +98,8 @@ namespace Jobs
         /// <remarks>This event will not necessarily happen synchronously with the main thread.</remarks>
         public event JobFinishedEventHandler JobFinished;
 
+        public event WorkerCountChangedEventHandler WorkerCountChanged;
+
         /// <summary>
         ///     Initializes a new instance of <see cref="JobQueue" /> class.
         /// </summary>
@@ -136,6 +138,7 @@ namespace Jobs
         public void ModifyWorkerThreadCount(int modification)
         {
             Interlocked.Exchange(ref _WorkerThreads, Math.Max(modification, 1));
+            OnWorkerCountChanged(this, WorkerThreads);
         }
 
         #region STATE
@@ -325,6 +328,11 @@ namespace Jobs
             JobFinished?.Invoke(sender, args);
         }
 
+        private void OnWorkerCountChanged(object sender, int newCount)
+        {
+            WorkerCountChanged?.Invoke(sender, newCount);
+        }
+        
         #endregion
 
         #region DISPOSE
