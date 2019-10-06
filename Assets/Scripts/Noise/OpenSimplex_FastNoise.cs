@@ -8,7 +8,6 @@
 #else
 using FN_DECIMAL = System.Single;
 #endif
-using System;
 using System.Runtime.CompilerServices;
 
 #endregion

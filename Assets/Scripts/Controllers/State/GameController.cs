@@ -25,11 +25,11 @@ namespace Controllers.State
         public int JobCount => JobExecutionQueue.JobCount;
         public int ActiveJobCount => JobExecutionQueue.ActiveJobCount;
         public int WorkerThreadCount => JobExecutionQueue.WorkerThreadCount;
-        
+
         public event JobFinishedEventHandler JobFinished;
         public event EventHandler<int> JobCountChanged;
         public event EventHandler<int> ActiveJobCountChanged;
-        public event EventHandler<int> WorkerThreadCountChanged; 
+        public event EventHandler<int> WorkerThreadCountChanged;
 
         private void Awake()
         {

@@ -22,9 +22,9 @@ namespace Controllers.UI.Components.Text
         {
             if (_UpdateDiagInfo)
             {
-                TextObject.text = string.Format(Format, 
+                TextObject.text = string.Format(Format,
                     GameController.Current.JobCount,
-                    GameController.Current.ActiveJobCount, 
+                    GameController.Current.ActiveJobCount,
                     GameController.Current.WorkerThreadCount);
 
                 _UpdateDiagInfo = false;

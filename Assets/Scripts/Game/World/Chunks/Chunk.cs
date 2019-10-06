@@ -68,7 +68,7 @@ namespace Game.World.Chunks
 
         public void Update()
         {
-                if (!ProcessBlockActions())
+            if (!ProcessBlockActions())
             {
                 _ChunkGenerationDispatcher.SynchronousContextUpdate();
             }
