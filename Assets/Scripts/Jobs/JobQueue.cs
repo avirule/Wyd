@@ -63,18 +63,12 @@ namespace Jobs
             }
         }
 
-        public int JobCount
-        {
-            get => _JobCount;
-            private set
-            {
-                _JobCount = value;
-                JobCountChanged?.Invoke(this, _JobCount);
-            }
-        }
+        public int JobCount { get; private set; }
+        public int ActiveJobCount { get; private set; }
 
-        public event EventHandler<JobFinishedEventArgs> JobFinished;
-        public event EventHandler<int> JobCountChanged;
+        public event JobQueuedEventHandler JobQueued;
+        public event JobStartedEventHandler JobStarted;
+        public event JobFinishedEventHandler JobFinished;
 
         /// <summary>
         ///     Initializes a new instance of <see cref="JobQueue" /> class.
@@ -98,6 +92,10 @@ namespace Jobs
             _LastThreadIndexQueuedInto = -1;
 
             Running = false;
+
+            JobQueued += (sender, args) => { JobCount += 1; };
+            JobStarted += (sender, args) => { ActiveJobCount += 1; };
+            JobFinished += (sender, args) => { JobCount = ActiveJobCount -= 1; };
         }
 
         /// <summary>
@@ -123,6 +121,7 @@ namespace Jobs
         private void SpawnJobWorker()
         {
             JobWorker jobWorker = new JobWorker(WaitTimeout, _AbortToken);
+            jobWorker.JobStarted += OnJobStarted;
             jobWorker.JobFinished += OnJobFinished;
             jobWorker.Start();
             _Workers.Add(jobWorker);
@@ -225,8 +224,9 @@ namespace Jobs
 
         private async Task ExecuteJob(Job job)
         {
+            OnJobStarted(this, new JobEventArgs(job));
             await job.Execute();
-            OnJobFinished(this, new JobFinishedEventArgs(job));
+            OnJobFinished(this, new JobEventArgs(job));
         }
 
         /// <summary>
@@ -243,7 +243,7 @@ namespace Jobs
 
             job.Initialize(Guid.NewGuid().ToString(), _AbortToken);
             _ProcessQueue.Add(job, _AbortToken);
-            JobCount += 1;
+            OnJobQueued(this, new JobEventArgs(job));
 
             return job.Identity;
         }
@@ -253,9 +253,18 @@ namespace Jobs
             Interlocked.Exchange(ref _ThreadPoolSize, Math.Max(modification, 1));
         }
 
-        private void OnJobFinished(object sender, JobFinishedEventArgs args)
+        private void OnJobQueued(object sender, JobEventArgs args)
         {
-            JobCount -= 1;
+            JobQueued?.Invoke(sender, args);
+        }
+        
+        private void OnJobStarted(object sender, JobEventArgs args)
+        {
+            JobStarted?.Invoke(sender, args);
+        }
+        
+        private void OnJobFinished(object sender, JobEventArgs args)
+        {
             JobFinished?.Invoke(sender, args);
         }
 

@@ -265,7 +265,7 @@ namespace Game.World.Chunks
             MeshChanged?.Invoke(this, args);
         }
 
-        private void OnJobQueueFinishedJob(object sender, JobFinishedEventArgs args)
+        private void OnJobQueueFinishedJob(object sender, JobEventArgs args)
         {
             if (args.Job.Identity != _JobIdentity)
             {

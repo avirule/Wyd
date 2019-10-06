@@ -24,7 +24,7 @@ namespace Controllers.State
 
         public int JobCount => JobExecutionQueue.JobCount;
 
-        public event EventHandler<JobFinishedEventArgs> JobFinished;
+        public event EventHandler<JobEventArgs> JobFinished;
         public event EventHandler<int> JobCountChanged;
 
         private void Awake()
@@ -37,7 +37,8 @@ namespace Controllers.State
         private void Start()
         {
             JobExecutionQueue = new JobQueue(200);
-            JobExecutionQueue.JobCountChanged += (sender, i) => JobCountChanged?.Invoke(sender, i);
+            JobExecutionQueue.JobQueued += (sender, i) => JobCountChanged?.Invoke(sender, JobExecutionQueue.JobCount);
+            JobExecutionQueue.JobFinished += (sender, i) => JobCountChanged?.Invoke(sender, JobExecutionQueue.JobCount);
 
             OptionsController.Current.PropertyChanged += (sender, args) =>
             {

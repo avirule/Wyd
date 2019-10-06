@@ -20,7 +20,8 @@ namespace Jobs
         public bool Processing { get; private set; }
         public int ManagedThreadId => _Thread.ManagedThreadId;
 
-        public event EventHandler<JobFinishedEventArgs> JobFinished;
+        public event JobStartedEventHandler JobStarted;
+        public event JobFinishedEventHandler JobFinished;
 
         public JobWorker(int waitTimeout, CancellationToken abortToken)
         {
@@ -63,13 +64,19 @@ namespace Jobs
         {
             Processing = true;
 
+            OnJobStarted(this, new JobEventArgs(job));
             job.Execute();
-            OnJobFinished(this, new JobFinishedEventArgs(job));
+            OnJobFinished(this, new JobEventArgs(job));
 
             Processing = false;
         }
 
-        private void OnJobFinished(object sender, JobFinishedEventArgs args)
+        private void OnJobStarted(object sender, JobEventArgs args)
+        {
+            JobStarted?.Invoke(sender, args);
+        }
+
+        private void OnJobFinished(object sender, JobEventArgs args)
         {
             JobFinished?.Invoke(sender, args);
         }
