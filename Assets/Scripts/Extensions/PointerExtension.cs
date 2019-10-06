@@ -5,7 +5,7 @@ using UnityEngine.EventSystems;
 
 #endregion
 
-namespace Extensions
+namespace Wyd.Extensions
 {
     public static class PointerExtension
     {

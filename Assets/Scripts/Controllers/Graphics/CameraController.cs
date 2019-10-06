@@ -1,12 +1,12 @@
 #region
 
-using Controllers.Entity;
-using Controllers.State;
 using UnityEngine;
+using Wyd.Controllers.Entity;
+using Wyd.Controllers.State;
 
 #endregion
 
-namespace Controllers.Graphics
+namespace Wyd.Controllers.Graphics
 {
     public class CameraController : MonoBehaviour
     {

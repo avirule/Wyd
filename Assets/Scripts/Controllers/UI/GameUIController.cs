@@ -4,7 +4,7 @@ using UnityEngine;
 
 #endregion
 
-namespace Controllers.UI
+namespace Wyd.Controllers.UI
 {
     public class GameUIController : MonoBehaviour
     {

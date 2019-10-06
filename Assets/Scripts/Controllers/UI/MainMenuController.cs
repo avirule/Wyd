@@ -1,13 +1,13 @@
 ﻿#region
 
-using Controllers.State;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
+using Wyd.Controllers.State;
 
 #endregion
 
-namespace Controllers.UI
+namespace Wyd.Controllers.UI
 {
     public class MainMenuController : MonoBehaviour
     {

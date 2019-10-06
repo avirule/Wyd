@@ -1,4 +1,4 @@
-namespace Game.World.Blocks
+namespace Wyd.Game.World.Blocks
 {
     public interface IReadOnlyBlockRule
     {

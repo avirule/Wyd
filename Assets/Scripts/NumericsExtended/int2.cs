@@ -5,7 +5,7 @@ using System.Runtime.CompilerServices;
 
 #endregion
 
-namespace NumericsExtended
+namespace Wyd.NumericsExtended
 {
     public struct int2
     {

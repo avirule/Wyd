@@ -1,4 +1,4 @@
-namespace Jobs
+namespace Wyd.Jobs
 {
     public delegate void JobQueuedEventHandler(object sender, JobEventArgs args);
 

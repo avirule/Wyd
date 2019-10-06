@@ -2,12 +2,12 @@
 
 using System.Collections.Generic;
 using System.Linq;
-using Game;
 using UnityEngine;
+using Wyd.Game;
 
 #endregion
 
-namespace Controllers.World
+namespace Wyd.Controllers.World
 {
     [RequireComponent(typeof(MeshCollider))]
     public class CollisionLoaderController : MonoBehaviour

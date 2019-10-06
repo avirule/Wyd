@@ -4,7 +4,7 @@ using UnityEngine;
 
 #endregion
 
-namespace Graphics
+namespace Wyd.Graphics
 {
     public static class SpriteExtensions
     {

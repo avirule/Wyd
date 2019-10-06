@@ -1,13 +1,13 @@
 #region
 
-using Controllers.World;
-using Game.World.Blocks;
-using Jobs;
 using UnityEngine;
+using Wyd.Controllers.World;
+using Wyd.Game.World.Blocks;
+using Wyd.Jobs;
 
 #endregion
 
-namespace Game.World.Chunks
+namespace Wyd.Game.World.Chunks
 {
     public class ChunkMeshingJob : Job
     {

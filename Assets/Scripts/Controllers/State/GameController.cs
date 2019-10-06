@@ -2,19 +2,19 @@
 
 using System;
 using System.Threading;
-using Controllers.World;
-using Game;
-using Game.World.Blocks;
-using Jobs;
-using Logging.Targets;
 using NLog;
 using UnityEditor;
 using UnityEngine;
 using UnityEngine.SceneManagement;
+using Wyd.Controllers.World;
+using Wyd.Game;
+using Wyd.Game.World.Blocks;
+using Wyd.Jobs;
+using Wyd.Logging.Targets;
 
 #endregion
 
-namespace Controllers.State
+namespace Wyd.Controllers.State
 {
     public class GameController : SingletonController<GameController>
     {

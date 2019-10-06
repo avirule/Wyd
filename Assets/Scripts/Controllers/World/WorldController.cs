@@ -3,22 +3,22 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
-using Controllers.State;
-using Game;
-using Game.Entities;
-using Game.World;
-using Game.World.Blocks;
-using Game.World.Chunks;
-using Logging;
 using NLog;
 using UnityEngine;
 using UnityEngine.SceneManagement;
+using Wyd.Controllers.State;
+using Wyd.Game;
+using Wyd.Game.Entities;
+using Wyd.Game.World;
+using Wyd.Game.World.Blocks;
+using Wyd.Game.World.Chunks;
+using Wyd.Logging;
 
 // ReSharper disable UnusedAutoPropertyAccessor.Global
 
 #endregion
 
-namespace Controllers.World
+namespace Wyd.Controllers.World
 {
     public class WorldController : SingletonController<WorldController>
     {
@@ -135,7 +135,7 @@ namespace Controllers.World
         {
             if (TicksPerSecond < 1)
             {
-                EventLog.Logger.Log(LogLevel.Error,
+                EventLogger.Log(LogLevel.Error,
                     "World tick rate cannot be set to less than 1tick/s. Exiting game.");
                 GameController.ApplicationClose();
                 return;

@@ -4,7 +4,7 @@ using System;
 
 #endregion
 
-namespace Game.Entities.Inventory
+namespace Wyd.Game.Entities.Inventory
 {
     public class ItemStack
     {

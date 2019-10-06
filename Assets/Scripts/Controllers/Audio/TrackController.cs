@@ -1,12 +1,12 @@
 ﻿#region
 
 using System.Collections;
-using Audio;
 using UnityEngine;
+using Wyd.Audio;
 
 #endregion
 
-namespace Controllers.Audio
+namespace Wyd.Controllers.Audio
 {
     public enum TrackControllerDomain
     {

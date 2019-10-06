@@ -1,11 +1,11 @@
 #region
 
-using Controllers.Entity;
 using UnityEngine;
+using Wyd.Controllers.Entity;
 
 #endregion
 
-namespace Controllers.UI.Components.Text
+namespace Wyd.Controllers.UI.Components.Text
 {
     public class PlayerChunkPositionTextController : FormattedTextController
     {

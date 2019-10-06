@@ -1,10 +1,10 @@
 #region
 
-using Controllers.World;
+using Wyd.Controllers.World;
 
 #endregion
 
-namespace Controllers.UI.Components.Text
+namespace Wyd.Controllers.UI.Components.Text
 {
     public class ChunksLoadedTextController : FormattedTextController
     {

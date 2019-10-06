@@ -1,10 +1,10 @@
 #region
 
-using Controllers.State;
+using Wyd.Controllers.State;
 
 #endregion
 
-namespace Controllers.UI.Components.Text
+namespace Wyd.Controllers.UI.Components.Text
 {
     public class GameStateJobInfoTextController : FormattedTextController
     {

@@ -1,14 +1,14 @@
 #region
 
 using System;
-using Controllers.State;
-using Graphics;
 using UnityEngine;
 using UnityEngine.EventSystems;
+using Wyd.Controllers.State;
+using Wyd.Graphics;
 
 #endregion
 
-namespace Controllers.UI.Components.Button
+namespace Wyd.Controllers.UI.Components.Button
 {
     public class WindowModeButtonController : MonoBehaviour, IPointerClickHandler
     {

@@ -5,7 +5,7 @@ using UnityEngine;
 
 #endregion
 
-namespace Game.World.Chunks
+namespace Wyd.Game.World.Chunks
 {
     public class ChunkChangedEventArgs
     {

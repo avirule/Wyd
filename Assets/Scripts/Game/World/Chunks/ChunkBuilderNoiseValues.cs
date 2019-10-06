@@ -1,10 +1,10 @@
 #region
 
-using Controllers.World;
+using Wyd.Controllers.World;
 
 #endregion
 
-namespace Game.World.Chunks
+namespace Wyd.Game.World.Chunks
 {
     public class ChunkBuilderNoiseValues
     {

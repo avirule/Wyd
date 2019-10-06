@@ -8,7 +8,7 @@ using System.Threading;
 
 #endregion
 
-namespace Collections
+namespace Wyd.Collections
 {
     public class FixedConcurrentQueue<T> : IProducerConsumerCollection<T>, IReadOnlyCollection<T>
     {

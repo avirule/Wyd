@@ -2,18 +2,18 @@
 
 using System;
 using System.Linq;
-using Collections;
-using Controllers.State;
-using Controllers.World;
-using Extensions;
-using Game.World.Blocks;
-using Game.World.Chunks.BuildingJob;
-using Jobs;
 using UnityEngine;
+using Wyd.Collections;
+using Wyd.Controllers.State;
+using Wyd.Controllers.World;
+using Wyd.Extensions;
+using Wyd.Game.World.Blocks;
+using Wyd.Game.World.Chunks.BuildingJob;
+using Wyd.Jobs;
 
 #endregion
 
-namespace Game.World.Chunks
+namespace Wyd.Game.World.Chunks
 {
     public class ChunkGenerator
     {

@@ -10,7 +10,7 @@ using Random = System.Random;
 // ReSharper disable MemberCanBePrivate.Global
 // ReSharper disable PrivateFieldCanBeConvertedToLocalVariable
 
-namespace Game.World
+namespace Wyd.Game.World
 {
     public class WorldSeed
     {

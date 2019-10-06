@@ -1,14 +1,14 @@
 #region
 
 using System;
-using Controllers.State;
-using Jobs;
 using UnityEngine;
 using UnityEngine.EventSystems;
+using Wyd.Controllers.State;
+using Wyd.Jobs;
 
 #endregion
 
-namespace Controllers.UI.Components.Button
+namespace Wyd.Controllers.UI.Components.Button
 {
     public class ThreadingModeButtonController : MonoBehaviour, IPointerClickHandler
     {

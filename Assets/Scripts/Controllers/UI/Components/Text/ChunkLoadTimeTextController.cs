@@ -2,11 +2,11 @@
 
 using System;
 using System.Linq;
-using Game.World.Chunks;
+using Wyd.Game.World.Chunks;
 
 #endregion
 
-namespace Controllers.UI.Components.Text
+namespace Wyd.Controllers.UI.Components.Text
 {
     public class ChunkLoadTimeTextController : FormattedTextController
     {

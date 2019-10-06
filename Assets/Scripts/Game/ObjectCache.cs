@@ -5,7 +5,7 @@ using System.Collections.Concurrent;
 
 #endregion
 
-namespace Game
+namespace Wyd.Game
 {
     public delegate ref T PreCachingOperation<T>(ref T item);
 

@@ -4,7 +4,7 @@ using System;
 
 #endregion
 
-namespace Jobs
+namespace Wyd.Jobs
 {
     public class JobEventArgs : EventArgs
     {

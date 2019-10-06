@@ -1,13 +1,13 @@
 #region
 
-using Controllers.State;
-using Controllers.World;
-using Game.World.Blocks;
 using UnityEngine;
+using Wyd.Controllers.State;
+using Wyd.Controllers.World;
+using Wyd.Game.World.Blocks;
 
 #endregion
 
-namespace Game.World.Chunks.BuildingJob
+namespace Wyd.Game.World.Chunks.BuildingJob
 {
     public class ChunkBuildingJobAccents : ChunkBuildingJob
     {

@@ -6,7 +6,7 @@ using UnityEngine.Profiling;
 
 #endregion
 
-namespace Controllers.UI.Components.Text
+namespace Wyd.Controllers.UI.Components.Text
 {
     public class UsedMemoryTextController : FormattedTextController
     {

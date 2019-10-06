@@ -4,7 +4,7 @@ using UnityEngine;
 
 #endregion
 
-namespace Controllers.UI.Components.Button
+namespace Wyd.Controllers.UI.Components.Button
 {
     public class OptionsButtonController : MonoBehaviour
     {

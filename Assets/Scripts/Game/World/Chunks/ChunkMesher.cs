@@ -2,17 +2,17 @@
 
 using System.Collections.Generic;
 using System.Threading;
-using Controllers.State;
-using Controllers.World;
-using Game.World.Blocks;
 using UnityEngine;
 using UnityEngine.Rendering;
+using Wyd.Controllers.State;
+using Wyd.Controllers.World;
+using Wyd.Game.World.Blocks;
 
 // ReSharper disable TooWideLocalVariableScope
 
 #endregion
 
-namespace Game.World.Chunks
+namespace Wyd.Game.World.Chunks
 {
     public class ChunkMesher
     {

@@ -1,12 +1,12 @@
 #region
 
 using System.ComponentModel;
-using Controllers.State;
-using Graphics;
+using Wyd.Controllers.State;
+using Wyd.Graphics;
 
 #endregion
 
-namespace Controllers.UI.Components.Text
+namespace Wyd.Controllers.UI.Components.Text
 {
     public class WindowModeTextController : OptionDisplayTextController
     {

@@ -1,11 +1,11 @@
 #region
 
-using Controllers.State;
 using UnityEngine;
+using Wyd.Controllers.State;
 
 #endregion
 
-namespace Controllers.UI.Diagnostics
+namespace Wyd.Controllers.UI.Diagnostics
 {
     public class DiagnosticsController : MonoBehaviour
     {

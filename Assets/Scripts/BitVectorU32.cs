@@ -4,52 +4,55 @@ using System;
 
 #endregion
 
-public struct BitVectorU32
+namespace Wyd
 {
-    public struct Section
+    public struct BitVectorU32
     {
-        public readonly uint Mask;
-        public readonly byte Offset;
-        public readonly uint Overflow;
-
-        public Section(uint mask, byte offset, uint overflow)
+        public struct Section
         {
-            if (offset > 32)
+            public readonly uint Mask;
+            public readonly byte Offset;
+            public readonly uint Overflow;
+
+            public Section(uint mask, byte offset, uint overflow)
             {
-                offset = 32;
+                if (offset > 32)
+                {
+                    offset = 32;
+                }
+
+                (Mask, Offset, Overflow) = (mask, offset, overflow);
+            }
+        }
+
+        public uint Data;
+
+        public uint this[Section section]
+        {
+            get => (Data >> section.Offset) & section.Mask;
+            set => Data |= (value << section.Offset) & section.Mask;
+        }
+
+        public Section CreateSection(uint maxValue, byte offset = 0)
+        {
+            if (maxValue < 1)
+            {
+                throw new ArgumentException("Argument must be >=1.", nameof(maxValue));
             }
 
-            (Mask, Offset, Overflow) = (mask, offset, overflow);
-        }
-    }
 
-    public uint Data;
+            if (offset > 31)
+            {
+                throw new ArgumentException("Argument must be <=31", nameof(offset));
+            }
 
-    public uint this[Section section]
-    {
-        get => (Data >> section.Offset) & section.Mask;
-        set => Data |= (value << section.Offset) & section.Mask;
-    }
+            // did this the dumb way
+            int remainingShift = 32 - maxValue.MostSigBitDigit();
+            uint finalMask = (uint.MaxValue << remainingShift) >> (remainingShift + offset);
 
-    public Section CreateSection(uint maxValue, byte offset = 0)
-    {
-        if (maxValue < 1)
-        {
-            throw new ArgumentException("Argument must be >=1.", nameof(maxValue));
+            return new Section(finalMask, offset, finalMask - maxValue);
         }
 
-
-        if (offset > 31)
-        {
-            throw new ArgumentException("Argument must be <=31", nameof(offset));
-        }
-
-        // did this the dumb way
-        int remainingShift = 32 - maxValue.MostSigBitDigit();
-        uint finalMask = (uint.MaxValue << remainingShift) >> (remainingShift + offset);
-
-        return new Section(finalMask, offset, finalMask - maxValue);
+        public int CountSetBits() => Mathb.CountSetBits(Data);
     }
-
-    public int CountSetBits() => Mathb.CountSetBits(Data);
 }

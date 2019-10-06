@@ -1,17 +1,17 @@
 #region
 
 using System.Collections.Generic;
-using Controllers.State;
-using Controllers.World;
-using Game;
-using Game.Entities.Inventory;
-using Game.World.Blocks;
 using TMPro;
 using UnityEngine;
+using Wyd.Controllers.State;
+using Wyd.Controllers.World;
+using Wyd.Game;
+using Wyd.Game.Entities.Inventory;
+using Wyd.Game.World.Blocks;
 
 #endregion
 
-namespace Controllers.UI
+namespace Wyd.Controllers.UI
 {
     public class DisplayBlockController : MonoBehaviour
     {

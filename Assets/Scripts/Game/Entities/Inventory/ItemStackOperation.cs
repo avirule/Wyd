@@ -1,4 +1,4 @@
-namespace Game.Entities.Inventory
+namespace Wyd.Game.Entities.Inventory
 {
     public enum ItemStackOperation
     {

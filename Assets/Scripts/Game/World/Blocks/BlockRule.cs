@@ -9,7 +9,7 @@ using Random = System.Random;
 
 #endregion
 
-namespace Game.World.Blocks
+namespace Wyd.Game.World.Blocks
 {
     public class BlockRule : IBlockRule
     {

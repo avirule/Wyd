@@ -1,12 +1,12 @@
 #region
 
-using Controllers.State;
 using UnityEngine;
 using UnityEngine.EventSystems;
+using Wyd.Controllers.State;
 
 #endregion
 
-namespace Controllers.UI.Components.Button
+namespace Wyd.Controllers.UI.Components.Button
 {
     public class QuitMainMenuButtonController : MonoBehaviour, IPointerClickHandler
     {

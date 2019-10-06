@@ -3,12 +3,12 @@
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
-using Controllers.World;
 using UnityEngine;
+using Wyd.Controllers.World;
 
 #endregion
 
-namespace Game
+namespace Wyd.Game
 {
     /// <summary>
     ///     6-way cardinal directions in byte values.

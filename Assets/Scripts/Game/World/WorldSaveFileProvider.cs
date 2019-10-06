@@ -5,15 +5,15 @@ using System.Data;
 using System.Data.SQLite;
 using System.IO;
 using System.Threading.Tasks;
-using Extensions;
-using Jobs;
-using Logging;
 using NLog;
 using UnityEngine;
+using Wyd.Extensions;
+using Wyd.Jobs;
+using Wyd.Logging;
 
 #endregion
 
-namespace Game.World
+namespace Wyd.Game.World
 {
     public class WorldSaveFileProvider : IDisposable
     {
@@ -76,7 +76,7 @@ namespace Game.World
             }
             catch (Exception ex)
             {
-                EventLog.Logger.Log(LogLevel.Warn, $"Failed to load world save: {ex.Message}");
+                EventLogger.Log(LogLevel.Warn, $"Failed to load world save: {ex.Message}");
                 return false;
             }
 
@@ -134,7 +134,7 @@ namespace Game.World
             }
             catch (Exception ex)
             {
-                EventLog.Logger.Log(LogLevel.Warn,
+                EventLogger.Log(LogLevel.Warn,
                     $"Failed to retrieve chunk data at position {position}: {ex.Message}");
             }
 
@@ -190,7 +190,7 @@ namespace Game.World
 
                     if (tries == MAXIMUM_QUERY_RETRIES)
                     {
-                        EventLog.Logger.Log(LogLevel.Warn, $"Failed to commit chunk data: {ex.Message}");
+                        EventLogger.Log(LogLevel.Warn, $"Failed to commit chunk data: {ex.Message}");
                     }
                 }
             }

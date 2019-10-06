@@ -6,7 +6,7 @@ using UnityEngine;
 
 #endregion
 
-namespace Game.Entities
+namespace Wyd.Game.Entities
 {
     public interface IEntity
     {

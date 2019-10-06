@@ -5,7 +5,7 @@ using UnityEngine;
 
 #endregion
 
-namespace Audio
+namespace Wyd.Audio
 {
     public enum FadeType
     {

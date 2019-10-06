@@ -4,13 +4,13 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Collections.Specialized;
 using System.Linq;
-using Controllers.UI;
-using Game.Entities.Inventory;
 using UnityEngine;
+using Wyd.Controllers.UI;
+using Wyd.Game.Entities.Inventory;
 
 #endregion
 
-namespace Controllers.Entity
+namespace Wyd.Controllers.Entity
 {
     public class InventoryController : MonoBehaviour
     {

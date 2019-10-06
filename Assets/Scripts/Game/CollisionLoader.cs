@@ -2,14 +2,14 @@
 
 using System.Collections.Generic;
 using System.Linq;
-using Controllers.State;
-using Controllers.World;
-using Game.World.Blocks;
 using UnityEngine;
+using Wyd.Controllers.State;
+using Wyd.Controllers.World;
+using Wyd.Game.World.Blocks;
 
 #endregion
 
-namespace Game
+namespace Wyd.Game
 {
     public class CollisionLoader : MonoBehaviour
     {

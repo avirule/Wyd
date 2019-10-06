@@ -3,16 +3,16 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
-using Controllers.State;
-using Controllers.UI;
-using Controllers.World;
-using Game.Entities;
-using Game.World.Blocks;
 using UnityEngine;
+using Wyd.Controllers.State;
+using Wyd.Controllers.UI;
+using Wyd.Controllers.World;
+using Wyd.Game.Entities;
+using Wyd.Game.World.Blocks;
 
 #endregion
 
-namespace Controllers.Entity
+namespace Wyd.Controllers.Entity
 {
     public class PlayerController : SingletonController<PlayerController>, IEntity, ICollideable
     {

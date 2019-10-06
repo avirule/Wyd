@@ -5,7 +5,7 @@ using UnityEngine;
 
 #endregion
 
-namespace Game.World.Blocks
+namespace Wyd.Game.World.Blocks
 {
     public static class BlockFaces
     {

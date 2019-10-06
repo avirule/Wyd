@@ -3,12 +3,12 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using Extensions;
-using Game.Entities;
+using Wyd.Extensions;
+using Wyd.Game.Entities;
 
 #endregion
 
-namespace Controllers.State
+namespace Wyd.Controllers.State
 {
     public class EntityController : SingletonController<EntityController>
     {

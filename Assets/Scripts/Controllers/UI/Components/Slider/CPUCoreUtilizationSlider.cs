@@ -1,12 +1,12 @@
 #region
 
 using System;
-using Controllers.State;
 using UnityEngine;
+using Wyd.Controllers.State;
 
 #endregion
 
-namespace Controllers.UI.Components.Slider
+namespace Wyd.Controllers.UI.Components.Slider
 {
     public class CPUCoreUtilizationSlider : MonoBehaviour
     {

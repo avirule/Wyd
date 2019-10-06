@@ -2,14 +2,14 @@
 
 using System.Linq;
 using System.Text;
-using Logging.Targets;
 using NLog;
 using TMPro;
 using UnityEngine;
+using Wyd.Logging.Targets;
 
 #endregion
 
-namespace Controllers.UI.Components.Text
+namespace Wyd.Controllers.UI.Components.Text
 {
     public class DebugLogTextController : MonoBehaviour
     {

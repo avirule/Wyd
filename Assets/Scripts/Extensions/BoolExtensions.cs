@@ -1,4 +1,4 @@
-namespace Extensions
+namespace Wyd.Extensions
 {
     public static class BoolExtensions
     {

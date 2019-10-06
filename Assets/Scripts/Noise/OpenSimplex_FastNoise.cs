@@ -6,13 +6,12 @@
 
 #if FN_USE_DOUBLES
 #else
-using FN_DECIMAL = System.Single;
 #endif
 using System.Runtime.CompilerServices;
 
 #endregion
 
-namespace Noise
+namespace Wyd.Noise
 {
     public class OpenSimplex_FastNoise
     {

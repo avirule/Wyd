@@ -4,7 +4,7 @@ using System.Collections.Generic;
 
 #endregion
 
-namespace Extensions
+namespace Wyd.Extensions
 {
     public static class KeyValuePairExtensions
     {

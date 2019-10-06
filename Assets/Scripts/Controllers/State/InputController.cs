@@ -1,11 +1,11 @@
 #region
 
-using Extensions;
 using UnityEngine;
+using Wyd.Extensions;
 
 #endregion
 
-namespace Controllers.State
+namespace Wyd.Controllers.State
 {
     public class InputController : LockableSingletonController<InputController>
     {

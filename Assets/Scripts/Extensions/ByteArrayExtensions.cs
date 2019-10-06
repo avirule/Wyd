@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 #endregion
 
-namespace Extensions
+namespace Wyd.Extensions
 {
     public static class ByteArrayExtensions
     {

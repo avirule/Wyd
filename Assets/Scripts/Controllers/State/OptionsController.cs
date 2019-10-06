@@ -6,17 +6,17 @@ using System.IO;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Text;
-using Graphics;
 using JetBrains.Annotations;
-using Jobs;
-using Logging;
 using NLog;
 using SharpConfig;
 using UnityEngine;
+using Wyd.Graphics;
+using Wyd.Jobs;
+using Wyd.Logging;
 
 #endregion
 
-namespace Controllers.State
+namespace Wyd.Controllers.State
 {
     public enum CacheCullingAggression
     {
@@ -424,12 +424,12 @@ namespace Controllers.State
                 SaveSettings();
             }
 
-            EventLog.Logger.Log(LogLevel.Info, "Configuration loaded.");
+            EventLogger.Log(LogLevel.Info, "Configuration loaded.");
         }
 
         private Configuration InitialiseDefaultConfig()
         {
-            EventLog.Logger.Log(LogLevel.Info, "Initializing default configuration file...");
+            EventLogger.Log(LogLevel.Info, "Initializing default configuration file...");
 
             _Configuration = new Configuration();
 
@@ -510,11 +510,11 @@ namespace Controllers.State
             _Configuration["Chunking"][nameof(PreLoadChunkDistance)].IntValue =
                 Defaults.PRE_LOAD_CHUNK_DISTANCE;
 
-            EventLog.Logger.Log(LogLevel.Info, "Default configuration initialized. Saving...");
+            EventLogger.Log(LogLevel.Info, "Default configuration initialized. Saving...");
 
             _Configuration.SaveToFile(_configPath);
 
-            EventLog.Logger.Log(LogLevel.Info, $"Configuration file saved at: {_configPath}");
+            EventLogger.Log(LogLevel.Info, $"Configuration file saved at: {_configPath}");
 
             return _Configuration;
         }
@@ -536,7 +536,7 @@ namespace Controllers.State
 
         private static void LogSettingLoadError(string settingName, object defaultValue)
         {
-            EventLog.Logger.Log(LogLevel.Warn, $"Error loading setting `{settingName}`, defaulting to {defaultValue}.");
+            EventLogger.Log(LogLevel.Warn, $"Error loading setting `{settingName}`, defaulting to {defaultValue}.");
         }
 
 

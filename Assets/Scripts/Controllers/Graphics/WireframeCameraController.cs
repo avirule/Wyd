@@ -1,14 +1,14 @@
 #region
 
-using Controllers.State;
 using UnityEngine;
+using Wyd.Controllers.State;
 
 #endregion
 
 // disable this functionality if not editor build
 #if UNITY_EDITOR
 
-namespace Controllers.Graphics
+namespace Wyd.Controllers.Graphics
 {
     [RequireComponent(typeof(Camera))]
     public class WireframeCameraController : MonoBehaviour

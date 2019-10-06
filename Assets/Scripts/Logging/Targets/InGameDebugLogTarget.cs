@@ -9,7 +9,7 @@ using NLog.Targets;
 
 #endregion
 
-namespace Logging.Targets
+namespace Wyd.Logging.Targets
 {
     [Target("InGameDebugLog")]
     public sealed class InGameDebugLogTarget : TargetWithLayout
@@ -40,7 +40,7 @@ namespace Logging.Targets
             OnEventLogged(this, logEvent.LogEvent);
         }
 
-        private void OnEventLogged(object sender, LogEventInfo eventInfo)
+        private static void OnEventLogged(object sender, LogEventInfo eventInfo)
         {
             EventLogged?.Invoke(sender, eventInfo);
         }

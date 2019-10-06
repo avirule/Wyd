@@ -4,7 +4,7 @@ using UnityEngine;
 
 #endregion
 
-namespace Game.World.Blocks
+namespace Wyd.Game.World.Blocks
 {
     public struct BlockAction
     {

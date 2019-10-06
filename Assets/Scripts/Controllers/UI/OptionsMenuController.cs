@@ -9,7 +9,7 @@ using Object = UnityEngine.Object;
 
 #endregion
 
-namespace Controllers.UI
+namespace Wyd.Controllers.UI
 {
     public class OptionsMenuController : MonoBehaviour
     {

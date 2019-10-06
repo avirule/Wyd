@@ -1,12 +1,12 @@
 #region
 
 using System.Threading;
-using Controllers.State;
 using UnityEngine;
+using Wyd.Controllers.State;
 
 #endregion
 
-namespace Graphics
+namespace Wyd.Graphics
 {
     public class WireframeCube
     {

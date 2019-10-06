@@ -4,14 +4,14 @@ using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Collections.Specialized;
-using Controllers.Entity;
-using Controllers.State;
-using Game.Entities.Inventory;
 using UnityEngine;
+using Wyd.Controllers.Entity;
+using Wyd.Controllers.State;
+using Wyd.Game.Entities.Inventory;
 
 #endregion
 
-namespace Controllers.UI
+namespace Wyd.Controllers.UI
 {
     public class HotbarController : SingletonController<HotbarController>
     {

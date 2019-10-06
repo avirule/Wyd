@@ -1,16 +1,16 @@
 #region
 
-using Controllers.State;
-using Controllers.World;
-using Game.World.Blocks;
-using Logging;
 using NLog;
-using Noise;
 using UnityEngine;
+using Wyd.Controllers.State;
+using Wyd.Controllers.World;
+using Wyd.Game.World.Blocks;
+using Wyd.Logging;
+using Wyd.Noise;
 
 #endregion
 
-namespace Game.World.Chunks.BuildingJob
+namespace Wyd.Game.World.Chunks.BuildingJob
 {
     public class ChunkBuildingJobRawTerrain : ChunkBuildingJob
     {
@@ -50,14 +50,14 @@ namespace Game.World.Chunks.BuildingJob
         {
             if (Blocks == default)
             {
-                EventLog.Logger.Log(LogLevel.Error,
+                EventLogger.Log(LogLevel.Error,
                     $"Field `{nameof(Blocks)}` has not been properly set. Cancelling operation.");
                 return;
             }
 
             if (useGpu && (noiseValues == null))
             {
-                EventLog.Logger.Log(LogLevel.Warn,
+                EventLogger.Log(LogLevel.Warn,
                     $"Parameter `{nameof(useGpu)}` was passed as true, but no noise values were provided. Defaulting to CPU-bound generation.");
                 useGpu = false;
             }

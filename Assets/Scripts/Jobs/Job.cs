@@ -5,7 +5,7 @@ using System.Threading;
 
 #endregion
 
-namespace Jobs
+namespace Wyd.Jobs
 {
     public class Job
     {

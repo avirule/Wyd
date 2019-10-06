@@ -1,10 +1,10 @@
 #region
 
-using Controllers;
+using Wyd.Controllers;
 
 #endregion
 
-namespace Extensions
+namespace Wyd.Extensions
 {
     public abstract class LockableSingletonController<T> : SingletonController<T> where T : class
     {

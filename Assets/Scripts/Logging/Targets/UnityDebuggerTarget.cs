@@ -8,7 +8,7 @@ using UnityEngine;
 
 #endregion
 
-namespace Logging.Targets
+namespace Wyd.Logging.Targets
 {
     [Target("UnityDebuggerTarget")]
     public sealed class UnityDebuggerTarget : TargetWithLayout

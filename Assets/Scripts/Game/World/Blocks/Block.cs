@@ -1,10 +1,10 @@
 #region
 
-using Controllers.State;
+using Wyd.Controllers.State;
 
 #endregion
 
-namespace Game.World.Blocks
+namespace Wyd.Game.World.Blocks
 {
     public struct Block
     {

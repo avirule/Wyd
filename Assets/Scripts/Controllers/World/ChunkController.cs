@@ -4,20 +4,20 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
-using Compression;
-using Controllers.State;
-using Game;
-using Game.Entities;
-using Game.World.Blocks;
-using Game.World.Chunks;
-using Logging;
 using NLog;
 using UnityEngine;
 using UnityEngine.Rendering;
+using Wyd.Compression;
+using Wyd.Controllers.State;
+using Wyd.Game;
+using Wyd.Game.Entities;
+using Wyd.Game.World.Blocks;
+using Wyd.Game.World.Chunks;
+using Wyd.Logging;
 
 #endregion
 
-namespace Controllers.World
+namespace Wyd.Controllers.World
 {
     public class ChunkController : MonoBehaviour
     {
@@ -118,7 +118,7 @@ namespace Controllers.World
         {
             if (_CurrentLoader == default)
             {
-                EventLog.Logger.Log(LogLevel.Warn,
+                EventLogger.Log(LogLevel.Warn,
                     $"Chunk at position {Position} has been initialized without a loader. This is possibly an error.");
             }
             else
@@ -164,7 +164,7 @@ namespace Controllers.World
         {
             if (!ChunkGeneratorsCache.TryRetrieveItem(out _ChunkGenerator))
             {
-                EventLog.Logger.Log(LogLevel.Warn,
+                EventLogger.Log(LogLevel.Warn,
                     $"Chunk at position {Position} unable to retrieve a {nameof(ChunkGenerator)} from cache. This is most likely a serious error.");
             }
 

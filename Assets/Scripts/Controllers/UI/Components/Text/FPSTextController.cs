@@ -2,14 +2,14 @@
 
 using System.Collections.Generic;
 using System.Linq;
-using Controllers.State;
 using UnityEngine;
+using Wyd.Controllers.State;
 
 // ReSharper disable InconsistentNaming
 
 #endregion
 
-namespace Controllers.UI.Components.Text
+namespace Wyd.Controllers.UI.Components.Text
 {
     public class FPSTextController : FormattedTextController
     {

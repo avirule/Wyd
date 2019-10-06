@@ -1,13 +1,13 @@
 #region
 
 using System.Collections.Generic;
-using Logging;
 using NLog;
 using UnityEngine;
+using Wyd.Logging;
 
 #endregion
 
-namespace Controllers.State
+namespace Wyd.Controllers.State
 {
     public class TextureController : SingletonController<TextureController>
     {
@@ -44,7 +44,7 @@ namespace Controllers.State
                 TerrainTexture.SetPixels(spritePixels, i, 0);
                 _TextureIDs.Add(sprites[i].name.ToLower(), i);
 
-                EventLog.Logger.Log(LogLevel.Info, $"Texture processed: {sprites[i].name}");
+                EventLogger.Log(LogLevel.Info, $"Texture processed: {sprites[i].name}");
             }
 
             TerrainTexture.Apply();

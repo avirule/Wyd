@@ -4,7 +4,7 @@ using UnityEngine;
 
 #endregion
 
-namespace Controllers.UI.Components.Panel
+namespace Wyd.Controllers.UI.Components.Panel
 {
     public class AutoSquareSizingPanelController : MonoBehaviour
     {

@@ -1,4 +1,4 @@
-namespace Graphics
+namespace Wyd.Graphics
 {
     public enum WindowMode
     {

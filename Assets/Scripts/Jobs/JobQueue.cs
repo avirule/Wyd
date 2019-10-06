@@ -4,12 +4,12 @@ using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Threading;
-using Logging;
 using NLog;
+using Wyd.Logging;
 
 #endregion
 
-namespace Jobs
+namespace Wyd.Jobs
 {
     public enum ThreadingMode
     {
@@ -93,7 +93,6 @@ namespace Jobs
         /// </param>
         /// <param name="threadingMode"></param>
         /// <param name="threadPoolSize">Size of internal <see cref="JobWorker" /> pool</param>
-        /// <param name="maximumQueuedJobs"></param>
         public JobQueue(int waitTimeout, ThreadingMode threadingMode = ThreadingMode.Single, int threadPoolSize = 0)
         {
             WaitTimeout = waitTimeout;
@@ -208,7 +207,7 @@ namespace Jobs
                 }
                 catch (Exception ex)
                 {
-                    EventLog.Logger.Log(LogLevel.Warn, $"Error occurred in job queue: {ex.Message}");
+                    EventLogger.Log(LogLevel.Warn, $"Error occurred in job queue: {ex.Message}");
                     break;
                 }
             }

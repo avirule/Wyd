@@ -4,7 +4,7 @@ using UnityEngine;
 
 #endregion
 
-namespace Controllers.UI.Components.Layout
+namespace Wyd.Controllers.UI.Components.Layout
 {
     [AddComponentMenu("UI/StackPanel")]
     public class StackPanel : MonoBehaviour

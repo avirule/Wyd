@@ -4,7 +4,7 @@ using UnityEngine;
 
 #endregion
 
-namespace Controllers
+namespace Wyd.Controllers
 {
     public abstract class SingletonController<T> : MonoBehaviour where T : class
     {

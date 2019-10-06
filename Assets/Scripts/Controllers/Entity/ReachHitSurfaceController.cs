@@ -4,7 +4,7 @@ using UnityEngine;
 
 #endregion
 
-namespace Controllers.Entity
+namespace Wyd.Controllers.Entity
 {
     public class ReachHitSurfaceController : MonoBehaviour
     {
