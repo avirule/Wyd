@@ -37,7 +37,7 @@ namespace Wyd.Controllers.UI.Components.Text
             _UpdateTimer.Restart();
 
             float averageFPS = GraphyManager.Instance.AverageFPS;
-            float averageFrameTimeMilliseconds = 1f / averageFPS;
+            float averageFrameTimeMilliseconds = (1f / averageFPS) * 1000f;
 
             TextObject.text = string.Format(Format, averageFPS, averageFrameTimeMilliseconds);
         }

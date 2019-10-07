@@ -77,6 +77,7 @@ namespace Wyd.Controllers.World
             if (GameController.Current == default)
             {
                 SceneManager.LoadSceneAsync("Scenes/Init", LoadSceneMode.Single);
+                SceneManager.UnloadSceneAsync("Scenes/Game", UnloadSceneOptions.None);
                 return;
             }
 
