@@ -8,26 +8,15 @@ using Wyd.Game.World.Chunks;
 
 namespace Wyd.Controllers.UI.Components.Text
 {
-    public class ChunkLoadTimeTextController : FormattedTextController
+    public class ChunkLoadTimeTextController : UpdatingFormattedTextController
     {
         private const double TOLERANCE = 0.001d;
 
-        private int _SkippedFrames;
         private double _LastBuildTime;
         private double _LastMeshTime;
 
-        public int SkipFrames = 30;
-
-        private void Update()
+        protected override void TimedUpdate()
         {
-            if (_SkippedFrames <= SkipFrames)
-            {
-                _SkippedFrames += 1;
-                return;
-            }
-
-            _SkippedFrames = 0;
-
             (double buildTime, double meshTime) = CalculateBuildAndMeshTimes();
 
             if ((Math.Abs(buildTime - _LastBuildTime) > TOLERANCE)

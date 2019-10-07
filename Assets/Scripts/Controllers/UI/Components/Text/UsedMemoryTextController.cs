@@ -1,42 +1,20 @@
 #region
 
 using System;
-using System.Diagnostics;
 using Tayx.Graphy;
-using UnityEngine;
 
 #endregion
 
 namespace Wyd.Controllers.UI.Components.Text
 {
-    public class UsedMemoryTextController : FormattedTextController
+    public class UsedMemoryTextController : UpdatingFormattedTextController
     {
-        [SerializeField]
-        private int UpdatesPerSecond = 4;
-
-        private TimeSpan _UpdatesPerSecondTimeSpan;
-        private Stopwatch _UpdateTimer;
         private float _ReservedMemory;
         private float _AllocatedMemory;
         private float _MonoMemory;
 
-        protected override void Awake()
+        protected override void TimedUpdate()
         {
-            base.Awake();
-
-            _UpdatesPerSecondTimeSpan = TimeSpan.FromSeconds(1d / UpdatesPerSecond);
-            _UpdateTimer = Stopwatch.StartNew();
-        }
-
-        private void Update()
-        {
-            if (_UpdateTimer.Elapsed <= _UpdatesPerSecondTimeSpan)
-            {
-                return;
-            }
-
-            _UpdateTimer.Restart();
-
             (float reservedMemory, float allocatedMemory, float monoMemory) = GetUsedMemory();
 
             if ((Math.Abs(reservedMemory - _ReservedMemory) > 0.009)
@@ -52,7 +30,6 @@ namespace Wyd.Controllers.UI.Components.Text
             TextObject.text = string.Format(Format,
                 _ReservedMemory = reservedMemory,
                 _AllocatedMemory = allocatedMemory,
-                (_AllocatedMemory / (double) _ReservedMemory) * 100d,
                 _MonoMemory = monoMemory);
         }
 

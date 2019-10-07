@@ -1,9 +1,6 @@
 #region
 
-using System;
-using System.Diagnostics;
 using Tayx.Graphy;
-using UnityEngine;
 
 // ReSharper disable InconsistentNaming
 
@@ -11,31 +8,10 @@ using UnityEngine;
 
 namespace Wyd.Controllers.UI.Components.Text
 {
-    public class FPSTextController : FormattedTextController
+    public class FPSTextController : UpdatingFormattedTextController
     {
-        [SerializeField]
-        private int UpdatesPerSecond = 5;
-
-        private TimeSpan _UpdatesPerSecondTimeSpan;
-        private Stopwatch _UpdateTimer;
-
-        protected override void Awake()
+        protected override void TimedUpdate()
         {
-            base.Awake();
-
-            _UpdatesPerSecondTimeSpan = TimeSpan.FromSeconds(1d / UpdatesPerSecond);
-            _UpdateTimer = Stopwatch.StartNew();
-        }
-
-        private void Update()
-        {
-            if (_UpdateTimer.Elapsed <= _UpdatesPerSecondTimeSpan)
-            {
-                return;
-            }
-
-            _UpdateTimer.Restart();
-
             float averageFPS = GraphyManager.Instance.AverageFPS;
             float averageFrameTimeMilliseconds = (1f / averageFPS) * 1000f;
 
