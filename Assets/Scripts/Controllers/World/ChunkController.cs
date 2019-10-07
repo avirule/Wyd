@@ -22,14 +22,15 @@ namespace Wyd.Controllers.World
 {
     public class ChunkController : MonoBehaviour
     {
+        public static readonly Vector3Int Size = new Vector3Int(32, 256, 32);
+        public static readonly int YIndexStep = Size.x * Size.z;
+        
         private static readonly ObjectCache<ChunkGenerator> ChunkGeneratorsCache =
-            new ObjectCache<ChunkGenerator>(true);
+            // todo decide how to handle this cache's size
+            new ObjectCache<ChunkGenerator>(true, false, (Size.x / 2) * (Size.z / 2));
 
         private static readonly ObjectCache<BlockAction> BlockActionsCache =
             new ObjectCache<BlockAction>(true, true, 1024);
-
-        public static readonly Vector3Int Size = new Vector3Int(32, 256, 32);
-        public static readonly int YIndexStep = Size.x * Size.z;
 
 
         #region INSTANCE MEMBERS
@@ -45,8 +46,11 @@ namespace Wyd.Controllers.World
         private Stack<BlockAction> _BlockActions;
         private HashSet<Vector3> _BlockActionLocalPositions;
 
-        public MeshFilter MeshFilter;
-        public MeshRenderer MeshRenderer;
+        [SerializeField]
+        private MeshFilter MeshFilter;
+
+        [SerializeField]
+        private MeshRenderer MeshRenderer;
 
         public Vector3 Position => _Bounds.min;
         public ChunkGenerator.GenerationStep GenerationStep => _ChunkGenerator.CurrentStep;
@@ -78,7 +82,7 @@ namespace Wyd.Controllers.World
                 }
 
                 _Visible = value;
-                MeshRenderer.enabled = value;
+                MeshRenderer.enabled = _Visible;
             }
         }
 

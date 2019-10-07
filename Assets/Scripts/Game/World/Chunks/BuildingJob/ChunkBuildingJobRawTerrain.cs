@@ -110,7 +110,7 @@ namespace Wyd.Game.World.Chunks.BuildingJob
                     }
                     else
                     {
-                        Blocks[index] = default;
+                        Blocks[index] = BlockController.Air;
                     }
                 }
             }

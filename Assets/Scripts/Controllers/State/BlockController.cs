@@ -67,33 +67,33 @@ namespace Wyd.Controllers.State
         public bool GetBlockSpriteUVs(ushort blockId, Vector3 position, Direction direction, Vector3 size2d,
             out Vector3[] uvs)
         {
-            uvs = null;
-
-            if (BlockIdExists(blockId))
+            if (!BlockIdExists(blockId))
             {
-                Blocks[blockId].ReadUVsRule(blockId, position, direction, out string textureName);
-
-                if (!TextureController.Current.TryGetTextureId(textureName, out int textureId))
-                {
-                    EventLogger.Log(LogLevel.Error,
-                        $"Failed to return block sprite UVs for direction `{direction}` of block with id `{blockId}`: texture does not exist for block.");
-                    return false;
-                }
-
-                uvs = new[]
-                {
-                    new Vector3(0, 0, textureId),
-                    new Vector3(size2d.x, 0, textureId),
-                    new Vector3(0, size2d.z, textureId),
-                    new Vector3(size2d.x, size2d.z, textureId)
-                };
-
-                return true;
+                EventLogger.Log(LogLevel.Warn,
+                    $"Failed to return block sprite UVs for direction `{direction}` of block with id `{blockId}`: block id does not exist.");
+                uvs = null;
+                return false;
             }
 
-            EventLogger.Log(LogLevel.Error,
-                $"Failed to return block sprite UVs for direction `{direction}` of block with id `{blockId}`: block id does not exist.");
-            return false;
+            Blocks[blockId].ReadUVsRule(blockId, position, direction, out string textureName);
+
+            if (!TextureController.Current.TryGetTextureId(textureName, out int textureId))
+            {
+                EventLogger.Log(LogLevel.Warn,
+                    $"Failed to return block sprite UVs for direction `{direction}` of block with id `{blockId}`: texture does not exist for block.");
+                uvs = null;
+                return false;
+            }
+
+            uvs = new[]
+            {
+                new Vector3(0, 0, textureId),
+                new Vector3(size2d.x, 0, textureId),
+                new Vector3(0, size2d.z, textureId),
+                new Vector3(size2d.x, size2d.z, textureId)
+            };
+
+            return true;
         }
 
         public bool BlockIdExists(ushort blockId) => blockId < Blocks.Count;

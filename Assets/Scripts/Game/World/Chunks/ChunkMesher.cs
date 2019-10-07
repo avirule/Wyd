@@ -134,6 +134,11 @@ namespace Wyd.Game.World.Chunks
 
         private void TraverseIndexTransparent(int index, Vector3Int localPosition)
         {
+            if (Blocks[index].Id == 15)
+            {
+                
+            }
+            
             Vector3 globalPosition = _Position + localPosition;
 
             if (!Blocks[index].HasFace(Direction.North)
@@ -467,6 +472,11 @@ namespace Wyd.Game.World.Chunks
 
         private void TraverseIndex(int index, Vector3Int localPosition)
         {
+            if (Blocks[index].Id == 15)
+            {
+                
+            }
+            
             Vector3 globalPosition = _Position + localPosition;
 
             // ensure this block face hasn't already been traversed
