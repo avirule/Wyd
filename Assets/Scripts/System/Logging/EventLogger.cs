@@ -40,7 +40,7 @@ namespace Wyd.System.Logging
 
             FileTarget fileTarget = new FileTarget
             {
-                Layout = "$[{longdate} | ${level}] ${message}",
+                Layout = "${longdate} | ${level} | ${message}",
                 OpenFileFlushTimeout = 30,
                 Encoding = Encoding.ASCII,
                 LineEnding = LineEndingMode.CRLF,
