@@ -2,7 +2,8 @@
 
 using System;
 using System.Diagnostics;
-using UnityEngine.Profiling;
+using Tayx.Graphy;
+using UnityEngine;
 
 #endregion
 
@@ -10,54 +11,52 @@ namespace Wyd.Controllers.UI.Components.Text
 {
     public class UsedMemoryTextController : FormattedTextController
     {
-        private const double MEGABYTE_VALUE = 1000000d;
+        [SerializeField]
+        private int UpdatesPerSecond = 4;
 
-        private TimeSpan _MaximumDisplayAccuracyUpdateInterval;
-        private Stopwatch _LastUpdateTimer;
-        private long _LastReservedMemoryTotal;
-        private long _LastAllocatedMemoryTotal;
-
-        public int Precision = 1;
+        private TimeSpan _UpdatesPerSecondTimeSpan;
+        private Stopwatch _UpdateTimer;
+        private float _ReservedMemory;
+        private float _AllocatedMemory;
+        private float _MonoMemory;
 
         protected override void Awake()
         {
             base.Awake();
 
-            _MaximumDisplayAccuracyUpdateInterval = TimeSpan.FromSeconds(1d / 2d);
-            _LastUpdateTimer = Stopwatch.StartNew();
+            _UpdatesPerSecondTimeSpan = TimeSpan.FromSeconds(1d / UpdatesPerSecond);
+            _UpdateTimer = Stopwatch.StartNew();
         }
 
         private void Update()
         {
-            if (_LastUpdateTimer.Elapsed <= _MaximumDisplayAccuracyUpdateInterval)
+            if (_UpdateTimer.Elapsed <= _UpdatesPerSecondTimeSpan)
             {
                 return;
             }
 
-            (long totalReservedMemory, long totalAllocatedMemory) = GetUsedMemory();
+            _UpdateTimer.Restart();
 
-            if ((totalReservedMemory != _LastReservedMemoryTotal)
-                || (totalAllocatedMemory != _LastAllocatedMemoryTotal))
+            (float reservedMemory, float allocatedMemory, float monoMemory) = GetUsedMemory();
+
+            if ((Math.Abs(reservedMemory - _ReservedMemory) > 0.009)
+                || (Math.Abs(allocatedMemory - _AllocatedMemory) > 0.009)
+                || (Math.Abs(monoMemory - _MonoMemory) > 0.009))
             {
-                UpdateUsedMemoryText(totalReservedMemory, totalAllocatedMemory);
+                UpdateUsedMemoryText(reservedMemory, allocatedMemory, monoMemory);
             }
-
-            _LastUpdateTimer.Restart();
         }
 
-        private void UpdateUsedMemoryText(long reservedMemory, long allocatedMemory)
+        private void UpdateUsedMemoryText(float reservedMemory, float allocatedMemory, float monoMemory)
         {
-            _LastReservedMemoryTotal = reservedMemory;
-            _LastAllocatedMemoryTotal = allocatedMemory;
-
-            double reservedMemoryInMb = Math.Round(reservedMemory / MEGABYTE_VALUE, Precision);
-            double allocatedMemoryInMb = Math.Round(allocatedMemory / MEGABYTE_VALUE, Precision);
-
-            TextObject.text = string.Format(Format, reservedMemoryInMb, allocatedMemoryInMb,
-                (allocatedMemoryInMb / reservedMemoryInMb) * 100d);
+            TextObject.text = string.Format(Format,
+                _ReservedMemory = reservedMemory,
+                _AllocatedMemory = allocatedMemory,
+                (_AllocatedMemory / (double) _ReservedMemory) * 100d,
+                _MonoMemory = monoMemory);
         }
 
-        private static (long, long) GetUsedMemory() =>
-            (Profiler.GetTotalReservedMemoryLong(), Profiler.GetTotalAllocatedMemoryLong());
+        private static (float, float, float) GetUsedMemory() =>
+            (GraphyManager.Instance.ReservedRam, GraphyManager.Instance.AllocatedRam, GraphyManager.Instance.MonoRam);
     }
 }

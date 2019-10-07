@@ -76,7 +76,8 @@ namespace Wyd.Controllers.World
         {
             if (GameController.Current == default)
             {
-                SceneManager.LoadSceneAsync("Scenes/MainMenu", LoadSceneMode.Single);
+                SceneManager.LoadSceneAsync("Scenes/Init", LoadSceneMode.Single);
+                return;
             }
 
             AssignCurrent(this);

@@ -1,9 +1,9 @@
 #region
 
-using System.Collections.Generic;
-using System.Linq;
+using System;
+using System.Diagnostics;
+using Tayx.Graphy;
 using UnityEngine;
-using Wyd.Controllers.State;
 
 // ReSharper disable InconsistentNaming
 
@@ -13,55 +13,33 @@ namespace Wyd.Controllers.UI.Components.Text
 {
     public class FPSTextController : FormattedTextController
     {
-        private List<float> _DeltaTimes;
-        private int _SkippedFrames;
+        [SerializeField]
+        private int UpdatesPerSecond = 5;
 
-        public int SkipFrames = 4;
+        private TimeSpan _UpdatesPerSecondTimeSpan;
+        private Stopwatch _UpdateTimer;
 
         protected override void Awake()
         {
             base.Awake();
 
-            _DeltaTimes = new List<float>();
-            _SkippedFrames = 0;
-
-            // avoids div by zero
-            if (SkipFrames <= 0)
-            {
-                SkipFrames = 1;
-            }
+            _UpdatesPerSecondTimeSpan = TimeSpan.FromSeconds(1d / UpdatesPerSecond);
+            _UpdateTimer = Stopwatch.StartNew();
         }
 
         private void Update()
         {
-            UpdateDeltaTimes();
-        }
-
-        private void LateUpdate()
-        {
-            if ((_DeltaTimes.Count == 0) || (_SkippedFrames < SkipFrames))
+            if (_UpdateTimer.Elapsed <= _UpdatesPerSecondTimeSpan)
             {
-                _SkippedFrames++;
                 return;
             }
 
-            double averageDeltaTime = _DeltaTimes.Average();
-            double averageDeltaTimeAsFrames = 1d / averageDeltaTime;
-            double averageDeltaTimeAsMillisecondsRounded = 1000d * averageDeltaTime;
+            _UpdateTimer.Restart();
 
-            TextObject.text = string.Format(Format, averageDeltaTimeAsFrames, averageDeltaTimeAsMillisecondsRounded);
-            _SkippedFrames = 0;
-        }
+            float averageFPS = GraphyManager.Instance.AverageFPS;
+            float averageFrameTimeMilliseconds = 1f / averageFPS;
 
-        private void UpdateDeltaTimes()
-        {
-            _DeltaTimes.Add(Time.deltaTime);
-
-            if (_DeltaTimes.Count > OptionsController.Current.MaximumFrameRateBufferSize)
-            {
-                _DeltaTimes.RemoveRange(0,
-                    _DeltaTimes.Count - OptionsController.Current.MaximumFrameRateBufferSize);
-            }
+            TextObject.text = string.Format(Format, averageFPS, averageFrameTimeMilliseconds);
         }
     }
 }

@@ -462,7 +462,7 @@ namespace Wyd.Controllers.State
             _Configuration["Graphics"][nameof(MaximumFrameRateBufferSize)].PreComment =
                 "Maximum size of buffer for reporting average frame rate.";
             _Configuration["Graphics"][nameof(MaximumFrameRateBufferSize)].Comment =
-                "Higher values decrease frame-to-frame accuracy. (min 0, max 120)";
+                "Higher values decrease frame-to-frame accuracy. (min 0, max 360)";
             _Configuration["Graphics"][nameof(MaximumFrameRateBufferSize)].IntValue =
                 Defaults.MAXIMUM_FRAME_RATE_BUFFER_SIZE;
 

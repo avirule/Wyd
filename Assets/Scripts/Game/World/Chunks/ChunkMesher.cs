@@ -71,9 +71,7 @@ namespace Wyd.Game.World.Chunks
         ///     Applies and returns processed <see cref="UnityEngine.Mesh" />.
         /// </summary>
         /// <param name="mesh">Given <see cref="UnityEngine.Mesh" /> to apply processed data to.</param>
-        /// <param name="immediateUpload"></param>
-        /// <param name="readOnlyData"></param>
-        public void SetMesh(ref Mesh mesh, bool immediateUpload = false, bool readOnlyData = false)
+        public void SetMesh(ref Mesh mesh)
         {
             if ((_Vertices.Count == 0) || ((_Triangles.Count == 0) && (_TransparentTriangles.Count == 0)))
             {
@@ -100,11 +98,6 @@ namespace Wyd.Game.World.Chunks
 
             mesh.RecalculateNormals();
             mesh.RecalculateTangents();
-
-            if (immediateUpload)
-            {
-                mesh.UploadMeshData(readOnlyData);
-            }
         }
 
         public void GenerateMesh()
