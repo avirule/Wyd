@@ -1,15 +1,8 @@
-﻿/* ---------------------------------------
- * Author:          Martin Pane (martintayx@gmail.com) (@tayx94)
- * Collaborators:   Lars Aalbertsen (@Rockylars)
- * Project:         Graphy - Ultimate Stats Monitor
- * Date:            23-Jan-18
- * Studio:          Tayx
- * 
- * This project is released under the MIT license.
- * Attribution is not required, but it is always welcomed!
- * -------------------------------------*/
+﻿#region
 
 using UnityEngine;
+
+#endregion
 
 namespace Tayx.Graphy.Graph
 {
@@ -22,16 +15,15 @@ namespace Tayx.Graphy.Graph
         #region Methods -> Protected
 
         /// <summary>
-        /// Updates the graph/s.
+        ///     Updates the graph/s.
         /// </summary>
         protected abstract void UpdateGraph();
 
         /// <summary>
-        /// Creates the points for the graph/s.
+        ///     Creates the points for the graph/s.
         /// </summary>
         protected abstract void CreatePoints();
 
         #endregion
     }
-
 }

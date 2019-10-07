@@ -1,15 +1,8 @@
-﻿/* ---------------------------------------
- * Author:          Started by David Mkrtchyan, modified by Martin Pane (martintayx@gmail.com) (@tayx94)
- * Collaborators:   Lars Aalbertsen (@Rockylars)
- * Project:         Graphy - Ultimate Stats Monitor
- * Date:            18-May-18
- * Studio:          Tayx
- * 
- * This project is released under the MIT license.
- * Attribution is not required, but it is always welcomed!
- * -------------------------------------*/
+﻿#region
 
 using UnityEngine;
+
+#endregion
 
 namespace Tayx.Graphy.Utils.NumString
 {
@@ -22,12 +15,12 @@ namespace Tayx.Graphy.Utils.NumString
         #region Variables -> Private
 
         /// <summary>
-        /// List of negative ints casted to strings.
+        ///     List of negative ints casted to strings.
         /// </summary>
         private static string[] negativeBuffer = new string[0];
 
         /// <summary>
-        /// List of positive ints casted to strings.
+        ///     List of positive ints casted to strings.
         /// </summary>
         private static string[] positiveBuffer = new string[0];
 
@@ -36,50 +29,32 @@ namespace Tayx.Graphy.Utils.NumString
         #region Properties -> Public
 
         /// <summary>
-        /// Have the int buffers been initialized?
+        ///     Have the int buffers been initialized?
         /// </summary>
-        public static bool Inited
-        {
-            get
-            {
-                return negativeBuffer.Length > 0 || positiveBuffer.Length > 0;
-            }
-        }
+        public static bool Inited => (negativeBuffer.Length > 0) || (positiveBuffer.Length > 0);
 
         /// <summary>
-        /// The lowest int value of the existing number buffer.
+        ///     The lowest int value of the existing number buffer.
         /// </summary>
-        public static int MinValue
-        {
-            get
-            {
-                return -(negativeBuffer.Length - 1);
-            }
-        }
+        public static int MinValue => -(negativeBuffer.Length - 1);
 
         /// <summary>
-        /// The highest int value of the existing number buffer.
+        ///     The highest int value of the existing number buffer.
         /// </summary>
-        public static int MaxValue
-        {
-            get
-            {
-                return positiveBuffer.Length - 1;
-            }
-        }
+        public static int MaxValue => positiveBuffer.Length - 1;
 
         #endregion
 
         #region Methods -> Public
 
         /// <summary>
-        /// Initialize the buffers.
+        ///     Initialize the buffers.
         /// </summary>
         /// <param name="minNegativeValue">
-        /// Lowest negative value allowed.
+        ///     Lowest negative value allowed.
         /// </param>
         /// <param name="maxPositiveValue">
-        /// Highest positive value allowed.
+        ///     Highest positive value allowed.
         /// </param>
         public static void Init(int minNegativeValue, int maxPositiveValue)
         {
@@ -92,6 +67,7 @@ namespace Tayx.Graphy.Utils.NumString
                     negativeBuffer[i] = (-i).ToString();
                 }
             }
+
             if (maxPositiveValue >= 0)
             {
                 positiveBuffer = new string[maxPositiveValue];
@@ -101,24 +77,24 @@ namespace Tayx.Graphy.Utils.NumString
                 }
             }
         }
-        
+
         /// <summary>
-        /// Returns this int as a cached string.
+        ///     Returns this int as a cached string.
         /// </summary>
         /// <param name="value">
-        /// The required int.
+        ///     The required int.
         /// </param>
         /// <returns>
-        /// A cached number string.
+        ///     A cached number string.
         /// </returns>
         public static string ToStringNonAlloc(this int value)
         {
-            if (value < 0 && -value < negativeBuffer.Length)
+            if ((value < 0) && (-value < negativeBuffer.Length))
             {
                 return negativeBuffer[-value];
             }
 
-            if (value >= 0 && value < positiveBuffer.Length)
+            if ((value >= 0) && (value < positiveBuffer.Length))
             {
                 return positiveBuffer[value];
             }

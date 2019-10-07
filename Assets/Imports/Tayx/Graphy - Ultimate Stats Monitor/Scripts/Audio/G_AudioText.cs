@@ -1,17 +1,10 @@
-﻿/* ---------------------------------------
- * Author:          Martin Pane (martintayx@gmail.com) (@tayx94)
- * Collaborators:   Lars Aalbertsen (@Rockylars)
- * Project:         Graphy - Ultimate Stats Monitor
- * Date:            15-Dec-17
- * Studio:          Tayx
- * 
- * This project is released under the MIT license.
- * Attribution is not required, but it is always welcomed!
- * -------------------------------------*/
+﻿#region
 
+using Tayx.Graphy.Utils.NumString;
 using UnityEngine;
 using UnityEngine.UI;
-using Tayx.Graphy.Utils.NumString;
+
+#endregion
 
 namespace Tayx.Graphy.Audio
 {
@@ -26,19 +19,20 @@ namespace Tayx.Graphy.Audio
 
         #region Variables -> Serialized Private
 
-        [SerializeField] private    Text            m_DBText            = null;
+        [SerializeField]
+        private Text m_DBText;
 
         #endregion
 
         #region Variables -> Private
 
-        private                     GraphyManager   m_graphyManager     = null;
+        private GraphyManager m_graphyManager;
 
-        private                     G_AudioMonitor  m_audioMonitor      = null;
+        private G_AudioMonitor m_audioMonitor;
 
-        private                     int             m_updateRate        = 4;
+        private int m_updateRate = 4;
 
-        private                     float           m_deltaTimeOffset   = 0;
+        private float m_deltaTimeOffset;
 
         #endregion
 
@@ -53,7 +47,7 @@ namespace Tayx.Graphy.Audio
         {
             if (m_audioMonitor.SpectrumDataAvailable)
             {
-                if (m_deltaTimeOffset > 1f / m_updateRate)
+                if (m_deltaTimeOffset > (1f / m_updateRate))
                 {
                     m_deltaTimeOffset = 0f;
 
@@ -82,19 +76,19 @@ namespace Tayx.Graphy.Audio
         private void Init()
         {
             //TODO: Replace this with one activated from the core and figure out the min value.
-            if (!G_FloatString.Inited || G_FloatString.MinValue > -1000f || G_FloatString.MaxValue < 16384f)
+            if (!G_FloatString.Inited || (G_FloatString.MinValue > -1000f) || (G_FloatString.MaxValue < 16384f))
             {
                 G_FloatString.Init
                 (
-                    minNegativeValue: -1001f,
-                    maxPositiveValue: 16386f
+                    -1001f,
+                    16386f
                 );
             }
 
             m_graphyManager = transform.root.GetComponentInChildren<GraphyManager>();
 
             m_audioMonitor = GetComponent<G_AudioMonitor>();
-                       
+
             UpdateParameters();
         }
 

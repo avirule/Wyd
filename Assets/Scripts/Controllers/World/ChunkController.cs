@@ -24,7 +24,7 @@ namespace Wyd.Controllers.World
     {
         public static readonly Vector3Int Size = new Vector3Int(32, 256, 32);
         public static readonly int YIndexStep = Size.x * Size.z;
-        
+
         private static readonly ObjectCache<ChunkGenerator> ChunkGeneratorsCache =
             // todo decide how to handle this cache's size
             new ObjectCache<ChunkGenerator>(true, false, (Size.x / 2) * (Size.z / 2));

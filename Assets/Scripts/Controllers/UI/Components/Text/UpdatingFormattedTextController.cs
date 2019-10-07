@@ -1,6 +1,10 @@
+#region
+
 using System;
 using System.Diagnostics;
 using UnityEngine;
+
+#endregion
 
 namespace Wyd.Controllers.UI.Components.Text
 {
@@ -15,7 +19,7 @@ namespace Wyd.Controllers.UI.Components.Text
         protected override void Awake()
         {
             base.Awake();
-            
+
             _UpdatesPerSecondTimeSpan = TimeSpan.FromSeconds(1d / UpdatesPerSecond);
             _UpdateTimer = Stopwatch.StartNew();
         }
@@ -26,9 +30,9 @@ namespace Wyd.Controllers.UI.Components.Text
             {
                 return;
             }
-            
+
             _UpdateTimer.Restart();
-            
+
             TimedUpdate();
         }
 

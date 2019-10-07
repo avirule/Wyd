@@ -1,24 +1,15 @@
-﻿/* ---------------------------------------
- * Author:          Martin Pane (martintayx@gmail.com) (@tayx94)
- * Collaborators:   Lars Aalbertsen (@Rockylars)
- * Project:         Graphy - Ultimate Stats Monitor
- * Date:            05-Mar-18
- * Studio:          Tayx
- * 
- * This project is released under the MIT license.
- * Attribution is not required, but it is always welcomed!
- * -------------------------------------*/
+﻿#region
 
 using UnityEngine;
 using UnityEngine.UI;
 
-using System.Collections;
+#endregion
 
 namespace Tayx.Graphy.CustomizationScene
 {
     [RequireComponent(typeof(Text))]
-	public class UpdateTextWithSliderValue : MonoBehaviour
-	{
+    public class UpdateTextWithSliderValue : MonoBehaviour
+    {
         /* ----- TODO: ----------------------------
          * Check if we can seal this class.
          * Add summaries to the variables.
@@ -29,7 +20,8 @@ namespace Tayx.Graphy.CustomizationScene
 
         #region Variables -> Serialized Private
 
-        [SerializeField] private Slider m_slider = null;
+        [SerializeField]
+        private Slider m_slider;
 
         #endregion
 
@@ -41,21 +33,21 @@ namespace Tayx.Graphy.CustomizationScene
 
         #region Methods -> Unity Callbacks
 
-        void Start()
-		{
-			m_text = GetComponent<Text>();
+        private void Start()
+        {
+            m_text = GetComponent<Text>();
 
-			m_slider.onValueChanged.AddListener(UpdateText);
-		}
+            m_slider.onValueChanged.AddListener(UpdateText);
+        }
 
         #endregion
 
         #region Methods -> Private
 
         private void UpdateText(float value)
-		{
-			m_text.text = value.ToString();
-		}
+        {
+            m_text.text = value.ToString();
+        }
 
         #endregion
     }

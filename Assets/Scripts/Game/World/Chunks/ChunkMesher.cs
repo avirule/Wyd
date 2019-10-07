@@ -129,7 +129,7 @@ namespace Wyd.Game.World.Chunks
             Vector3 globalPosition = _Position + localPosition;
 
             byte traversedFaces = 0;
-            
+
             if (!Blocks[index].HasFace(Direction.North)
                 && (((localPosition.z == (Size.z - 1))
                      && WorldController.Current.TryGetBlockAt(globalPosition + Vector3.forward, out Block block)
@@ -466,7 +466,7 @@ namespace Wyd.Game.World.Chunks
             Vector3 globalPosition = _Position + localPosition;
 
             byte traversedFaces = 0;
-            
+
             // ensure this block face hasn't already been traversed
             if (!Blocks[index].HasFace(Direction.North)
                 // check if we're on the far edge of the chunk, and if so, query WorldController for blocks in adjacent chunk

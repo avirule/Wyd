@@ -1,19 +1,12 @@
-﻿/* ---------------------------------------
- * Author:          Martin Pane (martintayx@gmail.com) (@tayx94)
- * Collaborators:   Lars Aalbertsen (@Rockylars)
- * Project:         Graphy - Ultimate Stats Monitor
- * Date:            03-Jan-18
- * Studio:          Tayx
- * 
- * This project is released under the MIT license.
- * Attribution is not required, but it is always welcomed!
- * -------------------------------------*/
+﻿#region
 
-using UnityEngine;
-using UnityEngine.UI;
 using System.Collections.Generic;
 using Tayx.Graphy.UI;
 using Tayx.Graphy.Utils;
+using UnityEngine;
+using UnityEngine.UI;
+
+#endregion
 
 namespace Tayx.Graphy.Audio
 {
@@ -30,28 +23,32 @@ namespace Tayx.Graphy.Audio
 
         #region Variables -> Serialized Private
 
-        [SerializeField] private    GameObject                  m_audioGraphGameObject = null;
-        [SerializeField] private    Text                        m_audioDbText = null;
+        [SerializeField]
+        private GameObject m_audioGraphGameObject;
 
-        [SerializeField] private    List<Image>                 m_backgroundImages      = new List<Image>();
+        [SerializeField]
+        private Text m_audioDbText;
+
+        [SerializeField]
+        private List<Image> m_backgroundImages = new List<Image>();
 
         #endregion
 
         #region Variables -> Private
 
-        private                     GraphyManager               m_graphyManager = null;
+        private GraphyManager m_graphyManager;
 
-        private                     G_AudioGraph                m_audioGraph = null;
-        private                     G_AudioMonitor              m_audioMonitor = null;
-        private                     G_AudioText                 m_audioText = null;
+        private G_AudioGraph m_audioGraph;
+        private G_AudioMonitor m_audioMonitor;
+        private G_AudioText m_audioText;
 
-        private                     RectTransform               m_rectTransform = null;
+        private RectTransform m_rectTransform;
 
-        private                     List<GameObject>            m_childrenGameObjects   = new List<GameObject>();
+        private List<GameObject> m_childrenGameObjects = new List<GameObject>();
 
-        private                     GraphyManager.ModuleState   m_previousModuleState = GraphyManager.ModuleState.FULL;
-        private                     GraphyManager.ModuleState   m_currentModuleState = GraphyManager.ModuleState.FULL;
-        
+        private GraphyManager.ModuleState m_previousModuleState = GraphyManager.ModuleState.FULL;
+        private GraphyManager.ModuleState m_currentModuleState = GraphyManager.ModuleState.FULL;
+
         #endregion
 
         #region Methods -> Unity Callbacks
@@ -74,40 +71,40 @@ namespace Tayx.Graphy.Audio
         {
             float xSideOffset = Mathf.Abs(m_rectTransform.anchoredPosition.x);
             float ySideOffset = Mathf.Abs(m_rectTransform.anchoredPosition.y);
-            
+
             m_audioDbText.alignment = TextAnchor.UpperRight;
 
             switch (newModulePosition)
             {
                 case GraphyManager.ModulePosition.TOP_LEFT:
 
-                    m_rectTransform.anchorMax           = Vector2.up;
-                    m_rectTransform.anchorMin           = Vector2.up;
-                    m_rectTransform.anchoredPosition    = new Vector2(xSideOffset, -ySideOffset);
+                    m_rectTransform.anchorMax = Vector2.up;
+                    m_rectTransform.anchorMin = Vector2.up;
+                    m_rectTransform.anchoredPosition = new Vector2(xSideOffset, -ySideOffset);
 
                     break;
 
                 case GraphyManager.ModulePosition.TOP_RIGHT:
 
-                    m_rectTransform.anchorMax           = Vector2.one;
-                    m_rectTransform.anchorMin           = Vector2.one;
-                    m_rectTransform.anchoredPosition    = new Vector2(-xSideOffset, -ySideOffset);
+                    m_rectTransform.anchorMax = Vector2.one;
+                    m_rectTransform.anchorMin = Vector2.one;
+                    m_rectTransform.anchoredPosition = new Vector2(-xSideOffset, -ySideOffset);
 
                     break;
 
                 case GraphyManager.ModulePosition.BOTTOM_LEFT:
 
-                    m_rectTransform.anchorMax           = Vector2.zero;
-                    m_rectTransform.anchorMin           = Vector2.zero;
-                    m_rectTransform.anchoredPosition    = new Vector2(xSideOffset, ySideOffset);
+                    m_rectTransform.anchorMax = Vector2.zero;
+                    m_rectTransform.anchorMin = Vector2.zero;
+                    m_rectTransform.anchoredPosition = new Vector2(xSideOffset, ySideOffset);
 
                     break;
 
                 case GraphyManager.ModulePosition.BOTTOM_RIGHT:
 
-                    m_rectTransform.anchorMax           = Vector2.right;
-                    m_rectTransform.anchorMin           = Vector2.right;
-                    m_rectTransform.anchoredPosition    = new Vector2(-xSideOffset, ySideOffset);
+                    m_rectTransform.anchorMax = Vector2.right;
+                    m_rectTransform.anchorMin = Vector2.right;
+                    m_rectTransform.anchoredPosition = new Vector2(-xSideOffset, ySideOffset);
 
                     break;
 
@@ -123,7 +120,7 @@ namespace Tayx.Graphy.Audio
                 m_previousModuleState = m_currentModuleState;
             }
 
-            m_currentModuleState    = state;
+            m_currentModuleState = state;
 
             switch (state)
             {
@@ -131,7 +128,7 @@ namespace Tayx.Graphy.Audio
                     gameObject.SetActive(true);
                     m_childrenGameObjects.SetAllActive(true);
                     SetGraphActive(true);
-                    
+
                     if (m_graphyManager.Background)
                     {
                         m_backgroundImages.SetOneActive(0);
@@ -140,15 +137,15 @@ namespace Tayx.Graphy.Audio
                     {
                         m_backgroundImages.SetAllActive(false);
                     }
-                    
+
                     break;
-                
+
                 case GraphyManager.ModuleState.TEXT:
                 case GraphyManager.ModuleState.BASIC:
                     gameObject.SetActive(true);
                     m_childrenGameObjects.SetAllActive(true);
                     SetGraphActive(false);
-                    
+
                     if (m_graphyManager.Background)
                     {
                         m_backgroundImages.SetOneActive(1);
@@ -157,14 +154,14 @@ namespace Tayx.Graphy.Audio
                     {
                         m_backgroundImages.SetAllActive(false);
                     }
-                    
+
                     break;
 
                 case GraphyManager.ModuleState.BACKGROUND:
                     gameObject.SetActive(true);
                     SetGraphActive(false);
                     m_childrenGameObjects.SetAllActive(false);
-                    
+
                     m_backgroundImages.SetAllActive(false);
 
                     break;
@@ -182,33 +179,33 @@ namespace Tayx.Graphy.Audio
 
         public void UpdateParameters()
         {
-            foreach (var image in m_backgroundImages)
+            foreach (Image image in m_backgroundImages)
             {
                 image.color = m_graphyManager.BackgroundColor;
             }
-            
-            m_audioGraph    .UpdateParameters();
-            m_audioMonitor  .UpdateParameters();
-            m_audioText     .UpdateParameters();
-            
+
+            m_audioGraph.UpdateParameters();
+            m_audioMonitor.UpdateParameters();
+            m_audioText.UpdateParameters();
+
             SetState(m_graphyManager.AudioModuleState);
         }
 
         public void RefreshParameters()
         {
-            foreach (var image in m_backgroundImages)
+            foreach (Image image in m_backgroundImages)
             {
                 image.color = m_graphyManager.BackgroundColor;
             }
 
-            m_audioGraph    .UpdateParameters();
-            m_audioMonitor  .UpdateParameters();
-            m_audioText     .UpdateParameters();
+            m_audioGraph.UpdateParameters();
+            m_audioMonitor.UpdateParameters();
+            m_audioText.UpdateParameters();
 
             SetState(m_currentModuleState, true);
         }
 
-            #endregion
+        #endregion
 
         #region Methods -> Private
 
@@ -218,10 +215,10 @@ namespace Tayx.Graphy.Audio
 
             m_rectTransform = GetComponent<RectTransform>();
 
-            m_audioGraph    = GetComponent<G_AudioGraph>();
-            m_audioMonitor  = GetComponent<G_AudioMonitor>();
-            m_audioText     = GetComponent<G_AudioText>();
-            
+            m_audioGraph = GetComponent<G_AudioGraph>();
+            m_audioMonitor = GetComponent<G_AudioMonitor>();
+            m_audioText = GetComponent<G_AudioText>();
+
             foreach (Transform child in transform)
             {
                 if (child.parent == transform)
