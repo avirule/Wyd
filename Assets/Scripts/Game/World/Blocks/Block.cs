@@ -81,11 +81,11 @@ namespace Wyd.Game.World.Blocks
 
         public bool HasAllFaces() => Faces >= SHIFTED_FACES_MASK;
 
-        public bool HasFace(Direction direction) => (Faces & (byte) direction) > 0;
+        public bool HasFace(Direction direction) => (Value & ((byte) direction << ID_PASS_BITSHIFT)) > 0;
 
         public void SetFace(Direction direction, bool boolean)
         {
-            Faces = Faces.SetBitByBoolWithMask((byte) direction, boolean);
+            Value = Value.SetBitByBoolWithMask((byte) direction << ID_PASS_BITSHIFT, boolean);
         }
 
         public void SetTransparency(bool transparent)

@@ -28,9 +28,8 @@ namespace Wyd.Game.World.Chunks
         private int _YIndexStep;
 
         public CancellationToken AbortToken;
-
-        public Block[] Blocks { get; set; }
-        public bool AggressiveFaceMerging { get; set; }
+        public Block[] Blocks;
+        public bool AggressiveFaceMerging;
 
         public Bounds Bounds
         {
@@ -134,13 +133,10 @@ namespace Wyd.Game.World.Chunks
 
         private void TraverseIndexTransparent(int index, Vector3Int localPosition)
         {
-            if (Blocks[index].Id == 15)
-            {
-                
-            }
-            
             Vector3 globalPosition = _Position + localPosition;
 
+            byte traversedFaces = 0;
+            
             if (!Blocks[index].HasFace(Direction.North)
                 && (((localPosition.z == (Size.z - 1))
                      && WorldController.Current.TryGetBlockAt(globalPosition + Vector3.forward, out Block block)
@@ -151,7 +147,7 @@ namespace Wyd.Game.World.Chunks
                 // todo fix northern transparent faces sometimes not culling inner faces
 
                 // set face of current block so it isn't traversed over
-                Blocks[index].SetFace(Direction.North, true);
+                traversedFaces |= (byte) Direction.North;
                 // add triangles for this block face
                 AddTriangles(Direction.North, true);
 
@@ -212,7 +208,7 @@ namespace Wyd.Game.World.Chunks
                     || ((localPosition.x < (Size.x - 1))
                         && (Blocks[index + 1].Id != Blocks[index].Id))))
             {
-                Blocks[index].SetFace(Direction.East, true);
+                traversedFaces |= (byte) Direction.East;
                 AddTriangles(Direction.East, true);
 
                 int traversals;
@@ -265,7 +261,7 @@ namespace Wyd.Game.World.Chunks
                     || ((localPosition.z > 0)
                         && (Blocks[index - Size.x].Id != Blocks[index].Id))))
             {
-                Blocks[index].SetFace(Direction.South, true);
+                traversedFaces |= (byte) Direction.South;
                 AddTriangles(Direction.South, true);
 
                 int traversals;
@@ -319,7 +315,7 @@ namespace Wyd.Game.World.Chunks
                      && (Blocks[index].Id != block.Id))
                     || ((localPosition.x > 0) && (Blocks[index - 1].Id != Blocks[index].Id))))
             {
-                Blocks[index].SetFace(Direction.West, true);
+                traversedFaces |= (byte) Direction.West;
                 AddTriangles(Direction.West, true);
 
                 int traversals;
@@ -372,7 +368,7 @@ namespace Wyd.Game.World.Chunks
                     || ((localPosition.y < (Size.y - 1))
                         && (Blocks[index + _YIndexStep].Id != Blocks[index].Id))))
             {
-                Blocks[index].SetFace(Direction.Up, true);
+                traversedFaces |= (byte) Direction.Up;
                 AddTriangles(Direction.Up, true);
 
                 int traversals;
@@ -423,7 +419,7 @@ namespace Wyd.Game.World.Chunks
                 && (localPosition.y > 0)
                 && (Blocks[index - _YIndexStep].Id != Blocks[index].Id))
             {
-                Blocks[index].SetFace(Direction.Down, true);
+                traversedFaces |= (byte) Direction.Down;
                 AddTriangles(Direction.Down, true);
 
                 int traversals;
@@ -468,17 +464,16 @@ namespace Wyd.Game.World.Chunks
                     _UVs.Add(uvs[3]);
                 }
             }
+
+            Blocks[index].Faces = traversedFaces;
         }
 
         private void TraverseIndex(int index, Vector3Int localPosition)
         {
-            if (Blocks[index].Id == 15)
-            {
-                
-            }
-            
             Vector3 globalPosition = _Position + localPosition;
 
+            byte traversedFaces = 0;
+            
             // ensure this block face hasn't already been traversed
             if (!Blocks[index].HasFace(Direction.North)
                 // check if we're on the far edge of the chunk, and if so, query WorldController for blocks in adjacent chunk
@@ -490,7 +485,7 @@ namespace Wyd.Game.World.Chunks
                         && Blocks[index + Size.x].Transparent)))
             {
                 // set face of current block so it isn't traversed over
-                Blocks[index].SetFace(Direction.North, true);
+                traversedFaces |= (byte) Direction.North;
                 // add triangles for this block face
                 AddTriangles(Direction.North);
 
@@ -551,7 +546,7 @@ namespace Wyd.Game.World.Chunks
                      && block.Transparent)
                     || ((localPosition.x < (Size.x - 1)) && Blocks[index + 1].Transparent)))
             {
-                Blocks[index].SetFace(Direction.East, true);
+                traversedFaces |= (byte) Direction.East;
                 AddTriangles(Direction.East);
 
                 int traversals;
@@ -603,7 +598,7 @@ namespace Wyd.Game.World.Chunks
                      && block.Transparent)
                     || ((localPosition.z > 0) && Blocks[index - Size.x].Transparent)))
             {
-                Blocks[index].SetFace(Direction.South, true);
+                traversedFaces |= (byte) Direction.South;
                 AddTriangles(Direction.South);
 
                 int traversals;
@@ -655,7 +650,7 @@ namespace Wyd.Game.World.Chunks
                      && block.Transparent)
                     || ((localPosition.x > 0) && Blocks[index - 1].Transparent)))
             {
-                Blocks[index].SetFace(Direction.West, true);
+                traversedFaces |= (byte) Direction.West;
                 AddTriangles(Direction.West);
 
                 int traversals;
@@ -708,7 +703,7 @@ namespace Wyd.Game.World.Chunks
                     || ((localPosition.y < (Size.y - 1))
                         && Blocks[index + _YIndexStep].Transparent)))
             {
-                Blocks[index].SetFace(Direction.Up, true);
+                traversedFaces |= (byte) Direction.Up;
                 AddTriangles(Direction.Up);
 
                 int traversals;
@@ -759,7 +754,7 @@ namespace Wyd.Game.World.Chunks
                 && (localPosition.y > 0)
                 && Blocks[index - _YIndexStep].Transparent)
             {
-                Blocks[index].SetFace(Direction.Down, true);
+                traversedFaces |= (byte) Direction.Down;
                 AddTriangles(Direction.Down);
 
                 int traversals;
@@ -804,6 +799,8 @@ namespace Wyd.Game.World.Chunks
                     _UVs.Add(uvs[3]);
                 }
             }
+
+            Blocks[index].Faces = traversedFaces;
         }
 
         private void AddTriangles(Direction direction, bool transparent = false)
