@@ -1,10 +1,10 @@
 #region
 
 using System;
-using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Threading;
 using NLog;
+using Wyd.System.Collections;
 using Wyd.System.Logging;
 
 #endregion
@@ -29,19 +29,19 @@ namespace Wyd.System.Jobs
         Adaptive
     }
 
-    public sealed class JobQueue : IDisposable
+    public sealed class JobQueue
     {
         private bool _Disposed;
 
         private readonly Thread _OperationThread;
         private readonly List<JobWorker> _Workers;
-        private readonly BlockingCollection<Job> _ProcessQueue;
+        private readonly SpinLockCollection<Job> _ProcessQueue;
         private readonly CancellationTokenSource _AbortTokenSource;
 
         private CancellationToken _AbortToken;
         private int _LastThreadIndexQueuedInto;
         private int _WorkerThreadCount;
-        private int _WaitTimeout;
+        private TimeSpan _WaitTimeout;
         private int _ActiveJobCount;
         private int _JobCount;
         private int _MaximumJobCount;
@@ -59,14 +59,14 @@ namespace Wyd.System.Jobs
         public bool Running { get; private set; }
 
         /// <summary>
-        ///     Time in milliseconds to wait between attempts to retrieve item from internal queue.
+        ///     Time to wait between attempts to retrieve item from internal queue.
         /// </summary>
-        public int WaitTimeout
+        public TimeSpan WaitTimeout
         {
             get => _WaitTimeout;
             set
             {
-                if ((value <= 0) || (_WaitTimeout == value))
+                if (value < TimeSpan.Zero)
                 {
                     return;
                 }
@@ -93,14 +93,15 @@ namespace Wyd.System.Jobs
         /// </param>
         /// <param name="threadingMode"></param>
         /// <param name="threadPoolSize">Size of internal <see cref="JobWorker" /> pool</param>
-        public JobQueue(int waitTimeout, ThreadingMode threadingMode = ThreadingMode.Single, int threadPoolSize = 0)
+        public JobQueue(TimeSpan waitTimeout, ThreadingMode threadingMode = ThreadingMode.Single,
+            int threadPoolSize = 0)
         {
             WaitTimeout = waitTimeout;
             ThreadingMode = threadingMode;
             ModifyWorkerThreadCount(threadPoolSize);
 
             _OperationThread = new Thread(ProcessJobs);
-            _ProcessQueue = new BlockingCollection<Job>();
+            _ProcessQueue = new SpinLockCollection<Job>();
             _Workers = new List<JobWorker>(WorkerThreadCount);
             _AbortTokenSource = new CancellationTokenSource();
             _AbortToken = _AbortTokenSource.Token;
@@ -150,7 +151,7 @@ namespace Wyd.System.Jobs
         public void Abort()
         {
             _AbortTokenSource.Cancel();
-            Interlocked.Exchange(ref _WaitTimeout, 1);
+            WaitTimeout = TimeSpan.Zero;
         }
 
         #endregion
@@ -174,7 +175,7 @@ namespace Wyd.System.Jobs
             }
 
             job.Initialize(Guid.NewGuid().ToString(), _AbortToken);
-            _ProcessQueue.Add(job, _AbortToken);
+            _ProcessQueue.Add(job);
             OnJobQueued(this, new JobEventArgs(job));
             identifier = job.Identity;
             return true;
@@ -213,7 +214,6 @@ namespace Wyd.System.Jobs
             }
 
             Running = false;
-            Dispose();
         }
 
         private void SpawnJobWorker()
@@ -337,33 +337,6 @@ namespace Wyd.System.Jobs
         private void OnWorkerCountChanged(object sender, int newCount)
         {
             WorkerCountChanged?.Invoke(sender, newCount);
-        }
-
-        #endregion
-
-        #region DISPOSE
-
-        /// <summary>
-        ///     Disposes of <see cref="JobQueue" /> instance.
-        /// </summary>
-        public void Dispose()
-        {
-            Dispose(true);
-        }
-
-        private void Dispose(bool disposing)
-        {
-            if (_Disposed)
-            {
-                return;
-            }
-
-            if (disposing)
-            {
-                _ProcessQueue?.Dispose();
-            }
-
-            _Disposed = true;
         }
 
         #endregion

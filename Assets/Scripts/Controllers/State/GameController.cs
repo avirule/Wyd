@@ -40,7 +40,7 @@ namespace Wyd.Controllers.State
 
         private void Start()
         {
-            JobExecutionQueue = new JobQueue(200, OptionsController.Current.ThreadingMode,
+            JobExecutionQueue = new JobQueue(TimeSpan.FromMilliseconds(200), OptionsController.Current.ThreadingMode,
                 OptionsController.Current.CPUCoreUtilization);
 
             JobExecutionQueue.WorkerCountChanged += (sender, count) =>
@@ -90,7 +90,6 @@ namespace Wyd.Controllers.State
         {
             // Deallocate and destroy ALL NativeCollection / disposable objects
             JobExecutionQueue.Abort();
-            JobExecutionQueue.Dispose();
             LogManager.Shutdown();
         }
 

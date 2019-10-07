@@ -5,7 +5,9 @@ using NLog;
 using NLog.Config;
 using NLog.Targets;
 using NLog.Targets.Wrappers;
+using UnityEngine;
 using Wyd.System.Logging.Targets;
+using Logger = NLog.Logger;
 
 #endregion
 
@@ -38,6 +40,7 @@ namespace Wyd.System.Logging
 
             FileTarget fileTarget = new FileTarget
             {
+                Layout = "$[{longdate} | ${level}] ${message}",
                 OpenFileFlushTimeout = 30,
                 Encoding = Encoding.ASCII,
                 LineEnding = LineEndingMode.CRLF,
@@ -45,18 +48,16 @@ namespace Wyd.System.Logging
                 ArchiveEvery = FileArchivePeriod.Day,
                 MaxArchiveFiles = 8,
                 EnableArchiveFileCompression = true,
-                FileName = @"logs/",
+                FileName = $@"{Application.persistentDataPath}\logs\runtime.log",
                 CreateDirs = true,
                 KeepFileOpen = true,
                 OpenFileCacheTimeout = 30,
                 ConcurrentWrites = false
             };
-            
+
             AsyncTargetWrapper asyncFileWrapper = new AsyncTargetWrapper(fileTarget)
             {
-                OverflowAction = AsyncTargetWrapperOverflowAction.Block,
-                OptimizeBufferReuse = true,
-                ForceLockingQueue = false
+                OverflowAction = AsyncTargetWrapperOverflowAction.Block
             };
 
             config.AddRule(LogLevel.Trace, LogLevel.Fatal, asyncFileWrapper);

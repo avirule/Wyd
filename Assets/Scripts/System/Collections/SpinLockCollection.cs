@@ -7,8 +7,6 @@ using System.Threading;
 
 #endregion
 
-// ReSharper disable FieldCanBeMadeReadOnly.Local
-
 namespace Wyd.System.Collections
 {
     internal static class Static
@@ -18,18 +16,14 @@ namespace Wyd.System.Collections
 
     public class SpinLockCollection<T>
     {
-        private ConcurrentQueue<T> _Queue;
-        private AutoResetEvent _AutoResetEvent;
-        private CancellationToken _Token;
+        private readonly ConcurrentQueue<T> _Queue;
+        private readonly AutoResetEvent _AutoResetEvent;
 
         public SpinLockCollection()
         {
             _Queue = new ConcurrentQueue<T>();
             _AutoResetEvent = new AutoResetEvent(false);
-            _Token = CancellationToken.None;
         }
-
-        public SpinLockCollection(CancellationToken token) : this() => _Token = token;
 
         public void Add(T item)
         {
@@ -51,11 +45,11 @@ namespace Wyd.System.Collections
             return item;
         }
 
-        public bool TryTake(out T result, TimeSpan timeout)
+        public bool TryTake(out T result, TimeSpan timeout, CancellationToken token)
         {
             result = default;
 
-            if (_Token.IsCancellationRequested)
+            if (token.IsCancellationRequested)
             {
                 return false;
             }
@@ -67,7 +61,7 @@ namespace Wyd.System.Collections
 
             Stopwatch stopwatch = Stopwatch.StartNew();
 
-            while (!_Token.IsCancellationRequested && (stopwatch.Elapsed < timeout))
+            while (!token.IsCancellationRequested && (stopwatch.Elapsed < timeout))
             {
                 if (_Queue.TryDequeue(out result))
                 {

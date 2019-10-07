@@ -1,8 +1,8 @@
 #region
 
 using System;
-using System.Collections.Concurrent;
 using System.Threading;
+using Wyd.System.Collections;
 
 #endregion
 
@@ -12,10 +12,10 @@ namespace Wyd.System.Jobs
     {
         private readonly object _Handle;
         private readonly Thread _Thread;
-        private readonly BlockingCollection<Job> _ItemQueue;
+        private readonly SpinLockCollection<Job> _ItemQueue;
         private readonly CancellationToken _AbortToken;
 
-        public readonly int WaitTimeout;
+        public readonly TimeSpan WaitTimeout;
         private bool _Processing;
 
         public bool Running { get; private set; }
@@ -47,14 +47,14 @@ namespace Wyd.System.Jobs
         public event JobStartedEventHandler JobStarted;
         public event JobFinishedEventHandler JobFinished;
 
-        public JobWorker(int waitTimeout, CancellationToken abortToken)
+        public JobWorker(TimeSpan waitTimeout, CancellationToken abortToken)
         {
             _Handle = new object();
             _Thread = new Thread(ProcessItemQueue);
-            _ItemQueue = new BlockingCollection<Job>();
 
-            WaitTimeout = waitTimeout;
             _AbortToken = abortToken;
+            _ItemQueue = new SpinLockCollection<Job>();
+            WaitTimeout = waitTimeout;
         }
 
         public void Start()
@@ -63,7 +63,7 @@ namespace Wyd.System.Jobs
             Running = true;
         }
 
-        public bool QueueJob(Job job) => _ItemQueue.TryAdd(job);
+        public void QueueJob(Job job) => _ItemQueue.Add(job);
 
         private void ProcessItemQueue()
         {
