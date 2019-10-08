@@ -355,9 +355,7 @@ namespace Wyd.Game.World.Chunks
             }
 
             if (!Blocks[index].HasFace(Direction.Up)
-                && (((localPosition.y == (Size.y - 1))
-                     && WorldController.Current.TryGetBlockAt(globalPosition + Vector3.up, out block)
-                     && (block.Id != Blocks[index].Id))
+                && ((localPosition.y == (Size.y - 1))
                     || ((localPosition.y < (Size.y - 1))
                         && (Blocks[index + _YIndexStep].Id != Blocks[index].Id))))
             {
@@ -690,9 +688,7 @@ namespace Wyd.Game.World.Chunks
             }
 
             if (!Blocks[index].HasFace(Direction.Up)
-                && (((localPosition.y == (Size.y - 1))
-                     && WorldController.Current.TryGetBlockAt(globalPosition + Vector3.up, out block)
-                     && block.Transparent)
+                && ((localPosition.y == (Size.y - 1))
                     || ((localPosition.y < (Size.y - 1))
                         && Blocks[index + _YIndexStep].Transparent)))
             {

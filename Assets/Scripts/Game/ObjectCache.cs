@@ -22,8 +22,7 @@ namespace Wyd.Game
 
         public int Size => _InternalCache.Count;
 
-        public ObjectCache(
-            bool createNewIfEmpty, bool preInitialize = false, int maximumSize = -1,
+        public ObjectCache(bool createNewIfEmpty, bool preInitialize = false, int maximumSize = -1,
             PreCachingOperation<T> preCachingOperation = default,
             ItemCulledOperation<T> itemCulledOperation = default)
         {

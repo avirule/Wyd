@@ -31,10 +31,10 @@ namespace Wyd.Game.World.Chunks
         public const GenerationStep LAST_BUILDING_STEP = GenerationStep.Accents;
 
         private static readonly ObjectCache<ChunkBuildingJobRawTerrain> ChunkRawTerrainBuilderCache =
-            new ObjectCache<ChunkBuildingJobRawTerrain>(true);
+            new ObjectCache<ChunkBuildingJobRawTerrain>(true, false, 256);
 
         private static readonly ObjectCache<ChunkBuildingJobAccents> ChunkAccentsBuilderCache =
-            new ObjectCache<ChunkBuildingJobAccents>(true);
+            new ObjectCache<ChunkBuildingJobAccents>(true, false, 256);
 
         private static readonly ObjectCache<ChunkMeshingJob> ChunkMeshersCache =
             new ObjectCache<ChunkMeshingJob>(true);

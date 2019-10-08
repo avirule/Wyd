@@ -39,7 +39,7 @@ namespace Wyd.Game.World.Chunks.BuildingJob
             {
                 int currentIndex = startIndex + (i * ChunkController.YIndexStep);
 
-                if (currentIndex > Blocks.Length)
+                if (currentIndex >= Blocks.Length)
                 {
                     return false;
                 }
