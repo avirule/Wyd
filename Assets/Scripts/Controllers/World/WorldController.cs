@@ -26,8 +26,8 @@ namespace Wyd.Controllers.World
         private ChunkController _ChunkControllerObject;
         private Dictionary<Vector3, ChunkController> _Chunks;
         private ObjectCache<ChunkController> _ChunkCache;
-        private Stack<IEntity> _BuildChunksAroundEntityStack;
-        private Stack<ChunkChangedEventArgs> _ChunkDeactivationStack;
+        private Stack<IEntity> _EntitiesPendingChunkBuilding;
+        private Stack<ChunkChangedEventArgs> _ChunksPendingDeactivation;
         private WorldSaveFileProvider _SaveFileProvider;
         private Stopwatch _FrameTimer;
         private Vector3 _SpawnPoint;
@@ -37,11 +37,11 @@ namespace Wyd.Controllers.World
         public float TicksPerSecond;
 
         public bool ReadyForGeneration =>
-            (_BuildChunksAroundEntityStack.Count == 0) && (_ChunkDeactivationStack.Count == 0);
+            (_EntitiesPendingChunkBuilding.Count == 0) && (_ChunksPendingDeactivation.Count == 0);
 
         public int ChunkRegionsActiveCount => _Chunks.Count;
         public int ChunkRegionsCachedCount => _ChunkCache.Size;
-        public int ChunkRegionsQueuedForCreation => _BuildChunksAroundEntityStack.Count;
+        public int ChunkRegionsQueuedForCreation => _EntitiesPendingChunkBuilding.Count;
 
         public WorldSeed Seed { get; private set; }
         public long InitialTick { get; private set; }
@@ -84,8 +84,8 @@ namespace Wyd.Controllers.World
             AssignCurrent(this);
             SetTickRate();
 
-            _ChunkControllerObject = Resources.Load<ChunkController>(@"Prefabs/Chunk");
-            _Chunks = new Dictionary<Vector3, ChunkController>();
+            _ChunkControllerObject = GameController.LoadResource<ChunkController>(@"Prefabs/Chunk");
+
             _ChunkCache = new ObjectCache<ChunkController>(false, false, -1,
                 (ref ChunkController chunkController) =>
                 {
@@ -96,9 +96,12 @@ namespace Wyd.Controllers.World
 
                     return ref chunkController;
                 },
-                (ref ChunkController chunkController) => Destroy(chunkController.gameObject));
-            _BuildChunksAroundEntityStack = new Stack<IEntity>();
-            _ChunkDeactivationStack = new Stack<ChunkChangedEventArgs>();
+                (ref ChunkController chunkController) =>
+                    Destroy(chunkController.gameObject));
+            
+            _Chunks = new Dictionary<Vector3, ChunkController>();
+            _EntitiesPendingChunkBuilding = new Stack<IEntity>();
+            _ChunksPendingDeactivation = new Stack<ChunkChangedEventArgs>();
             _SaveFileProvider = new WorldSaveFileProvider("world");
             _FrameTimer = new Stopwatch();
 
@@ -108,13 +111,15 @@ namespace Wyd.Controllers.World
 
         private void Start()
         {
-            TerrainMaterial = Resources.Load<Material>(@"Materials\TerrainMaterial");
+            _ChunkCache.MaximumSize = OptionsController.Current.MaximumChunkCacheSize;
+
+            TerrainMaterial = GameController.LoadResource<Material>(@"Materials\TerrainMaterial");
             TerrainMaterial.SetTexture(TextureController.MainTexPropertyID,
                 TextureController.Current.TerrainTexture);
 
             EntityController.Current.RegisterWatchForTag(RegisterCollideableEntity, "collider");
             EntityController.Current.RegisterWatchForTag(RegisterLoaderEntity, "loader");
-            _ChunkCache.MaximumSize = OptionsController.Current.MaximumChunkCacheSize;
+            
             // todo fix spawn point to set to useful value
             (_SpawnPoint.x, _SpawnPoint.y, _SpawnPoint.z) =
                 Mathv.GetIndexAs3D(Seed, new Vector3Int(int.MaxValue, int.MaxValue, int.MaxValue));
@@ -130,15 +135,15 @@ namespace Wyd.Controllers.World
         {
             _FrameTimer.Restart();
 
-            while ((_BuildChunksAroundEntityStack.Count > 0) && IsInSafeFrameTime())
+            while ((_EntitiesPendingChunkBuilding.Count > 0) && IsInSafeFrameTime())
             {
-                IEntity loader = _BuildChunksAroundEntityStack.Pop();
+                IEntity loader = _EntitiesPendingChunkBuilding.Pop();
                 BuildChunksAroundEntity(loader);
             }
 
-            while ((_ChunkDeactivationStack.Count > 0) && IsInSafeFrameTime())
+            while ((_ChunksPendingDeactivation.Count > 0) && IsInSafeFrameTime())
             {
-                ChunkChangedEventArgs args = _ChunkDeactivationStack.Pop();
+                ChunkChangedEventArgs args = _ChunksPendingDeactivation.Pop();
 
                 // cache position to avoid multiple native dll calls
                 Vector3 position = args.ChunkBounds.min;
@@ -212,7 +217,7 @@ namespace Wyd.Controllers.World
                 {
                     if (!IsInSafeFrameTime())
                     {
-                        _BuildChunksAroundEntityStack.Push(loader);
+                        _EntitiesPendingChunkBuilding.Push(loader);
                         return;
                     }
 
@@ -238,7 +243,7 @@ namespace Wyd.Controllers.World
                     chunkController.MeshChanged += OnChunkMeshChanged;
                     chunkController.DeactivationCallback += OnChunkDeactivationCallback;
 
-                    chunkController.AssignLoader(loader);
+                    chunkController.AssignLoader(ref loader);
                     _Chunks.Add(chunkController.Position, chunkController);
 
                     // ensures that neighbours update their meshes to cull newly out of sight faces
@@ -286,8 +291,8 @@ namespace Wyd.Controllers.World
                 return;
             }
 
-            loader.ChunkPositionChanged += (sender, vector3) => { _BuildChunksAroundEntityStack.Push(loader); };
-            _BuildChunksAroundEntityStack.Push(loader);
+            loader.ChunkPositionChanged += (sender, vector3) => { _EntitiesPendingChunkBuilding.Push(loader); };
+            _EntitiesPendingChunkBuilding.Push(loader);
         }
 
         private void OnChunkBlocksChanged(object sender, ChunkChangedEventArgs args)
@@ -307,7 +312,7 @@ namespace Wyd.Controllers.World
         private void OnChunkDeactivationCallback(object sender, ChunkChangedEventArgs args)
         {
             // queue chunk for deactivation so deactivations can be processed in a frame-sensitive manner
-            _ChunkDeactivationStack.Push(args);
+            _ChunksPendingDeactivation.Push(args);
         }
 
         #endregion

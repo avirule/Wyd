@@ -11,6 +11,7 @@ using Wyd.Game;
 using Wyd.Game.World.Blocks;
 using Wyd.System.Jobs;
 using Wyd.System.Logging.Targets;
+using Object = UnityEngine.Object;
 
 #endregion
 
@@ -167,6 +168,20 @@ namespace Wyd.Controllers.State
             BlockController.Current.RegisterBlockRules("oak_leaf_apple", Block.Types.None, false, true, true, true);
             BlockController.Current.RegisterBlockRules("sand", Block.Types.Raw, false, true, true, true);
             BlockController.Current.RegisterBlockRules("water", Block.Types.Raw, true, false, false, false);
+        }
+
+        public static T LoadResource<T>(string path) where T : Object
+        {
+            T resource = Resources.Load<T>(path);
+            Resources.UnloadUnusedAssets();
+            return resource;
+        }
+
+        public static T[] LoadAllResources<T>(string path) where T : Object
+        {
+            T[] resources = Resources.LoadAll<T>(path);
+            Resources.UnloadUnusedAssets();
+            return resources;
         }
 
         public static void QuitToMainMenu()

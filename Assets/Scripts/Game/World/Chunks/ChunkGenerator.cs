@@ -82,7 +82,7 @@ namespace Wyd.Game.World.Chunks
 
             if (_NoiseShader == default)
             {
-                _NoiseShader = Resources.Load<ComputeShader>(@"Graphics\Shaders\NoiseComputationShader");
+                _NoiseShader = GameController.LoadResource<ComputeShader>(@"Graphics\Shaders\NoiseComputationShader");
                 _NoiseShader.SetInt("_NoiseSeed", WorldController.Current.Seed);
                 _NoiseShader.SetVector("_MaximumSize",
                     new Vector4(ChunkController.Size.x, ChunkController.Size.y,

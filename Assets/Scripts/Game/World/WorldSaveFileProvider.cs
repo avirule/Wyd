@@ -34,7 +34,7 @@ namespace Wyd.Game.World
 
         static WorldSaveFileProvider()
         {
-            WorldSaveFileDirectory = $@"{Application.persistentDataPath}\saves\\";
+            WorldSaveFileDirectory = $@"{Application.persistentDataPath}\saves\";
 
             QueryExecutionQueue = new JobQueue(TimeSpan.FromMilliseconds(200));
             QueryExecutionQueue.Start();
@@ -43,7 +43,7 @@ namespace Wyd.Game.World
         private string WorldFilePath { get; }
         private string ConnectionString { get; }
 
-        public string WorldName { get; set; }
+        public string WorldName { get; }
 
 
         public WorldSaveFileProvider(string worldName)

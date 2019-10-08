@@ -247,7 +247,7 @@ namespace Wyd.Controllers.World
             gameObject.SetActive(false);
         }
 
-        public void AssignLoader(IEntity loader)
+        public void AssignLoader(ref IEntity loader)
         {
             if (loader == default)
             {

@@ -22,7 +22,7 @@ namespace Wyd.Game.World.Chunks
         /// <param name="isRemesh"></param>
         public void Set(Bounds bounds, ref Block[] blocks, bool aggressiveFaceMerging, bool isRemesh = false)
         {
-            if (_Mesher == default)
+            if (_Mesher == null)
             {
                 _Mesher = new ChunkMesher();
             }
