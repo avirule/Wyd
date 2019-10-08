@@ -1,6 +1,7 @@
 #region
 
 using System;
+using System.Diagnostics;
 using System.Threading;
 using NLog;
 using UnityEditor;
@@ -10,6 +11,7 @@ using Wyd.Controllers.World;
 using Wyd.Game;
 using Wyd.Game.World.Blocks;
 using Wyd.System.Jobs;
+using Wyd.System.Logging;
 using Wyd.System.Logging.Targets;
 using Object = UnityEngine.Object;
 
@@ -37,6 +39,7 @@ namespace Wyd.Controllers.State
             AssignCurrent(this);
             DontDestroyOnLoad(this);
             QualitySettings.vSyncCount = 0;
+            Application.logMessageReceived += LogHandler;
         }
 
         private void Start()
@@ -196,6 +199,12 @@ namespace Wyd.Controllers.State
 #if UNITY_EDITOR
             EditorApplication.ExitPlaymode();
 #endif
+        }
+        
+        private static void LogHandler(string message, string stackTrace, LogType type)
+        {
+            StackTrace trace = new StackTrace();
+            EventLogger.Log(LogLevel.Error, trace.ToString());
         }
 
         public bool TryQueueJob(Job job, out object identity) => JobExecutionQueue.TryQueueJob(job, out identity);

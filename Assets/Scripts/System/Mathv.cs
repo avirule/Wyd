@@ -105,6 +105,11 @@ namespace Wyd.System
 
         public static float Max(this Vector3 a) => Mathf.Max(a.x, a.y, a.z);
 
+        public static Vector3Int FloorToInt(this Vector3 a)
+        {
+            return new Vector3Int(Mathf.FloorToInt(a.x), Mathf.FloorToInt(a.y), Mathf.FloorToInt(a.z));
+        }
+        
         public static Vector3 RoundBy(this Vector3 a, Vector3 roundBy) => a.Divide(roundBy).Floor().Multiply(roundBy);
 
         /// <summary>

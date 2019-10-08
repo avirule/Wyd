@@ -15,6 +15,14 @@ namespace Wyd.Controllers.UI.Components.Text
         private double _LastBuildTime;
         private double _LastMeshTime;
 
+
+        protected override void Awake()
+        {
+            base.Awake();
+
+            _LastBuildTime = _LastMeshTime = -1d;
+        }
+
         protected override void TimedUpdate()
         {
             (double buildTime, double meshTime) = CalculateBuildAndMeshTimes();
