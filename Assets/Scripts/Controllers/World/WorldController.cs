@@ -98,7 +98,7 @@ namespace Wyd.Controllers.World
                 },
                 (ref ChunkController chunkController) =>
                     Destroy(chunkController.gameObject));
-            
+
             _Chunks = new Dictionary<Vector3, ChunkController>();
             _EntitiesPendingChunkBuilding = new Stack<IEntity>();
             _ChunksPendingDeactivation = new Stack<ChunkChangedEventArgs>();
@@ -119,7 +119,7 @@ namespace Wyd.Controllers.World
 
             EntityController.Current.RegisterWatchForTag(RegisterCollideableEntity, "collider");
             EntityController.Current.RegisterWatchForTag(RegisterLoaderEntity, "loader");
-            
+
             // todo fix spawn point to set to useful value
             (_SpawnPoint.x, _SpawnPoint.y, _SpawnPoint.z) =
                 Mathv.GetIndexAs3D(Seed, new Vector3Int(int.MaxValue, int.MaxValue, int.MaxValue));

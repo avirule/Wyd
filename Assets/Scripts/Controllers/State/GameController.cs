@@ -200,7 +200,7 @@ namespace Wyd.Controllers.State
             EditorApplication.ExitPlaymode();
 #endif
         }
-        
+
         private static void LogHandler(string message, string stackTrace, LogType type)
         {
             StackTrace trace = new StackTrace();
