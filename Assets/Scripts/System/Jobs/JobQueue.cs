@@ -190,6 +190,7 @@ namespace Wyd.System.Jobs
             {
                 try
                 {
+// todo extract initial check into if for clearer intent 
                     while ((_Workers.Count < WorkerThreadCount)
                            && (ThreadingMode > ThreadingMode.Single))
                     {
