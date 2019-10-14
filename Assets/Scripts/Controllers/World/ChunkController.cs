@@ -22,7 +22,7 @@ namespace Wyd.Controllers.World
 {
     public class ChunkController : MonoBehaviour
     {
-        public static readonly Vector3Int Size = new Vector3Int(16, 64, 16);
+        public static readonly Vector3Int Size = new Vector3Int(32, 256, 32);
         public static readonly int YIndexStep = Size.x * Size.z;
 
         private static readonly ObjectCache<ChunkGenerator> ChunkGeneratorsCache =
