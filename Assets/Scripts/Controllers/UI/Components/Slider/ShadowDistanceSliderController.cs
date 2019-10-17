@@ -25,7 +25,7 @@ namespace Wyd.Controllers.UI.Components.Slider
 
         private static void ShadowDistanceSliderValueChanged(float newValue)
         {
-            OptionsController.Current.ShadowDistance = (int) newValue;
+            OptionsController.Current.ShadowDistance = (int)newValue;
         }
 
         private void UpdateSliderValue()

@@ -17,16 +17,16 @@ namespace Wyd.Controllers.UI.Components.Button
             switch (eventData.button)
             {
                 case PointerEventData.InputButton.Left:
-                    int final = (int) OptionsController.Current.WindowMode - 1;
+                    int final = (int)OptionsController.Current.WindowMode - 1;
 
                     OptionsController.Current.WindowMode = final >= 0
-                        ? (WindowMode) final
+                        ? (WindowMode)final
                         : OptionsController.MaximumWindowModeValue;
                     break;
                 case PointerEventData.InputButton.Right:
                     OptionsController.Current.WindowMode =
-                        (WindowMode) (((int) OptionsController.Current.WindowMode + 1)
-                                      % ((int) OptionsController.MaximumWindowModeValue + 1));
+                        (WindowMode)(((int)OptionsController.Current.WindowMode + 1)
+                                     % ((int)OptionsController.MaximumWindowModeValue + 1));
                     break;
                 case PointerEventData.InputButton.Middle:
                     break;

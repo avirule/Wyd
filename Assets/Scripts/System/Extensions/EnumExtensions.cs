@@ -15,7 +15,7 @@ namespace Wyd.System.Extensions
                 throw new ArgumentException($"Argument {typeof(T).FullName} is not an Enum");
             }
 
-            T[] arr = (T[]) Enum.GetValues(src.GetType());
+            T[] arr = (T[])Enum.GetValues(src.GetType());
             int j = Array.IndexOf(arr, src) + 1;
             return arr.Length == j ? arr[0] : arr[j];
         }

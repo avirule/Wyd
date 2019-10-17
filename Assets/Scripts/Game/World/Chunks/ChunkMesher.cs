@@ -140,7 +140,7 @@ namespace Wyd.Game.World.Chunks
                 // todo fix northern transparent faces sometimes not culling inner faces
 
                 // set face of current block so it isn't traversed over
-                traversedFaces |= (byte) Direction.North;
+                traversedFaces |= (byte)Direction.North;
                 // add triangles for this block face
                 AddTriangles(Direction.North, true);
 
@@ -201,7 +201,7 @@ namespace Wyd.Game.World.Chunks
                     || ((localPosition.x < (Size.x - 1))
                         && (Blocks[index + 1].Id != Blocks[index].Id))))
             {
-                traversedFaces |= (byte) Direction.East;
+                traversedFaces |= (byte)Direction.East;
                 AddTriangles(Direction.East, true);
 
                 int traversals;
@@ -254,7 +254,7 @@ namespace Wyd.Game.World.Chunks
                     || ((localPosition.z > 0)
                         && (Blocks[index - Size.x].Id != Blocks[index].Id))))
             {
-                traversedFaces |= (byte) Direction.South;
+                traversedFaces |= (byte)Direction.South;
                 AddTriangles(Direction.South, true);
 
                 int traversals;
@@ -308,7 +308,7 @@ namespace Wyd.Game.World.Chunks
                      && (Blocks[index].Id != block.Id))
                     || ((localPosition.x > 0) && (Blocks[index - 1].Id != Blocks[index].Id))))
             {
-                traversedFaces |= (byte) Direction.West;
+                traversedFaces |= (byte)Direction.West;
                 AddTriangles(Direction.West, true);
 
                 int traversals;
@@ -359,7 +359,7 @@ namespace Wyd.Game.World.Chunks
                     || ((localPosition.y < (Size.y - 1))
                         && (Blocks[index + _YIndexStep].Id != Blocks[index].Id))))
             {
-                traversedFaces |= (byte) Direction.Up;
+                traversedFaces |= (byte)Direction.Up;
                 AddTriangles(Direction.Up, true);
 
                 int traversals;
@@ -410,7 +410,7 @@ namespace Wyd.Game.World.Chunks
                 && (localPosition.y > 0)
                 && (Blocks[index - _YIndexStep].Id != Blocks[index].Id))
             {
-                traversedFaces |= (byte) Direction.Down;
+                traversedFaces |= (byte)Direction.Down;
                 AddTriangles(Direction.Down, true);
 
                 int traversals;
@@ -476,7 +476,7 @@ namespace Wyd.Game.World.Chunks
                         && Blocks[index + Size.x].Transparent)))
             {
                 // set face of current block so it isn't traversed over
-                traversedFaces |= (byte) Direction.North;
+                traversedFaces |= (byte)Direction.North;
                 // add triangles for this block face
                 AddTriangles(Direction.North);
 
@@ -537,7 +537,7 @@ namespace Wyd.Game.World.Chunks
                      && block.Transparent)
                     || ((localPosition.x < (Size.x - 1)) && Blocks[index + 1].Transparent)))
             {
-                traversedFaces |= (byte) Direction.East;
+                traversedFaces |= (byte)Direction.East;
                 AddTriangles(Direction.East);
 
                 int traversals;
@@ -589,7 +589,7 @@ namespace Wyd.Game.World.Chunks
                      && block.Transparent)
                     || ((localPosition.z > 0) && Blocks[index - Size.x].Transparent)))
             {
-                traversedFaces |= (byte) Direction.South;
+                traversedFaces |= (byte)Direction.South;
                 AddTriangles(Direction.South);
 
                 int traversals;
@@ -641,7 +641,7 @@ namespace Wyd.Game.World.Chunks
                      && block.Transparent)
                     || ((localPosition.x > 0) && Blocks[index - 1].Transparent)))
             {
-                traversedFaces |= (byte) Direction.West;
+                traversedFaces |= (byte)Direction.West;
                 AddTriangles(Direction.West);
 
                 int traversals;
@@ -692,7 +692,7 @@ namespace Wyd.Game.World.Chunks
                     || ((localPosition.y < (Size.y - 1))
                         && Blocks[index + _YIndexStep].Transparent)))
             {
-                traversedFaces |= (byte) Direction.Up;
+                traversedFaces |= (byte)Direction.Up;
                 AddTriangles(Direction.Up);
 
                 int traversals;
@@ -743,7 +743,7 @@ namespace Wyd.Game.World.Chunks
                 && (localPosition.y > 0)
                 && Blocks[index - _YIndexStep].Transparent)
             {
-                traversedFaces |= (byte) Direction.Down;
+                traversedFaces |= (byte)Direction.Down;
                 AddTriangles(Direction.Down);
 
                 int traversals;

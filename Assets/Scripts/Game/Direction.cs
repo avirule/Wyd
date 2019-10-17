@@ -65,7 +65,7 @@ namespace Wyd.Game
             Dictionary<Direction, int> directionAsOrderPlacement = new Dictionary<Direction, int>();
 
             int index = 0;
-            foreach (Direction direction in (Direction[]) Enum.GetValues(typeof(Direction)))
+            foreach (Direction direction in (Direction[])Enum.GetValues(typeof(Direction)))
             {
                 directionAsOrderPlacement.Add(direction, index);
                 index += 1;

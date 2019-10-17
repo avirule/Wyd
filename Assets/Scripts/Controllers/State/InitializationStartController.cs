@@ -7,7 +7,6 @@ using System.Text;
 using System.Threading;
 using Serilog;
 using Serilog.Events;
-using UnityEditor.PackageManager;
 using UnityEngine;
 using Wyd.System.Logging;
 using Wyd.System.Logging.Sinks;
@@ -20,7 +19,7 @@ namespace Wyd.Controllers.State
     {
         private const string _DEFAULT_TEMPLATE = "{Timestamp:MM/dd/yy-HH:mm:ss} | {Level:u3} | {Message}";
         private const int _MAXIMUM_RUNTIME_ERRORS = 10;
-        
+
         private static readonly DateTime _RuntimeErrorsDateTime = DateTime.Now;
         private static string _runtimeErrorsPath;
         private static int _runtimeErrorCount;
@@ -29,14 +28,14 @@ namespace Wyd.Controllers.State
         private static MemorySink _loggedDataSink;
 
         public static IReadOnlyList<LogEvent> LoggedEvents => _loggedDataSink?.LogEvents;
-        
+
         private void Awake()
         {
             if (_loggedDataSink == null)
             {
                 _loggedDataSink = new MemorySink(_DEFAULT_TEMPLATE);
             }
-            
+
             Log.Logger = new LoggerConfiguration()
                 .WriteTo.RollingFile("")
                 .WriteTo.Sink(_loggedDataSink)

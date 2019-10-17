@@ -18,7 +18,7 @@ namespace Wyd.System.Noise
         private const short FN_INLINE = 256; //(Int16)MethodImplOptions.AggressiveInlining;
 
         private readonly int m_seed = 1337;
-        private const float m_frequency = (float) 0.01;
+        private const float m_frequency = (float)0.01;
 
         public OpenSimplex_FastNoise(int seed = 1337) => m_seed = seed;
 
@@ -78,7 +78,7 @@ namespace Wyd.System.Noise
         };
 
         [MethodImpl(FN_INLINE)]
-        private static int FastFloor(float f) => f >= 0 ? (int) f : (int) f - 1;
+        private static int FastFloor(float f) => f >= 0 ? (int)f : (int)f - 1;
 
         // Hashing
         private const int X_PRIME = 1619;
@@ -157,8 +157,8 @@ namespace Wyd.System.Noise
         public static float GetSimplex(int seed, float freq, float x, float y, float z) =>
             SingleSimplex(seed, x * freq, y * freq, z * freq);
 
-        private const float F3 = (float) (1.0 / 3.0);
-        private const float G3 = (float) (1.0 / 6.0);
+        private const float F3 = (float)(1.0 / 3.0);
+        private const float G3 = (float)(1.0 / 6.0);
         private const float G33 = (G3 * 3) - 1;
 
         private static float SingleSimplex(int seed, float x, float y, float z)
@@ -249,7 +249,7 @@ namespace Wyd.System.Noise
 
             float n0, n1, n2, n3;
 
-            t = (float) 0.6 - (x0 * x0) - (y0 * y0) - (z0 * z0);
+            t = (float)0.6 - (x0 * x0) - (y0 * y0) - (z0 * z0);
             if (t < 0)
             {
                 n0 = 0;
@@ -260,7 +260,7 @@ namespace Wyd.System.Noise
                 n0 = t * t * GradCoord3D(seed, i, j, k, x0, y0, z0);
             }
 
-            t = (float) 0.6 - (x1 * x1) - (y1 * y1) - (z1 * z1);
+            t = (float)0.6 - (x1 * x1) - (y1 * y1) - (z1 * z1);
             if (t < 0)
             {
                 n1 = 0;
@@ -271,7 +271,7 @@ namespace Wyd.System.Noise
                 n1 = t * t * GradCoord3D(seed, i + i1, j + j1, k + k1, x1, y1, z1);
             }
 
-            t = (float) 0.6 - (x2 * x2) - (y2 * y2) - (z2 * z2);
+            t = (float)0.6 - (x2 * x2) - (y2 * y2) - (z2 * z2);
             if (t < 0)
             {
                 n2 = 0;
@@ -282,7 +282,7 @@ namespace Wyd.System.Noise
                 n2 = t * t * GradCoord3D(seed, i + i2, j + j2, k + k2, x2, y2, z2);
             }
 
-            t = (float) 0.6 - (x3 * x3) - (y3 * y3) - (z3 * z3);
+            t = (float)0.6 - (x3 * x3) - (y3 * y3) - (z3 * z3);
             if (t < 0)
             {
                 n3 = 0;
@@ -298,8 +298,8 @@ namespace Wyd.System.Noise
 
         public float GetSimplex(float x, float y) => SingleSimplex(m_seed, x * m_frequency, y * m_frequency);
 
-        private const float F2 = (float) (1.0 / 2.0);
-        private const float G2 = (float) (1.0 / 4.0);
+        private const float F2 = (float)(1.0 / 2.0);
+        private const float G2 = (float)(1.0 / 4.0);
 
         private static float SingleSimplex(int seed, float x, float y)
         {
@@ -333,7 +333,7 @@ namespace Wyd.System.Noise
 
             float n0, n1, n2;
 
-            t = (float) 0.5 - (x0 * x0) - (y0 * y0);
+            t = (float)0.5 - (x0 * x0) - (y0 * y0);
             if (t < 0)
             {
                 n0 = 0;
@@ -344,7 +344,7 @@ namespace Wyd.System.Noise
                 n0 = t * t * GradCoord2D(seed, i, j, x0, y0);
             }
 
-            t = (float) 0.5 - (x1 * x1) - (y1 * y1);
+            t = (float)0.5 - (x1 * x1) - (y1 * y1);
             if (t < 0)
             {
                 n1 = 0;
@@ -355,7 +355,7 @@ namespace Wyd.System.Noise
                 n1 = t * t * GradCoord2D(seed, i + i1, j + j1, x1, y1);
             }
 
-            t = (float) 0.5 - (x2 * x2) - (y2 * y2);
+            t = (float)0.5 - (x2 * x2) - (y2 * y2);
             if (t < 0)
             {
                 n2 = 0;
@@ -632,8 +632,8 @@ namespace Wyd.System.Noise
             0
         };
 
-        private const float F4 = (float) ((2.23606797 - 1.0) / 4.0);
-        private const float G4 = (float) ((5.0 - 2.23606797) / 20.0);
+        private const float F4 = (float)((2.23606797 - 1.0) / 4.0);
+        private const float G4 = (float)((5.0 - 2.23606797) / 20.0);
 
         private float SingleSimplex(int seed, float x, float y, float z, float w)
         {
@@ -691,7 +691,7 @@ namespace Wyd.System.Noise
             float z4 = (z0 - 1) + (4 * G4);
             float w4 = (w0 - 1) + (4 * G4);
 
-            t = (float) 0.6 - (x0 * x0) - (y0 * y0) - (z0 * z0) - (w0 * w0);
+            t = (float)0.6 - (x0 * x0) - (y0 * y0) - (z0 * z0) - (w0 * w0);
             if (t < 0)
             {
                 n0 = 0;
@@ -702,7 +702,7 @@ namespace Wyd.System.Noise
                 n0 = t * t * GradCoord4D(seed, i, j, k, l, x0, y0, z0, w0);
             }
 
-            t = (float) 0.6 - (x1 * x1) - (y1 * y1) - (z1 * z1) - (w1 * w1);
+            t = (float)0.6 - (x1 * x1) - (y1 * y1) - (z1 * z1) - (w1 * w1);
             if (t < 0)
             {
                 n1 = 0;
@@ -713,7 +713,7 @@ namespace Wyd.System.Noise
                 n1 = t * t * GradCoord4D(seed, i + i1, j + j1, k + k1, l + l1, x1, y1, z1, w1);
             }
 
-            t = (float) 0.6 - (x2 * x2) - (y2 * y2) - (z2 * z2) - (w2 * w2);
+            t = (float)0.6 - (x2 * x2) - (y2 * y2) - (z2 * z2) - (w2 * w2);
             if (t < 0)
             {
                 n2 = 0;
@@ -724,7 +724,7 @@ namespace Wyd.System.Noise
                 n2 = t * t * GradCoord4D(seed, i + i2, j + j2, k + k2, l + l2, x2, y2, z2, w2);
             }
 
-            t = (float) 0.6 - (x3 * x3) - (y3 * y3) - (z3 * z3) - (w3 * w3);
+            t = (float)0.6 - (x3 * x3) - (y3 * y3) - (z3 * z3) - (w3 * w3);
             if (t < 0)
             {
                 n3 = 0;
@@ -735,7 +735,7 @@ namespace Wyd.System.Noise
                 n3 = t * t * GradCoord4D(seed, i + i3, j + j3, k + k3, l + l3, x3, y3, z3, w3);
             }
 
-            t = (float) 0.6 - (x4 * x4) - (y4 * y4) - (z4 * z4) - (w4 * w4);
+            t = (float)0.6 - (x4 * x4) - (y4 * y4) - (z4 * z4) - (w4 * w4);
             if (t < 0)
             {
                 n4 = 0;

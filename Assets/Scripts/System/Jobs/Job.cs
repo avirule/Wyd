@@ -93,8 +93,6 @@ namespace Wyd.System.Jobs
             ExecutionAction?.Invoke();
         }
 
-        protected virtual void ProcessFinished()
-        {
-        }
+        protected virtual void ProcessFinished() { }
     }
 }

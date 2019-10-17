@@ -44,16 +44,16 @@ namespace Wyd.Game.World.Blocks
 
         public ushort Id
         {
-            get => (ushort) _Bits[IdSection];
-            private set => _Bits[IdSection] = (short) value;
+            get => (ushort)_Bits[IdSection];
+            private set => _Bits[IdSection] = (short)value;
         }
 
         public string BlockName { get; }
 
         public Block.Types Type
         {
-            get => (Block.Types) _Bits[TypeSection];
-            private set => _Bits[TypeSection] = (short) value;
+            get => (Block.Types)_Bits[TypeSection];
+            private set => _Bits[TypeSection] = (short)value;
         }
 
         public bool Transparent

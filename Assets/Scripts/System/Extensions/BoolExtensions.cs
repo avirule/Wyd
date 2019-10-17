@@ -5,7 +5,7 @@ namespace Wyd.System.Extensions
         public static unsafe byte ToByte(this bool a)
         {
             bool b = a;
-            return *(byte*) &b;
+            return *(byte*)&b;
         }
     }
 }

@@ -37,7 +37,7 @@ namespace Wyd.Controllers.UI.Components.Slider
 
         private static void OnSliderValueChanged(float value)
         {
-            OptionsController.Current.CPUCoreUtilization = (int) value;
+            OptionsController.Current.CPUCoreUtilization = (int)value;
         }
 
         private void UpdateSliderValue()

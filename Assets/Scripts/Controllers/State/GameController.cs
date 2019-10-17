@@ -9,7 +9,6 @@ using Wyd.Controllers.World;
 using Wyd.Game;
 using Wyd.Game.World.Blocks;
 using Wyd.System.Jobs;
-using Wyd.System.Logging.Sinks;
 using Object = UnityEngine.Object;
 
 #endregion

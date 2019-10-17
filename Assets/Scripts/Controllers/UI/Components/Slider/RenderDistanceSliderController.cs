@@ -25,7 +25,7 @@ namespace Wyd.Controllers.UI.Components.Slider
 
         private static void RenderDistanceSliderValueChanged(float newValue)
         {
-            OptionsController.Current.RenderDistance = (int) newValue;
+            OptionsController.Current.RenderDistance = (int)newValue;
         }
 
         private void UpdateSliderValue()
