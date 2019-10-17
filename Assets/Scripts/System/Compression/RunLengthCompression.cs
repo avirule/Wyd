@@ -8,44 +8,36 @@ namespace Wyd.System.Compression
 {
     public static class RunLengthCompression
     {
-        public struct Node<T>
+        public static IEnumerable<RLENode<int>> Compress(IEnumerable<int> initialArray, int firstValue)
         {
-            public ushort RunLength { get; private set; }
-            public T Value { get; private set; }
+            int currentRun = 0;
+            int lastUnmatchedValue = firstValue;
 
-            public Node(ushort runLength, T value)
+            foreach (int value in initialArray)
             {
-                RunLength = runLength;
-                Value = value;
-            }
-
-            public Node<T> Initialise(ushort runLength, T value)
-            {
-                RunLength = runLength;
-                Value = value;
-
-                return this;
-            }
-        }
-
-        public static IEnumerable<Node<ushort>> Compress(IEnumerable<ushort> initialArray, ushort firstValue)
-        {
-            ushort currentRun = 0;
-            ushort lastUnmatchedValue = firstValue;
-
-            foreach (ushort value in initialArray)
-            {
-                if ((value == lastUnmatchedValue) && (currentRun < ushort.MaxValue))
+                if ((value == lastUnmatchedValue) && (currentRun < int.MaxValue))
                 {
                     currentRun += 1;
                     continue;
                 }
 
-                yield return new Node<ushort>(currentRun, lastUnmatchedValue);
+                yield return new RLENode<int>(currentRun, lastUnmatchedValue);
 
                 lastUnmatchedValue = value;
                 currentRun = 0;
             }
+        }
+    }
+
+    public class RLENode<T>
+    {
+        public int RunLength { get; set; }
+        public T Value { get; set; }
+
+        public RLENode(int runLength, T value)
+        {
+            RunLength = runLength;
+            Value = value;
         }
     }
 }

@@ -1,6 +1,7 @@
 #region
 
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
 using Wyd.Controllers.State;
@@ -47,7 +48,7 @@ namespace Wyd.Game.World.Chunks
         private bool _IsSet;
         private Bounds _Bounds;
         private Vector3 _Position;
-        private Block[] _Blocks;
+        private LinkedList<Block> _Blocks;
         private Mesh _Mesh;
         private ComputeShader _NoiseShader;
         private Action _PendingAction;
@@ -62,7 +63,7 @@ namespace Wyd.Game.World.Chunks
 
         public ChunkGenerator() => _IsSet = false;
 
-        public void Set(Bounds bounds, ref Block[] blocks, ref Mesh mesh)
+        public void Set(Bounds bounds, ref LinkedList<Block> blocks, ref Mesh mesh)
         {
             if (!_hasSetupTimeAggregators)
             {

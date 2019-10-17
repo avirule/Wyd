@@ -23,6 +23,7 @@ namespace Wyd.Controllers.World
     public class ChunkController : MonoBehaviour
     {
         public static readonly Vector3Int Size = new Vector3Int(32, 256, 32);
+        public static readonly int SizeProduct = Size.Product();
         public static readonly int YIndexStep = Size.x * Size.z;
 
         private static readonly ObjectCache<ChunkGenerator> ChunkGeneratorsCache =
@@ -38,7 +39,7 @@ namespace Wyd.Controllers.World
         private Bounds _Bounds;
         private Transform _SelfTransform;
         private IEntity _CurrentLoader;
-        private Block[] _Blocks;
+        private LinkedList<RLENode<ushort>> _Blocks;
         private Mesh _Mesh;
         private bool _Visible;
         private bool _RenderShadows;
@@ -95,7 +96,7 @@ namespace Wyd.Controllers.World
         {
             _SelfTransform = transform;
             UpdateBounds();
-            _Blocks = new Block[Size.Product()];
+            _Blocks = new LinkedList<RLENode<ushort>>();
             _Mesh = new Mesh();
             _BlockActions = new Stack<BlockAction>();
             _BlockActionLocalPositions = new HashSet<Vector3>();
@@ -195,7 +196,7 @@ namespace Wyd.Controllers.World
                 _BlockActionLocalPositions.Remove(blockAction.LocalPosition);
                 int localPosition1d = blockAction.LocalPosition.To1D(Size);
 
-                if (localPosition1d < _Blocks.Length)
+                if (localPosition1d < SizeProduct)
                 {
                     _Blocks[localPosition1d].Initialise(blockAction.Id);
                     RequestMeshUpdate();
@@ -209,6 +210,38 @@ namespace Wyd.Controllers.World
         }
 
 
+        private void ModifyBlockPosition(int localPosition1d, ushort newId)
+        {
+            int totalPositions = 0;
+            LinkedListNode<RLENode<ushort>> currentNode = _Blocks.First;
+            
+            while (totalPositions < localPosition1d && currentNode != null)
+            {
+                int newTotal = currentNode.Value.RunLength + totalPositions;
+
+                if (totalPositions >= localPosition1d)
+                {
+                    if (currentNode.Value.Value == newId)
+                    {
+                        // position resulted in already exists block id
+                        return;
+                    }
+
+                    int newNodePosition = currentNode.Value.RunLength - (localPosition1d - totalPositions);
+                    // todo this
+                    RLENode<ushort> inserted = new RLENode<ushort>(1, newId);
+                    RLENode<ushort> remainder = new RLENode<ushort>(, currentNode.Value.Value);
+
+                    // todo split and insert two new nodes
+                }
+                else
+                {
+                    totalPositions = newTotal;
+                    currentNode = currentNode.Next;
+                }
+            }
+        }
+        
         #region ACTIVATION STATE
 
         public void Activate(Vector3 position)
@@ -440,7 +473,7 @@ namespace Wyd.Controllers.World
         public byte[] GetCompressedAsByteArray()
         {
             // 4 bytes for runlength and value
-            List<RunLengthCompression.Node<ushort>> nodes = GetCompressedRaw().ToList();
+            List<RunLengthCompression.RLENode<ushort>> nodes = GetCompressedRaw().ToList();
             byte[] bytes = new byte[nodes.Count * 4];
 
             for (int i = 0; i < bytes.Length; i += 4)
@@ -479,7 +512,7 @@ namespace Wyd.Controllers.World
             _ChunkGenerator.SkipBuilding(true);
         }
 
-        public IEnumerable<RunLengthCompression.Node<ushort>> GetCompressedRaw() =>
+        public IEnumerable<RunLengthCompression.RLENode<ushort>> GetCompressedRaw() =>
             RunLengthCompression.Compress(GetBlocksAsIds(), _Blocks[0].Id);
 
         private IEnumerable<ushort> GetBlocksAsIds()
