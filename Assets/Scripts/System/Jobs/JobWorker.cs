@@ -83,7 +83,7 @@ namespace Wyd.System.Jobs
             {
                 // Thread aborted
                 EventLogger.Log(LogLevel.Warn,
-                    $"{nameof(JobWorker)} with id {ManagedThreadId} has critically aborted.");
+                    $"{nameof(JobWorker)} with ID {ManagedThreadId} has critically aborted.");
             }
             finally
             {

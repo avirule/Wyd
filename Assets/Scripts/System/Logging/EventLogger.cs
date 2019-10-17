@@ -15,11 +15,10 @@ using Logger = NLog.Logger;
 
 namespace Wyd.System.Logging
 {
-    [Preserve]
     public static class EventLogger
     {
         private static readonly Logger _Logger;
-
+        
         static EventLogger()
         {
             ConfigureLogger();

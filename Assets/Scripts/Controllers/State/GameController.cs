@@ -1,18 +1,15 @@
 #region
 
 using System;
-using System.IO;
 using System.Threading;
 using NLog;
 using UnityEditor;
 using UnityEngine;
 using UnityEngine.SceneManagement;
-using UnityEngine.Scripting;
 using Wyd.Controllers.World;
 using Wyd.Game;
 using Wyd.Game.World.Blocks;
 using Wyd.System.Jobs;
-using Wyd.System.Logging;
 using Wyd.System.Logging.Targets;
 using Object = UnityEngine.Object;
 
@@ -25,7 +22,7 @@ namespace Wyd.Controllers.State
         public static readonly int MainThreadId = Thread.CurrentThread.ManagedThreadId;
 
         private JobQueue JobExecutionQueue { get; set; }
-        
+
         public int JobCount => JobExecutionQueue.JobCount;
         public int ActiveJobCount => JobExecutionQueue.ActiveJobCount;
         public int WorkerThreadCount => JobExecutionQueue.WorkerThreadCount;
@@ -90,10 +87,11 @@ namespace Wyd.Controllers.State
         }
 #endif
 
-        private void OnApplicationQuit()
+        private void OnDestroy()
         {
             // Deallocate and destroy ALL NativeCollection / disposable objects
             JobExecutionQueue.Abort();
+            UnityDebuggerTarget.Flush();
             LogManager.Shutdown();
         }
 

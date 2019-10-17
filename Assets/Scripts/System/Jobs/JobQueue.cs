@@ -153,7 +153,7 @@ namespace Wyd.System.Jobs
             _AbortTokenSource.Cancel();
             WaitTimeout = TimeSpan.Zero;
             EventLogger.Log(LogLevel.Info,
-                $"{nameof(JobQueue)} with id {_OperationThread.ManagedThreadId} has safely aborted.");
+                $"{nameof(JobQueue)} with ID {_OperationThread.ManagedThreadId} has safely aborted.");
         }
 
         #endregion
@@ -209,11 +209,12 @@ namespace Wyd.System.Jobs
             {
                 // thread aborted
                 EventLogger.Log(LogLevel.Warn,
-                    $"{nameof(JobWorker)} with id {_OperationThread.ManagedThreadId} has critically aborted.");
+                    $"{nameof(JobWorker)} with ID {_OperationThread.ManagedThreadId} has critically aborted.");
             }
             catch (Exception ex)
             {
-                EventLogger.Log(LogLevel.Warn, $"Error occurred in job queue: {ex.Message}");
+                EventLogger.Log(LogLevel.Warn,
+                    $"Error occurred in {nameof(JobQueue)} (ID {_OperationThread.ManagedThreadId}): {ex.Message}");
             }
             finally
             {

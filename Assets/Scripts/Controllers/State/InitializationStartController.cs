@@ -37,7 +37,6 @@ namespace Wyd.Controllers.State
             }
         }
 
-        [Preserve]
         private static void LogHandler(string message, string stackTrace, LogType type)
         {
             if (type != LogType.Exception)
@@ -48,7 +47,7 @@ namespace Wyd.Controllers.State
             if (string.IsNullOrEmpty(_runtimeErrorsPath))
             {
                 _runtimeErrorsPath =
-                    $@"{Application.persistentDataPath}\logs\runtime_critical-{_RuntimeErrorsDateTime:MM/dd/yy_h:mm:ss}.log";
+                    $@"{Application.persistentDataPath}\logs\runtime-exceptions_{_RuntimeErrorsDateTime:MM-dd-yy_h-mm-ss}.log";
             }
 
             if (LoggerConfigured)

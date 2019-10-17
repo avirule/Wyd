@@ -1,0 +1,3 @@
+<linker>
+    <assembly fullname="Wyd.System.Logging.EventLogger" preserve="all" />
+</linker>
