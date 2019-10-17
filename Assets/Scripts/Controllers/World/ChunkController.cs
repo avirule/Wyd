@@ -4,7 +4,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
-using NLog;
+using Serilog;
 using UnityEngine;
 using UnityEngine.Rendering;
 using Wyd.Controllers.State;
@@ -14,7 +14,6 @@ using Wyd.Game.World.Blocks;
 using Wyd.Game.World.Chunks;
 using Wyd.System;
 using Wyd.System.Compression;
-using Wyd.System.Logging;
 
 #endregion
 
@@ -123,7 +122,7 @@ namespace Wyd.Controllers.World
         {
             if (_CurrentLoader == default)
             {
-                EventLogger.Log(LogLevel.Warn,
+                Log.Warning(
                     $"Chunk at position {Position} has been initialized without a loader. This is possibly an error.");
             }
             else
@@ -169,7 +168,7 @@ namespace Wyd.Controllers.World
         {
             if (!ChunkGeneratorsCache.TryRetrieveItem(out _ChunkGenerator))
             {
-                EventLogger.Log(LogLevel.Warn,
+                Log.Warning(
                     $"Chunk at position {Position} unable to retrieve a {nameof(ChunkGenerator)} from cache. This is most likely a serious error.");
             }
 

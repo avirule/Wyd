@@ -1,9 +1,8 @@
 #region
 
 using System.Collections.Generic;
-using NLog;
+using Serilog;
 using UnityEngine;
-using Wyd.System.Logging;
 
 #endregion
 
@@ -31,7 +30,7 @@ namespace Wyd.Controllers.State
         {
             Sprite[] sprites = GameController.LoadAllResources<Sprite>(@"Graphics/Textures/Blocks/");
 
-            TerrainTexture = new Texture2DArray((int) sprites[0].rect.width, (int) sprites[0].rect.height,
+            TerrainTexture = new Texture2DArray((int)sprites[0].rect.width, (int)sprites[0].rect.height,
                 sprites.Length, TextureFormat.RGBA32, true, false)
             {
                 filterMode = FilterMode.Point,
@@ -44,7 +43,7 @@ namespace Wyd.Controllers.State
                 TerrainTexture.SetPixels(spritePixels, i, 0);
                 _TextureIDs.Add(sprites[i].name.ToLower(), i);
 
-                EventLogger.Log(LogLevel.Info, $"Texture processed: {sprites[i].name}");
+                Log.Information($"Texture processed: {sprites[i].name}");
             }
 
             TerrainTexture.Apply();

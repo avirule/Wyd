@@ -21,7 +21,7 @@ namespace Wyd.System
         ///     <see cref="UnityEngine.Vector3Int" /> of <see cref="int" /> casted values from given
         ///     <see cref="UnityEngine.Vector3" />.
         /// </returns>
-        public static Vector3Int ToInt(this Vector3 a) => new Vector3Int((int) a.x, (int) a.y, (int) a.z);
+        public static Vector3Int ToInt(this Vector3 a) => new Vector3Int((int)a.x, (int)a.y, (int)a.z);
 
         public static bool GreaterThanVector3(Vector3 a, Vector3 b) => (a.x > b.x) || (a.y > b.y) || (a.z > b.z);
 
@@ -84,9 +84,9 @@ namespace Wyd.System
 
         public static Vector3 Ceil(this Vector3 a) => new Vector3(Mathf.Ceil(a.x), Mathf.Ceil(a.y), Mathf.Ceil(a.z));
 
-        public static Vector3 Trunc(this Vector3 a) => new Vector3((float) Math.Truncate(a.x),
-            (float) Math.Truncate(a.x),
-            (float) Math.Truncate(a.x));
+        public static Vector3 Trunc(this Vector3 a) => new Vector3((float)Math.Truncate(a.x),
+            (float)Math.Truncate(a.x),
+            (float)Math.Truncate(a.x));
 
         public static bool AllLessThan(this Vector3 a, Vector3 b) => (a.x < b.x) && (a.y < b.y) && (a.z < b.z);
 
@@ -125,7 +125,7 @@ namespace Wyd.System
                 a.Floor();
             }
 
-            return (int) (a.x + (a.z * size3d.x) + (a.y * size3d.x * size3d.z));
+            return (int)(a.x + (a.z * size3d.x) + (a.y * size3d.x * size3d.z));
         }
 
         public static float[] ToArray(this Vector3 a)
@@ -194,10 +194,10 @@ namespace Wyd.System
         public static int Product(this Vector3Int a) => a.x * a.y * a.z;
 
         /// <summary>
-        ///     Calculates 3D <see cref="System.Int32" /> index from 1D <see cref="System.Int32" /> index, given a
+        ///     Calculates 3D <see cref="int" /> index from 1D <see cref="int" /> index, given a
         ///     <see cref="UnityEngine.Vector3Int" /> size in 3D space.
         /// </summary>
-        /// <param name="index">1D <see cref="System.Int32" /> index.</param>
+        /// <param name="index">1D <see cref="int" /> index.</param>
         /// <param name="size3d"><see cref="UnityEngine.Vector3Int" /> size in 3D space.</param>
         /// <returns><see cref="T:Tuple{int, int, int}" /> (x, y, z) of 3D coordinates.</returns>
         public static (int, int, int) GetIndexAs3D(int index, Vector3Int size3d)

@@ -3,7 +3,7 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
-using NLog;
+using Serilog;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using Wyd.Controllers.State;
@@ -13,7 +13,6 @@ using Wyd.Game.World;
 using Wyd.Game.World.Blocks;
 using Wyd.Game.World.Chunks;
 using Wyd.System;
-using Wyd.System.Logging;
 
 // ReSharper disable UnusedAutoPropertyAccessor.Global
 
@@ -182,7 +181,7 @@ namespace Wyd.Controllers.World
         {
             if (TicksPerSecond < 1)
             {
-                EventLogger.Log(LogLevel.Error,
+                Log.Error(
                     "World tick rate cannot be set to less than 1tick/s. Exiting game.");
                 GameController.ApplicationClose();
                 return;

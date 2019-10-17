@@ -1,12 +1,11 @@
 #region
 
-using NLog;
+using Serilog;
 using UnityEngine;
 using Wyd.Controllers.State;
 using Wyd.Controllers.World;
 using Wyd.Game.World.Blocks;
 using Wyd.System;
-using Wyd.System.Logging;
 using Wyd.System.Noise;
 
 #endregion
@@ -51,14 +50,14 @@ namespace Wyd.Game.World.Chunks.BuildingJob
         {
             if (Blocks == default)
             {
-                EventLogger.Log(LogLevel.Error,
+                Log.Error(
                     $"Field `{nameof(Blocks)}` has not been properly set. Cancelling operation.");
                 return;
             }
 
             if (useGpu && (noiseValues == null))
             {
-                EventLogger.Log(LogLevel.Warn,
+                Log.Warning(
                     $"Parameter `{nameof(useGpu)}` was passed as true, but no noise values were provided. Defaulting to CPU-bound generation.");
                 useGpu = false;
             }

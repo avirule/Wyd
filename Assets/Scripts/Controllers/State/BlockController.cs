@@ -3,11 +3,10 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using NLog;
+using Serilog;
 using UnityEngine;
 using Wyd.Game;
 using Wyd.Game.World.Blocks;
-using Wyd.System.Logging;
 
 #endregion
 
@@ -40,12 +39,11 @@ namespace Wyd.Controllers.State
 
             try
             {
-                assignedBlockId = (ushort) Blocks.Count;
+                assignedBlockId = (ushort)Blocks.Count;
             }
             catch (OverflowException)
             {
-                EventLogger.Log(LogLevel.Error,
-                    "BlockController has registered too many blocks and is out of valid block ids.");
+                Log.Error("BlockController has registered too many blocks and is out of valid block ids.");
                 return ushort.MaxValue;
             }
 
@@ -58,8 +56,7 @@ namespace Wyd.Controllers.State
                 collectible, uvsRule));
             BlockNameIds.Add(blockName, assignedBlockId);
 
-            EventLogger.Log(LogLevel.Info,
-                $"Successfully added block `{blockName}` with ID: {assignedBlockId}");
+            Log.Information($"Successfully added block `{blockName}` with ID: {assignedBlockId}");
 
             return assignedBlockId;
         }
@@ -69,7 +66,7 @@ namespace Wyd.Controllers.State
         {
             if (!BlockIdExists(blockId))
             {
-                EventLogger.Log(LogLevel.Warn,
+                Log.Error(
                     $"Failed to return block sprite UVs for direction `{direction}` of block with id `{blockId}`: block id does not exist.");
                 uvs = null;
                 return false;
@@ -79,7 +76,7 @@ namespace Wyd.Controllers.State
 
             if (!TextureController.Current.TryGetTextureId(textureName, out int textureId))
             {
-                EventLogger.Log(LogLevel.Warn,
+                Log.Warning(
                     $"Failed to return block sprite UVs for direction `{direction}` of block with id `{blockId}`: texture does not exist for block.");
                 uvs = null;
                 return false;
@@ -102,8 +99,7 @@ namespace Wyd.Controllers.State
         {
             if (!BlockNameIds.TryGetValue(blockName, out ushort blockId))
             {
-                EventLogger.Log(LogLevel.Warn,
-                    $"Failed to return block id for block `{blockName}`: block does not exist.");
+                Log.Warning($"Failed to return block id for block `{blockName}`: block does not exist.");
                 return Air.Id;
             }
 
@@ -128,8 +124,7 @@ namespace Wyd.Controllers.State
                 return Blocks[blockId].BlockName;
             }
 
-            EventLogger.Log(LogLevel.Warn,
-                $"Failed to return block name for block id `{blockId}`: block does not exist.");
+            Log.Warning($"Failed to return block name for block id `{blockId}`: block does not exist.");
             return "null";
         }
 
@@ -140,8 +135,7 @@ namespace Wyd.Controllers.State
                 return Blocks[blockId];
             }
 
-            EventLogger.Log(LogLevel.Error,
-                $"Failed to return block rule for block with id `{blockId}`: block does not exist.");
+            Log.Error($"Failed to return block rule for block with id `{blockId}`: block does not exist.");
             return null;
         }
 
@@ -153,8 +147,7 @@ namespace Wyd.Controllers.State
                 return true;
             }
 
-            EventLogger.Log(LogLevel.Error,
-                $"Failed to return block rule for block with id `{blockId}`: block does not exist.");
+            Log.Error($"Failed to return block rule for block with id `{blockId}`: block does not exist.");
 
             blockRule = default;
             return false;

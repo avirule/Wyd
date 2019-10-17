@@ -1,13 +1,16 @@
 #region
 
+using System;
 using System.Collections.Concurrent;
+using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-using NLog;
+using Serilog.Events;
 using TMPro;
 using UnityEngine;
+using Wyd.Controllers.State;
 using Wyd.Controllers.World;
-using Wyd.System.Logging.Targets;
+using Wyd.System.Logging.Sinks;
 
 #endregion
 
@@ -28,7 +31,7 @@ namespace Wyd.Controllers.UI.Components.Text
 
             CheckSetDebugEventsLogged();
 
-            InGameDebugLogTarget.EventLogged += OnEventLogged;
+            GlobalLogEventSink.Logged += OnEventLogged;
         }
 
         private void Update()
@@ -52,29 +55,33 @@ namespace Wyd.Controllers.UI.Components.Text
             _DebugLogText.text = builder.ToString();
         }
 
-        private void OnEventLogged(object sender, LogEventInfo logEventInfo)
+        private void OnEventLogged(object sender, LogEvent logEvent)
         {
             string finalText = string.Empty;
-            string timeStampFormatted = logEventInfo.TimeStamp.ToString("HH:mm:fff");
+            string timeStampFormatted = logEvent.Timestamp.ToString("HH:mm:fff");
 
-            if ((logEventInfo.Level == LogLevel.Info) || (logEventInfo.Level == LogLevel.Debug))
+            switch (logEvent.Level)
             {
-                finalText = $"[{timeStampFormatted}] {logEventInfo.Message}";
-            }
-            else if (logEventInfo.Level == LogLevel.Warn)
-            {
-                finalText =
-                    $"<color={InGameDebugLogTarget.WARN_COLOR}>[{timeStampFormatted}]</color> {logEventInfo.Message}";
-            }
-            else if (logEventInfo.Level == LogLevel.Error)
-            {
-                finalText =
-                    $"<color={InGameDebugLogTarget.ERROR_COLOR}>[{timeStampFormatted}]</color> {logEventInfo.Message}";
-            }
-            else if (logEventInfo.Level == LogLevel.Fatal)
-            {
-                finalText =
-                    $"<color={InGameDebugLogTarget.ERROR_COLOR}>[{timeStampFormatted}] {logEventInfo.Message}</color> ";
+                case LogEventLevel.Information:
+                case LogEventLevel.Debug:
+                    finalText = $"[{timeStampFormatted}] {logEvent.RenderMessage()}";
+                    break;
+                case LogEventLevel.Warning:
+                    finalText =
+                        $"<color={MemorySink.WARN_COLOR}>[{timeStampFormatted}]</color> {logEvent.RenderMessage()}";
+                    break;
+                case LogEventLevel.Error:
+                    finalText =
+                        $"<color={MemorySink.ERROR_COLOR}>[{timeStampFormatted}]</color> {logEvent.RenderMessage()}";
+                    break;
+                case LogEventLevel.Fatal:
+                    finalText =
+                        $"<color={MemorySink.ERROR_COLOR}>[{timeStampFormatted}] {logEvent.RenderMessage()}</color> ";
+                    break;
+                case LogEventLevel.Verbose:
+                    break;
+                default:
+                    throw new ArgumentOutOfRangeException();
             }
 
             _LogMessageQueue.Enqueue(finalText);
@@ -82,14 +89,14 @@ namespace Wyd.Controllers.UI.Components.Text
 
         private void CheckSetDebugEventsLogged()
         {
-            if ((InGameDebugLogTarget.DebugEntries == default) || (InGameDebugLogTarget.DebugEntries.Count <= 0))
+            IReadOnlyList<LogEvent> loggedEvents = InitializationStartController.LoggedEvents;
+
+            if ((loggedEvents == null) || (loggedEvents.Count <= 0))
             {
                 return;
             }
 
-            // .ToList() to capture copy of list in case of threaded access
-            foreach (LogEventInfo logEventInfo in InGameDebugLogTarget.DebugEntries.Skip(
-                InGameDebugLogTarget.DebugEntries.Count - 30))
+            foreach (LogEvent logEventInfo in loggedEvents.Skip(loggedEvents.Count - 30))
             {
                 OnEventLogged(this, logEventInfo);
             }

@@ -5,11 +5,10 @@ using System.Data;
 using System.Data.SQLite;
 using System.IO;
 using System.Threading.Tasks;
-using NLog;
+using Serilog;
 using UnityEngine;
 using Wyd.System.Extensions;
 using Wyd.System.Jobs;
-using Wyd.System.Logging;
 
 #endregion
 
@@ -76,7 +75,7 @@ namespace Wyd.Game.World
             }
             catch (Exception ex)
             {
-                EventLogger.Log(LogLevel.Warn, $"Failed to load world save: {ex.Message}");
+                Log.Warning($"Failed to load world save: {ex.Message}");
                 return false;
             }
 
@@ -134,8 +133,7 @@ namespace Wyd.Game.World
             }
             catch (Exception ex)
             {
-                EventLogger.Log(LogLevel.Warn,
-                    $"Failed to retrieve chunk data at position {position}: {ex.Message}");
+                Log.Warning($"Failed to retrieve chunk data at position {position}: {ex.Message}");
             }
 
             return false;
@@ -190,7 +188,7 @@ namespace Wyd.Game.World
 
                     if (tries == MAXIMUM_QUERY_RETRIES)
                     {
-                        EventLogger.Log(LogLevel.Warn, $"Failed to commit chunk data: {ex.Message}");
+                        Log.Warning($"Failed to commit chunk data: {ex.Message}");
                     }
                 }
             }

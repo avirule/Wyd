@@ -7,12 +7,11 @@ using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Text;
 using JetBrains.Annotations;
-using NLog;
+using Serilog;
 using SharpConfig;
 using UnityEngine;
 using Wyd.Graphics;
 using Wyd.System.Jobs;
-using Wyd.System.Logging;
 
 #endregion
 
@@ -47,7 +46,7 @@ namespace Wyd.Controllers.State
             public const int MINIMUM_INTERNAL_FRAMES = 60;
             public const int MAXIMUM_FRAME_RATE_BUFFER_SIZE = 60;
             public const int VSYNC_LEVEL = 1;
-            public const int WINDOW_MODE = (int) WindowMode.Fullscreen;
+            public const int WINDOW_MODE = (int)WindowMode.Fullscreen;
             public const int RENDER_DISTANCE = 4;
             public const int SHADOW_DISTANCE = 4;
 
@@ -92,7 +91,7 @@ namespace Wyd.Controllers.State
             set
             {
                 _ThreadingMode = value;
-                _Configuration["General"][nameof(ThreadingMode)].IntValue = (int) _ThreadingMode;
+                _Configuration["General"][nameof(ThreadingMode)].IntValue = (int)_ThreadingMode;
                 SaveSettings();
                 OnPropertyChanged();
             }
@@ -192,7 +191,7 @@ namespace Wyd.Controllers.State
                         throw new ArgumentOutOfRangeException(nameof(value), value, null);
                 }
 
-                _Configuration["Graphics"][nameof(WindowMode)].IntValue = (int) _WindowMode;
+                _Configuration["Graphics"][nameof(WindowMode)].IntValue = (int)_WindowMode;
                 SaveSettings();
                 OnPropertyChanged();
             }
@@ -358,7 +357,7 @@ namespace Wyd.Controllers.State
 
             if (!GetSetting("Graphics", nameof(WindowMode), out int windowMode)
                 || (windowMode < 0)
-                || (windowMode > (int) MaximumWindowModeValue))
+                || (windowMode > (int)MaximumWindowModeValue))
             {
                 LogSettingLoadError(nameof(WindowMode), Defaults.WINDOW_MODE);
                 WindowMode = Defaults.WINDOW_MODE;
@@ -366,7 +365,7 @@ namespace Wyd.Controllers.State
             }
             else
             {
-                WindowMode = (WindowMode) windowMode;
+                WindowMode = (WindowMode)windowMode;
             }
 
             if (!GetSetting("Graphics", nameof(RenderDistance), out _RenderDistance)
@@ -424,12 +423,12 @@ namespace Wyd.Controllers.State
                 SaveSettings();
             }
 
-            EventLogger.Log(LogLevel.Info, "Configuration loaded.");
+            Log.Information("Configuration loaded.");
         }
 
         private Configuration InitialiseDefaultConfig()
         {
-            EventLogger.Log(LogLevel.Info, "Initializing default configuration file...");
+            Log.Information("Initializing default configuration file...");
 
             _Configuration = new Configuration();
 
@@ -438,7 +437,7 @@ namespace Wyd.Controllers.State
                 "Determines whether the threading mode the game will use when\r\n"
                 + "generating chunk data and meshes.";
             _Configuration["General"][nameof(ThreadingMode)].Comment = "(0 = single, 1 = multi, 2 = variable)";
-            _Configuration["General"][nameof(ThreadingMode)].IntValue = (int) Defaults.THREADING_MODE;
+            _Configuration["General"][nameof(ThreadingMode)].IntValue = (int)Defaults.THREADING_MODE;
 
             _Configuration["General"][nameof(CPUCoreUtilization)].PreComment =
                 "Loosely defines the total number of CPU cores the game will utilize with threading.";
@@ -510,11 +509,11 @@ namespace Wyd.Controllers.State
             _Configuration["Chunking"][nameof(PreLoadChunkDistance)].IntValue =
                 Defaults.PRE_LOAD_CHUNK_DISTANCE;
 
-            EventLogger.Log(LogLevel.Info, "Default configuration initialized. Saving...");
+            Log.Information("Default configuration initialized. Saving...");
 
             _Configuration.SaveToFile(ConfigPath);
 
-            EventLogger.Log(LogLevel.Info, $"Configuration file saved at: {ConfigPath}");
+            Log.Information($"Configuration file saved at: {ConfigPath}");
 
             return _Configuration;
         }
@@ -536,7 +535,7 @@ namespace Wyd.Controllers.State
 
         private static void LogSettingLoadError(string settingName, object defaultValue)
         {
-            EventLogger.Log(LogLevel.Warn, $"Error loading setting `{settingName}`, defaulting to {defaultValue}.");
+            Log.Warning($"Error loading setting `{settingName}`, defaulting to {defaultValue}.");
         }
 
 

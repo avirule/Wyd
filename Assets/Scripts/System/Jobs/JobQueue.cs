@@ -3,9 +3,8 @@
 using System;
 using System.Collections.Generic;
 using System.Threading;
-using NLog;
+using Serilog;
 using Wyd.System.Collections;
-using Wyd.System.Logging;
 
 #endregion
 
@@ -152,8 +151,7 @@ namespace Wyd.System.Jobs
         {
             _AbortTokenSource.Cancel();
             WaitTimeout = TimeSpan.Zero;
-            EventLogger.Log(LogLevel.Info,
-                $"{nameof(JobQueue)} with ID {_OperationThread.ManagedThreadId} has safely aborted.");
+            Log.Information($"{nameof(JobQueue)} with ID {_OperationThread.ManagedThreadId} has safely aborted.");
         }
 
         #endregion
@@ -208,12 +206,11 @@ namespace Wyd.System.Jobs
             catch (OperationCanceledException)
             {
                 // thread aborted
-                EventLogger.Log(LogLevel.Warn,
-                    $"{nameof(JobWorker)} with ID {_OperationThread.ManagedThreadId} has critically aborted.");
+                Log.Warning($"{nameof(JobWorker)} with ID {_OperationThread.ManagedThreadId} has critically aborted.");
             }
             catch (Exception ex)
             {
-                EventLogger.Log(LogLevel.Warn,
+                Log.Warning(
                     $"Error occurred in {nameof(JobQueue)} (ID {_OperationThread.ManagedThreadId}): {ex.Message}");
             }
             finally

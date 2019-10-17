@@ -2,13 +2,12 @@
 
 using System;
 using System.Linq;
-using NLog;
+using Serilog;
 using TMPro;
 using UnityEngine;
 using Wyd.Controllers.State;
 using Wyd.Controllers.World;
 using Wyd.Game.World.Blocks;
-using Wyd.System.Logging;
 
 #endregion
 
@@ -109,7 +108,7 @@ namespace Wyd.Controllers.UI.Components.InputField
                             }
                         }
 
-                        EventLogger.Log(LogLevel.Info,
+                        Log.Information(
                             $"Screen resolution set to (w{width}, h{height}) with fullscreen mode '{Screen.fullScreenMode}'");
                     }
 
@@ -130,13 +129,12 @@ namespace Wyd.Controllers.UI.Components.InputField
 
                             if (!WorldController.Current.TryGetBlockAt(position, out Block block))
                             {
-                                EventLogger.Log(LogLevel.Warn, $"Failed to get block at position: {position}");
+                                Log.Warning($"Failed to get block at position: {position}");
                             }
 
                             string blockName = BlockController.Current.GetBlockName(block.Id);
 
-                            EventLogger.Log(LogLevel.Info,
-                                $"Request for block at position {position} returned `{blockName}`.");
+                            Log.Information($"Request for block at position {position} returned `{blockName}`.");
                         }
                     }
 
@@ -144,7 +142,7 @@ namespace Wyd.Controllers.UI.Components.InputField
                 case "testcompress":
                     if (args.Length < 4)
                     {
-                        EventLogger.Log(LogLevel.Warn, "Not enough arguments.");
+                        Log.Warning("Not enough arguments.");
                         break;
                     }
 
@@ -152,7 +150,7 @@ namespace Wyd.Controllers.UI.Components.InputField
                         || !int.TryParse(args[2], out int y1)
                         || !int.TryParse(args[3], out int z1))
                     {
-                        EventLogger.Log(LogLevel.Warn, "Invalid coordinates.");
+                        Log.Warning("Invalid coordinates.");
                         break;
                     }
 
@@ -161,16 +159,16 @@ namespace Wyd.Controllers.UI.Components.InputField
                     if (!WorldController.Current.TryGetChunkAt(chunkPosition,
                         out ChunkController chunkController))
                     {
-                        EventLogger.Log(LogLevel.Warn, $"No chunk at coordinates {chunkPosition}.");
+                        Log.Warning($"No chunk at coordinates {chunkPosition}.");
                         break;
                     }
 
-                    EventLogger.Log(LogLevel.Info, chunkController.GetCompressedRaw().Count());
+                    Log.Information(chunkController.GetCompressedRaw().Count().ToString());
                     break;
                 case "testsave":
                     if (args.Length < 4)
                     {
-                        EventLogger.Log(LogLevel.Warn, "Not enough arguments.");
+                        Log.Warning("Not enough arguments.");
                         break;
                     }
 
@@ -178,7 +176,7 @@ namespace Wyd.Controllers.UI.Components.InputField
                         || !int.TryParse(args[2], out int y2)
                         || !int.TryParse(args[3], out int z2))
                     {
-                        EventLogger.Log(LogLevel.Warn, "Invalid coordinates.");
+                        Log.Warning("Invalid coordinates.");
                         break;
                     }
 
@@ -186,7 +184,7 @@ namespace Wyd.Controllers.UI.Components.InputField
 
                     if (!WorldController.Current.TryGetChunkAt(chunkPosition2, out ChunkController _))
                     {
-                        EventLogger.Log(LogLevel.Warn, $"No chunk at coordinates {chunkPosition2}.");
+                        Log.Warning($"No chunk at coordinates {chunkPosition2}.");
                     }
 
                     //WorldController.Current._SaveFileProvider.CompressAndCommitThreaded(chunkPosition2,
@@ -196,7 +194,7 @@ namespace Wyd.Controllers.UI.Components.InputField
                     //WorldController.Current._SaveFileProvider.TryGetSavedDataFromPosition(Vector3.zero, out byte[] data);
                     break;
                 default:
-                    EventLogger.Log(LogLevel.Warn, "Command invalid.");
+                    Log.Warning("Command invalid.");
                     break;
             }
         }

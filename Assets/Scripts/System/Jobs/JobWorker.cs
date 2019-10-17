@@ -2,9 +2,8 @@
 
 using System;
 using System.Threading;
-using NLog;
+using Serilog;
 using Wyd.System.Collections;
-using Wyd.System.Logging;
 
 #endregion
 
@@ -82,8 +81,7 @@ namespace Wyd.System.Jobs
             catch (OperationCanceledException)
             {
                 // Thread aborted
-                EventLogger.Log(LogLevel.Warn,
-                    $"{nameof(JobWorker)} with ID {ManagedThreadId} has critically aborted.");
+                Log.Warning($"{nameof(JobWorker)} with ID {ManagedThreadId} has critically aborted.");
             }
             finally
             {

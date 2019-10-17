@@ -1,13 +1,16 @@
 #region
 
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Text;
 using System.Threading;
-using NLog;
+using Serilog;
+using Serilog.Events;
+using UnityEditor.PackageManager;
 using UnityEngine;
-using UnityEngine.Scripting;
 using Wyd.System.Logging;
+using Wyd.System.Logging.Sinks;
 
 #endregion
 
@@ -15,17 +18,35 @@ namespace Wyd.Controllers.State
 {
     public class InitializationStartController : MonoBehaviour
     {
+        private const string _DEFAULT_TEMPLATE = "{Timestamp:MM/dd/yy-HH:mm:ss} | {Level:u3} | {Message}";
         private const int _MAXIMUM_RUNTIME_ERRORS = 10;
-
+        
         private static readonly DateTime _RuntimeErrorsDateTime = DateTime.Now;
         private static string _runtimeErrorsPath;
         private static int _runtimeErrorCount;
         private static bool _killApplication;
 
-        public static bool LoggerConfigured;
+        private static MemorySink _loggedDataSink;
 
+        public static IReadOnlyList<LogEvent> LoggedEvents => _loggedDataSink?.LogEvents;
+        
         private void Awake()
         {
+            if (_loggedDataSink == null)
+            {
+                _loggedDataSink = new MemorySink(_DEFAULT_TEMPLATE);
+            }
+            
+            Log.Logger = new LoggerConfiguration()
+                .WriteTo.RollingFile("")
+                .WriteTo.Sink(_loggedDataSink)
+                .WriteTo.Sink<GlobalLogEventSink>()
+#if UNITY_EDITOR
+                .WriteTo.UnityDebugSink(_DEFAULT_TEMPLATE)
+#endif
+                .CreateLogger();
+
+
             Application.logMessageReceived += LogHandler;
         }
 
@@ -50,12 +71,9 @@ namespace Wyd.Controllers.State
                     $@"{Application.persistentDataPath}\logs\runtime-exceptions_{_RuntimeErrorsDateTime:MM-dd-yy_h-mm-ss}.log";
             }
 
-            if (LoggerConfigured)
-                // strip-safe 
-            {
-                EventLogger.Log(LogLevel.Error, stackTrace);
-            }
+            Log.Fatal(stackTrace);
 
+            // todo make a fatality-specific sink
             File.AppendAllText(_runtimeErrorsPath, stackTrace, Encoding.ASCII);
 
             Interlocked.Increment(ref _runtimeErrorCount);

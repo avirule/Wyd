@@ -2,7 +2,6 @@
 
 using System;
 using System.Threading;
-using NLog;
 using UnityEditor;
 using UnityEngine;
 using UnityEngine.SceneManagement;
@@ -10,7 +9,7 @@ using Wyd.Controllers.World;
 using Wyd.Game;
 using Wyd.Game.World.Blocks;
 using Wyd.System.Jobs;
-using Wyd.System.Logging.Targets;
+using Wyd.System.Logging.Sinks;
 using Object = UnityEngine.Object;
 
 #endregion
@@ -21,11 +20,11 @@ namespace Wyd.Controllers.State
     {
         public static readonly int MainThreadId = Thread.CurrentThread.ManagedThreadId;
 
-        private JobQueue JobExecutionQueue { get; set; }
+        private JobQueue _JobExecutionQueue;
 
-        public int JobCount => JobExecutionQueue.JobCount;
-        public int ActiveJobCount => JobExecutionQueue.ActiveJobCount;
-        public int WorkerThreadCount => JobExecutionQueue.WorkerThreadCount;
+        public int JobCount => _JobExecutionQueue.JobCount;
+        public int ActiveJobCount => _JobExecutionQueue.ActiveJobCount;
+        public int WorkerThreadCount => _JobExecutionQueue.WorkerThreadCount;
 
         public event JobFinishedEventHandler JobFinished;
         public event EventHandler<int> JobCountChanged;
@@ -41,58 +40,49 @@ namespace Wyd.Controllers.State
 
         private void Start()
         {
-            JobExecutionQueue = new JobQueue(TimeSpan.FromMilliseconds(200), OptionsController.Current.ThreadingMode,
+            _JobExecutionQueue = new JobQueue(TimeSpan.FromMilliseconds(200), OptionsController.Current.ThreadingMode,
                 OptionsController.Current.CPUCoreUtilization);
 
-            JobExecutionQueue.WorkerCountChanged += (sender, count) =>
+            _JobExecutionQueue.WorkerCountChanged += (sender, count) =>
                 WorkerThreadCountChanged?.Invoke(sender, count);
 
-            JobExecutionQueue.JobQueued += (sender, args) =>
-                JobCountChanged?.Invoke(sender, JobExecutionQueue.JobCount);
+            _JobExecutionQueue.JobQueued += (sender, args) =>
+                JobCountChanged?.Invoke(sender, _JobExecutionQueue.JobCount);
 
-            JobExecutionQueue.JobStarted += (sender, args) =>
+            _JobExecutionQueue.JobStarted += (sender, args) =>
             {
-                JobCountChanged?.Invoke(sender, JobExecutionQueue.JobCount);
-                ActiveJobCountChanged?.Invoke(sender, JobExecutionQueue.ActiveJobCount);
+                JobCountChanged?.Invoke(sender, _JobExecutionQueue.JobCount);
+                ActiveJobCountChanged?.Invoke(sender, _JobExecutionQueue.ActiveJobCount);
             };
 
-            JobExecutionQueue.JobFinished += (sender, args) =>
+            _JobExecutionQueue.JobFinished += (sender, args) =>
             {
                 JobFinished?.Invoke(sender, args);
-                JobCountChanged?.Invoke(sender, JobExecutionQueue.JobCount);
-                ActiveJobCountChanged?.Invoke(sender, JobExecutionQueue.ActiveJobCount);
+                JobCountChanged?.Invoke(sender, _JobExecutionQueue.JobCount);
+                ActiveJobCountChanged?.Invoke(sender, _JobExecutionQueue.ActiveJobCount);
             };
 
             OptionsController.Current.PropertyChanged += (sender, args) =>
             {
                 if (args.PropertyName.Equals(nameof(OptionsController.Current.ThreadingMode)))
                 {
-                    JobExecutionQueue.ThreadingMode = OptionsController.Current.ThreadingMode;
+                    _JobExecutionQueue.ThreadingMode = OptionsController.Current.ThreadingMode;
                 }
                 else if (args.PropertyName.Equals(nameof(OptionsController.Current.CPUCoreUtilization)))
                 {
-                    JobExecutionQueue.ModifyWorkerThreadCount(OptionsController.Current.CPUCoreUtilization);
+                    _JobExecutionQueue.ModifyWorkerThreadCount(OptionsController.Current.CPUCoreUtilization);
                 }
             };
 
-            JobExecutionQueue.Start();
+            _JobExecutionQueue.Start();
 
             RegisterDefaultBlocks();
         }
 
-#if UNITY_EDITOR
-        private void LateUpdate()
-        {
-            UnityDebuggerTarget.Flush();
-        }
-#endif
-
         private void OnDestroy()
         {
             // Deallocate and destroy ALL NativeCollection / disposable objects
-            JobExecutionQueue.Abort();
-            UnityDebuggerTarget.Flush();
-            LogManager.Shutdown();
+            _JobExecutionQueue.Abort();
         }
 
         private void RegisterDefaultBlocks()
@@ -199,6 +189,6 @@ namespace Wyd.Controllers.State
 #endif
         }
 
-        public bool TryQueueJob(Job job, out object identity) => JobExecutionQueue.TryQueueJob(job, out identity);
+        public bool TryQueueJob(Job job, out object identity) => _JobExecutionQueue.TryQueueJob(job, out identity);
     }
 }
