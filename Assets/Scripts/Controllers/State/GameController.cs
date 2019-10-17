@@ -1,12 +1,13 @@
 #region
 
 using System;
-using System.Diagnostics;
+using System.IO;
 using System.Threading;
 using NLog;
 using UnityEditor;
 using UnityEngine;
 using UnityEngine.SceneManagement;
+using UnityEngine.Scripting;
 using Wyd.Controllers.World;
 using Wyd.Game;
 using Wyd.Game.World.Blocks;
@@ -21,10 +22,10 @@ namespace Wyd.Controllers.State
 {
     public class GameController : SingletonController<GameController>
     {
-        private JobQueue JobExecutionQueue { get; set; }
-
         public static readonly int MainThreadId = Thread.CurrentThread.ManagedThreadId;
 
+        private JobQueue JobExecutionQueue { get; set; }
+        
         public int JobCount => JobExecutionQueue.JobCount;
         public int ActiveJobCount => JobExecutionQueue.ActiveJobCount;
         public int WorkerThreadCount => JobExecutionQueue.WorkerThreadCount;
@@ -39,7 +40,6 @@ namespace Wyd.Controllers.State
             AssignCurrent(this);
             DontDestroyOnLoad(this);
             QualitySettings.vSyncCount = 0;
-            Application.logMessageReceived += LogHandler;
         }
 
         private void Start()
@@ -199,12 +199,6 @@ namespace Wyd.Controllers.State
 #if UNITY_EDITOR
             EditorApplication.ExitPlaymode();
 #endif
-        }
-
-        private static void LogHandler(string message, string stackTrace, LogType type)
-        {
-            StackTrace trace = new StackTrace();
-            EventLogger.Log(LogLevel.Error, trace.ToString());
         }
 
         public bool TryQueueJob(Job job, out object identity) => JobExecutionQueue.TryQueueJob(job, out identity);

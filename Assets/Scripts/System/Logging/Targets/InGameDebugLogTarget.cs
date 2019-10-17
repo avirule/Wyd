@@ -11,7 +11,7 @@ using NLog.Targets;
 
 namespace Wyd.System.Logging.Targets
 {
-    [Target("InGameDebugLog")]
+    [Target(nameof(InGameDebugLogTarget))]
     public sealed class InGameDebugLogTarget : TargetWithLayout
     {
         public const string ERROR_COLOR = "#FF6961";

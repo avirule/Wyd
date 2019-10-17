@@ -60,7 +60,7 @@ namespace Wyd.Controllers.State
 
         public const int MAXIMUM_RENDER_DISTANCE = 32;
 
-        private static string _configPath;
+        public static string ConfigPath { get; private set; }
 
         public static readonly WindowMode MaximumWindowModeValue =
             Enum.GetValues(typeof(WindowMode)).Cast<WindowMode>().Last();
@@ -284,7 +284,7 @@ namespace Wyd.Controllers.State
         {
             AssignCurrent(this);
 
-            _configPath = $@"{Application.persistentDataPath}/config.ini";
+            ConfigPath = $@"{Application.persistentDataPath}/config.ini";
         }
 
         private void Start()
@@ -294,9 +294,9 @@ namespace Wyd.Controllers.State
 
         private void LoadConfig()
         {
-            _Configuration = !File.Exists(_configPath)
+            _Configuration = !File.Exists(ConfigPath)
                 ? InitialiseDefaultConfig()
-                : Configuration.LoadFromFile(_configPath);
+                : Configuration.LoadFromFile(ConfigPath);
 
             // General
 
@@ -512,9 +512,9 @@ namespace Wyd.Controllers.State
 
             EventLogger.Log(LogLevel.Info, "Default configuration initialized. Saving...");
 
-            _Configuration.SaveToFile(_configPath);
+            _Configuration.SaveToFile(ConfigPath);
 
-            EventLogger.Log(LogLevel.Info, $"Configuration file saved at: {_configPath}");
+            EventLogger.Log(LogLevel.Info, $"Configuration file saved at: {ConfigPath}");
 
             return _Configuration;
         }
@@ -550,7 +550,7 @@ namespace Wyd.Controllers.State
 
         public void SaveSettings()
         {
-            _Configuration.SaveToFile(_configPath, Encoding.ASCII);
+            _Configuration.SaveToFile(ConfigPath, Encoding.ASCII);
         }
 
         #endregion

@@ -1,7 +1,6 @@
 #region
 
-using System;
-using Tayx.Graphy;
+using UnityEngine.Profiling;
 
 #endregion
 
@@ -9,31 +8,37 @@ namespace Wyd.Controllers.UI.Components.Text
 {
     public class UsedMemoryTextController : UpdatingFormattedTextController
     {
-        private float _ReservedMemory;
-        private float _AllocatedMemory;
-        private float _MonoMemory;
+        private const float _MEGABYTE_VALUE = 1_000_000f;
+
+        private long _ReservedMemory;
+        private long _AllocatedMemory;
+        private long _HeapMemory;
 
         protected override void TimedUpdate()
         {
-            (float reservedMemory, float allocatedMemory, float monoMemory) = GetUsedMemory();
+            (long reservedMemory, long allocatedMemory, long heapMemory) = GetUsedMemory();
 
-            if ((Math.Abs(reservedMemory - _ReservedMemory) > 0.009)
-                || (Math.Abs(allocatedMemory - _AllocatedMemory) > 0.009)
-                || (Math.Abs(monoMemory - _MonoMemory) > 0.009))
+            if ((reservedMemory != _ReservedMemory)
+                || (allocatedMemory != _AllocatedMemory)
+                || (heapMemory != _HeapMemory))
             {
-                UpdateUsedMemoryText(reservedMemory, allocatedMemory, monoMemory);
+                UpdateUsedMemoryText(reservedMemory, allocatedMemory, heapMemory);
             }
         }
 
-        private void UpdateUsedMemoryText(float reservedMemory, float allocatedMemory, float monoMemory)
+        private void UpdateUsedMemoryText(long reservedMemory, long allocatedMemory, long heapMemory)
         {
+            _ReservedMemory = reservedMemory;
+            _AllocatedMemory = allocatedMemory;
+            _HeapMemory = heapMemory;
+
             TextObject.text = string.Format(Format,
-                _ReservedMemory = reservedMemory,
-                _AllocatedMemory = allocatedMemory,
-                _MonoMemory = monoMemory);
+                _ReservedMemory / _MEGABYTE_VALUE,
+                _AllocatedMemory / _MEGABYTE_VALUE,
+                _HeapMemory / _MEGABYTE_VALUE);
         }
 
-        private static (float, float, float) GetUsedMemory() =>
-            (GraphyManager.Instance.ReservedRam, GraphyManager.Instance.AllocatedRam, GraphyManager.Instance.MonoRam);
+        private static (long, long, long) GetUsedMemory() =>
+            (Profiler.GetTotalReservedMemoryLong(), Profiler.GetTotalAllocatedMemoryLong(), Profiler.usedHeapSizeLong);
     }
 }

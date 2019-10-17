@@ -24,7 +24,7 @@ namespace Wyd.Controllers.UI.Components.Text
             _UpdateTimer = Stopwatch.StartNew();
         }
 
-        private void Update()
+        protected virtual void Update()
         {
             if (_UpdateTimer.Elapsed < _UpdatesPerSecondTimeSpan)
             {
@@ -36,8 +36,6 @@ namespace Wyd.Controllers.UI.Components.Text
             TimedUpdate();
         }
 
-        protected virtual void TimedUpdate()
-        {
-        }
+        protected virtual void TimedUpdate() { }
     }
 }

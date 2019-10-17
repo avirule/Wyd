@@ -13,7 +13,7 @@ namespace Wyd.Controllers.UI.Components.Text
         {
             if (force || args.PropertyName.Equals(nameof(OptionsController.Current.VSyncLevel)))
             {
-                TextObject.text = string.Format(Format, OptionsController.Current.VSyncLevel);
+                TextObject.text = string.Format(Format, OptionsController.Current.VSyncLevel == 1 ? "Enabled" : "Disabled");
             }
         }
     }

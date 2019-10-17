@@ -24,7 +24,7 @@ namespace Wyd.System.Jobs
         /// <remarks>
         ///     Despite the name, this mode doesn't necessarily increase
         ///     or decrease FPS. It is purely a more efficient scheduling
-        ///     model, thusly any FPS gain or loss is an unintended side-effect.
+        ///     model, thus any FPS gain or loss is an unintended side-effect.
         /// </remarks>
         Adaptive
     }
@@ -152,6 +152,8 @@ namespace Wyd.System.Jobs
         {
             _AbortTokenSource.Cancel();
             WaitTimeout = TimeSpan.Zero;
+            EventLogger.Log(LogLevel.Info,
+                $"{nameof(JobQueue)} with id {_OperationThread.ManagedThreadId} has safely aborted.");
         }
 
         #endregion
@@ -186,9 +188,9 @@ namespace Wyd.System.Jobs
         /// </summary>
         private void ProcessJobs()
         {
-            while (!_AbortToken.IsCancellationRequested)
+            try
             {
-                try
+                while (!_AbortToken.IsCancellationRequested)
                 {
 // todo extract initial check into if for clearer intent 
                     while ((_Workers.Count < WorkerThreadCount)
@@ -202,19 +204,21 @@ namespace Wyd.System.Jobs
                         ProcessJob(job);
                     }
                 }
-                catch (OperationCanceledException)
-                {
-                    // thread aborted
-                    break;
-                }
-                catch (Exception ex)
-                {
-                    EventLogger.Log(LogLevel.Warn, $"Error occurred in job queue: {ex.Message}");
-                    break;
-                }
             }
-
-            Running = false;
+            catch (OperationCanceledException)
+            {
+                // thread aborted
+                EventLogger.Log(LogLevel.Warn,
+                    $"{nameof(JobWorker)} with id {_OperationThread.ManagedThreadId} has critically aborted.");
+            }
+            catch (Exception ex)
+            {
+                EventLogger.Log(LogLevel.Warn, $"Error occurred in job queue: {ex.Message}");
+            }
+            finally
+            {
+                Running = false;
+            }
         }
 
         private void SpawnJobWorker()

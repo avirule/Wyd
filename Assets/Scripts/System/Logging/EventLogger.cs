@@ -6,6 +6,8 @@ using NLog.Config;
 using NLog.Targets;
 using NLog.Targets.Wrappers;
 using UnityEngine;
+using UnityEngine.Scripting;
+using Wyd.Controllers.State;
 using Wyd.System.Logging.Targets;
 using Logger = NLog.Logger;
 
@@ -13,14 +15,16 @@ using Logger = NLog.Logger;
 
 namespace Wyd.System.Logging
 {
+    [Preserve]
     public static class EventLogger
     {
-        private static readonly Logger Logger;
+        private static readonly Logger _Logger;
 
         static EventLogger()
         {
             ConfigureLogger();
-            Logger = LogManager.GetCurrentClassLogger();
+            _Logger = LogManager.GetCurrentClassLogger();
+            InitializationStartController.LoggerConfigured = true;
         }
 
         private static void ConfigureLogger()
@@ -67,12 +71,12 @@ namespace Wyd.System.Logging
 
         public static void Log(LogLevel level, string message)
         {
-            Logger.Log(level, message);
+            _Logger.Log(level, message);
         }
 
         public static void Log(LogLevel level, object args)
         {
-            Logger.Log(level, args);
+            _Logger.Log(level, args);
         }
     }
 }

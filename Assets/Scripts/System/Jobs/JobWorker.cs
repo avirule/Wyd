@@ -2,7 +2,9 @@
 
 using System;
 using System.Threading;
+using NLog;
 using Wyd.System.Collections;
+using Wyd.System.Logging;
 
 #endregion
 
@@ -67,24 +69,26 @@ namespace Wyd.System.Jobs
 
         private void ProcessItemQueue()
         {
-            while (!_AbortToken.IsCancellationRequested)
+            try
             {
-                try
+                while (!_AbortToken.IsCancellationRequested)
                 {
                     if (_ItemQueue.TryTake(out Job job, WaitTimeout, _AbortToken))
                     {
                         ProcessJob(job);
                     }
                 }
-                catch (OperationCanceledException)
-                {
-                    // Thread aborted
-                    Running = false;
-                    return;
-                }
             }
-
-            Running = false;
+            catch (OperationCanceledException)
+            {
+                // Thread aborted
+                EventLogger.Log(LogLevel.Warn,
+                    $"{nameof(JobWorker)} with id {ManagedThreadId} has critically aborted.");
+            }
+            finally
+            {
+                Running = false;
+            }
         }
 
         private void ProcessJob(Job job)
