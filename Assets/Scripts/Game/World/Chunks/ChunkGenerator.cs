@@ -161,10 +161,13 @@ namespace Wyd.Game.World.Chunks
             const float frequency = 0.01f;
             const float persistence = -1f;
 
-            if (Generating || !ChunkRawTerrainBuilderCache.TryRetrieveItem(out ChunkBuildingJobRawTerrain job))
+            if (Generating)
             {
                 return;
             }
+
+            ChunkBuildingJobRawTerrain job = ChunkRawTerrainBuilderCache.RetrieveItem()
+                                             ?? new ChunkBuildingJobRawTerrain();
 
             if (OptionsController.Current.GPUAcceleration)
             {
@@ -190,10 +193,12 @@ namespace Wyd.Game.World.Chunks
 
         public void BeginGeneratingAccents()
         {
-            if (Generating || !ChunkAccentsBuilderCache.TryRetrieveItem(out ChunkBuildingJobAccents job))
+            if (Generating)
             {
                 return;
             }
+
+            ChunkBuildingJobAccents job = ChunkAccentsBuilderCache.RetrieveItem() ?? new ChunkBuildingJobAccents();
 
             job.Set(_Bounds, _Blocks);
 
@@ -202,10 +207,12 @@ namespace Wyd.Game.World.Chunks
 
         private void BeginGeneratingMesh()
         {
-            if (Generating || !ChunkMeshersCache.TryRetrieveItem(out ChunkMeshingJob job))
+            if (Generating)
             {
                 return;
             }
+
+            ChunkMeshingJob job = ChunkMeshersCache.RetrieveItem() ?? new ChunkMeshingJob();
 
             job.Set(_Bounds, ref _Blocks, true, _Meshed);
 

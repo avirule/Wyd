@@ -13,6 +13,7 @@ using Wyd.Game.World;
 using Wyd.Game.World.Blocks;
 using Wyd.Game.World.Chunks;
 using Wyd.System;
+using Wyd.System.Collections;
 
 // ReSharper disable UnusedAutoPropertyAccessor.Global
 

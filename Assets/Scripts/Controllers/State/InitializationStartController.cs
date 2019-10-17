@@ -37,7 +37,6 @@ namespace Wyd.Controllers.State
             }
 
             Log.Logger = new LoggerConfiguration()
-                .WriteTo.RollingFile("")
                 .WriteTo.Sink(_loggedDataSink)
                 .WriteTo.Sink<GlobalLogEventSink>()
 #if UNITY_EDITOR

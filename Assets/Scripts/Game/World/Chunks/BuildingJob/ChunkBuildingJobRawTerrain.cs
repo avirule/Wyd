@@ -29,8 +29,9 @@ namespace Wyd.Game.World.Chunks.BuildingJob
             Persistence = persistence;
             GPUAcceleration = gpuAcceleration;
 
-            if ((noiseValuesBuffer != null) && NoiseValuesCache.TryRetrieveItem(out NoiseValues))
+            if (noiseValuesBuffer != null)
             {
+                NoiseValues = NoiseValuesCache.RetrieveItem() ?? new ChunkBuilderNoiseValues();
                 noiseValuesBuffer.GetData(NoiseValues.NoiseValues);
                 noiseValuesBuffer.Release();
             }

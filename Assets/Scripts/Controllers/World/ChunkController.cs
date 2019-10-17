@@ -13,6 +13,7 @@ using Wyd.Game.Entities;
 using Wyd.Game.World.Blocks;
 using Wyd.Game.World.Chunks;
 using Wyd.System;
+using Wyd.System.Collections;
 using Wyd.System.Compression;
 
 #endregion
@@ -166,12 +167,7 @@ namespace Wyd.Controllers.World
 
         private void ConfigureGenerator()
         {
-            if (!ChunkGeneratorsCache.TryRetrieveItem(out _ChunkGenerator))
-            {
-                Log.Warning(
-                    $"Chunk at position {Position} unable to retrieve a {nameof(ChunkGenerator)} from cache. This is most likely a serious error.");
-            }
-
+            _ChunkGenerator = ChunkGeneratorsCache.RetrieveItem() ?? new ChunkGenerator();
             _ChunkGenerator.Set(_Bounds, ref _Blocks, ref _Mesh);
             _ChunkGenerator.BlocksChanged += OnBlocksChanged;
             _ChunkGenerator.MeshChanged += OnMeshChanged;
@@ -353,12 +349,12 @@ namespace Wyd.Controllers.World
         {
             // todo this vvvv
             if (_BlockActionLocalPositions.Contains(localPosition)
-                || !_Bounds.Contains(localPosition)
-                || !BlockActionsCache.TryRetrieveItem(out BlockAction blockAction))
+                || !_Bounds.Contains(localPosition))
             {
                 return false;
             }
 
+            BlockAction blockAction = BlockActionsCache.RetrieveItem();
             blockAction.Initialise(localPosition, id);
             _BlockActions.Push(blockAction);
             _BlockActionLocalPositions.Add(localPosition);

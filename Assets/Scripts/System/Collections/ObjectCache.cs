@@ -5,7 +5,7 @@ using System.Collections.Concurrent;
 
 #endregion
 
-namespace Wyd.Game
+namespace Wyd.System.Collections
 {
     public delegate ref T PreCachingOperation<T>(ref T item);
 
@@ -13,7 +13,6 @@ namespace Wyd.Game
 
     public class ObjectCache<T>
     {
-        private readonly bool _CreateNewIfEmpty;
         private readonly ConcurrentStack<T> _InternalCache;
         private PreCachingOperation<T> _PreCachingOperation;
         private ItemCulledOperation<T> _ItemCulledOperation;
@@ -23,21 +22,13 @@ namespace Wyd.Game
         public int Size => _InternalCache.Count;
 
         public ObjectCache(bool createNewIfEmpty, bool preInitialize = false, int maximumSize = -1,
-            PreCachingOperation<T> preCachingOperation = default,
-            ItemCulledOperation<T> itemCulledOperation = default)
+            PreCachingOperation<T> preCachingOperation = null,
+            ItemCulledOperation<T> itemCulledOperation = null)
         {
             _InternalCache = new ConcurrentStack<T>();
             SetPreCachingOperation(preCachingOperation);
             SetItemCulledOperation(itemCulledOperation);
 
-            if (createNewIfEmpty && (typeof(T).GetConstructor(Type.EmptyTypes) == null) && !typeof(T).IsValueType)
-            {
-                throw new ArgumentException(
-                    $"Type T ({typeof(T)}) must have an empty constructor if `{nameof(_CreateNewIfEmpty)}` flag is true.",
-                    nameof(_CreateNewIfEmpty));
-            }
-
-            _CreateNewIfEmpty = createNewIfEmpty;
             MaximumSize = maximumSize;
 
             if (preInitialize && (maximumSize > -1) && createNewIfEmpty)
@@ -51,7 +42,7 @@ namespace Wyd.Game
 
         public void SetPreCachingOperation(PreCachingOperation<T> preCachingOperation)
         {
-            if (preCachingOperation == default)
+            if (preCachingOperation == null)
             {
                 return;
             }
@@ -61,7 +52,7 @@ namespace Wyd.Game
 
         public void SetItemCulledOperation(ItemCulledOperation<T> itemCulledOperation)
         {
-            if (itemCulledOperation == default)
+            if (itemCulledOperation == null)
             {
                 return;
             }
@@ -71,7 +62,7 @@ namespace Wyd.Game
 
         public void CacheItem(ref T item)
         {
-            if (_PreCachingOperation != default)
+            if (_PreCachingOperation != null)
             {
                 item = ref _PreCachingOperation(ref item);
             }
@@ -89,21 +80,26 @@ namespace Wyd.Game
             }
         }
 
+        public T RetrieveItem()
+        {
+            if ((_InternalCache.Count == 0)
+                || !_InternalCache.TryPop(out T item)
+                || !(item is object))
+            {
+                return default;
+            }
+
+            return item;
+        }
+
         public bool TryRetrieveItem(out T item)
         {
             if ((_InternalCache.Count == 0)
                 || !_InternalCache.TryPop(out item)
                 || !(item is object))
             {
-                if (_CreateNewIfEmpty)
-                {
-                    item = Activator.CreateInstance<T>();
-                }
-                else
-                {
-                    item = default;
-                    return false;
-                }
+                item = default;
+                return false;
             }
 
             return true;
