@@ -209,39 +209,109 @@ namespace Wyd.Controllers.World
             }
         }
 
-
-        private void ModifyBlockPosition(int localPosition1d, ushort newId)
+        private ushort GetBlockAt(int localPosition1d)
         {
+            // todo decide whether to use Block or ushort?
+            if (localPosition1d >= SizeProduct)
+            {
+                throw new ArgumentOutOfRangeException(nameof(localPosition1d),
+                    "Argument must be within the size of a blocks collection.");
+            }
+
             int totalPositions = 0;
             LinkedListNode<RLENode<ushort>> currentNode = _Blocks.First;
-            
-            while (totalPositions < localPosition1d && currentNode != null)
+
+            while (totalPositions <= localPosition1d)
             {
                 int newTotal = currentNode.Value.RunLength + totalPositions;
 
-                if (totalPositions >= localPosition1d)
+                if (newTotal >= localPosition1d)
                 {
-                    if (currentNode.Value.Value == newId)
-                    {
-                        // position resulted in already exists block id
-                        return;
-                    }
+                    return currentNode.Value.Value;
+                }
 
-                    int newNodePosition = currentNode.Value.RunLength - (localPosition1d - totalPositions);
-                    // todo this
-                    RLENode<ushort> inserted = new RLENode<ushort>(1, newId);
-                    RLENode<ushort> remainder = new RLENode<ushort>(, currentNode.Value.Value);
+                totalPositions = newTotal;
+            }
 
-                    // todo split and insert two new nodes
+            return 0;
+        }
+
+        private void ModifyBlockPosition(int localPosition1d, ushort newId)
+        {
+            if (localPosition1d >= SizeProduct)
+            {
+                return;
+            }
+
+            int totalPositions = 0;
+            LinkedListNode<RLENode<ushort>> currentNode = _Blocks.First;
+
+            // todo null check
+            while ((totalPositions <= localPosition1d) && (currentNode != null))
+            {
+                if (currentNode.Value.RunLength == 0)
+                {
+                    _Blocks.Remove(currentNode);
                 }
                 else
                 {
+                    int newTotal = currentNode.Value.RunLength + totalPositions;
+
+                    // in this case, the position exists at the beginning of a node
+                    if (localPosition1d == (totalPositions + 1))
+                    {
+                        // insert node before current node
+                        _Blocks.AddBefore(currentNode, new RLENode<ushort>(1, newId));
+                        // decrement current node to make room for new node
+                        currentNode.Value.RunLength -= 1;
+                    }
+                    // position exists after end of node
+                    else if ((localPosition1d == (newTotal + 1))
+                             // and ids match so just increment RunLength without any insertions
+                             && (newId == currentNode.Value.Value))
+                    {
+                        currentNode.Value.RunLength += 1;
+
+                        // make sure next node is not null
+                        if (currentNode.Next != null)
+                        {
+                            // decrement from the next node so that there's space for the new placement
+                            // in currentNode's RunLength 
+                            currentNode.Next.Value.RunLength -= 1;
+                        }
+                    }
+                    // we've found the node that overlaps the queried position
+                    else if (newTotal > localPosition1d)
+                    {
+                        if (currentNode.Value.Value == newId)
+                        {
+                            // position resulted in already exists block id
+                            break;
+                        }
+
+                        // inserted node will take up 1 position / run length
+                        LinkedListNode<RLENode<ushort>> insertedNode =
+                            _Blocks.AddAfter(currentNode, new RLENode<ushort>(1, newId));
+                        // split CurrentNode's RunLength and -1 to make space for the inserted node
+                        currentNode.Value.RunLength = localPosition1d - totalPositions - 1;
+
+                        if (localPosition1d != newTotal)
+                        {
+                            // hit is not at end of rle node, so we must add a remainder node
+                            _Blocks.AddAfter(insertedNode,
+                                new RLENode<ushort>(newTotal - localPosition1d, currentNode.Value.Value));
+                        }
+
+                        break;
+                    }
+
                     totalPositions = newTotal;
-                    currentNode = currentNode.Next;
                 }
+
+                currentNode = currentNode.Next;
             }
         }
-        
+
         #region ACTIVATION STATE
 
         public void Activate(Vector3 position)
