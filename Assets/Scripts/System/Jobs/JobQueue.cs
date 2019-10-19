@@ -238,33 +238,34 @@ namespace Wyd.System.Jobs
             switch (ThreadingMode)
             {
                 case ThreadingMode.Single:
-                    ExecuteJob(job);
+                    _Workers[0].QueueJob(job);
                     break;
                 case ThreadingMode.Multi:
                     _LastThreadIndexQueuedInto = (_LastThreadIndexQueuedInto + 1) % WorkerThreadCount;
 
-                    if (!_Workers[_LastThreadIndexQueuedInto].Running)
-                    {
-                        Log.Warning(
-                            $"{nameof(JobQueue)} (ID {_OperationThread.ManagedThreadId}):"
-                            + $" {nameof(JobWorker)} (ID {_Workers[_LastThreadIndexQueuedInto].ManagedThreadId}) has shutdown."
-                            + " This is unexpected, so it is being restarted.");
 
-                        _Workers[_LastThreadIndexQueuedInto].Start();
-                    }
 
                     _Workers[_LastThreadIndexQueuedInto].QueueJob(job);
                     break;
                 case ThreadingMode.Adaptive:
-                    if (TryGetFirstFreeWorker(out int jobWorkerIndex))
+                    int jobWorkerIndex;
+
+                    while (!TryGetFirstFreeWorker(out jobWorkerIndex))
                     {
-                        _Workers[jobWorkerIndex].QueueJob(job);
-                    }
-                    else
-                    {
-                        ExecuteJob(job);
+                        Thread.Sleep(1);
                     }
 
+                    if (!_Workers[jobWorkerIndex].Running)
+                    {
+                        Log.Warning(
+                            $"{nameof(JobQueue)} (ID {_OperationThread.ManagedThreadId}):"
+                            + $" {nameof(JobWorker)} (ID {_Workers[jobWorkerIndex].ManagedThreadId}) has shutdown."
+                            + " This is unexpected, so it is being restarted.");
+
+                        _Workers[jobWorkerIndex].Start();
+                    }
+                    
+                    _Workers[jobWorkerIndex].QueueJob(job);
                     break;
                 default:
                     throw new ArgumentOutOfRangeException();
@@ -299,13 +300,6 @@ namespace Wyd.System.Jobs
             }
 
             return false;
-        }
-
-        private void ExecuteJob(Job job)
-        {
-            OnJobStarted(this, new JobEventArgs(job));
-            job.Execute();
-            OnJobFinished(this, new JobEventArgs(job));
         }
 
         #endregion
