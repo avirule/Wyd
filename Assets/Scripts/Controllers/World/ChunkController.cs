@@ -3,7 +3,6 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
-using System.Linq;
 using Serilog;
 using UnityEngine;
 using UnityEngine.Rendering;
@@ -243,11 +242,10 @@ namespace Wyd.Controllers.World
                 return;
             }
 
-            int totalPositions = 0;
+            int steppedLength = 0;
             LinkedListNode<RLENode<ushort>> currentNode = _Blocks.First;
 
-            // todo null check
-            while ((totalPositions <= localPosition1d) && (currentNode != null))
+            while ((steppedLength <= localPosition1d) && (currentNode != null))
             {
                 if (currentNode.Value.RunLength == 0)
                 {
@@ -255,10 +253,10 @@ namespace Wyd.Controllers.World
                 }
                 else
                 {
-                    int newTotal = currentNode.Value.RunLength + totalPositions;
+                    int newSteppedLength = currentNode.Value.RunLength + steppedLength;
 
                     // in this case, the position exists at the beginning of a node
-                    if (localPosition1d == (totalPositions + 1))
+                    if (localPosition1d == (steppedLength + 1))
                     {
                         // insert node before current node
                         _Blocks.AddBefore(currentNode, new RLENode<ushort>(1, newId));
@@ -266,7 +264,7 @@ namespace Wyd.Controllers.World
                         currentNode.Value.RunLength -= 1;
                     }
                     // position exists after end of node
-                    else if ((localPosition1d == (newTotal + 1))
+                    else if ((localPosition1d == (newSteppedLength + 1))
                              // and ids match so just increment RunLength without any insertions
                              && (newId == currentNode.Value.Value))
                     {
@@ -281,7 +279,7 @@ namespace Wyd.Controllers.World
                         }
                     }
                     // we've found the node that overlaps the queried position
-                    else if (newTotal > localPosition1d)
+                    else if (newSteppedLength > localPosition1d)
                     {
                         if (currentNode.Value.Value == newId)
                         {
@@ -293,19 +291,19 @@ namespace Wyd.Controllers.World
                         LinkedListNode<RLENode<ushort>> insertedNode =
                             _Blocks.AddAfter(currentNode, new RLENode<ushort>(1, newId));
                         // split CurrentNode's RunLength and -1 to make space for the inserted node
-                        currentNode.Value.RunLength = localPosition1d - totalPositions - 1;
+                        currentNode.Value.RunLength = localPosition1d - steppedLength - 1;
 
-                        if (localPosition1d != newTotal)
+                        if (localPosition1d != newSteppedLength)
                         {
                             // hit is not at end of rle node, so we must add a remainder node
                             _Blocks.AddAfter(insertedNode,
-                                new RLENode<ushort>(newTotal - localPosition1d, currentNode.Value.Value));
+                                new RLENode<ushort>(newSteppedLength - localPosition1d, currentNode.Value.Value));
                         }
 
                         break;
                     }
 
-                    totalPositions = newTotal;
+                    steppedLength = newSteppedLength;
                 }
 
                 currentNode = currentNode.Next;
@@ -543,17 +541,17 @@ namespace Wyd.Controllers.World
         public byte[] GetCompressedAsByteArray()
         {
             // 4 bytes for runlength and value
-            List<RunLengthCompression.RLENode<ushort>> nodes = GetCompressedRaw().ToList();
-            byte[] bytes = new byte[nodes.Count * 4];
+            byte[] bytes = new byte[_Blocks.Count * 4];
 
-            for (int i = 0; i < bytes.Length; i += 4)
+            int count = 0;
+            foreach (RLENode<ushort> node in _Blocks)
             {
-                int nodesIndex = i / 4;
-
                 // copy runlength (ushort, 2 bytes) to position of i
-                Array.Copy(BitConverter.GetBytes(nodes[nodesIndex].RunLength), 0, bytes, i, 2);
+                Array.Copy(BitConverter.GetBytes(node.RunLength), 0, bytes, count, 2);
                 // copy node value, also 2 bytes, to position of i + 2 bytes from runlength
-                Array.Copy(BitConverter.GetBytes(nodes[nodesIndex].Value), 0, bytes, i + 2, 2);
+                Array.Copy(BitConverter.GetBytes(node.Value), 0, bytes, count + 2, 2);
+
+                count += 4;
             }
 
             return bytes;
@@ -569,6 +567,7 @@ namespace Wyd.Controllers.World
             int blocksIndex = 0;
             for (int i = 0; i < data.Length; i += 4)
             {
+                // todo fix this to work with linked list
                 ushort runLength = BitConverter.ToUInt16(data, i);
                 ushort value = BitConverter.ToUInt16(data, i + 2);
 
@@ -582,12 +581,15 @@ namespace Wyd.Controllers.World
             _ChunkGenerator.SkipBuilding(true);
         }
 
-        public IEnumerable<RunLengthCompression.RLENode<ushort>> GetCompressedRaw() =>
-            RunLengthCompression.Compress(GetBlocksAsIds(), _Blocks[0].Id);
-
-        private IEnumerable<ushort> GetBlocksAsIds()
+        private IEnumerable<ushort> GetDecompressed()
         {
-            return _Blocks.Select(block => block.Id);
+            foreach (RLENode<ushort> node in _Blocks)
+            {
+                for (int i = 0; i < node.RunLength; i++)
+                {
+                    yield return node.Value;
+                }
+            }
         }
 
         #endregion
