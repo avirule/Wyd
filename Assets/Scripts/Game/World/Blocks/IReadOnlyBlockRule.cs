@@ -1,5 +1,3 @@
-using Wyd.Controllers.State;
-
 namespace Wyd.Game.World.Blocks
 {
     public interface IReadOnlyBlockRule

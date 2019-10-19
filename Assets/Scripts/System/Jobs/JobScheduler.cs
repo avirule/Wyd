@@ -249,7 +249,8 @@ namespace Wyd.System.Jobs
         /// </remarks>
         /// <param name="jobWorkerIndex">The resultant <see cref="T:List{JobWorker}" /> index.</param>
         /// <returns>
-        ///     <value>False</value> if no job is found.
+        ///     <value>False</value>
+        ///     if no job is found.
         /// </returns>
         private bool TryGetFirstFreeWorker(out int jobWorkerIndex)
         {

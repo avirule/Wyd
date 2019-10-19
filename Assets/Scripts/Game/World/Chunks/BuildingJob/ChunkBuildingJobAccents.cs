@@ -1,10 +1,6 @@
 #region
 
 using UnityEngine;
-using Wyd.Controllers.State;
-using Wyd.Controllers.World;
-using Wyd.Game.World.Blocks;
-using Wyd.System;
 
 #endregion
 
@@ -20,7 +16,6 @@ namespace Wyd.Game.World.Chunks.BuildingJob
 
         private void Generate()
         {
-            return;
             // todo fix this
 //            BlockController.Current.TryGetBlockId("water", out ushort blockIdWater);
 //            BlockController.Current.TryGetBlockId("sand", out ushort blockIdSand);

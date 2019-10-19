@@ -39,7 +39,8 @@ namespace Wyd.Controllers.State
 
         private void Start()
         {
-            _JobExecutionScheduler = new JobScheduler(TimeSpan.FromMilliseconds(200), OptionsController.Current.ThreadingMode,
+            _JobExecutionScheduler = new JobScheduler(TimeSpan.FromMilliseconds(200),
+                OptionsController.Current.ThreadingMode,
                 OptionsController.Current.CPUCoreUtilization);
 
             _JobExecutionScheduler.WorkerCountChanged += (sender, count) =>

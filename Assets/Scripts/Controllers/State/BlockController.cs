@@ -69,7 +69,7 @@ namespace Wyd.Controllers.State
             {
                 _BlockPropertiesRegistry[property].Add(assignedBlockId);
             }
-            
+
             Log.Information($"Successfully added block `{blockName}` with ID: {assignedBlockId}");
 
             return assignedBlockId;
@@ -172,9 +172,7 @@ namespace Wyd.Controllers.State
             return BlockRules.Where(block => block.Type == type);
         }
 
-        public bool CheckBlockHasProperty(ushort blockId, BlockRule.Property property)
-        {
-            return _BlockPropertiesRegistry[property].Contains(blockId);
-        }
+        public bool CheckBlockHasProperty(ushort blockId, BlockRule.Property property) =>
+            _BlockPropertiesRegistry[property].Contains(blockId);
     }
 }

@@ -79,7 +79,7 @@ namespace Wyd.Game.World.Chunks.BuildingJob
 
             Vector3 position = Vector3.zero;
             ushort currentId = 0;
-            int runLength = 0;
+            int runLength = 1;
 
             for (int index = ChunkController.SizeProduct - 1;
                 (index >= 0) && !AbortToken.IsCancellationRequested;
@@ -97,7 +97,8 @@ namespace Wyd.Game.World.Chunks.BuildingJob
                 {
                     currentId = nextId;
                     AddBlockSequentialAware(currentId, runLength);
-                    runLength = 0;
+                    // reset run length
+                    runLength = 1;
                 }
             }
         }
@@ -155,11 +156,11 @@ namespace Wyd.Game.World.Chunks.BuildingJob
             // allocate from the front since we are adding from top to bottom (i.e. last to first)
             if (_Blocks.Count > 0)
             {
-                RLENode<ushort> firstNode = _Blocks.First.Value;
+                LinkedListNode<RLENode<ushort>> firstNode = _Blocks.First;
 
-                if (firstNode.Value == blockId)
+                if (firstNode.Value.Value == blockId)
                 {
-                    firstNode.RunLength += 1;
+                    firstNode.Value.RunLength += runLength;
                 }
                 else
                 {
@@ -168,7 +169,7 @@ namespace Wyd.Game.World.Chunks.BuildingJob
             }
             else
             {
-                _Blocks.AddLast(new RLENode<ushort>(runLength, blockId));
+                _Blocks.AddFirst(new RLENode<ushort>(runLength, blockId));
             }
         }
     }

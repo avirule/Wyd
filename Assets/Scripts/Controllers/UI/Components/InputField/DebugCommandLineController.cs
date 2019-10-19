@@ -1,13 +1,11 @@
 #region
 
 using System;
-using System.Linq;
 using Serilog;
 using TMPro;
 using UnityEngine;
 using Wyd.Controllers.State;
 using Wyd.Controllers.World;
-using Wyd.Game.World.Blocks;
 
 #endregion
 
@@ -160,7 +158,6 @@ namespace Wyd.Controllers.UI.Components.InputField
                         out ChunkController chunkController))
                     {
                         Log.Warning($"No chunk at coordinates {chunkPosition}.");
-                        break;
                     }
 
                     //Log.Information(chunkController.GetC().Count().ToString());

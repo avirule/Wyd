@@ -396,17 +396,13 @@ namespace Wyd.Controllers.World
 
         public bool BlockExistsAt(Vector3 globalPosition) => GetBlockAt(globalPosition) != BlockController.Air.Id;
 
-        public bool TryPlaceBlockAt(Vector3 globalPosition, ushort id)
-        {
-            return _Bounds.Contains(globalPosition) 
-                   && TryAllocateBlockAction(globalPosition - Position, id);
-        }
+        public bool TryPlaceBlockAt(Vector3 globalPosition, ushort id) =>
+            _Bounds.Contains(globalPosition)
+            && TryAllocateBlockAction(globalPosition - Position, id);
 
-        public bool TryRemoveBlockAt(Vector3 globalPosition)
-        {
-            return _Bounds.Contains(globalPosition) 
-                   && TryAllocateBlockAction(globalPosition - Position, BlockController.Air.Id);
-        }
+        public bool TryRemoveBlockAt(Vector3 globalPosition) =>
+            _Bounds.Contains(globalPosition)
+            && TryAllocateBlockAction(globalPosition - Position, BlockController.Air.Id);
 
         private bool TryAllocateBlockAction(Vector3 localPosition, ushort id)
         {
