@@ -3,10 +3,8 @@
 using System.Collections.Generic;
 using Serilog;
 using UnityEngine;
-using UnityEngine.UI;
 using Wyd.Controllers.State;
 using Wyd.Controllers.World;
-using Wyd.Game.World.Blocks;
 using Wyd.System;
 using Wyd.System.Compression;
 using Wyd.System.Noise;
@@ -17,20 +15,25 @@ namespace Wyd.Game.World.Chunks.BuildingJob
 {
     public class ChunkBuildingJobRawTerrain : ChunkBuildingJob
     {
+        private ushort _BlockIdGrass;
+        private ushort _BlockIdDirt;
+        private ushort _BlockIdStone;
+        private ushort _BlockIdWater;
+        private ushort _BlockIdSand;
+
         public float Frequency;
         public float Persistence;
-        public bool GPUAcceleration;
+        public bool GpuAcceleration;
         public ChunkBuilderNoiseValues NoiseValues;
 
-        public void Set(
-            Bounds bounds, ref LinkedList<RLENode<ushort>> blocks, float frequency, float persistence,
+        public void Set(Bounds bounds, ref LinkedList<RLENode<ushort>> blocks, float frequency, float persistence,
             bool gpuAcceleration = false, ComputeBuffer noiseValuesBuffer = null)
         {
             Set(bounds, ref blocks);
 
             Frequency = frequency;
             Persistence = persistence;
-            GPUAcceleration = gpuAcceleration;
+            GpuAcceleration = gpuAcceleration;
 
             if (noiseValuesBuffer != null)
             {
@@ -38,11 +41,17 @@ namespace Wyd.Game.World.Chunks.BuildingJob
                 noiseValuesBuffer.GetData(NoiseValues.NoiseValues);
                 noiseValuesBuffer.Release();
             }
+
+            BlockController.Current.TryGetBlockId("grass", out _BlockIdGrass);
+            BlockController.Current.TryGetBlockId("dirt", out _BlockIdDirt);
+            BlockController.Current.TryGetBlockId("stone", out _BlockIdStone);
+            BlockController.Current.TryGetBlockId("water", out _BlockIdWater);
+            BlockController.Current.TryGetBlockId("sand", out _BlockIdSand);
         }
 
         protected override void Process()
         {
-            Generate(GPUAcceleration, NoiseValues?.NoiseValues);
+            Generate(GpuAcceleration, NoiseValues?.NoiseValues);
         }
 
         protected override void ProcessFinished()
@@ -69,12 +78,8 @@ namespace Wyd.Game.World.Chunks.BuildingJob
             _Blocks.Clear();
 
             Vector3 position = Vector3.zero;
-
-            BlockController.Current.TryGetBlockId("grass", out ushort blockIdGrass);
-            BlockController.Current.TryGetBlockId("dirt", out ushort blockIdDirt);
-            BlockController.Current.TryGetBlockId("stone", out ushort blockIdStone);
-            BlockController.Current.TryGetBlockId("water", out ushort blockIdWater);
-            BlockController.Current.TryGetBlockId("sand", out ushort blockIdSand);
+            ushort currentId = 0;
+            int runLength = 0;
 
             for (int index = ChunkController.SizeProduct - 1;
                 (index >= 0) && !AbortToken.IsCancellationRequested;
@@ -82,45 +87,57 @@ namespace Wyd.Game.World.Chunks.BuildingJob
             {
                 (position.x, position.y, position.z) = Mathv.GetIndexAs3D(index, ChunkController.Size);
 
-                if ((position.y < 4) && (position.y <= _Rand.Next(0, 4)))
+                ushort nextId = GetBlockToGenerate(position, index, useGpu, noiseValues);
+
+                if (currentId == nextId)
                 {
-                    BlockController.Current.TryGetBlockId("bedrock", out ushort blockId);
-                    AddBlockSequentialAware(blockId);
+                    runLength += 1;
                 }
                 else
                 {
-                    // these seems inefficient, but the CPU branch predictor will pick up on it pretty quick
-                    // so the slowdown from this check is nonexistent, since useGpu shouldn't change in this context.
-                    float noiseValue = useGpu ? noiseValues[index] : GetNoiseValueByVector3(position);
+                    currentId = nextId;
+                    AddBlockSequentialAware(currentId, runLength);
+                    runLength = 0;
+                }
+            }
+        }
 
-                    if (noiseValue >= 0.01f)
-                    {
-                        int indexAbove = index + ChunkController.YIndexStep;
+        private ushort GetBlockToGenerate(Vector3 position, int index, bool useGpu = false,
+            IReadOnlyList<float> noiseValues = null)
+        {
+            if ((position.y < 4) && (position.y <= _Rand.Next(0, 4)))
+            {
+                BlockController.Current.TryGetBlockId("bedrock", out ushort blockId);
+                return blockId;
+            }
 
-                        if ((position.y > 135) && IsBlockAtPositionTransparent(indexAbove))
-                        {
-                            AddBlockSequentialAware(blockIdGrass);
-                        }
-                        // todo fix this
+            // these seems inefficient, but the CPU branch predictor will pick up on it pretty quick
+            // so the slowdown from this check is nonexistent, since useGpu shouldn't change in this context.
+            float noiseValue = useGpu ? noiseValues[index] : GetNoiseValueByVector3(position);
+
+            if (noiseValue >= 0.01f)
+            {
+                int indexAbove = index + ChunkController.YIndexStep;
+
+                if ((position.y > 135) && IsBlockAtPositionTransparent(indexAbove))
+                {
+                    return _BlockIdGrass;
+                }
+                // todo fix this
 //                        else if (IdExistsAboveWithinRange(index, 2, blockIdGrass))
 //                        {
 //                            AddBlockSequentialAware(blockIdDirt);
 //                        }
-                        else
-                        {
-                            AddBlockSequentialAware(blockIdStone);
-                        }
-                    }
-                    else if ((position.y <= 155) && (position.y > 135))
-                    {
-                        AddBlockSequentialAware(blockIdWater);
-                    }
-                    else
-                    {
-                        AddBlockSequentialAware(BlockController.Air.Id);
-                    }
-                }
+
+                return _BlockIdStone;
             }
+
+            if ((position.y <= 155) && (position.y > 135))
+            {
+                return _BlockIdWater;
+            }
+
+            return BlockController.Air.Id;
         }
 
         protected float GetNoiseValueByVector3(Vector3 pos3d)
@@ -133,7 +150,7 @@ namespace Wyd.Game.World.Chunks.BuildingJob
             return noiseValue;
         }
 
-        private void AddBlockSequentialAware(ushort blockId)
+        private void AddBlockSequentialAware(ushort blockId, int runLength = 1)
         {
             // allocate from the front since we are adding from top to bottom (i.e. last to first)
             if (_Blocks.Count > 0)
@@ -146,12 +163,12 @@ namespace Wyd.Game.World.Chunks.BuildingJob
                 }
                 else
                 {
-                    _Blocks.AddFirst(new RLENode<ushort>(1, blockId));
+                    _Blocks.AddFirst(new RLENode<ushort>(runLength, blockId));
                 }
             }
             else
             {
-                _Blocks.AddLast(new RLENode<ushort>(1, blockId));
+                _Blocks.AddLast(new RLENode<ushort>(runLength, blockId));
             }
         }
     }

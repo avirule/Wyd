@@ -6,7 +6,6 @@ using System.Linq;
 using UnityEngine;
 using Wyd.Controllers.State;
 using Wyd.Controllers.World;
-using Wyd.Game.World.Blocks;
 using Wyd.Game.World.Chunks.BuildingJob;
 using Wyd.System;
 using Wyd.System.Collections;
@@ -148,7 +147,7 @@ namespace Wyd.Game.World.Chunks
                     BeginGeneratingRawTerrain();
                     break;
                 case GenerationStep.Accents:
-                    _StepForward = true;
+                    BeginGeneratingAccents();
                     break;
                 case GenerationStep.Meshing:
                     BeginGeneratingMesh();
@@ -194,19 +193,19 @@ namespace Wyd.Game.World.Chunks
         }
 
         // todo fix this
-//        public void BeginGeneratingAccents()
-//        {
-//            if (Generating)
-//            {
-//                return;
-//            }
-//
-//            ChunkBuildingJobAccents job = ChunkAccentsBuilderCache.RetrieveItem() ?? new ChunkBuildingJobAccents();
-//
-//            job.Set(_Bounds, _Blocks);
-//
-//            QueueJob(job);
-//        }
+        public void BeginGeneratingAccents()
+        {
+            if (Generating)
+            {
+                return;
+            }
+
+            ChunkBuildingJobAccents job = ChunkAccentsBuilderCache.RetrieveItem() ?? new ChunkBuildingJobAccents();
+
+            job.Set(_Bounds, ref _Blocks);
+
+            QueueJob(job);
+        }
 
         private void BeginGeneratingMesh()
         {

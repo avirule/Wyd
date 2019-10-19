@@ -165,9 +165,7 @@ namespace Wyd.Game.World.Chunks
                     || ((localPosition.z < (Size.z - 1))
                         && (_Blocks[index + Size.x] != _Blocks[index]))))
             {
-                // todo fix northern transparent faces sometimes not culling inner faces
-
-                // set face of current block so it isn't traversed over
+                // set face of current block so it isn't traversed over again
                 traversedFaces |= (byte)Direction.North;
                 // add triangles for this block face
                 AddTriangles(Direction.North, true);
