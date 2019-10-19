@@ -17,6 +17,7 @@ namespace Wyd.Game.World.Chunks
 {
     public class ChunkMesher
     {
+        private readonly BlockFaces[] _BlockFaces;
         private readonly List<Vector3> _Vertices;
         private readonly List<int> _Triangles;
         private readonly List<int> _TransparentTriangles;
@@ -28,11 +29,12 @@ namespace Wyd.Game.World.Chunks
         private int _YIndexStep;
 
         public CancellationToken AbortToken;
-        public Block[] Blocks;
+        public IEnumerable<ushort> Blocks;
         public bool AggressiveFaceMerging;
 
         public Bounds Bounds
         {
+            
             get => _Bounds;
             set
             {

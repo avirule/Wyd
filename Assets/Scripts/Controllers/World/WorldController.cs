@@ -332,7 +332,7 @@ namespace Wyd.Controllers.World
         public bool TryGetChunkAt(Vector3 position, out ChunkController chunkController) =>
             _Chunks.TryGetValue(position, out chunkController);
 
-        public ref Block GetBlockAt(Vector3 globalPosition)
+        public ushort GetBlockAt(Vector3 globalPosition)
         {
             Vector3 chunkPosition = globalPosition.RoundBy(ChunkController.Size);
 
@@ -344,17 +344,17 @@ namespace Wyd.Controllers.World
                     $"Position `{globalPosition}` outside of current loaded radius.");
             }
 
-            return ref chunkController.GetBlockAt(globalPosition);
+            return chunkController.GetBlockAt(globalPosition);
         }
 
-        public bool TryGetBlockAt(Vector3 globalPosition, out Block block)
+        public bool TryGetBlockAt(Vector3 globalPosition, out ushort blockId)
         {
-            block = default;
+            blockId = default;
             Vector3 chunkPosition = globalPosition.RoundBy(ChunkController.Size);
 
             return TryGetChunkAt(chunkPosition, out ChunkController chunkController)
                    && (chunkController != default)
-                   && chunkController.TryGetBlockAt(globalPosition, out block);
+                   && chunkController.TryGetBlockAt(globalPosition, out blockId);
         }
 
         public bool BlockExistsAt(Vector3 globalPosition)
@@ -365,18 +365,6 @@ namespace Wyd.Controllers.World
                    && chunkController.BlockExistsAt(globalPosition);
         }
 
-        public void PlaceBlockAt(Vector3 globalPosition, ushort id)
-        {
-            Vector3 chunkPosition = globalPosition.RoundBy(ChunkController.Size);
-
-            if (!TryGetChunkAt(chunkPosition, out ChunkController chunkController))
-            {
-                throw new ArgumentOutOfRangeException($"Chunk containing position {globalPosition} does not exist.");
-            }
-
-            chunkController.ImmediatePlaceBlockAt(globalPosition, id);
-        }
-
         public bool TryPlaceBlockAt(Vector3 globalPosition, ushort id)
         {
             Vector3 chunkPosition = globalPosition.RoundBy(ChunkController.Size);
@@ -384,18 +372,6 @@ namespace Wyd.Controllers.World
             return TryGetChunkAt(chunkPosition, out ChunkController chunkController)
                    && (chunkController != default)
                    && chunkController.TryPlaceBlockAt(globalPosition, id);
-        }
-
-        public void RemoveBlockAt(Vector3 globalPosition)
-        {
-            Vector3 chunkPosition = globalPosition.RoundBy(ChunkController.Size);
-
-            if (!TryGetChunkAt(chunkPosition, out ChunkController chunkController))
-            {
-                throw new ArgumentOutOfRangeException($"Chunk containing position {globalPosition} does not exist.");
-            }
-
-            chunkController.ImmediateRemoveBlockAt(globalPosition);
         }
 
         public bool TryRemoveBlockAt(Vector3 globalPosition)

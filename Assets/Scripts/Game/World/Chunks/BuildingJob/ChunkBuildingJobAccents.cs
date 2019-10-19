@@ -25,9 +25,9 @@ namespace Wyd.Game.World.Chunks.BuildingJob
 
             Vector3 localPosition = Vector3.zero;
 
-            for (int index = 0; index < Blocks.Length; index++)
+            for (int index = 0; index < _Blocks.Length; index++)
             {
-                if (Blocks[index].Id != blockIdWater)
+                if (_Blocks[index].Id != blockIdWater)
                 {
                     continue;
                 }
@@ -50,14 +50,14 @@ namespace Wyd.Game.World.Chunks.BuildingJob
                     for (int z = -sand_radius; z < (sand_radius + 1); z++)
                     {
                         localPosition += new Vector3(x, y, z);
-                        Vector3 globalPosition = Bounds.min + localPosition;
+                        Vector3 globalPosition = _Bounds.min + localPosition;
 
                         if ((globalPosition.y < 0) || (globalPosition.y > ChunkController.Size.y))
                         {
                             continue;
                         }
 
-                        if (!Bounds.Contains(globalPosition))
+                        if (!_Bounds.Contains(globalPosition))
                         {
                             if (!WorldController.Current.TryGetBlockAt(globalPosition, out Block queriedBlock)
                                 || (queriedBlock.Id == blockIdWater)
@@ -73,13 +73,13 @@ namespace Wyd.Game.World.Chunks.BuildingJob
                             // todo fix this 
                             int queriedIndex = localPosition.To1D(ChunkController.Size);
 
-                            if ((Blocks[queriedIndex].Id == blockIdWater)
-                                || (Blocks[queriedIndex].Id == blockIdSand))
+                            if ((_Blocks[queriedIndex].Id == blockIdWater)
+                                || (_Blocks[queriedIndex].Id == blockIdSand))
                             {
                                 continue;
                             }
 
-                            Blocks[queriedIndex].Initialise(blockIdSand);
+                            _Blocks[queriedIndex].Initialise(blockIdSand);
                         }
                     }
                 }

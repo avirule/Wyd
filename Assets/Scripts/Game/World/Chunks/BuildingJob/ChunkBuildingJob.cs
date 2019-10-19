@@ -1,10 +1,12 @@
 #region
 
+using System.Collections.Generic;
 using UnityEngine;
 using Wyd.Controllers.State;
 using Wyd.Controllers.World;
 using Wyd.Game.World.Blocks;
 using Wyd.System.Collections;
+using Wyd.System.Compression;
 using Wyd.System.Extensions;
 using Wyd.System.Jobs;
 using Random = System.Random;
@@ -18,20 +20,20 @@ namespace Wyd.Game.World.Chunks.BuildingJob
         protected static readonly ObjectCache<ChunkBuilderNoiseValues> NoiseValuesCache =
             new ObjectCache<ChunkBuilderNoiseValues>(true);
 
-        protected Random Rand;
-        protected Bounds Bounds;
-        protected Block[] Blocks;
+        protected Random _Rand;
+        protected Bounds _Bounds;
+        protected LinkedList<RLENode<ushort>> _Blocks;
 
         /// <summary>
         ///     Prepares item for new execution.
         /// </summary>
         /// <param name="bounds"></param>
         /// <param name="blocks">Pre-initialized and built <see cref="T:ushort[]" /> to iterate through.</param>
-        public void Set(Bounds bounds, Block[] blocks)
+        public void Set(Bounds bounds, ref LinkedList<RLENode<ushort>> blocks)
         {
-            Rand = new Random(WorldController.Current.Seed);
-            Bounds = bounds;
-            Blocks = blocks;
+            _Rand = new Random(WorldController.Current.Seed);
+            _Bounds = bounds;
+            _Blocks = blocks;
         }
 
         protected bool IdExistsAboveWithinRange(int startIndex, int maxSteps, ushort soughtId)
@@ -40,15 +42,15 @@ namespace Wyd.Game.World.Chunks.BuildingJob
             {
                 int currentIndex = startIndex + (i * ChunkController.YIndexStep);
 
-                if (currentIndex >= Blocks.Length)
+                if (currentIndex >= _Blocks.Count)
                 {
                     return false;
                 }
-
-                if (Blocks[currentIndex].Id == soughtId)
-                {
-                    return true;
-                }
+// todo fix this
+//                if (_Blocks[currentIndex].Id == soughtId)
+//                {
+//                    return true;
+//                }
             }
 
             return false;
@@ -62,12 +64,13 @@ namespace Wyd.Game.World.Chunks.BuildingJob
                 {
                     for (int z = -radius; z < (radius + 1); z++)
                     {
-                        int index = (x, y, z).To1D(ChunkController.Size);
+                        int index = startIndex + (x, y, z).To1D(ChunkController.Size);
 
-                        if ((index < Blocks.Length) && (Blocks[index].Id == soughtId))
-                        {
-                            return true;
-                        }
+                        // todo fix thsis
+//                        if ((index < _Blocks.Length) && (_Blocks[index].Id == soughtId))
+//                        {
+//                            return true;
+//                        }
                     }
                 }
             }
@@ -78,33 +81,67 @@ namespace Wyd.Game.World.Chunks.BuildingJob
         /// <summary>
         ///     Scans the block array and returns the highest index that is non-air
         /// </summary>
-        /// <param name="blocks">Array of blocks to scan</param>
         /// <param name="startIndex"></param>
         /// <param name="strideSize">Number of indexes to jump each iteration</param>
         /// <param name="maxHeight">Maximum amount of iterations to stride</param>
         /// <returns></returns>
-        public static int GetTopmostBlockIndex(Block[] blocks, int startIndex, int strideSize, int maxHeight)
+        public static int GetTopmostBlockIndex(int startIndex, int strideSize, int maxHeight)
         {
             int highestNonAirIndex = 0;
 
             for (int y = 0; y < maxHeight; y++)
             {
                 int currentIndex = startIndex + (y * strideSize);
-
-                if (currentIndex >= blocks.Length)
-                {
-                    break;
-                }
-
-                if (blocks[currentIndex].Id == BlockController.Air.Id)
-                {
-                    continue;
-                }
+// todo fix this
+//                if (currentIndex >= _Blocks.Length)
+//                {
+//                    break;
+//                }
+//
+//                if (_Blocks[currentIndex].Id == BlockController.Air.Id)
+//                {
+//                    continue;
+//                }
 
                 highestNonAirIndex = currentIndex;
             }
+            
+            
 
             return highestNonAirIndex;
+        }
+        
+        protected bool IsBlockAtPositionTransparent(int position)
+        {
+            return !BlockController.Current.TryGetBlockRule(GetBlockAtPosition_LastToFirst(position),
+                       out IReadOnlyBlockRule blockRule) || blockRule.Transparent;
+        }
+
+        protected ushort GetBlockAtPosition_LastToFirst(int position)
+        {
+            if (position > ChunkController.SizeProduct)
+            {
+                return ushort.MaxValue;
+            }
+
+            int totalPositions = 0;
+            // go backwards as building is done from top to bottom
+            LinkedListNode<RLENode<ushort>> currentNode = _Blocks.Last;
+
+            while ((totalPositions <= position) && (currentNode != null))
+            {
+                int newTotal = currentNode.Value.RunLength + totalPositions;
+
+                if (newTotal >= position)
+                {
+                    return currentNode.Value.Value;
+                }
+
+                totalPositions = newTotal;
+                currentNode = currentNode.Previous;
+            }
+
+            return BlockController.Air.Id;
         }
     }
 }

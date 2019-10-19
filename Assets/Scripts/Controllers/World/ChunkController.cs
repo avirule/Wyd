@@ -197,7 +197,8 @@ namespace Wyd.Controllers.World
 
                 if (localPosition1d < SizeProduct)
                 {
-                    _Blocks[localPosition1d].Initialise(blockAction.Id);
+                    // todo optimize this to order the block actions by position, so modifications can happen in one pass
+                    ModifyBlockPosition(localPosition1d, blockAction.Id);
                     RequestMeshUpdate();
                     OnBlocksChanged(this,
                         new ChunkChangedEventArgs(_Bounds,
@@ -208,32 +209,54 @@ namespace Wyd.Controllers.World
             }
         }
 
-        private ushort GetBlockAt(int localPosition1d)
+        #region ACTIVATION STATE
+
+        public void Activate(Vector3 position)
         {
-            // todo decide whether to use Block or ushort?
-            if (localPosition1d >= SizeProduct)
-            {
-                throw new ArgumentOutOfRangeException(nameof(localPosition1d),
-                    "Argument must be within the size of a blocks collection.");
-            }
-
-            int totalPositions = 0;
-            LinkedListNode<RLENode<ushort>> currentNode = _Blocks.First;
-
-            while (totalPositions <= localPosition1d)
-            {
-                int newTotal = currentNode.Value.RunLength + totalPositions;
-
-                if (newTotal >= localPosition1d)
-                {
-                    return currentNode.Value.Value;
-                }
-
-                totalPositions = newTotal;
-            }
-
-            return 0;
+            _SelfTransform.position = position;
+            UpdateBounds();
+            _Visible = MeshRenderer.enabled;
+            ConfigureGenerator();
+            gameObject.SetActive(true);
         }
+
+        public void Deactivate()
+        {
+            if (_Mesh != default)
+            {
+                _Mesh.Clear();
+            }
+
+            if (_CurrentLoader != default)
+            {
+                _CurrentLoader.ChunkPositionChanged -= OnCurrentLoaderChangedChunk;
+                _CurrentLoader = default;
+            }
+
+            _BlockActions.Clear();
+            _BlockActionLocalPositions.Clear();
+            _Bounds = default;
+
+            CacheGenerator();
+            StopAllCoroutines();
+            gameObject.SetActive(false);
+        }
+
+        public void AssignLoader(ref IEntity loader)
+        {
+            if (loader == default)
+            {
+                return;
+            }
+
+            _CurrentLoader = loader;
+            _CurrentLoader.ChunkPositionChanged += OnCurrentLoaderChangedChunk;
+        }
+
+        #endregion
+
+
+        #region TRY GET / PLACE / REMOVE BLOCKS
 
         private void ModifyBlockPosition(int localPosition1d, ushort newId)
         {
@@ -310,105 +333,67 @@ namespace Wyd.Controllers.World
             }
         }
 
-        #region ACTIVATION STATE
-
-        public void Activate(Vector3 position)
-        {
-            _SelfTransform.position = position;
-            UpdateBounds();
-            _Visible = MeshRenderer.enabled;
-            ConfigureGenerator();
-            gameObject.SetActive(true);
-        }
-
-        public void Deactivate()
-        {
-            if (_Mesh != default)
-            {
-                _Mesh.Clear();
-            }
-
-            if (_CurrentLoader != default)
-            {
-                _CurrentLoader.ChunkPositionChanged -= OnCurrentLoaderChangedChunk;
-                _CurrentLoader = default;
-            }
-
-            _BlockActions.Clear();
-            _BlockActionLocalPositions.Clear();
-            _Bounds = default;
-
-            CacheGenerator();
-            StopAllCoroutines();
-            gameObject.SetActive(false);
-        }
-
-        public void AssignLoader(ref IEntity loader)
-        {
-            if (loader == default)
-            {
-                return;
-            }
-
-            _CurrentLoader = loader;
-            _CurrentLoader.ChunkPositionChanged += OnCurrentLoaderChangedChunk;
-        }
-
-        #endregion
-
-
-        #region TRY GET / PLACE / REMOVE BLOCKS
-
-        public ref Block GetBlockAt(Vector3 globalPosition)
+        public ushort GetBlockAt(Vector3 globalPosition)
         {
             if (!_Bounds.Contains(globalPosition))
             {
-                throw new ArgumentOutOfRangeException(nameof(globalPosition), globalPosition,
-                    $"Given position `{globalPosition}` exists outside of local bounds.");
+                throw new ArgumentOutOfRangeException(nameof(globalPosition),
+                    "Given position must be within chunk's bounds.");
             }
 
-            return ref _Blocks[(globalPosition - Position).To1D(Size, true)];
+            int localPosition1d = (globalPosition - Position).To1D(Size, true);
+
+            int totalPositions = 0;
+            LinkedListNode<RLENode<ushort>> currentNode = _Blocks.First;
+
+            while (totalPositions <= localPosition1d && currentNode != null)
+            {
+                int newTotal = currentNode.Value.RunLength + totalPositions;
+
+                if (newTotal >= localPosition1d)
+                {
+                    return currentNode.Value.Value;
+                }
+
+                totalPositions = newTotal;
+                currentNode = currentNode.Next;
+            }
+
+            return 0;
         }
 
-        public bool TryGetBlockAt(Vector3 globalPosition, out Block block)
+        public bool TryGetBlockAt(Vector3 globalPosition, out ushort blockId)
         {
+            blockId = 0;
+
             if (!_Bounds.Contains(globalPosition))
             {
-                block = default;
                 return false;
             }
 
-            block = _Blocks[(globalPosition - Position).To1D(Size, true)];
-            return true;
-        }
+            int localPosition1d = (globalPosition - Position).To1D(Size, true);
 
-        public bool BlockExistsAt(Vector3 globalPosition)
-        {
-            if (!_Bounds.Contains(globalPosition))
+            int totalPositions = 0;
+            LinkedListNode<RLENode<ushort>> currentNode = _Blocks.First;
+
+            while (totalPositions <= localPosition1d && currentNode != null)
             {
-                throw new ArgumentOutOfRangeException(nameof(globalPosition), globalPosition,
-                    $"Given position `{globalPosition}` exists outside of local bounds.");
+                int newTotal = currentNode.Value.RunLength + totalPositions;
+
+                if (newTotal >= localPosition1d)
+                {
+                    blockId = currentNode.Value.Value;
+                    return true;
+                }
+
+                totalPositions = newTotal;
+                currentNode = currentNode.Next;
             }
 
-            return _Blocks[(globalPosition - Position).To1D(Size, true)].Id != BlockController.Air.Id;
+            return false;
         }
 
-        public void ImmediatePlaceBlockAt(Vector3 globalPosition, ushort id)
-        {
-            if (!_Bounds.Contains(globalPosition))
-            {
-                throw new ArgumentOutOfRangeException(nameof(globalPosition), globalPosition,
-                    $"Given position `{globalPosition}` outside of local bounds.");
-            }
-
-
-            Vector3 localPosition = globalPosition - Position;
-            _Blocks[localPosition.To1D(Size, true)].Initialise(id);
-            RequestMeshUpdate();
-
-            OnBlocksChanged(this,
-                new ChunkChangedEventArgs(_Bounds, DetermineDirectionsForNeighborUpdate(localPosition)));
-        }
+        public bool BlockExistsAt(Vector3 globalPosition) => GetBlockAt(globalPosition) != BlockController.Air.Id;
 
         public bool TryPlaceBlockAt(Vector3 globalPosition, ushort id)
         {
@@ -418,22 +403,6 @@ namespace Wyd.Controllers.World
             }
 
             return TryAllocateBlockAction(globalPosition - Position, id);
-        }
-
-        public void ImmediateRemoveBlockAt(Vector3 globalPosition)
-        {
-            if (!_Bounds.Contains(globalPosition))
-            {
-                throw new ArgumentOutOfRangeException(nameof(globalPosition), globalPosition,
-                    $"Given position `{globalPosition}` outside of local bounds.");
-            }
-
-            Vector3 localPosition = globalPosition - Position;
-            _Blocks[localPosition.To1D(Size, true)] = BlockController.Air;
-            RequestMeshUpdate();
-
-            OnBlocksChanged(this,
-                new ChunkChangedEventArgs(_Bounds, DetermineDirectionsForNeighborUpdate(localPosition)));
         }
 
         public bool TryRemoveBlockAt(Vector3 globalPosition)
@@ -573,7 +542,7 @@ namespace Wyd.Controllers.World
 
                 for (int run = 0; run < runLength; run++)
                 {
-                    _Blocks[blocksIndex].Initialise(value);
+                    //_Blocks[blocksIndex].Initialise(value);
                     blocksIndex += 1;
                 }
             }
@@ -583,13 +552,7 @@ namespace Wyd.Controllers.World
 
         private IEnumerable<ushort> GetDecompressed()
         {
-            foreach (RLENode<ushort> node in _Blocks)
-            {
-                for (int i = 0; i < node.RunLength; i++)
-                {
-                    yield return node.Value;
-                }
-            }
+            return RunLengthCompression.Decompress(_Blocks);
         }
 
         #endregion

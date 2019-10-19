@@ -2,12 +2,13 @@
 
 using System.Collections.Generic;
 using UnityEngine;
+using Wyd.System;
 
 #endregion
 
 namespace Wyd.Game.World.Blocks
 {
-    public static class BlockFaces
+    public struct BlockFaces
     {
         public static class Vertices
         {
@@ -147,6 +148,28 @@ namespace Wyd.Game.World.Blocks
                     { Direction.Up, Up },
                     { Direction.Down, Down }
                 };
+        }
+
+        private const byte FACES_MASK = 0b0011_1111;
+
+        public byte RawValue;
+
+        public BlockFaces(byte rawValue = 0) => RawValue = rawValue;
+
+        public bool HasAnyFaces() => RawValue > 0;
+
+        public bool HasAllFaces() => (RawValue & FACES_MASK) >= FACES_MASK;
+
+        public bool HasFace(Direction direction) => (RawValue & (byte)direction) > 0;
+
+        public void SetFace(Direction direction, bool boolean)
+        {
+            RawValue = RawValue.SetBitByBoolWithMask((byte)direction, boolean);
+        }
+
+        public void ClearFaces()
+        {
+            RawValue = 0;
         }
     }
 }

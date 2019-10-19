@@ -1,11 +1,14 @@
 #region
 
+using System.Collections.Generic;
 using Serilog;
 using UnityEngine;
+using UnityEngine.UI;
 using Wyd.Controllers.State;
 using Wyd.Controllers.World;
 using Wyd.Game.World.Blocks;
 using Wyd.System;
+using Wyd.System.Compression;
 using Wyd.System.Noise;
 
 #endregion
@@ -20,10 +23,10 @@ namespace Wyd.Game.World.Chunks.BuildingJob
         public ChunkBuilderNoiseValues NoiseValues;
 
         public void Set(
-            Bounds bounds, Block[] blocks, float frequency, float persistence,
+            Bounds bounds, ref LinkedList<RLENode<ushort>> blocks, float frequency, float persistence,
             bool gpuAcceleration = false, ComputeBuffer noiseValuesBuffer = null)
         {
-            Set(bounds, blocks);
+            Set(bounds, ref blocks);
 
             Frequency = frequency;
             Persistence = persistence;
@@ -49,10 +52,10 @@ namespace Wyd.Game.World.Chunks.BuildingJob
 
         public void Generate(bool useGpu = false, float[] noiseValues = null)
         {
-            if (Blocks == default)
+            if (_Blocks == default)
             {
                 Log.Error(
-                    $"Field `{nameof(Blocks)}` has not been properly set. Cancelling operation.");
+                    $"Field `{nameof(_Blocks)}` has not been properly set. Cancelling operation.");
                 return;
             }
 
@@ -63,6 +66,8 @@ namespace Wyd.Game.World.Chunks.BuildingJob
                 useGpu = false;
             }
 
+            _Blocks.Clear();
+
             Vector3 position = Vector3.zero;
 
             BlockController.Current.TryGetBlockId("grass", out ushort blockIdGrass);
@@ -71,15 +76,16 @@ namespace Wyd.Game.World.Chunks.BuildingJob
             BlockController.Current.TryGetBlockId("water", out ushort blockIdWater);
             BlockController.Current.TryGetBlockId("sand", out ushort blockIdSand);
 
-
-            for (int index = Blocks.Length - 1; (index >= 0) && !AbortToken.IsCancellationRequested; index--)
+            for (int index = ChunkController.SizeProduct - 1;
+                (index >= 0) && !AbortToken.IsCancellationRequested;
+                index--)
             {
                 (position.x, position.y, position.z) = Mathv.GetIndexAs3D(index, ChunkController.Size);
 
-                if ((position.y < 4) && (position.y <= Rand.Next(0, 4)))
+                if ((position.y < 4) && (position.y <= _Rand.Next(0, 4)))
                 {
                     BlockController.Current.TryGetBlockId("bedrock", out ushort blockId);
-                    Blocks[index].Initialise(blockId);
+                    AddBlockSequentialAware(blockId);
                 }
                 else
                 {
@@ -91,26 +97,27 @@ namespace Wyd.Game.World.Chunks.BuildingJob
                     {
                         int indexAbove = index + ChunkController.YIndexStep;
 
-                        if ((position.y > 135) && ((indexAbove > Blocks.Length) || Blocks[indexAbove].Transparent))
+                        if ((position.y > 135) && IsBlockAtPositionTransparent(indexAbove))
                         {
-                            Blocks[index].Initialise(blockIdGrass);
+                            AddBlockSequentialAware(blockIdGrass);
                         }
-                        else if (IdExistsAboveWithinRange(index, 2, blockIdGrass))
-                        {
-                            Blocks[index].Initialise(blockIdDirt);
-                        }
+                        // todo fix this
+//                        else if (IdExistsAboveWithinRange(index, 2, blockIdGrass))
+//                        {
+//                            AddBlockSequentialAware(blockIdDirt);
+//                        }
                         else
                         {
-                            Blocks[index].Initialise(blockIdStone);
+                            AddBlockSequentialAware(blockIdStone);
                         }
                     }
                     else if ((position.y <= 155) && (position.y > 135))
                     {
-                        Blocks[index].Initialise(blockIdWater);
+                        AddBlockSequentialAware(blockIdWater);
                     }
                     else
                     {
-                        Blocks[index] = BlockController.Air;
+                        AddBlockSequentialAware(BlockController.Air.Id);
                     }
                 }
             }
@@ -119,11 +126,33 @@ namespace Wyd.Game.World.Chunks.BuildingJob
         protected float GetNoiseValueByVector3(Vector3 pos3d)
         {
             float noiseValue = OpenSimplex_FastNoise.GetSimplex(WorldController.Current.Seed, Frequency,
-                Bounds.min.x + pos3d.x, Bounds.min.y + pos3d.y, Bounds.min.z + pos3d.z);
+                _Bounds.min.x + pos3d.x, _Bounds.min.y + pos3d.y, _Bounds.min.z + pos3d.z);
             noiseValue += 5f * (1f - Mathf.InverseLerp(0f, ChunkController.Size.y, pos3d.y));
             noiseValue /= pos3d.y + (-1f * Persistence);
 
             return noiseValue;
+        }
+
+        private void AddBlockSequentialAware(ushort blockId)
+        {
+            // allocate from the front since we are adding from top to bottom (i.e. last to first)
+            if (_Blocks.Count > 0)
+            {
+                RLENode<ushort> firstNode = _Blocks.First.Value;
+
+                if (firstNode.Value == blockId)
+                {
+                    firstNode.RunLength += 1;
+                }
+                else
+                {
+                    _Blocks.AddFirst(new RLENode<ushort>(1, blockId));
+                }
+            }
+            else
+            {
+                _Blocks.AddLast(new RLENode<ushort>(1, blockId));
+            }
         }
     }
 }

@@ -27,6 +27,17 @@ namespace Wyd.System.Compression
                 currentRun = 0;
             }
         }
+
+        public static IEnumerable<T> Decompress<T>(IEnumerable<RLENode<T>> nodes)
+        {
+            foreach (RLENode<T> node in nodes)
+            {
+                for (int i = 0; i < node.RunLength; i++)
+                {
+                    yield return node.Value;
+                }
+            }
+        }
     }
 
     public class RLENode<T>

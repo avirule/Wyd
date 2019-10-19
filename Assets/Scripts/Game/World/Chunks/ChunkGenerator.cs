@@ -10,6 +10,7 @@ using Wyd.Game.World.Blocks;
 using Wyd.Game.World.Chunks.BuildingJob;
 using Wyd.System;
 using Wyd.System.Collections;
+using Wyd.System.Compression;
 using Wyd.System.Extensions;
 using Wyd.System.Jobs;
 
@@ -48,7 +49,7 @@ namespace Wyd.Game.World.Chunks
         private bool _IsSet;
         private Bounds _Bounds;
         private Vector3 _Position;
-        private LinkedList<Block> _Blocks;
+        private LinkedList<RLENode<ushort>> _Blocks;
         private Mesh _Mesh;
         private ComputeShader _NoiseShader;
         private Action _PendingAction;
@@ -63,7 +64,7 @@ namespace Wyd.Game.World.Chunks
 
         public ChunkGenerator() => _IsSet = false;
 
-        public void Set(Bounds bounds, ref LinkedList<Block> blocks, ref Mesh mesh)
+        public void Set(Bounds bounds, ref LinkedList<RLENode<ushort>> blocks, ref Mesh mesh)
         {
             if (!_hasSetupTimeAggregators)
             {
@@ -181,30 +182,31 @@ namespace Wyd.Game.World.Chunks
                 // 256 is the value set in the shader's [numthreads(--> 256 <--, 1, 1)]
                 _NoiseShader.Dispatch(kernel, ChunkController.Size.Product() / 1024, 1, 1);
 
-                job.Set(_Bounds, _Blocks, frequency, persistence, OptionsController.Current.GPUAcceleration,
+                job.Set(_Bounds, ref _Blocks, frequency, persistence, OptionsController.Current.GPUAcceleration,
                     noiseBuffer);
             }
             else
             {
-                job.Set(_Bounds, _Blocks, frequency, persistence);
+                job.Set(_Bounds, ref _Blocks, frequency, persistence);
             }
 
             QueueJob(job);
         }
 
-        public void BeginGeneratingAccents()
-        {
-            if (Generating)
-            {
-                return;
-            }
-
-            ChunkBuildingJobAccents job = ChunkAccentsBuilderCache.RetrieveItem() ?? new ChunkBuildingJobAccents();
-
-            job.Set(_Bounds, _Blocks);
-
-            QueueJob(job);
-        }
+        // todo fix this
+//        public void BeginGeneratingAccents()
+//        {
+//            if (Generating)
+//            {
+//                return;
+//            }
+//
+//            ChunkBuildingJobAccents job = ChunkAccentsBuilderCache.RetrieveItem() ?? new ChunkBuildingJobAccents();
+//
+//            job.Set(_Bounds, _Blocks);
+//
+//            QueueJob(job);
+//        }
 
         private void BeginGeneratingMesh()
         {

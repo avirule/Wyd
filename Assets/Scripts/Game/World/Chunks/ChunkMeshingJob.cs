@@ -1,5 +1,6 @@
 #region
 
+using System.Collections.Generic;
 using UnityEngine;
 using Wyd.Controllers.World;
 using Wyd.Game.World.Blocks;
@@ -20,16 +21,11 @@ namespace Wyd.Game.World.Chunks
         /// <param name="blocks">Pre-initialized and built <see cref="T:ushort[]" /> to iterate through.</param>
         /// <param name="aggressiveFaceMerging"></param>
         /// <param name="isRemesh"></param>
-        public void Set(Bounds bounds, ref Block[] blocks, bool aggressiveFaceMerging, bool isRemesh = false)
+        public void Set(Bounds bounds, ref IEnumerable<ushort> blocks, bool aggressiveFaceMerging, bool isRemesh = false)
         {
             if (_Mesher == null)
             {
                 _Mesher = new ChunkMesher();
-            }
-
-            if (isRemesh)
-            {
-                ClearAllFaces(blocks);
             }
 
             _Mesher.AbortToken = AbortToken;
@@ -38,6 +34,8 @@ namespace Wyd.Game.World.Chunks
             _Mesher.Size = ChunkController.Size;
             _Mesher.AggressiveFaceMerging = aggressiveFaceMerging;
             _Mesher.ClearInternalData();
+            
+            bounds.
         }
 
         protected override void Process()
