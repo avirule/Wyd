@@ -151,7 +151,7 @@ namespace Wyd.System.Jobs
         {
             _AbortTokenSource.Cancel();
             WaitTimeout = TimeSpan.Zero;
-            Log.Information($"{nameof(JobQueue)} with ID {_OperationThread.ManagedThreadId} has safely aborted.");
+            Log.Information($"{nameof(JobQueue)} (ID {_OperationThread.ManagedThreadId}) has safely aborted.");
         }
 
         #endregion
@@ -206,12 +206,12 @@ namespace Wyd.System.Jobs
             catch (OperationCanceledException)
             {
                 // thread aborted
-                Log.Warning($"{nameof(JobWorker)} with ID {_OperationThread.ManagedThreadId} has critically aborted.");
+                Log.Warning($"{nameof(JobWorker)} (ID {_OperationThread.ManagedThreadId}) has critically aborted.");
             }
             catch (Exception ex)
             {
-                Log.Warning(
-                    $"Error occurred in {nameof(JobQueue)} (ID {_OperationThread.ManagedThreadId}): {ex.Message}");
+                Log.Error(
+                    $"{nameof(JobQueue)} (ID {_OperationThread.ManagedThreadId}): {ex.Message}\r\n{ex.StackTrace}");
             }
             finally
             {
@@ -242,6 +242,16 @@ namespace Wyd.System.Jobs
                     break;
                 case ThreadingMode.Multi:
                     _LastThreadIndexQueuedInto = (_LastThreadIndexQueuedInto + 1) % WorkerThreadCount;
+
+                    if (!_Workers[_LastThreadIndexQueuedInto].Running)
+                    {
+                        Log.Warning(
+                            $"{nameof(JobQueue)} (ID {_OperationThread.ManagedThreadId}):"
+                            + $" {nameof(JobWorker)} (ID {_Workers[_LastThreadIndexQueuedInto].ManagedThreadId}) has shutdown."
+                            + " This is unexpected, so it is being restarted.");
+
+                        _Workers[_LastThreadIndexQueuedInto].Start();
+                    }
 
                     _Workers[_LastThreadIndexQueuedInto].QueueJob(job);
                     break;

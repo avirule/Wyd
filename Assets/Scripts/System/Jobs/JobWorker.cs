@@ -81,7 +81,11 @@ namespace Wyd.System.Jobs
             catch (OperationCanceledException)
             {
                 // Thread aborted
-                Log.Warning($"{nameof(JobWorker)} with ID {ManagedThreadId} has critically aborted.");
+                Log.Warning($"{nameof(JobWorker)} (ID {ManagedThreadId}) has critically aborted.");
+            }
+            catch (Exception ex)
+            {
+                Log.Error($"Error in {nameof(JobWorker)} (ID {ManagedThreadId}): {ex.Message}\r\n{ex.StackTrace}");
             }
             finally
             {
