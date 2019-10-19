@@ -89,7 +89,7 @@ namespace Wyd.System.Jobs
             }
             finally
             {
-                Running = false;
+                Running = Processing = false;
             }
         }
 

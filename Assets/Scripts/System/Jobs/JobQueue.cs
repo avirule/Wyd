@@ -13,19 +13,7 @@ namespace Wyd.System.Jobs
     public enum ThreadingMode
     {
         Single,
-        Multi,
-
-        /// <summary>
-        ///     Signals to consuming members that the executed action(s)
-        ///     should be aware of processing state of internal threads
-        ///     to avoid over-scheduling.
-        /// </summary>
-        /// <remarks>
-        ///     Despite the name, this mode doesn't necessarily increase
-        ///     or decrease FPS. It is purely a more efficient scheduling
-        ///     model, thus any FPS gain or loss is an unintended side-effect.
-        /// </remarks>
-        Adaptive
+        Multi
     }
 
     public sealed class JobQueue
@@ -38,7 +26,6 @@ namespace Wyd.System.Jobs
         private readonly CancellationTokenSource _AbortTokenSource;
 
         private CancellationToken _AbortToken;
-        private int _LastThreadIndexQueuedInto;
         private int _WorkerThreadCount;
         private TimeSpan _WaitTimeout;
         private int _ActiveJobCount;
@@ -91,21 +78,19 @@ namespace Wyd.System.Jobs
         ///     Time in milliseconds to wait between attempts to process an item in internal queue.
         /// </param>
         /// <param name="threadingMode"></param>
-        /// <param name="threadPoolSize">Size of internal <see cref="JobWorker" /> pool</param>
-        public JobQueue(TimeSpan waitTimeout, ThreadingMode threadingMode = ThreadingMode.Single,
-            int threadPoolSize = 0)
+        /// <param name="workerCount">Size of internal <see cref="JobWorker" /> pool</param>
+        public JobQueue(TimeSpan waitTimeout, ThreadingMode threadingMode,
+            int workerCount = 1)
         {
             WaitTimeout = waitTimeout;
             ThreadingMode = threadingMode;
-            ModifyWorkerThreadCount(threadPoolSize);
+            ModifyWorkerThreadCount(workerCount);
 
             _OperationThread = new Thread(ProcessJobs);
             _ProcessQueue = new SpinLockCollection<Job>();
             _Workers = new List<JobWorker>(WorkerThreadCount);
             _AbortTokenSource = new CancellationTokenSource();
             _AbortToken = _AbortTokenSource.Token;
-            // set to -1 increment in first run of process queue
-            _LastThreadIndexQueuedInto = -1;
 
             Running = false;
 
@@ -129,7 +114,7 @@ namespace Wyd.System.Jobs
         public void ModifyWorkerThreadCount(int modification)
         {
             Interlocked.Exchange(ref _WorkerThreadCount, Math.Max(modification, 1));
-            Interlocked.Exchange(ref _MaximumJobCount, _WorkerThreadCount * 5);
+            Interlocked.Exchange(ref _MaximumJobCount, _WorkerThreadCount * 10);
             OnWorkerCountChanged(this, WorkerThreadCount);
         }
 
@@ -190,7 +175,6 @@ namespace Wyd.System.Jobs
             {
                 while (!_AbortToken.IsCancellationRequested)
                 {
-// todo extract initial check into if for clearer intent 
                     while ((_Workers.Count < WorkerThreadCount)
                            && (ThreadingMode > ThreadingMode.Single))
                     {
@@ -241,30 +225,14 @@ namespace Wyd.System.Jobs
                     _Workers[0].QueueJob(job);
                     break;
                 case ThreadingMode.Multi:
-                    _LastThreadIndexQueuedInto = (_LastThreadIndexQueuedInto + 1) % WorkerThreadCount;
-
-
-
-                    _Workers[_LastThreadIndexQueuedInto].QueueJob(job);
-                    break;
-                case ThreadingMode.Adaptive:
                     int jobWorkerIndex;
 
                     while (!TryGetFirstFreeWorker(out jobWorkerIndex))
                     {
-                        Thread.Sleep(1);
+                        // relinquish time slice
+                        Thread.Sleep(0);
                     }
 
-                    if (!_Workers[jobWorkerIndex].Running)
-                    {
-                        Log.Warning(
-                            $"{nameof(JobQueue)} (ID {_OperationThread.ManagedThreadId}):"
-                            + $" {nameof(JobWorker)} (ID {_Workers[jobWorkerIndex].ManagedThreadId}) has shutdown."
-                            + " This is unexpected, so it is being restarted.");
-
-                        _Workers[jobWorkerIndex].Start();
-                    }
-                    
                     _Workers[jobWorkerIndex].QueueJob(job);
                     break;
                 default:
@@ -277,12 +245,11 @@ namespace Wyd.System.Jobs
         ///     its `Processing` flag set to false.
         /// </summary>
         /// <remarks>
-        ///     This method is used exclusively for enabling the  <see cref="T:ThreadingMode.Adaptive" /> mode.
+        ///     This method is used exclusively for enabling the  <see cref="T:ThreadingMode.Multi" /> mode.
         /// </remarks>
         /// <param name="jobWorkerIndex">The resultant <see cref="T:List{JobWorker}" /> index.</param>
         /// <returns>
-        ///     <value>False</value>
-        ///     if no job is found.
+        ///     <value>False</value> if no job is found.
         /// </returns>
         private bool TryGetFirstFreeWorker(out int jobWorkerIndex)
         {
