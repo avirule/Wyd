@@ -46,6 +46,7 @@ namespace Wyd.Game.World.Chunks.BuildingJob
                 {
                     return false;
                 }
+
 // todo fix this
 //                if (_Blocks[currentIndex].Id == soughtId)
 //                {
@@ -105,17 +106,14 @@ namespace Wyd.Game.World.Chunks.BuildingJob
 
                 highestNonAirIndex = currentIndex;
             }
-            
-            
+
 
             return highestNonAirIndex;
         }
-        
-        protected bool IsBlockAtPositionTransparent(int position)
-        {
-            return !BlockController.Current.TryGetBlockRule(GetBlockAtPosition_LastToFirst(position),
-                       out IReadOnlyBlockRule blockRule) || blockRule.Transparent;
-        }
+
+        protected bool IsBlockAtPositionTransparent(int position) =>
+            !BlockController.Current.CheckBlockHasProperty(GetBlockAtPosition_LastToFirst(position),
+                BlockRule.Property.Transparent);
 
         protected ushort GetBlockAtPosition_LastToFirst(int position)
         {

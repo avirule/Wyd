@@ -172,8 +172,8 @@ namespace Wyd.Controllers.Entity
                 || !WorldController.Current.TryGetBlockAt(
                     _LastReachRayHit.normal.Sum() > 0f
                         ? _LastReachRayHit.point.Floor() - _LastReachRayHit.normal
-                        : _LastReachRayHit.point.Floor(), out Block block)
-                || (!BlockController.Current.GetBlockRule(block.Id)?.Destroyable ?? false))
+                        : _LastReachRayHit.point.Floor(), out ushort blockId)
+                || !BlockController.Current.CheckBlockHasProperty(blockId, BlockRule.Property.Destroyable))
             {
                 ReachHitSurfaceObject.SetActive(false);
                 _IsInReachOfValidSurface = false;
@@ -219,11 +219,11 @@ namespace Wyd.Controllers.Entity
                     || WorldController.Current.TryRemoveBlockAt(
                         position = _LastReachRayHit.point.Floor()))
                 {
-                    WorldController.Current.TryGetBlockAt(position, out Block destroyedBlock);
+                    WorldController.Current.TryGetBlockAt(position, out ushort blockId);
 
-                    if (BlockController.Current.GetBlockRule(destroyedBlock.Id)?.Collectible ?? false)
+                    if (BlockController.Current.CheckBlockHasProperty(blockId, BlockRule.Property.Collectible))
                     {
-                        Inventory.AddItem(destroyedBlock.Id, 1);
+                        Inventory.AddItem(blockId, 1);
                     }
                 }
 

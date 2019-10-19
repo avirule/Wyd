@@ -13,92 +13,60 @@ namespace Wyd.Game.World.Blocks
 {
     public class BlockRule : IBlockRule
     {
-        private static readonly BitVector32.Section IdSection;
-        private static readonly BitVector32.Section TypeSection;
-        private static readonly BitVector32.Section TransparencySection;
-        private static readonly BitVector32.Section CollideableSection;
-        private static readonly BitVector32.Section DestroyableSection;
-        private static readonly BitVector32.Section CollectibleSection;
-        private static readonly BitVector32.Section LightSourceSection;
-        private static readonly BitVector32.Section LightLevelSection;
+        [Flags]
+        public enum Property
+        {
+            Transparent = 1,
+            Collideable = 2,
+            Destroyable = 4,
+            Collectible = 8,
+            LightSource = 16
+        }
 
-        private static readonly Func<Vector3, Direction, string> DefaultUVsRule;
+        private static readonly Func<Vector3, Direction, string> _DefaultUVsRule;
 
         static BlockRule()
         {
-            IdSection = BitVector32.CreateSection(short.MaxValue);
-            TypeSection = BitVector32.CreateSection(15, IdSection); // maximum of 4 bits type accuracy
-            TransparencySection = BitVector32.CreateSection(1, TypeSection);
-            CollideableSection = BitVector32.CreateSection(1, TransparencySection);
-            DestroyableSection = BitVector32.CreateSection(1, CollideableSection);
-            CollectibleSection = BitVector32.CreateSection(1, DestroyableSection);
-            LightSourceSection = BitVector32.CreateSection(1, CollectibleSection);
-            LightLevelSection = BitVector32.CreateSection(15, LightSourceSection);
-
-            DefaultUVsRule = (position, direction) => string.Empty;
+            _DefaultUVsRule = (position, direction) => string.Empty;
         }
 
         private Func<Vector3, Direction, string> UVsRule { get; }
 
         private BitVector32 _Bits;
 
-        public ushort Id
-        {
-            get => (ushort)_Bits[IdSection];
-            private set => _Bits[IdSection] = (short)value;
-        }
+        public ushort Id { get; }
 
         public string BlockName { get; }
+        public Property Properties { get; }
 
-        public Block.Types Type
-        {
-            get => (Block.Types)_Bits[TypeSection];
-            private set => _Bits[TypeSection] = (short)value;
-        }
+        public Block.Types Type { get; }
 
-        public bool Transparent
-        {
-            get => _Bits[TransparencySection] == 1;
-            private set => _Bits[TransparencySection] = value ? 1 : 0;
-        }
+        public bool Transparent => (Properties & Property.Transparent) > 0;
 
-        public bool Collideable
-        {
-            get => _Bits[CollideableSection] == 1;
-            private set => _Bits[CollideableSection] = value ? 1 : 0;
-        }
+        public bool Collideable => (Properties & Property.Collideable) > 0;
 
-        public bool Destroyable
-        {
-            get => _Bits[DestroyableSection] == 1;
-            private set => _Bits[DestroyableSection] = value ? 1 : 0;
-        }
+        public bool Destroyable => (Properties & Property.Destroyable) > 0;
 
-        public bool Collectible
-        {
-            get => _Bits[CollectibleSection] == 1;
-            private set => _Bits[CollectibleSection] = value ? 1 : 0;
-        }
+        public bool Collectible => (Properties & Property.Collectible) > 0;
 
-        public bool LightSource { get; }
+        public bool LightSource => (Properties & Property.LightSource) > 0;
         public byte LightLevel { get; }
 
-        public BlockRule(
-            ushort id, string blockName, Block.Types type,
-            bool transparent, bool collideable, bool destroyable, bool collectible,
-            Func<Vector3, Direction, string> uvsRule)
+        public BlockRule(ushort id, string blockName, Block.Types type,
+            Func<Vector3, Direction, string> uvsRule, params Property[] properties)
         {
             _Bits = new BitVector32(0);
 
             Id = id;
             BlockName = blockName;
             Type = type;
-            Transparent = transparent;
-            Collideable = collideable;
-            Destroyable = destroyable;
-            Collectible = collectible;
 
-            UVsRule = uvsRule ?? DefaultUVsRule;
+            foreach (Property property in properties)
+            {
+                Properties |= property;
+            }
+
+            UVsRule = uvsRule ?? _DefaultUVsRule;
         }
 
         public virtual bool ReadUVsRule(ushort blockId, Vector3 position, Direction direction, out string spriteName)

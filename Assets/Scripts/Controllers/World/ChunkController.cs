@@ -266,6 +266,7 @@ namespace Wyd.Controllers.World
             }
 
             int steppedLength = 0;
+
             LinkedListNode<RLENode<ushort>> currentNode = _Blocks.First;
 
             while ((steppedLength <= localPosition1d) && (currentNode != null))
@@ -346,7 +347,7 @@ namespace Wyd.Controllers.World
             int totalPositions = 0;
             LinkedListNode<RLENode<ushort>> currentNode = _Blocks.First;
 
-            while (totalPositions <= localPosition1d && currentNode != null)
+            while ((totalPositions <= localPosition1d) && (currentNode != null))
             {
                 int newTotal = currentNode.Value.RunLength + totalPositions;
 
@@ -376,7 +377,7 @@ namespace Wyd.Controllers.World
             int totalPositions = 0;
             LinkedListNode<RLENode<ushort>> currentNode = _Blocks.First;
 
-            while (totalPositions <= localPosition1d && currentNode != null)
+            while ((totalPositions <= localPosition1d) && (currentNode != null))
             {
                 int newTotal = currentNode.Value.RunLength + totalPositions;
 
@@ -397,22 +398,14 @@ namespace Wyd.Controllers.World
 
         public bool TryPlaceBlockAt(Vector3 globalPosition, ushort id)
         {
-            if (!_Bounds.Contains(globalPosition))
-            {
-                return false;
-            }
-
-            return TryAllocateBlockAction(globalPosition - Position, id);
+            return _Bounds.Contains(globalPosition) 
+                   && TryAllocateBlockAction(globalPosition - Position, id);
         }
 
         public bool TryRemoveBlockAt(Vector3 globalPosition)
         {
-            if (!_Bounds.Contains(globalPosition))
-            {
-                return false;
-            }
-
-            return TryAllocateBlockAction(globalPosition - Position, BlockController.Air.Id);
+            return _Bounds.Contains(globalPosition) 
+                   && TryAllocateBlockAction(globalPosition - Position, BlockController.Air.Id);
         }
 
         private bool TryAllocateBlockAction(Vector3 localPosition, ushort id)
@@ -550,10 +543,7 @@ namespace Wyd.Controllers.World
             _ChunkGenerator.SkipBuilding(true);
         }
 
-        private IEnumerable<ushort> GetDecompressed()
-        {
-            return RunLengthCompression.Decompress(_Blocks);
-        }
+        private IEnumerable<ushort> GetDecompressed() => RunLengthCompression.Decompress(_Blocks);
 
         #endregion
 

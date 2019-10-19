@@ -127,12 +127,12 @@ namespace Wyd.Controllers.UI.Components.InputField
 
                             Vector3 position = new Vector3(x, y, z);
 
-                            if (!WorldController.Current.TryGetBlockAt(position, out Block block))
+                            if (!WorldController.Current.TryGetBlockAt(position, out ushort blockId))
                             {
                                 Log.Warning($"Failed to get block at position: {position}");
                             }
 
-                            string blockName = BlockController.Current.GetBlockName(block.Id);
+                            string blockName = BlockController.Current.GetBlockName(blockId);
 
                             Log.Information($"Request for block at position {position} returned `{blockName}`.");
                         }
@@ -163,7 +163,7 @@ namespace Wyd.Controllers.UI.Components.InputField
                         break;
                     }
 
-                    Log.Information(chunkController.GetCompressedRaw().Count().ToString());
+                    //Log.Information(chunkController.GetC().Count().ToString());
                     break;
                 case "testsave":
                     if (args.Length < 4)

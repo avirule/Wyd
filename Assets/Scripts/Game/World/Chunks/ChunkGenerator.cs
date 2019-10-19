@@ -148,7 +148,7 @@ namespace Wyd.Game.World.Chunks
                     BeginGeneratingRawTerrain();
                     break;
                 case GenerationStep.Accents:
-                    BeginGeneratingAccents();
+                    _StepForward = true;
                     break;
                 case GenerationStep.Meshing:
                     BeginGeneratingMesh();
@@ -217,7 +217,7 @@ namespace Wyd.Game.World.Chunks
 
             ChunkMeshingJob job = ChunkMeshersCache.RetrieveItem() ?? new ChunkMeshingJob();
 
-            job.Set(_Bounds, ref _Blocks, true, _Meshed);
+            job.Set(_Bounds, RunLengthCompression.Decompress(_Blocks), true, _Meshed);
 
             if (QueueJob(job))
             {
