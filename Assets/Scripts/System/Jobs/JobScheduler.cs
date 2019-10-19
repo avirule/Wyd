@@ -16,31 +16,31 @@ namespace Wyd.System.Jobs
         Multi
     }
 
-    public sealed class JobQueue
+    public sealed class JobScheduler
     {
         private bool _Disposed;
 
         private readonly Thread _OperationThread;
         private readonly List<JobWorker> _Workers;
-        private readonly SpinLockCollection<Job> _ProcessQueue;
+        private readonly SpinLockCollection<Job> _JobQueue;
         private readonly CancellationTokenSource _AbortTokenSource;
 
         private CancellationToken _AbortToken;
         private int _WorkerThreadCount;
         private TimeSpan _WaitTimeout;
-        private int _ActiveJobCount;
+        private int _ProcessingJobCount;
         private int _JobCount;
         private int _MaximumJobCount;
 
         /// <summary>
-        ///     Determines whether the <see cref="JobQueue" /> executes <see cref="Job" />s on
+        ///     Determines whether the <see cref="JobScheduler" /> executes <see cref="Job" />s on
         ///     the internal thread, or uses worker threads.
         /// </summary>
         public ThreadingMode ThreadingMode { get; set; }
 
 
         /// <summary>
-        ///     Whether or not the <see cref="JobQueue" /> is currently executing incoming jobs.
+        ///     Whether or not the <see cref="JobScheduler" /> is currently executing incoming jobs.
         /// </summary>
         public bool Running { get; private set; }
 
@@ -67,19 +67,19 @@ namespace Wyd.System.Jobs
         public int WorkerThreadCount => _WorkerThreadCount;
 
         public int JobCount => _JobCount;
-        public int ActiveJobCount => _ActiveJobCount;
+        public int ProcessingJobCount => _ProcessingJobCount;
         public int MaximumJobCount => _MaximumJobCount;
 
 
         /// <summary>
-        ///     Initializes a new instance of <see cref="JobQueue" /> class.
+        ///     Initializes a new instance of <see cref="JobScheduler" /> class.
         /// </summary>
         /// <param name="waitTimeout">
         ///     Time in milliseconds to wait between attempts to process an item in internal queue.
         /// </param>
         /// <param name="threadingMode"></param>
         /// <param name="workerCount">Size of internal <see cref="JobWorker" /> pool</param>
-        public JobQueue(TimeSpan waitTimeout, ThreadingMode threadingMode,
+        public JobScheduler(TimeSpan waitTimeout, ThreadingMode threadingMode,
             int workerCount = 1)
         {
             WaitTimeout = waitTimeout;
@@ -87,7 +87,7 @@ namespace Wyd.System.Jobs
             ModifyWorkerThreadCount(workerCount);
 
             _OperationThread = new Thread(ProcessJobs);
-            _ProcessQueue = new SpinLockCollection<Job>();
+            _JobQueue = new SpinLockCollection<Job>();
             _Workers = new List<JobWorker>(WorkerThreadCount);
             _AbortTokenSource = new CancellationTokenSource();
             _AbortToken = _AbortTokenSource.Token;
@@ -95,11 +95,11 @@ namespace Wyd.System.Jobs
             Running = false;
 
             JobQueued += (sender, args) => Interlocked.Increment(ref _JobCount);
-            JobStarted += (sender, args) => Interlocked.Increment(ref _ActiveJobCount);
+            JobStarted += (sender, args) => Interlocked.Increment(ref _ProcessingJobCount);
             JobFinished += (sender, args) =>
             {
                 Interlocked.Decrement(ref _JobCount);
-                Interlocked.Decrement(ref _ActiveJobCount);
+                Interlocked.Decrement(ref _ProcessingJobCount);
             };
         }
 
@@ -136,7 +136,7 @@ namespace Wyd.System.Jobs
         {
             _AbortTokenSource.Cancel();
             WaitTimeout = TimeSpan.Zero;
-            Log.Information($"{nameof(JobQueue)} (ID {_OperationThread.ManagedThreadId}) has safely aborted.");
+            Log.Information($"{nameof(JobScheduler)} (ID {_OperationThread.ManagedThreadId}) has safely aborted.");
         }
 
         #endregion
@@ -160,7 +160,7 @@ namespace Wyd.System.Jobs
             }
 
             job.Initialize(Guid.NewGuid().ToString(), _AbortToken);
-            _ProcessQueue.Add(job);
+            _JobQueue.Add(job);
             OnJobQueued(this, new JobEventArgs(job));
             identifier = job.Identity;
             return true;
@@ -181,7 +181,7 @@ namespace Wyd.System.Jobs
                         SpawnJobWorker();
                     }
 
-                    if (_ProcessQueue.TryTake(out Job job, WaitTimeout, _AbortToken))
+                    if (_JobQueue.TryTake(out Job job, WaitTimeout, _AbortToken))
                     {
                         ProcessJob(job);
                     }
@@ -195,7 +195,7 @@ namespace Wyd.System.Jobs
             catch (Exception ex)
             {
                 Log.Error(
-                    $"{nameof(JobQueue)} (ID {_OperationThread.ManagedThreadId}): {ex.Message}\r\n{ex.StackTrace}");
+                    $"{nameof(JobScheduler)} (ID {_OperationThread.ManagedThreadId}): {ex.Message}\r\n{ex.StackTrace}");
             }
             finally
             {

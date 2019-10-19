@@ -27,7 +27,7 @@ namespace Wyd.Game.World
                  COMMIT;
             ";
 
-        private static readonly JobQueue QueryExecutionQueue;
+        private static readonly JobScheduler _QueryExecutionScheduler;
 
         public static string WorldSaveFileDirectory { get; }
 
@@ -35,8 +35,8 @@ namespace Wyd.Game.World
         {
             WorldSaveFileDirectory = $@"{Application.persistentDataPath}\saves\";
 
-            QueryExecutionQueue = new JobQueue(TimeSpan.FromMilliseconds(200));
-            QueryExecutionQueue.Start();
+            _QueryExecutionScheduler = new JobScheduler(TimeSpan.FromMilliseconds(200));
+            _QueryExecutionScheduler.Start();
         }
 
         private string WorldFilePath { get; }
@@ -150,7 +150,7 @@ namespace Wyd.Game.World
         public void CompressAndCommitThreaded(Vector3 position, byte[] data)
         {
             // todo cache the jobs
-            QueryExecutionQueue.TryQueueJob(new Job(() => CompressAndCommit(position, data)), out object _);
+            _QueryExecutionScheduler.TryQueueJob(new Job(() => CompressAndCommit(position, data)), out object _);
         }
 
         public void Commit(Vector3 position, byte[] chunkData)
@@ -198,7 +198,7 @@ namespace Wyd.Game.World
 
         public static void ApplicationQuit()
         {
-            QueryExecutionQueue?.Abort();
+            _QueryExecutionScheduler?.Abort();
         }
 
         public void Dispose()

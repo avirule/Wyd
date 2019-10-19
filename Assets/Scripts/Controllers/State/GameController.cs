@@ -19,11 +19,11 @@ namespace Wyd.Controllers.State
     {
         public static readonly int MainThreadId = Thread.CurrentThread.ManagedThreadId;
 
-        private JobQueue _JobExecutionQueue;
+        private JobScheduler _JobExecutionScheduler;
 
-        public int JobCount => _JobExecutionQueue.JobCount;
-        public int ActiveJobCount => _JobExecutionQueue.ActiveJobCount;
-        public int WorkerThreadCount => _JobExecutionQueue.WorkerThreadCount;
+        public int JobCount => _JobExecutionScheduler.JobCount;
+        public int ActiveJobCount => _JobExecutionScheduler.ProcessingJobCount;
+        public int WorkerThreadCount => _JobExecutionScheduler.WorkerThreadCount;
 
         public event JobFinishedEventHandler JobFinished;
         public event EventHandler<int> JobCountChanged;
@@ -39,41 +39,41 @@ namespace Wyd.Controllers.State
 
         private void Start()
         {
-            _JobExecutionQueue = new JobQueue(TimeSpan.FromMilliseconds(200), OptionsController.Current.ThreadingMode,
+            _JobExecutionScheduler = new JobScheduler(TimeSpan.FromMilliseconds(200), OptionsController.Current.ThreadingMode,
                 OptionsController.Current.CPUCoreUtilization);
 
-            _JobExecutionQueue.WorkerCountChanged += (sender, count) =>
+            _JobExecutionScheduler.WorkerCountChanged += (sender, count) =>
                 WorkerThreadCountChanged?.Invoke(sender, count);
 
-            _JobExecutionQueue.JobQueued += (sender, args) =>
-                JobCountChanged?.Invoke(sender, _JobExecutionQueue.JobCount);
+            _JobExecutionScheduler.JobQueued += (sender, args) =>
+                JobCountChanged?.Invoke(sender, _JobExecutionScheduler.JobCount);
 
-            _JobExecutionQueue.JobStarted += (sender, args) =>
+            _JobExecutionScheduler.JobStarted += (sender, args) =>
             {
-                JobCountChanged?.Invoke(sender, _JobExecutionQueue.JobCount);
-                ActiveJobCountChanged?.Invoke(sender, _JobExecutionQueue.ActiveJobCount);
+                JobCountChanged?.Invoke(sender, _JobExecutionScheduler.JobCount);
+                ActiveJobCountChanged?.Invoke(sender, _JobExecutionScheduler.ProcessingJobCount);
             };
 
-            _JobExecutionQueue.JobFinished += (sender, args) =>
+            _JobExecutionScheduler.JobFinished += (sender, args) =>
             {
                 JobFinished?.Invoke(sender, args);
-                JobCountChanged?.Invoke(sender, _JobExecutionQueue.JobCount);
-                ActiveJobCountChanged?.Invoke(sender, _JobExecutionQueue.ActiveJobCount);
+                JobCountChanged?.Invoke(sender, _JobExecutionScheduler.JobCount);
+                ActiveJobCountChanged?.Invoke(sender, _JobExecutionScheduler.ProcessingJobCount);
             };
 
             OptionsController.Current.PropertyChanged += (sender, args) =>
             {
                 if (args.PropertyName.Equals(nameof(OptionsController.Current.ThreadingMode)))
                 {
-                    _JobExecutionQueue.ThreadingMode = OptionsController.Current.ThreadingMode;
+                    _JobExecutionScheduler.ThreadingMode = OptionsController.Current.ThreadingMode;
                 }
                 else if (args.PropertyName.Equals(nameof(OptionsController.Current.CPUCoreUtilization)))
                 {
-                    _JobExecutionQueue.ModifyWorkerThreadCount(OptionsController.Current.CPUCoreUtilization);
+                    _JobExecutionScheduler.ModifyWorkerThreadCount(OptionsController.Current.CPUCoreUtilization);
                 }
             };
 
-            _JobExecutionQueue.Start();
+            _JobExecutionScheduler.Start();
 
             RegisterDefaultBlocks();
         }
@@ -81,7 +81,7 @@ namespace Wyd.Controllers.State
         private void OnDestroy()
         {
             // Deallocate and destroy ALL NativeCollection / disposable objects
-            _JobExecutionQueue.Abort();
+            _JobExecutionScheduler.Abort();
         }
 
         private void RegisterDefaultBlocks()
@@ -223,6 +223,6 @@ namespace Wyd.Controllers.State
 #endif
         }
 
-        public bool TryQueueJob(Job job, out object identity) => _JobExecutionQueue.TryQueueJob(job, out identity);
+        public bool TryQueueJob(Job job, out object identity) => _JobExecutionScheduler.TryQueueJob(job, out identity);
     }
 }
