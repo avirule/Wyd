@@ -79,7 +79,7 @@ namespace Wyd.Game.World.Chunks.BuildingJob
 
             Vector3 position = Vector3.zero;
             ushort currentId = 0;
-            int runLength = 1;
+            uint runLength = 1;
 
             for (int index = ChunkController.SizeProduct - 1;
                 (index >= 0) && !AbortToken.IsCancellationRequested;
@@ -151,7 +151,7 @@ namespace Wyd.Game.World.Chunks.BuildingJob
             return noiseValue;
         }
 
-        private void AddBlockSequentialAware(ushort blockId, int runLength = 1)
+        private void AddBlockSequentialAware(ushort blockId, uint runLength = 1)
         {
             // allocate from the front since we are adding from top to bottom (i.e. last to first)
             if (_Blocks.Count > 0)

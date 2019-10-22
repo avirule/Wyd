@@ -122,13 +122,13 @@ namespace Wyd.Game.World.Chunks.BuildingJob
                 return ushort.MaxValue;
             }
 
-            int totalPositions = 0;
+            uint totalPositions = 0;
             // go backwards as building is done from top to bottom
             LinkedListNode<RLENode<ushort>> currentNode = _Blocks.Last;
 
             while ((totalPositions <= position) && (currentNode != null))
             {
-                int newTotal = currentNode.Value.RunLength + totalPositions;
+                uint newTotal = currentNode.Value.RunLength + totalPositions;
 
                 if (newTotal >= position)
                 {

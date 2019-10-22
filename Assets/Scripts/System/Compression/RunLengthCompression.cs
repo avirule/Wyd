@@ -10,7 +10,7 @@ namespace Wyd.System.Compression
     {
         public static IEnumerable<RLENode<int>> Compress(IEnumerable<int> initialArray, int firstValue)
         {
-            int currentRun = 0;
+            uint currentRun = 0;
             int lastUnmatchedValue = firstValue;
 
             foreach (int value in initialArray)
@@ -42,10 +42,10 @@ namespace Wyd.System.Compression
 
     public class RLENode<T>
     {
-        public int RunLength { get; set; }
+        public uint RunLength { get; set; }
         public T Value { get; set; }
 
-        public RLENode(int runLength, T value)
+        public RLENode(uint runLength, T value)
         {
             RunLength = runLength;
             Value = value;

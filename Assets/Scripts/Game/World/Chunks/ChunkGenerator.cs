@@ -242,7 +242,7 @@ namespace Wyd.Game.World.Chunks
         ///     THREADED CONTEXTS.
         /// </summary>
         /// <param name="skip"></param>
-        public void SkipBuilding(bool skip)
+        public void SetSkipBuilding(bool skip)
         {
             if (skip)
             {

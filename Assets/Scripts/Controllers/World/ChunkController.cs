@@ -193,7 +193,7 @@ namespace Wyd.Controllers.World
             {
                 BlockAction blockAction = _BlockActions.Pop();
                 _BlockActionLocalPositions.Remove(blockAction.LocalPosition);
-                int localPosition1d = blockAction.LocalPosition.To1D(Size);
+                uint localPosition1d = (uint)blockAction.LocalPosition.To1D(Size);
 
                 if (localPosition1d < SizeProduct)
                 {
@@ -258,14 +258,14 @@ namespace Wyd.Controllers.World
 
         #region TRY GET / PLACE / REMOVE BLOCKS
 
-        private void ModifyBlockPosition(int localPosition1d, ushort newId)
+        private void ModifyBlockPosition(uint localPosition1d, ushort newId)
         {
             if (localPosition1d >= SizeProduct)
             {
                 return;
             }
 
-            int steppedLength = 0;
+            uint steppedLength = 0;
 
             LinkedListNode<RLENode<ushort>> currentNode = _Blocks.First;
 
@@ -277,7 +277,7 @@ namespace Wyd.Controllers.World
                 }
                 else
                 {
-                    int newSteppedLength = currentNode.Value.RunLength + steppedLength;
+                    uint newSteppedLength = currentNode.Value.RunLength + steppedLength;
 
                     // in this case, the position exists at the beginning of a node
                     if (localPosition1d == (steppedLength + 1))
@@ -344,12 +344,12 @@ namespace Wyd.Controllers.World
 
             int localPosition1d = (globalPosition - Position).To1D(Size, true);
 
-            int totalPositions = 0;
+            uint totalPositions = 0;
             LinkedListNode<RLENode<ushort>> currentNode = _Blocks.First;
 
             while ((totalPositions <= localPosition1d) && (currentNode != null))
             {
-                int newTotal = currentNode.Value.RunLength + totalPositions;
+                uint newTotal = currentNode.Value.RunLength + totalPositions;
 
                 if (newTotal >= localPosition1d)
                 {
@@ -374,12 +374,12 @@ namespace Wyd.Controllers.World
 
             int localPosition1d = (globalPosition - Position).To1D(Size, true);
 
-            int totalPositions = 0;
+            uint totalPositions = 0;
             LinkedListNode<RLENode<ushort>> currentNode = _Blocks.First;
 
             while ((totalPositions <= localPosition1d) && (currentNode != null))
             {
-                int newTotal = currentNode.Value.RunLength + totalPositions;
+                uint newTotal = currentNode.Value.RunLength + totalPositions;
 
                 if (newTotal >= localPosition1d)
                 {
@@ -496,47 +496,53 @@ namespace Wyd.Controllers.World
             }
         }
 
-        public byte[] GetCompressedAsByteArray()
+        public byte[] ToSerialized()
         {
-            // 4 bytes for runlength and value
-            byte[] bytes = new byte[_Blocks.Count * 4];
+            const byte run_length_size = sizeof(uint);
+            const byte value_size = sizeof(ushort);
+            const byte node_size = value_size + run_length_size;
 
-            int count = 0;
+            // 8 bytes for runlength and value
+            byte[] bytes = new byte[_Blocks.Count * node_size];
+
+            uint index = 0;
             foreach (RLENode<ushort> node in _Blocks)
             {
-                // copy runlength (ushort, 2 bytes) to position of i
-                Array.Copy(BitConverter.GetBytes(node.RunLength), 0, bytes, count, 2);
-                // copy node value, also 2 bytes, to position of i + 2 bytes from runlength
-                Array.Copy(BitConverter.GetBytes(node.Value), 0, bytes, count + 2, 2);
+                // copy runlength (int, 4 bytes) to position of i
+                Array.Copy(BitConverter.GetBytes(node.RunLength), 0, bytes, index, run_length_size);
+                // copy node value, also 4 bytes, to position of i + 4 bytes from runlength
+                Array.Copy(BitConverter.GetBytes(node.Value), 0, bytes, index + value_size, value_size);
 
-                count += 4;
+                index += node_size;
             }
 
             return bytes;
         }
 
-        public void BuildFromByteData(byte[] data)
+        public bool FromSerialized(byte[] data)
         {
-            if ((data.Length % 4) != 0)
+            const byte run_length_size = sizeof(uint);
+            const byte value_size = sizeof(ushort);
+            const byte node_size = value_size + run_length_size;
+
+            if ((data.Length % node_size) != 0)
             {
-                return;
+                // data is misformatted, so do nothing
+                return false;
             }
 
-            int blocksIndex = 0;
-            for (int i = 0; i < data.Length; i += 4)
+            for (int i = 0; i < data.Length; i += node_size)
             {
                 // todo fix this to work with linked list
-                ushort runLength = BitConverter.ToUInt16(data, i);
-                ushort value = BitConverter.ToUInt16(data, i + 2);
+                uint runLength = BitConverter.ToUInt32(data, i);
+                ushort value = BitConverter.ToUInt16(data, i + run_length_size);
 
-                for (int run = 0; run < runLength; run++)
-                {
-                    //_Blocks[blocksIndex].Initialise(value);
-                    blocksIndex += 1;
-                }
+                _Blocks.AddLast(new RLENode<ushort>(runLength, value));
             }
 
-            _ChunkGenerator.SkipBuilding(true);
+            _ChunkGenerator.SetSkipBuilding(true);
+
+            return true;
         }
 
         private IEnumerable<ushort> GetDecompressed() => RunLengthCompression.Decompress(_Blocks);
