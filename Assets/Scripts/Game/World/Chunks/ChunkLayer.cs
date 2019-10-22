@@ -39,14 +39,12 @@ namespace Wyd.Game.World.Chunks
                 return;
             }
 
-            ushort airId = BlockController.Air.Id;
-
-            if (newId != airId)
+            if (newId != BlockController.AIR_ID)
             {
                 _ContainedBlockIDs.Add(newId);
                 _SolidBlockCount += 1;
             }
-            else if (_Blocks[index].Id == airId)
+            else if (_Blocks[index].Id == BlockController.AIR_ID)
             {
                 _ContainedBlockIDs.Remove(_Blocks[index].Id);
                 _Blocks[index].Initialise(newId);
@@ -58,7 +56,7 @@ namespace Wyd.Game.World.Chunks
         {
             for (int index = 0; index < _Blocks.Length; index++)
             {
-                _Blocks[index] = BlockController.Air;
+                _Blocks[index] = default;
             }
         }
     }

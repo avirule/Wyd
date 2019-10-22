@@ -14,9 +14,9 @@ namespace Wyd.Controllers.State
 {
     public class BlockController : SingletonController<BlockController>
     {
-        private Dictionary<BlockRule.Property, HashSet<ushort>> _BlockPropertiesRegistry;
+        public const ushort AIR_ID = 0;
 
-        public static Block Air;
+        private Dictionary<BlockRule.Property, HashSet<ushort>> _BlockPropertiesRegistry;
 
         public Dictionary<string, ushort> BlockNames;
         public List<IBlockRule> BlockRules;
@@ -35,21 +35,16 @@ namespace Wyd.Controllers.State
 
             BlockNames = new Dictionary<string, ushort>(byte.MaxValue);
             BlockRules = new List<IBlockRule>(byte.MaxValue);
-
-            // default 'nothing' block
-            ushort airId = RegisterBlockRule("air", Block.Types.None, null, BlockRule.Property.Transparent);
-            Air = new Block();
-            Air.Initialise(airId);
         }
 
         public ushort RegisterBlockRule(string blockName, Block.Types type,
             Func<Vector3, Direction, string> uvsRule, params BlockRule.Property[] properties)
         {
-            ushort assignedBlockId = 0;
+            ushort assignedBlockId;
 
             try
             {
-                assignedBlockId = (ushort)BlockRules.Count;
+                assignedBlockId = (ushort)(BlockRules.Count + 1);
             }
             catch (OverflowException)
             {
@@ -114,7 +109,7 @@ namespace Wyd.Controllers.State
             if (!BlockNames.TryGetValue(blockName, out ushort blockId))
             {
                 Log.Warning($"Failed to return block id for block `{blockName}`: block does not exist.");
-                return Air.Id;
+                return AIR_ID;
             }
 
             return blockId;

@@ -139,7 +139,7 @@ namespace Wyd.Game.World.Chunks.BuildingJob
                 currentNode = currentNode.Previous;
             }
 
-            return BlockController.Air.Id;
+            return BlockController.AIR_ID;
         }
     }
 }

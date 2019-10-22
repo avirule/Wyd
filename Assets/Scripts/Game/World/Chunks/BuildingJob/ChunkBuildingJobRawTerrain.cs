@@ -77,7 +77,6 @@ namespace Wyd.Game.World.Chunks.BuildingJob
 
             _Blocks.Clear();
 
-            Vector3 position = Vector3.zero;
             ushort currentId = 0;
             uint runLength = 1;
 
@@ -85,9 +84,9 @@ namespace Wyd.Game.World.Chunks.BuildingJob
                 (index >= 0) && !AbortToken.IsCancellationRequested;
                 index--)
             {
-                (position.x, position.y, position.z) = Mathv.GetIndexAs3D(index, ChunkController.Size);
+                (int x, int y, int z) = Mathv.GetIndexAs3D(index, ChunkController.Size);
 
-                ushort nextId = GetBlockToGenerate(position, index, useGpu, noiseValues);
+                ushort nextId = GetBlockToGenerate(new Vector3(x, y, z), index, useGpu, noiseValues);
 
                 if (currentId == nextId)
                 {
@@ -95,8 +94,9 @@ namespace Wyd.Game.World.Chunks.BuildingJob
                 }
                 else
                 {
-                    currentId = nextId;
                     AddBlockSequentialAware(currentId, runLength);
+                    // set current id to new current block
+                    currentId = nextId;
                     // reset run length
                     runLength = 1;
                 }
@@ -138,7 +138,7 @@ namespace Wyd.Game.World.Chunks.BuildingJob
                 return _BlockIdWater;
             }
 
-            return BlockController.Air.Id;
+            return BlockController.AIR_ID;
         }
 
         protected float GetNoiseValueByVector3(Vector3 pos3d)

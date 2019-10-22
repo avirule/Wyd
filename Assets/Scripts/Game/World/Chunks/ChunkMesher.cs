@@ -132,7 +132,7 @@ namespace Wyd.Game.World.Chunks
             {
                 index += 1;
 
-                if (blockId == BlockController.Air.Id)
+                if (blockId == BlockController.AIR_ID)
                 {
                     continue;
                 }
