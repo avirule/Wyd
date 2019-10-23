@@ -20,10 +20,17 @@ namespace Wyd.Game.World.Chunks.BuildingJob
         protected static readonly ObjectCache<ChunkBuilderNoiseValues> NoiseValuesCache =
             new ObjectCache<ChunkBuilderNoiseValues>(true);
 
+        protected readonly List<ushort> LocalBlocksCache;
+
         protected Random _Rand;
         protected Bounds _Bounds;
         protected LinkedList<RLENode<ushort>> _Blocks;
 
+        public ChunkBuildingJob()
+        {
+            LocalBlocksCache = new List<ushort>();
+        }
+        
         /// <summary>
         ///     Prepares item for new execution.
         /// </summary>
@@ -110,10 +117,6 @@ namespace Wyd.Game.World.Chunks.BuildingJob
 
             return highestNonAirIndex;
         }
-
-        protected bool IsBlockAtPositionTransparent(int position) =>
-            !BlockController.Current.CheckBlockHasProperty(GetBlockAtPosition_LastToFirst(position),
-                BlockRule.Property.Transparent);
 
         protected ushort GetBlockAtPosition_LastToFirst(int position)
         {

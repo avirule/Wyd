@@ -5,6 +5,7 @@ using Serilog;
 using UnityEngine;
 using Wyd.Controllers.State;
 using Wyd.Controllers.World;
+using Wyd.Game.World.Blocks;
 using Wyd.System;
 using Wyd.System.Compression;
 using Wyd.System.Noise;
@@ -15,6 +16,7 @@ namespace Wyd.Game.World.Chunks.BuildingJob
 {
     public class ChunkBuildingJobRawTerrain : ChunkBuildingJob
     {
+        private ushort _BlockIdBedrock;
         private ushort _BlockIdGrass;
         private ushort _BlockIdDirt;
         private ushort _BlockIdStone;
@@ -42,6 +44,7 @@ namespace Wyd.Game.World.Chunks.BuildingJob
                 noiseValuesBuffer.Release();
             }
 
+            BlockController.Current.TryGetBlockId("bedrock", out _BlockIdBedrock);
             BlockController.Current.TryGetBlockId("grass", out _BlockIdGrass);
             BlockController.Current.TryGetBlockId("dirt", out _BlockIdDirt);
             BlockController.Current.TryGetBlockId("stone", out _BlockIdStone);
@@ -87,6 +90,7 @@ namespace Wyd.Game.World.Chunks.BuildingJob
                 (int x, int y, int z) = Mathv.GetIndexAs3D(index, ChunkController.Size);
 
                 ushort nextId = GetBlockToGenerate(new Vector3(x, y, z), index, useGpu, noiseValues);
+                LocalBlocksCache.Add(nextId);
 
                 if (currentId == nextId)
                 {
@@ -101,6 +105,8 @@ namespace Wyd.Game.World.Chunks.BuildingJob
                     runLength = 1;
                 }
             }
+
+            LocalBlocksCache.Clear();
         }
 
         private ushort GetBlockToGenerate(Vector3 position, int index, bool useGpu = false,
@@ -108,9 +114,10 @@ namespace Wyd.Game.World.Chunks.BuildingJob
         {
             if ((position.y < 4) && (position.y <= _Rand.Next(0, 4)))
             {
-                BlockController.Current.TryGetBlockId("bedrock", out ushort blockId);
-                return blockId;
+                return _BlockIdBedrock;
             }
+
+            int sizeProduct = ChunkController.SizeProduct;
 
             // these seems inefficient, but the CPU branch predictor will pick up on it pretty quick
             // so the slowdown from this check is nonexistent, since useGpu shouldn't change in this context.
@@ -120,17 +127,21 @@ namespace Wyd.Game.World.Chunks.BuildingJob
             {
                 int indexAbove = index + ChunkController.YIndexStep;
 
-                if ((position.y > 135) && IsBlockAtPositionTransparent(indexAbove))
+                if ((position.y > 135)
+                    && BlockController.Current.CheckBlockHasProperty(LocalBlocksCache[sizeProduct - indexAbove],
+                        BlockRule.Property.Transparent))
                 {
                     return _BlockIdGrass;
                 }
                 // todo fix this
-//                        else if (IdExistsAboveWithinRange(index, 2, blockIdGrass))
-//                        {
-//                            AddBlockSequentialAware(blockIdDirt);
-//                        }
-
-                return _BlockIdStone;
+                // else if (IdExistsAboveWithinRange(index, 2, blockIdGrass))
+                // {
+                //     AddBlockSequentialAware(blockIdDirt);
+                // }
+                else
+                {
+                    return _BlockIdStone;
+                }
             }
 
             if ((position.y <= 155) && (position.y > 135))

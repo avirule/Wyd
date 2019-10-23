@@ -2,6 +2,7 @@
 
 using System;
 using System.Collections.Specialized;
+using Serilog;
 using UnityEngine;
 using Random = System.Random;
 
@@ -73,7 +74,7 @@ namespace Wyd.Game.World.Blocks
         {
             if (Id != blockId)
             {
-                Debug.Log(
+                Log.Warning(
                     $"Failed to get rule of specified block `{blockId}`: block name mismatch (referenced {blockId}, targeted {BlockName}).");
                 spriteName = string.Empty;
                 return false;

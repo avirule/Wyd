@@ -33,8 +33,12 @@ namespace Wyd.Controllers.State
                 _BlockPropertiesRegistry.Add(property, new HashSet<ushort>());
             }
 
-            BlockNames = new Dictionary<string, ushort>(byte.MaxValue);
-            BlockRules = new List<IBlockRule>(byte.MaxValue);
+            BlockNames = new Dictionary<string, ushort>();
+            BlockRules = new List<IBlockRule>
+            {
+                // add first value so count aligns with ids
+                null
+            };
         }
 
         public ushort RegisterBlockRule(string blockName, Block.Types type,
@@ -44,7 +48,7 @@ namespace Wyd.Controllers.State
 
             try
             {
-                assignedBlockId = (ushort)(BlockRules.Count + 1);
+                assignedBlockId = (ushort)BlockRules.Count;
             }
             catch (OverflowException)
             {
