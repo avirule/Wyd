@@ -178,7 +178,7 @@ namespace Wyd.Game.World.Chunks
                 _NoiseShader.SetFloat("_Frequency", frequency);
                 _NoiseShader.SetFloat("_Persistence", persistence);
                 _NoiseShader.SetBuffer(kernel, "Result", noiseBuffer);
-                // 256 is the value set in the shader's [numthreads(--> 256 <--, 1, 1)]
+                // 1024 is the value set in the shader's [numthreads(--> 1024 <--, 1, 1)]
                 _NoiseShader.Dispatch(kernel, ChunkController.Size.Product() / 1024, 1, 1);
 
                 job.Set(_Bounds, ref _Blocks, frequency, persistence, OptionsController.Current.GPUAcceleration,
@@ -307,6 +307,10 @@ namespace Wyd.Game.World.Chunks
                     MeshTimes.Enqueue(args.Job.ExecutionTime);
                     OnMeshChanged(new ChunkChangedEventArgs(_Bounds, Enumerable.Empty<Vector3>()));
                     break;
+                case GenerationStep.Complete:
+                    break;
+                default:
+                    throw new ArgumentOutOfRangeException();
             }
 
             // this check always BEFORE incrementing the step
