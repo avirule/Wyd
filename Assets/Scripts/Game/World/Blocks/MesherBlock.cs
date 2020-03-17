@@ -5,6 +5,10 @@ namespace Wyd.Game.World.Blocks
         public readonly ushort Id;
         public BlockFaces Faces;
 
-        public MesherBlock(ushort id, byte faces = 0) => (Id, Faces) = (Id, new BlockFaces(faces));
+        public MesherBlock(ushort id, byte faces = 0)
+        {
+            Id = id;
+            Faces = new BlockFaces(faces);
+        }
     }
 }
