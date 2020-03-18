@@ -2,7 +2,6 @@
 
 using System;
 using System.Collections.Generic;
-using System.Linq;
 
 #endregion
 
@@ -39,6 +38,21 @@ namespace Wyd.System.Compression
                 {
                     yield return node.Value;
                 }
+            }
+        }
+
+        public static IEnumerable<T> DecompressLinkedList<T>(LinkedList<RLENode<T>> nodes) where T : IEquatable<T>
+        {
+            LinkedListNode<RLENode<T>> currentNode = nodes.First;
+
+            while (currentNode != null)
+            {
+                for (int i = 0; i < currentNode.Value.RunLength; i++)
+                {
+                    yield return currentNode.Value.Value;
+                }
+                
+                currentNode = currentNode.Next;
             }
         }
     }

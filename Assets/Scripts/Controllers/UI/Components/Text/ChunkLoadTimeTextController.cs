@@ -2,7 +2,6 @@
 
 using System;
 using System.Linq;
-using Wyd.Game.World.Chunks;
 
 #endregion
 
@@ -10,7 +9,7 @@ namespace Wyd.Controllers.UI.Components.Text
 {
     public class ChunkLoadTimeTextController : UpdatingFormattedTextController
     {
-        private const double TOLERANCE = 0.001d;
+        private const double _TOLERANCE = 0.001d;
 
         private double _LastBuildTime;
         private double _LastMeshTime;
@@ -27,8 +26,8 @@ namespace Wyd.Controllers.UI.Components.Text
         {
             (double buildTime, double meshTime) = CalculateBuildAndMeshTimes();
 
-            if ((Math.Abs(buildTime - _LastBuildTime) > TOLERANCE)
-                || (Math.Abs(meshTime - _LastMeshTime) > TOLERANCE))
+            if ((Math.Abs(buildTime - _LastBuildTime) > _TOLERANCE)
+                || (Math.Abs(meshTime - _LastMeshTime) > _TOLERANCE))
             {
                 UpdateChunkLoadTimeText(buildTime, meshTime);
             }
@@ -47,14 +46,19 @@ namespace Wyd.Controllers.UI.Components.Text
             double avgBuildTime = 0d;
             double avgMeshTime = 0d;
 
-            if ((ChunkGenerator.BuildTimes != default) && (ChunkGenerator.BuildTimes.Count > 0))
+            if ((DiagnosticsController.Current.RollingChunkBuildTimes != default)
+                && (DiagnosticsController.Current.RollingChunkBuildTimes.Count > 0))
             {
-                avgBuildTime = ChunkGenerator.BuildTimes.Average(timeSpan => timeSpan.TotalMilliseconds);
+                avgBuildTime =
+                    DiagnosticsController.Current.RollingChunkBuildTimes.Average(timeSpan =>
+                        timeSpan.TotalMilliseconds);
             }
 
-            if ((ChunkGenerator.MeshTimes != default) && (ChunkGenerator.MeshTimes.Count > 0))
+            if ((DiagnosticsController.Current.RollingChunkMeshTimes != default)
+                && (DiagnosticsController.Current.RollingChunkMeshTimes.Count > 0))
             {
-                avgMeshTime = ChunkGenerator.MeshTimes.Average(timeSpan => timeSpan.TotalMilliseconds);
+                avgMeshTime =
+                    DiagnosticsController.Current.RollingChunkMeshTimes.Average(timeSpan => timeSpan.TotalMilliseconds);
             }
 
             return (avgBuildTime, avgMeshTime);

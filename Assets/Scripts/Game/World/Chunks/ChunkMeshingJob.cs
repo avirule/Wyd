@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using Wyd.Controllers.World;
 using Wyd.Game.World.Blocks;
+using Wyd.System.Compression;
 using Wyd.System.Jobs;
 
 #endregion
@@ -13,6 +14,7 @@ namespace Wyd.Game.World.Chunks
     public class ChunkMeshingJob : Job
     {
         private ChunkMesher _Mesher;
+        private LinkedList<RLENode<ushort>> _Blocks;
 
         /// <summary>
         ///     Prepares item for new execution.
@@ -21,29 +23,29 @@ namespace Wyd.Game.World.Chunks
         /// <param name="blocks">Pre-initialized and built <see cref="T:ushort[]" /> to iterate through.</param>
         /// <param name="aggressiveFaceMerging"></param>
         /// <param name="isRemesh"></param>
-        public void Set(Bounds bounds, IEnumerable<ushort> blocks, bool aggressiveFaceMerging, bool isRemesh = false)
+        public void SetData(Bounds bounds, LinkedList<RLENode<ushort>> blocks, bool aggressiveFaceMerging, bool isRemesh = false)
         {
             if (_Mesher == null)
             {
                 _Mesher = new ChunkMesher();
             }
 
+            _Blocks = blocks;
             _Mesher.AbortToken = AbortToken;
             _Mesher.Bounds = bounds;
-            _Mesher.EnumerableBlocks = blocks;
             _Mesher.Size = ChunkController.Size;
-            _Mesher.AggressiveFaceMerging = aggressiveFaceMerging;
-            _Mesher.ClearInternalData();
+            _Mesher.AggressiveFaceMerging = false;
+            _Mesher.ClearData();
         }
 
         protected override void Process()
         {
-            if (_Mesher.EnumerableBlocks == null)
+            if (_Blocks == null)
             {
                 return;
             }
 
-            _Mesher.GenerateMesh();
+            _Mesher.GenerateMesh(RunLengthCompression.DecompressLinkedList(_Blocks));
         }
 
         public void SetMesh(ref Mesh mesh)

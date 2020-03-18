@@ -9,11 +9,8 @@ using UnityEngine.Rendering;
 using Wyd.Controllers.State;
 using Wyd.Game;
 using Wyd.Game.Entities;
-using Wyd.Game.World.Blocks;
 using Wyd.Game.World.Chunks;
 using Wyd.System;
-using Wyd.System.Collections;
-using Wyd.System.Compression;
 
 #endregion
 
@@ -25,35 +22,17 @@ namespace Wyd.Controllers.World
         public static readonly int SizeProduct = Size.Product();
         public static readonly int YIndexStep = Size.x * Size.z;
 
-        private static readonly ObjectCache<ChunkGenerator> ChunkGeneratorsCache =
-            // todo decide how to handle this cache's size
-            new ObjectCache<ChunkGenerator>(true, false, (Size.x / 2) * (Size.z / 2));
-
-        private static readonly ObjectCache<BlockAction> BlockActionsCache =
-            new ObjectCache<BlockAction>(true, true, 1024);
-
-
         #region INSTANCE MEMBERS
 
         private Bounds _Bounds;
         private Transform _SelfTransform;
         private IEntity _CurrentLoader;
-        private LinkedList<RLENode<ushort>> _Blocks;
-        private Mesh _Mesh;
+
         private bool _Visible;
         private bool _RenderShadows;
-        private ChunkGenerator _ChunkGenerator;
-        private Stack<BlockAction> _BlockActions;
-        private HashSet<Vector3> _BlockActionLocalPositions;
 
-        [SerializeField]
-        private MeshFilter MeshFilter;
-
-        [SerializeField]
-        private MeshRenderer MeshRenderer;
 
         public Vector3 Position => _Bounds.min;
-        public ChunkGenerator.GenerationStep GenerationStep => _ChunkGenerator.CurrentStep;
 
         public bool RenderShadows
         {
@@ -89,18 +68,29 @@ namespace Wyd.Controllers.World
         #endregion
 
 
+        #region SERIALIZED MEMBERS
+
+        [SerializeField]
+        private MeshRenderer MeshRenderer;
+
+        [SerializeField]
+        public ChunkBlocksController BlocksController;
+
+        [SerializeField]
+        public ChunkGenerationController GenerationController;
+
+        #endregion
+
+
         #region UNITY BUILT-INS
 
         private void Awake()
         {
             _SelfTransform = transform;
-            UpdateBounds();
-            _Blocks = new LinkedList<RLENode<ushort>>();
-            _Mesh = new Mesh();
-            _BlockActions = new Stack<BlockAction>();
-            _BlockActionLocalPositions = new HashSet<Vector3>();
+            Vector3 position = _SelfTransform.position;
+            _Bounds.SetMinMax(position, position + Size);
 
-            MeshFilter.sharedMesh = _Mesh;
+            BlocksController.BlocksChanged += (sender, args) => { GenerationController.RequestMeshUpdate(); };
 
             foreach (Material material in MeshRenderer.materials)
             {
@@ -108,8 +98,6 @@ namespace Wyd.Controllers.World
             }
 
             _Visible = MeshRenderer.enabled;
-
-            ConfigureGenerator();
 
             // todo implement chunk ticks
 //            double waitTime = TimeSpan
@@ -140,105 +128,37 @@ namespace Wyd.Controllers.World
             };
         }
 
-        private void Update()
-        {
-            if (!WorldController.Current.IsInSafeFrameTime())
-            {
-                return;
-            }
-
-            if (_BlockActions.Count > 0)
-            {
-                ProcessBlockActions();
-            }
-            else if (WorldController.Current.ReadyForGeneration)
-            {
-                _ChunkGenerator.SynchronousContextUpdate();
-            }
-        }
+        private void Update() { }
 
         private void OnDestroy()
         {
-            Destroy(_Mesh);
             OnDestroyed(this, new ChunkChangedEventArgs(_Bounds, Directions.CardinalDirectionsVector3));
         }
 
         #endregion
 
-        private void ConfigureGenerator()
-        {
-            _ChunkGenerator = ChunkGeneratorsCache.RetrieveItem() ?? new ChunkGenerator();
-            _ChunkGenerator.Set(_Bounds, ref _Blocks, ref _Mesh);
-            _ChunkGenerator.BlocksChanged += OnBlocksChanged;
-            _ChunkGenerator.MeshChanged += OnMeshChanged;
-        }
-
-
-        private void CacheGenerator()
-        {
-            _ChunkGenerator.BlocksChanged -= OnBlocksChanged;
-            _ChunkGenerator.MeshChanged -= OnMeshChanged;
-            _ChunkGenerator.Unset();
-            ChunkGeneratorsCache.CacheItem(ref _ChunkGenerator);
-        }
-
-        public void RequestMeshUpdate()
-        {
-            _ChunkGenerator.RequestMeshUpdate();
-        }
-
-        private void ProcessBlockActions()
-        {
-            while ((_BlockActions.Count > 0) && WorldController.Current.IsInSafeFrameTime())
-            {
-                BlockAction blockAction = _BlockActions.Pop();
-                _BlockActionLocalPositions.Remove(blockAction.LocalPosition);
-                uint localPosition1d = (uint)blockAction.LocalPosition.To1D(Size);
-
-                if (localPosition1d < SizeProduct)
-                {
-                    // todo optimize this to order the block actions by position, so modifications can happen in one pass
-                    ModifyBlockPosition(localPosition1d, blockAction.Id);
-                    RequestMeshUpdate();
-                    OnBlocksChanged(this,
-                        new ChunkChangedEventArgs(_Bounds,
-                            DetermineDirectionsForNeighborUpdate(blockAction.LocalPosition)));
-                }
-
-                BlockActionsCache.CacheItem(ref blockAction);
-            }
-        }
-
-        #region ACTIVATION STATE
+        #region DE/ACTIVATION
 
         public void Activate(Vector3 position)
         {
             _SelfTransform.position = position;
-            UpdateBounds();
+            _Bounds.SetMinMax(position, position + Size);
             _Visible = MeshRenderer.enabled;
-            ConfigureGenerator();
+
+            GenerationController.Activate();
             gameObject.SetActive(true);
         }
 
         public void Deactivate()
         {
-            if (_Mesh != default)
-            {
-                _Mesh.Clear();
-            }
-
             if (_CurrentLoader != default)
             {
                 _CurrentLoader.ChunkPositionChanged -= OnCurrentLoaderChangedChunk;
                 _CurrentLoader = default;
             }
 
-            _BlockActions.Clear();
-            _BlockActionLocalPositions.Clear();
-            _Bounds = default;
-
-            CacheGenerator();
             StopAllCoroutines();
+            GenerationController.Deactivate();
             gameObject.SetActive(false);
         }
 
@@ -256,296 +176,58 @@ namespace Wyd.Controllers.World
         #endregion
 
 
-        #region TRY GET / PLACE / REMOVE BLOCKS
-
-        private void ModifyBlockPosition(uint localPosition1d, ushort newId)
-        {
-            if (localPosition1d >= SizeProduct)
-            {
-                return;
-            }
-
-            uint steppedLength = 0;
-
-            LinkedListNode<RLENode<ushort>> currentNode = _Blocks.First;
-
-            while ((steppedLength <= localPosition1d) && (currentNode != null))
-            {
-                if (currentNode.Value.RunLength == 0)
-                {
-                    _Blocks.Remove(currentNode);
-                }
-                else
-                {
-                    uint newSteppedLength = currentNode.Value.RunLength + steppedLength;
-
-                    // in this case, the position exists at the beginning of a node
-                    if (localPosition1d == (steppedLength + 1))
-                    {
-                        // insert node before current node
-                        _Blocks.AddBefore(currentNode, new RLENode<ushort>(1, newId));
-                        // decrement current node to make room for new node
-                        currentNode.Value.RunLength -= 1;
-                    }
-                    // position exists after end of node
-                    else if ((localPosition1d == (newSteppedLength + 1))
-                             // and ids match so just increment RunLength without any insertions
-                             && (newId == currentNode.Value.Value))
-                    {
-                        currentNode.Value.RunLength += 1;
-
-                        // make sure next node is not null
-                        if (currentNode.Next != null)
-                        {
-                            // decrement from the next node so that there's space for the new placement
-                            // in currentNode's RunLength 
-                            currentNode.Next.Value.RunLength -= 1;
-                        }
-                    }
-                    // we've found the node that overlaps the queried position
-                    else if (newSteppedLength > localPosition1d)
-                    {
-                        if (currentNode.Value.Value == newId)
-                        {
-                            // position resulted in already exists block id
-                            break;
-                        }
-
-                        // inserted node will take up 1 position / run length
-                        LinkedListNode<RLENode<ushort>> insertedNode =
-                            _Blocks.AddAfter(currentNode, new RLENode<ushort>(1, newId));
-                        // split CurrentNode's RunLength and -1 to make space for the inserted node
-                        currentNode.Value.RunLength = localPosition1d - steppedLength - 1;
-
-                        if (localPosition1d != newSteppedLength)
-                        {
-                            // hit is not at end of rle node, so we must add a remainder node
-                            _Blocks.AddAfter(insertedNode,
-                                new RLENode<ushort>(newSteppedLength - localPosition1d, currentNode.Value.Value));
-                        }
-
-                        break;
-                    }
-
-                    steppedLength = newSteppedLength;
-                }
-
-                currentNode = currentNode.Next;
-            }
-        }
-
-        public ushort GetBlockAt(Vector3 globalPosition)
-        {
-            if (!_Bounds.Contains(globalPosition))
-            {
-                throw new ArgumentOutOfRangeException(nameof(globalPosition),
-                    "Given position must be within chunk's bounds.");
-            }
-
-            int localPosition1d = (globalPosition - Position).To1D(Size, true);
-
-            uint totalPositions = 0;
-            LinkedListNode<RLENode<ushort>> currentNode = _Blocks.First;
-
-            while ((totalPositions <= localPosition1d) && (currentNode != null))
-            {
-                uint newTotal = currentNode.Value.RunLength + totalPositions;
-
-                if (newTotal >= localPosition1d)
-                {
-                    return currentNode.Value.Value;
-                }
-
-                totalPositions = newTotal;
-                currentNode = currentNode.Next;
-            }
-
-            return 0;
-        }
-
-        public bool TryGetBlockAt(Vector3 globalPosition, out ushort blockId)
-        {
-            blockId = 0;
-
-            if (!_Bounds.Contains(globalPosition))
-            {
-                return false;
-            }
-
-            int localPosition1d = (globalPosition - Position).To1D(Size, true);
-
-            uint totalPositions = 0;
-            LinkedListNode<RLENode<ushort>> currentNode = _Blocks.First;
-
-            while ((totalPositions <= localPosition1d) && (currentNode != null))
-            {
-                uint newTotal = currentNode.Value.RunLength + totalPositions;
-
-                if (newTotal >= localPosition1d)
-                {
-                    blockId = currentNode.Value.Value;
-                    return true;
-                }
-
-                totalPositions = newTotal;
-                currentNode = currentNode.Next;
-            }
-
-            return false;
-        }
-
-        public bool BlockExistsAt(Vector3 globalPosition) => GetBlockAt(globalPosition) != BlockController.AIR_ID;
-
-        public bool TryPlaceBlockAt(Vector3 globalPosition, ushort id) =>
-            _Bounds.Contains(globalPosition)
-            && TryAllocateBlockAction(globalPosition - Position, id);
-
-        public bool TryRemoveBlockAt(Vector3 globalPosition) =>
-            _Bounds.Contains(globalPosition)
-            && TryAllocateBlockAction(globalPosition - Position, BlockController.AIR_ID);
-
-        private bool TryAllocateBlockAction(Vector3 localPosition, ushort id)
-        {
-            // todo this vvvv
-            if (_BlockActionLocalPositions.Contains(localPosition)
-                || !_Bounds.Contains(localPosition))
-            {
-                return false;
-            }
-
-            BlockAction blockAction = BlockActionsCache.RetrieveItem();
-            blockAction.Initialise(localPosition, id);
-            _BlockActions.Push(blockAction);
-            _BlockActionLocalPositions.Add(localPosition);
-            return true;
-        }
-
-        #endregion
-
-
         #region HELPER METHODS
 
-        private void UpdateBounds()
-        {
-            Vector3 position = _SelfTransform.position;
-            _Bounds.SetMinMax(position, position + Size);
-        }
 
-        [SuppressMessage("ReSharper", "InconsistentNaming")]
-        private static IEnumerable<Vector3> DetermineDirectionsForNeighborUpdate(Vector3 localPosition)
-        {
-            // topleft & bottomright x computation value
-            float tl_br_x = localPosition.x * Size.x;
-            // topleft & bottomright y computation value
-            float tl_br_y = localPosition.z * Size.z;
 
-            // topright & bottomleft left-side computation value
-            float tr_bl_l = localPosition.x + localPosition.z;
-            // topright & bottomleft right-side computation value
-            float tr_bl_r = (Size.x + Size.z) / 2f;
-
-            // `half` refers to the diagonal half of the chunk the point lies in.
-            // If the point does not lie in a diagonal half, its a center block, and we don't need to update chunks.
-
-            bool isInTopLeftHalf = tl_br_x > tl_br_y;
-            bool isInBottomRightHalf = tl_br_x < tl_br_y;
-            bool isInTopRightHalf = tr_bl_l > tr_bl_r;
-            bool isInBottomLeftHalf = tr_bl_l < tr_bl_r;
-
-            if (isInTopRightHalf && isInTopLeftHalf)
-            {
-                yield return Vector3.right;
-            }
-            else if (isInTopRightHalf && isInBottomRightHalf)
-            {
-                yield return Vector3.forward;
-            }
-            else if (isInBottomRightHalf && isInBottomLeftHalf)
-            {
-                yield return Vector3.left;
-            }
-            else if (isInBottomLeftHalf && isInTopLeftHalf)
-            {
-                yield return Vector3.back;
-            }
-            else if (!isInTopRightHalf && !isInBottomLeftHalf)
-            {
-                if (isInTopLeftHalf)
-                {
-                    yield return Vector3.back;
-                    yield return Vector3.left;
-                }
-                else if (isInBottomRightHalf)
-                {
-                    yield return Vector3.back;
-                    yield return Vector3.right;
-                }
-            }
-            else if (!isInTopLeftHalf && !isInBottomRightHalf)
-            {
-                if (isInTopRightHalf)
-                {
-                    yield return Vector3.forward;
-                    yield return Vector3.right;
-                }
-                else if (isInBottomLeftHalf)
-                {
-                    yield return Vector3.forward;
-                    yield return Vector3.left;
-                }
-            }
-        }
-
-        public byte[] ToSerialized()
-        {
-            const byte run_length_size = sizeof(uint);
-            const byte value_size = sizeof(ushort);
-            const byte node_size = value_size + run_length_size;
-
-            // 8 bytes for runlength and value
-            byte[] bytes = new byte[_Blocks.Count * node_size];
-
-            uint index = 0;
-            foreach (RLENode<ushort> node in _Blocks)
-            {
-                // copy runlength (int, 4 bytes) to position of i
-                Array.Copy(BitConverter.GetBytes(node.RunLength), 0, bytes, index, run_length_size);
-                // copy node value, also 4 bytes, to position of i + 4 bytes from runlength
-                Array.Copy(BitConverter.GetBytes(node.Value), 0, bytes, index + value_size, value_size);
-
-                index += node_size;
-            }
-
-            return bytes;
-        }
-
-        public bool FromSerialized(byte[] data)
-        {
-            const byte run_length_size = sizeof(uint);
-            const byte value_size = sizeof(ushort);
-            const byte node_size = value_size + run_length_size;
-
-            if ((data.Length % node_size) != 0)
-            {
-                // data is misformatted, so do nothing
-                return false;
-            }
-
-            for (int i = 0; i < data.Length; i += node_size)
-            {
-                // todo fix this to work with linked list
-                uint runLength = BitConverter.ToUInt32(data, i);
-                ushort value = BitConverter.ToUInt16(data, i + run_length_size);
-
-                _Blocks.AddLast(new RLENode<ushort>(runLength, value));
-            }
-
-            _ChunkGenerator.SetSkipBuilding(true);
-
-            return true;
-        }
-
-        private IEnumerable<ushort> GetDecompressed() => RunLengthCompression.Decompress(_Blocks);
+        // public byte[] ToSerialized()
+        // {
+        //     const byte run_length_size = sizeof(uint);
+        //     const byte value_size = sizeof(ushort);
+        //     const byte node_size = value_size + run_length_size;
+        //
+        //     // 8 bytes for runlength and value
+        //     byte[] bytes = new byte[_Blocks.Count * node_size];
+        //
+        //     uint index = 0;
+        //     foreach (RLENode<ushort> node in _Blocks)
+        //     {
+        //         // copy runlength (int, 4 bytes) to position of i
+        //         Array.Copy(BitConverter.GetBytes(node.RunLength), 0, bytes, index, run_length_size);
+        //         // copy node value, also 4 bytes, to position of i + 4 bytes from runlength
+        //         Array.Copy(BitConverter.GetBytes(node.Value), 0, bytes, index + value_size, value_size);
+        //
+        //         index += node_size;
+        //     }
+        //
+        //     return bytes;
+        // }
+        //
+        // public bool FromSerialized(byte[] data)
+        // {
+        //     const byte run_length_size = sizeof(uint);
+        //     const byte value_size = sizeof(ushort);
+        //     const byte node_size = value_size + run_length_size;
+        //
+        //     if ((data.Length % node_size) != 0)
+        //     {
+        //         // data is misformatted, so do nothing
+        //         return false;
+        //     }
+        //
+        //     for (int i = 0; i < data.Length; i += node_size)
+        //     {
+        //         // todo fix this to work with linked list
+        //         uint runLength = BitConverter.ToUInt32(data, i);
+        //         ushort value = BitConverter.ToUInt16(data, i + run_length_size);
+        //
+        //         _Blocks.AddLast(new RLENode<ushort>(runLength, value));
+        //     }
+        //
+        //     _ChunkGenerator.SetSkipBuilding(true);
+        //
+        //     return true;
+        // }
 
         #endregion
 
@@ -570,15 +252,9 @@ namespace Wyd.Controllers.World
 
         // todo chunk load failed event
 
-        public event EventHandler<ChunkChangedEventArgs> BlocksChanged;
         public event EventHandler<ChunkChangedEventArgs> MeshChanged;
         public event EventHandler<ChunkChangedEventArgs> DeactivationCallback;
         public event EventHandler<ChunkChangedEventArgs> Destroyed;
-
-        protected virtual void OnBlocksChanged(object sender, ChunkChangedEventArgs args)
-        {
-            BlocksChanged?.Invoke(sender, args);
-        }
 
         protected virtual void OnMeshChanged(object sender, ChunkChangedEventArgs args)
         {

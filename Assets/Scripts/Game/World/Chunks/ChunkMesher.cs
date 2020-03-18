@@ -24,13 +24,12 @@ namespace Wyd.Game.World.Chunks
         private readonly List<int> _TransparentTriangles;
         private readonly List<Vector3> _UVs;
 
-        private List<MesherBlock> _Blocks;
+        private readonly List<MeshBlock> _Blocks;
         private Bounds _Bounds;
         private Vector3 _Position;
         private Vector3Int _Size;
         private int _YIndexStep;
 
-        public IEnumerable<ushort> EnumerableBlocks;
         public CancellationToken AbortToken;
         public bool AggressiveFaceMerging;
 
@@ -56,14 +55,14 @@ namespace Wyd.Game.World.Chunks
 
         public ChunkMesher()
         {
-            _Blocks = new List<MesherBlock>();
+            _Blocks = new List<MeshBlock>();
             _Vertices = new List<Vector3>();
             _UVs = new List<Vector3>();
             _Triangles = new List<int>();
             _TransparentTriangles = new List<int>();
         }
 
-        public void ClearInternalData()
+        public void ClearData()
         {
             _Blocks.Clear();
             _Vertices.Clear();
@@ -105,23 +104,21 @@ namespace Wyd.Game.World.Chunks
             mesh.RecalculateTangents();
         }
 
-        public void GenerateMesh()
+        private void SetBlockData(IEnumerable<ushort> blocks)
         {
             // enumerate blocks and assign to internal blocks array
-            int unrollIndex = 0;
-            foreach (ushort id in EnumerableBlocks)
+            foreach (ushort id in blocks)
             {
-                if (unrollIndex >= _Blocks.Count)
-                {
-                    break;
-                }
-                
-                _Blocks[unrollIndex] = new MesherBlock(id);
-                unrollIndex += 1;
+                _Blocks.Add(new MeshBlock(id));
             }
-
+        }
+        
+        public void GenerateMesh(IEnumerable<ushort> blocks)
+        {
+            SetBlockData(blocks);
+            
             int index = -1;
-            foreach (MesherBlock block in _Blocks)
+            foreach (MeshBlock block in _Blocks)
             {
                 index += 1;
 
