@@ -7,6 +7,7 @@ using UnityEngine;
 using Wyd.Controllers.State;
 using Wyd.Controllers.UI;
 using Wyd.Controllers.World;
+using Wyd.Controllers.World.Chunk;
 using Wyd.Game.Entities;
 using Wyd.Game.World.Blocks;
 using Wyd.System;

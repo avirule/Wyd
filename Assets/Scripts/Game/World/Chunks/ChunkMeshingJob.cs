@@ -3,6 +3,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 using Wyd.Controllers.World;
+using Wyd.Controllers.World.Chunk;
 using Wyd.Game.World.Blocks;
 using Wyd.System.Compression;
 using Wyd.System.Jobs;

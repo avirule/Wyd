@@ -14,7 +14,7 @@ using Wyd.System.Jobs;
 
 #endregion
 
-namespace Wyd.Controllers.World
+namespace Wyd.Controllers.World.Chunk
 {
     public class ChunkGenerationController : MonoBehaviour
     {
@@ -210,12 +210,12 @@ namespace Wyd.Controllers.World
                 // 1024 is the value set in the shader's [numthreads(--> 1024 <--, 1, 1)]
                 _NoiseShader.Dispatch(kernel, ChunkController.Size.Product() / 1024, 1, 1);
 
-                job.Set(_Bounds, ref _ChunkBlocksController.Blocks, frequency, persistence, OptionsController.Current.GPUAcceleration,
+                job.SetData(_Bounds, ref _ChunkBlocksController.Blocks, frequency, persistence, OptionsController.Current.GPUAcceleration,
                     noiseBuffer);
             }
             else
             {
-                job.Set(_Bounds, ref _ChunkBlocksController.Blocks, frequency, persistence);
+                job.SetData(_Bounds, ref _ChunkBlocksController.Blocks, frequency, persistence);
             }
 
             QueueJob(job);
@@ -231,7 +231,7 @@ namespace Wyd.Controllers.World
 
             ChunkBuildingJobAccents job = ChunkAccentsBuilderCache.RetrieveItem() ?? new ChunkBuildingJobAccents();
 
-            job.Set(_Bounds, ref _ChunkBlocksController.Blocks);
+            job.SetGenerationData(_Bounds, ref _ChunkBlocksController.Blocks);
 
             QueueJob(job);
         }

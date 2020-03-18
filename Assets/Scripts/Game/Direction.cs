@@ -5,6 +5,7 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using UnityEngine;
 using Wyd.Controllers.World;
+using Wyd.Controllers.World.Chunk;
 
 #endregion
 

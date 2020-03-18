@@ -4,7 +4,9 @@ using System.Collections.Generic;
 using UnityEngine;
 using Wyd.Controllers.State;
 using Wyd.Controllers.World;
+using Wyd.Controllers.World.Chunk;
 using Wyd.Game.World.Blocks;
+using Wyd.System;
 using Wyd.System.Collections;
 using Wyd.System.Compression;
 using Wyd.System.Extensions;
@@ -20,27 +22,16 @@ namespace Wyd.Game.World.Chunks.BuildingJob
         protected static readonly ObjectCache<ChunkBuilderNoiseValues> NoiseValuesCache =
             new ObjectCache<ChunkBuilderNoiseValues>(true);
 
-        protected readonly List<ushort> LocalBlocksCache;
-
         protected Random _Rand;
-        protected Bounds _Bounds;
-        protected LinkedList<RLENode<ushort>> _Blocks;
+        protected GenerationData _GenerationData;
 
-        public ChunkBuildingJob()
-        {
-            LocalBlocksCache = new List<ushort>();
-        }
-        
         /// <summary>
-        ///     Prepares item for new execution.
+        ///     Prepares job for new execution.
         /// </summary>
-        /// <param name="bounds"></param>
-        /// <param name="blocks">Pre-initialized and built <see cref="T:ushort[]" /> to iterate through.</param>
-        public void Set(Bounds bounds, ref LinkedList<RLENode<ushort>> blocks)
+        public void SetGenerationData(GenerationData generationData)
         {
             _Rand = new Random(WorldController.Current.Seed);
-            _Bounds = bounds;
-            _Blocks = blocks;
+            _GenerationData = generationData;
         }
 
         protected bool IdExistsAboveWithinRange(int startIndex, int maxSteps, ushort soughtId)
@@ -49,7 +40,7 @@ namespace Wyd.Game.World.Chunks.BuildingJob
             {
                 int currentIndex = startIndex + (i * ChunkController.YIndexStep);
 
-                if (currentIndex >= _Blocks.Count)
+                if (currentIndex >= _GenerationData.Blocks.Count)
                 {
                     return false;
                 }
@@ -127,7 +118,7 @@ namespace Wyd.Game.World.Chunks.BuildingJob
 
             uint totalPositions = 0;
             // go backwards as building is done from top to bottom
-            LinkedListNode<RLENode<ushort>> currentNode = _Blocks.Last;
+            LinkedListNode<RLENode<ushort>> currentNode = _GenerationData.Blocks.Last;
 
             while ((totalPositions <= position) && (currentNode != null))
             {

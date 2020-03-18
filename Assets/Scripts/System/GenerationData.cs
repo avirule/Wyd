@@ -1,15 +1,21 @@
+#region
+
 using System;
+using System.Collections.Generic;
+using UnityEngine;
+using Wyd.System.Compression;
+
+#endregion
 
 namespace Wyd.System
 {
-    public static class GenerationData
+    public class GenerationData
     {
         [Flags]
         public enum GenerationStep : ushort
         {
             RawTerrain = 0b0000_0000_0000_0001,
             Accents = 0b0000_0000_0000_0011,
-            Meshing = 0b0000_0001_1111_1111,
             Complete = 0b1111_1111_1111_1111
         }
 
@@ -22,8 +28,12 @@ namespace Wyd.System
             Meshed
         }
 
-        public const GenerationStep INITIAL_STEP = GenerationStep.RawTerrain;
+        public const GenerationStep INITIAL_TERRAIN_STEP = GenerationStep.RawTerrain;
         public const GenerationStep FINAL_TERRAIN_STEP = GenerationStep.Accents;
-        public const GenerationStep FINAL_STEP = GenerationStep.Meshing;
+
+        public Bounds Bounds { get; private set; }
+        public LinkedList<RLENode<ushort>> Blocks { get; private set; }
+
+        public GenerationData(Bounds bounds, LinkedList<RLENode<ushort>> blocks) => (Bounds, Blocks) = (bounds, blocks);
     }
 }

@@ -7,6 +7,7 @@ using Serilog;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using Wyd.Controllers.State;
+using Wyd.Controllers.World.Chunk;
 using Wyd.Game;
 using Wyd.Game.Entities;
 using Wyd.Game.World;

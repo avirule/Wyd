@@ -13,7 +13,7 @@ using Wyd.System.Compression;
 
 #endregion
 
-namespace Wyd.Controllers.World
+namespace Wyd.Controllers.World.Chunk
 {
     public class ChunkBlocksController : MonoBehaviour
     {

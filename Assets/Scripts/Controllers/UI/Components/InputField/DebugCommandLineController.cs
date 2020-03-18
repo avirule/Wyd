@@ -6,6 +6,7 @@ using TMPro;
 using UnityEngine;
 using Wyd.Controllers.State;
 using Wyd.Controllers.World;
+using Wyd.Controllers.World.Chunk;
 
 #endregion
 

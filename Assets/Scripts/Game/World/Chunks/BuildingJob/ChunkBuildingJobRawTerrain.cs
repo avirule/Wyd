@@ -6,6 +6,7 @@ using Serilog;
 using UnityEngine;
 using Wyd.Controllers.State;
 using Wyd.Controllers.World;
+using Wyd.Controllers.World.Chunk;
 using Wyd.Game.World.Blocks;
 using Wyd.System;
 using Wyd.System.Compression;
@@ -29,10 +30,10 @@ namespace Wyd.Game.World.Chunks.BuildingJob
         public bool GpuAcceleration;
         public ChunkBuilderNoiseValues NoiseValues;
 
-        public void Set(Bounds bounds, ref LinkedList<RLENode<ushort>> blocks, float frequency, float persistence,
+        public void SetData(GenerationData generationData, float frequency, float persistence,
             bool gpuAcceleration = false, ComputeBuffer noiseValuesBuffer = null)
         {
-            Set(bounds, ref blocks);
+            SetGenerationData(generationData);
 
             Frequency = frequency;
             Persistence = persistence;
@@ -65,10 +66,10 @@ namespace Wyd.Game.World.Chunks.BuildingJob
 
         public void Generate(bool useGpu = false, float[] noiseValues = null)
         {
-            if (_Blocks == default)
+            if (_GenerationData.Blocks == default)
             {
                 Log.Error(
-                    $"Field `{nameof(_Blocks)}` has not been properly set. Cancelling operation.");
+                    $"Field `{nameof(_GenerationData.Blocks)}` has not been properly set. Cancelling operation.");
                 return;
             }
 
@@ -79,7 +80,7 @@ namespace Wyd.Game.World.Chunks.BuildingJob
                 useGpu = false;
             }
 
-            _Blocks.Clear();
+            _GenerationData.Blocks.Clear();
 
             bool firstIteration = true;
             ushort currentId = 0;
@@ -92,7 +93,6 @@ namespace Wyd.Game.World.Chunks.BuildingJob
                 (int x, int y, int z) = Mathv.GetIndexAs3D(index, ChunkController.Size);
 
                 ushort nextId = GetBlockToGenerate(new Vector3Int(x, y, z), index, useGpu, noiseValues);
-                LocalBlocksCache.Add(nextId);
 
                 if (firstIteration)
                 {
@@ -114,8 +114,6 @@ namespace Wyd.Game.World.Chunks.BuildingJob
                     runLength = 1;
                 }
             }
-
-            LocalBlocksCache.Clear();
         }
 
         private ushort GetBlockToGenerate(Vector3Int position, int index, bool useGpu = false,
@@ -138,7 +136,7 @@ namespace Wyd.Game.World.Chunks.BuildingJob
             {
                 return _BlockIdGrass;
             }
-            
+
 //            if (noiseValue >= 0.01f)
 //            {
 //                int indexAbove = index + yIndexStep;
@@ -170,7 +168,7 @@ namespace Wyd.Game.World.Chunks.BuildingJob
         protected float GetNoiseValueByVector3(Vector3 pos3d)
         {
             float noiseValue = OpenSimplex_FastNoise.GetSimplex(WorldController.Current.Seed, Frequency,
-                _Bounds.min.x + pos3d.x, _Bounds.min.y + pos3d.y, _Bounds.min.z + pos3d.z);
+                _GenerationData.Bounds.min.x + pos3d.x, _GenerationData.Bounds.min.y + pos3d.y, _GenerationData.Bounds.min.z + pos3d.z);
             noiseValue += 5f * (1f - Mathf.InverseLerp(0f, ChunkController.Size.y, pos3d.y));
             noiseValue /= pos3d.y + (-1f * Persistence);
 
@@ -180,9 +178,9 @@ namespace Wyd.Game.World.Chunks.BuildingJob
         private void AddBlockSequentialAware(ushort blockId, uint runLength)
         {
             // allocate from the front since we are adding from top to bottom (i.e. last to first)
-            if (_Blocks.Count > 0)
+            if (_GenerationData.Blocks.Count > 0)
             {
-                LinkedListNode<RLENode<ushort>> firstNode = _Blocks.First;
+                LinkedListNode<RLENode<ushort>> firstNode = _GenerationData.Blocks.First;
 
                 if (firstNode.Value.Value == blockId)
                 {
@@ -190,12 +188,12 @@ namespace Wyd.Game.World.Chunks.BuildingJob
                 }
                 else
                 {
-                    _Blocks.AddFirst(new RLENode<ushort>(runLength, blockId));
+                    _GenerationData.Blocks.AddFirst(new RLENode<ushort>(runLength, blockId));
                 }
             }
             else
             {
-                _Blocks.AddFirst(new RLENode<ushort>(runLength, blockId));
+                _GenerationData.Blocks.AddFirst(new RLENode<ushort>(runLength, blockId));
             }
         }
     }

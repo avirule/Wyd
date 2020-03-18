@@ -1,8 +1,6 @@
 #region
 
 using System;
-using System.Collections.Generic;
-using System.Diagnostics.CodeAnalysis;
 using Serilog;
 using UnityEngine;
 using UnityEngine.Rendering;
@@ -14,7 +12,7 @@ using Wyd.System;
 
 #endregion
 
-namespace Wyd.Controllers.World
+namespace Wyd.Controllers.World.Chunk
 {
     public class ChunkController : MonoBehaviour
     {
