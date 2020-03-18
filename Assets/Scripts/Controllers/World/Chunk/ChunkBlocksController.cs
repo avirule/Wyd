@@ -7,6 +7,7 @@ using UnityEngine;
 using Wyd.Controllers.State;
 using Wyd.Game.World.Blocks;
 using Wyd.Game.World.Chunks;
+using Wyd.Game.World.Chunks.Events;
 using Wyd.System;
 using Wyd.System.Collections;
 using Wyd.System.Compression;
@@ -15,7 +16,7 @@ using Wyd.System.Compression;
 
 namespace Wyd.Controllers.World.Chunk
 {
-    public class ChunkBlocksController : MonoBehaviour
+    public class ChunkBlocksController : ActivationStateChunkController
     {
         private static readonly ObjectCache<BlockAction> _BlockActionsCache =
             new ObjectCache<BlockAction>(true, true, 1024);
@@ -23,8 +24,6 @@ namespace Wyd.Controllers.World.Chunk
 
         #region INSTANCE MEMBERS
 
-        private Transform _SelfTransform;
-        private Bounds _Bounds;
         private Queue<BlockAction> _BlockActions;
 
         public LinkedList<RLENode<ushort>> Blocks;
@@ -32,11 +31,9 @@ namespace Wyd.Controllers.World.Chunk
         #endregion
 
 
-        public void Awake()
+        public override void Awake()
         {
-            _SelfTransform = transform;
-            Vector3 position = _SelfTransform.position;
-            _Bounds.SetMinMax(position, position + ChunkController.Size);
+            base.Awake();
 
             Blocks = new LinkedList<RLENode<ushort>>();
             _BlockActions = new Queue<BlockAction>();
@@ -59,6 +56,23 @@ namespace Wyd.Controllers.World.Chunk
             }
         }
 
+        public void Activate(Vector3 position, bool setPosition)
+        {
+            base.Activate(position, setPosition);
+            ClearInternalData();
+        }
+
+        public override void Deactivate()
+        {
+            base.Deactivate();
+            ClearInternalData();
+        }
+
+        private void ClearInternalData()
+        {
+            _BlockActions.Clear();
+            Blocks.Clear();
+        }
 
         [SuppressMessage("ReSharper", "InconsistentNaming")]
         private static IEnumerable<Vector3> DetermineDirectionsForNeighborUpdate(Vector3 localPosition)

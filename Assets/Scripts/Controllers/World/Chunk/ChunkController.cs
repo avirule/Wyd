@@ -7,23 +7,22 @@ using UnityEngine.Rendering;
 using Wyd.Controllers.State;
 using Wyd.Game;
 using Wyd.Game.Entities;
-using Wyd.Game.World.Chunks;
+using Wyd.Game.World.Chunks.Events;
 using Wyd.System;
 
 #endregion
 
 namespace Wyd.Controllers.World.Chunk
 {
-    public class ChunkController : MonoBehaviour
+    public class ChunkController : ActivationStateChunkController
     {
+        // todo Size should be somewhere that makes more sense, I think
         public static readonly Vector3Int Size = new Vector3Int(32, 256, 32);
         public static readonly int SizeProduct = Size.Product();
         public static readonly int YIndexStep = Size.x * Size.z;
 
         #region INSTANCE MEMBERS
 
-        private Bounds _Bounds;
-        private Transform _SelfTransform;
         private IEntity _CurrentLoader;
 
         private bool _Visible;
@@ -75,7 +74,16 @@ namespace Wyd.Controllers.World.Chunk
         public ChunkBlocksController BlocksController;
 
         [SerializeField]
+        private ChunkTerrainController TerrainController;
+
+        [SerializeField]
+        private ChunkMeshController MeshController;
+
+
+        [SerializeField]
         public ChunkGenerationController GenerationController;
+
+        public ChunkController(Bounds bounds) : base(bounds) { }
 
         #endregion
 
@@ -139,24 +147,28 @@ namespace Wyd.Controllers.World.Chunk
 
         public void Activate(Vector3 position)
         {
-            _SelfTransform.position = position;
-            _Bounds.SetMinMax(position, position + Size);
-            _Visible = MeshRenderer.enabled;
-
-            GenerationController.Activate();
+            base.Activate(position, true);
+            BlocksController.Activate(position, false);
+            TerrainController.Activate(position, false);
+            MeshController.Activate(position, false);
             gameObject.SetActive(true);
+
+            _Visible = MeshRenderer.enabled;
         }
 
-        public void Deactivate()
+        public override void Deactivate()
         {
+            base.Deactivate();
+            BlocksController.Deactivate();
+            TerrainController.Deactivate();
+            MeshController.Deactivate();
+
             if (_CurrentLoader != default)
             {
                 _CurrentLoader.ChunkPositionChanged -= OnCurrentLoaderChangedChunk;
                 _CurrentLoader = default;
             }
 
-            StopAllCoroutines();
-            GenerationController.Deactivate();
             gameObject.SetActive(false);
         }
 
@@ -175,8 +187,6 @@ namespace Wyd.Controllers.World.Chunk
 
 
         #region HELPER METHODS
-
-
 
         // public byte[] ToSerialized()
         // {
@@ -250,14 +260,8 @@ namespace Wyd.Controllers.World.Chunk
 
         // todo chunk load failed event
 
-        public event EventHandler<ChunkChangedEventArgs> MeshChanged;
         public event EventHandler<ChunkChangedEventArgs> DeactivationCallback;
         public event EventHandler<ChunkChangedEventArgs> Destroyed;
-
-        protected virtual void OnMeshChanged(object sender, ChunkChangedEventArgs args)
-        {
-            MeshChanged?.Invoke(sender, args);
-        }
 
         protected virtual void OnDestroyed(object sender, ChunkChangedEventArgs args)
         {

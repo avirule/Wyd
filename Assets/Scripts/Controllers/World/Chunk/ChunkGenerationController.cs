@@ -7,6 +7,7 @@ using Wyd.Controllers.State;
 using Wyd.Game;
 using Wyd.Game.World.Chunks;
 using Wyd.Game.World.Chunks.BuildingJob;
+using Wyd.Game.World.Chunks.Events;
 using Wyd.System;
 using Wyd.System.Collections;
 using Wyd.System.Extensions;

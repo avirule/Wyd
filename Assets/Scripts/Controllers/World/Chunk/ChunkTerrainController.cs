@@ -1,9 +1,13 @@
 #region
 
 using System;
+using System.Linq;
 using UnityEngine;
 using Wyd.Controllers.State;
+using Wyd.Game;
+using Wyd.Game.World.Chunks;
 using Wyd.Game.World.Chunks.BuildingJob;
+using Wyd.Game.World.Chunks.Events;
 using Wyd.System;
 using Wyd.System.Collections;
 using Wyd.System.Extensions;
@@ -13,7 +17,7 @@ using Wyd.System.Jobs;
 
 namespace Wyd.Controllers.World.Chunk
 {
-    public class ChunkTerrainController : MonoBehaviour
+    public class ChunkTerrainController : ActivationStateChunkController
     {
         private static readonly ObjectCache<ChunkBuildingJobRawTerrain> _ChunkRawTerrainBuilderCache =
             new ObjectCache<ChunkBuildingJobRawTerrain>(true);
@@ -25,8 +29,6 @@ namespace Wyd.Controllers.World.Chunk
 
         private TimeSpan _AggregateBuildTime;
         private ComputeShader _NoiseShader;
-        private Transform _SelfTransform;
-        private Bounds _Bounds;
 
         private object _JobIdentity;
 
@@ -42,17 +44,15 @@ namespace Wyd.Controllers.World.Chunk
 
         #endregion
 
-        public void Awake()
+        public override void Awake()
         {
+            base.Awake();
+
             _NoiseShader = GameController.LoadResource<ComputeShader>(@"Graphics\Shaders\NoiseComputationShader");
             _NoiseShader.SetInt("_NoiseSeed", WorldController.Current.Seed);
             _NoiseShader.SetVector("_MaximumSize",
                 new Vector4(ChunkController.Size.x, ChunkController.Size.y,
                     ChunkController.Size.z, 0f));
-
-            _SelfTransform = transform;
-            Vector3 position = _SelfTransform.position;
-            _Bounds.SetMinMax(position, position + ChunkController.Size);
         }
 
         public void Update()
@@ -77,17 +77,15 @@ namespace Wyd.Controllers.World.Chunk
 
         #region DE/ACTIVATION
 
-        public void Activate()
+        public override void Activate(Vector3 position, bool setPosition)
         {
-            _SelfTransform = transform;
-            Vector3 position = _SelfTransform.position;
-            _Bounds.SetMinMax(position, position + ChunkController.Size);
-
+            base.Activate(position, setPosition);
             ClearInternalData();
         }
 
-        public void Deactivate()
+        public override void Deactivate()
         {
+            base.Deactivate();
             ClearInternalData();
         }
 
@@ -188,6 +186,13 @@ namespace Wyd.Controllers.World.Chunk
 
         #region EVENTS
 
+        private event ChunkChangedEventHandler TerrainChanged;
+
+        private void OnTerrainChanged(object sender, ChunkChangedEventArgs args)
+        {
+            TerrainChanged?.Invoke(sender, args);
+        }
+
         private void OnJobFinished(object sender, JobEventArgs args)
         {
             if (args.Job.Identity != _JobIdentity)
@@ -199,11 +204,11 @@ namespace Wyd.Controllers.World.Chunk
             {
                 case GenerationData.GenerationStep.RawTerrain:
                     _AggregateBuildTime += args.Job.ExecutionTime;
-                    //OnBlocksChanged(new ChunkChangedEventArgs(_Bounds, Directions.CardinalDirectionsVector3));
+                    OnTerrainChanged(this, new ChunkChangedEventArgs(_Bounds, Directions.CardinalDirectionsVector3));
                     break;
                 case GenerationData.GenerationStep.Accents:
                     _AggregateBuildTime += args.Job.ExecutionTime;
-                    //OnBlocksChanged(new ChunkChangedEventArgs(_Bounds, Enumerable.Empty<Vector3>()));
+                    OnTerrainChanged(this, new ChunkChangedEventArgs(_Bounds, Enumerable.Empty<Vector3>()));
                     break;
                 case GenerationData.GenerationStep.Complete:
                     break;
