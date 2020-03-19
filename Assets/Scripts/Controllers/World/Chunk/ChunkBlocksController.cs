@@ -249,7 +249,7 @@ namespace Wyd.Controllers.World.Chunk
                     "Given position must be within chunk's bounds.");
             }
 
-            int localPosition1d = (globalPosition - _SelfTransform.position).To1D(ChunkController.Size, true);
+            int localPosition1d = (globalPosition - _Position).To1D(ChunkController.Size, true);
 
             uint totalPositions = 0;
             LinkedListNode<RLENode<ushort>> currentNode = Blocks.First;
@@ -279,7 +279,7 @@ namespace Wyd.Controllers.World.Chunk
                 return false;
             }
 
-            int localPosition1d = (globalPosition - _SelfTransform.position).To1D(ChunkController.Size, true);
+            int localPosition1d = (globalPosition - _Position).To1D(ChunkController.Size, true);
 
             uint totalPositions = 0;
             LinkedListNode<RLENode<ushort>> currentNode = Blocks.First;
@@ -305,11 +305,11 @@ namespace Wyd.Controllers.World.Chunk
 
         public bool TryPlaceBlockAt(Vector3 globalPosition, ushort id) =>
             _Bounds.Contains(globalPosition)
-            && TryAllocateBlockAction(globalPosition - _SelfTransform.position, id);
+            && TryAllocateBlockAction(globalPosition - _Position, id);
 
         public bool TryRemoveBlockAt(Vector3 globalPosition) =>
             _Bounds.Contains(globalPosition)
-            && TryAllocateBlockAction(globalPosition - _SelfTransform.position, BlockController.AIR_ID);
+            && TryAllocateBlockAction(globalPosition - _Position, BlockController.AIR_ID);
 
         private bool TryAllocateBlockAction(Vector3 localPosition, ushort id)
         {

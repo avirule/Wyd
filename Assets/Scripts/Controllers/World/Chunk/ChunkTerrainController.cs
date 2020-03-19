@@ -55,7 +55,7 @@ namespace Wyd.Controllers.World.Chunk
                     ChunkController.Size.z, 0f));
         }
 
-        public void Update()
+        private void Update()
         {
             // if we've passed safe frame time for target
             // fps, then skip updates as necessary to reach
@@ -67,13 +67,14 @@ namespace Wyd.Controllers.World.Chunk
 
             if (Generating
                 || (CurrentStep == GenerationData.GenerationStep.Complete)
-                || (WorldController.Current.AggregateNeighborsStep(_SelfTransform.position) < CurrentStep))
+                || (WorldController.Current.AggregateNeighborsStep(_Position) < CurrentStep))
             {
                 return;
             }
 
             ExecuteStep(CurrentStep);
         }
+
 
         #region DE/ACTIVATION
 
@@ -140,13 +141,13 @@ namespace Wyd.Controllers.World.Chunk
                 return;
             }
 
-            ChunkBuildingJobRawTerrain job = _ChunkRawTerrainBuilderCache.RetrieveItem();
+            ChunkBuildingJobRawTerrain job = _ChunkRawTerrainBuilderCache.RetrieveItem() ?? new ChunkBuildingJobRawTerrain();
 
             if (OptionsController.Current.GPUAcceleration)
             {
                 ComputeBuffer noiseBuffer = new ComputeBuffer(ChunkController.Size.Product(), 4);
                 int kernel = _NoiseShader.FindKernel("CSMain");
-                _NoiseShader.SetVector("_Offset", _SelfTransform.position);
+                _NoiseShader.SetVector("_Offset", _Position);
                 _NoiseShader.SetFloat("_Frequency", frequency);
                 _NoiseShader.SetFloat("_Persistence", persistence);
                 _NoiseShader.SetBuffer(kernel, "Result", noiseBuffer);
@@ -154,8 +155,7 @@ namespace Wyd.Controllers.World.Chunk
                 _NoiseShader.Dispatch(kernel, ChunkController.Size.Product() / 1024, 1, 1);
 
                 job.SetData(new GenerationData(_Bounds, BlocksController.Blocks), frequency, persistence,
-                    OptionsController.Current.GPUAcceleration,
-                    noiseBuffer);
+                    OptionsController.Current.GPUAcceleration, noiseBuffer);
             }
             else
             {
@@ -173,7 +173,7 @@ namespace Wyd.Controllers.World.Chunk
                 return;
             }
 
-            ChunkBuildingJobAccents job = _ChunkAccentsBuilderCache.RetrieveItem();
+            ChunkBuildingJobAccents job = _ChunkAccentsBuilderCache.RetrieveItem() ?? new ChunkBuildingJobAccents();
 
             job.SetGenerationData(new GenerationData(_Bounds, BlocksController.Blocks));
 

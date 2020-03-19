@@ -12,6 +12,7 @@ namespace Wyd.Controllers.World.Chunk
 
         protected Transform _SelfTransform;
         protected Bounds _Bounds;
+        protected Vector3 _Position;
 
         #endregion
 
@@ -22,18 +23,19 @@ namespace Wyd.Controllers.World.Chunk
         protected virtual void Awake()
         {
             _SelfTransform = transform;
-            Vector3 position = _SelfTransform.position;
-            _Bounds.SetMinMax(position, position + ChunkController.Size);
+            _Position = _SelfTransform.position;
+            _Bounds.SetMinMax(_Position, _Position + ChunkController.Size);
         }
 
         public virtual void Activate(Vector3 position, bool setPosition)
         {
             if (setPosition)
             {
-                _SelfTransform.position = position;
+                _SelfTransform.position = _Position = position;
             }
 
-            _Bounds.SetMinMax(position, position + ChunkController.Size);
+            _Bounds.SetMinMax(_Position, _Position + ChunkController.Size);
+
         }
 
         public virtual void Deactivate()

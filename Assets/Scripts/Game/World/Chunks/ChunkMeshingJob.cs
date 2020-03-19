@@ -32,7 +32,7 @@ namespace Wyd.Game.World.Chunks
 
         protected override void Process()
         {
-            ChunkMesher mesher = _ChunkMesherCache.RetrieveItem();
+            ChunkMesher mesher = _ChunkMesherCache.RetrieveItem() ?? new ChunkMesher();
 
             mesher.AbortToken = AbortToken;
             mesher.Size = ChunkController.Size;

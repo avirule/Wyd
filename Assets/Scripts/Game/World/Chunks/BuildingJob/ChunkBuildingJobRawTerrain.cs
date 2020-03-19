@@ -57,6 +57,7 @@ namespace Wyd.Game.World.Chunks.BuildingJob
         protected override void Process()
         {
             Generate(GpuAcceleration, NoiseValues?.NoiseValues);
+
         }
 
         protected override void ProcessFinished()
