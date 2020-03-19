@@ -26,12 +26,13 @@ namespace Wyd.Controllers.World.Chunk
 
         private Queue<BlockAction> _BlockActions;
 
-        public LinkedList<RLENode<ushort>> Blocks;
+        public LinkedList<RLENode<ushort>> Blocks { get; private set; }
+        public int QueuedBlockActions => _BlockActions.Count;
 
         #endregion
 
 
-        public override void Awake()
+        protected override void Awake()
         {
             base.Awake();
 
@@ -56,7 +57,7 @@ namespace Wyd.Controllers.World.Chunk
             }
         }
 
-        public void Activate(Vector3 position, bool setPosition)
+        public override void Activate(Vector3 position, bool setPosition)
         {
             base.Activate(position, setPosition);
             ClearInternalData();

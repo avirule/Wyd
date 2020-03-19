@@ -19,7 +19,7 @@ namespace Wyd.Controllers.World.Chunk
 
         public ActivationStateChunkController(Bounds bounds) => _Bounds = bounds;
 
-        public virtual void Awake()
+        protected virtual void Awake()
         {
             _SelfTransform = transform;
             Vector3 position = _SelfTransform.position;

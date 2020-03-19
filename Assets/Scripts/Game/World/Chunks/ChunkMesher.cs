@@ -10,6 +10,7 @@ using Wyd.Controllers.State;
 using Wyd.Controllers.World;
 using Wyd.Game.World.Blocks;
 using Wyd.System;
+using Wyd.System.Compression;
 
 // ReSharper disable TooWideLocalVariableScope
 
@@ -25,23 +26,11 @@ namespace Wyd.Game.World.Chunks
         private readonly List<Vector3> _UVs;
 
         private readonly List<MeshBlock> _Blocks;
-        private Bounds _Bounds;
-        private Vector3 _Position;
         private Vector3Int _Size;
         private int _YIndexStep;
 
         public CancellationToken AbortToken;
         public bool AggressiveFaceMerging;
-
-        public Bounds Bounds
-        {
-            get => _Bounds;
-            set
-            {
-                _Bounds = value;
-                _Position = _Bounds.min;
-            }
-        }
 
         public Vector3Int Size
         {
@@ -112,11 +101,11 @@ namespace Wyd.Game.World.Chunks
                 _Blocks.Add(new MeshBlock(id));
             }
         }
-        
-        public void GenerateMesh(IEnumerable<ushort> blocks)
+
+        public void GenerateMesh(GenerationData generationData)
         {
-            SetBlockData(blocks);
-            
+            SetBlockData(RunLengthCompression.DecompressLinkedList(generationData.Blocks));
+
             int index = -1;
             foreach (MeshBlock block in _Blocks)
             {
@@ -135,16 +124,16 @@ namespace Wyd.Game.World.Chunks
                 }
                 else
                 {
-                    TraverseIndex(index, localPosition);
+                    TraverseIndex(generationData.Bounds.min, index, localPosition);
                 }
             }
         }
 
         #region SIMPLER MESHING
 
-        private void TraverseIndexTransparent(int index, Vector3Int localPosition)
+        private void TraverseIndexTransparent(Vector3 position, int index, Vector3Int localPosition)
         {
-            Vector3 globalPosition = _Position + localPosition;
+            Vector3 globalPosition = position + localPosition;
 
             if (!_Blocks[index].Faces.HasFace(Direction.North)
                 && (((localPosition.z == (Size.z - 1))
@@ -471,9 +460,9 @@ namespace Wyd.Game.World.Chunks
             }
         }
 
-        private void TraverseIndex(int index, Vector3Int localPosition)
+        private void TraverseIndex(Vector3 position, int index, Vector3Int localPosition)
         {
-            Vector3 globalPosition = _Position + localPosition;
+            Vector3 globalPosition = position + localPosition;
 
             // ensure this block face hasn't already been traversed
             if (!_Blocks[index].Faces.HasFace(Direction.North)
@@ -481,7 +470,7 @@ namespace Wyd.Game.World.Chunks
                 && (((localPosition.z == (Size.z - 1))
                      && WorldController.Current.TryGetBlockAt(globalPosition + Vector3.forward, out ushort blockId)
                      && BlockController.Current.CheckBlockHasProperty(blockId, BlockRule.Property.Transparent))
-                    // however if we're inside the chunk, use the proper Blocks[] array index for check 
+                    // however if we're inside the chunk, use the proper Blocks[] array index for check
                     || ((localPosition.z < (Size.z - 1))
                         && BlockController.Current.CheckBlockHasProperty(_Blocks[index + Size.x].Id,
                             BlockRule.Property.Transparent))))

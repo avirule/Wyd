@@ -7,7 +7,7 @@ using Wyd.Controllers.State;
 
 namespace Wyd.Controllers.UI.Diagnostics
 {
-    public class DiagnosticsController : MonoBehaviour
+    public class DiagnosticUIController : MonoBehaviour
     {
         private bool _DiagnosticKeyPressed;
 

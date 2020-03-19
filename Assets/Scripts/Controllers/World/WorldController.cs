@@ -58,7 +58,6 @@ namespace Wyd.Controllers.World
             private set => _SpawnPoint = value;
         }
 
-        public event EventHandler<ChunkChangedEventArgs> ChunkBlocksChanged;
         public event EventHandler<ChunkChangedEventArgs> ChunkMeshChanged;
 
         #region DEBUG
@@ -166,8 +165,7 @@ namespace Wyd.Controllers.World
                 return;
             }
 
-            chunkController.BlocksController.BlocksChanged -= OnChunkBlocksChanged;
-            chunkController.MeshChanged -= OnChunkMeshChanged;
+            chunkController.Changed -= OnChunkMeshChanged;
             chunkController.DeactivationCallback -= OnChunkDeactivationCallback;
 
             _Chunks.Remove(chunkPosition);
@@ -240,8 +238,7 @@ namespace Wyd.Controllers.World
                         chunkController.Activate(position);
                     }
 
-                    chunkController.BlocksController.BlocksChanged += OnChunkBlocksChanged;
-                    chunkController.MeshChanged += OnChunkMeshChanged;
+                    chunkController.Changed += OnChunkMeshChanged;
                     chunkController.DeactivationCallback += OnChunkDeactivationCallback;
 
                     chunkController.AssignLoader(ref loader);
@@ -266,7 +263,7 @@ namespace Wyd.Controllers.World
             if (TryGetChunkAt(globalChunkPosition.RoundBy(ChunkController.Size),
                 out ChunkController chunkController))
             {
-                chunkController.GenerationController.RequestMeshUpdate();
+                chunkController.FlagMeshForUpdate();
             }
         }
 
@@ -296,12 +293,6 @@ namespace Wyd.Controllers.World
             _EntitiesPendingChunkBuilding.Push(loader);
         }
 
-        private void OnChunkBlocksChanged(object sender, ChunkChangedEventArgs args)
-        {
-            FlagNeighborsForMeshUpdate(args.ChunkBounds.min, args.NeighborDirectionsToUpdate);
-
-            ChunkBlocksChanged?.Invoke(sender, args);
-        }
 
         private void OnChunkMeshChanged(object sender, ChunkChangedEventArgs args)
         {
@@ -391,25 +382,25 @@ namespace Wyd.Controllers.World
             if (TryGetChunkAt(position + (Vector3.forward * ChunkController.Size.z),
                 out ChunkController northChunk))
             {
-                generationStep &= northChunk.GenerationController.CurrentStep;
+                generationStep &= northChunk.CurrentStep;
             }
 
             if (TryGetChunkAt(position + (Vector3.right * ChunkController.Size.x),
                 out ChunkController eastChunk))
             {
-                generationStep &= eastChunk.GenerationController.CurrentStep;
+                generationStep &= eastChunk.CurrentStep;
             }
 
             if (TryGetChunkAt(position + (Vector3.back * ChunkController.Size.z),
                 out ChunkController southChunk))
             {
-                generationStep &= southChunk.GenerationController.CurrentStep;
+                generationStep &= southChunk.CurrentStep;
             }
 
             if (TryGetChunkAt(position + (Vector3.left * ChunkController.Size.x),
                 out ChunkController westChunk))
             {
-                generationStep &= westChunk.GenerationController.CurrentStep;
+                generationStep &= westChunk.CurrentStep;
             }
 
             return generationStep;

@@ -14,8 +14,8 @@ namespace Wyd.System
         [Flags]
         public enum GenerationStep : ushort
         {
-            RawTerrain = 0b0000_0000_0000_0001,
-            Accents = 0b0000_0000_0000_0011,
+            RawTerrain = 0b0000_0000_0000_0000,
+            Accents = 0b0000_0000_0000_0001,
             Complete = 0b1111_1111_1111_1111
         }
 
@@ -24,7 +24,6 @@ namespace Wyd.System
             Unmeshed,
             UpdateRequested,
             PendingGeneration,
-            MeshPending,
             Meshed
         }
 

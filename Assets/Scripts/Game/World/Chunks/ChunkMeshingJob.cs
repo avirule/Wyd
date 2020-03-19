@@ -1,10 +1,13 @@
 #region
 
 using System.Collections.Generic;
+using UnityEditor.AI;
 using UnityEngine;
 using Wyd.Controllers.World;
 using Wyd.Controllers.World.Chunk;
 using Wyd.Game.World.Blocks;
+using Wyd.System;
+using Wyd.System.Collections;
 using Wyd.System.Compression;
 using Wyd.System.Jobs;
 
@@ -14,55 +17,36 @@ namespace Wyd.Game.World.Chunks
 {
     public class ChunkMeshingJob : Job
     {
+        private static readonly ObjectCache<ChunkMesher> _ChunkMesherCache = new ObjectCache<ChunkMesher>(true);
+
         private ChunkMesher _Mesher;
-        private LinkedList<RLENode<ushort>> _Blocks;
+        private readonly GenerationData _GenerationData;
+        private readonly bool _AggressiveFaceMerging;
 
-        /// <summary>
-        ///     Prepares item for new execution.
-        /// </summary>
-        /// <param name="bounds"></param>
-        /// <param name="blocks">Pre-initialized and built <see cref="T:ushort[]" /> to iterate through.</param>
-        /// <param name="aggressiveFaceMerging"></param>
-        /// <param name="isRemesh"></param>
-        public void SetData(Bounds bounds, LinkedList<RLENode<ushort>> blocks, bool aggressiveFaceMerging, bool isRemesh = false)
+        public ChunkMeshingJob(GenerationData generationData, bool aggressiveFaceMerging)
         {
-            if (_Mesher == null)
-            {
-                _Mesher = new ChunkMesher();
-            }
-
-            _Blocks = blocks;
-            _Mesher.AbortToken = AbortToken;
-            _Mesher.Bounds = bounds;
-            _Mesher.Size = ChunkController.Size;
-            _Mesher.AggressiveFaceMerging = false;
-            _Mesher.ClearData();
+            _Mesher = null;
+            _GenerationData = generationData;
+            _AggressiveFaceMerging = aggressiveFaceMerging;
         }
 
         protected override void Process()
         {
-            if (_Blocks == null)
-            {
-                return;
-            }
+            ChunkMesher mesher = _ChunkMesherCache.RetrieveItem();
 
-            _Mesher.GenerateMesh(RunLengthCompression.DecompressLinkedList(_Blocks));
+            mesher.AbortToken = AbortToken;
+            mesher.Size = ChunkController.Size;
+            mesher.AggressiveFaceMerging = _AggressiveFaceMerging;
+            mesher.ClearData();
+
+            mesher.GenerateMesh(_GenerationData);
+
+            _Mesher = mesher;
         }
 
         public void SetMesh(ref Mesh mesh)
         {
             _Mesher.SetMesh(ref mesh);
-        }
-
-        private static void ClearAllFaces(Block[] blocks)
-        {
-            for (int index = 0; index < blocks.Length; index++)
-            {
-                if (blocks[index].HasAnyFaces())
-                {
-                    blocks[index].ClearFaces();
-                }
-            }
         }
     }
 }

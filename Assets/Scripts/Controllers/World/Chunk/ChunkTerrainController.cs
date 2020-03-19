@@ -44,7 +44,7 @@ namespace Wyd.Controllers.World.Chunk
 
         #endregion
 
-        public override void Awake()
+        protected override void Awake()
         {
             base.Awake();
 
@@ -140,8 +140,7 @@ namespace Wyd.Controllers.World.Chunk
                 return;
             }
 
-            ChunkBuildingJobRawTerrain job = _ChunkRawTerrainBuilderCache.RetrieveItem()
-                                             ?? new ChunkBuildingJobRawTerrain();
+            ChunkBuildingJobRawTerrain job = _ChunkRawTerrainBuilderCache.RetrieveItem();
 
             if (OptionsController.Current.GPUAcceleration)
             {
@@ -174,7 +173,7 @@ namespace Wyd.Controllers.World.Chunk
                 return;
             }
 
-            ChunkBuildingJobAccents job = _ChunkAccentsBuilderCache.RetrieveItem() ?? new ChunkBuildingJobAccents();
+            ChunkBuildingJobAccents job = _ChunkAccentsBuilderCache.RetrieveItem();
 
             job.SetGenerationData(new GenerationData(_Bounds, BlocksController.Blocks));
 
@@ -186,7 +185,7 @@ namespace Wyd.Controllers.World.Chunk
 
         #region EVENTS
 
-        private event ChunkChangedEventHandler TerrainChanged;
+        public event ChunkChangedEventHandler TerrainChanged;
 
         private void OnTerrainChanged(object sender, ChunkChangedEventArgs args)
         {

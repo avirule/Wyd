@@ -1,8 +1,11 @@
 #region
 
-using System;
 using UnityEngine;
+using Wyd.Controllers.State;
+using Wyd.Game;
 using Wyd.Game.World.Chunks;
+using Wyd.Game.World.Chunks.Events;
+using Wyd.System;
 
 #endregion
 
@@ -17,6 +20,7 @@ namespace Wyd.Controllers.World.Chunk
         private bool _UpdateRequested;
         private ChunkMeshingJob _PendingMeshData;
 
+        public bool Meshed { get; private set; }
         public bool Meshing { get; private set; }
 
         #endregion
@@ -34,17 +38,36 @@ namespace Wyd.Controllers.World.Chunk
 
         #endregion
 
-        public override void Awake()
+        protected override void Awake()
         {
             base.Awake();
 
             _Mesh = new Mesh();
             MeshFilter.sharedMesh = _Mesh;
+            _PendingMeshData = null;
+            Meshed = Meshing = false;
         }
 
         public void Update()
         {
-            
+            if (!WorldController.Current.IsInSafeFrameTime())
+            {
+                return;
+            }
+
+            if (_PendingMeshData != null)
+            {
+                Meshed = true;
+                _PendingMeshData.SetMesh(ref _Mesh);
+                OnMeshChanged(this, new ChunkChangedEventArgs(_Bounds, Directions.CardinalDirectionsVector3));
+            }
+
+            if (_UpdateRequested
+                && (BlocksController.QueuedBlockActions <= 0)
+                && (TerrainController.CurrentStep == GenerationData.GenerationStep.Complete))
+            {
+                BeginGeneratingMesh();
+            }
         }
 
         #region DE/ACTIVATION
@@ -74,12 +97,51 @@ namespace Wyd.Controllers.World.Chunk
 
         #endregion
 
-        public void RequestUpdate()
+        public void FlagForUpdate()
         {
             if (!_UpdateRequested)
             {
                 _UpdateRequested = true;
             }
         }
+
+        private void BeginGeneratingMesh()
+        {
+            if (Meshing)
+            {
+                return;
+            }
+
+            ChunkMeshingJob job = new ChunkMeshingJob(new GenerationData(_Bounds, BlocksController.Blocks), true);
+
+            if (!GameController.Current.TryQueueJob(job, out _JobIdentity))
+            {
+                return;
+            }
+
+            GameController.Current.JobFinished += (sender, args) =>
+            {
+                if ((args.Job.Identity == _JobIdentity) || !(args.Job is ChunkMeshingJob meshingJob))
+                {
+                    return;
+                }
+
+                _PendingMeshData = meshingJob;
+                _JobIdentity = null;
+            };
+
+            Meshing = true;
+        }
+
+        #region EVENTS
+
+        public event ChunkChangedEventHandler MeshChanged;
+
+        private void OnMeshChanged(object sender, ChunkChangedEventArgs args)
+        {
+            MeshChanged?.Invoke(sender, args);
+        }
+
+        #endregion
     }
 }

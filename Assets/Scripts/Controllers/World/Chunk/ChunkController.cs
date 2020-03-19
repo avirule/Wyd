@@ -24,12 +24,11 @@ namespace Wyd.Controllers.World.Chunk
         #region INSTANCE MEMBERS
 
         private IEntity _CurrentLoader;
-
         private bool _Visible;
         private bool _RenderShadows;
 
-
         public Vector3 Position => _Bounds.min;
+        public GenerationData.GenerationStep CurrentStep => TerrainController.CurrentStep;
 
         public bool RenderShadows
         {
@@ -79,24 +78,17 @@ namespace Wyd.Controllers.World.Chunk
         [SerializeField]
         private ChunkMeshController MeshController;
 
-
-        [SerializeField]
-        public ChunkGenerationController GenerationController;
-
         public ChunkController(Bounds bounds) : base(bounds) { }
 
         #endregion
 
-
-        #region UNITY BUILT-INS
-
-        private void Awake()
+        protected override void Awake()
         {
-            _SelfTransform = transform;
-            Vector3 position = _SelfTransform.position;
-            _Bounds.SetMinMax(position, position + Size);
+            base.Awake();
 
-            BlocksController.BlocksChanged += (sender, args) => { GenerationController.RequestMeshUpdate(); };
+            BlocksController.BlocksChanged += (sender, args) => MeshController.FlagForUpdate();
+            TerrainController.TerrainChanged += (sender, args) => MeshController.FlagForUpdate();
+            MeshController.MeshChanged += OnChanged;
 
             foreach (Material material in MeshRenderer.materials)
             {
@@ -134,14 +126,15 @@ namespace Wyd.Controllers.World.Chunk
             };
         }
 
-        private void Update() { }
-
         private void OnDestroy()
         {
             OnDestroyed(this, new ChunkChangedEventArgs(_Bounds, Directions.CardinalDirectionsVector3));
         }
 
-        #endregion
+        public void FlagMeshForUpdate()
+        {
+            MeshController.FlagForUpdate();
+        }
 
         #region DE/ACTIVATION
 
@@ -186,7 +179,64 @@ namespace Wyd.Controllers.World.Chunk
         #endregion
 
 
-        #region HELPER METHODS
+        #region INTERNAL STATE CHECKS
+
+        private static bool IsWithinLoaderRange(Vector3 difference) =>
+            difference.AllLessThanOrEqual(Size
+                                          * (OptionsController.Current.RenderDistance
+                                             + OptionsController.Current.PreLoadChunkDistance));
+
+        private static bool IsWithinRenderDistance(Vector3 difference) =>
+            difference.AllLessThanOrEqual(Size * OptionsController.Current.RenderDistance);
+
+        private static bool IsWithinShadowsDistance(Vector3 difference) =>
+            difference.AllLessThanOrEqual(Size * OptionsController.Current.ShadowDistance);
+
+        #endregion
+
+
+        #region EVENTS
+
+        // todo chunk load failed event
+
+        public event ChunkChangedEventHandler Changed;
+        public event ChunkChangedEventHandler DeactivationCallback;
+        public event ChunkChangedEventHandler Destroyed;
+
+        private void OnChanged(object sender, ChunkChangedEventArgs args)
+        {
+            Changed?.Invoke(sender, args);
+        }
+
+        protected virtual void OnDestroyed(object sender, ChunkChangedEventArgs args)
+        {
+            Destroyed?.Invoke(sender, args);
+        }
+
+        private void OnCurrentLoaderChangedChunk(object sender, Vector3 newChunkPosition)
+        {
+            if (Position == newChunkPosition)
+            {
+                return;
+            }
+
+            Vector3 difference = (Position - newChunkPosition).Abs();
+
+            if (!IsWithinLoaderRange(difference))
+            {
+                DeactivationCallback?.Invoke(this,
+                    new ChunkChangedEventArgs(_Bounds, Directions.CardinalDirectionsVector3));
+                return;
+            }
+
+            Visible = IsWithinRenderDistance(difference);
+            RenderShadows = IsWithinShadowsDistance(difference);
+        }
+
+        #endregion
+
+
+        #region SERIALIZATION
 
         // public byte[] ToSerialized()
         // {
@@ -236,57 +286,6 @@ namespace Wyd.Controllers.World.Chunk
         //
         //     return true;
         // }
-
-        #endregion
-
-
-        #region INTERNAL STATE CHECKS
-
-        private static bool IsWithinLoaderRange(Vector3 difference) =>
-            difference.AllLessThanOrEqual(Size
-                                          * (OptionsController.Current.RenderDistance
-                                             + OptionsController.Current.PreLoadChunkDistance));
-
-        private static bool IsWithinRenderDistance(Vector3 difference) =>
-            difference.AllLessThanOrEqual(Size * OptionsController.Current.RenderDistance);
-
-        private static bool IsWithinShadowsDistance(Vector3 difference) =>
-            difference.AllLessThanOrEqual(Size * OptionsController.Current.ShadowDistance);
-
-        #endregion
-
-
-        #region EVENTS
-
-        // todo chunk load failed event
-
-        public event EventHandler<ChunkChangedEventArgs> DeactivationCallback;
-        public event EventHandler<ChunkChangedEventArgs> Destroyed;
-
-        protected virtual void OnDestroyed(object sender, ChunkChangedEventArgs args)
-        {
-            Destroyed?.Invoke(sender, args);
-        }
-
-        private void OnCurrentLoaderChangedChunk(object sender, Vector3 newChunkPosition)
-        {
-            if (Position == newChunkPosition)
-            {
-                return;
-            }
-
-            Vector3 difference = (Position - newChunkPosition).Abs();
-
-            if (!IsWithinLoaderRange(difference))
-            {
-                DeactivationCallback?.Invoke(this,
-                    new ChunkChangedEventArgs(_Bounds, Directions.CardinalDirectionsVector3));
-                return;
-            }
-
-            Visible = IsWithinRenderDistance(difference);
-            RenderShadows = IsWithinShadowsDistance(difference);
-        }
 
         #endregion
     }

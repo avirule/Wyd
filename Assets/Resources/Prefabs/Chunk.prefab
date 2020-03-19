@@ -11,8 +11,9 @@ GameObject:
   - component: {fileID: 2133818191605063449}
   - component: {fileID: -925064434372530524}
   - component: {fileID: 5378599154586136568}
-  - component: {fileID: 4276170816300164440}
-  - component: {fileID: 1473434905881407646}
+  - component: {fileID: 8120247410673770892}
+  - component: {fileID: 3105495873480507178}
+  - component: {fileID: 7041328555870071864}
   - component: {fileID: 2133818191605063653}
   m_Layer: 8
   m_Name: Chunk
@@ -83,7 +84,7 @@ MeshRenderer:
   m_SortingLayerID: 0
   m_SortingLayer: 0
   m_SortingOrder: 0
---- !u!114 &4276170816300164440
+--- !u!114 &8120247410673770892
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -95,7 +96,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 2730fb551fd74e84b7017b3873c64773, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
---- !u!114 &1473434905881407646
+--- !u!114 &3105495873480507178
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -104,10 +105,25 @@ MonoBehaviour:
   m_GameObject: {fileID: 2133818191605063652}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: f16b1ad5106343b48a0db54d57f10113, type: 3}
+  m_Script: {fileID: 11500000, guid: 02483e423e48465f816b685b1f06b6cc, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  BlocksController: {fileID: 8120247410673770892}
+--- !u!114 &7041328555870071864
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2133818191605063652}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 201e6994096d4dafad67cdcb571d006f, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
   MeshFilter: {fileID: -925064434372530524}
+  BlocksController: {fileID: 8120247410673770892}
+  TerrainController: {fileID: 3105495873480507178}
 --- !u!114 &2133818191605063653
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -121,5 +137,6 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   MeshRenderer: {fileID: 5378599154586136568}
-  BlocksController: {fileID: 4276170816300164440}
-  GenerationController: {fileID: 1473434905881407646}
+  BlocksController: {fileID: 8120247410673770892}
+  TerrainController: {fileID: 3105495873480507178}
+  MeshController: {fileID: 7041328555870071864}

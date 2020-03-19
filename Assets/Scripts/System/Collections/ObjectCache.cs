@@ -31,12 +31,14 @@ namespace Wyd.System.Collections
 
             MaximumSize = maximumSize;
 
-            if (preInitialize && (maximumSize > -1) && createNewIfEmpty)
+            if (!preInitialize || (maximumSize <= -1) || !createNewIfEmpty)
             {
-                for (int i = 0; i < maximumSize; i++)
-                {
-                    _InternalCache.Push(Activator.CreateInstance<T>());
-                }
+                return;
+            }
+
+            for (int i = 0; i < maximumSize; i++)
+            {
+                _InternalCache.Push(Activator.CreateInstance<T>());
             }
         }
 
