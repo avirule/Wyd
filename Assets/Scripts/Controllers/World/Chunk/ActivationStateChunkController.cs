@@ -35,7 +35,6 @@ namespace Wyd.Controllers.World.Chunk
             }
 
             _Bounds.SetMinMax(_Position, _Position + ChunkController.Size);
-
         }
 
         public virtual void Deactivate()

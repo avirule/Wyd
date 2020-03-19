@@ -12,7 +12,7 @@ namespace Wyd.Controllers.State
         public FixedConcurrentQueue<TimeSpan> RollingChunkBuildTimes { get; private set; }
         public FixedConcurrentQueue<TimeSpan> RollingChunkMeshTimes { get; private set; }
 
-        private void Awake()
+        private void Start()
         {
             AssignCurrent(this);
 

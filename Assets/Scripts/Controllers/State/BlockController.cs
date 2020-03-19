@@ -34,11 +34,9 @@ namespace Wyd.Controllers.State
             }
 
             BlockNames = new Dictionary<string, ushort>();
-            BlockRules = new List<IBlockRule>
-            {
-                // add first value so count aligns with ids
-                null
-            };
+            BlockRules = new List<IBlockRule>();
+
+            RegisterBlockRule("air", Block.Types.None, null, BlockRule.Property.Transparent);
         }
 
         public ushort RegisterBlockRule(string blockName, Block.Types type,

@@ -51,7 +51,7 @@ namespace Wyd.System.Compression
                 {
                     yield return currentNode.Value.Value;
                 }
-                
+
                 currentNode = currentNode.Next;
             }
         }

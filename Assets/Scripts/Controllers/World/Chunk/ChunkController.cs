@@ -1,6 +1,5 @@
 #region
 
-using System;
 using Serilog;
 using UnityEngine;
 using UnityEngine.Rendering;

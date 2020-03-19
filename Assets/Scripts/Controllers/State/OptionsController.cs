@@ -53,7 +53,7 @@ namespace Wyd.Controllers.State
             // Chunking
             public const bool PRE_INITIALIZE_CHUNK_CACHE = false;
             public const int MAXIMUM_CHUNK_CACHE_SIZE = -1;
-            public const int MAXIMUM_CHUNK_LOAD_TIME_BUFFER_SIZE = 120;
+            public const int MAXIMUM_CHUNK_LOAD_TIME_BUFFER_SIZE = 6000;
             public const int PRE_LOAD_CHUNK_DISTANCE = 0;
         }
 

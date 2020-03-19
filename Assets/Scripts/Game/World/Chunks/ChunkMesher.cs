@@ -1,13 +1,12 @@
 #region
 
-using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Threading;
 using UnityEngine;
 using UnityEngine.Rendering;
 using Wyd.Controllers.State;
 using Wyd.Controllers.World;
+using Wyd.Controllers.World.Chunk;
 using Wyd.Game.World.Blocks;
 using Wyd.System;
 using Wyd.System.Compression;
@@ -53,7 +52,11 @@ namespace Wyd.Game.World.Chunks
 
         public void ClearData()
         {
-            _Blocks.Clear();
+            foreach (MeshBlock block in _Blocks)
+            {
+                block.Faces.ClearFaces();
+            }
+
             _Vertices.Clear();
             _Triangles.Clear();
             _TransparentTriangles.Clear();
@@ -95,10 +98,22 @@ namespace Wyd.Game.World.Chunks
 
         private void SetBlockData(IEnumerable<ushort> blocks)
         {
-            // enumerate blocks and assign to internal blocks array
-            foreach (ushort id in blocks)
+            if (_Blocks.Count == 0)
             {
-                _Blocks.Add(new MeshBlock(id));
+                foreach (ushort id in blocks)
+                {
+                    _Blocks.Add(new MeshBlock(id));
+                }
+            }
+            else
+            {
+                int index = 0;
+
+                foreach (ushort id in blocks)
+                {
+                    _Blocks[index].Id = id;
+                    index += 1;
+                }
             }
         }
 

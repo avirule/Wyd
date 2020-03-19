@@ -5,7 +5,6 @@ using System.Linq;
 using UnityEngine;
 using Wyd.Controllers.State;
 using Wyd.Game;
-using Wyd.Game.World.Chunks;
 using Wyd.Game.World.Chunks.BuildingJob;
 using Wyd.Game.World.Chunks.Events;
 using Wyd.System;
@@ -102,16 +101,15 @@ namespace Wyd.Controllers.World.Chunk
 
         #region RUNTIME
 
-        private bool QueueJob(Job job)
+        private void QueueJob(Job job)
         {
             if (!GameController.Current.TryQueueJob(job, out _JobIdentity))
             {
-                return false;
+                return;
             }
 
             GameController.Current.JobFinished += OnJobFinished;
             Generating = true;
-            return true;
         }
 
         private void ExecuteStep(GenerationData.GenerationStep step)
@@ -141,7 +139,8 @@ namespace Wyd.Controllers.World.Chunk
                 return;
             }
 
-            ChunkBuildingJobRawTerrain job = _ChunkRawTerrainBuilderCache.RetrieveItem() ?? new ChunkBuildingJobRawTerrain();
+            ChunkBuildingJobRawTerrain job = _ChunkRawTerrainBuilderCache.RetrieveItem()
+                                             ?? new ChunkBuildingJobRawTerrain();
 
             if (OptionsController.Current.GPUAcceleration)
             {
@@ -187,7 +186,7 @@ namespace Wyd.Controllers.World.Chunk
 
         public event ChunkChangedEventHandler TerrainChanged;
 
-        private void OnTerrainChanged(object sender, ChunkChangedEventArgs args)
+        private void OnChunkTerrainChanged(object sender, ChunkChangedEventArgs args)
         {
             TerrainChanged?.Invoke(sender, args);
         }
@@ -203,11 +202,12 @@ namespace Wyd.Controllers.World.Chunk
             {
                 case GenerationData.GenerationStep.RawTerrain:
                     _AggregateBuildTime += args.Job.ExecutionTime;
-                    OnTerrainChanged(this, new ChunkChangedEventArgs(_Bounds, Directions.CardinalDirectionsVector3));
+                    OnChunkTerrainChanged(this,
+                        new ChunkChangedEventArgs(_Bounds, Directions.CardinalDirectionsVector3));
                     break;
                 case GenerationData.GenerationStep.Accents:
                     _AggregateBuildTime += args.Job.ExecutionTime;
-                    OnTerrainChanged(this, new ChunkChangedEventArgs(_Bounds, Enumerable.Empty<Vector3>()));
+                    OnChunkTerrainChanged(this, new ChunkChangedEventArgs(_Bounds, Enumerable.Empty<Vector3>()));
                     break;
                 case GenerationData.GenerationStep.Complete:
                     break;
@@ -229,6 +229,5 @@ namespace Wyd.Controllers.World.Chunk
         }
 
         #endregion
-
     }
 }

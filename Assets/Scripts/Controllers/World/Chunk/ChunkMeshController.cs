@@ -126,6 +126,8 @@ namespace Wyd.Controllers.World.Chunk
                     return;
                 }
 
+                DiagnosticsController.Current.RollingChunkMeshTimes.Enqueue(meshingJob.ExecutionTime);
+
                 _PendingMeshData = meshingJob;
                 _JobIdentity = null;
             };

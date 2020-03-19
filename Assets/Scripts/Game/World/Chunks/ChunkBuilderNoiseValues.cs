@@ -1,6 +1,5 @@
 #region
 
-using Wyd.Controllers.World;
 using Wyd.Controllers.World.Chunk;
 using Wyd.System;
 

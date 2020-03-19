@@ -1,7 +1,6 @@
 #region
 
 using System.Collections.Generic;
-using System.Linq;
 using Serilog;
 using UnityEngine;
 using Wyd.Controllers.State;
@@ -18,6 +17,8 @@ namespace Wyd.Game.World.Chunks.BuildingJob
 {
     public class ChunkBuildingJobRawTerrain : ChunkBuildingJob
     {
+        
+
         private ushort _BlockIdBedrock;
         private ushort _BlockIdGrass;
         private ushort _BlockIdDirt;
@@ -57,7 +58,6 @@ namespace Wyd.Game.World.Chunks.BuildingJob
         protected override void Process()
         {
             Generate(GpuAcceleration, NoiseValues?.NoiseValues);
-
         }
 
         protected override void ProcessFinished()
@@ -133,35 +133,30 @@ namespace Wyd.Game.World.Chunks.BuildingJob
             // so the slowdown from this check is nonexistent, since useGpu shouldn't change in this context.
             float noiseValue = useGpu ? noiseValues[index] : GetNoiseValueByVector3(position);
 
-            if (position.y == 1)
+            if (noiseValue >= 0.01f)
             {
-                return _BlockIdGrass;
-            }
+                int indexAbove = index + yIndexStep;
 
-//            if (noiseValue >= 0.01f)
-//            {
-//                int indexAbove = index + yIndexStep;
-//
-//                if ((position.y > 135)
-//                    && BlockController.Current.CheckBlockHasProperty(LocalBlocksCache[sizeProduct - indexAbove],
-//                        BlockRule.Property.Transparent))
-//                {
-//                    return _BlockIdGrass;
-//                }
-//                // todo fix this
-//                // else if (IdExistsAboveWithinRange(index, 2, blockIdGrass))
-//                // {
-//                //     AddBlockSequentialAware(blockIdDirt);
-//                // }
-//                else
-//                {
-//                    return _BlockIdStone;
-//                }
-//            }
-//            else if ((position.y <= 155) && (position.y > 135))
-//            {
-//                return _BlockIdWater;
-//            }
+                if ((position.y > 135)
+                    && BlockController.Current.CheckBlockHasProperty(LocalBlocksCache[sizeProduct - indexAbove],
+                        BlockRule.Property.Transparent))
+                {
+                    return _BlockIdGrass;
+                }
+                // todo fix this
+                // else if (IdExistsAboveWithinRange(index, 2, blockIdGrass))
+                // {
+                //     AddBlockSequentialAware(blockIdDirt);
+                // }
+                else
+                {
+                    return _BlockIdStone;
+                }
+            }
+            else if ((position.y <= 155) && (position.y > 135))
+            {
+                return _BlockIdWater;
+            }
 
             return BlockController.AIR_ID;
         }
@@ -169,7 +164,8 @@ namespace Wyd.Game.World.Chunks.BuildingJob
         protected float GetNoiseValueByVector3(Vector3 pos3d)
         {
             float noiseValue = OpenSimplex_FastNoise.GetSimplex(WorldController.Current.Seed, Frequency,
-                _GenerationData.Bounds.min.x + pos3d.x, _GenerationData.Bounds.min.y + pos3d.y, _GenerationData.Bounds.min.z + pos3d.z);
+                _GenerationData.Bounds.min.x + pos3d.x, _GenerationData.Bounds.min.y + pos3d.y,
+                _GenerationData.Bounds.min.z + pos3d.z);
             noiseValue += 5f * (1f - Mathf.InverseLerp(0f, ChunkController.Size.y, pos3d.y));
             noiseValue /= pos3d.y + (-1f * Persistence);
 
