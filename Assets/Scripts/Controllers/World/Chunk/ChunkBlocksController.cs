@@ -31,6 +31,23 @@ namespace Wyd.Controllers.World.Chunk
         #endregion
 
 
+        #region SERIALIZED MEMBERS
+
+        [SerializeField]
+        [ReadOnlyInspectorField]
+        private int TotalNodes = -1;
+
+        [SerializeField]
+        [ReadOnlyInspectorField]
+        private uint UniqueNodes;
+
+        [SerializeField]
+        [ReadOnlyInspectorField]
+        private uint NonAirBlocks;
+
+        #endregion
+
+
         protected override void Awake()
         {
             base.Awake();
@@ -54,7 +71,38 @@ namespace Wyd.Controllers.World.Chunk
             {
                 ProcessBlockActions();
             }
+
+            if (Blocks.Count != TotalNodes)
+            {
+                UpdateInternalStateInfo();
+            }
         }
+
+        private void UpdateInternalStateInfo()
+        {
+            TotalNodes = Blocks.Count;
+
+            HashSet<ushort> uniqueBlockIds = new HashSet<ushort>();
+            NonAirBlocks = 0;
+
+            foreach (RLENode<ushort> node in Blocks)
+            {
+                if (!uniqueBlockIds.Contains(node.Value))
+                {
+                    uniqueBlockIds.Add(node.Value);
+                }
+
+                if (node.Value != 0)
+                {
+                    NonAirBlocks += node.RunLength;
+                }
+            }
+
+            UniqueNodes = (uint)uniqueBlockIds.Count;
+        }
+
+
+        #region DE/ACTIVATION
 
         public override void Activate(Vector3 position, bool setPosition)
         {
@@ -73,6 +121,8 @@ namespace Wyd.Controllers.World.Chunk
             _BlockActions.Clear();
             Blocks.Clear();
         }
+
+        #endregion
 
         [SuppressMessage("ReSharper", "InconsistentNaming")]
         private static IEnumerable<Vector3> DetermineDirectionsForNeighborUpdate(Vector3 localPosition)

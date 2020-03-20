@@ -41,6 +41,14 @@ namespace Wyd.Controllers.World.Chunk
         [SerializeField]
         private ChunkBlocksController BlocksController;
 
+        [SerializeField]
+        [ReadOnlyInspectorField]
+        private int TotalTimesTerrainChanged;
+
+        [SerializeField]
+        [ReadOnlyInspectorField]
+        private int TimesTerrainChanged;
+
         #endregion
 
         protected override void Awake()
@@ -91,6 +99,7 @@ namespace Wyd.Controllers.World.Chunk
 
         private void ClearInternalData()
         {
+            TimesTerrainChanged = 0;
             _AggregateBuildTime = TimeSpan.Zero;
             _JobIdentity = null;
             CurrentStep = GenerationData.GenerationStep.Accents;
@@ -220,6 +229,9 @@ namespace Wyd.Controllers.World.Chunk
             {
                 DiagnosticsController.Current.RollingChunkBuildTimes.Enqueue(_AggregateBuildTime);
                 _AggregateBuildTime = TimeSpan.Zero;
+
+                TotalTimesTerrainChanged += 1;
+                TimesTerrainChanged += 1;
             }
 
             CurrentStep = CurrentStep.Next();

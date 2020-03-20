@@ -81,6 +81,8 @@ namespace Wyd.Controllers.World.Chunk
                 VertexCount = _Mesh.vertices.Length;
                 TrianglesCount = _Mesh.triangles.Length;
                 UVsCount = _Mesh.uv.Length;
+                TotalTimesMeshed += 1;
+                TimesMeshed += 1;
             };
         }
 
@@ -95,6 +97,8 @@ namespace Wyd.Controllers.World.Chunk
             {
                 Meshed = true;
                 _PendingMeshData.SetMesh(ref _Mesh);
+                _PendingMeshData = null;
+
                 OnMeshChanged(this, new ChunkChangedEventArgs(_Bounds, Directions.CardinalDirectionsVector3));
             }
 
@@ -127,7 +131,7 @@ namespace Wyd.Controllers.World.Chunk
                 _Mesh.Clear();
             }
 
-            VertexCount = TrianglesCount = UVsCount = TotalTimesMeshed = TimesMeshed = 0;
+            VertexCount = TrianglesCount = UVsCount = TimesMeshed = 0;
             _JobIdentity = _PendingMeshData = null;
             Meshing = false;
         }
