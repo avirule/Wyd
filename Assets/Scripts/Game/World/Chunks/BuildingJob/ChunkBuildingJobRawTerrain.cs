@@ -115,51 +115,47 @@ namespace Wyd.Game.World.Chunks.BuildingJob
         }
 
         private ushort GetBlockToGenerate(Vector3Int position, int index, bool useGpu = false,
-            IReadOnlyList<float> noiseValues = null)
-        {
-            return position.y == 1 ? _BlockIdBedrock : BlockController.AIR_ID;
+            IReadOnlyList<float> noiseValues = null) =>
+            position.y == 1 ? _BlockIdBedrock : BlockController.AIR_ID;
 
-            //            if ((position.y < 4) && (position.y <= _Rand.Next(0, 4)))
-//            {
-//                return _BlockIdBedrock;
-//            }
-
-            // // add non-local values to current stack
-            // int sizeProduct = ChunkController.SizeProduct;
-            // int yIndexStep = ChunkController.YIndexStep;
-            //
-            // // these seems inefficient, but the CPU branch predictor will pick up on it pretty quick
-            // // so the slowdown from this check is nonexistent, since useGpu shouldn't change in this context.
-            // float noiseValue = useGpu ? noiseValues[index] : GetNoiseValueByVector3(position);
-            //
-            // if (noiseValue >= 0.01f)
-            // {
-            //     int indexAbove = index + yIndexStep;
-            //
-            //     if ((position.y > 135)
-            //         && BlockController.Current.CheckBlockHasProperty(LocalBlocksCache[sizeProduct - indexAbove],
-            //             BlockRule.Property.Transparent))
-            //     {
-            //         return _BlockIdGrass;
-            //     }
-            //     // todo fix this
-            //     // else if (IdExistsAboveWithinRange(index, 2, blockIdGrass))
-            //     // {
-            //     //     AddBlockSequentialAware(blockIdDirt);
-            //     // }
-            //     else
-            //     {
-            //         return _BlockIdStone;
-            //     }
-            // }
-            // else if ((position.y <= 155) && (position.y > 135))
-            // {
-            //     return _BlockIdWater;
-            // }
-            //
-            // return BlockController.AIR_ID;
-        }
-
+        //            if ((position.y < 4) && (position.y <= _Rand.Next(0, 4)))
+        //            {
+        //                return _BlockIdBedrock;
+        //            }
+        // // add non-local values to current stack
+        // int sizeProduct = ChunkController.SizeProduct;
+        // int yIndexStep = ChunkController.YIndexStep;
+        //
+        // // these seems inefficient, but the CPU branch predictor will pick up on it pretty quick
+        // // so the slowdown from this check is nonexistent, since useGpu shouldn't change in this context.
+        // float noiseValue = useGpu ? noiseValues[index] : GetNoiseValueByVector3(position);
+        //
+        // if (noiseValue >= 0.01f)
+        // {
+        //     int indexAbove = index + yIndexStep;
+        //
+        //     if ((position.y > 135)
+        //         && BlockController.Current.CheckBlockHasProperty(LocalBlocksCache[sizeProduct - indexAbove],
+        //             BlockRule.Property.Transparent))
+        //     {
+        //         return _BlockIdGrass;
+        //     }
+        //     // todo fix this
+        //     // else if (IdExistsAboveWithinRange(index, 2, blockIdGrass))
+        //     // {
+        //     //     AddBlockSequentialAware(blockIdDirt);
+        //     // }
+        //     else
+        //     {
+        //         return _BlockIdStone;
+        //     }
+        // }
+        // else if ((position.y <= 155) && (position.y > 135))
+        // {
+        //     return _BlockIdWater;
+        // }
+        //
+        // return BlockController.AIR_ID;
         protected float GetNoiseValueByVector3(Vector3 pos3d)
         {
             float noiseValue = OpenSimplex_FastNoise.GetSimplex(WorldController.Current.Seed, Frequency,
