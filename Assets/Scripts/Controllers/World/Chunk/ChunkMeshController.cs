@@ -36,6 +36,34 @@ namespace Wyd.Controllers.World.Chunk
         [SerializeField]
         private ChunkTerrainController TerrainController;
 
+        [SerializeField]
+        [ReadOnlyInspectorField]
+        private long VertexCount;
+
+        [SerializeField]
+        [ReadOnlyInspectorField]
+        private long TrianglesCount;
+
+        [SerializeField]
+        [ReadOnlyInspectorField]
+        private long UVsCount;
+
+        /// <summary>
+        ///     Total numbers of times chunk has been
+        ///     meshed, persisting through de/activation.
+        /// </summary>
+        [SerializeField]
+        [ReadOnlyInspectorField]
+        private int TotalTimesMeshed;
+
+        /// <summary>
+        ///     Number of times chunk has been meshed,
+        ///     resetting every de/activation.
+        /// </summary>
+        [SerializeField]
+        [ReadOnlyInspectorField]
+        private int TimesMeshed;
+
         #endregion
 
         protected override void Awake()
@@ -46,6 +74,14 @@ namespace Wyd.Controllers.World.Chunk
             MeshFilter.sharedMesh = _Mesh;
             _PendingMeshData = null;
             Meshed = Meshing = false;
+
+            // update debug data when mesh changed
+            MeshChanged += (sender, args) =>
+            {
+                VertexCount = _Mesh.vertices.Length;
+                TrianglesCount = _Mesh.triangles.Length;
+                UVsCount = _Mesh.uv.Length;
+            };
         }
 
         public void Update()
@@ -91,6 +127,7 @@ namespace Wyd.Controllers.World.Chunk
                 _Mesh.Clear();
             }
 
+            VertexCount = TrianglesCount = UVsCount = TotalTimesMeshed = TimesMeshed = 0;
             _JobIdentity = _PendingMeshData = null;
             Meshing = false;
         }
