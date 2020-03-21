@@ -12,30 +12,31 @@ using Wyd.System.Noise;
 
 #endregion
 
-namespace Wyd.Game.World.Chunks.BuildingJob
+namespace Wyd.Game.World.Chunks
 {
-    public class ChunkBuildingJobRawTerrain : ChunkBuildingJob
+    public class ChunkRawTerrainBuilder : ChunkBuilder
     {
-        private ushort _BlockIdBedrock;
-        private ushort _BlockIdGrass;
-        private ushort _BlockIdDirt;
-        private ushort _BlockIdStone;
-        private ushort _BlockIdWater;
-        private ushort _BlockIdSand;
+        private ComputeBuffer _NoiseValuesBuffer;
+        private float _Frequency;
+        private float _Persistence;
+        private bool _GpuAcceleration;
+        private ChunkBuilderNoiseValues NoiseValues;
 
-        public float Frequency;
-        public float Persistence;
-        public bool GpuAcceleration;
-        public ChunkBuilderNoiseValues NoiseValues;
-
-        public void SetData(GenerationData generationData, float frequency, float persistence,
-            bool gpuAcceleration = false, ComputeBuffer noiseValuesBuffer = null)
+        public void SetData(GenerationData generationData, ComputeBuffer noiseValuesBuffer, float frequency,
+            float persistence,
+            bool gpuAcceleration = false)
         {
             SetGenerationData(generationData);
+            _Frequency = frequency;
+            _Persistence = persistence;
+            _GpuAcceleration = gpuAcceleration;
 
-            Frequency = frequency;
-            Persistence = persistence;
-            GpuAcceleration = gpuAcceleration;
+            if (_GpuAcceleration)
+            {
+                Log.Warning(
+                    $"Parameter `{nameof(_GpuAcceleration)}` is set to true, but no noise values were provided. Defaulting to CPU-bound generation.");
+                _GpuAcceleration = false;
+            }
 
             if (noiseValuesBuffer != null)
             {
@@ -43,39 +44,21 @@ namespace Wyd.Game.World.Chunks.BuildingJob
                 noiseValuesBuffer.GetData(NoiseValues.NoiseValues);
                 noiseValuesBuffer.Release();
             }
-
-            BlockController.Current.TryGetBlockId("bedrock", out _BlockIdBedrock);
-            BlockController.Current.TryGetBlockId("grass", out _BlockIdGrass);
-            BlockController.Current.TryGetBlockId("dirt", out _BlockIdDirt);
-            BlockController.Current.TryGetBlockId("stone", out _BlockIdStone);
-            BlockController.Current.TryGetBlockId("water", out _BlockIdWater);
-            BlockController.Current.TryGetBlockId("sand", out _BlockIdSand);
+            else if (_GpuAcceleration)
+            {
+                Log.Warning(
+                    $"Parameter `{nameof(_GpuAcceleration)}` is set to true, but no noise values were provided. Defaulting to CPU-bound generation.");
+                _GpuAcceleration = false;
+            }
         }
 
-        protected override void Process()
-        {
-            Generate(GpuAcceleration, NoiseValues?.NoiseValues);
-        }
-
-        protected override void ProcessFinished()
-        {
-            NoiseValuesCache.CacheItem(ref NoiseValues);
-        }
-
-        public void Generate(bool useGpu = false, float[] noiseValues = null)
+        public void Generate(float[] noiseValues = null)
         {
             if (_GenerationData.Blocks == default)
             {
                 Log.Error(
                     $"Field `{nameof(_GenerationData.Blocks)}` has not been properly set. Cancelling operation.");
                 return;
-            }
-
-            if (useGpu && (noiseValues == null))
-            {
-                Log.Warning(
-                    $"Parameter `{nameof(useGpu)}` was passed as true, but no noise values were provided. Defaulting to CPU-bound generation.");
-                useGpu = false;
             }
 
             _GenerationData.Blocks.Clear();
@@ -90,7 +73,7 @@ namespace Wyd.Game.World.Chunks.BuildingJob
             {
                 (int x, int y, int z) = Mathv.GetIndexAs3D(index, ChunkController.Size);
 
-                ushort nextId = GetBlockToGenerate(new Vector3Int(x, y, z), index, useGpu, noiseValues);
+                ushort nextId = GetBlockToGenerate(new Vector3Int(x, y, z), index, _GpuAcceleration, noiseValues);
 
                 if (firstIteration)
                 {
@@ -116,7 +99,7 @@ namespace Wyd.Game.World.Chunks.BuildingJob
 
         private ushort GetBlockToGenerate(Vector3Int position, int index, bool useGpu = false,
             IReadOnlyList<float> noiseValues = null) =>
-            position.y == 1 ? _BlockIdBedrock : BlockController.AIR_ID;
+            position.y == 1 ? (ushort)1 : BlockController.AIR_ID;
 
         //            if ((position.y < 4) && (position.y <= _Rand.Next(0, 4)))
         //            {
@@ -158,11 +141,11 @@ namespace Wyd.Game.World.Chunks.BuildingJob
         // return BlockController.AIR_ID;
         protected float GetNoiseValueByVector3(Vector3 pos3d)
         {
-            float noiseValue = OpenSimplex_FastNoise.GetSimplex(WorldController.Current.Seed, Frequency,
+            float noiseValue = OpenSimplex_FastNoise.GetSimplex(WorldController.Current.Seed, _Frequency,
                 _GenerationData.Bounds.min.x + pos3d.x, _GenerationData.Bounds.min.y + pos3d.y,
                 _GenerationData.Bounds.min.z + pos3d.z);
             noiseValue += 5f * (1f - Mathf.InverseLerp(0f, ChunkController.Size.y, pos3d.y));
-            noiseValue /= pos3d.y + (-1f * Persistence);
+            noiseValue /= pos3d.y + (-1f * _Persistence);
 
             return noiseValue;
         }

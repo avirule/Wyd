@@ -3,9 +3,9 @@
 using System;
 using System.Linq;
 using UnityEngine;
+using UnityEngine.Assertions.Must;
 using Wyd.Controllers.State;
 using Wyd.Game;
-using Wyd.Game.World.Chunks.BuildingJob;
 using Wyd.Game.World.Chunks.Events;
 using Wyd.System;
 using Wyd.System.Collections;
@@ -18,12 +18,6 @@ namespace Wyd.Controllers.World.Chunk
 {
     public class ChunkTerrainController : ActivationStateChunkController
     {
-        private static readonly ObjectCache<ChunkBuildingJobRawTerrain> _ChunkRawTerrainBuilderCache =
-            new ObjectCache<ChunkBuildingJobRawTerrain>(true);
-
-        private static readonly ObjectCache<ChunkBuildingJobAccents> _ChunkAccentsBuilderCache =
-            new ObjectCache<ChunkBuildingJobAccents>(true);
-
         #region INSTANCE MEMBERS
 
         private TimeSpan _AggregateBuildTime;
@@ -102,7 +96,7 @@ namespace Wyd.Controllers.World.Chunk
             TimesTerrainChanged = 0;
             _AggregateBuildTime = TimeSpan.Zero;
             _JobIdentity = null;
-            CurrentStep = GenerationData.GenerationStep.Accents;
+            CurrentStep = GenerationData.GenerationStep.RawTerrain;
             Generating = false;
         }
 
@@ -126,10 +120,7 @@ namespace Wyd.Controllers.World.Chunk
             switch (step)
             {
                 case GenerationData.GenerationStep.RawTerrain:
-                    BeginGeneratingRawTerrain();
-                    break;
-                case GenerationData.GenerationStep.Accents:
-                    BeginGeneratingAccents();
+                    BeginGenerationStep();
                     break;
                 case GenerationData.GenerationStep.Complete:
                     break;
@@ -138,7 +129,7 @@ namespace Wyd.Controllers.World.Chunk
             }
         }
 
-        private void BeginGeneratingRawTerrain()
+        private void BeginGenerationStep()
         {
             const float frequency = 0.01f;
             const float persistence = -1f;
@@ -148,8 +139,7 @@ namespace Wyd.Controllers.World.Chunk
                 return;
             }
 
-            ChunkBuildingJobRawTerrain job = _ChunkRawTerrainBuilderCache.RetrieveItem()
-                                             ?? new ChunkBuildingJobRawTerrain();
+            ChunkBuildingJob job;
 
             if (OptionsController.Current.GPUAcceleration)
             {
@@ -162,28 +152,14 @@ namespace Wyd.Controllers.World.Chunk
                 // 1024 is the value set in the shader's [numthreads(--> 1024 <--, 1, 1)]
                 _NoiseShader.Dispatch(kernel, ChunkController.Size.Product() / 1024, 1, 1);
 
-                job.SetData(new GenerationData(_Bounds, BlocksController.Blocks), frequency, persistence,
-                    OptionsController.Current.GPUAcceleration, noiseBuffer);
+                job  = new ChunkBuildingJob(new GenerationData(_Bounds, BlocksController.Blocks), frequency, persistence, OptionsController.Current.GPUAcceleration, noiseBuffer);
             }
             else
             {
-                job.SetData(new GenerationData(_Bounds, BlocksController.Blocks), frequency, persistence);
+                job = new ChunkBuildingJob(new GenerationData(_Bounds, BlocksController.Blocks), frequency, persistence, OptionsController.Current.GPUAcceleration);
             }
 
-            QueueJob(job);
-        }
 
-        // todo fix this
-        public void BeginGeneratingAccents()
-        {
-            if (Generating)
-            {
-                return;
-            }
-
-            ChunkBuildingJobAccents job = _ChunkAccentsBuilderCache.RetrieveItem() ?? new ChunkBuildingJobAccents();
-
-            job.SetGenerationData(new GenerationData(_Bounds, BlocksController.Blocks));
 
             QueueJob(job);
         }
@@ -214,10 +190,10 @@ namespace Wyd.Controllers.World.Chunk
                     OnChunkTerrainChanged(this,
                         new ChunkChangedEventArgs(_Bounds, Directions.CardinalDirectionsVector3));
                     break;
-                case GenerationData.GenerationStep.Accents:
-                    _AggregateBuildTime += args.Job.ExecutionTime;
-                    OnChunkTerrainChanged(this, new ChunkChangedEventArgs(_Bounds, Enumerable.Empty<Vector3>()));
-                    break;
+                // case GenerationData.GenerationStep.Accents:
+                //     _AggregateBuildTime += args.Job.ExecutionTime;
+                //     OnChunkTerrainChanged(this, new ChunkChangedEventArgs(_Bounds, Enumerable.Empty<Vector3>()));
+                //     break;
                 case GenerationData.GenerationStep.Complete:
                     break;
                 default:

@@ -13,9 +13,9 @@ using Wyd.System.Jobs;
 
 #endregion
 
-namespace Wyd.Game.World.Chunks.BuildingJob
+namespace Wyd.Game.World.Chunks
 {
-    public class ChunkBuildingJob : Job
+    public class ChunkBuilder : Job
     {
         protected static readonly ObjectCache<ChunkBuilderNoiseValues> NoiseValuesCache =
             new ObjectCache<ChunkBuilderNoiseValues>(true);

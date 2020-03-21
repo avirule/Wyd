@@ -2,13 +2,12 @@
 
 using UnityEngine;
 using Wyd.Controllers.World.Chunk;
-using Wyd.System;
+using Wyd.Game.World.Chunks;
 using Wyd.System.Collections;
-using Wyd.System.Jobs;
 
 #endregion
 
-namespace Wyd.Game.World.Chunks
+namespace Wyd.System.Jobs
 {
     public class ChunkMeshingJob : Job
     {

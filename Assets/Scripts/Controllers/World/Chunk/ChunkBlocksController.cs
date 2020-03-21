@@ -101,30 +101,7 @@ namespace Wyd.Controllers.World.Chunk
             UniqueNodes = (uint)uniqueBlockIds.Count;
         }
 
-
-        #region DE/ACTIVATION
-
-        public override void Activate(Vector3 position, bool setPosition)
-        {
-            base.Activate(position, setPosition);
-            ClearInternalData();
-        }
-
-        public override void Deactivate()
-        {
-            base.Deactivate();
-            ClearInternalData();
-        }
-
-        private void ClearInternalData()
-        {
-            _BlockActions.Clear();
-            Blocks.Clear();
-        }
-
-        #endregion
-
-        [SuppressMessage("ReSharper", "InconsistentNaming")]
+                [SuppressMessage("ReSharper", "InconsistentNaming")]
         private static IEnumerable<Vector3> DetermineDirectionsForNeighborUpdate(Vector3 localPosition)
         {
             // topleft & bottomright x computation value
@@ -188,6 +165,30 @@ namespace Wyd.Controllers.World.Chunk
                 }
             }
         }
+
+
+        #region DE/ACTIVATION
+
+        public override void Activate(Vector3 position, bool setPosition)
+        {
+            base.Activate(position, setPosition);
+            ClearInternalData();
+        }
+
+        public override void Deactivate()
+        {
+            base.Deactivate();
+            ClearInternalData();
+        }
+
+        private void ClearInternalData()
+        {
+            _BlockActions.Clear();
+            Blocks.Clear();
+        }
+
+        #endregion
+
 
         #region TRY GET / PLACE / REMOVE BLOCKS
 
