@@ -101,7 +101,7 @@ namespace Wyd.Controllers.World.Chunk
             UniqueNodes = (uint)uniqueBlockIds.Count;
         }
 
-                [SuppressMessage("ReSharper", "InconsistentNaming")]
+        [SuppressMessage("ReSharper", "InconsistentNaming")]
         private static IEnumerable<Vector3> DetermineDirectionsForNeighborUpdate(Vector3 localPosition)
         {
             // topleft & bottomright x computation value

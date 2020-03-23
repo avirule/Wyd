@@ -1,14 +1,11 @@
 #region
 
 using System;
-using System.Linq;
 using UnityEngine;
-using UnityEngine.Assertions.Must;
 using Wyd.Controllers.State;
 using Wyd.Game;
 using Wyd.Game.World.Chunks.Events;
 using Wyd.System;
-using Wyd.System.Collections;
 using Wyd.System.Extensions;
 using Wyd.System.Jobs;
 
@@ -152,13 +149,14 @@ namespace Wyd.Controllers.World.Chunk
                 // 1024 is the value set in the shader's [numthreads(--> 1024 <--, 1, 1)]
                 _NoiseShader.Dispatch(kernel, ChunkController.Size.Product() / 1024, 1, 1);
 
-                job  = new ChunkBuildingJob(new GenerationData(_Bounds, BlocksController.Blocks), frequency, persistence, OptionsController.Current.GPUAcceleration, noiseBuffer);
+                job = new ChunkBuildingJob(new GenerationData(_Bounds, BlocksController.Blocks), frequency, persistence,
+                    OptionsController.Current.GPUAcceleration, noiseBuffer);
             }
             else
             {
-                job = new ChunkBuildingJob(new GenerationData(_Bounds, BlocksController.Blocks), frequency, persistence, OptionsController.Current.GPUAcceleration);
+                job = new ChunkBuildingJob(new GenerationData(_Bounds, BlocksController.Blocks), frequency, persistence,
+                    OptionsController.Current.GPUAcceleration);
             }
-
 
 
             QueueJob(job);

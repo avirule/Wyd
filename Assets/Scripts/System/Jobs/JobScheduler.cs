@@ -176,7 +176,7 @@ namespace Wyd.System.Jobs
                 while (!_AbortToken.IsCancellationRequested)
                 {
                     while ((_Workers.Count < WorkerThreadCount)
-                           && (ThreadingMode > ThreadingMode.Single))
+                           && (ThreadingMode == ThreadingMode.Multi))
                     {
                         SpawnJobWorker();
                     }
@@ -213,12 +213,14 @@ namespace Wyd.System.Jobs
         }
 
         /// <summary>
-        ///     Internally processes specified <see cref="Job" /> and adds it to the list of processed
-        ///     <see cref="Job" />s.
+        ///     Internally processes specified <see cref="Job" /> and adds it
+        ///     to the list of processed <see cref="Job" />s.
         /// </summary>
         /// <param name="job"><see cref="Job" /> to be processed.</param>
         private void ProcessJob(Job job)
         {
+            job.PreProcess();
+
             switch (ThreadingMode)
             {
                 case ThreadingMode.Single:
@@ -249,8 +251,7 @@ namespace Wyd.System.Jobs
         /// </remarks>
         /// <param name="jobWorkerIndex">The resultant <see cref="T:List{JobWorker}" /> index.</param>
         /// <returns>
-        ///     <value>False</value>
-        ///     if no job is found.
+        ///     <value>False</value> if no job is found.
         /// </returns>
         private bool TryGetFirstFreeWorker(out int jobWorkerIndex)
         {

@@ -19,6 +19,8 @@ namespace Wyd.System.Jobs
         private readonly float _Persistence;
         private readonly bool _GpuAcceleration;
 
+        private ChunkRawTerrainBuilder _TerrainBuilder;
+
         public ChunkBuildingJob(GenerationData generationData, float frequency, float persistence,
             bool gpuAcceleration = false, ComputeBuffer noiseValuesBuffer = null)
         {
@@ -29,16 +31,25 @@ namespace Wyd.System.Jobs
             _NoiseValuesBuffer = noiseValuesBuffer;
         }
 
-        protected override void Process()
+        public override void PreProcess()
         {
-            ChunkRawTerrainBuilder rawTerrainBuilder =
-                _RawTerrainBuilders.RetrieveItem() ?? new ChunkRawTerrainBuilder();
-
-            rawTerrainBuilder.SetData(_GenerationData, _NoiseValuesBuffer, _Frequency, _Persistence, _GpuAcceleration);
-            rawTerrainBuilder.Generate();
-            _RawTerrainBuilders.CacheItem(ref rawTerrainBuilder);
+            // todo execute on main thread
+            _TerrainBuilder = _RawTerrainBuilders.RetrieveItem() ?? new ChunkRawTerrainBuilder();
+            _TerrainBuilder.SetData(_GenerationData, _NoiseValuesBuffer, _Frequency, _Persistence, _GpuAcceleration);
         }
 
-        protected override void ProcessFinished() { }
+        protected override void Process()
+        {
+            _TerrainBuilder.Generate();
+        }
+
+        protected override void ProcessFinished()
+        {
+            // cache builder
+            _RawTerrainBuilders.CacheItem(ref _TerrainBuilder);
+
+            // clear reference
+            _TerrainBuilder = null;
+        }
     }
 }

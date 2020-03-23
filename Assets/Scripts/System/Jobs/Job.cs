@@ -10,7 +10,13 @@ namespace Wyd.System.Jobs
     public class Job
     {
         protected readonly object Handle;
+
+        /// <summary>
+        ///     Allows jobs to be created on-the-fly with delegates,
+        ///     not necessitating an entire derived class for usage.
+        /// </summary>
         protected readonly Action ExecutionAction;
+
         protected bool Done;
 
         public DateTime StartTime { get; private set; }
@@ -72,7 +78,7 @@ namespace Wyd.System.Jobs
         }
 
         /// <summary>
-        ///     Begins executing the <see cref="Job" />
+        ///     Begins executing the <see cref="Job" />.
         /// </summary>
         public void Execute()
         {
@@ -88,11 +94,25 @@ namespace Wyd.System.Jobs
             Finished?.Invoke(this, EventArgs.Empty);
         }
 
+        /// <summary>
+        ///     This method is run on the <see cref="JobScheduler" />'s threaded
+        ///     context, prior to <see cref="Process" />.
+        /// </summary>
+        public virtual void PreProcess() { }
+
+        /// <summary>
+        ///     This is the main method that is executed in
+        ///     the <see cref="JobWorker" />'s threaded context.
+        /// </summary>
         protected virtual void Process()
         {
             ExecutionAction?.Invoke();
         }
 
+        /// <summary>
+        ///     The final method, run after <see cref="Process" />
+        ///     in the <see cref="JobWorker" />'s threaded context.
+        /// </summary>
         protected virtual void ProcessFinished() { }
     }
 }

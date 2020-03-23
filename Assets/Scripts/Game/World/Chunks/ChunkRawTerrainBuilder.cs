@@ -20,7 +20,7 @@ namespace Wyd.Game.World.Chunks
         private float _Frequency;
         private float _Persistence;
         private bool _GpuAcceleration;
-        private ChunkBuilderNoiseValues NoiseValues;
+        private ChunkBuilderNoiseValues _NoiseValues;
 
         public void SetData(GenerationData generationData, ComputeBuffer noiseValuesBuffer, float frequency,
             float persistence,
@@ -40,8 +40,8 @@ namespace Wyd.Game.World.Chunks
 
             if (noiseValuesBuffer != null)
             {
-                NoiseValues = NoiseValuesCache.RetrieveItem() ?? new ChunkBuilderNoiseValues();
-                noiseValuesBuffer.GetData(NoiseValues.NoiseValues);
+                _NoiseValues = NoiseValuesCache.RetrieveItem() ?? new ChunkBuilderNoiseValues();
+                noiseValuesBuffer.GetData(_NoiseValues.NoiseValues);
                 noiseValuesBuffer.Release();
             }
             else if (_GpuAcceleration)
