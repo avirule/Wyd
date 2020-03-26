@@ -2,11 +2,11 @@
 
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using Serilog;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using Wyd.Controllers.State;
+using Wyd.Controllers.System;
 using Wyd.Controllers.World.Chunk;
 using Wyd.Game;
 using Wyd.Game.Entities;
@@ -29,7 +29,6 @@ namespace Wyd.Controllers.World
         private Stack<IEntity> _EntitiesPendingChunkBuilding;
         private Stack<ChunkChangedEventArgs> _ChunksPendingDeactivation;
         private WorldSaveFileProvider _SaveFileProvider;
-        private Stopwatch _FrameTimer;
         private Vector3 _SpawnPoint;
 
         public CollisionLoaderController CollisionLoaderController;
@@ -80,12 +79,12 @@ namespace Wyd.Controllers.World
                 return;
             }
 
-            AssignCurrent(this);
+            AssignSingletonInstance(this);
             SetTickRate();
 
             _ChunkControllerObject = GameController.LoadResource<ChunkController>(@"Prefabs/Chunk");
 
-            _ChunkCache = new ObjectCache<ChunkController>(false, false, -1,
+            _ChunkCache = new ObjectCache<ChunkController>(false, -1,
                 (ref ChunkController chunkController) =>
                 {
                     if (chunkController != default)
@@ -102,8 +101,6 @@ namespace Wyd.Controllers.World
             _EntitiesPendingChunkBuilding = new Stack<IEntity>();
             _ChunksPendingDeactivation = new Stack<ChunkChangedEventArgs>();
             _SaveFileProvider = new WorldSaveFileProvider("world");
-            _FrameTimer = new Stopwatch();
-
             Seed = new WorldSeed(SeedString);
             _SaveFileProvider.Initialise().ConfigureAwait(false);
         }
@@ -132,15 +129,13 @@ namespace Wyd.Controllers.World
 
         private void Update()
         {
-            _FrameTimer.Restart();
-
-            while ((_EntitiesPendingChunkBuilding.Count > 0) && IsInSafeFrameTime())
+            while ((_EntitiesPendingChunkBuilding.Count > 0) && SystemController.Current.IsInSafeFrameTime())
             {
                 IEntity loader = _EntitiesPendingChunkBuilding.Pop();
                 BuildChunksAroundEntity(loader);
             }
 
-            while ((_ChunksPendingDeactivation.Count > 0) && IsInSafeFrameTime())
+            while ((_ChunksPendingDeactivation.Count > 0) && SystemController.Current.IsInSafeFrameTime())
             {
                 ChunkChangedEventArgs args = _ChunksPendingDeactivation.Pop();
 
@@ -191,13 +186,6 @@ namespace Wyd.Controllers.World
             InitialTick = DateTime.Now.Ticks;
         }
 
-        public bool IsInSafeFrameTime() => _FrameTimer.Elapsed <= OptionsController.Current.MaximumInternalFrameTime;
-
-        public void GetRemainingSafeFrameTime(out TimeSpan remainingTime)
-        {
-            remainingTime = OptionsController.Current.MaximumInternalFrameTime - _FrameTimer.Elapsed;
-        }
-
         #endregion
 
 
@@ -213,7 +201,7 @@ namespace Wyd.Controllers.World
             {
                 for (int z = -radius; z < (radius + 1); z++)
                 {
-                    if (!IsInSafeFrameTime())
+                    if (!SystemController.Current.IsInSafeFrameTime())
                     {
                         _EntitiesPendingChunkBuilding.Push(loader);
                         return;
@@ -227,7 +215,7 @@ namespace Wyd.Controllers.World
                         continue;
                     }
 
-                    if (!_ChunkCache.TryRetrieveItem(out ChunkController chunkController))
+                    if (!_ChunkCache.TryRetrieve(out ChunkController chunkController))
                     {
                         chunkController = Instantiate(_ChunkControllerObject, position, Quaternion.identity,
                             transform);

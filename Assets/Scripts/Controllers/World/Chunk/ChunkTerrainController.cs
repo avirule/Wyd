@@ -3,6 +3,7 @@
 using System;
 using UnityEngine;
 using Wyd.Controllers.State;
+using Wyd.Controllers.System;
 using Wyd.Game;
 using Wyd.Game.World.Chunks.Events;
 using Wyd.System;
@@ -58,7 +59,7 @@ namespace Wyd.Controllers.World.Chunk
             // if we've passed safe frame time for target
             // fps, then skip updates as necessary to reach
             // next frame
-            if (!WorldController.Current.IsInSafeFrameTime())
+            if (!SystemController.Current.IsInSafeFrameTime())
             {
                 return;
             }

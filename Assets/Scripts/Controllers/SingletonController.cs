@@ -12,7 +12,7 @@ namespace Wyd.Controllers
 
         public static T Current { get; private set; }
 
-        protected virtual void AssignCurrent(T instance)
+        protected virtual void AssignSingletonInstance(T instance)
         {
             if ((_singletonInstance != default) && (_singletonInstance != this))
             {

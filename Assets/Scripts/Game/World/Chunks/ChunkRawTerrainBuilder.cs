@@ -1,9 +1,11 @@
 #region
 
 using System.Collections.Generic;
+using System.Threading;
 using Serilog;
 using UnityEngine;
 using Wyd.Controllers.State;
+using Wyd.Controllers.System;
 using Wyd.Controllers.World;
 using Wyd.Controllers.World.Chunk;
 using Wyd.System;
@@ -16,40 +18,53 @@ namespace Wyd.Game.World.Chunks
 {
     public class ChunkRawTerrainBuilder : ChunkBuilder
     {
-        private ComputeBuffer _NoiseValuesBuffer;
+        private readonly object _NoiseValuesReadyHandle = new object();
+        private bool _NoiseValuesReady;
         private float _Frequency;
         private float _Persistence;
         private bool _GpuAcceleration;
+        private ComputeBuffer _NoiseValuesBuffer;
         private ChunkBuilderNoiseValues _NoiseValues;
 
-        public void SetData(GenerationData generationData, ComputeBuffer noiseValuesBuffer, float frequency,
-            float persistence,
-            bool gpuAcceleration = false)
+        private bool NoiseValuesReady
+        {
+            get
+            {
+                bool tmp;
+
+                lock (_NoiseValuesReadyHandle)
+                {
+                    tmp = _NoiseValuesReady;
+                }
+
+                return tmp;
+            }
+            set
+            {
+                lock (_NoiseValuesReadyHandle)
+                {
+                    _NoiseValuesReady = value;
+                }
+            }
+        }
+
+        public void SetData(GenerationData generationData, float frequency, float persistence,
+            bool gpuAcceleration = false, ComputeBuffer noiseValuesBuffer = null)
         {
             SetGenerationData(generationData);
             _Frequency = frequency;
             _Persistence = persistence;
             _GpuAcceleration = gpuAcceleration;
+            _NoiseValuesBuffer = noiseValuesBuffer;
+            NoiseValuesReady = false;
+        }
 
-            if (_GpuAcceleration)
-            {
-                Log.Warning(
-                    $"Parameter `{nameof(_GpuAcceleration)}` is set to true, but no noise values were provided. Defaulting to CPU-bound generation.");
-                _GpuAcceleration = false;
-            }
-
-            if (noiseValuesBuffer != null)
-            {
-                _NoiseValues = NoiseValuesCache.RetrieveItem() ?? new ChunkBuilderNoiseValues();
-                noiseValuesBuffer.GetData(_NoiseValues.NoiseValues);
-                noiseValuesBuffer.Release();
-            }
-            else if (_GpuAcceleration)
-            {
-                Log.Warning(
-                    $"Parameter `{nameof(_GpuAcceleration)}` is set to true, but no noise values were provided. Defaulting to CPU-bound generation.");
-                _GpuAcceleration = false;
-            }
+        private void GetComputeBufferData()
+        {
+            _NoiseValues = NoiseValuesCache.Retrieve() ?? new ChunkBuilderNoiseValues();
+            _NoiseValuesBuffer.GetData(_NoiseValues.NoiseValues);
+            _NoiseValuesBuffer.Release();
+            NoiseValuesReady = true;
         }
 
         public void Generate(float[] noiseValues = null)
@@ -57,8 +72,24 @@ namespace Wyd.Game.World.Chunks
             if (_GenerationData.Blocks == default)
             {
                 Log.Error(
-                    $"Field `{nameof(_GenerationData.Blocks)}` has not been properly set. Cancelling operation.");
+                    $"`{nameof(_GenerationData.Blocks)}` has not been set. Aborting generation.");
                 return;
+            }
+
+            if (_GpuAcceleration && (_NoiseValuesBuffer != null))
+            {
+                MainThreadActionsController.Current.PushAction(GetComputeBufferData);
+
+                while (!NoiseValuesReady)
+                {
+                    Thread.Sleep(0);
+                }
+            }
+            else if (_GpuAcceleration && (_NoiseValuesBuffer == null))
+            {
+                Log.Warning(
+                    $"`{nameof(_GpuAcceleration)}` is set to true, but no noise values were provided. Defaulting to CPU-bound generation.");
+                _GpuAcceleration = false;
             }
 
             _GenerationData.Blocks.Clear();
@@ -95,6 +126,8 @@ namespace Wyd.Game.World.Chunks
                     runLength = 1;
                 }
             }
+
+            NoiseValuesCache.CacheItem(ref _NoiseValues);
         }
 
         private ushort GetBlockToGenerate(Vector3Int position, int index, bool useGpu = false,

@@ -16,7 +16,7 @@ namespace Wyd.Controllers.State
 
         private void Awake()
         {
-            AssignCurrent(this);
+            AssignSingletonInstance(this);
 
             _TextureIDs = new Dictionary<string, int>();
         }

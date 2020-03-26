@@ -9,6 +9,7 @@ using Serilog.Events;
 using TMPro;
 using UnityEngine;
 using Wyd.Controllers.State;
+using Wyd.Controllers.System;
 using Wyd.Controllers.World;
 using Wyd.System.Logging.Sinks;
 
@@ -40,7 +41,7 @@ namespace Wyd.Controllers.UI.Components.Text
 
             while ((_LogMessageQueue.Count > 0)
                    && worldControllerInstanced
-                   && WorldController.Current.IsInSafeFrameTime())
+                   && SystemController.Current.IsInSafeFrameTime())
             {
                 _LogMessageQueue.TryDequeue(out string result);
                 AppendDebugText(result);
@@ -89,7 +90,7 @@ namespace Wyd.Controllers.UI.Components.Text
 
         private void CheckSetDebugEventsLogged()
         {
-            IReadOnlyList<LogEvent> loggedEvents = InitializationStartController.LoggedEvents;
+            IReadOnlyList<LogEvent> loggedEvents = LogController.LoggedEvents;
 
             if ((loggedEvents == null) || (loggedEvents.Count <= 0))
             {

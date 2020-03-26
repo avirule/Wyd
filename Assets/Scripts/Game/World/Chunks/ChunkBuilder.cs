@@ -18,7 +18,7 @@ namespace Wyd.Game.World.Chunks
     public class ChunkBuilder : Job
     {
         protected static readonly ObjectCache<ChunkBuilderNoiseValues> NoiseValuesCache =
-            new ObjectCache<ChunkBuilderNoiseValues>(true);
+            new ObjectCache<ChunkBuilderNoiseValues>();
 
         protected Random _Rand;
         protected GenerationData _GenerationData;

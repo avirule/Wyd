@@ -17,7 +17,7 @@ namespace Wyd.Controllers.State
 
         private void Awake()
         {
-            AssignCurrent(this);
+            AssignSingletonInstance(this);
 
             _EntityRegister = new Dictionary<Type, List<IEntity>>();
             _EntityTagWatchers = new Dictionary<string, List<Action<IEntity>>>();

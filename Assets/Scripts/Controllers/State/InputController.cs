@@ -11,7 +11,7 @@ namespace Wyd.Controllers.State
     {
         private void Awake()
         {
-            AssignCurrent(this);
+            AssignSingletonInstance(this);
         }
 
         public bool GetKey(KeyCode keyCode, object keyMaster = null) => IsLockedFor(keyMaster) && Input.GetKey(keyCode);

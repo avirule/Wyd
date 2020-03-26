@@ -281,7 +281,7 @@ namespace Wyd.Controllers.State
 
         private void Awake()
         {
-            AssignCurrent(this);
+            AssignSingletonInstance(this);
 
             ConfigPath = $@"{Application.persistentDataPath}/config.ini";
         }

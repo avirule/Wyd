@@ -1,11 +1,12 @@
 #region
 
 using System;
+using Wyd.Controllers.State;
 using Wyd.System.Collections;
 
 #endregion
 
-namespace Wyd.Controllers.State
+namespace Wyd.Controllers.System
 {
     public class DiagnosticsController : SingletonController<DiagnosticsController>
     {
@@ -14,7 +15,7 @@ namespace Wyd.Controllers.State
 
         private void Start()
         {
-            AssignCurrent(this);
+            AssignSingletonInstance(this);
 
             RollingChunkBuildTimes =
                 new FixedConcurrentQueue<TimeSpan>(OptionsController.Current.MaximumChunkLoadTimeBufferSize);

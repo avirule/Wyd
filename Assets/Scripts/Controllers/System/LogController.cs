@@ -13,9 +13,9 @@ using Wyd.System.Logging.Sinks;
 
 #endregion
 
-namespace Wyd.Controllers.State
+namespace Wyd.Controllers.System
 {
-    public class InitializationStartController : MonoBehaviour
+    public class LogController : MonoBehaviour
     {
         private const string _DEFAULT_TEMPLATE = "{Timestamp:MM/dd/yy-HH:mm:ss} | {Level:u3} | {Message}";
         private const int _MAXIMUM_RUNTIME_ERRORS = 10;

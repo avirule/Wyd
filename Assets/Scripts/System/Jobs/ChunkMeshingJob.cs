@@ -11,7 +11,7 @@ namespace Wyd.System.Jobs
 {
     public class ChunkMeshingJob : Job
     {
-        private static readonly ObjectCache<ChunkMesher> _ChunkMesherCache = new ObjectCache<ChunkMesher>(true);
+        private static readonly ObjectCache<ChunkMesher> _ChunkMesherCache = new ObjectCache<ChunkMesher>();
 
         private ChunkMesher _Mesher;
         private readonly GenerationData _GenerationData;
@@ -26,7 +26,7 @@ namespace Wyd.System.Jobs
 
         protected override void Process()
         {
-            ChunkMesher mesher = _ChunkMesherCache.RetrieveItem() ?? new ChunkMesher();
+            ChunkMesher mesher = _ChunkMesherCache.Retrieve() ?? new ChunkMesher();
 
             mesher.AbortToken = AbortToken;
             mesher.Size = ChunkController.Size;

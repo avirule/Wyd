@@ -55,7 +55,7 @@ namespace Wyd.Controllers.UI
 
         private void Awake()
         {
-            AssignCurrent(this);
+            AssignSingletonInstance(this);
 
             _InternalInventory =
                 new ObservableCollection<DisplayBlockController>(new DisplayBlockController[MAXIMUM_HOTBAR_STACKS]);

@@ -5,6 +5,7 @@ using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using UnityEngine;
 using Wyd.Controllers.State;
+using Wyd.Controllers.System;
 using Wyd.Game.World.Blocks;
 using Wyd.Game.World.Chunks.Events;
 using Wyd.System;
@@ -18,7 +19,7 @@ namespace Wyd.Controllers.World.Chunk
     public class ChunkBlocksController : ActivationStateChunkController
     {
         private static readonly ObjectCache<BlockAction> _BlockActionsCache =
-            new ObjectCache<BlockAction>(true, true, 1024);
+            new ObjectCache<BlockAction>(true, 1024);
 
 
         #region INSTANCE MEMBERS
@@ -62,7 +63,7 @@ namespace Wyd.Controllers.World.Chunk
             // if we've passed safe frame time for target
             // fps, then skip updates as necessary to reach
             // next frame
-            if (!WorldController.Current.IsInSafeFrameTime())
+            if (!SystemController.Current.IsInSafeFrameTime())
             {
                 return;
             }
@@ -197,7 +198,7 @@ namespace Wyd.Controllers.World.Chunk
         /// </summary>
         private void ProcessBlockActions()
         {
-            while ((_BlockActions.Count > 0) && WorldController.Current.IsInSafeFrameTime())
+            while ((_BlockActions.Count > 0) && SystemController.Current.IsInSafeFrameTime())
             {
                 BlockAction blockAction = _BlockActions.Dequeue();
                 uint localPosition1d = (uint)blockAction.LocalPosition.To1D(ChunkController.Size);
@@ -363,7 +364,7 @@ namespace Wyd.Controllers.World.Chunk
 
         private bool TryAllocateBlockAction(Vector3 localPosition, ushort id)
         {
-            BlockAction blockAction = _BlockActionsCache.RetrieveItem();
+            BlockAction blockAction = _BlockActionsCache.Retrieve();
             blockAction.Initialise(localPosition, id);
             _BlockActions.Enqueue(blockAction);
             return true;

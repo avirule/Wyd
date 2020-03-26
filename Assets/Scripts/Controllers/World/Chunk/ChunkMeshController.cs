@@ -2,6 +2,7 @@
 
 using UnityEngine;
 using Wyd.Controllers.State;
+using Wyd.Controllers.System;
 using Wyd.Game;
 using Wyd.Game.World.Chunks.Events;
 using Wyd.System;
@@ -88,7 +89,7 @@ namespace Wyd.Controllers.World.Chunk
 
         public void Update()
         {
-            if (!WorldController.Current.IsInSafeFrameTime())
+            if (!SystemController.Current.IsInSafeFrameTime())
             {
                 return;
             }

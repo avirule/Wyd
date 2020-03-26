@@ -23,7 +23,7 @@ namespace Wyd.Controllers.State
 
         private void Awake()
         {
-            AssignCurrent(this);
+            AssignSingletonInstance(this);
 
             _BlockPropertiesRegistry = new Dictionary<BlockRule.Property, HashSet<ushort>>();
 

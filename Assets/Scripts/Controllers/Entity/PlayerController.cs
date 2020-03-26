@@ -75,7 +75,7 @@ namespace Wyd.Controllers.Entity
 
         private void Awake()
         {
-            AssignCurrent(this);
+            AssignSingletonInstance(this);
 
             _ReachRay = new Ray();
             _ActionCooldown = Stopwatch.StartNew();

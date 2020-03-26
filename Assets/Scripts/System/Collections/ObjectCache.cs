@@ -21,7 +21,7 @@ namespace Wyd.System.Collections
 
         public int Size => _InternalCache.Count;
 
-        public ObjectCache(bool createNewIfEmpty, bool preInitialize = false, int maximumSize = -1,
+        public ObjectCache(bool preInitialize = false, int maximumSize = -1,
             PreCachingOperation<T> preCachingOperation = null,
             ItemCulledOperation<T> itemCulledOperation = null)
         {
@@ -31,7 +31,7 @@ namespace Wyd.System.Collections
 
             MaximumSize = maximumSize;
 
-            if (!preInitialize || (maximumSize <= -1) || !createNewIfEmpty)
+            if (!preInitialize || (maximumSize <= -1))
             {
                 return;
             }
@@ -82,7 +82,7 @@ namespace Wyd.System.Collections
             }
         }
 
-        public T RetrieveItem()
+        public T Retrieve()
         {
             if ((_InternalCache.Count == 0)
                 || !_InternalCache.TryPop(out T item)
@@ -94,17 +94,18 @@ namespace Wyd.System.Collections
             return item;
         }
 
-        public bool TryRetrieveItem(out T item)
+        public bool TryRetrieve(out T item)
         {
-            if ((_InternalCache.Count == 0)
-                || !_InternalCache.TryPop(out item)
-                || !(item is object))
+            if ((_InternalCache.Count != 0)
+                && _InternalCache.TryPop(out item)
+                && item is object)
             {
-                item = default;
-                return false;
+                return true;
             }
 
-            return true;
+            item = default;
+            return false;
+
         }
 
         private void AttemptCullCache()

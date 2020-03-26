@@ -16,7 +16,7 @@ namespace Wyd.Game
     public class CollisionLoader : MonoBehaviour
     {
         private static readonly ObjectCache<GameObject> ColliderCubeCache =
-            new ObjectCache<GameObject>(false, false, -1, DeactivateGameObject);
+            new ObjectCache<GameObject>(false, -1, DeactivateGameObject);
 
         private static ref GameObject DeactivateGameObject(ref GameObject obj)
         {
@@ -165,7 +165,7 @@ namespace Wyd.Game
 
         private GameObject GetCollisionCube(Vector3 position)
         {
-            if (!ColliderCubeCache.TryRetrieveItem(out GameObject surfaceCollider))
+            if (!ColliderCubeCache.TryRetrieve(out GameObject surfaceCollider))
             {
                 surfaceCollider = Instantiate(CollisionCubeObject);
             }
