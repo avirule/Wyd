@@ -19,7 +19,6 @@ namespace Wyd.Controllers.World.Chunk
         private Mesh _Mesh;
         private object _JobIdentity;
         private bool _UpdateRequested;
-        private ChunkMeshingJob _PendingMeshData;
 
         public bool Meshed { get; private set; }
         public bool Meshing { get; private set; }
@@ -73,7 +72,6 @@ namespace Wyd.Controllers.World.Chunk
 
             _Mesh = new Mesh();
             MeshFilter.sharedMesh = _Mesh;
-            _PendingMeshData = null;
             Meshed = Meshing = false;
 
             // update debug data when mesh changed
@@ -92,14 +90,6 @@ namespace Wyd.Controllers.World.Chunk
             if (!SystemController.Current.IsInSafeFrameTime())
             {
                 return;
-            }
-
-            if (_PendingMeshData != null)
-            {
-                Meshed = _PendingMeshData.SetMesh(ref _Mesh);
-                _PendingMeshData = null;
-
-                OnMeshChanged(this, new ChunkChangedEventArgs(_Bounds, Directions.CardinalDirectionsVector3));
             }
 
             if (_UpdateRequested
@@ -132,7 +122,7 @@ namespace Wyd.Controllers.World.Chunk
             }
 
             VertexCount = TrianglesCount = UVsCount = TimesMeshed = 0;
-            _JobIdentity = _PendingMeshData = null;
+            _JobIdentity = null;
             Meshing = Meshed = false;
         }
 
@@ -153,28 +143,25 @@ namespace Wyd.Controllers.World.Chunk
                 return;
             }
 
-            ChunkMeshingJob chunkMeshingJob = new ChunkMeshingJob(new GenerationData(_Bounds, BlocksController.Blocks), true);
+            ChunkMeshingJob chunkMeshingJob =
+                new ChunkMeshingJob(new GenerationData(_Bounds, BlocksController.Blocks), true);
 
             if (!GameController.Current.TryQueueJob(chunkMeshingJob, out _JobIdentity))
             {
                 return;
             }
 
-            GameController.Current.JobFinished += (sender, args) =>
-            {
-                if ((args.Job.Identity != _JobIdentity) || !(args.Job is ChunkMeshingJob meshingJob))
-                {
-                    return;
-                }
-
-                DiagnosticsController.Current.RollingChunkMeshTimes.Enqueue(meshingJob.ExecutionTime);
-
-                _PendingMeshData = meshingJob;
-                _JobIdentity = null;
-            };
+            GameController.Current.JobFinished += OnJobFinished;
 
             Meshing = true;
         }
+
+        private void ApplyMesh(ChunkMeshingJob chunkMeshingJob)
+        {
+            chunkMeshingJob.SetMesh(ref _Mesh);
+            OnMeshChanged(this, new ChunkChangedEventArgs(_Bounds, Directions.CardinalDirectionsVector3));
+        }
+
 
         #region EVENTS
 
@@ -183,6 +170,19 @@ namespace Wyd.Controllers.World.Chunk
         private void OnMeshChanged(object sender, ChunkChangedEventArgs args)
         {
             MeshChanged?.Invoke(sender, args);
+        }
+
+        private void OnJobFinished(object sender, JobEventArgs args)
+        {
+            if ((args.Job.Identity != _JobIdentity) || !(args.Job is ChunkMeshingJob chunkMeshingJob))
+            {
+                return;
+            }
+
+            DiagnosticsController.Current.RollingChunkMeshTimes.Enqueue(chunkMeshingJob.ExecutionTime);
+            MainThreadActionsController.Current.PushAction(() => ApplyMesh(chunkMeshingJob));
+            GameController.Current.JobFinished -= OnJobFinished;
+            _JobIdentity = null;
         }
 
         #endregion

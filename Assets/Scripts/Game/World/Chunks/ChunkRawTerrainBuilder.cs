@@ -61,7 +61,6 @@ namespace Wyd.Game.World.Chunks
 
         private void GetComputeBufferData()
         {
-            _NoiseValues = NoiseValuesCache.Retrieve() ?? new ChunkBuilderNoiseValues();
             _NoiseValuesBuffer.GetData(_NoiseValues.NoiseValues);
             _NoiseValuesBuffer.Release();
             NoiseValuesReady = true;
@@ -78,6 +77,7 @@ namespace Wyd.Game.World.Chunks
 
             if (_GpuAcceleration && (_NoiseValuesBuffer != null))
             {
+                _NoiseValues = NoiseValuesCache.Retrieve() ?? new ChunkBuilderNoiseValues();
                 MainThreadActionsController.Current.PushAction(GetComputeBufferData);
 
                 while (!NoiseValuesReady)

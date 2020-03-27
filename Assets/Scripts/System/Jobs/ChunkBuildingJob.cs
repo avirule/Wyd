@@ -10,7 +10,7 @@ namespace Wyd.System.Jobs
 {
     public class ChunkBuildingJob : Job
     {
-        private static readonly ObjectCache<ChunkRawTerrainBuilder> _RawTerrainBuilders =
+        private static readonly ObjectCache<ChunkRawTerrainBuilder> _ChunkRawTerrainBuilders =
             new ObjectCache<ChunkRawTerrainBuilder>();
 
         private readonly GenerationData _GenerationData;
@@ -33,7 +33,7 @@ namespace Wyd.System.Jobs
 
         public override void PreProcess()
         {
-            _TerrainBuilder = _RawTerrainBuilders.Retrieve() ?? new ChunkRawTerrainBuilder();
+            _TerrainBuilder = _ChunkRawTerrainBuilders.Retrieve() ?? new ChunkRawTerrainBuilder();
             _TerrainBuilder.SetData(_GenerationData, _Frequency, _Persistence, _GpuAcceleration, _NoiseValuesBuffer);
         }
 
@@ -45,7 +45,7 @@ namespace Wyd.System.Jobs
         protected override void ProcessFinished()
         {
             // cache builder
-            _RawTerrainBuilders.CacheItem(ref _TerrainBuilder);
+            _ChunkRawTerrainBuilders.CacheItem(ref _TerrainBuilder);
 
             // clear reference
             _TerrainBuilder = null;
