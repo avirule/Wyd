@@ -1,5 +1,6 @@
 #region
 
+using Serilog;
 using UnityEngine;
 using Wyd.Controllers.World.Chunk;
 using Wyd.Game.World.Chunks;
@@ -38,9 +39,20 @@ namespace Wyd.System.Jobs
             _Mesher = mesher;
         }
 
-        public void SetMesh(ref Mesh mesh)
+        public bool SetMesh(ref Mesh mesh)
         {
-            _Mesher.SetMesh(ref mesh);
+            if (_Mesher != null)
+            {
+                _Mesher.SetMesh(ref mesh);
+                _ChunkMesherCache.CacheItem(ref _Mesher);
+                _Mesher = null;
+                return true;
+            }
+            else
+            {
+                Log.Error($"Attempted to use `{nameof(SetMesh)}` when no ChunkMesher has been processed. This could be from a previous `{nameof(SetMesh)}` call, or improper initialization.");
+                return false;
+            }
         }
     }
 }

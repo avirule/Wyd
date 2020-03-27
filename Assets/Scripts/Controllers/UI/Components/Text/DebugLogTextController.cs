@@ -8,7 +8,6 @@ using System.Text;
 using Serilog.Events;
 using TMPro;
 using UnityEngine;
-using Wyd.Controllers.State;
 using Wyd.Controllers.System;
 using Wyd.Controllers.World;
 using Wyd.System.Logging.Sinks;

@@ -96,8 +96,7 @@ namespace Wyd.Controllers.World.Chunk
 
             if (_PendingMeshData != null)
             {
-                Meshed = true;
-                _PendingMeshData.SetMesh(ref _Mesh);
+                Meshed = _PendingMeshData.SetMesh(ref _Mesh);
                 _PendingMeshData = null;
 
                 OnMeshChanged(this, new ChunkChangedEventArgs(_Bounds, Directions.CardinalDirectionsVector3));
@@ -134,7 +133,7 @@ namespace Wyd.Controllers.World.Chunk
 
             VertexCount = TrianglesCount = UVsCount = TimesMeshed = 0;
             _JobIdentity = _PendingMeshData = null;
-            Meshing = false;
+            Meshing = Meshed = false;
         }
 
         #endregion
@@ -154,16 +153,16 @@ namespace Wyd.Controllers.World.Chunk
                 return;
             }
 
-            ChunkMeshingJob job = new ChunkMeshingJob(new GenerationData(_Bounds, BlocksController.Blocks), true);
+            ChunkMeshingJob chunkMeshingJob = new ChunkMeshingJob(new GenerationData(_Bounds, BlocksController.Blocks), true);
 
-            if (!GameController.Current.TryQueueJob(job, out _JobIdentity))
+            if (!GameController.Current.TryQueueJob(chunkMeshingJob, out _JobIdentity))
             {
                 return;
             }
 
             GameController.Current.JobFinished += (sender, args) =>
             {
-                if ((args.Job.Identity == _JobIdentity) || !(args.Job is ChunkMeshingJob meshingJob))
+                if ((args.Job.Identity != _JobIdentity) || !(args.Job is ChunkMeshingJob meshingJob))
                 {
                     return;
                 }

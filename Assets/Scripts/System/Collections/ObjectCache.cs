@@ -105,7 +105,6 @@ namespace Wyd.System.Collections
 
             item = default;
             return false;
-
         }
 
         private void AttemptCullCache()

@@ -85,6 +85,9 @@ namespace Wyd.Controllers.UI.Components.InputField
 
             switch (args[0])
             {
+                // case "disablegravity":
+                //     GameObject.FindWithTag("player").GetComponent<Rigidbody>().useGravity = true;
+                //     break;
                 case "set":
                     if ((args.Length >= 4)
                         && args[1].Equals("resolution", StringComparison.OrdinalIgnoreCase)

@@ -1,6 +1,7 @@
 #region
 
 using System;
+using UnityEditor;
 using UnityEngine;
 
 #endregion
@@ -11,16 +12,16 @@ namespace Wyd.System
     public class ReadOnlyInspectorField : PropertyAttribute { }
 
 #if UNITY_EDITOR
-    [UnityEditor.CustomPropertyDrawer(typeof(ReadOnlyInspectorField))]
-    public class ReadOnlyInspectorFieldDrawer : UnityEditor.PropertyDrawer
+    [CustomPropertyDrawer(typeof(ReadOnlyInspectorField))]
+    public class ReadOnlyInspectorFieldDrawer : PropertyDrawer
     {
-        public override float GetPropertyHeight(UnityEditor.SerializedProperty property, GUIContent label) =>
-            UnityEditor.EditorGUI.GetPropertyHeight(property, label, true);
+        public override float GetPropertyHeight(SerializedProperty property, GUIContent label) =>
+            EditorGUI.GetPropertyHeight(property, label, true);
 
-        public override void OnGUI(Rect position, UnityEditor.SerializedProperty property, GUIContent label)
+        public override void OnGUI(Rect position, SerializedProperty property, GUIContent label)
         {
             GUI.enabled = false;
-            UnityEditor.EditorGUI.PropertyField(position, property, label, true);
+            EditorGUI.PropertyField(position, property, label, true);
             GUI.enabled = true;
         }
     }
