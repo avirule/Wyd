@@ -9,13 +9,12 @@ using Wyd.System;
 using Wyd.System.Collections;
 using Wyd.System.Compression;
 using Wyd.System.Extensions;
-using Wyd.System.Jobs;
 
 #endregion
 
 namespace Wyd.Game.World.Chunks
 {
-    public class ChunkBuilder : Job
+    public class ChunkBuilder
     {
         protected static readonly ObjectCache<ChunkBuilderNoiseValues> NoiseValuesCache =
             new ObjectCache<ChunkBuilderNoiseValues>();

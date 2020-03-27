@@ -219,8 +219,6 @@ namespace Wyd.System.Jobs
         /// <param name="job"><see cref="Job" /> to be processed.</param>
         private void ProcessJob(Job job)
         {
-            job.PreProcess();
-
             switch (ThreadingMode)
             {
                 case ThreadingMode.Single:

@@ -18,12 +18,12 @@ namespace Wyd.Game.World.Chunks
 {
     public class ChunkRawTerrainBuilder : ChunkBuilder
     {
-        private readonly object _NoiseValuesReadyHandle = new object();
         private bool _NoiseValuesReady;
-        private float _Frequency;
-        private float _Persistence;
         private bool _GpuAcceleration;
-        private ComputeBuffer _NoiseValuesBuffer;
+        private readonly object _NoiseValuesReadyHandle = new object();
+        private readonly float _Frequency;
+        private readonly float _Persistence;
+        private readonly ComputeBuffer _NoiseValuesBuffer;
         private ChunkBuilderNoiseValues _NoiseValues;
 
         private bool NoiseValuesReady
@@ -48,7 +48,7 @@ namespace Wyd.Game.World.Chunks
             }
         }
 
-        public void SetData(GenerationData generationData, float frequency, float persistence,
+        public ChunkRawTerrainBuilder(GenerationData generationData, float frequency, float persistence,
             bool gpuAcceleration = false, ComputeBuffer noiseValuesBuffer = null)
         {
             SetGenerationData(generationData);
@@ -98,9 +98,7 @@ namespace Wyd.Game.World.Chunks
             ushort currentId = 0;
             uint runLength = 0;
 
-            for (int index = ChunkController.SizeProduct - 1;
-                (index >= 0) && !AbortToken.IsCancellationRequested;
-                index--)
+            for (int index = ChunkController.SizeProduct - 1; index >= 0; index--)
             {
                 (int x, int y, int z) = Mathv.GetIndexAs3D(index, ChunkController.Size);
 

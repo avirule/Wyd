@@ -95,12 +95,6 @@ namespace Wyd.System.Jobs
         }
 
         /// <summary>
-        ///     This method is run on the <see cref="JobScheduler" />'s threaded
-        ///     context, prior to <see cref="Process" />.
-        /// </summary>
-        public virtual void PreProcess() { }
-
-        /// <summary>
         ///     This is the main method that is executed in
         ///     the <see cref="JobWorker" />'s threaded context.
         /// </summary>
