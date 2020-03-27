@@ -1,14 +1,12 @@
 #region
 
 using System;
-using System.Threading;
 using UnityEditor;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using Wyd.Controllers.World;
 using Wyd.Game;
 using Wyd.Game.World.Blocks;
-using Wyd.System.Jobs;
 using Object = UnityEngine.Object;
 
 #endregion
@@ -17,19 +15,6 @@ namespace Wyd.Controllers.State
 {
     public class GameController : SingletonController<GameController>
     {
-        public static readonly int MainThreadId = Thread.CurrentThread.ManagedThreadId;
-
-        private JobScheduler _JobExecutionScheduler;
-
-        public int JobCount => _JobExecutionScheduler.JobCount;
-        public int ActiveJobCount => _JobExecutionScheduler.ProcessingJobCount;
-        public int WorkerThreadCount => _JobExecutionScheduler.WorkerThreadCount;
-
-        public event JobFinishedEventHandler JobFinished;
-        public event EventHandler<int> JobCountChanged;
-        public event EventHandler<int> ActiveJobCountChanged;
-        public event EventHandler<int> WorkerThreadCountChanged;
-
         private void Awake()
         {
             AssignSingletonInstance(this);
@@ -39,50 +24,7 @@ namespace Wyd.Controllers.State
 
         private void Start()
         {
-            _JobExecutionScheduler = new JobScheduler(TimeSpan.FromMilliseconds(200),
-                OptionsController.Current.ThreadingMode,
-                OptionsController.Current.CPUCoreUtilization);
-
-            _JobExecutionScheduler.WorkerCountChanged += (sender, count) =>
-                WorkerThreadCountChanged?.Invoke(sender, count);
-
-            _JobExecutionScheduler.JobQueued += (sender, args) =>
-                JobCountChanged?.Invoke(sender, _JobExecutionScheduler.JobCount);
-
-            _JobExecutionScheduler.JobStarted += (sender, args) =>
-            {
-                JobCountChanged?.Invoke(sender, _JobExecutionScheduler.JobCount);
-                ActiveJobCountChanged?.Invoke(sender, _JobExecutionScheduler.ProcessingJobCount);
-            };
-
-            _JobExecutionScheduler.JobFinished += (sender, args) =>
-            {
-                JobFinished?.Invoke(sender, args);
-                JobCountChanged?.Invoke(sender, _JobExecutionScheduler.JobCount);
-                ActiveJobCountChanged?.Invoke(sender, _JobExecutionScheduler.ProcessingJobCount);
-            };
-
-            OptionsController.Current.PropertyChanged += (sender, args) =>
-            {
-                if (args.PropertyName.Equals(nameof(OptionsController.Current.ThreadingMode)))
-                {
-                    _JobExecutionScheduler.ThreadingMode = OptionsController.Current.ThreadingMode;
-                }
-                else if (args.PropertyName.Equals(nameof(OptionsController.Current.CPUCoreUtilization)))
-                {
-                    _JobExecutionScheduler.ModifyWorkerThreadCount(OptionsController.Current.CPUCoreUtilization);
-                }
-            };
-
-            _JobExecutionScheduler.Start();
-
             RegisterDefaultBlocks();
-        }
-
-        private void OnDestroy()
-        {
-            // Deallocate and destroy ALL NativeCollection / disposable objects
-            _JobExecutionScheduler.Abort();
         }
 
         private void RegisterDefaultBlocks()
@@ -223,7 +165,5 @@ namespace Wyd.Controllers.State
             EditorApplication.ExitPlaymode();
 #endif
         }
-
-        public bool TryQueueJob(Job job, out object identity) => _JobExecutionScheduler.TryQueueJob(job, out identity);
     }
 }

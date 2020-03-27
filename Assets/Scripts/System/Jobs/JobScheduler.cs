@@ -28,9 +28,9 @@ namespace Wyd.System.Jobs
         private CancellationToken _AbortToken;
         private int _WorkerThreadCount;
         private TimeSpan _WaitTimeout;
-        private int _ProcessingJobCount;
-        private int _JobCount;
-        private int _MaximumJobCount;
+        private long _MaximumJobCount;
+        private long _ProcessingJobCount;
+        private long _JobCount;
 
         /// <summary>
         ///     Determines whether the <see cref="JobScheduler" /> executes <see cref="Job" />s on
@@ -66,9 +66,9 @@ namespace Wyd.System.Jobs
         /// </summary>
         public int WorkerThreadCount => _WorkerThreadCount;
 
-        public int JobCount => _JobCount;
-        public int ProcessingJobCount => _ProcessingJobCount;
-        public int MaximumJobCount => _MaximumJobCount;
+        public long JobCount => Interlocked.Read(ref _JobCount);
+        public long ProcessingJobCount => _ProcessingJobCount;
+        public long MaximumJobCount => _MaximumJobCount;
 
 
         /// <summary>
@@ -290,7 +290,7 @@ namespace Wyd.System.Jobs
         ///     Called when a job finishes execution.
         /// </summary>
         /// <remarks>This event will not necessarily happen synchronously with the main thread.</remarks>
-        public event JobFinishedEventHandler JobFinished;
+        public event JobEventHandler JobFinished;
 
         public event WorkerCountChangedEventHandler WorkerCountChanged;
 

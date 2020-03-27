@@ -104,12 +104,12 @@ namespace Wyd.Controllers.World.Chunk
 
         private void QueueJob(Job job)
         {
-            if (!GameController.Current.TryQueueJob(job, out _JobIdentity))
+            if (!SystemController.Current.TryQueueJob(job, out _JobIdentity))
             {
                 return;
             }
 
-            GameController.Current.JobFinished += OnJobFinished;
+            SystemController.Current.JobFinished += OnJobFinished;
             Generating = true;
         }
 
@@ -212,7 +212,7 @@ namespace Wyd.Controllers.World.Chunk
             CurrentStep = CurrentStep.Next();
             Generating = false;
             _JobIdentity = null;
-            GameController.Current.JobFinished -= OnJobFinished;
+            SystemController.Current.JobFinished -= OnJobFinished;
         }
 
         #endregion

@@ -46,7 +46,7 @@ namespace Wyd.System.Jobs
         public int ManagedThreadId => _Thread.ManagedThreadId;
 
         public event JobStartedEventHandler JobStarted;
-        public event JobFinishedEventHandler JobFinished;
+        public event JobEventHandler JobFinished;
 
         public JobWorker(TimeSpan waitTimeout, CancellationToken abortToken)
         {

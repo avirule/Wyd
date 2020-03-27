@@ -3,6 +3,7 @@
 using System.Threading;
 using UnityEngine;
 using Wyd.Controllers.State;
+using Wyd.Controllers.System;
 
 #endregion
 
@@ -29,7 +30,7 @@ namespace Wyd.Graphics
 
         public void Draw()
         {
-            if (Thread.CurrentThread.ManagedThreadId == GameController.MainThreadId)
+            if (Thread.CurrentThread.ManagedThreadId == SystemController.MainThreadId)
             {
                 // don't try to run GL code on side thread
                 return;

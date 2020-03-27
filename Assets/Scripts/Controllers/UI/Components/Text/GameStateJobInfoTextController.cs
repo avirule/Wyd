@@ -1,6 +1,6 @@
 #region
 
-using Wyd.Controllers.State;
+using Wyd.Controllers.System;
 
 #endregion
 
@@ -12,9 +12,9 @@ namespace Wyd.Controllers.UI.Components.Text
 
         private void Start()
         {
-            GameController.Current.JobCountChanged += (sender, i) => _UpdateDiagInfo = true;
-            GameController.Current.ActiveJobCountChanged += (sender, i) => _UpdateDiagInfo = true;
-            GameController.Current.WorkerThreadCountChanged += (sender, i) => _UpdateDiagInfo = true;
+            SystemController.Current.JobCountChanged += (sender, i) => _UpdateDiagInfo = true;
+            SystemController.Current.ActiveJobCountChanged += (sender, i) => _UpdateDiagInfo = true;
+            SystemController.Current.WorkerThreadCountChanged += (sender, i) => _UpdateDiagInfo = true;
             _UpdateDiagInfo = true;
         }
 
@@ -23,9 +23,9 @@ namespace Wyd.Controllers.UI.Components.Text
             if (_UpdateDiagInfo)
             {
                 TextObject.text = string.Format(Format,
-                    GameController.Current.WorkerThreadCount,
-                    GameController.Current.JobCount,
-                    GameController.Current.ActiveJobCount);
+                    SystemController.Current.WorkerThreadCount,
+                    SystemController.Current.JobCount,
+                    SystemController.Current.ActiveJobCount);
 
                 _UpdateDiagInfo = false;
             }

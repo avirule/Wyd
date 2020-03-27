@@ -146,12 +146,12 @@ namespace Wyd.Controllers.World.Chunk
             ChunkMeshingJob chunkMeshingJob =
                 new ChunkMeshingJob(new GenerationData(_Bounds, BlocksController.Blocks), true);
 
-            if (!GameController.Current.TryQueueJob(chunkMeshingJob, out _JobIdentity))
+            if (!SystemController.Current.TryQueueJob(chunkMeshingJob, out _JobIdentity))
             {
                 return;
             }
 
-            GameController.Current.JobFinished += OnJobFinished;
+            SystemController.Current.JobFinished += OnJobFinished;
 
             Meshing = true;
         }
@@ -181,7 +181,7 @@ namespace Wyd.Controllers.World.Chunk
 
             DiagnosticsController.Current.RollingChunkMeshTimes.Enqueue(chunkMeshingJob.ExecutionTime);
             MainThreadActionsController.Current.PushAction(() => ApplyMesh(chunkMeshingJob));
-            GameController.Current.JobFinished -= OnJobFinished;
+            SystemController.Current.JobFinished -= OnJobFinished;
             _JobIdentity = null;
         }
 
