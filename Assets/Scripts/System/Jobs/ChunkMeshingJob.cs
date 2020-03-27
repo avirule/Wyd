@@ -50,7 +50,8 @@ namespace Wyd.System.Jobs
             }
             else
             {
-                Log.Error($"Attempted to use `{nameof(SetMesh)}` when no ChunkMesher has been processed. This could be from a previous `{nameof(SetMesh)}` call, or improper initialization.");
+                Log.Error(
+                    $"Attempted to use `{nameof(SetMesh)}` when no ChunkMesher has been processed. This could be from a previous `{nameof(SetMesh)}` call, or improper initialization.");
                 return false;
             }
         }

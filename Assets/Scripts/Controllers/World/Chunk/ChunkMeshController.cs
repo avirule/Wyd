@@ -1,7 +1,6 @@
 #region
 
 using UnityEngine;
-using Wyd.Controllers.State;
 using Wyd.Controllers.System;
 using Wyd.Game;
 using Wyd.Game.World.Chunks.Events;

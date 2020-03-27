@@ -1,7 +1,6 @@
 #region
 
 using System;
-using System.ComponentModel;
 using System.Diagnostics;
 using System.Threading;
 using Wyd.Controllers.State;

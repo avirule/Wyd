@@ -2,7 +2,6 @@
 
 using System.Threading;
 using UnityEngine;
-using Wyd.Controllers.State;
 using Wyd.Controllers.System;
 
 #endregion
