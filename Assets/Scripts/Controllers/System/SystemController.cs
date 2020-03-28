@@ -29,6 +29,10 @@ namespace Wyd.Controllers.System
             DontDestroyOnLoad(this);
 
             _FrameTimer = new Stopwatch();
+        }
+
+        private void Start()
+        {
             _JobExecutionScheduler = new JobScheduler(TimeSpan.FromMilliseconds(200),
                 OptionsController.Current.ThreadingMode,
                 OptionsController.Current.CPUCoreUtilization);

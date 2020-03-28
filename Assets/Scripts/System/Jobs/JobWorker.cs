@@ -19,6 +19,8 @@ namespace Wyd.System.Jobs
         public readonly TimeSpan WaitTimeout;
         private bool _Processing;
 
+        public Thread InternalThread => _Thread;
+
         public bool Running { get; private set; }
 
         public bool Processing
@@ -43,8 +45,6 @@ namespace Wyd.System.Jobs
             }
         }
 
-        public int ManagedThreadId => _Thread.ManagedThreadId;
-
         public event JobStartedEventHandler JobStarted;
         public event JobEventHandler JobFinished;
 
@@ -64,6 +64,21 @@ namespace Wyd.System.Jobs
             Running = true;
         }
 
+        /// <summary>
+        ///     Used to forcefully abort the thread. Use ONLY IF NECESSARY.
+        /// </summary>
+        /// <param name="quit">Whether or not to forcefully abort worker.</param>
+        public void ForceAbort(bool quit)
+        {
+            if (!quit)
+            {
+                return;
+            }
+
+            _Thread.Abort();
+            Log.Warning($"{nameof(JobWorker)} ID {InternalThread.ManagedThreadId} forced to abort.");
+        }
+
         public void QueueJob(Job job) => _ItemQueue.Add(job);
 
         private void ProcessItemQueue()
@@ -81,11 +96,11 @@ namespace Wyd.System.Jobs
             catch (OperationCanceledException)
             {
                 // Thread aborted
-                Log.Warning($"{nameof(JobWorker)} (ID {ManagedThreadId}) has critically aborted.");
+                Log.Warning($"{nameof(JobWorker)} (ID {InternalThread.ManagedThreadId}) has critically aborted.");
             }
             catch (Exception ex)
             {
-                Log.Error($"Error in {nameof(JobWorker)} (ID {ManagedThreadId}): {ex.Message}\r\n{ex.StackTrace}");
+                Log.Error($"Error in {nameof(JobWorker)} (ID {InternalThread.ManagedThreadId}): {ex.Message}\r\n{ex.StackTrace}");
             }
             finally
             {

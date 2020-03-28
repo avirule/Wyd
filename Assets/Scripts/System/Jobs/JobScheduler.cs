@@ -79,8 +79,7 @@ namespace Wyd.System.Jobs
         /// </param>
         /// <param name="threadingMode"></param>
         /// <param name="workerCount">Size of internal <see cref="JobWorker" /> pool</param>
-        public JobScheduler(TimeSpan waitTimeout, ThreadingMode threadingMode,
-            int workerCount = 1)
+        public JobScheduler(TimeSpan waitTimeout, ThreadingMode threadingMode, int workerCount = 1)
         {
             WaitTimeout = waitTimeout;
             ThreadingMode = threadingMode;
@@ -136,7 +135,43 @@ namespace Wyd.System.Jobs
         {
             _AbortTokenSource.Cancel();
             WaitTimeout = TimeSpan.Zero;
-            Log.Information($"{nameof(JobScheduler)} (ID {_OperationThread.ManagedThreadId}) has safely aborted.");
+        }
+
+        private void AttemptSafeAbort()
+        {
+            if (CheckWorkersSafelyAborted())
+            {
+                Log.Information($"{nameof(JobScheduler)} (ID {_OperationThread.ManagedThreadId}) has safely aborted.");
+            }
+            else
+            {
+                Log.Warning($"{nameof(JobScheduler)} (ID {_OperationThread.ManagedThreadId}) failed to safely abort.");
+            }
+        }
+
+        private bool CheckWorkersSafelyAborted()
+        {
+            bool safeAbort = true;
+            DateTime maximumWorkerLifetime = DateTime.UtcNow + TimeSpan.FromSeconds(2);
+
+            foreach (JobWorker worker in _Workers)
+            {
+                while (!worker.InternalThread.ThreadState.HasFlag(ThreadState.Aborted))
+                {
+                    if (DateTime.UtcNow <= maximumWorkerLifetime)
+                    {
+                        Thread.Sleep(0);
+                    }
+                    else
+                    {
+                        worker.ForceAbort(true);
+                        worker.InternalThread.Join();
+                        safeAbort = false;
+                    }
+                }
+            }
+
+            return safeAbort;
         }
 
         #endregion
@@ -186,6 +221,8 @@ namespace Wyd.System.Jobs
                         ProcessJob(job);
                     }
                 }
+
+                AttemptSafeAbort();
             }
             catch (OperationCanceledException)
             {
@@ -222,7 +259,7 @@ namespace Wyd.System.Jobs
             switch (ThreadingMode)
             {
                 case ThreadingMode.Single:
-                    _Workers[0].QueueJob(job);
+                    job.Execute();
                     break;
                 case ThreadingMode.Multi:
                     int jobWorkerIndex;

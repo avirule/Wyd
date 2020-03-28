@@ -23,7 +23,7 @@ namespace Wyd.Controllers.System
 
         private void Update()
         {
-            // try to retrieve item from _Actions, or break if no items present
+            // try to retrieve item from _Actions in safe time, or break if no items present
             while (SystemController.Current.IsInSafeFrameTime() && _Actions.TryPop(out Action currentAction))
             {
                 currentAction.Invoke();

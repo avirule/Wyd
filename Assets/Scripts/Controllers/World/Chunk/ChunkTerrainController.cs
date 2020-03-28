@@ -1,6 +1,7 @@
 #region
 
 using System;
+using Serilog;
 using UnityEngine;
 using Wyd.Controllers.State;
 using Wyd.Controllers.System;
@@ -141,6 +142,7 @@ namespace Wyd.Controllers.World.Chunk
 
             if (OptionsController.Current.GPUAcceleration)
             {
+                Log.Debug($"Creating ComputeBuffer to generate noise values for chunk at position ({_Position.x}, {_Position.y}, {_Position.z}).");
                 ComputeBuffer noiseBuffer = new ComputeBuffer(ChunkController.Size.Product(), 4);
                 int kernel = _NoiseShader.FindKernel("CSMain");
                 _NoiseShader.SetVector("_Offset", _Position);
