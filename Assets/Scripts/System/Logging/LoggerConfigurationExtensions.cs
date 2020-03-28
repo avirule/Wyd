@@ -1,7 +1,9 @@
 #region
 
+using System.Collections.Generic;
 using Serilog;
 using Serilog.Configuration;
+using Serilog.Events;
 using Wyd.System.Logging.Sinks;
 
 #endregion
@@ -11,11 +13,12 @@ namespace Wyd.System.Logging
     public static class LoggerConfigurationExtensions
     {
         public static LoggerConfiguration UnityDebugSink(this LoggerSinkConfiguration sinkConfiguration,
-            string outputTemplate) =>
-            sinkConfiguration.Sink(new UnityDebugLoggerSink(outputTemplate));
+            string outputTemplate) => sinkConfiguration.Sink(new UnityDebugLoggerSink(outputTemplate));
 
         public static LoggerConfiguration MemorySink(this LoggerSinkConfiguration sinkConfiguration,
-            string outputTemplate) =>
-            sinkConfiguration.Sink(new MemorySink(outputTemplate));
+            ref List<LogEvent> logEvents) => sinkConfiguration.Sink(new MemorySink(ref logEvents));
+
+        public static LoggerConfiguration EventSink(this LoggerSinkConfiguration sinkConfiguration) =>
+            sinkConfiguration.Sink(new EventSink());
     }
 }

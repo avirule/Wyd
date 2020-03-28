@@ -1,6 +1,5 @@
 #region
 
-using System;
 using System.Collections.Generic;
 using System.Threading;
 using Serilog;
@@ -18,18 +17,18 @@ namespace Wyd.Controllers.System
         private const string _DEFAULT_TEMPLATE = "{Timestamp:MM/dd/yy-HH:mm:ss} | {Level:u3} | {Message}\r\n";
         private const int _MAXIMUM_RUNTIME_ERRORS = 10;
 
-        private static readonly DateTime _RuntimeErrorsDateTime = DateTime.Now;
         private static string _logPath;
         private static int _runtimeErrorCount;
         private static bool _killApplication;
-
         private static MemorySink _memorySink;
+        private static List<LogEvent> _logEvents;
 
-        public static IReadOnlyList<LogEvent> LoggedEvents => _memorySink?.LogEvents;
+        public static IReadOnlyList<LogEvent> LoggedEvents => _logEvents;
 
         private void Awake()
         {
             _logPath = $@"{Application.persistentDataPath}\logs\";
+            _logEvents = new List<LogEvent>();
 
             SetupStaticLogger();
 
@@ -51,37 +50,39 @@ namespace Wyd.Controllers.System
 
         private static void SetupStaticLogger()
         {
-            if (_memorySink == null)
-            {
-                _memorySink = new MemorySink(_DEFAULT_TEMPLATE);
-            }
-
             Log.Logger = new LoggerConfiguration()
-                .WriteTo.Sink(_memorySink)
-                .WriteTo.Sink<GlobalLogEventSink>()
-                // default log output
-                .WriteTo.File(
-                    path: $@"{_logPath}\runtime_.log",
-                    rollingInterval: RollingInterval.Day,
-                    outputTemplate: _DEFAULT_TEMPLATE,
-                    rollOnFileSizeLimit: true,
-                    restrictedToMinimumLevel: LogEventLevel.Information)
                 // verbose log output
-                .WriteTo.File(
-                    path: $@"{_logPath}\runtime-verbose_.log",
-                    rollingInterval: RollingInterval.Day,
-                    outputTemplate: _DEFAULT_TEMPLATE,
-                    rollOnFileSizeLimit: true)
+                .WriteTo.Async(configuration =>
+                    configuration.File(
+                        $@"{_logPath}\runtime-verbose_.log",
+                        rollingInterval: RollingInterval.Day,
+                        outputTemplate: _DEFAULT_TEMPLATE,
+                        retainedFileCountLimit: 31,
+                        rollOnFileSizeLimit: true))
+                // default log output
+                .WriteTo.Async(configuration =>
+                    configuration.File(
+                        $@"{_logPath}\runtime_.log",
+                        rollingInterval: RollingInterval.Day,
+                        outputTemplate: _DEFAULT_TEMPLATE,
+                        retainedFileCountLimit: 31,
+                        rollOnFileSizeLimit: true,
+                        restrictedToMinimumLevel: LogEventLevel.Information))
                 // error log output
-                .WriteTo.File(
-                    path: $@"{_logPath}\runtime-error_.log",
-                    rollingInterval: RollingInterval.Day,
-                    outputTemplate: _DEFAULT_TEMPLATE,
-                    rollOnFileSizeLimit: true,
-                    restrictedToMinimumLevel: LogEventLevel.Error)
+                .WriteTo.Async(configuration =>
+                    configuration.File(
+                        $@"{_logPath}\runtime-error_.log",
+                        rollingInterval: RollingInterval.Day,
+                        outputTemplate: _DEFAULT_TEMPLATE,
+                        retainedFileCountLimit: 31,
+                        rollOnFileSizeLimit: true,
+                        restrictedToMinimumLevel: LogEventLevel.Error))
 #if UNITY_EDITOR
                 .WriteTo.UnityDebugSink(_DEFAULT_TEMPLATE)
 #endif
+                .WriteTo.MemorySink(ref _logEvents)
+                .WriteTo.EventSink()
+                .MinimumLevel.Verbose()
                 .CreateLogger();
         }
 

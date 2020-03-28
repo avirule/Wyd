@@ -21,7 +21,6 @@ namespace Wyd.System.Logging.Sinks
 
             switch (logEvent.Level)
             {
-                case LogEventLevel.Debug:
                 case LogEventLevel.Information:
                     Debug.Log(rendered);
                     break;

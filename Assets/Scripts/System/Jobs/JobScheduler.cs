@@ -162,7 +162,7 @@ namespace Wyd.System.Jobs
 
         private void AttemptSafeAbort()
         {
-            if (CheckWorkersSafelyAborted())
+            if (CheckAllJobWorkersAborted())
             {
                 Log.Information($"{nameof(JobScheduler)} (ID {_OperationThread.ManagedThreadId}) has safely aborted.");
             }
@@ -172,14 +172,14 @@ namespace Wyd.System.Jobs
             }
         }
 
-        private bool CheckWorkersSafelyAborted()
+        private bool CheckAllJobWorkersAborted()
         {
             bool safeAbort = true;
             DateTime maximumWorkerLifetime = DateTime.UtcNow + TimeSpan.FromSeconds(2);
 
-            foreach (JobWorker worker in _Workers)
+            foreach (JobWorker jobWorker in _Workers)
             {
-                while (!worker.InternalThread.ThreadState.HasFlag(ThreadState.Aborted))
+                while (!jobWorker.InternalThread.ThreadState.HasFlag(ThreadState.Aborted))
                 {
                     if (DateTime.UtcNow <= maximumWorkerLifetime)
                     {
@@ -187,11 +187,11 @@ namespace Wyd.System.Jobs
                     }
                     else
                     {
-                        worker.ForceAbort(true);
+                        jobWorker.ForceAbort(true);
                         safeAbort = false;
                     }
 
-                    worker.InternalThread.Join();
+                    jobWorker.InternalThread.Join();
                 }
             }
 

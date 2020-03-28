@@ -9,7 +9,7 @@ namespace Wyd.System.Logging.Sinks
 {
     public delegate void LogEventLoggedEventHandler(object sender, LogEvent logEvent);
 
-    public class GlobalLogEventSink : ILogEventSink
+    public class EventSink : ILogEventSink
     {
         public static event LogEventLoggedEventHandler Logged;
 

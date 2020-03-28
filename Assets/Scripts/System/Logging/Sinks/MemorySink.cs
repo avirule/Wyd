@@ -14,21 +14,16 @@ namespace Wyd.System.Logging.Sinks
         public const string ERROR_COLOR = "#FF6961";
         public const string WARN_COLOR = "#FFFF99";
 
-        private string _OutputTemplate;
+        private readonly List<LogEvent> _LogEvents;
 
-        public readonly List<LogEvent> LogEvents;
-
-
-        public MemorySink(string outputTemplate)
+        public MemorySink(ref List<LogEvent> logEvents)
         {
-            LogEvents = new List<LogEvent>();
-
-            _OutputTemplate = outputTemplate;
+            _LogEvents = logEvents;
         }
 
         public void Emit(LogEvent logEvent)
         {
-            LogEvents.Add(logEvent);
+            _LogEvents.Add(logEvent);
         }
     }
 }

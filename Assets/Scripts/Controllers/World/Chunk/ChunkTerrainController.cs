@@ -142,7 +142,8 @@ namespace Wyd.Controllers.World.Chunk
 
             if (OptionsController.Current.GPUAcceleration)
             {
-                Log.Debug($"Creating ComputeBuffer to generate noise values for chunk at position ({_Position.x}, {_Position.y}, {_Position.z}).");
+                Log.Debug(
+                    $"Generating chunk at position ({_Position.x}, {_Position.y}, {_Position.z}) using GPU acceleration ({nameof(OptionsController.Current.GPUAcceleration)} == {OptionsController.Current.GPUAcceleration}).");
                 ComputeBuffer noiseBuffer = new ComputeBuffer(ChunkController.Size.Product(), 4);
                 int kernel = _NoiseShader.FindKernel("CSMain");
                 _NoiseShader.SetVector("_Offset", _Position);
@@ -157,6 +158,8 @@ namespace Wyd.Controllers.World.Chunk
             }
             else
             {
+                Log.Debug(
+                    $"Generating chunk at position ({_Position.x}, {_Position.y}, {_Position.z}) without GPU acceleration ({nameof(OptionsController.Current.GPUAcceleration)} == {OptionsController.Current.GPUAcceleration}).");
                 job = new ChunkBuildingJob(new GenerationData(_Bounds, BlocksController.Blocks), frequency, persistence,
                     OptionsController.Current.GPUAcceleration);
             }

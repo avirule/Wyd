@@ -31,7 +31,7 @@ namespace Wyd.Controllers.UI.Components.Text
 
             CheckSetDebugEventsLogged();
 
-            GlobalLogEventSink.Logged += OnEventLogged;
+            EventSink.Logged += OnEventLogged;
         }
 
         private void Update()
