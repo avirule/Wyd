@@ -205,6 +205,11 @@ namespace Wyd.Game.World
         {
             using (SQLiteConnection connection = new SQLiteConnection(ConnectionString))
             {
+                if (connection.State != ConnectionState.Open)
+                {
+                    return;
+                }
+
                 connection.OpenAsync();
 
                 using (SQLiteCommand command = new SQLiteCommand(connection))

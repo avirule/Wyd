@@ -97,11 +97,11 @@ namespace Wyd.Controllers.World
                 (ref ChunkController chunkController) =>
                     Destroy(chunkController.gameObject));
 
+            Seed = new WorldSeed(SeedString);
             _Chunks = new Dictionary<Vector3, ChunkController>();
             _EntitiesPendingChunkBuilding = new Stack<IEntity>();
             _ChunksPendingDeactivation = new Stack<ChunkChangedEventArgs>();
             _SaveFileProvider = new WorldSaveFileProvider("world");
-            Seed = new WorldSeed(SeedString);
             _SaveFileProvider.Initialise().ConfigureAwait(false);
         }
 

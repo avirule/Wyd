@@ -2,8 +2,6 @@
 
 using System;
 using System.Collections.Generic;
-using System.IO;
-using System.Text;
 using System.Threading;
 using Serilog;
 using Serilog.Events;
@@ -17,33 +15,23 @@ namespace Wyd.Controllers.System
 {
     public class LogController : MonoBehaviour
     {
-        private const string _DEFAULT_TEMPLATE = "{Timestamp:MM/dd/yy-HH:mm:ss} | {Level:u3} | {Message}";
+        private const string _DEFAULT_TEMPLATE = "{Timestamp:MM/dd/yy-HH:mm:ss} | {Level:u3} | {Message}\r\n";
         private const int _MAXIMUM_RUNTIME_ERRORS = 10;
 
         private static readonly DateTime _RuntimeErrorsDateTime = DateTime.Now;
-        private static string _runtimeErrorsPath;
+        private static string _logPath;
         private static int _runtimeErrorCount;
         private static bool _killApplication;
 
-        private static MemorySink _loggedDataSink;
+        private static MemorySink _memorySink;
 
-        public static IReadOnlyList<LogEvent> LoggedEvents => _loggedDataSink?.LogEvents;
+        public static IReadOnlyList<LogEvent> LoggedEvents => _memorySink?.LogEvents;
 
         private void Awake()
         {
-            if (_loggedDataSink == null)
-            {
-                _loggedDataSink = new MemorySink(_DEFAULT_TEMPLATE);
-            }
+            _logPath = $@"{Application.persistentDataPath}\logs\";
 
-            Log.Logger = new LoggerConfiguration()
-                .WriteTo.Sink(_loggedDataSink)
-                .WriteTo.Sink<GlobalLogEventSink>()
-#if UNITY_EDITOR
-                .WriteTo.UnityDebugSink(_DEFAULT_TEMPLATE)
-#endif
-                .CreateLogger();
-
+            SetupStaticLogger();
 
             Application.logMessageReceived += LogHandler;
         }
@@ -56,6 +44,47 @@ namespace Wyd.Controllers.System
             }
         }
 
+        private void OnDestroy()
+        {
+            Log.CloseAndFlush();
+        }
+
+        private static void SetupStaticLogger()
+        {
+            if (_memorySink == null)
+            {
+                _memorySink = new MemorySink(_DEFAULT_TEMPLATE);
+            }
+
+            Log.Logger = new LoggerConfiguration()
+                .WriteTo.Sink(_memorySink)
+                .WriteTo.Sink<GlobalLogEventSink>()
+                // default log output
+                .WriteTo.File(
+                    path: $@"{_logPath}\runtime_.log",
+                    rollingInterval: RollingInterval.Day,
+                    outputTemplate: _DEFAULT_TEMPLATE,
+                    rollOnFileSizeLimit: true,
+                    restrictedToMinimumLevel: LogEventLevel.Information)
+                // verbose log output
+                .WriteTo.File(
+                    path: $@"{_logPath}\runtime-verbose_.log",
+                    rollingInterval: RollingInterval.Day,
+                    outputTemplate: _DEFAULT_TEMPLATE,
+                    rollOnFileSizeLimit: true)
+                // error log output
+                .WriteTo.File(
+                    path: $@"{_logPath}\runtime-error_.log",
+                    rollingInterval: RollingInterval.Day,
+                    outputTemplate: _DEFAULT_TEMPLATE,
+                    rollOnFileSizeLimit: true,
+                    restrictedToMinimumLevel: LogEventLevel.Error)
+#if UNITY_EDITOR
+                .WriteTo.UnityDebugSink(_DEFAULT_TEMPLATE)
+#endif
+                .CreateLogger();
+        }
+
         private static void LogHandler(string message, string stackTrace, LogType type)
         {
             if (type != LogType.Exception)
@@ -63,16 +92,7 @@ namespace Wyd.Controllers.System
                 return;
             }
 
-            if (string.IsNullOrEmpty(_runtimeErrorsPath))
-            {
-                _runtimeErrorsPath =
-                    $@"{Application.persistentDataPath}\logs\runtime-exceptions_{_RuntimeErrorsDateTime:MM-dd-yy_h-mm-ss}.log";
-            }
-
             Log.Fatal(stackTrace);
-
-            // todo make a fatality-specific sink
-            File.AppendAllText(_runtimeErrorsPath, stackTrace, Encoding.ASCII);
 
             Interlocked.Increment(ref _runtimeErrorCount);
 

@@ -85,7 +85,7 @@ namespace Wyd.System.Jobs
             ThreadingMode = threadingMode;
             ModifyWorkerThreadCount(workerCount);
 
-            _OperationThread = new Thread(ProcessJobs);
+            _OperationThread = new Thread(ExecuteScheduler);
             _JobQueue = new SpinLockCollection<Job>();
             _Workers = new List<JobWorker>(WorkerThreadCount);
             _AbortTokenSource = new CancellationTokenSource();
@@ -103,16 +103,39 @@ namespace Wyd.System.Jobs
         }
 
         /// <summary>
+        ///     Adds specified <see cref="Job" /> to internal queue and returns a unique identity.
+        /// </summary>
+        /// <param name="job"><see cref="Job" /> to be added.</param>
+        /// <param name="identifier">A unique <see cref="object" /> identity.</param>
+        public bool TryQueueJob(Job job, out object identifier)
+        {
+            identifier = null;
+
+            if (!Running
+                || _AbortToken.IsCancellationRequested
+                || ((MaximumJobCount > 0) && (JobCount >= MaximumJobCount)))
+            {
+                return false;
+            }
+
+            job.Initialize(Guid.NewGuid().ToString(), _AbortToken);
+            _JobQueue.Add(job);
+            OnJobQueued(this, new JobEventArgs(job));
+            identifier = job.Identity;
+            return true;
+        }
+
+        /// <summary>
         ///     Modifies total number of available worker threads for JobQueue.
         /// </summary>
         /// <remarks>
-        ///     This separate-method approach is takes to make intent clear, and to
+        ///     This separate-method approach is taken to make intent clear, and to
         ///     more idiomatically constrain the total to a positive value.
         /// </remarks>
-        /// <param name="modification"></param>
-        public void ModifyWorkerThreadCount(int modification)
+        /// <param name="newTotal"></param>
+        public void ModifyWorkerThreadCount(int newTotal)
         {
-            Interlocked.Exchange(ref _WorkerThreadCount, Math.Max(modification, 1));
+            Interlocked.Exchange(ref _WorkerThreadCount, Math.Max(newTotal, 1));
             Interlocked.Exchange(ref _MaximumJobCount, _WorkerThreadCount * 10);
             OnWorkerCountChanged(this, WorkerThreadCount);
         }
@@ -165,9 +188,10 @@ namespace Wyd.System.Jobs
                     else
                     {
                         worker.ForceAbort(true);
-                        worker.InternalThread.Join();
                         safeAbort = false;
                     }
+
+                    worker.InternalThread.Join();
                 }
             }
 
@@ -176,42 +200,18 @@ namespace Wyd.System.Jobs
 
         #endregion
 
-        #region JOBS
-
-        /// <summary>
-        ///     Adds specified <see cref="Job" /> to internal queue and returns a unique identity.
-        /// </summary>
-        /// <param name="job"><see cref="Job" /> to be added.</param>
-        /// <param name="identifier">A unique <see cref="object" /> identity.</param>
-        public bool TryQueueJob(Job job, out object identifier)
-        {
-            identifier = null;
-
-            if (!Running
-                || _AbortToken.IsCancellationRequested
-                || ((MaximumJobCount > 0) && (JobCount >= MaximumJobCount)))
-            {
-                return false;
-            }
-
-            job.Initialize(Guid.NewGuid().ToString(), _AbortToken);
-            _JobQueue.Add(job);
-            OnJobQueued(this, new JobEventArgs(job));
-            identifier = job.Identity;
-            return true;
-        }
+        #region RUNTIME
 
         /// <summary>
         ///     Begins internal loop for processing <see cref="Job" />s from internal queue.
         /// </summary>
-        private void ProcessJobs()
+        private void ExecuteScheduler()
         {
             try
             {
                 while (!_AbortToken.IsCancellationRequested)
                 {
-                    while ((_Workers.Count < WorkerThreadCount)
-                           && (ThreadingMode == ThreadingMode.Multi))
+                    while ((_Workers.Count < WorkerThreadCount) && (ThreadingMode == ThreadingMode.Multi))
                     {
                         SpawnJobWorker();
                     }
