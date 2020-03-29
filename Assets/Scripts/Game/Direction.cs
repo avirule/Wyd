@@ -56,6 +56,16 @@ namespace Wyd.Game
             Vector3.back,
             Vector3.left
         };
+
+        public static readonly Vector3[] AllDirectionsVector3 =
+        {
+            Vector3.forward,
+            Vector3.right,
+            Vector3.back,
+            Vector3.left,
+            Vector3.up,
+            Vector3.down
+        };
     }
 
     public static class DirectionExtensions

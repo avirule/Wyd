@@ -3,6 +3,7 @@
 using System;
 using System.Collections.Generic;
 using UnityEngine;
+using Wyd.System.Collections;
 using Wyd.System.Compression;
 
 #endregion
@@ -30,8 +31,8 @@ namespace Wyd.System
         public const GenerationStep FINAL_TERRAIN_STEP = GenerationStep.RawTerrain;
 
         public Bounds Bounds { get; private set; }
-        public LinkedList<RLENode<ushort>> Blocks { get; private set; }
+        public Octree<ushort> Blocks { get; private set; }
 
-        public GenerationData(Bounds bounds, LinkedList<RLENode<ushort>> blocks) => (Bounds, Blocks) = (bounds, blocks);
+        public GenerationData(Bounds bounds, Octree<ushort> blocks) => (Bounds, Blocks) = (bounds, blocks);
     }
 }

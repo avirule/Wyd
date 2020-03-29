@@ -6,11 +6,11 @@ using System.Diagnostics.CodeAnalysis;
 using UnityEngine;
 using Wyd.Controllers.State;
 using Wyd.Controllers.System;
+using Wyd.Game;
 using Wyd.Game.World.Blocks;
 using Wyd.Game.World.Chunks.Events;
 using Wyd.System;
 using Wyd.System.Collections;
-using Wyd.System.Compression;
 
 #endregion
 
@@ -26,7 +26,7 @@ namespace Wyd.Controllers.World.Chunk
 
         private Queue<BlockAction> _BlockActions;
 
-        public LinkedList<RLENode<ushort>> Blocks { get; private set; }
+        public Octree<ushort> Blocks { get; private set; }
         public int QueuedBlockActions => _BlockActions.Count;
 
         #endregion
@@ -53,7 +53,7 @@ namespace Wyd.Controllers.World.Chunk
         {
             base.Awake();
 
-            Blocks = new LinkedList<RLENode<ushort>>();
+            Blocks = new Octree<ushort>(_Position + (ChunkController.Size.AsVector3() / 2f), ChunkController.Size.x, 0);
             _BlockActions = new Queue<BlockAction>();
         }
 
@@ -63,44 +63,41 @@ namespace Wyd.Controllers.World.Chunk
             // if we've passed safe frame time for target
             // fps, then skip updates as necessary to reach
             // next frame
-            if (!SystemController.Current.IsInSafeFrameTime())
-            {
-                return;
-            }
+            if (!SystemController.Current.IsInSafeFrameTime()) { }
 
-            if (_BlockActions.Count > 0)
-            {
-                ProcessBlockActions();
-            }
-
-            if (Blocks.Count != TotalNodes)
-            {
-                UpdateInternalStateInfo();
-            }
+            // if (_BlockActions.Count > 0)
+            // {
+            //     ProcessBlockActions();
+            // }
+            //
+            // if (Blocks.Count != TotalNodes)
+            // {
+            //     UpdateInternalStateInfo();
+            // }
         }
 
-        private void UpdateInternalStateInfo()
-        {
-            TotalNodes = Blocks.Count;
-
-            HashSet<ushort> uniqueBlockIds = new HashSet<ushort>();
-            NonAirBlocks = 0;
-
-            foreach (RLENode<ushort> node in Blocks)
-            {
-                if (!uniqueBlockIds.Contains(node.Value))
-                {
-                    uniqueBlockIds.Add(node.Value);
-                }
-
-                if (node.Value != 0)
-                {
-                    NonAirBlocks += node.RunLength;
-                }
-            }
-
-            UniqueNodes = (uint)uniqueBlockIds.Count;
-        }
+        // private void UpdateInternalStateInfo()
+        // {
+        //     TotalNodes = Blocks.Count;
+        //
+        //     HashSet<ushort> uniqueBlockIds = new HashSet<ushort>();
+        //     NonAirBlocks = 0;
+        //
+        //     foreach (RLENode<ushort> node in Blocks)
+        //     {
+        //         if (!uniqueBlockIds.Contains(node.Value))
+        //         {
+        //             uniqueBlockIds.Add(node.Value);
+        //         }
+        //
+        //         if (node.Value != 0)
+        //         {
+        //             NonAirBlocks += node.RunLength;
+        //         }
+        //     }
+        //
+        //     UniqueNodes = (uint)uniqueBlockIds.Count;
+        // }
 
         [SuppressMessage("ReSharper", "InconsistentNaming")]
         private static IEnumerable<Vector3> DetermineDirectionsForNeighborUpdate(Vector3 localPosition)
@@ -185,7 +182,7 @@ namespace Wyd.Controllers.World.Chunk
         private void ClearInternalData()
         {
             _BlockActions.Clear();
-            Blocks.Clear();
+            Blocks.Collapse(true);
         }
 
         #endregion
@@ -201,155 +198,135 @@ namespace Wyd.Controllers.World.Chunk
             while ((_BlockActions.Count > 0) && SystemController.Current.IsInSafeFrameTime())
             {
                 BlockAction blockAction = _BlockActions.Dequeue();
-                uint localPosition1d = (uint)blockAction.LocalPosition.To1D(ChunkController.Size);
 
-                if (localPosition1d < ChunkController.SizeProduct)
-                {
-                    // todo optimize this to order the block actions by position, so modifications can happen in one pass
-                    ModifyBlockPosition(localPosition1d, blockAction.Id);
-                    OnBlocksChanged(this,
-                        new ChunkChangedEventArgs(_Bounds,
-                            DetermineDirectionsForNeighborUpdate(blockAction.LocalPosition)));
-                }
+                ModifyBlockPosition(blockAction.GlobalPosition, blockAction.Id);
+                OnBlocksChanged(this, new ChunkChangedEventArgs(_Bounds, Directions.AllDirectionsVector3));
 
                 _BlockActionsCache.CacheItem(ref blockAction);
             }
         }
 
-        private void ModifyBlockPosition(uint localPosition1d, ushort newId)
+        private void ModifyBlockPosition(Vector3 globalPosition, ushort newId)
         {
-            if (localPosition1d >= ChunkController.SizeProduct)
+            if (!Blocks.ContainsPoint(globalPosition))
             {
                 return;
             }
 
-            uint steppedLength = 0;
+            Blocks.SetPoint(globalPosition, newId);
 
-            LinkedListNode<RLENode<ushort>> currentNode = Blocks.First;
-
-            while ((steppedLength <= localPosition1d) && (currentNode != null))
-            {
-                if (currentNode.Value.RunLength == 0)
-                {
-                    Blocks.Remove(currentNode);
-                }
-                else
-                {
-                    uint newSteppedLength = currentNode.Value.RunLength + steppedLength;
-
-                    // in this case, the position exists at the beginning of a node
-                    if (localPosition1d == (steppedLength + 1))
-                    {
-                        // insert node before current node
-                        Blocks.AddBefore(currentNode, new RLENode<ushort>(1, newId));
-                        // decrement current node to make room for new node
-                        currentNode.Value.RunLength -= 1;
-                    }
-                    // position exists after end of node
-                    else if ((localPosition1d == (newSteppedLength + 1))
-                             // and ids match so just increment RunLength without any insertions
-                             && (newId == currentNode.Value.Value))
-                    {
-                        currentNode.Value.RunLength += 1;
-
-                        // make sure next node is not null
-                        if (currentNode.Next != null)
-                        {
-                            // decrement from the next node so that there's space for the new placement
-                            // in currentNode's RunLength
-                            currentNode.Next.Value.RunLength -= 1;
-                        }
-                    }
-                    // we've found the node that overlaps the queried position
-                    else if (newSteppedLength > localPosition1d)
-                    {
-                        if (currentNode.Value.Value == newId)
-                        {
-                            // position resulted in already exists block id
-                            break;
-                        }
-
-                        // inserted node will take up 1 position / run length
-                        LinkedListNode<RLENode<ushort>> insertedNode =
-                            Blocks.AddAfter(currentNode, new RLENode<ushort>(1, newId));
-                        // split CurrentNode's RunLength and -1 to make space for the inserted node
-                        currentNode.Value.RunLength = localPosition1d - steppedLength - 1;
-
-                        if (localPosition1d != newSteppedLength)
-                        {
-                            // hit is not at end of rle node, so we must add a remainder node
-                            Blocks.AddAfter(insertedNode,
-                                new RLENode<ushort>(newSteppedLength - localPosition1d, currentNode.Value.Value));
-                        }
-
-                        break;
-                    }
-
-                    steppedLength = newSteppedLength;
-                }
-
-                currentNode = currentNode.Next;
-            }
+            // uint steppedLength = 0;
+            //
+            // LinkedListNode<RLENode<ushort>> currentNode = Blocks.First;
+            //
+            // while ((steppedLength <= localPosition1d) && (currentNode != null))
+            // {
+            //     if (currentNode.Value.RunLength == 0)
+            //     {
+            //         Blocks.Remove(currentNode);
+            //     }
+            //     else
+            //     {
+            //         uint newSteppedLength = currentNode.Value.RunLength + steppedLength;
+            //
+            //         // in this case, the position exists at the beginning of a node
+            //         if (localPosition1d == (steppedLength + 1))
+            //         {
+            //             // insert node before current node
+            //             Blocks.AddBefore(currentNode, new RLENode<ushort>(1, newId));
+            //             // decrement current node to make room for new node
+            //             currentNode.Value.RunLength -= 1;
+            //         }
+            //         // position exists after end of node
+            //         else if ((localPosition1d == (newSteppedLength + 1))
+            //                  // and ids match so just increment RunLength without any insertions
+            //                  && (newId == currentNode.Value.Value))
+            //         {
+            //             currentNode.Value.RunLength += 1;
+            //
+            //             // make sure next node is not null
+            //             if (currentNode.Next != null)
+            //             {
+            //                 // decrement from the next node so that there's space for the new placement
+            //                 // in currentNode's RunLength
+            //                 currentNode.Next.Value.RunLength -= 1;
+            //             }
+            //         }
+            //         // we've found the node that overlaps the queried position
+            //         else if (newSteppedLength > localPosition1d)
+            //         {
+            //             if (currentNode.Value.Value == newId)
+            //             {
+            //                 // position resulted in already exists block id
+            //                 break;
+            //             }
+            //
+            //             // inserted node will take up 1 position / run length
+            //             LinkedListNode<RLENode<ushort>> insertedNode =
+            //                 Blocks.AddAfter(currentNode, new RLENode<ushort>(1, newId));
+            //             // split CurrentNode's RunLength and -1 to make space for the inserted node
+            //             currentNode.Value.RunLength = localPosition1d - steppedLength - 1;
+            //
+            //             if (localPosition1d != newSteppedLength)
+            //             {
+            //                 // hit is not at end of rle node, so we must add a remainder node
+            //                 Blocks.AddAfter(insertedNode,
+            //                     new RLENode<ushort>(newSteppedLength - localPosition1d, currentNode.Value.Value));
+            //             }
+            //
+            //             break;
+            //         }
+            //
+            //         steppedLength = newSteppedLength;
+            //     }
+            //
+            //     currentNode = currentNode.Next;
+            // }
         }
 
         public ushort GetBlockAt(Vector3 globalPosition)
         {
-            if (!_Bounds.Contains(globalPosition))
+            if (!Blocks.ContainsPoint(globalPosition))
             {
                 throw new ArgumentOutOfRangeException(nameof(globalPosition),
                     "Given position must be within chunk's bounds.");
             }
 
-            int localPosition1d = (globalPosition - _Position).To1D(ChunkController.Size, true);
+            return Blocks.GetPoint(globalPosition);
 
-            uint totalPositions = 0;
-            LinkedListNode<RLENode<ushort>> currentNode = Blocks.First;
-
-            while ((totalPositions <= localPosition1d) && (currentNode != null))
-            {
-                uint newTotal = currentNode.Value.RunLength + totalPositions;
-
-                if (newTotal >= localPosition1d)
-                {
-                    return currentNode.Value.Value;
-                }
-
-                totalPositions = newTotal;
-                currentNode = currentNode.Next;
-            }
-
-            return 0;
+            // int localPosition1d = (globalPosition - _Position).To1D(ChunkController.Size, true);
+            //
+            // uint totalPositions = 0;
+            // LinkedListNode<RLENode<ushort>> currentNode = Blocks.First;
+            //
+            // while ((totalPositions <= localPosition1d) && (currentNode != null))
+            // {
+            //     uint newTotal = currentNode.Value.RunLength + totalPositions;
+            //
+            //     if (newTotal >= localPosition1d)
+            //     {
+            //         return currentNode.Value.Value;
+            //     }
+            //
+            //     totalPositions = newTotal;
+            //     currentNode = currentNode.Next;
+            // }
+            //
+            // return 0;
         }
 
         public bool TryGetBlockAt(Vector3 globalPosition, out ushort blockId)
         {
             blockId = 0;
 
-            if (!_Bounds.Contains(globalPosition))
+            if (!Blocks.ContainsPoint(globalPosition))
             {
                 return false;
             }
 
-            int localPosition1d = (globalPosition - _Position).To1D(ChunkController.Size, true);
+            blockId = Blocks.GetPoint(globalPosition);
 
-            uint totalPositions = 0;
-            LinkedListNode<RLENode<ushort>> currentNode = Blocks.First;
-
-            while ((totalPositions <= localPosition1d) && (currentNode != null))
-            {
-                uint newTotal = currentNode.Value.RunLength + totalPositions;
-
-                if (newTotal >= localPosition1d)
-                {
-                    blockId = currentNode.Value.Value;
-                    return true;
-                }
-
-                totalPositions = newTotal;
-                currentNode = currentNode.Next;
-            }
-
-            return false;
+            return true;
         }
 
         public bool BlockExistsAt(Vector3 globalPosition) => GetBlockAt(globalPosition) != BlockController.AIR_ID;

@@ -45,27 +45,10 @@ namespace Wyd.System.Collections
             MinPoint = CenterPoint - extents;
         }
 
-        #region HELPER METHODS
-
-        private bool ContainsMinBiased(Vector3 point) =>
-            (point.x < MaxPoint.x)
-            && (point.y < MaxPoint.y)
-            && (point.z < MaxPoint.z)
-            && (point.x >= MinPoint.x)
-            && (point.y >= MinPoint.y)
-            && (point.z >= MinPoint.z);
-
-        // indexes:
-        // bottom half quadrant:
-        // 1 3
-        // 0 2
-        // top half quadrant:
-        // 5 7
-        // 4 6
-        private int DetermineOctant(Vector3 point) =>
-            (point.x < CenterPoint.x ? 0 : 1) + (point.y < CenterPoint.y ? 0 : 4) + (point.z < CenterPoint.z ? 0 : 2);
-
-        #endregion
+        public void Collapse()
+        {
+            Nodes = null;
+        }
 
         public void Populate()
         {
@@ -134,20 +117,42 @@ namespace Wyd.System.Collections
 
             // on each recursion back-step, ensure integrity of node
             // and collapse child nodes if all are equal
-            if (CheckShouldCollapse())
+            if (!CheckShouldCollapse())
             {
-                Collapse();
+                return;
             }
+
+            Value = Nodes[0].Value;
+            Collapse();
         }
 
         private bool CheckShouldCollapse()
         {
-            return Nodes.All(node => node.IsUniform) && Nodes.All(node => node.Value.Equals(Value));
+            T firstValue = Nodes[0].Value;
+            return Nodes.All(node => node.IsUniform) && Nodes.All(node => node.Value.Equals(firstValue));
         }
 
-        private void Collapse()
-        {
-            Nodes = null;
-        }
+
+        #region HELPER METHODS
+
+        public bool ContainsMinBiased(Vector3 point) =>
+            (point.x < MaxPoint.x)
+            && (point.y < MaxPoint.y)
+            && (point.z < MaxPoint.z)
+            && (point.x >= MinPoint.x)
+            && (point.y >= MinPoint.y)
+            && (point.z >= MinPoint.z);
+
+        // indexes:
+        // bottom half quadrant:
+        // 1 3
+        // 0 2
+        // top half quadrant:
+        // 5 7
+        // 4 6
+        private int DetermineOctant(Vector3 point) =>
+            (point.x < CenterPoint.x ? 0 : 1) + (point.y < CenterPoint.y ? 0 : 4) + (point.z < CenterPoint.z ? 0 : 2);
+
+        #endregion
     }
 }

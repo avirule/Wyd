@@ -169,17 +169,25 @@ namespace Wyd.Controllers.Entity
 
         private void UpdateLastLookAtCubeOrigin()
         {
-            if (!Physics.Raycast(_ReachRay, out _LastReachRayHit, REACH, RaycastLayerMask)
-                || !WorldController.Current.TryGetBlockAt(
-                    _LastReachRayHit.normal.Sum() > 0f
-                        ? _LastReachRayHit.point.Floor() - _LastReachRayHit.normal
-                        : _LastReachRayHit.point.Floor(), out ushort blockId)
-                || !BlockController.Current.CheckBlockHasProperty(blockId, BlockRule.Property.Destroyable))
+            if (!Physics.Raycast(_ReachRay, out _LastReachRayHit, REACH, RaycastLayerMask))
             {
                 ReachHitSurfaceObject.SetActive(false);
                 _IsInReachOfValidSurface = false;
                 return;
             }
+
+            ushort blockId = WorldController.Current.GetBlockAt(_LastReachRayHit.normal.Sum() > 0f
+                            ? _LastReachRayHit.point.Floor() - _LastReachRayHit.normal
+                            : _LastReachRayHit.point.Floor());
+
+                if (!BlockController.Current.CheckBlockHasProperty(blockId, BlockRule.Property.Destroyable))
+                {
+
+                    ReachHitSurfaceObject.SetActive(false);
+                    _IsInReachOfValidSurface = false;
+                    return;
+                }
+
 
             if (!ReachHitSurfaceObject.activeSelf)
             {
@@ -220,7 +228,7 @@ namespace Wyd.Controllers.Entity
                     || WorldController.Current.TryRemoveBlockAt(
                         position = _LastReachRayHit.point.Floor()))
                 {
-                    WorldController.Current.TryGetBlockAt(position, out ushort blockId);
+                    ushort blockId = WorldController.Current.GetBlockAt(position);
 
                     if (BlockController.Current.CheckBlockHasProperty(blockId, BlockRule.Property.Collectible))
                     {

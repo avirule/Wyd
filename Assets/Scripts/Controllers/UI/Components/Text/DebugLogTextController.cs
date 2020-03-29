@@ -62,8 +62,10 @@ namespace Wyd.Controllers.UI.Components.Text
 
             switch (logEvent.Level)
             {
-                case LogEventLevel.Information:
+                case LogEventLevel.Verbose:
                 case LogEventLevel.Debug:
+                    break;
+                case LogEventLevel.Information:
                     finalText = $"[{timeStampFormatted}] {logEvent.RenderMessage()}";
                     break;
                 case LogEventLevel.Warning:
@@ -77,8 +79,6 @@ namespace Wyd.Controllers.UI.Components.Text
                 case LogEventLevel.Fatal:
                     finalText =
                         $"<color={MemorySink.ERROR_COLOR}>[{timeStampFormatted}] {logEvent.RenderMessage()}</color> ";
-                    break;
-                case LogEventLevel.Verbose:
                     break;
                 default:
                     throw new ArgumentOutOfRangeException();

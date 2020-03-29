@@ -1,6 +1,7 @@
 #region
 
 using UnityEngine;
+using Wyd.Controllers.State;
 using Wyd.Controllers.System;
 using Wyd.Game;
 using Wyd.Game.World.Chunks.Events;
@@ -86,17 +87,16 @@ namespace Wyd.Controllers.World.Chunk
 
         public void Update()
         {
-            if (!SystemController.Current.IsInSafeFrameTime())
+            if (!SystemController.Current.IsInSafeFrameTime()
+                || !_UpdateRequested
+                || (BlocksController.QueuedBlockActions > 0)
+                || (TerrainController.CurrentStep != GenerationData.GenerationStep.Complete)
+                || (BlocksController.Blocks.IsOriginNodeUniform(out ushort blockId) && blockId == BlockController.AIR_ID))
             {
                 return;
             }
 
-            if (_UpdateRequested
-                && (BlocksController.QueuedBlockActions <= 0)
-                && (TerrainController.CurrentStep == GenerationData.GenerationStep.Complete))
-            {
-                BeginGeneratingMesh();
-            }
+            BeginGeneratingMesh();
         }
 
         #region DE/ACTIVATION

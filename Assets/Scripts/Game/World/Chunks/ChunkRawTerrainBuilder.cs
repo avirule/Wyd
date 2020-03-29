@@ -1,6 +1,5 @@
 #region
 
-using System.Collections.Generic;
 using System.Threading;
 using Serilog;
 using UnityEngine;
@@ -9,7 +8,6 @@ using Wyd.Controllers.System;
 using Wyd.Controllers.World;
 using Wyd.Controllers.World.Chunk;
 using Wyd.System;
-using Wyd.System.Compression;
 using Wyd.System.Noise;
 
 #endregion
@@ -66,7 +64,7 @@ namespace Wyd.Game.World.Chunks
             NoiseValuesReady = true;
         }
 
-        public void Generate(float[] noiseValues = null)
+        public void Generate()
         {
             if (_GenerationData.Blocks == default)
             {
@@ -92,45 +90,19 @@ namespace Wyd.Game.World.Chunks
                 _GpuAcceleration = false;
             }
 
-            _GenerationData.Blocks.Clear();
-
-            bool firstIteration = true;
-            ushort currentId = 0;
-            uint runLength = 0;
+            _GenerationData.Blocks.Collapse(true);
 
             for (int index = ChunkController.SizeProduct - 1; index >= 0; index--)
             {
-                (int x, int y, int z) = Mathv.GetIndexAs3D(index, ChunkController.Size);
+                Vector3 globalPosition =
+                    _GenerationData.Bounds.min + Mathv.GetIndexAsVector3Int(index, ChunkController.Size);
+                ushort id = _NoiseValues.NoiseValues[index] > 0.01f ? (ushort)1 : BlockController.AIR_ID;
 
-                ushort nextId = GetBlockToGenerate(new Vector3Int(x, y, z), index, _GpuAcceleration, noiseValues);
-
-                if (firstIteration)
-                {
-                    currentId = nextId;
-                    runLength += 1;
-                    firstIteration = false;
-                }
-
-                if (currentId == nextId)
-                {
-                    runLength += 1;
-                }
-                else
-                {
-                    AddBlockSequentialAware(currentId, runLength);
-                    // set current id to new current block
-                    currentId = nextId;
-                    // reset run length
-                    runLength = 1;
-                }
+                _GenerationData.Blocks.SetPoint(globalPosition, id);
             }
 
             NoiseValuesCache.CacheItem(ref _NoiseValues);
         }
-
-        private ushort GetBlockToGenerate(Vector3Int position, int index, bool useGpu = false,
-            IReadOnlyList<float> noiseValues = null) =>
-            position.y == 1 ? (ushort)1 : BlockController.AIR_ID;
 
         //            if ((position.y < 4) && (position.y <= _Rand.Next(0, 4)))
         //            {
@@ -170,37 +142,15 @@ namespace Wyd.Game.World.Chunks
         // }
         //
         // return BlockController.AIR_ID;
+
         protected float GetNoiseValueByVector3(Vector3 pos3d)
         {
             float noiseValue = OpenSimplex_FastNoise.GetSimplex(WorldController.Current.Seed, _Frequency,
-                _GenerationData.Bounds.min.x + pos3d.x, _GenerationData.Bounds.min.y + pos3d.y,
-                _GenerationData.Bounds.min.z + pos3d.z);
+                pos3d.x, pos3d.y, pos3d.z);
             noiseValue += 5f * (1f - Mathf.InverseLerp(0f, ChunkController.Size.y, pos3d.y));
             noiseValue /= pos3d.y + (-1f * _Persistence);
 
             return noiseValue;
-        }
-
-        private void AddBlockSequentialAware(ushort blockId, uint runLength)
-        {
-            // allocate from the front since we are adding from top to bottom (i.e. last to first)
-            if (_GenerationData.Blocks.Count > 0)
-            {
-                LinkedListNode<RLENode<ushort>> firstNode = _GenerationData.Blocks.First;
-
-                if (firstNode.Value.Value == blockId)
-                {
-                    firstNode.Value.RunLength += runLength;
-                }
-                else
-                {
-                    _GenerationData.Blocks.AddFirst(new RLENode<ushort>(runLength, blockId));
-                }
-            }
-            else
-            {
-                _GenerationData.Blocks.AddFirst(new RLENode<ushort>(runLength, blockId));
-            }
         }
     }
 }

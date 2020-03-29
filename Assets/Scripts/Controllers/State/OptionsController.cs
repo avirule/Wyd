@@ -407,7 +407,7 @@ namespace Wyd.Controllers.State
 
             if (!GetSetting("Chunking", nameof(MaximumChunkLoadTimeBufferSize), out _MaximumChunkLoadTimeBufferSize)
                 || (MaximumFrameRateBufferSize < 0)
-                || (MaximumChunkLoadTimeBufferSize > 120))
+                || (MaximumChunkLoadTimeBufferSize > 6000))
             {
                 LogSettingLoadError(nameof(MaximumChunkLoadTimeBufferSize),
                     Defaults.MAXIMUM_CHUNK_LOAD_TIME_BUFFER_SIZE);

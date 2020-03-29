@@ -21,7 +21,7 @@ namespace Wyd.System
         ///     <see cref="UnityEngine.Vector3Int" /> of <see cref="int" /> casted values from given
         ///     <see cref="UnityEngine.Vector3" />.
         /// </returns>
-        public static Vector3Int ToInt(this Vector3 a) => new Vector3Int((int)a.x, (int)a.y, (int)a.z);
+        public static Vector3Int AsVector3Int(this Vector3 a) => new Vector3Int((int)a.x, (int)a.y, (int)a.z);
 
         public static bool GreaterThanVector3(Vector3 a, Vector3 b) => (a.x > b.x) || (a.y > b.y) || (a.z > b.z);
 
@@ -195,6 +195,8 @@ namespace Wyd.System
         ///     <see cref="UnityEngine.Vector3Int" />.
         /// </returns>
         public static int Product(this Vector3Int a) => a.x * a.y * a.z;
+
+        public static Vector3 AsVector3(this Vector3Int a) => new Vector3(a.x, a.y, a.z);
 
         /// <summary>
         ///     Calculates 3D <see cref="int" /> index from 1D <see cref="int" /> index, given a

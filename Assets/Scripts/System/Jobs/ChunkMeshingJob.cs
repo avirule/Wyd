@@ -28,9 +28,8 @@ namespace Wyd.System.Jobs
         protected override void Process()
         {
             ChunkMesher mesher = _ChunkMesherCache.Retrieve() ?? new ChunkMesher();
-
+            mesher.GenerationData = _GenerationData;
             mesher.AbortToken = AbortToken;
-            mesher.Size = ChunkController.Size;
             mesher.AggressiveFaceMerging = _AggressiveFaceMerging;
             mesher.ClearData();
 

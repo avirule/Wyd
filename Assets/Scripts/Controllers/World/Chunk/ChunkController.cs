@@ -16,7 +16,7 @@ namespace Wyd.Controllers.World.Chunk
     public class ChunkController : ActivationStateChunkController
     {
         // todo Size should be somewhere that makes more sense, I think
-        public static readonly Vector3Int Size = new Vector3Int(32, 256, 32);
+        public static readonly Vector3Int Size = new Vector3Int(32, 32, 32);
         public static readonly int SizeProduct = Size.Product();
         public static readonly int YIndexStep = Size.x * Size.z;
 
