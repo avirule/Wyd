@@ -12,14 +12,13 @@ namespace Wyd.System.Jobs
     public class JobWorker
     {
         private readonly object _Handle;
-        private readonly Thread _Thread;
         private readonly SpinLockCollection<Job> _ItemQueue;
         private readonly CancellationToken _AbortToken;
 
         public readonly TimeSpan WaitTimeout;
         private bool _Processing;
 
-        public Thread InternalThread => _Thread;
+        public Thread InternalThread { get; }
 
         public bool Running { get; private set; }
 
@@ -51,7 +50,7 @@ namespace Wyd.System.Jobs
         public JobWorker(TimeSpan waitTimeout, CancellationToken abortToken)
         {
             _Handle = new object();
-            _Thread = new Thread(ProcessItemQueue);
+            InternalThread = new Thread(ProcessItemQueue);
 
             _AbortToken = abortToken;
             _ItemQueue = new SpinLockCollection<Job>();
@@ -60,7 +59,7 @@ namespace Wyd.System.Jobs
 
         public void Start()
         {
-            _Thread.Start();
+            InternalThread.Start();
             Running = true;
         }
 
@@ -75,7 +74,7 @@ namespace Wyd.System.Jobs
                 return;
             }
 
-            _Thread.Abort();
+            InternalThread.Abort();
             Log.Warning($"{nameof(JobWorker)} ID {InternalThread.ManagedThreadId} forced to abort.");
         }
 
@@ -100,7 +99,8 @@ namespace Wyd.System.Jobs
             }
             catch (Exception ex)
             {
-                Log.Error($"Error in {nameof(JobWorker)} (ID {InternalThread.ManagedThreadId}): {ex.Message}\r\n{ex.StackTrace}");
+                Log.Error(
+                    $"Error in {nameof(JobWorker)} (ID {InternalThread.ManagedThreadId}): {ex.Message}\r\n{ex.StackTrace}");
             }
             finally
             {

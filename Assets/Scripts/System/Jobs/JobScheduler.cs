@@ -28,7 +28,6 @@ namespace Wyd.System.Jobs
         private CancellationToken _AbortToken;
         private int _WorkerThreadCount;
         private TimeSpan _WaitTimeout;
-        private long _MaximumJobCount;
         private long _ProcessingJobCount;
         private long _JobCount;
 
@@ -68,7 +67,6 @@ namespace Wyd.System.Jobs
 
         public long JobCount => Interlocked.Read(ref _JobCount);
         public long ProcessingJobCount => _ProcessingJobCount;
-        public long MaximumJobCount => _MaximumJobCount;
 
 
         /// <summary>
@@ -111,9 +109,7 @@ namespace Wyd.System.Jobs
         {
             identifier = null;
 
-            if (!Running
-                || _AbortToken.IsCancellationRequested
-                || ((MaximumJobCount > 0) && (JobCount >= MaximumJobCount)))
+            if (!Running || _AbortToken.IsCancellationRequested)
             {
                 return false;
             }
@@ -136,7 +132,6 @@ namespace Wyd.System.Jobs
         public void ModifyWorkerThreadCount(int newTotal)
         {
             Interlocked.Exchange(ref _WorkerThreadCount, Math.Max(newTotal, 1));
-            Interlocked.Exchange(ref _MaximumJobCount, _WorkerThreadCount * 10);
             OnWorkerCountChanged(this, WorkerThreadCount);
         }
 

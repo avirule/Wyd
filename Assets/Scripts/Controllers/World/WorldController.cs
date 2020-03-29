@@ -23,7 +23,7 @@ namespace Wyd.Controllers.World
 {
     public class WorldController : SingletonController<WorldController>
     {
-        private ChunkController _ChunkControllerObject;
+        private ChunkController _ChunkControllerPrefab;
         private Dictionary<Vector3, ChunkController> _Chunks;
         private ObjectCache<ChunkController> _ChunkCache;
         private Stack<IEntity> _EntitiesPendingChunkBuilding;
@@ -82,7 +82,7 @@ namespace Wyd.Controllers.World
             AssignSingletonInstance(this);
             SetTickRate();
 
-            _ChunkControllerObject = GameController.LoadResource<ChunkController>(@"Prefabs/Chunk");
+            _ChunkControllerPrefab = GameController.LoadResource<ChunkController>(@"Prefabs/Chunk");
 
             _ChunkCache = new ObjectCache<ChunkController>(false, -1,
                 (ref ChunkController chunkController) =>
@@ -208,7 +208,7 @@ namespace Wyd.Controllers.World
                     }
 
                     Vector3 position = loader.CurrentChunk
-                                       + new Vector3(x, 0f, z).Multiply(ChunkController.Size);
+                                       + new Vector3(x, 0f, z).MultiplyBy(ChunkController.Size);
 
                     if (ChunkExistsAt(position))
                     {
@@ -217,7 +217,7 @@ namespace Wyd.Controllers.World
 
                     if (!_ChunkCache.TryRetrieve(out ChunkController chunkController))
                     {
-                        chunkController = Instantiate(_ChunkControllerObject, position, Quaternion.identity,
+                        chunkController = Instantiate(_ChunkControllerPrefab, position, Quaternion.identity,
                             transform);
                     }
                     else
@@ -241,7 +241,7 @@ namespace Wyd.Controllers.World
         {
             foreach (Vector3 normal in directions)
             {
-                FlagChunkForUpdateMesh(globalChunkPosition + normal.Multiply(ChunkController.Size));
+                FlagChunkForUpdateMesh(globalChunkPosition + normal.MultiplyBy(ChunkController.Size));
             }
         }
 
@@ -403,7 +403,7 @@ namespace Wyd.Controllers.World
             for (int i = 0; i < (OptionsController.Current.MaximumChunkCacheSize / 2); i++)
             {
                 ChunkController chunkController =
-                    Instantiate(_ChunkControllerObject, Vector3.zero, Quaternion.identity, transform);
+                    Instantiate(_ChunkControllerPrefab, Vector3.zero, Quaternion.identity, transform);
                 chunkController.gameObject.SetActive(false);
                 _ChunkCache.CacheItem(ref chunkController);
             }

@@ -16,10 +16,7 @@ namespace Wyd.System.Logging.Sinks
 
         private readonly List<LogEvent> _LogEvents;
 
-        public MemorySink(ref List<LogEvent> logEvents)
-        {
-            _LogEvents = logEvents;
-        }
+        public MemorySink(ref List<LogEvent> logEvents) => _LogEvents = logEvents;
 
         public void Emit(LogEvent logEvent)
         {
