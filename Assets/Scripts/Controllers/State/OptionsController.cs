@@ -43,7 +43,7 @@ namespace Wyd.Controllers.State
             public const bool GPU_ACCELERATION = true;
 
             // Graphics
-            public const int MINIMUM_INTERNAL_FRAMES = 60;
+            public const int TARGET_FRAME_RATE = 60;
             public const int MAXIMUM_FRAME_RATE_BUFFER_SIZE = 60;
             public const int VSYNC_LEVEL = 1;
             public const int WINDOW_MODE = (int)WindowMode.Fullscreen;
@@ -70,7 +70,7 @@ namespace Wyd.Controllers.State
         private ThreadingMode _ThreadingMode;
         private int _CPUCoreUtilization;
         private bool _GPUAcceleration;
-        private int _MinimumInternalFrames;
+        private int _TargetFrameRate;
         private int _MaximumFrameRateBufferSize;
         private bool _PreInitializeChunkCache;
         private int _MaximumChunkCacheSize;
@@ -126,13 +126,13 @@ namespace Wyd.Controllers.State
 
         #region GRAPHICS OPTIONS MEMBERS
 
-        public int MinimumInternalFrames
+        public int TargetFrameRate
         {
-            get => _MinimumInternalFrames;
+            get => _TargetFrameRate;
             set
             {
-                _MinimumInternalFrames = value;
-                _Configuration["General"][nameof(MinimumInternalFrames)].IntValue = _MinimumInternalFrames;
+                _TargetFrameRate = value;
+                _Configuration["General"][nameof(TargetFrameRate)].IntValue = _TargetFrameRate;
                 SaveSettings();
                 OnPropertyChanged();
             }
@@ -324,16 +324,16 @@ namespace Wyd.Controllers.State
 
             // Graphics
 
-            if (!GetSetting("Graphics", nameof(MinimumInternalFrames), out _MinimumInternalFrames)
-                || (MinimumInternalFrames < 0)
-                || (MinimumInternalFrames > 120))
+            if (!GetSetting("Graphics", nameof(TargetFrameRate), out _TargetFrameRate)
+                || (TargetFrameRate < 0)
+                || (TargetFrameRate > 120))
             {
-                LogSettingLoadError(nameof(MinimumInternalFrames), Defaults.MINIMUM_INTERNAL_FRAMES);
-                MinimumInternalFrames = Defaults.MINIMUM_INTERNAL_FRAMES;
+                LogSettingLoadError(nameof(TargetFrameRate), Defaults.TARGET_FRAME_RATE);
+                TargetFrameRate = Defaults.TARGET_FRAME_RATE;
                 SaveSettings();
             }
 
-            MaximumInternalFrameTime = TimeSpan.FromSeconds(1d / (MinimumInternalFrames * 2));
+            MaximumInternalFrameTime = TimeSpan.FromSeconds(1d / TargetFrameRate);
 
             if (!GetSetting("Graphics", nameof(MaximumFrameRateBufferSize), out _MaximumFrameRateBufferSize)
                 || (MaximumFrameRateBufferSize < 0)
@@ -451,12 +451,12 @@ namespace Wyd.Controllers.State
 
             // Graphics
 
-            _Configuration["Graphics"][nameof(MinimumInternalFrames)].PreComment =
+            _Configuration["Graphics"][nameof(TargetFrameRate)].PreComment =
                 "Minimum number of frames internal systems will target to lapse during updates.";
-            _Configuration["Graphics"][nameof(MinimumInternalFrames)].Comment =
+            _Configuration["Graphics"][nameof(TargetFrameRate)].Comment =
                 "Higher values decrease overall CPU stress (min 15, max 120).";
-            _Configuration["Graphics"][nameof(MinimumInternalFrames)].IntValue =
-                Defaults.MINIMUM_INTERNAL_FRAMES;
+            _Configuration["Graphics"][nameof(TargetFrameRate)].IntValue =
+                Defaults.TARGET_FRAME_RATE;
 
             _Configuration["Graphics"][nameof(MaximumFrameRateBufferSize)].PreComment =
                 "Maximum size of buffer for reporting average frame rate.";

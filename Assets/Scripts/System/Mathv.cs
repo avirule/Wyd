@@ -9,7 +9,7 @@ namespace Wyd.System
 {
     public static class Mathv
     {
-        #region Vector3
+        #region VECTOR3
 
         public static Vector3 Half = new Vector3(0.5f, 0.5f, 0.5f);
 
@@ -53,8 +53,8 @@ namespace Wyd.System
         /// <param name="a">Given <see cref="UnityEngine.Vector3" />.</param>
         /// <param name="b"><see cref="UnityEngine.Vector3" /> to multiply with.</param>
         /// <returns>Product of the two <see cref="UnityEngine.Vector3" />.</returns>
-        /// <seealso cref="Multiply(Vector3Int, Vector3Int)" />
-        public static Vector3 Multiply(this Vector3 a, Vector3 b) => new Vector3(a.x * b.x, a.y * b.y, a.z * b.z);
+        /// <seealso cref="MultiplyBy(UnityEngine.Vector3Int,UnityEngine.Vector3Int)" />
+        public static Vector3 MultiplyBy(this Vector3 a, Vector3 b) => new Vector3(a.x * b.x, a.y * b.y, a.z * b.z);
 
         /// <summary>
         ///     Calculates quotient of two <see cref="UnityEngine.Vector3" />.
@@ -62,8 +62,8 @@ namespace Wyd.System
         /// <param name="a">Given <see cref="UnityEngine.Vector3" />.</param>
         /// <param name="b"><see cref="UnityEngine.Vector3" /> to divide with.</param>
         /// <returns>Quotient of the two <see cref="UnityEngine.Vector3" />.</returns>
-        /// <seealso cref="Divide(Vector3Int, Vector3Int)" />
-        public static Vector3 Divide(this Vector3 a, Vector3 b) => new Vector3(a.x / b.x, a.y / b.y, a.z / b.z);
+        /// <seealso cref="DivideBy(UnityEngine.Vector3Int,UnityEngine.Vector3Int)" />
+        public static Vector3 DivideBy(this Vector3 a, Vector3 b) => new Vector3(a.x / b.x, a.y / b.y, a.z / b.z);
 
         /// <summary>
         ///     Calculates <see cref="UnityEngine.Vector3" /> of division remainders.
@@ -81,6 +81,8 @@ namespace Wyd.System
 
         public static Vector3 Floor(this Vector3 a) =>
             new Vector3(Mathf.Floor(a.x), Mathf.Floor(a.y), Mathf.Floor(a.z));
+
+        public static Vector3 FloorBy(this Vector3 a, float floorValue) => (a / floorValue).Floor();
 
         public static Vector3 Ceil(this Vector3 a) => new Vector3(Mathf.Ceil(a.x), Mathf.Ceil(a.y), Mathf.Ceil(a.z));
 
@@ -108,7 +110,8 @@ namespace Wyd.System
         public static Vector3Int FloorToInt(this Vector3 a) =>
             new Vector3Int(Mathf.FloorToInt(a.x), Mathf.FloorToInt(a.y), Mathf.FloorToInt(a.z));
 
-        public static Vector3 RoundBy(this Vector3 a, Vector3 roundBy) => a.Divide(roundBy).Floor().Multiply(roundBy);
+        public static Vector3 RoundBy(this Vector3 a, Vector3 roundBy) =>
+            a.DivideBy(roundBy).Floor().MultiplyBy(roundBy);
 
         /// <summary>
         ///     Calculates 1D <see cref="int" /> index from 3D <see cref="UnityEngine.Vector3Int" />, given a
@@ -141,7 +144,7 @@ namespace Wyd.System
         #endregion
 
 
-        #region Vector3Int
+        #region VECTOR3INT
 
         /// <summary>
         ///     Calculates absolute value of given <see cref="UnityEngine.Vector3Int" />.
@@ -157,8 +160,8 @@ namespace Wyd.System
         /// <param name="a">Given <see cref="UnityEngine.Vector3Int" />.</param>
         /// <param name="b"><see cref="UnityEngine.Vector3Int" /> to multiply with.</param>
         /// <returns>Product of the two <see cref="UnityEngine.Vector3Int" />.</returns>
-        /// <seealso cref="Multiply(Vector3, Vector3)" />
-        public static Vector3Int Multiply(this Vector3Int a, Vector3Int b) =>
+        /// <seealso cref="MultiplyBy" />
+        public static Vector3Int MultiplyBy(this Vector3Int a, Vector3Int b) =>
             new Vector3Int(a.x * b.x, a.y * b.y, a.z * b.z);
 
         /// <summary>
@@ -167,11 +170,11 @@ namespace Wyd.System
         /// <param name="a">Given <see cref="UnityEngine.Vector3Int" />.</param>
         /// <param name="b"><see cref="UnityEngine.Vector3Int" /> to divide with.</param>
         /// <returns>Quotient of the two <see cref="UnityEngine.Vector3Int" />.</returns>
-        /// <seealso cref="Divide(Vector3, Vector3)" />
-        public static Vector3Int Divide(this Vector3Int a, Vector3Int b) =>
+        /// <seealso cref="DivideBy(UnityEngine.Vector3,UnityEngine.Vector3)" />
+        public static Vector3Int DivideBy(this Vector3Int a, Vector3Int b) =>
             new Vector3Int(a.x / b.x, a.y / b.y, a.z / b.z);
 
-        public static Vector3Int Divide(this Vector3Int a, int b) => new Vector3Int(a.x / b, a.y / b, a.z / b);
+        public static Vector3Int DivideBy(this Vector3Int a, int b) => new Vector3Int(a.x / b, a.y / b, a.z / b);
 
         /// <summary>
         ///     Calculates <see cref="UnityEngine.Vector3Int" /> of division remainders.
@@ -235,6 +238,20 @@ namespace Wyd.System
                 a.z
             };
         }
+
+        #endregion
+
+
+        #region INTEGER
+
+        public static Vector3 DivideBy(this int a, Vector3 b) => new Vector3(a / b.x, a / b.y, a / b.z);
+
+        #endregion
+
+
+        #region FLOAT
+
+        public static Vector3 AsVector3(this float a) => new Vector3(a, a, a);
 
         #endregion
     }
