@@ -14,7 +14,7 @@ using Wyd.System.Jobs;
 
 namespace Wyd.Controllers.World.Chunk
 {
-    public class ChunkTerrainController : ActivationStateChunkController
+    public class ChunkTerrainController : ActivationStateChunkController, IPerFrameUpdate
     {
         private const float _FREQUENCY = 0.01f;
         private const float _PERSISTENCE = -1f;
@@ -57,13 +57,18 @@ namespace Wyd.Controllers.World.Chunk
                     ChunkController.Size.z, 0f));
         }
 
-        private void Update()
+        private void OnEnable()
         {
-            if (!SystemController.Current.IsInSafeFrameTime())
-            {
-                return;
-            }
+            PerFrameUpdateController.Current.RegisterPerFrameUpdater(40, this);
+        }
 
+        private void OnDisable()
+        {
+            PerFrameUpdateController.Current.DeregisterPerFrameUpdater(40, this);
+        }
+
+        public void FrameUpdate()
+        {
             if (Generating
                 || (CurrentStep == GenerationData.GenerationStep.Complete)
                 || ((CurrentStep > GenerationData.GenerationStep.RawTerrain)
@@ -74,7 +79,6 @@ namespace Wyd.Controllers.World.Chunk
 
             ExecuteStep(CurrentStep);
         }
-
 
         #region DE/ACTIVATION
 

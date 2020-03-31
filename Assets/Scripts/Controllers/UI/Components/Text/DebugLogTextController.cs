@@ -1,6 +1,7 @@
 #region
 
 using System;
+using System.Collections;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
@@ -10,13 +11,14 @@ using TMPro;
 using UnityEngine;
 using Wyd.Controllers.System;
 using Wyd.Controllers.World;
+using Wyd.System;
 using Wyd.System.Logging.Sinks;
 
 #endregion
 
 namespace Wyd.Controllers.UI.Components.Text
 {
-    public class DebugLogTextController : MonoBehaviour
+    public class DebugLogTextController : MonoBehaviour, IPerFrameIncrementalUpdate
     {
         private ConcurrentQueue<string> _LogMessageQueue;
         private TextMeshProUGUI _DebugLogText;
@@ -34,16 +36,26 @@ namespace Wyd.Controllers.UI.Components.Text
             EventSink.Logged += OnEventLogged;
         }
 
-        private void Update()
+        private void OnEnable()
         {
-            bool worldControllerInstanced = WorldController.Current != null;
+            PerFrameUpdateController.Current.RegisterPerFrameUpdater(200, this);
+        }
 
-            while ((_LogMessageQueue.Count > 0)
-                   && worldControllerInstanced
-                   && SystemController.Current.IsInSafeFrameTime())
+        private void OnDisable()
+        {
+            PerFrameUpdateController.Current.DeregisterPerFrameUpdater(200, this);
+        }
+
+        public void FrameUpdate() { }
+
+        public IEnumerable IncrementalFrameUpdate()
+        {
+            while ((_LogMessageQueue.Count > 0) && (WorldController.Current != null))
             {
                 _LogMessageQueue.TryDequeue(out string result);
                 AppendDebugText(result);
+
+                yield return null;
             }
         }
 

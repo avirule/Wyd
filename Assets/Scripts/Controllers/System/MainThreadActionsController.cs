@@ -1,7 +1,8 @@
 #region
 
-using System;
+using System.Collections;
 using System.Collections.Concurrent;
+using Wyd.System;
 using Wyd.System.Jobs;
 
 #endregion
@@ -11,7 +12,8 @@ namespace Wyd.Controllers.System
     /// <summary>
     ///     Controller allowing qu
     /// </summary>
-    public class MainThreadActionsController : SingletonController<MainThreadActionsController>
+    public class MainThreadActionsController : SingletonController<MainThreadActionsController>,
+        IPerFrameIncrementalUpdate
     {
         private ConcurrentStack<MainThreadAction> _Actions;
 
@@ -22,19 +24,32 @@ namespace Wyd.Controllers.System
             _Actions = new ConcurrentStack<MainThreadAction>();
         }
 
-        private void Update()
+        private void OnEnable()
         {
-            // try to retrieve item from _Actions in safe time, or break if no items present
-            while (SystemController.Current.IsInSafeFrameTime() && _Actions.TryPop(out MainThreadAction mainThreadAction))
-            {
-                mainThreadAction.Execute();
-                mainThreadAction.Set();
-            }
+            PerFrameUpdateController.Current.RegisterPerFrameUpdater(-900, this);
+        }
+
+        private void OnDisable()
+        {
+            PerFrameUpdateController.Current.DeregisterPerFrameUpdater(-900, this);
         }
 
         public void PushAction(MainThreadAction mainThreadAction)
         {
             _Actions.Push(mainThreadAction);
+        }
+
+        public void FrameUpdate() { }
+
+        public IEnumerable IncrementalFrameUpdate()
+        {
+            while (_Actions.TryPop(out MainThreadAction mainThreadAction))
+            {
+                mainThreadAction.Execute();
+                mainThreadAction.Set();
+
+                yield return null;
+            }
         }
     }
 }

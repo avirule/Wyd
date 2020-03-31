@@ -1,7 +1,6 @@
 #region
 
 using System;
-using System.Diagnostics;
 using System.Threading;
 using Wyd.Controllers.State;
 using Wyd.System.Jobs;
@@ -14,21 +13,17 @@ namespace Wyd.Controllers.System
     {
         public static readonly int MainThreadId = Thread.CurrentThread.ManagedThreadId;
 
-        private Stopwatch _FrameTimer;
         private JobScheduler _JobExecutionScheduler;
 
         public long JobCount => _JobExecutionScheduler.JobCount;
         public long ActiveJobCount => _JobExecutionScheduler.ProcessingJobCount;
         public long WorkerThreadCount => _JobExecutionScheduler.WorkerThreadCount;
 
-        public bool IsInSafeFrameTime() => _FrameTimer.Elapsed <= OptionsController.Current.MaximumInternalFrameTime;
 
         private void Awake()
         {
             AssignSingletonInstance(this);
             DontDestroyOnLoad(this);
-
-            _FrameTimer = new Stopwatch();
         }
 
         private void Start()
@@ -54,11 +49,6 @@ namespace Wyd.Controllers.System
             };
 
             _JobExecutionScheduler.Start();
-        }
-
-        private void Update()
-        {
-            _FrameTimer.Restart();
         }
 
         private void OnDestroy()

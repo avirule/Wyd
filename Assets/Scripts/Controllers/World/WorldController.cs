@@ -1,6 +1,7 @@
 #region
 
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using Serilog;
 using UnityEngine;
@@ -21,10 +22,10 @@ using Wyd.System.Collections;
 
 namespace Wyd.Controllers.World
 {
-    public class WorldController : SingletonController<WorldController>
+    public class WorldController : SingletonController<WorldController>, IPerFrameIncrementalUpdate
     {
         public const float WORLD_HEIGHT = 256f;
-        public static float WorldHeightInChunks = Mathf.Floor(WORLD_HEIGHT / ChunkController.Size.y);
+        public static readonly float WorldHeightInChunks = Mathf.Floor(WORLD_HEIGHT / ChunkController.Size.y);
 
         private ChunkController _ChunkControllerPrefab;
         private Dictionary<Vector3, ChunkController> _Chunks;
@@ -130,15 +131,35 @@ namespace Wyd.Controllers.World
             }
         }
 
-        private void Update()
+        private void OnEnable()
         {
-            while ((_EntitiesPendingChunkBuilding.Count > 0) && SystemController.Current.IsInSafeFrameTime())
+            PerFrameUpdateController.Current.RegisterPerFrameUpdater(10, this);
+        }
+
+        private void OnDisable()
+        {
+            PerFrameUpdateController.Current.DeregisterPerFrameUpdater(10, this);
+        }
+
+        private void OnApplicationQuit()
+        {
+            WorldSaveFileProvider.ApplicationQuit();
+            _SaveFileProvider.Dispose();
+        }
+
+        public void FrameUpdate() { }
+
+        public IEnumerable IncrementalFrameUpdate()
+        {
+            while (_EntitiesPendingChunkBuilding.Count > 0)
             {
                 IEntity loader = _EntitiesPendingChunkBuilding.Pop();
                 BuildChunksAroundEntity(loader);
+
+                yield return null;
             }
 
-            while ((_ChunksPendingDeactivation.Count > 0) && SystemController.Current.IsInSafeFrameTime())
+            while (_ChunksPendingDeactivation.Count > 0)
             {
                 ChunkChangedEventArgs args = _ChunksPendingDeactivation.Pop();
 
@@ -146,13 +167,9 @@ namespace Wyd.Controllers.World
                 Vector3 position = args.ChunkBounds.min;
                 CacheChunk(position);
                 FlagNeighborsForMeshUpdate(position, args.NeighborDirectionsToUpdate);
-            }
-        }
 
-        private void OnApplicationQuit()
-        {
-            WorldSaveFileProvider.ApplicationQuit();
-            _SaveFileProvider.Dispose();
+                yield return null;
+            }
         }
 
         private void CacheChunk(Vector3 chunkPosition)
@@ -206,7 +223,7 @@ namespace Wyd.Controllers.World
                 {
                     for (int z = -radius; z < (radius + 1); z++)
                     {
-                        if (!SystemController.Current.IsInSafeFrameTime())
+                        if (!PerFrameUpdateController.Current.IsInSafeFrameTime())
                         {
                             _EntitiesPendingChunkBuilding.Push(loader);
                             return;

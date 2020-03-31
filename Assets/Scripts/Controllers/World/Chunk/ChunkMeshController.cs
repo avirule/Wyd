@@ -1,7 +1,6 @@
 #region
 
 using UnityEngine;
-using Wyd.Controllers.State;
 using Wyd.Controllers.System;
 using Wyd.Game;
 using Wyd.Game.World.Chunks.Events;
@@ -12,7 +11,7 @@ using Wyd.System.Jobs;
 
 namespace Wyd.Controllers.World.Chunk
 {
-    public class ChunkMeshController : ActivationStateChunkController
+    public class ChunkMeshController : ActivationStateChunkController, IPerFrameUpdate
     {
         #region INSTANCE MEMBERS
 
@@ -85,16 +84,24 @@ namespace Wyd.Controllers.World.Chunk
             };
         }
 
-        public void Update()
+        private void OnEnable()
         {
-            if (!SystemController.Current.IsInSafeFrameTime()
-                || !_UpdateRequested
+            PerFrameUpdateController.Current.RegisterPerFrameUpdater(50, this);
+        }
+
+        private void OnDisable()
+        {
+            PerFrameUpdateController.Current.DeregisterPerFrameUpdater(50, this);
+        }
+
+        public void FrameUpdate()
+        {
+            if (!_UpdateRequested
                 || (BlocksController.QueuedBlockActions > 0)
                 || (TerrainController.CurrentStep != GenerationData.GenerationStep.Complete)
                 || !WorldController.Current.ReadyForGeneration
-                || (WorldController.Current.AggregateNeighborsStep(_Position) != GenerationData.GenerationStep.Complete)
-                || (BlocksController.Blocks.IsOriginNodeUniform(out ushort blockId)
-                    && (blockId == BlockController.AIR_ID)))
+                || (WorldController.Current.AggregateNeighborsStep(_Position)
+                    != GenerationData.GenerationStep.Complete))
             {
                 return;
             }
@@ -181,7 +188,8 @@ namespace Wyd.Controllers.World.Chunk
                 return;
             }
 
-            MainThreadActionsController.Current.PushAction(new MainThreadAction(default, () => ApplyMesh(chunkMeshingJob)));
+            MainThreadActionsController.Current.PushAction(new MainThreadAction(default,
+                () => ApplyMesh(chunkMeshingJob)));
             SystemController.Current.JobFinished -= OnJobFinished;
             _JobIdentity = null;
         }

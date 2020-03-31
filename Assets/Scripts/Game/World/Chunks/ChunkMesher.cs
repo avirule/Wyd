@@ -52,7 +52,7 @@ namespace Wyd.Game.World.Chunks
             _Size = _GenerationData.Bounds.size.AsVector3Int();
             _VerticalIndexStep = _Size.x * _Size.z;
 
-            int sizeProduct = (int)_GenerationData.Bounds.size.Product();
+            int sizeProduct = _Size.Product();
             if (_Blocks.Length != sizeProduct)
             {
                 _Blocks = new MeshBlock[sizeProduct];
@@ -127,6 +127,12 @@ namespace Wyd.Game.World.Chunks
 
         public void GenerateMesh()
         {
+            if (_GenerationData.Blocks.IsOriginNodeUniform(out ushort blockId)
+                && (blockId == BlockController.AIR_ID))
+            {
+                return;
+            }
+
             _Stopwatch.Restart();
             SetBlockData(_GenerationData.Blocks.GetAllData());
             _Stopwatch.Stop();

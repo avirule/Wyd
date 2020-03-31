@@ -16,7 +16,7 @@ using Wyd.System.Collections;
 
 namespace Wyd.Controllers.World.Chunk
 {
-    public class ChunkBlocksController : ActivationStateChunkController
+    public class ChunkBlocksController : ActivationStateChunkController, IPerFrameUpdate
     {
         private static readonly ObjectCache<BlockAction> _BlockActionsCache =
             new ObjectCache<BlockAction>(true, 1024);
@@ -57,17 +57,18 @@ namespace Wyd.Controllers.World.Chunk
             _BlockActions = new Queue<BlockAction>();
         }
 
-
-        public void Update()
+        private void OnEnable()
         {
-            // if we've passed safe frame time for target
-            // fps, then skip updates as necessary to reach
-            // next frame
-            if (!SystemController.Current.IsInSafeFrameTime())
-            {
-                return;
-            }
+            PerFrameUpdateController.Current.RegisterPerFrameUpdater(30, this);
+        }
 
+        private void OnDisable()
+        {
+            PerFrameUpdateController.Current.DeregisterPerFrameUpdater(30, this);
+        }
+
+        public void FrameUpdate()
+        {
             // if (_BlockActions.Count > 0)
             // {
             //     ProcessBlockActions();
@@ -193,12 +194,9 @@ namespace Wyd.Controllers.World.Chunk
 
         #region TRY GET / PLACE / REMOVE BLOCKS
 
-        /// <summary>
-        ///     todo write comment explaining this
-        /// </summary>
         private void ProcessBlockActions()
         {
-            while ((_BlockActions.Count > 0) && SystemController.Current.IsInSafeFrameTime())
+            while (_BlockActions.Count > 0)
             {
                 BlockAction blockAction = _BlockActions.Dequeue();
 

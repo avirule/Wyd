@@ -38,7 +38,8 @@ namespace Wyd.System.Jobs
         protected override void ProcessFinished()
         {
             DiagnosticsController.Current.RollingNoiseRetrievalTimes.Enqueue(_TerrainBuilder.NoiseRetrievalTimeSpan);
-            DiagnosticsController.Current.RollingTerrainGenerationTimes.Enqueue(_TerrainBuilder.TerrainGenerationTimeSpan);
+            DiagnosticsController.Current.RollingTerrainGenerationTimes.Enqueue(_TerrainBuilder
+                .TerrainGenerationTimeSpan);
         }
     }
 }
