@@ -23,37 +23,39 @@ namespace Wyd.Game.World.Chunks
         private readonly List<int> _TransparentTriangles;
         private readonly List<Vector3> _UVs;
 
-        private readonly List<MeshBlock> _Blocks;
-
+        private MeshBlock[] _Blocks;
         private Vector3Int _Size;
         private int _VerticalIndexStep;
         private GenerationData _GenerationData;
-
-
-        public GenerationData GenerationData
-        {
-            get => _GenerationData;
-            set
-            {
-                _GenerationData = value;
-                _Size = _GenerationData.Bounds.size.AsVector3Int();
-                _VerticalIndexStep = _Size.x * _Size.z;
-            }
-        }
-
-        public CancellationToken AbortToken { get; set; }
-        public bool AggressiveFaceMerging { get; set; }
+        private CancellationToken _AbortToken;
+        private bool _AggressiveFaceMerging;
 
         public ChunkMesher()
         {
-            _Blocks = new List<MeshBlock>();
             _Vertices = new List<Vector3>();
             _UVs = new List<Vector3>();
             _Triangles = new List<int>();
             _TransparentTriangles = new List<int>();
         }
 
-        public void ClearData()
+        public void SetRuntimeFields(GenerationData generationData, CancellationToken abortToken,
+            bool aggressiveFaceMerging)
+        {
+            _GenerationData = generationData;
+            _Size = _GenerationData.Bounds.size.AsVector3Int();
+            _VerticalIndexStep = _Size.x * _Size.z;
+
+            int sizeProduct = (int)_GenerationData.Bounds.size.Product();
+            if (_Blocks.Length != sizeProduct)
+            {
+                _Blocks = new MeshBlock[sizeProduct];
+            }
+
+            _AbortToken = abortToken;
+            _AggressiveFaceMerging = aggressiveFaceMerging;
+        }
+
+        public void ClearMeshData()
         {
             foreach (MeshBlock block in _Blocks)
             {
@@ -101,35 +103,25 @@ namespace Wyd.Game.World.Chunks
 
         private void SetBlockData(IEnumerable<ushort> blocks)
         {
-            if (_Blocks.Count == 0)
-            {
-                foreach (ushort id in blocks)
-                {
-                    _Blocks.Add(new MeshBlock(id));
-                }
-            }
-            else
-            {
-                int index = 0;
+            int index = 0;
 
-                foreach (ushort id in blocks)
-                {
-                    _Blocks[index].Id = id;
-                    index += 1;
-                }
+            foreach (ushort id in blocks)
+            {
+                _Blocks[index].Id = id;
+                index += 1;
             }
         }
 
-        public void GenerateMesh(GenerationData generationData)
+        public void GenerateMesh()
         {
-            SetBlockData(GenerationData.Blocks.GetAllData());
+            SetBlockData(_GenerationData.Blocks.GetAllData());
 
             int index = -1;
             foreach (MeshBlock block in _Blocks)
             {
                 index += 1;
 
-                if (AbortToken.IsCancellationRequested)
+                if (_AbortToken.IsCancellationRequested)
                 {
                     return;
                 }
@@ -139,7 +131,7 @@ namespace Wyd.Game.World.Chunks
                     continue;
                 }
 
-                Vector3Int localPosition = Mathv.GetIndexAsVector3Int(index, generationData.Bounds.size.AsVector3Int());
+                Vector3Int localPosition = Mathv.GetIndexAsVector3Int(index, _GenerationData.Bounds.size.AsVector3Int());
 
                 if (BlockController.Current.CheckBlockHasProperty(block.Id, BlockRule.Property.Transparent))
                 {
@@ -147,7 +139,7 @@ namespace Wyd.Game.World.Chunks
                 }
                 else
                 {
-                    TraverseIndex(generationData.Bounds.min, index, localPosition);
+                    TraverseIndex(_GenerationData.Bounds.min, index, localPosition);
                 }
             }
         }
@@ -173,7 +165,7 @@ namespace Wyd.Game.World.Chunks
                 int traversals;
                 Vector3 uvSize = Vector3.one;
 
-                if (AggressiveFaceMerging)
+                if (_AggressiveFaceMerging)
                 {
                     traversals = GetTraversals(index, globalPosition, localPosition.x, Direction.North, Direction.East,
                         1, _Size.x, _Blocks[index].Id);
@@ -233,7 +225,7 @@ namespace Wyd.Game.World.Chunks
                 int traversals;
                 Vector3 uvSize = Vector3.one;
 
-                if (AggressiveFaceMerging)
+                if (_AggressiveFaceMerging)
                 {
                     traversals = GetTraversals(index, globalPosition, localPosition.z, Direction.East, Direction.North,
                         _Size.x, _Size.z, _Blocks[index].Id);
@@ -286,7 +278,7 @@ namespace Wyd.Game.World.Chunks
                 int traversals;
                 Vector3 uvSize = Vector3.one;
 
-                if (AggressiveFaceMerging)
+                if (_AggressiveFaceMerging)
                 {
                     traversals = GetTraversals(index, globalPosition, localPosition.x, Direction.South, Direction.East,
                         1, _Size.x, _Blocks[index].Id);
@@ -340,7 +332,7 @@ namespace Wyd.Game.World.Chunks
                 int traversals;
                 Vector3 uvSize = Vector3.one;
 
-                if (AggressiveFaceMerging)
+                if (_AggressiveFaceMerging)
                 {
                     traversals = GetTraversals(index, globalPosition, localPosition.z, Direction.West, Direction.North,
                         _Size.x, _Size.z, _Blocks[index].Id);
@@ -391,7 +383,7 @@ namespace Wyd.Game.World.Chunks
                 int traversals;
                 Vector3 uvSize = Vector3.one;
 
-                if (AggressiveFaceMerging)
+                if (_AggressiveFaceMerging)
                 {
                     traversals = GetTraversals(index, globalPosition, localPosition.z, Direction.Up, Direction.North,
                         _Size.x, _Size.z, _Blocks[index].Id);
@@ -442,7 +434,7 @@ namespace Wyd.Game.World.Chunks
                 int traversals;
                 Vector3 uvSize = Vector3.one;
 
-                if (AggressiveFaceMerging)
+                if (_AggressiveFaceMerging)
                 {
                     traversals = GetTraversals(index, globalPosition, localPosition.z, Direction.Down, Direction.North,
                         _Size.x, _Size.z, _Blocks[index].Id);
@@ -506,7 +498,7 @@ namespace Wyd.Game.World.Chunks
                 int traversals;
                 Vector3 uvSize = Vector3.one;
 
-                if (AggressiveFaceMerging)
+                if (_AggressiveFaceMerging)
                 {
                     traversals = GetTraversals(index, globalPosition, localPosition.x, Direction.North, Direction.East,
                         1, _Size.x);
@@ -567,7 +559,7 @@ namespace Wyd.Game.World.Chunks
                 int traversals;
                 Vector3 uvSize = Vector3.one;
 
-                if (AggressiveFaceMerging)
+                if (_AggressiveFaceMerging)
                 {
                     traversals = GetTraversals(index, globalPosition, localPosition.z, Direction.East, Direction.North,
                         _Size.x, _Size.z);
@@ -621,7 +613,7 @@ namespace Wyd.Game.World.Chunks
                 int traversals;
                 Vector3 uvSize = Vector3.one;
 
-                if (AggressiveFaceMerging)
+                if (_AggressiveFaceMerging)
                 {
                     traversals = GetTraversals(index, globalPosition, localPosition.x, Direction.South, Direction.East,
                         1, _Size.x);
@@ -675,7 +667,7 @@ namespace Wyd.Game.World.Chunks
                 int traversals;
                 Vector3 uvSize = Vector3.one;
 
-                if (AggressiveFaceMerging)
+                if (_AggressiveFaceMerging)
                 {
                     traversals = GetTraversals(index, globalPosition, localPosition.z, Direction.West, Direction.North,
                         _Size.x, _Size.z);
@@ -729,7 +721,7 @@ namespace Wyd.Game.World.Chunks
                 int traversals;
                 Vector3 uvSize = Vector3.one;
 
-                if (AggressiveFaceMerging)
+                if (_AggressiveFaceMerging)
                 {
                     traversals = GetTraversals(index, globalPosition, localPosition.z, Direction.Up, Direction.North,
                         _Size.x, _Size.z);
@@ -784,7 +776,7 @@ namespace Wyd.Game.World.Chunks
                 int traversals;
                 Vector3 uvSize = Vector3.one;
 
-                if (AggressiveFaceMerging)
+                if (_AggressiveFaceMerging)
                 {
                     traversals = GetTraversals(index, globalPosition, localPosition.z, Direction.Down, Direction.North,
                         _Size.x, _Size.z);
@@ -870,7 +862,7 @@ namespace Wyd.Game.World.Chunks
             int traversals = 1;
 
             // todo make aggressive face merging compatible with special block shapes
-            if (!AggressiveFaceMerging)
+            if (!_AggressiveFaceMerging)
             {
                 return traversals;
             }
