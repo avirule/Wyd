@@ -10,6 +10,7 @@ using Wyd.Controllers.System;
 using Wyd.Controllers.World;
 using Wyd.Controllers.World.Chunk;
 using Wyd.System;
+using Wyd.System.Jobs;
 using Wyd.System.Noise;
 
 #endregion
@@ -76,8 +77,7 @@ namespace Wyd.Game.World.Chunks
         {
             if (_GenerationData.Blocks == default)
             {
-                Log.Error(
-                    $"`{nameof(_GenerationData.Blocks)}` has not been set. Aborting generation.");
+                Log.Error($"`{nameof(_GenerationData.Blocks)}` has not been set. Aborting generation.");
                 return;
             }
 
@@ -86,12 +86,11 @@ namespace Wyd.Game.World.Chunks
                 _Stopwatch.Restart();
 
                 _NoiseValues = NoiseValuesCache.Retrieve() ?? new ChunkBuilderNoiseValues();
-                MainThreadActionsController.Current.PushAction(GetComputeBufferData);
 
-                while (!NoiseValuesReady)
-                {
-                    Thread.Sleep(0);
-                }
+                ManualResetEvent manualResetEvent = new ManualResetEvent(false);
+                MainThreadActionsController.Current.PushAction(new MainThreadAction(manualResetEvent,
+                    GetComputeBufferData));
+                manualResetEvent.WaitOne();
 
                 _Stopwatch.Stop();
                 NoiseRetrievalTimeSpan = _Stopwatch.Elapsed;

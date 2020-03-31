@@ -467,19 +467,21 @@ namespace Wyd.Controllers.State
 
             _Configuration["Graphics"][nameof(VSyncLevel)].PreComment =
                 "Each level increases the number of screen updates to wait before rendering to the screen.";
-            _Configuration["Graphics"][nameof(VSyncLevel)].Comment = "Maximum value of 4";
+            _Configuration["Graphics"][nameof(VSyncLevel)].Comment = "(0 = Disabled, 1 = Enabled)";
             _Configuration["Graphics"][nameof(VSyncLevel)].IntValue = Defaults.VSYNC_LEVEL;
 
             _Configuration["Graphics"][nameof(WindowMode)].Comment =
                 "(0 = Fullscreen, 1 = BorderlessWindowed, 2 = Windowed)";
+
             _Configuration["Graphics"][nameof(WindowMode)].IntValue = Defaults.WINDOW_MODE;
 
             _Configuration["Graphics"][nameof(ShadowDistance)].PreComment =
                 "Defines radius in chunks around player to draw shadows.";
+            _Configuration["Graphics"][nameof(ShadowDistance)].Comment = "(min 1, max 48)";
             _Configuration["Graphics"][nameof(ShadowDistance)].IntValue = Defaults.SHADOW_DISTANCE;
 
             _Configuration["Graphics"][nameof(RenderDistance)].PreComment =
-                "Defines radius in regions around player to draw shadows.";
+                "Defines radius in regions around player to load chunks.";
             _Configuration["Graphics"][nameof(RenderDistance)].Comment = "(min 1, max 48)";
             _Configuration["Graphics"][nameof(RenderDistance)].IntValue = Defaults.RENDER_DISTANCE;
 

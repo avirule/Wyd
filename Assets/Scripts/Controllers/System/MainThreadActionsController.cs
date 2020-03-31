@@ -2,6 +2,7 @@
 
 using System;
 using System.Collections.Concurrent;
+using Wyd.System.Jobs;
 
 #endregion
 
@@ -12,27 +13,28 @@ namespace Wyd.Controllers.System
     /// </summary>
     public class MainThreadActionsController : SingletonController<MainThreadActionsController>
     {
-        private ConcurrentStack<Action> _Actions;
+        private ConcurrentStack<MainThreadAction> _Actions;
 
         private void Awake()
         {
             AssignSingletonInstance(this);
 
-            _Actions = new ConcurrentStack<Action>();
+            _Actions = new ConcurrentStack<MainThreadAction>();
         }
 
         private void Update()
         {
             // try to retrieve item from _Actions in safe time, or break if no items present
-            while (SystemController.Current.IsInSafeFrameTime() && _Actions.TryPop(out Action currentAction))
+            while (SystemController.Current.IsInSafeFrameTime() && _Actions.TryPop(out MainThreadAction mainThreadAction))
             {
-                currentAction.Invoke();
+                mainThreadAction.Execute();
+                mainThreadAction.Set();
             }
         }
 
-        public void PushAction(Action action)
+        public void PushAction(MainThreadAction mainThreadAction)
         {
-            _Actions.Push(action);
+            _Actions.Push(mainThreadAction);
         }
     }
 }

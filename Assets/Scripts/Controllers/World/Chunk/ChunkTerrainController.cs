@@ -59,9 +59,6 @@ namespace Wyd.Controllers.World.Chunk
 
         private void Update()
         {
-            // if we've passed safe frame time for target
-            // fps, then skip updates as necessary to reach
-            // next frame
             if (!SystemController.Current.IsInSafeFrameTime())
             {
                 return;
@@ -168,9 +165,7 @@ namespace Wyd.Controllers.World.Chunk
             }
 
             ChunkBuildingJob job = new ChunkBuildingJob(new GenerationData(_Bounds, BlocksController.Blocks),
-                _FREQUENCY, _PERSISTENCE,
-                OptionsController.Current.GPUAcceleration, _NoiseBuffer);
-
+                _FREQUENCY, _PERSISTENCE, OptionsController.Current.GPUAcceleration, _NoiseBuffer);
 
             QueueJob(job);
         }

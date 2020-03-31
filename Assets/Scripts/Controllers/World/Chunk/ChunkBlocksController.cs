@@ -63,7 +63,10 @@ namespace Wyd.Controllers.World.Chunk
             // if we've passed safe frame time for target
             // fps, then skip updates as necessary to reach
             // next frame
-            if (!SystemController.Current.IsInSafeFrameTime()) { }
+            if (!SystemController.Current.IsInSafeFrameTime())
+            {
+                return;
+            }
 
             // if (_BlockActions.Count > 0)
             // {
