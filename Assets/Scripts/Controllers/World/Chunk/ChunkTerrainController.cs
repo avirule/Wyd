@@ -3,7 +3,6 @@
 using System;
 using Serilog;
 using UnityEngine;
-using UnityEngine.Rendering;
 using Wyd.Controllers.State;
 using Wyd.Controllers.System;
 using Wyd.Game;
@@ -18,14 +17,10 @@ namespace Wyd.Controllers.World.Chunk
 {
     public class ChunkTerrainController : ActivationStateChunkController
     {
-        private const float _FREQUENCY = 0.01f;
-        private const float _PERSISTENCE = -1f;
-
         #region INSTANCE MEMBERS
 
         private TimeSpan _AggregateBuildTime;
         private ComputeShader _NoiseShader;
-        private AsyncGPUReadbackRequest _NoiseValuesRequest;
 
         private object _JobIdentity;
 
@@ -100,7 +95,6 @@ namespace Wyd.Controllers.World.Chunk
             TimesTerrainChanged = 0;
             _AggregateBuildTime = TimeSpan.Zero;
             _JobIdentity = null;
-            _NoiseValuesRequest = default;
             CurrentStep = GenerationData.GenerationStep.RawTerrain;
             Generating = false;
         }
@@ -124,32 +118,6 @@ namespace Wyd.Controllers.World.Chunk
         {
             switch (step)
             {
-                case GenerationData.GenerationStep.Noise:
-                    if (OptionsController.Current.GPUAcceleration)
-                    {
-                        ComputeBuffer noiseBuffer = new ComputeBuffer(ChunkController.Size.Product(), 4);
-                        int kernel = _NoiseShader.FindKernel("CSMain");
-                        _NoiseShader.SetVector("_Offset", _Position);
-                        _NoiseShader.SetFloat("_Frequency", _FREQUENCY);
-                        _NoiseShader.SetFloat("_Persistence", _PERSISTENCE);
-                        _NoiseShader.SetBuffer(kernel, "Result", noiseBuffer);
-                        // 1024 is the value set in the shader's [numthreads(--> 1024 <--, 1, 1)]
-                        _NoiseShader.Dispatch(kernel, ChunkController.Size.Product() / 1024, 1, 1);
-
-                        _NoiseValuesRequest = AsyncGPUReadback.Request(noiseBuffer);
-                    }
-                    else
-                    {
-                        CurrentStep = GenerationData.GenerationStep.RawTerrain;
-                    }
-
-                    break;
-                case GenerationData.GenerationStep.RequestedNoise:
-                    if (_NoiseValuesRequest.done)
-                    {
-                        CurrentStep = GenerationData.GenerationStep.RawTerrain;
-                    }
-                    break;
                 case GenerationData.GenerationStep.RawTerrain:
                     BeginGenerationStep();
                     break;
@@ -162,14 +130,39 @@ namespace Wyd.Controllers.World.Chunk
 
         private void BeginGenerationStep()
         {
+            const float frequency = 0.01f;
+            const float persistence = -1f;
 
             if (Generating)
             {
                 return;
             }
 
-            ChunkBuildingJob job = new ChunkBuildingJob(new GenerationData(_Bounds, BlocksController.Blocks), _FREQUENCY, _PERSISTENCE,
-                    OptionsController.Current.GPUAcceleration, _NoiseValuesRequest);
+            ChunkBuildingJob job;
+
+            if (OptionsController.Current.GPUAcceleration)
+            {
+                Log.Debug(
+                    $"Generating chunk at position ({_Position.x}, {_Position.y}, {_Position.z}) using GPU acceleration ({nameof(OptionsController.Current.GPUAcceleration)} == {OptionsController.Current.GPUAcceleration}).");
+                ComputeBuffer noiseBuffer = new ComputeBuffer(ChunkController.Size.Product(), 4);
+                int kernel = _NoiseShader.FindKernel("CSMain");
+                _NoiseShader.SetVector("_Offset", _Position);
+                _NoiseShader.SetFloat("_Frequency", frequency);
+                _NoiseShader.SetFloat("_Persistence", persistence);
+                _NoiseShader.SetBuffer(kernel, "Result", noiseBuffer);
+                // 1024 is the value set in the shader's [numthreads(--> 1024 <--, 1, 1)]
+                _NoiseShader.Dispatch(kernel, ChunkController.Size.Product() / 1024, 1, 1);
+
+                job = new ChunkBuildingJob(new GenerationData(_Bounds, BlocksController.Blocks), frequency, persistence,
+                    OptionsController.Current.GPUAcceleration, noiseBuffer);
+            }
+            else
+            {
+                Log.Debug(
+                    $"Generating chunk at position ({_Position.x}, {_Position.y}, {_Position.z}) without GPU acceleration ({nameof(OptionsController.Current.GPUAcceleration)} == {OptionsController.Current.GPUAcceleration}).");
+                job = new ChunkBuildingJob(new GenerationData(_Bounds, BlocksController.Blocks), frequency, persistence,
+                    OptionsController.Current.GPUAcceleration);
+            }
 
 
             QueueJob(job);

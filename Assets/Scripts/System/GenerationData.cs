@@ -13,10 +13,8 @@ namespace Wyd.System
         [Flags]
         public enum GenerationStep : ushort
         {
-            Noise,
-            RequestedNoise,
-            RawTerrain,
-            Complete
+            RawTerrain = 0b0000_0000_0000_0000,
+            Complete = 0b1111_1111_1111_1111
         }
 
         public enum MeshingState
@@ -27,7 +25,7 @@ namespace Wyd.System
             Meshed
         }
 
-        public const GenerationStep INITIAL_TERRAIN_STEP = GenerationStep.Noise;
+        public const GenerationStep INITIAL_TERRAIN_STEP = GenerationStep.RawTerrain;
         public const GenerationStep FINAL_TERRAIN_STEP = GenerationStep.RawTerrain;
 
         public Bounds Bounds { get; private set; }

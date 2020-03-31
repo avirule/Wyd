@@ -32,7 +32,6 @@ namespace Wyd.Game.World.Chunks
 
         public ChunkMesher()
         {
-            _Blocks = new MeshBlock[0];
             _Vertices = new List<Vector3>();
             _UVs = new List<Vector3>();
             _Triangles = new List<int>();

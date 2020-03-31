@@ -1,11 +1,8 @@
 #region
 
-using System.Diagnostics;
 using System.Threading;
 using Serilog;
-using Unity.Collections;
 using UnityEngine;
-using UnityEngine.Rendering;
 using Wyd.Controllers.State;
 using Wyd.Controllers.System;
 using Wyd.Controllers.World;
@@ -19,15 +16,13 @@ namespace Wyd.Game.World.Chunks
 {
     public class ChunkRawTerrainBuilder : ChunkBuilder
     {
-        private readonly Stopwatch _DebugStopwatch;
-        private readonly bool _GpuAcceleration;
+        private bool _NoiseValuesReady;
+        private bool _GpuAcceleration;
         private readonly object _NoiseValuesReadyHandle = new object();
         private readonly float _Frequency;
         private readonly float _Persistence;
-
-        private bool _NoiseValuesReady;
-        private AsyncGPUReadbackRequest _NoiseValuesRequest;
-        private NativeArray<float> _NoiseValues;
+        private readonly ComputeBuffer _NoiseValuesBuffer;
+        private ChunkBuilderNoiseValues _NoiseValues;
 
         private bool NoiseValuesReady
         {
@@ -52,20 +47,20 @@ namespace Wyd.Game.World.Chunks
         }
 
         public ChunkRawTerrainBuilder(GenerationData generationData, float frequency, float persistence,
-            bool gpuAcceleration = false, AsyncGPUReadbackRequest noiseValuesRequest = default)
+            bool gpuAcceleration = false, ComputeBuffer noiseValuesBuffer = null)
         {
             SetGenerationData(generationData);
             _Frequency = frequency;
             _Persistence = persistence;
             _GpuAcceleration = gpuAcceleration;
-            _NoiseValuesRequest = noiseValuesRequest;
+            _NoiseValuesBuffer = noiseValuesBuffer;
             NoiseValuesReady = false;
-            _DebugStopwatch = new Stopwatch();
         }
 
         private void GetComputeBufferData()
         {
-            _NoiseValues = _NoiseValuesRequest.GetData<float>();
+            _NoiseValuesBuffer.GetData(_NoiseValues.NoiseValues);
+            _NoiseValuesBuffer.Release();
             NoiseValuesReady = true;
         }
 
@@ -78,20 +73,21 @@ namespace Wyd.Game.World.Chunks
                 return;
             }
 
-            if (_GpuAcceleration)
+            if (_GpuAcceleration && (_NoiseValuesBuffer != null))
             {
-                Log.Debug($"Retrieving noise values from GPU for chunk at position {_GenerationData.Bounds.min}.");
-                _DebugStopwatch.Restart();
-
+                _NoiseValues = NoiseValuesCache.Retrieve() ?? new ChunkBuilderNoiseValues();
                 MainThreadActionsController.Current.PushAction(GetComputeBufferData);
 
                 while (!NoiseValuesReady)
                 {
-                    Thread.Sleep(5);
+                    Thread.Sleep(0);
                 }
-
-                _DebugStopwatch.Stop();
-                Log.Debug($"Retrieved noise values from GPU for chunk at position {_GenerationData.Bounds.min} in {_DebugStopwatch.ElapsedMilliseconds}ms.");
+            }
+            else if (_GpuAcceleration && (_NoiseValuesBuffer == null))
+            {
+                Log.Warning(
+                    $"`{nameof(_GpuAcceleration)}` is set to true, but no noise values were provided. Defaulting to CPU-bound generation.");
+                _GpuAcceleration = false;
             }
 
             _GenerationData.Blocks.Collapse(true);
@@ -100,12 +96,12 @@ namespace Wyd.Game.World.Chunks
             {
                 Vector3 globalPosition =
                     _GenerationData.Bounds.min + Mathv.GetIndexAsVector3Int(index, ChunkController.Size);
-                ushort id = _NoiseValues[index] > 0.01f ? (ushort)1 : BlockController.AIR_ID;
+                ushort id = _NoiseValues.NoiseValues[index] > 0.01f ? (ushort)1 : BlockController.AIR_ID;
 
                 _GenerationData.Blocks.SetPoint(globalPosition, id);
             }
 
-            _NoiseValues.Dispose();
+            NoiseValuesCache.CacheItem(ref _NoiseValues);
         }
 
         //            if ((position.y < 4) && (position.y <= _Rand.Next(0, 4)))

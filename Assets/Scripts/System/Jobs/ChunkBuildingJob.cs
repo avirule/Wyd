@@ -1,7 +1,6 @@
 #region
 
 using UnityEngine;
-using UnityEngine.Rendering;
 using Wyd.Game.World.Chunks;
 
 #endregion
@@ -11,7 +10,7 @@ namespace Wyd.System.Jobs
     public class ChunkBuildingJob : Job
     {
         private readonly GenerationData _GenerationData;
-        private readonly AsyncGPUReadbackRequest _NoiseValuesRequest;
+        private readonly ComputeBuffer _NoiseValuesBuffer;
         private readonly float _Frequency;
         private readonly float _Persistence;
         private readonly bool _GpuAcceleration;
@@ -19,19 +18,19 @@ namespace Wyd.System.Jobs
         private ChunkRawTerrainBuilder _TerrainBuilder;
 
         public ChunkBuildingJob(GenerationData generationData, float frequency, float persistence,
-            bool gpuAcceleration = false, AsyncGPUReadbackRequest noiseValuesRequest = default)
+            bool gpuAcceleration = false, ComputeBuffer noiseValuesBuffer = null)
         {
             _GenerationData = generationData;
             _Frequency = frequency;
             _Persistence = persistence;
             _GpuAcceleration = gpuAcceleration;
-            _NoiseValuesRequest = noiseValuesRequest;
+            _NoiseValuesBuffer = noiseValuesBuffer;
         }
 
         protected override void Process()
         {
             ChunkRawTerrainBuilder terrainBuilder = new ChunkRawTerrainBuilder(_GenerationData, _Frequency,
-                _Persistence, _GpuAcceleration, _NoiseValuesRequest);
+                _Persistence, _GpuAcceleration, _NoiseValuesBuffer);
             terrainBuilder.Generate();
         }
     }
