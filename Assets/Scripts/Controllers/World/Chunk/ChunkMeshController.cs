@@ -91,6 +91,8 @@ namespace Wyd.Controllers.World.Chunk
                 || !_UpdateRequested
                 || (BlocksController.QueuedBlockActions > 0)
                 || (TerrainController.CurrentStep != GenerationData.GenerationStep.Complete)
+                || !WorldController.Current.ReadyForGeneration
+                || WorldController.Current.AggregateNeighborsStep(_Position) != GenerationData.GenerationStep.Complete
                 || (BlocksController.Blocks.IsOriginNodeUniform(out ushort blockId) && blockId == BlockController.AIR_ID))
             {
                 return;

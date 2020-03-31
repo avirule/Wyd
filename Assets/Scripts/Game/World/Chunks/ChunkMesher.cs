@@ -876,13 +876,13 @@ namespace Wyd.Game.World.Chunks
             }
 
             // incrementing on x, so the traversal factor is 1
-            // if we were incrementing on z, the factor would be Chunk.Size.x
-            // and on y it would be (Chunk.YIndexStep)
+            // if we were incrementing on z, the factor would be _Size.x
+            // and on y it would be (_Size.x * _Size.z)
             int traversalIndex = index + (traversals * traversalFactor);
 
             try
             {
-                while ( // Set traversalIndex and ensure it is within the chunk's context
+                while ( // Set traversalIndex and ensure it is within the chunk's bounds
                     ((slice + traversals) < limitingSliceValue)
                     // This check removes the need to check if the adjacent block is transparent,
                     // as our current block will never be transparent

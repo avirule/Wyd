@@ -215,6 +215,10 @@ namespace Wyd.Controllers.World
                         Vector3 position = loader.CurrentChunk
                                            + new Vector3(x, y, z).MultiplyBy(ChunkController.Size);
 
+                        // todo
+                        // this will run into the issue of two loaders being within the same render distance
+                        // and chunks getting unloaded relative to their loader, but needing to be loaded in
+                        // for the other loader sharing render distance
                         if (ChunkExistsAt(position))
                         {
                             continue;
@@ -296,7 +300,7 @@ namespace Wyd.Controllers.World
 
         private void OnChunkDeactivationCallback(object sender, ChunkChangedEventArgs args)
         {
-            // queue chunk for deactivation so deactivations can be processed in a frame-sensitive manner
+            // queue chunk for deactivation so deactivations can be processed in a frame-time sensitive manner
             _ChunksPendingDeactivation.Push(args);
         }
 
@@ -337,8 +341,17 @@ namespace Wyd.Controllers.World
             blockId = default;
             Vector3 chunkPosition = globalPosition.RoundBy(ChunkController.Size);
 
-            return TryGetChunkAt(chunkPosition, out ChunkController chunkController)
-                   && chunkController.BlocksController.TryGetBlockAt(globalPosition, out blockId);
+            if (!TryGetChunkAt(chunkPosition, out ChunkController chunkController))
+            {
+                return false;
+            }
+
+            if (!chunkController.BlocksController.TryGetBlockAt(globalPosition, out blockId))
+            {
+                return false;
+            }
+
+            return true;
         }
 
         public bool BlockExistsAt(Vector3 globalPosition)

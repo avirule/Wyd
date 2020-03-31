@@ -220,6 +220,7 @@ namespace Wyd.Controllers.World.Chunk
             }
 
             Vector3 difference = (Position - newChunkPosition).Abs();
+            difference.y = 0; // always load all chunks on y axis
 
             if (!IsWithinLoaderRange(difference))
             {
