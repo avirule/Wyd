@@ -181,7 +181,7 @@ namespace Wyd.Controllers.World.Chunk
                 return;
             }
 
-            DiagnosticsController.Current.RollingChunkMeshTimes.Enqueue(chunkMeshingJob.ExecutionTime);
+            DiagnosticsController.Current.RollingTotalChunkMeshTimes.Enqueue(chunkMeshingJob.ExecutionTime);
             MainThreadActionsController.Current.PushAction(() => ApplyMesh(chunkMeshingJob));
             SystemController.Current.JobFinished -= OnJobFinished;
             _JobIdentity = null;

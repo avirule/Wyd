@@ -1,5 +1,7 @@
 #region
 
+using System.Diagnostics;
+using System.Linq;
 using System.Threading;
 using Serilog;
 using UnityEngine;
@@ -8,6 +10,7 @@ using Wyd.Controllers.System;
 using Wyd.Controllers.World;
 using Wyd.Controllers.World.Chunk;
 using Wyd.System;
+using Wyd.System.Collections;
 using Wyd.System.Noise;
 
 #endregion
@@ -16,12 +19,16 @@ namespace Wyd.Game.World.Chunks
 {
     public class ChunkRawTerrainBuilder : ChunkBuilder
     {
-        private bool _NoiseValuesReady;
-        private bool _GpuAcceleration;
+        private static FixedConcurrentQueue<long> _noiseGenerationTimes = new FixedConcurrentQueue<long>(2000);
+
         private readonly object _NoiseValuesReadyHandle = new object();
+        private readonly Stopwatch _DebugStopwatch;
         private readonly float _Frequency;
         private readonly float _Persistence;
         private readonly ComputeBuffer _NoiseValuesBuffer;
+
+        private bool _NoiseValuesReady;
+        private bool _GpuAcceleration;
         private ChunkBuilderNoiseValues _NoiseValues;
 
         private bool NoiseValuesReady
@@ -50,6 +57,7 @@ namespace Wyd.Game.World.Chunks
             bool gpuAcceleration = false, ComputeBuffer noiseValuesBuffer = null)
         {
             SetGenerationData(generationData);
+            _DebugStopwatch = new Stopwatch();
             _Frequency = frequency;
             _Persistence = persistence;
             _GpuAcceleration = gpuAcceleration;
@@ -75,6 +83,8 @@ namespace Wyd.Game.World.Chunks
 
             if (_GpuAcceleration && (_NoiseValuesBuffer != null))
             {
+                _DebugStopwatch.Restart();
+
                 _NoiseValues = NoiseValuesCache.Retrieve() ?? new ChunkBuilderNoiseValues();
                 MainThreadActionsController.Current.PushAction(GetComputeBufferData);
 
@@ -82,6 +92,11 @@ namespace Wyd.Game.World.Chunks
                 {
                     Thread.Sleep(0);
                 }
+
+                _DebugStopwatch.Stop();
+                _noiseGenerationTimes.Enqueue(_DebugStopwatch.ElapsedMilliseconds);
+                Log.Debug(
+                    $"Retrieved noise values for chunk at position {_GenerationData.Bounds.min} in {_DebugStopwatch.ElapsedMilliseconds}ms (avg {(long)_noiseGenerationTimes.Average()}ms).");
             }
             else if (_GpuAcceleration && (_NoiseValuesBuffer == null))
             {

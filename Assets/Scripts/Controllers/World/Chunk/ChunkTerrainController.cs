@@ -1,7 +1,6 @@
 #region
 
 using System;
-using Serilog;
 using UnityEngine;
 using Wyd.Controllers.State;
 using Wyd.Controllers.System;
@@ -17,10 +16,14 @@ namespace Wyd.Controllers.World.Chunk
 {
     public class ChunkTerrainController : ActivationStateChunkController
     {
+        private const float _FREQUENCY = 0.01f;
+        private const float _PERSISTENCE = -1f;
+
         #region INSTANCE MEMBERS
 
         private TimeSpan _AggregateBuildTime;
         private ComputeShader _NoiseShader;
+        private ComputeBuffer _NoiseBuffer;
 
         private object _JobIdentity;
 
@@ -67,7 +70,8 @@ namespace Wyd.Controllers.World.Chunk
 
             if (Generating
                 || (CurrentStep == GenerationData.GenerationStep.Complete)
-                || (WorldController.Current.AggregateNeighborsStep(_Position) < CurrentStep))
+                || ((CurrentStep > GenerationData.GenerationStep.RawTerrain)
+                    && (WorldController.Current.AggregateNeighborsStep(_Position) < CurrentStep)))
             {
                 return;
             }
@@ -92,10 +96,11 @@ namespace Wyd.Controllers.World.Chunk
 
         private void ClearInternalData()
         {
+            _NoiseBuffer?.Release();
             TimesTerrainChanged = 0;
             _AggregateBuildTime = TimeSpan.Zero;
             _JobIdentity = null;
-            CurrentStep = GenerationData.GenerationStep.RawTerrain;
+            CurrentStep = 0;
             Generating = false;
         }
 
@@ -118,51 +123,55 @@ namespace Wyd.Controllers.World.Chunk
         {
             switch (step)
             {
+                case GenerationData.GenerationStep.Noise:
+                    if (OptionsController.Current.GPUAcceleration)
+                    {
+                        BeginNoiseGeneration();
+                        CurrentStep = CurrentStep.Next();
+                    }
+                    else
+                    {
+                        CurrentStep = GenerationData.GenerationStep.RawTerrain;
+                    }
+
+                    break;
+                case GenerationData.GenerationStep.NoiseWaitFrameOne:
+                case GenerationData.GenerationStep.NoiseWaitFrameTwo:
+                    CurrentStep = CurrentStep.Next();
+                    break;
                 case GenerationData.GenerationStep.RawTerrain:
-                    BeginGenerationStep();
+                    BeginRawTerrainGeneration();
                     break;
                 case GenerationData.GenerationStep.Complete:
                     break;
+
                 default:
                     throw new ArgumentOutOfRangeException(nameof(step), step, null);
             }
         }
 
-        private void BeginGenerationStep()
+        private void BeginNoiseGeneration()
         {
-            const float frequency = 0.01f;
-            const float persistence = -1f;
+            _NoiseBuffer = new ComputeBuffer(ChunkController.Size.Product(), 4);
+            int kernel = _NoiseShader.FindKernel("CSMain");
+            _NoiseShader.SetVector("_Offset", _Position);
+            _NoiseShader.SetFloat("_Frequency", _FREQUENCY);
+            _NoiseShader.SetFloat("_Persistence", _PERSISTENCE);
+            _NoiseShader.SetBuffer(kernel, "Result", _NoiseBuffer);
+            // 1024 is the value set in the shader's [numthreads(--> 1024 <--, 1, 1)]
+            _NoiseShader.Dispatch(kernel, ChunkController.Size.Product() / 1024, 1, 1);
+        }
 
+        private void BeginRawTerrainGeneration()
+        {
             if (Generating)
             {
                 return;
             }
 
-            ChunkBuildingJob job;
-
-            if (OptionsController.Current.GPUAcceleration)
-            {
-                Log.Debug(
-                    $"Generating chunk at position ({_Position.x}, {_Position.y}, {_Position.z}) using GPU acceleration ({nameof(OptionsController.Current.GPUAcceleration)} == {OptionsController.Current.GPUAcceleration}).");
-                ComputeBuffer noiseBuffer = new ComputeBuffer(ChunkController.Size.Product(), 4);
-                int kernel = _NoiseShader.FindKernel("CSMain");
-                _NoiseShader.SetVector("_Offset", _Position);
-                _NoiseShader.SetFloat("_Frequency", frequency);
-                _NoiseShader.SetFloat("_Persistence", persistence);
-                _NoiseShader.SetBuffer(kernel, "Result", noiseBuffer);
-                // 1024 is the value set in the shader's [numthreads(--> 1024 <--, 1, 1)]
-                _NoiseShader.Dispatch(kernel, ChunkController.Size.Product() / 1024, 1, 1);
-
-                job = new ChunkBuildingJob(new GenerationData(_Bounds, BlocksController.Blocks), frequency, persistence,
-                    OptionsController.Current.GPUAcceleration, noiseBuffer);
-            }
-            else
-            {
-                Log.Debug(
-                    $"Generating chunk at position ({_Position.x}, {_Position.y}, {_Position.z}) without GPU acceleration ({nameof(OptionsController.Current.GPUAcceleration)} == {OptionsController.Current.GPUAcceleration}).");
-                job = new ChunkBuildingJob(new GenerationData(_Bounds, BlocksController.Blocks), frequency, persistence,
-                    OptionsController.Current.GPUAcceleration);
-            }
+            ChunkBuildingJob job = new ChunkBuildingJob(new GenerationData(_Bounds, BlocksController.Blocks),
+                _FREQUENCY, _PERSISTENCE,
+                OptionsController.Current.GPUAcceleration, _NoiseBuffer);
 
 
             QueueJob(job);
@@ -207,7 +216,7 @@ namespace Wyd.Controllers.World.Chunk
             // this check always BEFORE incrementing the step
             if (CurrentStep == GenerationData.FINAL_TERRAIN_STEP)
             {
-                DiagnosticsController.Current.RollingChunkBuildTimes.Enqueue(_AggregateBuildTime);
+                DiagnosticsController.Current.RollingTotalChunkBuildTimes.Enqueue(_AggregateBuildTime);
                 _AggregateBuildTime = TimeSpan.Zero;
 
                 TotalTimesTerrainChanged += 1;

@@ -10,16 +10,23 @@ namespace Wyd.Controllers.System
 {
     public class DiagnosticsController : SingletonController<DiagnosticsController>
     {
-        public FixedConcurrentQueue<TimeSpan> RollingChunkBuildTimes { get; private set; }
-        public FixedConcurrentQueue<TimeSpan> RollingChunkMeshTimes { get; private set; }
+        public FixedConcurrentQueue<TimeSpan> RollingChunkNoiseRetrievalTimes { get; private set; }
+        public FixedConcurrentQueue<TimeSpan> RollingTotalChunkBuildTimes { get; private set; }
+        public FixedConcurrentQueue<TimeSpan> RollingChunkMeshSetBlockTimes { get; private set; }
+        public FixedConcurrentQueue<TimeSpan> RollingTotalChunkMeshTimes { get; private set; }
 
         private void Start()
         {
             AssignSingletonInstance(this);
 
-            RollingChunkBuildTimes =
+            RollingTotalChunkBuildTimes =
                 new FixedConcurrentQueue<TimeSpan>(OptionsController.Current.MaximumChunkLoadTimeBufferSize);
-            RollingChunkMeshTimes =
+            RollingChunkNoiseRetrievalTimes =
+                new FixedConcurrentQueue<TimeSpan>(OptionsController.Current.MaximumChunkLoadTimeBufferSize);
+
+            RollingTotalChunkMeshTimes =
+                new FixedConcurrentQueue<TimeSpan>(OptionsController.Current.MaximumChunkLoadTimeBufferSize);
+            RollingChunkMeshSetBlockTimes =
                 new FixedConcurrentQueue<TimeSpan>(OptionsController.Current.MaximumChunkLoadTimeBufferSize);
         }
     }

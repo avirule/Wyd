@@ -58,11 +58,6 @@ namespace Wyd.Game.World.Chunks
 
         public void ClearMeshData()
         {
-            foreach (MeshBlock block in _Blocks)
-            {
-                block.Faces.ClearFaces();
-            }
-
             _Vertices.Clear();
             _Triangles.Clear();
             _TransparentTriangles.Clear();
@@ -108,7 +103,16 @@ namespace Wyd.Game.World.Chunks
 
             foreach (ushort id in blocks)
             {
-                _Blocks[index].Id = id;
+                if (_Blocks[index] == null)
+                {
+                    _Blocks[index] = new MeshBlock(id);
+                }
+                else
+                {
+                    _Blocks[index].Id = id;
+                    _Blocks[index].Faces.ClearFaces();
+                }
+
                 index += 1;
             }
         }

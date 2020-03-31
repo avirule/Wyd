@@ -13,8 +13,11 @@ namespace Wyd.System
         [Flags]
         public enum GenerationStep : ushort
         {
-            RawTerrain = 0b0000_0000_0000_0000,
-            Complete = 0b1111_1111_1111_1111
+            Noise,
+            NoiseWaitFrameOne,
+            NoiseWaitFrameTwo,
+            RawTerrain,
+            Complete
         }
 
         public enum MeshingState

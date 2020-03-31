@@ -21,6 +21,9 @@ namespace Wyd.System.Logging.Sinks
 
             switch (logEvent.Level)
             {
+                case LogEventLevel.Verbose:
+                    break;
+                case LogEventLevel.Debug:
                 case LogEventLevel.Information:
                     Debug.Log(rendered);
                     break;
@@ -37,8 +40,6 @@ namespace Wyd.System.Logging.Sinks
                     }
 
                     Debug.LogException(logEvent.Exception);
-                    break;
-                case LogEventLevel.Verbose:
                     break;
                 default:
                     throw new ArgumentOutOfRangeException();

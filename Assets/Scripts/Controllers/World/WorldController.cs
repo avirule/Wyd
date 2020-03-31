@@ -341,17 +341,8 @@ namespace Wyd.Controllers.World
             blockId = default;
             Vector3 chunkPosition = globalPosition.RoundBy(ChunkController.Size);
 
-            if (!TryGetChunkAt(chunkPosition, out ChunkController chunkController))
-            {
-                return false;
-            }
-
-            if (!chunkController.BlocksController.TryGetBlockAt(globalPosition, out blockId))
-            {
-                return false;
-            }
-
-            return true;
+            return TryGetChunkAt(chunkPosition, out ChunkController chunkController)
+                   && chunkController.BlocksController.TryGetBlockAt(globalPosition, out blockId);
         }
 
         public bool BlockExistsAt(Vector3 globalPosition)

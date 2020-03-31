@@ -47,19 +47,19 @@ namespace Wyd.Controllers.UI.Components.Text
             double avgBuildTime = 0d;
             double avgMeshTime = 0d;
 
-            if ((DiagnosticsController.Current.RollingChunkBuildTimes != default)
-                && (DiagnosticsController.Current.RollingChunkBuildTimes.Count > 0))
+            if ((DiagnosticsController.Current.RollingTotalChunkBuildTimes != default)
+                && (DiagnosticsController.Current.RollingTotalChunkBuildTimes.Count > 0))
             {
                 avgBuildTime =
-                    DiagnosticsController.Current.RollingChunkBuildTimes.Average(timeSpan =>
+                    DiagnosticsController.Current.RollingTotalChunkBuildTimes.Average(timeSpan =>
                         timeSpan.TotalMilliseconds);
             }
 
-            if ((DiagnosticsController.Current.RollingChunkMeshTimes != default)
-                && (DiagnosticsController.Current.RollingChunkMeshTimes.Count > 0))
+            if ((DiagnosticsController.Current.RollingTotalChunkMeshTimes != default)
+                && (DiagnosticsController.Current.RollingTotalChunkMeshTimes.Count > 0))
             {
                 avgMeshTime =
-                    DiagnosticsController.Current.RollingChunkMeshTimes.Average(timeSpan => timeSpan.TotalMilliseconds);
+                    DiagnosticsController.Current.RollingTotalChunkMeshTimes.Average(timeSpan => timeSpan.TotalMilliseconds);
             }
 
             return (avgBuildTime, avgMeshTime);
