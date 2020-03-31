@@ -2,7 +2,6 @@
 
 using Serilog;
 using UnityEngine;
-using Wyd.Controllers.World.Chunk;
 using Wyd.Game.World.Chunks;
 using Wyd.System.Collections;
 
@@ -30,8 +29,7 @@ namespace Wyd.System.Jobs
             ChunkMesher mesher = _ChunkMesherCache.Retrieve() ?? new ChunkMesher();
             mesher.SetRuntimeFields(_GenerationData, AbortToken, _AggressiveFaceMerging);
             mesher.ClearMeshData();
-
-            mesher.GenerateMesh(_GenerationData);
+            mesher.GenerateMesh();
 
             _Mesher = mesher;
         }

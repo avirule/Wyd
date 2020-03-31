@@ -131,7 +131,8 @@ namespace Wyd.Game.World.Chunks
                     continue;
                 }
 
-                Vector3Int localPosition = Mathv.GetIndexAsVector3Int(index, _GenerationData.Bounds.size.AsVector3Int());
+                Vector3Int localPosition =
+                    Mathv.GetIndexAsVector3Int(index, _GenerationData.Bounds.size.AsVector3Int());
 
                 if (BlockController.Current.CheckBlockHasProperty(block.Id, BlockRule.Property.Transparent))
                 {
