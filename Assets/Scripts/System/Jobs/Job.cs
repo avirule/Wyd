@@ -1,6 +1,7 @@
 #region
 
 using System;
+using System.Diagnostics;
 using System.Threading;
 
 #endregion
@@ -9,6 +10,8 @@ namespace Wyd.System.Jobs
 {
     public class Job
     {
+        private Stopwatch _Stopwatch;
+
         protected readonly object Handle;
 
         /// <summary>
@@ -19,9 +22,6 @@ namespace Wyd.System.Jobs
 
         protected bool Done;
 
-        public DateTime StartTime { get; private set; }
-        public DateTime FinishTime { get; private set; }
-
         /// <summary>
         ///     Identity of <see cref="Job" />.
         /// </summary>
@@ -31,6 +31,11 @@ namespace Wyd.System.Jobs
         ///     Token signalling cancellation of internal process.
         /// </summary>
         public CancellationToken AbortToken { get; private set; }
+
+        /// <summary>
+        ///     Elapsed time of specifically the <see cref="Process" /> function.
+        /// </summary>
+        public TimeSpan ProcessTime { get; private set; }
 
         /// <summary>
         ///     Total elapsed time of execution in milliseconds.
@@ -71,10 +76,11 @@ namespace Wyd.System.Jobs
             }
         }
 
-        internal virtual void Initialize(object identity, CancellationToken token)
+        internal virtual void Initialize(object identity, CancellationToken abortToken)
         {
+            _Stopwatch = new Stopwatch();
             Identity = identity;
-            AbortToken = token;
+            AbortToken = abortToken;
         }
 
         /// <summary>
@@ -82,13 +88,17 @@ namespace Wyd.System.Jobs
         /// </summary>
         public void Execute()
         {
-            StartTime = DateTime.UtcNow;
+            _Stopwatch.Restart();
 
             Process();
+
+            ProcessTime = _Stopwatch.Elapsed;
+
             ProcessFinished();
 
-            FinishTime = DateTime.UtcNow;
-            ExecutionTime = FinishTime - StartTime;
+            ExecutionTime = _Stopwatch.Elapsed;
+            _Stopwatch.Stop();
+            _Stopwatch.Reset();
 
             IsDone = true;
             Finished?.Invoke(this, EventArgs.Empty);

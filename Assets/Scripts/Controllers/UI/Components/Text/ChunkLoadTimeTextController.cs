@@ -1,7 +1,6 @@
 #region
 
 using System;
-using System.Linq;
 using Wyd.Controllers.System;
 
 #endregion
@@ -10,59 +9,53 @@ namespace Wyd.Controllers.UI.Components.Text
 {
     public class ChunkLoadTimeTextController : UpdatingFormattedTextController
     {
-        private const double _TOLERANCE = 0.001d;
+        private const double _TOLERANCE = 0.01d;
 
-        private double _LastBuildTime;
-        private double _LastMeshTime;
-
-
-        protected override void Awake()
-        {
-            base.Awake();
-
-            _LastBuildTime = _LastMeshTime = -1d;
-        }
+        private double _RecentNoiseRetrievalTime;
+        private double _RecentTerrainGenerationTime;
+        private double _RecentMeshingSetBlockTime;
+        private double _RecentMeshingTime;
 
         protected override void TimedUpdate()
         {
-            (double buildTime, double meshTime) = CalculateBuildAndMeshTimes();
+            double averageNoiseRetrievalTime = DiagnosticsController.Current.AverageNoiseRetrievalTime;
+            double averageTerrainGenerationTime = DiagnosticsController.Current.AverageTerrainGenerationTime;
+            double averageMeshingSetBlockTime = DiagnosticsController.Current.AverageMeshingSetBlockTime;
+            double averageMeshingTime = DiagnosticsController.Current.AverageMeshingTime;
 
-            if ((Math.Abs(buildTime - _LastBuildTime) > _TOLERANCE)
-                || (Math.Abs(meshTime - _LastMeshTime) > _TOLERANCE))
+            if (!(Math.Abs(_RecentNoiseRetrievalTime - averageNoiseRetrievalTime) > _TOLERANCE)
+                && !(Math.Abs(_RecentTerrainGenerationTime - averageTerrainGenerationTime) > _TOLERANCE)
+                && !(Math.Abs(_RecentMeshingSetBlockTime - averageMeshingSetBlockTime) > _TOLERANCE)
+                && !(Math.Abs(_RecentMeshingTime - averageMeshingTime) > _TOLERANCE))
             {
-                UpdateChunkLoadTimeText(buildTime, meshTime);
+                return;
             }
+
+            SetRecentAverages(
+                averageNoiseRetrievalTime,
+                averageTerrainGenerationTime,
+                averageMeshingSetBlockTime,
+                averageMeshingTime);
+
+            UpdateChunkLoadTimeText();
         }
 
-        private void UpdateChunkLoadTimeText(double buildTime, double meshTime)
+        private void SetRecentAverages(double averageNoiseRetrievalTime, double averageTerrainGenerationTime,
+            double averageMeshingSetBlockTime, double averageMeshingTime)
         {
-            _LastBuildTime = buildTime;
-            _LastMeshTime = meshTime;
-
-            TextObject.text = string.Format(Format, buildTime, meshTime);
+            _RecentNoiseRetrievalTime = averageNoiseRetrievalTime;
+            _RecentTerrainGenerationTime = averageTerrainGenerationTime;
+            _RecentMeshingSetBlockTime = averageMeshingSetBlockTime;
+            _RecentMeshingTime = averageMeshingTime;
         }
 
-        private static (double, double) CalculateBuildAndMeshTimes()
+        private void UpdateChunkLoadTimeText()
         {
-            double avgBuildTime = 0d;
-            double avgMeshTime = 0d;
-
-            if ((DiagnosticsController.Current.RollingTotalChunkBuildTimes != default)
-                && (DiagnosticsController.Current.RollingTotalChunkBuildTimes.Count > 0))
-            {
-                avgBuildTime =
-                    DiagnosticsController.Current.RollingTotalChunkBuildTimes.Average(timeSpan =>
-                        timeSpan.TotalMilliseconds);
-            }
-
-            if ((DiagnosticsController.Current.RollingTotalChunkMeshTimes != default)
-                && (DiagnosticsController.Current.RollingTotalChunkMeshTimes.Count > 0))
-            {
-                avgMeshTime =
-                    DiagnosticsController.Current.RollingTotalChunkMeshTimes.Average(timeSpan => timeSpan.TotalMilliseconds);
-            }
-
-            return (avgBuildTime, avgMeshTime);
+            TextObject.text = string.Format(Format,
+                _RecentNoiseRetrievalTime,
+                _RecentTerrainGenerationTime,
+                _RecentMeshingSetBlockTime,
+                _RecentMeshingTime);
         }
     }
 }

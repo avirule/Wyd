@@ -21,7 +21,6 @@ namespace Wyd.Controllers.World.Chunk
 
         #region INSTANCE MEMBERS
 
-        private TimeSpan _AggregateBuildTime;
         private ComputeShader _NoiseShader;
         private ComputeBuffer _NoiseBuffer;
 
@@ -98,7 +97,6 @@ namespace Wyd.Controllers.World.Chunk
         {
             _NoiseBuffer?.Release();
             TimesTerrainChanged = 0;
-            _AggregateBuildTime = TimeSpan.Zero;
             _JobIdentity = null;
             CurrentStep = 0;
             Generating = false;
@@ -199,7 +197,6 @@ namespace Wyd.Controllers.World.Chunk
             switch (CurrentStep)
             {
                 case GenerationData.GenerationStep.RawTerrain:
-                    _AggregateBuildTime += args.Job.ExecutionTime;
                     OnChunkTerrainChanged(this,
                         new ChunkChangedEventArgs(_Bounds, Directions.CardinalDirectionsVector3));
                     break;
@@ -208,6 +205,9 @@ namespace Wyd.Controllers.World.Chunk
                 //     OnChunkTerrainChanged(this, new ChunkChangedEventArgs(_Bounds, Enumerable.Empty<Vector3>()));
                 //     break;
                 case GenerationData.GenerationStep.Complete:
+                case GenerationData.GenerationStep.Noise:
+                case GenerationData.GenerationStep.NoiseWaitFrameOne:
+                case GenerationData.GenerationStep.NoiseWaitFrameTwo:
                     break;
                 default:
                     throw new ArgumentOutOfRangeException();
@@ -216,9 +216,6 @@ namespace Wyd.Controllers.World.Chunk
             // this check always BEFORE incrementing the step
             if (CurrentStep == GenerationData.FINAL_TERRAIN_STEP)
             {
-                DiagnosticsController.Current.RollingTotalChunkBuildTimes.Enqueue(_AggregateBuildTime);
-                _AggregateBuildTime = TimeSpan.Zero;
-
                 TotalTimesTerrainChanged += 1;
                 TimesTerrainChanged += 1;
             }

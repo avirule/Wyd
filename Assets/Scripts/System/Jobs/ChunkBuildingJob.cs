@@ -1,6 +1,7 @@
 #region
 
 using UnityEngine;
+using Wyd.Controllers.System;
 using Wyd.Game.World.Chunks;
 
 #endregion
@@ -29,9 +30,15 @@ namespace Wyd.System.Jobs
 
         protected override void Process()
         {
-            ChunkRawTerrainBuilder terrainBuilder = new ChunkRawTerrainBuilder(_GenerationData, _Frequency,
+            _TerrainBuilder = new ChunkRawTerrainBuilder(_GenerationData, _Frequency,
                 _Persistence, _GpuAcceleration, _NoiseValuesBuffer);
-            terrainBuilder.Generate();
+            _TerrainBuilder.Generate();
+        }
+
+        protected override void ProcessFinished()
+        {
+            DiagnosticsController.Current.RollingNoiseRetrievalTimes.Enqueue(_TerrainBuilder.NoiseRetrievalTimeSpan);
+            DiagnosticsController.Current.RollingTerrainGenerationTimes.Enqueue(_TerrainBuilder.TerrainGenerationTimeSpan);
         }
     }
 }

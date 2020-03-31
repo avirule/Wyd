@@ -1,7 +1,7 @@
 #region
 
+using System;
 using System.Diagnostics;
-using System.Linq;
 using System.Threading;
 using Serilog;
 using UnityEngine;
@@ -10,7 +10,6 @@ using Wyd.Controllers.System;
 using Wyd.Controllers.World;
 using Wyd.Controllers.World.Chunk;
 using Wyd.System;
-using Wyd.System.Collections;
 using Wyd.System.Noise;
 
 #endregion
@@ -19,10 +18,8 @@ namespace Wyd.Game.World.Chunks
 {
     public class ChunkRawTerrainBuilder : ChunkBuilder
     {
-        private static FixedConcurrentQueue<long> _noiseGenerationTimes = new FixedConcurrentQueue<long>(2000);
-
         private readonly object _NoiseValuesReadyHandle = new object();
-        private readonly Stopwatch _DebugStopwatch;
+        private readonly Stopwatch _Stopwatch;
         private readonly float _Frequency;
         private readonly float _Persistence;
         private readonly ComputeBuffer _NoiseValuesBuffer;
@@ -30,6 +27,9 @@ namespace Wyd.Game.World.Chunks
         private bool _NoiseValuesReady;
         private bool _GpuAcceleration;
         private ChunkBuilderNoiseValues _NoiseValues;
+
+        public TimeSpan NoiseRetrievalTimeSpan { get; private set; }
+        public TimeSpan TerrainGenerationTimeSpan { get; private set; }
 
         private bool NoiseValuesReady
         {
@@ -57,7 +57,7 @@ namespace Wyd.Game.World.Chunks
             bool gpuAcceleration = false, ComputeBuffer noiseValuesBuffer = null)
         {
             SetGenerationData(generationData);
-            _DebugStopwatch = new Stopwatch();
+            _Stopwatch = new Stopwatch();
             _Frequency = frequency;
             _Persistence = persistence;
             _GpuAcceleration = gpuAcceleration;
@@ -83,7 +83,7 @@ namespace Wyd.Game.World.Chunks
 
             if (_GpuAcceleration && (_NoiseValuesBuffer != null))
             {
-                _DebugStopwatch.Restart();
+                _Stopwatch.Restart();
 
                 _NoiseValues = NoiseValuesCache.Retrieve() ?? new ChunkBuilderNoiseValues();
                 MainThreadActionsController.Current.PushAction(GetComputeBufferData);
@@ -93,10 +93,8 @@ namespace Wyd.Game.World.Chunks
                     Thread.Sleep(0);
                 }
 
-                _DebugStopwatch.Stop();
-                _noiseGenerationTimes.Enqueue(_DebugStopwatch.ElapsedMilliseconds);
-                Log.Debug(
-                    $"Retrieved noise values for chunk at position {_GenerationData.Bounds.min} in {_DebugStopwatch.ElapsedMilliseconds}ms (avg {(long)_noiseGenerationTimes.Average()}ms).");
+                _Stopwatch.Stop();
+                NoiseRetrievalTimeSpan = _Stopwatch.Elapsed;
             }
             else if (_GpuAcceleration && (_NoiseValuesBuffer == null))
             {
@@ -105,18 +103,22 @@ namespace Wyd.Game.World.Chunks
                 _GpuAcceleration = false;
             }
 
+            _Stopwatch.Restart();
             _GenerationData.Blocks.Collapse(true);
+            Vector3 position = _GenerationData.Bounds.min;
 
             for (int index = ChunkController.SizeProduct - 1; index >= 0; index--)
             {
-                Vector3 globalPosition =
-                    _GenerationData.Bounds.min + Mathv.GetIndexAsVector3Int(index, ChunkController.Size);
+                Vector3 globalPosition = position + Mathv.GetIndexAsVector3Int(index, ChunkController.Size);
                 ushort id = _NoiseValues.NoiseValues[index] > 0.01f ? (ushort)1 : BlockController.AIR_ID;
 
                 _GenerationData.Blocks.SetPoint(globalPosition, id);
             }
 
             NoiseValuesCache.CacheItem(ref _NoiseValues);
+
+            _Stopwatch.Stop();
+            TerrainGenerationTimeSpan = _Stopwatch.Elapsed;
         }
 
         //            if ((position.y < 4) && (position.y <= _Rand.Next(0, 4)))

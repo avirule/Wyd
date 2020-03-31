@@ -2,6 +2,7 @@
 
 using Serilog;
 using UnityEngine;
+using Wyd.Controllers.System;
 using Wyd.Game.World.Chunks;
 using Wyd.System.Collections;
 
@@ -28,10 +29,17 @@ namespace Wyd.System.Jobs
         {
             ChunkMesher mesher = _ChunkMesherCache.Retrieve() ?? new ChunkMesher();
             mesher.SetRuntimeFields(_GenerationData, AbortToken, _AggressiveFaceMerging);
-            mesher.ClearMeshData();
+            mesher.ClearExistingData();
             mesher.GenerateMesh();
 
             _Mesher = mesher;
+        }
+
+        protected override void ProcessFinished()
+        {
+            DiagnosticsController.Current.RollingMeshingSetBlockTimes.Enqueue(_Mesher.SetBlockTimeSpan);
+            DiagnosticsController.Current.RollingMeshingTimes.Enqueue(_Mesher.MeshingTimeSpan);
+            _Mesher.ClearExistingData();
         }
 
         public bool SetMesh(ref Mesh mesh)

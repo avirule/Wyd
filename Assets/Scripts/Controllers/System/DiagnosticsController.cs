@@ -1,6 +1,7 @@
 #region
 
 using System;
+using System.Linq;
 using Wyd.Controllers.State;
 using Wyd.System.Collections;
 
@@ -10,23 +11,38 @@ namespace Wyd.Controllers.System
 {
     public class DiagnosticsController : SingletonController<DiagnosticsController>
     {
-        public FixedConcurrentQueue<TimeSpan> RollingChunkNoiseRetrievalTimes { get; private set; }
-        public FixedConcurrentQueue<TimeSpan> RollingTotalChunkBuildTimes { get; private set; }
-        public FixedConcurrentQueue<TimeSpan> RollingChunkMeshSetBlockTimes { get; private set; }
-        public FixedConcurrentQueue<TimeSpan> RollingTotalChunkMeshTimes { get; private set; }
+        public FixedConcurrentQueue<TimeSpan> RollingNoiseRetrievalTimes { get; private set; }
+        public FixedConcurrentQueue<TimeSpan> RollingTerrainGenerationTimes { get; private set; }
+        public FixedConcurrentQueue<TimeSpan> RollingMeshingSetBlockTimes { get; private set; }
+        public FixedConcurrentQueue<TimeSpan> RollingMeshingTimes { get; private set; }
+
+        public double AverageNoiseRetrievalTime => RollingNoiseRetrievalTimes.Count == 0
+            ? 0d
+            : RollingNoiseRetrievalTimes.Average(timeSpan => timeSpan.TotalMilliseconds);
+
+        public double AverageTerrainGenerationTime => RollingTerrainGenerationTimes.Count == 0
+            ? 0d
+            : RollingTerrainGenerationTimes.Average(timeSpan => timeSpan.TotalMilliseconds);
+
+        public double AverageMeshingSetBlockTime => RollingMeshingSetBlockTimes.Count == 0
+            ? 0d
+            : RollingMeshingSetBlockTimes.Average(timeSpan => timeSpan.TotalMilliseconds);
+
+        public double AverageMeshingTime => RollingMeshingTimes.Count == 0
+            ? 0d
+            : RollingMeshingTimes.Average(timeSpan => timeSpan.TotalMilliseconds);
 
         private void Start()
         {
             AssignSingletonInstance(this);
 
-            RollingTotalChunkBuildTimes =
+            RollingTerrainGenerationTimes =
                 new FixedConcurrentQueue<TimeSpan>(OptionsController.Current.MaximumChunkLoadTimeBufferSize);
-            RollingChunkNoiseRetrievalTimes =
+            RollingNoiseRetrievalTimes =
                 new FixedConcurrentQueue<TimeSpan>(OptionsController.Current.MaximumChunkLoadTimeBufferSize);
-
-            RollingTotalChunkMeshTimes =
+            RollingMeshingTimes =
                 new FixedConcurrentQueue<TimeSpan>(OptionsController.Current.MaximumChunkLoadTimeBufferSize);
-            RollingChunkMeshSetBlockTimes =
+            RollingMeshingSetBlockTimes =
                 new FixedConcurrentQueue<TimeSpan>(OptionsController.Current.MaximumChunkLoadTimeBufferSize);
         }
     }

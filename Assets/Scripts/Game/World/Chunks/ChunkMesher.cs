@@ -2,6 +2,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Threading;
 using UnityEngine;
 using UnityEngine.Rendering;
@@ -18,6 +19,7 @@ namespace Wyd.Game.World.Chunks
 {
     public class ChunkMesher
     {
+        private readonly Stopwatch _Stopwatch;
         private readonly List<Vector3> _Vertices;
         private readonly List<int> _Triangles;
         private readonly List<int> _TransparentTriangles;
@@ -30,8 +32,12 @@ namespace Wyd.Game.World.Chunks
         private CancellationToken _AbortToken;
         private bool _AggressiveFaceMerging;
 
+        public TimeSpan SetBlockTimeSpan { get; private set; }
+        public TimeSpan MeshingTimeSpan { get; private set; }
+
         public ChunkMesher()
         {
+            _Stopwatch = new Stopwatch();
             _Blocks = new MeshBlock[0];
             _Vertices = new List<Vector3>();
             _UVs = new List<Vector3>();
@@ -56,8 +62,10 @@ namespace Wyd.Game.World.Chunks
             _AggressiveFaceMerging = aggressiveFaceMerging;
         }
 
-        public void ClearMeshData()
+        public void ClearExistingData()
         {
+            SetBlockTimeSpan = MeshingTimeSpan = TimeSpan.Zero;
+            _Stopwatch.Reset();
             _Vertices.Clear();
             _Triangles.Clear();
             _TransparentTriangles.Clear();
@@ -119,8 +127,12 @@ namespace Wyd.Game.World.Chunks
 
         public void GenerateMesh()
         {
+            _Stopwatch.Restart();
             SetBlockData(_GenerationData.Blocks.GetAllData());
+            _Stopwatch.Stop();
+            SetBlockTimeSpan = _Stopwatch.Elapsed;
 
+            _Stopwatch.Restart();
             int index = -1;
             foreach (MeshBlock block in _Blocks)
             {
@@ -148,6 +160,9 @@ namespace Wyd.Game.World.Chunks
                     TraverseIndex(_GenerationData.Bounds.min, index, localPosition);
                 }
             }
+
+            _Stopwatch.Stop();
+            MeshingTimeSpan = _Stopwatch.Elapsed;
         }
 
         #region SIMPLER MESHING
