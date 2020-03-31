@@ -1,10 +1,8 @@
 #region
 
 using System;
-using System.Collections.Generic;
 using UnityEngine;
 using Wyd.System.Collections;
-using Wyd.System.Compression;
 
 #endregion
 

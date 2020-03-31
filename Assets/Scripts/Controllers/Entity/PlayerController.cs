@@ -177,16 +177,15 @@ namespace Wyd.Controllers.Entity
             }
 
             ushort blockId = WorldController.Current.GetBlockAt(_LastReachRayHit.normal.Sum() > 0f
-                            ? _LastReachRayHit.point.Floor() - _LastReachRayHit.normal
-                            : _LastReachRayHit.point.Floor());
+                ? _LastReachRayHit.point.Floor() - _LastReachRayHit.normal
+                : _LastReachRayHit.point.Floor());
 
-                if (!BlockController.Current.CheckBlockHasProperty(blockId, BlockRule.Property.Destroyable))
-                {
-
-                    ReachHitSurfaceObject.SetActive(false);
-                    _IsInReachOfValidSurface = false;
-                    return;
-                }
+            if (!BlockController.Current.CheckBlockHasProperty(blockId, BlockRule.Property.Destroyable))
+            {
+                ReachHitSurfaceObject.SetActive(false);
+                _IsInReachOfValidSurface = false;
+                return;
+            }
 
 
             if (!ReachHitSurfaceObject.activeSelf)
