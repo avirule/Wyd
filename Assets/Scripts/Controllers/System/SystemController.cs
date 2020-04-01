@@ -16,7 +16,8 @@ namespace Wyd.Controllers.System
         private JobScheduler _JobExecutionScheduler;
 
         public long JobCount => _JobExecutionScheduler.JobCount;
-        public long ActiveJobCount => _JobExecutionScheduler.ProcessingJobCount;
+        public long DelegatedJobCount => _JobExecutionScheduler.DelegatedJobCount;
+        public long ProcessingJobCount => _JobExecutionScheduler.ProcessingJobCount;
         public long WorkerThreadCount => _JobExecutionScheduler.WorkerThreadCount;
 
 
@@ -28,7 +29,7 @@ namespace Wyd.Controllers.System
 
         private void Start()
         {
-            _JobExecutionScheduler = new JobScheduler(TimeSpan.FromMilliseconds(200),
+            _JobExecutionScheduler = new JobScheduler(TimeSpan.FromMilliseconds(5),
                 OptionsController.Current.ThreadingMode,
                 OptionsController.Current.CPUCoreUtilization);
             _JobExecutionScheduler.WorkerCountChanged += OnWorkerCountChanged;
@@ -63,7 +64,8 @@ namespace Wyd.Controllers.System
         public event JobEventHandler JobStarted;
         public event JobEventHandler JobFinished;
         public event EventHandler<long> JobCountChanged;
-        public event EventHandler<long> ActiveJobCountChanged;
+        public event EventHandler<long> DelegatedJobCountChanged;
+        public event EventHandler<long> ProcessingJobCountChanged;
         public event EventHandler<long> WorkerThreadCountChanged;
 
         private void OnWorkerCountChanged(object sender, int args)
@@ -73,21 +75,27 @@ namespace Wyd.Controllers.System
 
         private void OnJobQueued(object sender, JobEventArgs args)
         {
-            JobCountChanged?.Invoke(sender, _JobExecutionScheduler.JobCount);
+            JobCountChanged?.Invoke(sender, JobCount);
+        }
+
+        private void OnJobDelegated(object sender, JobEventArgs args)
+        {
+            DelegatedJobCountChanged?.Invoke(sender, DelegatedJobCount);
         }
 
         private void OnJobStarted(object sender, JobEventArgs args)
         {
             JobStarted?.Invoke(sender, args);
-            JobCountChanged?.Invoke(sender, _JobExecutionScheduler.JobCount);
-            ActiveJobCountChanged?.Invoke(sender, _JobExecutionScheduler.ProcessingJobCount);
+            JobCountChanged?.Invoke(sender, JobCount);
+            ProcessingJobCountChanged?.Invoke(sender, ProcessingJobCount);
         }
 
         private void OnJobFinished(object sender, JobEventArgs args)
         {
             JobFinished?.Invoke(sender, args);
-            JobCountChanged?.Invoke(sender, _JobExecutionScheduler.JobCount);
-            ActiveJobCountChanged?.Invoke(sender, _JobExecutionScheduler.ProcessingJobCount);
+            JobCountChanged?.Invoke(sender, JobCount);
+            DelegatedJobCountChanged?.Invoke(sender, DelegatedJobCount);
+            ProcessingJobCountChanged?.Invoke(sender, ProcessingJobCount);
         }
 
         #endregion

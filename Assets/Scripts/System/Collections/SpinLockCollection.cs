@@ -16,11 +16,13 @@ namespace Wyd.System.Collections
 
     public class SpinLockCollection<T>
     {
+        private readonly Stopwatch _TimeoutStopwatch;
         private readonly ConcurrentQueue<T> _Queue;
         private readonly AutoResetEvent _AutoResetEvent;
 
         public SpinLockCollection()
         {
+            _TimeoutStopwatch = new Stopwatch();
             _Queue = new ConcurrentQueue<T>();
             _AutoResetEvent = new AutoResetEvent(false);
         }
@@ -59,16 +61,16 @@ namespace Wyd.System.Collections
                 return true;
             }
 
-            Stopwatch stopwatch = Stopwatch.StartNew();
+            _TimeoutStopwatch.Restart();
 
-            while (!token.IsCancellationRequested && (stopwatch.Elapsed < timeout))
+            while (!token.IsCancellationRequested && (_TimeoutStopwatch.Elapsed < timeout))
             {
                 if (_Queue.TryDequeue(out result))
                 {
                     return true;
                 }
 
-                TimeSpan remainingTimeout = timeout - stopwatch.Elapsed;
+                TimeSpan remainingTimeout = timeout - _TimeoutStopwatch.Elapsed;
 
                 if (remainingTimeout <= TimeSpan.Zero)
                 {
@@ -82,6 +84,8 @@ namespace Wyd.System.Collections
 
                 _AutoResetEvent.WaitOne(remainingTimeout);
             }
+
+            _TimeoutStopwatch.Stop();
 
             return false;
         }

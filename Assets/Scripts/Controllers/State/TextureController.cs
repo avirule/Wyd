@@ -12,7 +12,7 @@ namespace Wyd.Controllers.State
     {
         public static int MainTexPropertyID => Shader.PropertyToID("_MainTex");
         public Texture2DArray TerrainTexture { get; private set; }
-        private Dictionary<string, int> _TextureIDs;
+        public Dictionary<string, int> _TextureIDs;
 
         private void Awake()
         {

@@ -36,7 +36,7 @@ namespace Wyd.Controllers.State
             BlockNames = new Dictionary<string, ushort>();
             BlockRules = new List<IBlockRule>();
 
-            RegisterBlockRule("air", Block.Types.None, null, BlockRule.Property.Transparent);
+            RegisterBlockRule("Air", Block.Types.None, null, BlockRule.Property.Transparent);
         }
 
         public ushort RegisterBlockRule(string blockName, Block.Types type,
@@ -84,7 +84,6 @@ namespace Wyd.Controllers.State
             }
 
             BlockRules[blockId].ReadUVsRule(blockId, position, direction, out string textureName);
-
             if (!TextureController.Current.TryGetTextureId(textureName, out int textureId))
             {
                 Log.Warning(

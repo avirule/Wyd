@@ -32,12 +32,12 @@ float gradCoord3d(int seed, int3 xyz, float3 xyz0)
     hash ^= (xprime * xyz.x);
     hash ^= (yprime * xyz.y);
     hash ^= (zprime * xyz.z);
-    
+
     hash = hash * hash * hash * 60493;
     hash = (hash >> 13) ^ hash;
-    
+
     float3 xyzg = grad_3d[hash & 15];
-    
+
     return (xyz0.x * xyzg.x) + (xyz0.y * xyzg.y) + (xyz0.z * xyzg.z);
 }
 
@@ -63,14 +63,14 @@ static const float G33 = ((1 / 6.0) * 3.0) - 1.0;
 float singleSimplex(uint seed, float frequency, float3 xyz)
 {
     xyz *= frequency;
-    float t = (xyz.x + xyz.y + xyz.z) * F3;    
+    float t = (xyz.x + xyz.y + xyz.z) * F3;
     float3 ijk = float3(fastFloor(xyz.x + t), fastFloor(xyz.y + t), fastFloor(xyz.z + t));
-    
+
     t = (ijk.x + ijk.y + ijk.z) * G3;
     float3 xyz0 = float3(xyz.x - (ijk.x - t), xyz.y - (ijk.y - t), xyz.z - (ijk.z - t));
     float3 ijk1;
     float3 ijk2;
-    
+
     if (xyz0.x >= xyz0.y)
     {
         if (xyz0.y >= xyz0.z)
@@ -107,14 +107,14 @@ float singleSimplex(uint seed, float frequency, float3 xyz)
             ijk2 = float3(1.0, 1.0, 0.0);
         }
     }
-    
+
     float3 xyz1 = (xyz0 - ijk1) + G3;
     float3 xyz2 = (xyz0 - ijk2) + F3;
     float3 xyz3 = xyz0 + G33;
     float4 n;
-    
+
     t = 0.6 - pow(xyz0.x, 2) - pow(xyz0.y, 2) - pow(xyz0.z, 2);
-    
+
     if (t < 0.0)
     {
         n.x = 0.0;
@@ -124,7 +124,7 @@ float singleSimplex(uint seed, float frequency, float3 xyz)
         t *= t;
         n.x = pow(t, 2) * gradCoord3d(seed, ijk, xyz0);
     }
-    
+
     t = 0.6 - pow(xyz1.x, 2) - pow(xyz1.y, 2) - pow(xyz1.z, 2);
     if (t < 0.0)
     {
@@ -135,7 +135,7 @@ float singleSimplex(uint seed, float frequency, float3 xyz)
         t *= t;
         n.y = pow(t, 2) * gradCoord3d(seed, ijk + ijk1, xyz1);
     }
-    
+
     t = 0.6 - pow(xyz2.x, 2) - pow(xyz2.y, 2) - pow(xyz2.z, 2);
     if (t < 0.0)
     {
@@ -146,7 +146,7 @@ float singleSimplex(uint seed, float frequency, float3 xyz)
         t *= t;
         n.z = pow(t, 2) * gradCoord3d(seed, ijk + ijk2, xyz2);
     }
-    
+
     t = 0.6 - pow(xyz3.x, 2) - pow(xyz3.y, 2) - pow(xyz3.z, 2);
     if (t < 0.0)
     {
@@ -157,14 +157,13 @@ float singleSimplex(uint seed, float frequency, float3 xyz)
         t *= t;
         n.w = pow(t, 2) * gradCoord3d(seed, ijk + 1.0, xyz3);
     }
-    
+
     return 32.0 * (n.x + n.y + n.z + n.w);
 }
 
 
 uniform uint _NoiseSeed;
 uniform float3 _MaximumSize;
-uniform uint _BasicWorldId;
 uniform float _Threshold;
 
 RWStructuredBuffer<float> Result;
@@ -192,7 +191,7 @@ float3 coordTo3D(uint index)
     index -= (y * _MaximumSize.x * _MaximumSize.z);
     uint z = index / _MaximumSize.x;
     uint x = index % _MaximumSize.x;
-    
+
     return float3(x, y, z);
 }
 

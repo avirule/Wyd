@@ -12,17 +12,18 @@ namespace Wyd.System.Jobs
     public class JobWorker
     {
         private readonly object _Handle;
-        private readonly SpinLockCollection<Job> _ItemQueue;
+        private readonly SpinLockCollection<Job> _JobQueue;
         private readonly CancellationToken _AbortToken;
 
-        public readonly TimeSpan WaitTimeout;
-        private bool _Processing;
+        private bool _Executing;
+        private long _JobsQueued;
 
+        public TimeSpan WaitTimeout { get; }
         public Thread InternalThread { get; }
 
         public bool Running { get; private set; }
 
-        public bool Processing
+        public bool Executing
         {
             get
             {
@@ -30,7 +31,7 @@ namespace Wyd.System.Jobs
 
                 lock (_Handle)
                 {
-                    tmp = _Processing;
+                    tmp = _Executing;
                 }
 
                 return tmp;
@@ -39,12 +40,14 @@ namespace Wyd.System.Jobs
             {
                 lock (_Handle)
                 {
-                    _Processing = value;
+                    _Executing = value;
                 }
             }
         }
 
-        public event JobStartedEventHandler JobStarted;
+        public long JobsQueued => Interlocked.Read(ref _JobsQueued);
+
+        public event JobEventHandler JobStarted;
         public event JobEventHandler JobFinished;
 
         public JobWorker(TimeSpan waitTimeout, CancellationToken abortToken)
@@ -53,7 +56,7 @@ namespace Wyd.System.Jobs
             InternalThread = new Thread(ProcessItemQueue);
 
             _AbortToken = abortToken;
-            _ItemQueue = new SpinLockCollection<Job>();
+            _JobQueue = new SpinLockCollection<Job>();
             WaitTimeout = waitTimeout;
         }
 
@@ -78,7 +81,11 @@ namespace Wyd.System.Jobs
             Log.Warning($"{nameof(JobWorker)} ID {InternalThread.ManagedThreadId} forced to abort.");
         }
 
-        public void QueueJob(Job job) => _ItemQueue.Add(job);
+        public void QueueJob(Job job)
+        {
+            Interlocked.Increment(ref _JobsQueued);
+            _JobQueue.Add(job);
+        }
 
         private void ProcessItemQueue()
         {
@@ -86,10 +93,13 @@ namespace Wyd.System.Jobs
             {
                 while (!_AbortToken.IsCancellationRequested)
                 {
-                    if (_ItemQueue.TryTake(out Job job, WaitTimeout, _AbortToken))
+                    if (!_JobQueue.TryTake(out Job job, WaitTimeout, _AbortToken))
                     {
-                        ProcessJob(job);
+                        continue;
                     }
+
+                    ExecuteJob(job);
+                    Interlocked.Decrement(ref _JobsQueued);
                 }
             }
             catch (OperationCanceledException)
@@ -104,19 +114,19 @@ namespace Wyd.System.Jobs
             }
             finally
             {
-                Running = Processing = false;
+                Running = Executing = false;
             }
         }
 
-        private void ProcessJob(Job job)
+        private void ExecuteJob(Job job)
         {
-            Processing = true;
+            Executing = true;
 
             OnJobStarted(this, new JobEventArgs(job));
             job.Execute();
             OnJobFinished(this, new JobEventArgs(job));
 
-            Processing = false;
+            Executing = false;
         }
 
         private void OnJobStarted(object sender, JobEventArgs args)

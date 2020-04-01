@@ -39,7 +39,6 @@ namespace Wyd.System.Jobs
         {
             DiagnosticsController.Current.RollingMeshingSetBlockTimes.Enqueue(_Mesher.SetBlockTimeSpan);
             DiagnosticsController.Current.RollingMeshingTimes.Enqueue(_Mesher.MeshingTimeSpan);
-            _Mesher.ClearExistingData();
         }
 
         public bool SetMesh(ref Mesh mesh)

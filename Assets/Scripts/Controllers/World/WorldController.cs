@@ -76,13 +76,6 @@ namespace Wyd.Controllers.World
 
         private void Awake()
         {
-            if (GameController.Current == default)
-            {
-                SceneManager.LoadSceneAsync("Scenes/Init", LoadSceneMode.Single);
-                SceneManager.UnloadSceneAsync("Scenes/Game", UnloadSceneOptions.None);
-                return;
-            }
-
             AssignSingletonInstance(this);
             SetTickRate();
 

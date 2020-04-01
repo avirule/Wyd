@@ -109,7 +109,21 @@ namespace Wyd.Game.World.Chunks
             for (int index = ChunkController.SizeProduct - 1; index >= 0; index--)
             {
                 Vector3 globalPosition = position + Mathv.GetIndexAsVector3Int(index, ChunkController.Size);
-                ushort id = _NoiseValues.NoiseValues[index] > 0.01f ? (ushort)1 : BlockController.AIR_ID;
+                //ushort id = _NoiseValues.NoiseValues[index] > ChunkTerrainController.THRESHOLD ? (ushort)1 : BlockController.AIR_ID;
+
+                ushort id = 0;
+
+                if (_NoiseValues.NoiseValues[index] > 0.01f)
+                {
+                    if (_NoiseValues.NoiseValues[index] < 0.005f)
+                    {
+                        id = 2;
+                    }
+                    else
+                    {
+                        id = 3;
+                    }
+                }
 
                 _GenerationData.Blocks.SetPoint(globalPosition, id);
             }

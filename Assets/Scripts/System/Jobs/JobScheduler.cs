@@ -2,6 +2,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading;
 using Serilog;
 using Wyd.System.Collections;
@@ -23,13 +24,15 @@ namespace Wyd.System.Jobs
         private readonly Thread _OperationThread;
         private readonly List<JobWorker> _Workers;
         private readonly SpinLockCollection<Job> _JobQueue;
+        private readonly SpinLockCollection<JobWorker> _FreeJobWorkers;
         private readonly CancellationTokenSource _AbortTokenSource;
 
         private CancellationToken _AbortToken;
-        private int _WorkerThreadCount;
         private TimeSpan _WaitTimeout;
-        private long _ProcessingJobCount;
+        private int _WorkerThreadCount;
         private long _JobCount;
+        private long _DelegatedJobCount;
+        private long _ProcessingJobCount;
 
         /// <summary>
         ///     Determines whether the <see cref="JobScheduler" /> executes <see cref="Job" />s on
@@ -60,13 +63,10 @@ namespace Wyd.System.Jobs
             }
         }
 
-        /// <summary>
-        ///     Total number of worker threads JobQueue is managing.
-        /// </summary>
         public int WorkerThreadCount => _WorkerThreadCount;
-
         public long JobCount => Interlocked.Read(ref _JobCount);
-        public long ProcessingJobCount => _ProcessingJobCount;
+        public long DelegatedJobCount => Interlocked.Read(ref _DelegatedJobCount);
+        public long ProcessingJobCount => Interlocked.Read(ref _ProcessingJobCount);
 
 
         /// <summary>
@@ -88,14 +88,17 @@ namespace Wyd.System.Jobs
             _Workers = new List<JobWorker>(WorkerThreadCount);
             _AbortTokenSource = new CancellationTokenSource();
             _AbortToken = _AbortTokenSource.Token;
+            _FreeJobWorkers = new SpinLockCollection<JobWorker>();
 
             Running = false;
 
             JobQueued += (sender, args) => Interlocked.Increment(ref _JobCount);
+            JobDelegated += (sender, args) => Interlocked.Increment(ref _DelegatedJobCount);
             JobStarted += (sender, args) => Interlocked.Increment(ref _ProcessingJobCount);
             JobFinished += (sender, args) =>
             {
                 Interlocked.Decrement(ref _JobCount);
+                Interlocked.Decrement(ref _DelegatedJobCount);
                 Interlocked.Decrement(ref _ProcessingJobCount);
             };
         }
@@ -213,7 +216,7 @@ namespace Wyd.System.Jobs
 
                     if (_JobQueue.TryTake(out Job job, WaitTimeout, _AbortToken))
                     {
-                        ProcessJob(job);
+                        DelegateJob(job);
                     }
                 }
 
@@ -239,9 +242,14 @@ namespace Wyd.System.Jobs
         {
             JobWorker jobWorker = new JobWorker(WaitTimeout, _AbortToken);
             jobWorker.JobStarted += OnJobStarted;
-            jobWorker.JobFinished += OnJobFinished;
+            jobWorker.JobFinished += (sender, args) =>
+            {
+                _FreeJobWorkers.Add(jobWorker);
+                OnJobFinished(sender, args);
+            };
             jobWorker.Start();
             _Workers.Add(jobWorker);
+            _FreeJobWorkers.Add(jobWorker);
         }
 
         /// <summary>
@@ -249,7 +257,7 @@ namespace Wyd.System.Jobs
         ///     to the list of processed <see cref="Job" />s.
         /// </summary>
         /// <param name="job"><see cref="Job" /> to be processed.</param>
-        private void ProcessJob(Job job)
+        private void DelegateJob(Job job)
         {
             switch (ThreadingMode)
             {
@@ -257,19 +265,46 @@ namespace Wyd.System.Jobs
                     job.Execute();
                     break;
                 case ThreadingMode.Multi:
-                    int jobWorkerIndex;
+                    DelegateJobByWorkload(job);
+                    //DelegateJobToFreeWorker(job);
 
-                    while (!TryGetFirstFreeWorker(out jobWorkerIndex))
-                    {
-                        // relinquish time slice
-                        Thread.Sleep(0);
-                    }
-
-                    _Workers[jobWorkerIndex].QueueJob(job);
+                    OnJobDelegated(this, new JobEventArgs(job));
                     break;
                 default:
                     throw new ArgumentOutOfRangeException();
             }
+        }
+
+        private void DelegateJobByWorkload(Job job)
+        {
+            int index = GetLowestWorkloadJobWorkerIndex();
+
+            _Workers[index].QueueJob(job);
+        }
+
+        private void DelegateJobToFreeWorker(Job job)
+        {
+            JobWorker jobWorker = _FreeJobWorkers.Take();
+            jobWorker.QueueJob(job);
+        }
+
+        private int GetLowestWorkloadJobWorkerIndex()
+        {
+            int jobWorkerIndex = 0;
+            long lowestWorkload = int.MaxValue;
+
+            for (int index = 0; index < _Workers.Count; index++)
+            {
+                long jobsQueued = _Workers[index].JobsQueued;
+
+                if (jobsQueued < lowestWorkload)
+                {
+                    jobWorkerIndex = index;
+                    lowestWorkload = jobsQueued;
+                }
+            }
+
+            return jobWorkerIndex;
         }
 
         /// <summary>
@@ -279,27 +314,15 @@ namespace Wyd.System.Jobs
         /// <remarks>
         ///     This method is used exclusively for enabling the  <see cref="T:ThreadingMode.Multi" /> mode.
         /// </remarks>
-        /// <param name="jobWorkerIndex">The resultant <see cref="T:List{JobWorker}" /> index.</param>
+        /// <param name="jobWorker">The resultant <see cref="T:List{JobWorker}" />.</param>
         /// <returns>
         ///     <value>False</value>
         ///     if no job is found.
         /// </returns>
-        private bool TryGetFirstFreeWorker(out int jobWorkerIndex)
+        private bool TryGetFirstFreeWorker(out JobWorker jobWorker)
         {
-            jobWorkerIndex = -1;
-
-            for (int index = 0; index < _Workers.Count; index++)
-            {
-                if (_Workers[index].Processing)
-                {
-                    continue;
-                }
-
-                jobWorkerIndex = index;
-                return true;
-            }
-
-            return false;
+            jobWorker = _Workers.FirstOrDefault(worker => !worker.Executing && worker.JobsQueued == 0);
+            return jobWorker != null;
         }
 
         #endregion
@@ -310,13 +333,15 @@ namespace Wyd.System.Jobs
         ///     Called when a job is queued.
         /// </summary>
         /// <remarks>This event will not necessarily happen synchronously with the main thread.</remarks>
-        public event JobQueuedEventHandler JobQueued;
+        public event JobEventHandler JobQueued;
+
+        public event JobEventHandler JobDelegated;
 
         /// <summary>
         ///     Called when a job starts execution.
         /// </summary>
         /// <remarks>This event will not necessarily happen synchronously with the main thread.</remarks>
-        public event JobStartedEventHandler JobStarted;
+        public event JobEventHandler JobStarted;
 
         /// <summary>
         ///     Called when a job finishes execution.
@@ -324,11 +349,16 @@ namespace Wyd.System.Jobs
         /// <remarks>This event will not necessarily happen synchronously with the main thread.</remarks>
         public event JobEventHandler JobFinished;
 
-        public event WorkerCountChangedEventHandler WorkerCountChanged;
+        public event EventHandler<int> WorkerCountChanged;
 
         private void OnJobQueued(object sender, JobEventArgs args)
         {
             JobQueued?.Invoke(sender, args);
+        }
+
+        private void OnJobDelegated(object sender, JobEventArgs args)
+        {
+            JobDelegated?.Invoke(sender, args);
         }
 
         private void OnJobStarted(object sender, JobEventArgs args)
