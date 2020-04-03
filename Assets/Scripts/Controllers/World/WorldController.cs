@@ -5,7 +5,6 @@ using System.Collections;
 using System.Collections.Generic;
 using Serilog;
 using UnityEngine;
-using UnityEngine.SceneManagement;
 using Wyd.Controllers.State;
 using Wyd.Controllers.System;
 using Wyd.Controllers.World.Chunk;

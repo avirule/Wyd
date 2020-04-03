@@ -55,7 +55,7 @@ namespace Wyd.Controllers.World.Chunk
             _NoiseShader = GameController.LoadResource<ComputeShader>(@"Graphics\Shaders\NoiseComputationShader");
             _NoiseShader.SetInt("_NoiseSeed", WorldController.Current.Seed);
             _NoiseShader.SetVector("_MaximumSize", new Vector4(ChunkController.Size.x, ChunkController.Size.y,
-                    ChunkController.Size.z, 0f));
+                ChunkController.Size.z, 0f));
         }
 
         private void OnEnable()

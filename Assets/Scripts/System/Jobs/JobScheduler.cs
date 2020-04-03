@@ -321,7 +321,7 @@ namespace Wyd.System.Jobs
         /// </returns>
         private bool TryGetFirstFreeWorker(out JobWorker jobWorker)
         {
-            jobWorker = _Workers.FirstOrDefault(worker => !worker.Executing && worker.JobsQueued == 0);
+            jobWorker = _Workers.FirstOrDefault(worker => !worker.Executing && (worker.JobsQueued == 0));
             return jobWorker != null;
         }
 

@@ -12,7 +12,7 @@ namespace Wyd.Controllers.State
     {
         public static int MainTexPropertyID => Shader.PropertyToID("_MainTex");
         public Texture2DArray TerrainTexture { get; private set; }
-        public Dictionary<string, int> _TextureIDs;
+        private Dictionary<string, int> _TextureIDs;
 
         private void Awake()
         {
@@ -43,16 +43,13 @@ namespace Wyd.Controllers.State
                 TerrainTexture.SetPixels(spritePixels, i, 0);
                 _TextureIDs.Add(sprites[i].name.ToLower(), i);
 
-                Log.Information($"Texture processed: {sprites[i].name}");
+                Log.Information($"Texture processed (depth {i}): {sprites[i].name}");
             }
 
             TerrainTexture.Apply();
         }
 
-        public bool TryGetTextureId(string textureName, out int textureId) =>
-            _TextureIDs.TryGetValue(textureName, out textureId);
-
-        public static Color[] GetPixels(Sprite sprite)
+        private static Color[] GetPixels(Sprite sprite)
         {
             int x = Mathf.FloorToInt(sprite.rect.x);
             int y = Mathf.FloorToInt(sprite.rect.y);
@@ -61,5 +58,8 @@ namespace Wyd.Controllers.State
 
             return sprite.texture.GetPixels(x, y, width, height);
         }
+
+        public bool TryGetTextureId(string textureName, out int textureId) =>
+            _TextureIDs.TryGetValue(textureName, out textureId);
     }
 }

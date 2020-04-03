@@ -5,7 +5,6 @@ using System.Diagnostics;
 using System.Threading;
 using Serilog;
 using UnityEngine;
-using Wyd.Controllers.State;
 using Wyd.Controllers.System;
 using Wyd.Controllers.World;
 using Wyd.Controllers.World.Chunk;
@@ -115,7 +114,7 @@ namespace Wyd.Game.World.Chunks
 
                 if (_NoiseValues.NoiseValues[index] > 0.01f)
                 {
-                    if (_NoiseValues.NoiseValues[index] < 0.005f)
+                    if (_Rand.Next(0, 3) > 1)
                     {
                         id = 2;
                     }
