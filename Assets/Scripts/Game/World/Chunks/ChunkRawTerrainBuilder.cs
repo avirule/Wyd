@@ -116,11 +116,11 @@ namespace Wyd.Game.World.Chunks
                 {
                     if (_Rand.Next(0, 3) > 1)
                     {
-                        id = 2;
+                        id = 5;
                     }
                     else
                     {
-                        id = 3;
+                        id = 7;
                     }
                 }
 
