@@ -1,5 +1,6 @@
 #region
 
+using System;
 using System.Collections.Generic;
 using Serilog;
 using UnityEngine;
@@ -10,8 +11,11 @@ namespace Wyd.Controllers.State
 {
     public class TextureController : SingletonController<TextureController>
     {
+        public MeshRenderer MeshRenderer;
+
         public static int MainTexPropertyID => Shader.PropertyToID("_MainTex");
         public Texture2DArray TerrainTexture { get; private set; }
+        public Material[] TerrainMaterials { get; private set; }
         private Dictionary<string, int> _TextureIDs;
 
         private void Awake()
@@ -24,6 +28,13 @@ namespace Wyd.Controllers.State
         private void Start()
         {
             ProcessSprites();
+
+            foreach (Material material in MeshRenderer.materials)
+            {
+                material.SetTexture(MainTexPropertyID, TerrainTexture);
+            }
+
+            TerrainMaterials = MeshRenderer.materials;
         }
 
         private void ProcessSprites()

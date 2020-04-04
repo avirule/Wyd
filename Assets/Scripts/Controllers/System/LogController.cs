@@ -20,10 +20,11 @@ namespace Wyd.Controllers.System
         private static string _logPath;
         private static int _runtimeErrorCount;
         private static bool _killApplication;
-        private static MemorySink _memorySink;
         private static List<LogEvent> _logEvents;
 
         public static IReadOnlyList<LogEvent> LoggedEvents => _logEvents;
+
+        public LogEventLevel MinimumLevel;
 
         private void Awake()
         {
@@ -48,7 +49,7 @@ namespace Wyd.Controllers.System
             Log.CloseAndFlush();
         }
 
-        private static void SetupStaticLogger()
+        private void SetupStaticLogger()
         {
             Log.Logger = new LoggerConfiguration()
                 // verbose log output
@@ -78,7 +79,7 @@ namespace Wyd.Controllers.System
                         rollOnFileSizeLimit: true,
                         restrictedToMinimumLevel: LogEventLevel.Error))
 #if UNITY_EDITOR
-                .WriteTo.UnityDebugSink(_DEFAULT_TEMPLATE)
+                .WriteTo.UnityDebugSink(_DEFAULT_TEMPLATE, MinimumLevel)
 #endif
                 .WriteTo.MemorySink(ref _logEvents)
                 .WriteTo.EventSink()

@@ -12,17 +12,23 @@ namespace Wyd.System.Logging.Sinks
     public class UnityDebugLoggerSink : ILogEventSink
     {
         private readonly string _OutputTemplate;
+        private readonly LogEventLevel _MinimumLevel;
 
-        public UnityDebugLoggerSink(string outputTemplate) => _OutputTemplate = outputTemplate;
+        public UnityDebugLoggerSink(string outputTemplate, LogEventLevel minimumLevel = LogEventLevel.Debug) =>
+            (_OutputTemplate, _MinimumLevel) = (outputTemplate, minimumLevel);
 
         public void Emit(LogEvent logEvent)
         {
+            if (logEvent.Level < _MinimumLevel)
+            {
+                return;
+            }
+
             string rendered = string.Format(logEvent.RenderMessage(), _OutputTemplate);
 
             switch (logEvent.Level)
             {
                 case LogEventLevel.Verbose:
-                    break;
                 case LogEventLevel.Debug:
                 case LogEventLevel.Information:
                     Debug.Log(rendered);

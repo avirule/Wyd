@@ -7,6 +7,7 @@ using Serilog;
 using UnityEngine;
 using Wyd.Game;
 using Wyd.Game.World.Blocks;
+using Wyd.Graphics;
 
 #endregion
 
@@ -73,13 +74,13 @@ namespace Wyd.Controllers.State
         }
 
         public bool GetBlockSpriteUVs(ushort blockId, Vector3 position, Direction direction, Vector3 size2d,
-            out Vector3[] uvs)
+            out BlockUVs blockUVs)
         {
             if (!BlockIdExists(blockId))
             {
                 Log.Error(
                     $"Failed to return block sprite UVs for direction `{direction}` of block with id `{blockId}`: block id does not exist.");
-                uvs = null;
+                blockUVs = null;
                 return false;
             }
 
@@ -88,17 +89,14 @@ namespace Wyd.Controllers.State
             {
                 Log.Warning(
                     $"Failed to return block sprite UVs for direction `{direction}` of block with id `{blockId}`: texture does not exist for block.");
-                uvs = null;
+                blockUVs = null;
                 return false;
             }
 
-            uvs = new[]
-            {
-                new Vector3(0, 0, textureId),
-                new Vector3(size2d.x, 0, textureId),
-                new Vector3(0, size2d.z, textureId),
-                new Vector3(size2d.x, size2d.z, textureId)
-            };
+            blockUVs = new BlockUVs(new Vector3(0, 0, textureId), new Vector3(size2d.x, 0, textureId),
+                new Vector3(0, size2d.z, textureId), new Vector3(size2d.x, size2d.z, textureId));
+
+            Log.Verbose($"Block `{textureName}:{blockId}` returned block UVs `{blockUVs}`.");
 
             return true;
         }

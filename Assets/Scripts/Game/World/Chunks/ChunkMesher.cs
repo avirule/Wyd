@@ -9,6 +9,7 @@ using UnityEngine.Rendering;
 using Wyd.Controllers.State;
 using Wyd.Controllers.World;
 using Wyd.Game.World.Blocks;
+using Wyd.Graphics;
 using Wyd.System;
 
 // ReSharper disable TooWideLocalVariableScope
@@ -100,9 +101,6 @@ namespace Wyd.Game.World.Chunks
             {
                 mesh.SetUVs(0, _UVs);
             }
-
-            mesh.RecalculateNormals();
-            mesh.RecalculateTangents();
         }
 
         private void SetBlockData(IEnumerable<ushort> blocks)
@@ -171,7 +169,7 @@ namespace Wyd.Game.World.Chunks
             MeshingTimeSpan = _Stopwatch.Elapsed;
         }
 
-        #region SIMPLER MESHING
+        #region TRAVERSAL MESHING
 
         private void TraverseIndexTransparent(Vector3 position, int index, Vector3Int localPosition)
         {
@@ -230,12 +228,12 @@ namespace Wyd.Game.World.Chunks
 
                 // attempt to retrieve and add uvs for block face
                 if (BlockController.Current.GetBlockSpriteUVs(_Blocks[index].Id, globalPosition,
-                    Direction.North, uvSize, out Vector3[] uvs))
+                    Direction.North, uvSize, out BlockUVs blockUVs))
                 {
-                    _UVs.Add(uvs[1]);
-                    _UVs.Add(uvs[3]);
-                    _UVs.Add(uvs[0]);
-                    _UVs.Add(uvs[2]);
+                    _UVs.Add(blockUVs.TopLeft);
+                    _UVs.Add(blockUVs.TopRight);
+                    _UVs.Add(blockUVs.BottomLeft);
+                    _UVs.Add(blockUVs.BottomRight);
                 }
             }
 
@@ -283,12 +281,13 @@ namespace Wyd.Game.World.Chunks
                 }
 
                 if (BlockController.Current.GetBlockSpriteUVs(_Blocks[index].Id, globalPosition,
-                    Direction.East, uvSize, out Vector3[] uvs))
+                    Direction.East, uvSize, out BlockUVs blockUVs))
                 {
-                    _UVs.Add(uvs[0]);
-                    _UVs.Add(uvs[1]);
-                    _UVs.Add(uvs[2]);
-                    _UVs.Add(uvs[3]);
+
+                    _UVs.Add(blockUVs.BottomLeft);
+                    _UVs.Add(blockUVs.TopLeft);
+                    _UVs.Add(blockUVs.BottomRight);
+                    _UVs.Add(blockUVs.TopRight);
                 }
             }
 
@@ -337,12 +336,13 @@ namespace Wyd.Game.World.Chunks
                 }
 
                 if (BlockController.Current.GetBlockSpriteUVs(_Blocks[index].Id, globalPosition,
-                    Direction.South, uvSize, out Vector3[] uvs))
+                    Direction.South, uvSize, out BlockUVs blockUVs))
                 {
-                    _UVs.Add(uvs[0]);
-                    _UVs.Add(uvs[1]);
-                    _UVs.Add(uvs[2]);
-                    _UVs.Add(uvs[3]);
+
+                    _UVs.Add(blockUVs.BottomLeft);
+                    _UVs.Add(blockUVs.TopLeft);
+                    _UVs.Add(blockUVs.BottomRight);
+                    _UVs.Add(blockUVs.TopRight);
                 }
             }
 
@@ -390,12 +390,12 @@ namespace Wyd.Game.World.Chunks
                 }
 
                 if (BlockController.Current.GetBlockSpriteUVs(_Blocks[index].Id, globalPosition,
-                    Direction.West, uvSize, out Vector3[] uvs))
+                    Direction.West, uvSize, out BlockUVs blockUVs))
                 {
-                    _UVs.Add(uvs[1]);
-                    _UVs.Add(uvs[3]);
-                    _UVs.Add(uvs[0]);
-                    _UVs.Add(uvs[2]);
+                    _UVs.Add(blockUVs.TopLeft);
+                    _UVs.Add(blockUVs.TopRight);
+                    _UVs.Add(blockUVs.BottomLeft);
+                    _UVs.Add(blockUVs.BottomRight);
                 }
             }
 
@@ -441,12 +441,12 @@ namespace Wyd.Game.World.Chunks
                 }
 
                 if (BlockController.Current.GetBlockSpriteUVs(_Blocks[index].Id, globalPosition,
-                    Direction.Up, uvSize, out Vector3[] uvs))
+                    Direction.Up, uvSize, out BlockUVs blockUVs))
                 {
-                    _UVs.Add(uvs[0]);
-                    _UVs.Add(uvs[2]);
-                    _UVs.Add(uvs[1]);
-                    _UVs.Add(uvs[3]);
+                    _UVs.Add(blockUVs.BottomLeft);
+                    _UVs.Add(blockUVs.BottomRight);
+                    _UVs.Add(blockUVs.TopLeft);
+                    _UVs.Add(blockUVs.TopRight);
                 }
             }
 
@@ -492,12 +492,13 @@ namespace Wyd.Game.World.Chunks
                 }
 
                 if (BlockController.Current.GetBlockSpriteUVs(_Blocks[index].Id, globalPosition,
-                    Direction.Down, uvSize, out Vector3[] uvs))
+                    Direction.Down, uvSize, out BlockUVs blockUVs))
                 {
-                    _UVs.Add(uvs[0]);
-                    _UVs.Add(uvs[1]);
-                    _UVs.Add(uvs[2]);
-                    _UVs.Add(uvs[3]);
+
+                    _UVs.Add(blockUVs.BottomLeft);
+                    _UVs.Add(blockUVs.TopLeft);
+                    _UVs.Add(blockUVs.BottomRight);
+                    _UVs.Add(blockUVs.TopRight);
                 }
             }
         }
@@ -563,12 +564,12 @@ namespace Wyd.Game.World.Chunks
 
                 // attempt to retrieve and add uvs for block face
                 if (BlockController.Current.GetBlockSpriteUVs(_Blocks[index].Id, globalPosition,
-                    Direction.North, uvSize, out Vector3[] uvs))
+                    Direction.North, uvSize, out BlockUVs blockUVs))
                 {
-                    _UVs.Add(uvs[1]);
-                    _UVs.Add(uvs[3]);
-                    _UVs.Add(uvs[0]);
-                    _UVs.Add(uvs[2]);
+                    _UVs.Add(blockUVs.TopLeft);
+                    _UVs.Add(blockUVs.TopRight);
+                    _UVs.Add(blockUVs.BottomLeft);
+                    _UVs.Add(blockUVs.BottomRight);
                 }
             }
 
@@ -617,12 +618,13 @@ namespace Wyd.Game.World.Chunks
                 }
 
                 if (BlockController.Current.GetBlockSpriteUVs(_Blocks[index].Id, globalPosition,
-                    Direction.East, uvSize, out Vector3[] uvs))
+                    Direction.East, uvSize, out BlockUVs blockUVs))
                 {
-                    _UVs.Add(uvs[0]);
-                    _UVs.Add(uvs[1]);
-                    _UVs.Add(uvs[2]);
-                    _UVs.Add(uvs[3]);
+
+                    _UVs.Add(blockUVs.BottomLeft);
+                    _UVs.Add(blockUVs.TopLeft);
+                    _UVs.Add(blockUVs.BottomRight);
+                    _UVs.Add(blockUVs.TopRight);
                 }
             }
 
@@ -671,12 +673,13 @@ namespace Wyd.Game.World.Chunks
                 }
 
                 if (BlockController.Current.GetBlockSpriteUVs(_Blocks[index].Id, globalPosition,
-                    Direction.South, uvSize, out Vector3[] uvs))
+                    Direction.South, uvSize, out BlockUVs blockUVs))
                 {
-                    _UVs.Add(uvs[0]);
-                    _UVs.Add(uvs[1]);
-                    _UVs.Add(uvs[2]);
-                    _UVs.Add(uvs[3]);
+
+                    _UVs.Add(blockUVs.BottomLeft);
+                    _UVs.Add(blockUVs.TopLeft);
+                    _UVs.Add(blockUVs.BottomRight);
+                    _UVs.Add(blockUVs.TopRight);
                 }
             }
 
@@ -725,12 +728,12 @@ namespace Wyd.Game.World.Chunks
                 }
 
                 if (BlockController.Current.GetBlockSpriteUVs(_Blocks[index].Id, globalPosition,
-                    Direction.West, uvSize, out Vector3[] uvs))
+                    Direction.West, uvSize, out BlockUVs blockUVs))
                 {
-                    _UVs.Add(uvs[1]);
-                    _UVs.Add(uvs[3]);
-                    _UVs.Add(uvs[0]);
-                    _UVs.Add(uvs[2]);
+                    _UVs.Add(blockUVs.TopLeft);
+                    _UVs.Add(blockUVs.TopRight);
+                    _UVs.Add(blockUVs.BottomLeft);
+                    _UVs.Add(blockUVs.BottomRight);
                 }
             }
 
@@ -779,12 +782,12 @@ namespace Wyd.Game.World.Chunks
                 }
 
                 if (BlockController.Current.GetBlockSpriteUVs(_Blocks[index].Id, globalPosition,
-                    Direction.Up, uvSize, out Vector3[] uvs))
+                    Direction.Up, uvSize, out BlockUVs blockUVs))
                 {
-                    _UVs.Add(uvs[0]);
-                    _UVs.Add(uvs[2]);
-                    _UVs.Add(uvs[1]);
-                    _UVs.Add(uvs[3]);
+                    _UVs.Add(blockUVs.BottomLeft);
+                    _UVs.Add(blockUVs.BottomRight);
+                    _UVs.Add(blockUVs.TopLeft);
+                    _UVs.Add(blockUVs.TopRight);
                 }
             }
 
@@ -834,12 +837,13 @@ namespace Wyd.Game.World.Chunks
                 }
 
                 if (BlockController.Current.GetBlockSpriteUVs(_Blocks[index].Id, globalPosition,
-                    Direction.Down, uvSize, out Vector3[] uvs))
+                    Direction.Down, uvSize, out BlockUVs blockUVs))
                 {
-                    _UVs.Add(uvs[0]);
-                    _UVs.Add(uvs[1]);
-                    _UVs.Add(uvs[2]);
-                    _UVs.Add(uvs[3]);
+
+                    _UVs.Add(blockUVs.BottomLeft);
+                    _UVs.Add(blockUVs.TopLeft);
+                    _UVs.Add(blockUVs.BottomRight);
+                    _UVs.Add(blockUVs.TopRight);
                 }
             }
         }

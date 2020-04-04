@@ -8,6 +8,7 @@ using Wyd.Controllers.World;
 using Wyd.Game;
 using Wyd.Game.Entities.Inventory;
 using Wyd.Game.World.Blocks;
+using Wyd.Graphics;
 
 #endregion
 
@@ -57,34 +58,34 @@ namespace Wyd.Controllers.UI
             AddTriangles(Direction.Up);
             AddVertices(Direction.Up, Vector3.zero);
             if (BlockController.Current.GetBlockSpriteUVs(BlockId, Vector3.positiveInfinity, Direction.Up, Vector3.one,
-                out Vector3[] uvs))
+                out BlockUVs blockUVs))
             {
-                _UVs.Add(uvs[0]);
-                _UVs.Add(uvs[2]);
-                _UVs.Add(uvs[1]);
-                _UVs.Add(uvs[3]);
+                _UVs.Add(blockUVs[0]);
+                _UVs.Add(blockUVs[2]);
+                _UVs.Add(blockUVs[1]);
+                _UVs.Add(blockUVs[3]);
             }
 
             AddTriangles(Direction.North);
             AddVertices(Direction.North, Vector3.zero);
             if (BlockController.Current.GetBlockSpriteUVs(BlockId, Vector3.positiveInfinity, Direction.North,
-                Vector3.one, out uvs))
+                Vector3.one, out blockUVs))
             {
-                _UVs.Add(uvs[1]);
-                _UVs.Add(uvs[3]);
-                _UVs.Add(uvs[0]);
-                _UVs.Add(uvs[2]);
+                _UVs.Add(blockUVs[1]);
+                _UVs.Add(blockUVs[3]);
+                _UVs.Add(blockUVs[0]);
+                _UVs.Add(blockUVs[2]);
             }
 
             AddTriangles(Direction.East);
             AddVertices(Direction.East, Vector3.zero);
             if (BlockController.Current.GetBlockSpriteUVs(BlockId, Vector3.positiveInfinity, Direction.East,
-                Vector3.one, out uvs))
+                Vector3.one, out blockUVs))
             {
-                _UVs.Add(uvs[0]);
-                _UVs.Add(uvs[1]);
-                _UVs.Add(uvs[2]);
-                _UVs.Add(uvs[3]);
+                _UVs.Add(blockUVs[0]);
+                _UVs.Add(blockUVs[1]);
+                _UVs.Add(blockUVs[2]);
+                _UVs.Add(blockUVs[3]);
             }
 
             _Mesh.SetVertices(_Vertices);

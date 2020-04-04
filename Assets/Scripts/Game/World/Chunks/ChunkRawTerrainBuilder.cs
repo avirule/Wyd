@@ -114,14 +114,7 @@ namespace Wyd.Game.World.Chunks
 
                 if (_NoiseValues.NoiseValues[index] > 0.01f)
                 {
-                    if (_Rand.Next(0, 3) > 1)
-                    {
-                        id = 5;
-                    }
-                    else
-                    {
-                        id = 7;
-                    }
+                    id = 4;
                 }
 
                 _GenerationData.Blocks.SetPoint(globalPosition, id);

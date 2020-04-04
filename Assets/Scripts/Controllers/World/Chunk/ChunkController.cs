@@ -89,11 +89,7 @@ namespace Wyd.Controllers.World.Chunk
             TerrainController.TerrainChanged += (sender, args) => MeshController.FlagForUpdate();
             MeshController.MeshChanged += OnChanged;
 
-            foreach (Material material in MeshRenderer.materials)
-            {
-                material.SetTexture(TextureController.MainTexPropertyID, TextureController.Current.TerrainTexture);
-            }
-
+            MeshRenderer.materials = TextureController.Current.TerrainMaterials;
             _Visible = MeshRenderer.enabled;
 
             // todo implement chunk ticks

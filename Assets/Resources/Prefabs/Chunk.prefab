@@ -61,9 +61,7 @@ MeshRenderer:
   m_RayTracingMode: 2
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
-  m_Materials:
-  - {fileID: 2100000, guid: 7a70b44b137a7f14ea9fe317526a5d97, type: 2}
-  - {fileID: 2100000, guid: 6e2246bb7385f1e49bea6635aebd4a32, type: 2}
+  m_Materials: []
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -96,6 +94,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 2730fb551fd74e84b7017b3873c64773, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  TotalNodes: -1
+  UniqueNodes: 0
+  NonAirBlocks: 0
 --- !u!114 &3105495873480507178
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -109,6 +110,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   BlocksController: {fileID: 8120247410673770892}
+  TotalTimesTerrainChanged: 0
+  TimesTerrainChanged: 0
 --- !u!114 &7041328555870071864
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -124,6 +127,11 @@ MonoBehaviour:
   MeshFilter: {fileID: -925064434372530524}
   BlocksController: {fileID: 8120247410673770892}
   TerrainController: {fileID: 3105495873480507178}
+  VertexCount: 0
+  TrianglesCount: 0
+  UVsCount: 0
+  TotalTimesMeshed: 0
+  TimesMeshed: 0
 --- !u!114 &2133818191605063653
 MonoBehaviour:
   m_ObjectHideFlags: 0

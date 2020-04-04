@@ -26,6 +26,14 @@ namespace Wyd.Controllers.World
         public const float WORLD_HEIGHT = 256f;
         public static readonly float WorldHeightInChunks = Mathf.Floor(WORLD_HEIGHT / ChunkController.Size.y);
 
+#if UNITY_EDITOR
+
+        private Mesh _Mesh;
+
+        public MeshFilter MeshFilter;
+        public MeshRenderer MeshRenderer;
+#endif
+
         private ChunkController _ChunkControllerPrefab;
         private Dictionary<Vector3, ChunkController> _Chunks;
         private ObjectCache<ChunkController> _ChunkCache;
@@ -121,6 +129,34 @@ namespace Wyd.Controllers.World
             {
                 InitialiseChunkCache();
             }
+
+            // _Mesh = new Mesh();
+            // MeshFilter.sharedMesh = _Mesh;
+            // MeshRenderer.material.SetTexture(TextureController.MainTexPropertyID, TextureController.Current.TerrainTexture);
+            //
+            // List<Vector3> vertices = new List<Vector3>();
+            // List<int> triangles = new List<int>();
+            // List<Vector3> uvs = new List<Vector3>();
+            //
+            // Vector3[] verts = BlockFaces.Vertices.North;
+            // Vector3[] uvsApply = {
+            //     new Vector3(1, 0, 0),
+            //     new Vector3(1, 1, 0),
+            //     new Vector3(0, 0, 0),
+            //     new Vector3(0, 1, 0),
+            // };
+            //
+            // for (int i = 0; i < TextureController.Current.TerrainTexture.depth; i++)
+            // {
+            //     triangles.AddRange(BlockFaces.Triangles.North.Select(tri => tri + vertices.Count));
+            //     vertices.AddRange(verts.Select(vert => vert + Vector3.forward * i));
+            //     uvs.AddRange(uvsApply.Select(uv => uv + Vector3.forward * i));
+            // }
+            //
+            // _Mesh.SetVertices(vertices);
+            // _Mesh.SetTriangles(triangles, 0);
+            // _Mesh.SetUVs(0, uvs);
+            // _Mesh.Optimize();
         }
 
         private void OnEnable()
