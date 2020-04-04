@@ -2,6 +2,7 @@
 
 using System;
 using System.Collections.Generic;
+using Unity.Mathematics;
 using UnityEngine;
 
 #endregion
@@ -12,11 +13,11 @@ namespace Wyd.Game.Entities
     {
         Transform Transform { get; }
         Rigidbody Rigidbody { get; }
-        Vector3 CurrentChunk { get; }
+        int3 ChunkPosition { get; }
         HashSet<string> Tags { get; }
 
-        event EventHandler<Vector3> PositionChanged;
-        event EventHandler<Vector3> ChunkPositionChanged;
+        event EventHandler<float3> PositionChanged;
+        event EventHandler<int3> ChunkPositionChanged;
         event EventHandler<IEntity> EntityDestroyed;
     }
 }

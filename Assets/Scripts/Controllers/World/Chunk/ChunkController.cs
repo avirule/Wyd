@@ -1,6 +1,8 @@
 #region
 
+using System.Linq;
 using Serilog;
+using Unity.Mathematics;
 using UnityEngine;
 using UnityEngine.Rendering;
 using Wyd.Controllers.State;
@@ -8,6 +10,7 @@ using Wyd.Game;
 using Wyd.Game.Entities;
 using Wyd.Game.World.Chunks.Events;
 using Wyd.System;
+using Bounds = Wyd.System.Bounds;
 
 #endregion
 
@@ -16,9 +19,7 @@ namespace Wyd.Controllers.World.Chunk
     public class ChunkController : ActivationStateChunkController
     {
         // todo Size should be somewhere that makes more sense, I think
-        public static readonly Vector3Int Size = new Vector3Int(32, 32, 32);
-        public static readonly int SizeProduct = Size.Product();
-        public static readonly int YIndexStep = Size.x * Size.z;
+        public static readonly int3 Size = new int3(32, 32, 32);
 
         #region INSTANCE MEMBERS
 
@@ -26,7 +27,7 @@ namespace Wyd.Controllers.World.Chunk
         private bool _Visible;
         private bool _RenderShadows;
 
-        public Vector3 Position => _Bounds.min;
+        public int3 Position => WydMath.ToInt(_Bounds.MinPoint);
         public GenerationData.GenerationStep CurrentStep => TerrainController.CurrentStep;
 
         public bool RenderShadows
@@ -77,8 +78,6 @@ namespace Wyd.Controllers.World.Chunk
         [SerializeField]
         private ChunkMeshController MeshController;
 
-        public ChunkController(Bounds bounds) : base(bounds) { }
-
         #endregion
 
         protected override void Awake()
@@ -109,21 +108,39 @@ namespace Wyd.Controllers.World.Chunk
             }
             else
             {
-                OnCurrentLoaderChangedChunk(this, _CurrentLoader.CurrentChunk);
+                OnCurrentLoaderChangedChunk(this, _CurrentLoader.ChunkPosition);
             }
 
             OptionsController.Current.PropertyChanged += (sender, args) =>
             {
                 if (args.PropertyName.Equals(nameof(OptionsController.Current.ShadowDistance)))
                 {
-                    RenderShadows = IsWithinShadowsDistance((Position - _CurrentLoader.CurrentChunk).Abs());
+                    RenderShadows = IsWithinShadowsDistance(math.abs(Position - _CurrentLoader.ChunkPosition));
                 }
             };
         }
 
+        protected override void OnEnable()
+        {
+            base.OnEnable();
+
+            _Visible = MeshRenderer.enabled;
+        }
+
+        protected override void OnDisable()
+        {
+            base.OnDisable();
+
+            if (_CurrentLoader != default)
+            {
+                _CurrentLoader.ChunkPositionChanged -= OnCurrentLoaderChangedChunk;
+                _CurrentLoader = default;
+            }
+        }
+
         private void OnDestroy()
         {
-            OnDestroyed(this, new ChunkChangedEventArgs(_Bounds, Directions.CardinalDirectionsVector3));
+            OnDestroyed(this, new ChunkChangedEventArgs(_Bounds, Directions.CardinalDirectionAxes));
         }
 
         public void FlagMeshForUpdate()
@@ -133,30 +150,15 @@ namespace Wyd.Controllers.World.Chunk
 
         #region DE/ACTIVATION
 
-        public void Activate(Vector3 position)
+        public void Activate(int3 position)
         {
-            base.Activate(position, true);
-            BlocksController.Activate(position, false);
-            TerrainController.Activate(position, false);
-            MeshController.Activate(position, false);
-            gameObject.SetActive(true);
+            _SelfTransform.position = (float3)position;
 
-            _Visible = MeshRenderer.enabled;
+            gameObject.SetActive(true);
         }
 
-        public override void Deactivate()
+        public void Deactivate()
         {
-            base.Deactivate();
-            BlocksController.Deactivate();
-            TerrainController.Deactivate();
-            MeshController.Deactivate();
-
-            if (_CurrentLoader != default)
-            {
-                _CurrentLoader.ChunkPositionChanged -= OnCurrentLoaderChangedChunk;
-                _CurrentLoader = default;
-            }
-
             gameObject.SetActive(false);
         }
 
@@ -176,16 +178,17 @@ namespace Wyd.Controllers.World.Chunk
 
         #region INTERNAL STATE CHECKS
 
-        private static bool IsWithinLoaderRange(Vector3 difference) =>
-            difference.AllLessThanOrEqual(Size
-                                          * (OptionsController.Current.RenderDistance
-                                             + OptionsController.Current.PreLoadChunkDistance));
+        private static bool IsWithinLoaderRange(float3 difference) =>
+            math.all(difference
+                     <= (Size
+                         * (OptionsController.Current.RenderDistance
+                            + OptionsController.Current.PreLoadChunkDistance)));
 
-        private static bool IsWithinRenderDistance(Vector3 difference) =>
-            difference.AllLessThanOrEqual(Size * OptionsController.Current.RenderDistance);
+        private static bool IsWithinRenderDistance(float3 difference) =>
+            math.all(difference <= (Size * OptionsController.Current.RenderDistance));
 
-        private static bool IsWithinShadowsDistance(Vector3 difference) =>
-            difference.AllLessThanOrEqual(Size * OptionsController.Current.ShadowDistance);
+        private static bool IsWithinShadowsDistance(float3 difference) =>
+            math.all(difference <= (Size * OptionsController.Current.ShadowDistance));
 
         #endregion
 
@@ -208,20 +211,20 @@ namespace Wyd.Controllers.World.Chunk
             Destroyed?.Invoke(sender, args);
         }
 
-        private void OnCurrentLoaderChangedChunk(object sender, Vector3 newChunkPosition)
+        private void OnCurrentLoaderChangedChunk(object sender, int3 newChunkPosition)
         {
-            if (Position == newChunkPosition)
+            if (math.all(Position == newChunkPosition))
             {
                 return;
             }
 
-            Vector3 difference = (Position - newChunkPosition).Abs();
+            float3 difference = math.abs(Position - newChunkPosition);
             difference.y = 0; // always load all chunks on y axis
 
             if (!IsWithinLoaderRange(difference))
             {
                 DeactivationCallback?.Invoke(this,
-                    new ChunkChangedEventArgs(_Bounds, Directions.CardinalDirectionsVector3));
+                    new ChunkChangedEventArgs(_Bounds, Directions.CardinalDirectionAxes));
                 return;
             }
 

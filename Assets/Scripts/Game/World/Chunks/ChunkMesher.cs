@@ -4,6 +4,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Threading;
+using Unity.Mathematics;
 using UnityEngine;
 using UnityEngine.Rendering;
 using Wyd.Controllers.State;
@@ -27,7 +28,7 @@ namespace Wyd.Game.World.Chunks
         private readonly List<Vector3> _UVs;
 
         private MeshBlock[] _Blocks;
-        private Vector3Int _Size;
+        private int3 _Size;
         private int _VerticalIndexStep;
         private GenerationData _GenerationData;
         private CancellationToken _AbortToken;
@@ -50,10 +51,10 @@ namespace Wyd.Game.World.Chunks
             bool aggressiveFaceMerging)
         {
             _GenerationData = generationData;
-            _Size = _GenerationData.Bounds.size.AsVector3Int();
-            _VerticalIndexStep = _Size.x * _Size.z;
+            _Size = WydMath.ToInt(_GenerationData.Bounds.Size);
+            _VerticalIndexStep = (int)(_GenerationData.Bounds.Size.x * _GenerationData.Bounds.Size.z);
 
-            int sizeProduct = _Size.Product();
+            int sizeProduct = (int)WydMath.Product(_GenerationData.Bounds.Size);
             if (_Blocks.Length != sizeProduct)
             {
                 _Blocks = new MeshBlock[sizeProduct];
@@ -152,8 +153,7 @@ namespace Wyd.Game.World.Chunks
                     continue;
                 }
 
-                Vector3Int localPosition =
-                    WydMath.GetIndexAsVector3Int(index, _GenerationData.Bounds.size.AsVector3Int());
+                int3 localPosition = WydMath.IndexTo3D(index, _Size);
 
                 if (BlockController.Current.CheckBlockHasProperties(block.Id, BlockDefinition.Property.Transparent))
                 {
@@ -161,7 +161,7 @@ namespace Wyd.Game.World.Chunks
                 }
                 else
                 {
-                    TraverseIndex(_GenerationData.Bounds.min, index, localPosition);
+                    TraverseIndex(WydMath.ToInt(_GenerationData.Bounds.MinPoint), index, localPosition);
                 }
             }
 
@@ -171,344 +171,344 @@ namespace Wyd.Game.World.Chunks
 
         #region TRAVERSAL MESHING
 
-        private void TraverseIndexTransparent(Vector3 position, int index, Vector3Int localPosition)
+        // private void TraverseIndexTransparent(int3 position, int index, int3 localPosition)
+        // {
+        //     int3 globalPosition = position + localPosition;
+        //
+        //     if (!_Blocks[index].Faces.HasFace(Direction.North)
+        //         && (((localPosition.z == (_Size.z - 1))
+        //              && WorldController.Current.TryGetBlockAt(globalPosition + Directions.North, out ushort blockId)
+        //              && (blockId != _Blocks[index].Id))
+        //             || ((localPosition.z < (_Size.z - 1))
+        //                 && (_Blocks[index + _Size.x].Id != _Blocks[index].Id))))
+        //     {
+        //         // set face of current block so it isn't traversed over again
+        //         _Blocks[index].Faces.SetFace(Direction.North, true);
+        //         // add triangles for this block face
+        //         AddTriangles(Direction.North, true);
+        //
+        //         int traversals;
+        //         Vector3 uvSize = Vector3.one;
+        //
+        //         if (_AggressiveFaceMerging)
+        //         {
+        //             traversals = GetTraversals(index, globalPosition, localPosition.x, Direction.North, Direction.East,
+        //                 1, _Size.x, _Blocks[index].Id);
+        //
+        //             if (traversals > 1)
+        //             {
+        //                 // The traversals value goes into the vertex points that have a positive value
+        //                 // on the same axis as your slice value.
+        //                 // So for instance, we were traversing on the x, so we'll be extending the x point of our
+        //                 // vertices by the number of successful traversals.
+        //                 _Vertices.Add(localPosition + new Vector3(0f, 0f, 1f));
+        //                 _Vertices.Add(localPosition + new Vector3(0f, 1f, 1f));
+        //                 _Vertices.Add(localPosition + new Vector3(traversals, 0f, 1f));
+        //                 _Vertices.Add(localPosition + new Vector3(traversals, 1f, 1f));
+        //                 uvSize.x = traversals;
+        //             }
+        //             else
+        //             {
+        //                 // if traversal failed (no blocks found in probed direction) then look on next axis
+        //                 traversals = GetTraversals(index, globalPosition, localPosition.y, Direction.North,
+        //                     Direction.Up, _VerticalIndexStep, _Size.y, _Blocks[index].Id);
+        //
+        //                 _Vertices.Add(localPosition + new Vector3(0f, 0f, 1f));
+        //                 _Vertices.Add(localPosition + new Vector3(0f, traversals, 1f));
+        //                 _Vertices.Add(localPosition + new Vector3(1f, 0f, 1f));
+        //                 _Vertices.Add(localPosition + new Vector3(1f, traversals, 1f));
+        //                 uvSize.z = traversals;
+        //             }
+        //         }
+        //         else
+        //         {
+        //             // no traversals found, so just add vertices for a regular 1x1 face
+        //             AddVertices(Direction.North, localPosition);
+        //         }
+        //
+        //         // attempt to retrieve and add uvs for block face
+        //         if (BlockController.Current.GetBlockSpriteUVs(_Blocks[index].Id, globalPosition,
+        //             Direction.North, uvSize, out BlockUVs blockUVs))
+        //         {
+        //             _UVs.Add(blockUVs.TopLeft);
+        //             _UVs.Add(blockUVs.TopRight);
+        //             _UVs.Add(blockUVs.BottomLeft);
+        //             _UVs.Add(blockUVs.BottomRight);
+        //         }
+        //     }
+        //
+        //     if (!_Blocks[index].Faces.HasFace(Direction.East)
+        //         && (((localPosition.x == (_Size.x - 1))
+        //              && WorldController.Current.TryGetBlockAt(globalPosition + Vector3.right, out blockId)
+        //              && (_Blocks[index].Id != blockId))
+        //             || ((localPosition.x < (_Size.x - 1))
+        //                 && (_Blocks[index + 1].Id != _Blocks[index].Id))))
+        //     {
+        //         _Blocks[index].Faces.SetFace(Direction.East, true);
+        //         AddTriangles(Direction.East, true);
+        //
+        //         int traversals;
+        //         Vector3 uvSize = Vector3.one;
+        //
+        //         if (_AggressiveFaceMerging)
+        //         {
+        //             traversals = GetTraversals(index, globalPosition, localPosition.z, Direction.East, Direction.North,
+        //                 _Size.x, _Size.z, _Blocks[index].Id);
+        //
+        //             if (traversals > 1)
+        //             {
+        //                 _Vertices.Add(localPosition + new Vector3(1f, 0f, 0f));
+        //                 _Vertices.Add(localPosition + new Vector3(1f, 0f, traversals));
+        //                 _Vertices.Add(localPosition + new Vector3(1f, 1f, 0f));
+        //                 _Vertices.Add(localPosition + new Vector3(1f, 1f, traversals));
+        //                 uvSize.x = traversals;
+        //             }
+        //             else
+        //             {
+        //                 traversals = GetTraversals(index, globalPosition, localPosition.y, Direction.East, Direction.Up,
+        //                     _VerticalIndexStep, _Size.y, _Blocks[index].Id);
+        //
+        //                 _Vertices.Add(localPosition + new Vector3(1f, 0f, 0f));
+        //                 _Vertices.Add(localPosition + new Vector3(1f, 0f, 1f));
+        //                 _Vertices.Add(localPosition + new Vector3(1f, traversals, 0f));
+        //                 _Vertices.Add(localPosition + new Vector3(1f, traversals, 1f));
+        //                 uvSize.z = traversals;
+        //             }
+        //         }
+        //         else
+        //         {
+        //             AddVertices(Direction.East, localPosition);
+        //         }
+        //
+        //         if (BlockController.Current.GetBlockSpriteUVs(_Blocks[index].Id, globalPosition,
+        //             Direction.East, uvSize, out BlockUVs blockUVs))
+        //         {
+        //             _UVs.Add(blockUVs.BottomLeft);
+        //             _UVs.Add(blockUVs.TopLeft);
+        //             _UVs.Add(blockUVs.BottomRight);
+        //             _UVs.Add(blockUVs.TopRight);
+        //         }
+        //     }
+        //
+        //     if (!_Blocks[index].Faces.HasFace(Direction.South)
+        //         && (((localPosition.z == 0)
+        //              && WorldController.Current.TryGetBlockAt(globalPosition + Vector3.back, out blockId)
+        //              && (_Blocks[index].Id != blockId))
+        //             || ((localPosition.z > 0)
+        //                 && (_Blocks[index - _Size.x].Id != _Blocks[index].Id))))
+        //     {
+        //         _Blocks[index].Faces.SetFace(Direction.South, true);
+        //         AddTriangles(Direction.South, true);
+        //
+        //         int traversals;
+        //         Vector3 uvSize = Vector3.one;
+        //
+        //         if (_AggressiveFaceMerging)
+        //         {
+        //             traversals = GetTraversals(index, globalPosition, localPosition.x, Direction.South, Direction.East,
+        //                 1, _Size.x, _Blocks[index].Id);
+        //
+        //             if (traversals > 1)
+        //             {
+        //                 _Vertices.Add(localPosition + new Vector3(0f, 0f, 0f));
+        //                 _Vertices.Add(localPosition + new Vector3(traversals, 0f, 0f));
+        //                 _Vertices.Add(localPosition + new Vector3(0f, 1f, 0f));
+        //                 _Vertices.Add(localPosition + new Vector3(traversals, 1f, 0f));
+        //                 uvSize.x = traversals;
+        //             }
+        //             else
+        //             {
+        //                 traversals = GetTraversals(index, globalPosition, localPosition.y, Direction.South,
+        //                     Direction.Up,
+        //                     _VerticalIndexStep, _Size.y, _Blocks[index].Id);
+        //
+        //                 _Vertices.Add(localPosition + new Vector3(0f, 0f, 0f));
+        //                 _Vertices.Add(localPosition + new Vector3(1f, 0f, 0f));
+        //                 _Vertices.Add(localPosition + new Vector3(0f, traversals, 0f));
+        //                 _Vertices.Add(localPosition + new Vector3(1f, traversals, 0f));
+        //                 uvSize.z = traversals;
+        //             }
+        //         }
+        //         else
+        //         {
+        //             AddVertices(Direction.South, localPosition);
+        //         }
+        //
+        //         if (BlockController.Current.GetBlockSpriteUVs(_Blocks[index].Id, globalPosition,
+        //             Direction.South, uvSize, out BlockUVs blockUVs))
+        //         {
+        //             _UVs.Add(blockUVs.BottomLeft);
+        //             _UVs.Add(blockUVs.TopLeft);
+        //             _UVs.Add(blockUVs.BottomRight);
+        //             _UVs.Add(blockUVs.TopRight);
+        //         }
+        //     }
+        //
+        //
+        //     if (!_Blocks[index].Faces.HasFace(Direction.West)
+        //         && (((localPosition.x == 0)
+        //              && WorldController.Current.TryGetBlockAt(globalPosition + Vector3.left, out blockId)
+        //              && (_Blocks[index].Id != blockId))
+        //             || ((localPosition.x > 0) && (_Blocks[index - 1].Id != _Blocks[index].Id))))
+        //     {
+        //         _Blocks[index].Faces.SetFace(Direction.West, true);
+        //         AddTriangles(Direction.West, true);
+        //
+        //         int traversals;
+        //         Vector3 uvSize = Vector3.one;
+        //
+        //         if (_AggressiveFaceMerging)
+        //         {
+        //             traversals = GetTraversals(index, globalPosition, localPosition.z, Direction.West, Direction.North,
+        //                 _Size.x, _Size.z, _Blocks[index].Id);
+        //
+        //             if (traversals > 1)
+        //             {
+        //                 _Vertices.Add(localPosition + new Vector3(0f, 0f, 0f));
+        //                 _Vertices.Add(localPosition + new Vector3(0f, 1f, 0f));
+        //                 _Vertices.Add(localPosition + new Vector3(0f, 0f, traversals));
+        //                 _Vertices.Add(localPosition + new Vector3(0f, 1f, traversals));
+        //                 uvSize.x = traversals;
+        //             }
+        //             else
+        //             {
+        //                 traversals = GetTraversals(index, globalPosition, localPosition.y, Direction.West, Direction.Up,
+        //                     _VerticalIndexStep, _Size.y, _Blocks[index].Id);
+        //
+        //                 _Vertices.Add(localPosition + new Vector3(0f, 0f, 0f));
+        //                 _Vertices.Add(localPosition + new Vector3(0f, traversals, 0f));
+        //                 _Vertices.Add(localPosition + new Vector3(0f, 0f, 1f));
+        //                 _Vertices.Add(localPosition + new Vector3(0f, traversals, 1f));
+        //                 uvSize.z = traversals;
+        //             }
+        //         }
+        //         else
+        //         {
+        //             AddVertices(Direction.West, localPosition);
+        //         }
+        //
+        //         if (BlockController.Current.GetBlockSpriteUVs(_Blocks[index].Id, globalPosition,
+        //             Direction.West, uvSize, out BlockUVs blockUVs))
+        //         {
+        //             _UVs.Add(blockUVs.TopLeft);
+        //             _UVs.Add(blockUVs.TopRight);
+        //             _UVs.Add(blockUVs.BottomLeft);
+        //             _UVs.Add(blockUVs.BottomRight);
+        //         }
+        //     }
+        //
+        //     if (!_Blocks[index].Faces.HasFace(Direction.Up)
+        //         && ((localPosition.y == (_Size.y - 1))
+        //             || ((localPosition.y < (_Size.y - 1))
+        //                 && (_Blocks[index + _VerticalIndexStep].Id != _Blocks[index].Id))))
+        //     {
+        //         _Blocks[index].Faces.SetFace(Direction.Up, true);
+        //         AddTriangles(Direction.Up, true);
+        //
+        //         int traversals;
+        //         Vector3 uvSize = Vector3.one;
+        //
+        //         if (_AggressiveFaceMerging)
+        //         {
+        //             traversals = GetTraversals(index, globalPosition, localPosition.z, Direction.Up, Direction.North,
+        //                 _Size.x, _Size.z, _Blocks[index].Id);
+        //
+        //             if (traversals > 1)
+        //             {
+        //                 _Vertices.Add(localPosition + new Vector3(0f, 1f, 0f));
+        //                 _Vertices.Add(localPosition + new Vector3(1f, 1f, 0f));
+        //                 _Vertices.Add(localPosition + new Vector3(0f, 1f, traversals));
+        //                 _Vertices.Add(localPosition + new Vector3(1f, 1f, traversals));
+        //                 uvSize.x = traversals;
+        //             }
+        //             else
+        //             {
+        //                 traversals = GetTraversals(index, globalPosition, localPosition.x, Direction.Up, Direction.East,
+        //                     1, _Size.x, _Blocks[index].Id);
+        //
+        //                 _Vertices.Add(localPosition + new Vector3(0f, 1f, 0f));
+        //                 _Vertices.Add(localPosition + new Vector3(traversals, 1f, 0f));
+        //                 _Vertices.Add(localPosition + new Vector3(0f, 1f, 1f));
+        //                 _Vertices.Add(localPosition + new Vector3(traversals, 1f, 1f));
+        //                 uvSize.z = traversals;
+        //             }
+        //         }
+        //         else
+        //         {
+        //             AddVertices(Direction.Up, localPosition);
+        //         }
+        //
+        //         if (BlockController.Current.GetBlockSpriteUVs(_Blocks[index].Id, globalPosition,
+        //             Direction.Up, uvSize, out BlockUVs blockUVs))
+        //         {
+        //             _UVs.Add(blockUVs.BottomLeft);
+        //             _UVs.Add(blockUVs.BottomRight);
+        //             _UVs.Add(blockUVs.TopLeft);
+        //             _UVs.Add(blockUVs.TopRight);
+        //         }
+        //     }
+        //
+        //     // ignore the very bottom face of the world to reduce verts/tris
+        //     if (!_Blocks[index].Faces.HasFace(Direction.Down)
+        //         && (localPosition.y > 0)
+        //         && (_Blocks[index - _VerticalIndexStep].Id != _Blocks[index].Id))
+        //     {
+        //         _Blocks[index].Faces.SetFace(Direction.Down, true);
+        //         AddTriangles(Direction.Down, true);
+        //
+        //         int traversals;
+        //         Vector3 uvSize = Vector3.one;
+        //
+        //         if (_AggressiveFaceMerging)
+        //         {
+        //             traversals = GetTraversals(index, globalPosition, localPosition.z, Direction.Down, Direction.North,
+        //                 _Size.x, _Size.z, _Blocks[index].Id);
+        //
+        //             if (traversals > 1)
+        //             {
+        //                 _Vertices.Add(localPosition + new Vector3(0f, 0f, 0f));
+        //                 _Vertices.Add(localPosition + new Vector3(0f, 0f, traversals));
+        //                 _Vertices.Add(localPosition + new Vector3(1f, 0f, 0f));
+        //                 _Vertices.Add(localPosition + new Vector3(1f, 0f, traversals));
+        //                 uvSize.x = traversals;
+        //             }
+        //             else
+        //             {
+        //                 traversals = GetTraversals(index, globalPosition, localPosition.x, Direction.Down,
+        //                     Direction.East, 1, _Size.x, _Blocks[index].Id);
+        //
+        //                 _Vertices.Add(localPosition + new Vector3(0f, 0f, 0f));
+        //                 _Vertices.Add(localPosition + new Vector3(0f, 0f, 1f));
+        //                 _Vertices.Add(localPosition + new Vector3(traversals, 0f, 0f));
+        //                 _Vertices.Add(localPosition + new Vector3(traversals, 0f, 1f));
+        //                 uvSize.z = traversals;
+        //             }
+        //         }
+        //         else
+        //         {
+        //             AddVertices(Direction.Down, localPosition);
+        //         }
+        //
+        //         if (BlockController.Current.GetBlockSpriteUVs(_Blocks[index].Id, globalPosition,
+        //             Direction.Down, uvSize, out BlockUVs blockUVs))
+        //         {
+        //             _UVs.Add(blockUVs.BottomLeft);
+        //             _UVs.Add(blockUVs.TopLeft);
+        //             _UVs.Add(blockUVs.BottomRight);
+        //             _UVs.Add(blockUVs.TopRight);
+        //         }
+        //     }
+        // }
+
+        private void TraverseIndex(int3 position, int index, int3 localPosition)
         {
-            Vector3 globalPosition = position + localPosition;
-
-            if (!_Blocks[index].Faces.HasFace(Direction.North)
-                && (((localPosition.z == (_Size.z - 1))
-                     && WorldController.Current.TryGetBlockAt(globalPosition + Vector3.forward, out ushort blockId)
-                     && (blockId != _Blocks[index].Id))
-                    || ((localPosition.z < (_Size.z - 1))
-                        && (_Blocks[index + _Size.x].Id != _Blocks[index].Id))))
-            {
-                // set face of current block so it isn't traversed over again
-                _Blocks[index].Faces.SetFace(Direction.North, true);
-                // add triangles for this block face
-                AddTriangles(Direction.North, true);
-
-                int traversals;
-                Vector3 uvSize = Vector3.one;
-
-                if (_AggressiveFaceMerging)
-                {
-                    traversals = GetTraversals(index, globalPosition, localPosition.x, Direction.North, Direction.East,
-                        1, _Size.x, _Blocks[index].Id);
-
-                    if (traversals > 1)
-                    {
-                        // The traversals value goes into the vertex points that have a positive value
-                        // on the same axis as your slice value.
-                        // So for instance, we were traversing on the x, so we'll be extending the x point of our
-                        // vertices by the number of successful traversals.
-                        _Vertices.Add(localPosition + new Vector3(0f, 0f, 1f));
-                        _Vertices.Add(localPosition + new Vector3(0f, 1f, 1f));
-                        _Vertices.Add(localPosition + new Vector3(traversals, 0f, 1f));
-                        _Vertices.Add(localPosition + new Vector3(traversals, 1f, 1f));
-                        uvSize.x = traversals;
-                    }
-                    else
-                    {
-                        // if traversal failed (no blocks found in probed direction) then look on next axis
-                        traversals = GetTraversals(index, globalPosition, localPosition.y, Direction.North,
-                            Direction.Up, _VerticalIndexStep, _Size.y, _Blocks[index].Id);
-
-                        _Vertices.Add(localPosition + new Vector3(0f, 0f, 1f));
-                        _Vertices.Add(localPosition + new Vector3(0f, traversals, 1f));
-                        _Vertices.Add(localPosition + new Vector3(1f, 0f, 1f));
-                        _Vertices.Add(localPosition + new Vector3(1f, traversals, 1f));
-                        uvSize.z = traversals;
-                    }
-                }
-                else
-                {
-                    // no traversals found, so just add vertices for a regular 1x1 face
-                    AddVertices(Direction.North, localPosition);
-                }
-
-                // attempt to retrieve and add uvs for block face
-                if (BlockController.Current.GetBlockSpriteUVs(_Blocks[index].Id, globalPosition,
-                    Direction.North, uvSize, out BlockUVs blockUVs))
-                {
-                    _UVs.Add(blockUVs.TopLeft);
-                    _UVs.Add(blockUVs.TopRight);
-                    _UVs.Add(blockUVs.BottomLeft);
-                    _UVs.Add(blockUVs.BottomRight);
-                }
-            }
-
-            if (!_Blocks[index].Faces.HasFace(Direction.East)
-                && (((localPosition.x == (_Size.x - 1))
-                     && WorldController.Current.TryGetBlockAt(globalPosition + Vector3.right, out blockId)
-                     && (_Blocks[index].Id != blockId))
-                    || ((localPosition.x < (_Size.x - 1))
-                        && (_Blocks[index + 1].Id != _Blocks[index].Id))))
-            {
-                _Blocks[index].Faces.SetFace(Direction.East, true);
-                AddTriangles(Direction.East, true);
-
-                int traversals;
-                Vector3 uvSize = Vector3.one;
-
-                if (_AggressiveFaceMerging)
-                {
-                    traversals = GetTraversals(index, globalPosition, localPosition.z, Direction.East, Direction.North,
-                        _Size.x, _Size.z, _Blocks[index].Id);
-
-                    if (traversals > 1)
-                    {
-                        _Vertices.Add(localPosition + new Vector3(1f, 0f, 0f));
-                        _Vertices.Add(localPosition + new Vector3(1f, 0f, traversals));
-                        _Vertices.Add(localPosition + new Vector3(1f, 1f, 0f));
-                        _Vertices.Add(localPosition + new Vector3(1f, 1f, traversals));
-                        uvSize.x = traversals;
-                    }
-                    else
-                    {
-                        traversals = GetTraversals(index, globalPosition, localPosition.y, Direction.East, Direction.Up,
-                            _VerticalIndexStep, _Size.y, _Blocks[index].Id);
-
-                        _Vertices.Add(localPosition + new Vector3(1f, 0f, 0f));
-                        _Vertices.Add(localPosition + new Vector3(1f, 0f, 1f));
-                        _Vertices.Add(localPosition + new Vector3(1f, traversals, 0f));
-                        _Vertices.Add(localPosition + new Vector3(1f, traversals, 1f));
-                        uvSize.z = traversals;
-                    }
-                }
-                else
-                {
-                    AddVertices(Direction.East, localPosition);
-                }
-
-                if (BlockController.Current.GetBlockSpriteUVs(_Blocks[index].Id, globalPosition,
-                    Direction.East, uvSize, out BlockUVs blockUVs))
-                {
-                    _UVs.Add(blockUVs.BottomLeft);
-                    _UVs.Add(blockUVs.TopLeft);
-                    _UVs.Add(blockUVs.BottomRight);
-                    _UVs.Add(blockUVs.TopRight);
-                }
-            }
-
-            if (!_Blocks[index].Faces.HasFace(Direction.South)
-                && (((localPosition.z == 0)
-                     && WorldController.Current.TryGetBlockAt(globalPosition + Vector3.back, out blockId)
-                     && (_Blocks[index].Id != blockId))
-                    || ((localPosition.z > 0)
-                        && (_Blocks[index - _Size.x].Id != _Blocks[index].Id))))
-            {
-                _Blocks[index].Faces.SetFace(Direction.South, true);
-                AddTriangles(Direction.South, true);
-
-                int traversals;
-                Vector3 uvSize = Vector3.one;
-
-                if (_AggressiveFaceMerging)
-                {
-                    traversals = GetTraversals(index, globalPosition, localPosition.x, Direction.South, Direction.East,
-                        1, _Size.x, _Blocks[index].Id);
-
-                    if (traversals > 1)
-                    {
-                        _Vertices.Add(localPosition + new Vector3(0f, 0f, 0f));
-                        _Vertices.Add(localPosition + new Vector3(traversals, 0f, 0f));
-                        _Vertices.Add(localPosition + new Vector3(0f, 1f, 0f));
-                        _Vertices.Add(localPosition + new Vector3(traversals, 1f, 0f));
-                        uvSize.x = traversals;
-                    }
-                    else
-                    {
-                        traversals = GetTraversals(index, globalPosition, localPosition.y, Direction.South,
-                            Direction.Up,
-                            _VerticalIndexStep, _Size.y, _Blocks[index].Id);
-
-                        _Vertices.Add(localPosition + new Vector3(0f, 0f, 0f));
-                        _Vertices.Add(localPosition + new Vector3(1f, 0f, 0f));
-                        _Vertices.Add(localPosition + new Vector3(0f, traversals, 0f));
-                        _Vertices.Add(localPosition + new Vector3(1f, traversals, 0f));
-                        uvSize.z = traversals;
-                    }
-                }
-                else
-                {
-                    AddVertices(Direction.South, localPosition);
-                }
-
-                if (BlockController.Current.GetBlockSpriteUVs(_Blocks[index].Id, globalPosition,
-                    Direction.South, uvSize, out BlockUVs blockUVs))
-                {
-                    _UVs.Add(blockUVs.BottomLeft);
-                    _UVs.Add(blockUVs.TopLeft);
-                    _UVs.Add(blockUVs.BottomRight);
-                    _UVs.Add(blockUVs.TopRight);
-                }
-            }
-
-
-            if (!_Blocks[index].Faces.HasFace(Direction.West)
-                && (((localPosition.x == 0)
-                     && WorldController.Current.TryGetBlockAt(globalPosition + Vector3.left, out blockId)
-                     && (_Blocks[index].Id != blockId))
-                    || ((localPosition.x > 0) && (_Blocks[index - 1].Id != _Blocks[index].Id))))
-            {
-                _Blocks[index].Faces.SetFace(Direction.West, true);
-                AddTriangles(Direction.West, true);
-
-                int traversals;
-                Vector3 uvSize = Vector3.one;
-
-                if (_AggressiveFaceMerging)
-                {
-                    traversals = GetTraversals(index, globalPosition, localPosition.z, Direction.West, Direction.North,
-                        _Size.x, _Size.z, _Blocks[index].Id);
-
-                    if (traversals > 1)
-                    {
-                        _Vertices.Add(localPosition + new Vector3(0f, 0f, 0f));
-                        _Vertices.Add(localPosition + new Vector3(0f, 1f, 0f));
-                        _Vertices.Add(localPosition + new Vector3(0f, 0f, traversals));
-                        _Vertices.Add(localPosition + new Vector3(0f, 1f, traversals));
-                        uvSize.x = traversals;
-                    }
-                    else
-                    {
-                        traversals = GetTraversals(index, globalPosition, localPosition.y, Direction.West, Direction.Up,
-                            _VerticalIndexStep, _Size.y, _Blocks[index].Id);
-
-                        _Vertices.Add(localPosition + new Vector3(0f, 0f, 0f));
-                        _Vertices.Add(localPosition + new Vector3(0f, traversals, 0f));
-                        _Vertices.Add(localPosition + new Vector3(0f, 0f, 1f));
-                        _Vertices.Add(localPosition + new Vector3(0f, traversals, 1f));
-                        uvSize.z = traversals;
-                    }
-                }
-                else
-                {
-                    AddVertices(Direction.West, localPosition);
-                }
-
-                if (BlockController.Current.GetBlockSpriteUVs(_Blocks[index].Id, globalPosition,
-                    Direction.West, uvSize, out BlockUVs blockUVs))
-                {
-                    _UVs.Add(blockUVs.TopLeft);
-                    _UVs.Add(blockUVs.TopRight);
-                    _UVs.Add(blockUVs.BottomLeft);
-                    _UVs.Add(blockUVs.BottomRight);
-                }
-            }
-
-            if (!_Blocks[index].Faces.HasFace(Direction.Up)
-                && ((localPosition.y == (_Size.y - 1))
-                    || ((localPosition.y < (_Size.y - 1))
-                        && (_Blocks[index + _VerticalIndexStep].Id != _Blocks[index].Id))))
-            {
-                _Blocks[index].Faces.SetFace(Direction.Up, true);
-                AddTriangles(Direction.Up, true);
-
-                int traversals;
-                Vector3 uvSize = Vector3.one;
-
-                if (_AggressiveFaceMerging)
-                {
-                    traversals = GetTraversals(index, globalPosition, localPosition.z, Direction.Up, Direction.North,
-                        _Size.x, _Size.z, _Blocks[index].Id);
-
-                    if (traversals > 1)
-                    {
-                        _Vertices.Add(localPosition + new Vector3(0f, 1f, 0f));
-                        _Vertices.Add(localPosition + new Vector3(1f, 1f, 0f));
-                        _Vertices.Add(localPosition + new Vector3(0f, 1f, traversals));
-                        _Vertices.Add(localPosition + new Vector3(1f, 1f, traversals));
-                        uvSize.x = traversals;
-                    }
-                    else
-                    {
-                        traversals = GetTraversals(index, globalPosition, localPosition.x, Direction.Up, Direction.East,
-                            1, _Size.x, _Blocks[index].Id);
-
-                        _Vertices.Add(localPosition + new Vector3(0f, 1f, 0f));
-                        _Vertices.Add(localPosition + new Vector3(traversals, 1f, 0f));
-                        _Vertices.Add(localPosition + new Vector3(0f, 1f, 1f));
-                        _Vertices.Add(localPosition + new Vector3(traversals, 1f, 1f));
-                        uvSize.z = traversals;
-                    }
-                }
-                else
-                {
-                    AddVertices(Direction.Up, localPosition);
-                }
-
-                if (BlockController.Current.GetBlockSpriteUVs(_Blocks[index].Id, globalPosition,
-                    Direction.Up, uvSize, out BlockUVs blockUVs))
-                {
-                    _UVs.Add(blockUVs.BottomLeft);
-                    _UVs.Add(blockUVs.BottomRight);
-                    _UVs.Add(blockUVs.TopLeft);
-                    _UVs.Add(blockUVs.TopRight);
-                }
-            }
-
-            // ignore the very bottom face of the world to reduce verts/tris
-            if (!_Blocks[index].Faces.HasFace(Direction.Down)
-                && (localPosition.y > 0)
-                && (_Blocks[index - _VerticalIndexStep].Id != _Blocks[index].Id))
-            {
-                _Blocks[index].Faces.SetFace(Direction.Down, true);
-                AddTriangles(Direction.Down, true);
-
-                int traversals;
-                Vector3 uvSize = Vector3.one;
-
-                if (_AggressiveFaceMerging)
-                {
-                    traversals = GetTraversals(index, globalPosition, localPosition.z, Direction.Down, Direction.North,
-                        _Size.x, _Size.z, _Blocks[index].Id);
-
-                    if (traversals > 1)
-                    {
-                        _Vertices.Add(localPosition + new Vector3(0f, 0f, 0f));
-                        _Vertices.Add(localPosition + new Vector3(0f, 0f, traversals));
-                        _Vertices.Add(localPosition + new Vector3(1f, 0f, 0f));
-                        _Vertices.Add(localPosition + new Vector3(1f, 0f, traversals));
-                        uvSize.x = traversals;
-                    }
-                    else
-                    {
-                        traversals = GetTraversals(index, globalPosition, localPosition.x, Direction.Down,
-                            Direction.East, 1, _Size.x, _Blocks[index].Id);
-
-                        _Vertices.Add(localPosition + new Vector3(0f, 0f, 0f));
-                        _Vertices.Add(localPosition + new Vector3(0f, 0f, 1f));
-                        _Vertices.Add(localPosition + new Vector3(traversals, 0f, 0f));
-                        _Vertices.Add(localPosition + new Vector3(traversals, 0f, 1f));
-                        uvSize.z = traversals;
-                    }
-                }
-                else
-                {
-                    AddVertices(Direction.Down, localPosition);
-                }
-
-                if (BlockController.Current.GetBlockSpriteUVs(_Blocks[index].Id, globalPosition,
-                    Direction.Down, uvSize, out BlockUVs blockUVs))
-                {
-                    _UVs.Add(blockUVs.BottomLeft);
-                    _UVs.Add(blockUVs.TopLeft);
-                    _UVs.Add(blockUVs.BottomRight);
-                    _UVs.Add(blockUVs.TopRight);
-                }
-            }
-        }
-
-        private void TraverseIndex(Vector3 position, int index, Vector3Int localPosition)
-        {
-            Vector3 globalPosition = position + localPosition;
+            int3 globalPosition = position + localPosition;
 
             // ensure this block face hasn't already been traversed
             if (!_Blocks[index].Faces.HasFace(Direction.North)
                 // check if we're on the far edge of the chunk, and if so, query WorldController for blocks in adjacent chunk
                 && (((localPosition.z == (_Size.z - 1))
-                     && WorldController.Current.TryGetBlockAt(globalPosition + Vector3.forward, out ushort blockId)
+                     && WorldController.Current.TryGetBlockAt(globalPosition + Directions.North, out ushort blockId)
                      && BlockController.Current.CheckBlockHasProperties(blockId, BlockDefinition.Property.Transparent))
                     // however if we're inside the chunk, use the proper Blocks[] array index for check
                     || ((localPosition.z < (_Size.z - 1))
@@ -521,7 +521,7 @@ namespace Wyd.Game.World.Chunks
                 AddTriangles(Direction.North);
 
                 int traversals;
-                Vector3 uvSize = Vector3.one;
+                float3 uvSize = new float3(1f);
 
                 if (_AggressiveFaceMerging)
                 {
@@ -534,10 +534,10 @@ namespace Wyd.Game.World.Chunks
                         // on the same axis as your slice value.
                         // So for instance, we were traversing on the x, so we'll be extending the x point of our
                         // vertices by the number of successful traversals.
-                        _Vertices.Add(localPosition + new Vector3(0f, 0f, 1f));
-                        _Vertices.Add(localPosition + new Vector3(0f, 1f, 1f));
-                        _Vertices.Add(localPosition + new Vector3(traversals, 0f, 1f));
-                        _Vertices.Add(localPosition + new Vector3(traversals, 1f, 1f));
+                        _Vertices.Add(localPosition + new float3(0f, 0f, 1f));
+                        _Vertices.Add(localPosition + new float3(0f, 1f, 1f));
+                        _Vertices.Add(localPosition + new float3(traversals, 0f, 1f));
+                        _Vertices.Add(localPosition + new float3(traversals, 1f, 1f));
                         uvSize.x = traversals;
                     }
                     else
@@ -546,10 +546,10 @@ namespace Wyd.Game.World.Chunks
                         traversals = GetTraversals(index, globalPosition, localPosition.y, Direction.North,
                             Direction.Up, _VerticalIndexStep, _Size.y);
 
-                        _Vertices.Add(localPosition + new Vector3(0f, 0f, 1f));
-                        _Vertices.Add(localPosition + new Vector3(0f, traversals, 1f));
-                        _Vertices.Add(localPosition + new Vector3(1f, 0f, 1f));
-                        _Vertices.Add(localPosition + new Vector3(1f, traversals, 1f));
+                        _Vertices.Add(localPosition + new float3(0f, 0f, 1f));
+                        _Vertices.Add(localPosition + new float3(0f, traversals, 1f));
+                        _Vertices.Add(localPosition + new float3(1f, 0f, 1f));
+                        _Vertices.Add(localPosition + new float3(1f, traversals, 1f));
                         uvSize.z = traversals;
                     }
                 }
@@ -572,7 +572,7 @@ namespace Wyd.Game.World.Chunks
 
             if (!_Blocks[index].Faces.HasFace(Direction.East)
                 && (((localPosition.x == (_Size.x - 1))
-                     && WorldController.Current.TryGetBlockAt(globalPosition + Vector3.right, out blockId)
+                     && WorldController.Current.TryGetBlockAt(globalPosition + Directions.East, out blockId)
                      && BlockController.Current.CheckBlockHasProperties(blockId, BlockDefinition.Property.Transparent))
                     || ((localPosition.x < (_Size.x - 1))
                         && BlockController.Current.CheckBlockHasProperties(_Blocks[index + 1].Id,
@@ -582,7 +582,7 @@ namespace Wyd.Game.World.Chunks
                 AddTriangles(Direction.East);
 
                 int traversals;
-                Vector3 uvSize = Vector3.one;
+                float3 uvSize = new float3(1f);
 
                 if (_AggressiveFaceMerging)
                 {
@@ -591,10 +591,10 @@ namespace Wyd.Game.World.Chunks
 
                     if (traversals > 1)
                     {
-                        _Vertices.Add(localPosition + new Vector3(1f, 0f, 0f));
-                        _Vertices.Add(localPosition + new Vector3(1f, 0f, traversals));
-                        _Vertices.Add(localPosition + new Vector3(1f, 1f, 0f));
-                        _Vertices.Add(localPosition + new Vector3(1f, 1f, traversals));
+                        _Vertices.Add(localPosition + new float3(1f, 0f, 0f));
+                        _Vertices.Add(localPosition + new float3(1f, 0f, traversals));
+                        _Vertices.Add(localPosition + new float3(1f, 1f, 0f));
+                        _Vertices.Add(localPosition + new float3(1f, 1f, traversals));
                         uvSize.x = traversals;
                     }
                     else
@@ -602,10 +602,10 @@ namespace Wyd.Game.World.Chunks
                         traversals = GetTraversals(index, globalPosition, localPosition.y, Direction.East, Direction.Up,
                             _VerticalIndexStep, _Size.y);
 
-                        _Vertices.Add(localPosition + new Vector3(1f, 0f, 0f));
-                        _Vertices.Add(localPosition + new Vector3(1f, 0f, 1f));
-                        _Vertices.Add(localPosition + new Vector3(1f, traversals, 0f));
-                        _Vertices.Add(localPosition + new Vector3(1f, traversals, 1f));
+                        _Vertices.Add(localPosition + new float3(1f, 0f, 0f));
+                        _Vertices.Add(localPosition + new float3(1f, 0f, 1f));
+                        _Vertices.Add(localPosition + new float3(1f, traversals, 0f));
+                        _Vertices.Add(localPosition + new float3(1f, traversals, 1f));
                         uvSize.z = traversals;
                     }
                 }
@@ -626,7 +626,7 @@ namespace Wyd.Game.World.Chunks
 
             if (!_Blocks[index].Faces.HasFace(Direction.South)
                 && (((localPosition.z == 0)
-                     && WorldController.Current.TryGetBlockAt(globalPosition + Vector3.back, out blockId)
+                     && WorldController.Current.TryGetBlockAt(globalPosition + Directions.South, out blockId)
                      && BlockController.Current.CheckBlockHasProperties(blockId, BlockDefinition.Property.Transparent))
                     || ((localPosition.z > 0)
                         && BlockController.Current.CheckBlockHasProperties(_Blocks[index - _Size.x].Id,
@@ -636,7 +636,7 @@ namespace Wyd.Game.World.Chunks
                 AddTriangles(Direction.South);
 
                 int traversals;
-                Vector3 uvSize = Vector3.one;
+                float3 uvSize = new float3(1f);
 
                 if (_AggressiveFaceMerging)
                 {
@@ -645,10 +645,10 @@ namespace Wyd.Game.World.Chunks
 
                     if (traversals > 1)
                     {
-                        _Vertices.Add(localPosition + new Vector3(0f, 0f, 0f));
-                        _Vertices.Add(localPosition + new Vector3(traversals, 0f, 0f));
-                        _Vertices.Add(localPosition + new Vector3(0f, 1f, 0f));
-                        _Vertices.Add(localPosition + new Vector3(traversals, 1f, 0f));
+                        _Vertices.Add(localPosition + new float3(0f, 0f, 0f));
+                        _Vertices.Add(localPosition + new float3(traversals, 0f, 0f));
+                        _Vertices.Add(localPosition + new float3(0f, 1f, 0f));
+                        _Vertices.Add(localPosition + new float3(traversals, 1f, 0f));
                         uvSize.x = traversals;
                     }
                     else
@@ -656,10 +656,10 @@ namespace Wyd.Game.World.Chunks
                         traversals = GetTraversals(index, globalPosition, localPosition.y, Direction.South,
                             Direction.Up, _VerticalIndexStep, _Size.y);
 
-                        _Vertices.Add(localPosition + new Vector3(0f, 0f, 0f));
-                        _Vertices.Add(localPosition + new Vector3(1f, 0f, 0f));
-                        _Vertices.Add(localPosition + new Vector3(0f, traversals, 0f));
-                        _Vertices.Add(localPosition + new Vector3(1f, traversals, 0f));
+                        _Vertices.Add(localPosition + new float3(0f, 0f, 0f));
+                        _Vertices.Add(localPosition + new float3(1f, 0f, 0f));
+                        _Vertices.Add(localPosition + new float3(0f, traversals, 0f));
+                        _Vertices.Add(localPosition + new float3(1f, traversals, 0f));
                         uvSize.z = traversals;
                     }
                 }
@@ -680,7 +680,7 @@ namespace Wyd.Game.World.Chunks
 
             if (!_Blocks[index].Faces.HasFace(Direction.West)
                 && (((localPosition.x == 0)
-                     && WorldController.Current.TryGetBlockAt(globalPosition + Vector3.left, out blockId)
+                     && WorldController.Current.TryGetBlockAt(globalPosition + Directions.West, out blockId)
                      && BlockController.Current.CheckBlockHasProperties(blockId, BlockDefinition.Property.Transparent))
                     || ((localPosition.x > 0)
                         && BlockController.Current.CheckBlockHasProperties(_Blocks[index - 1].Id,
@@ -690,7 +690,7 @@ namespace Wyd.Game.World.Chunks
                 AddTriangles(Direction.West);
 
                 int traversals;
-                Vector3 uvSize = Vector3.one;
+                float3 uvSize = new float3(1f);
 
                 if (_AggressiveFaceMerging)
                 {
@@ -699,10 +699,10 @@ namespace Wyd.Game.World.Chunks
 
                     if (traversals > 1)
                     {
-                        _Vertices.Add(localPosition + new Vector3(0f, 0f, 0f));
-                        _Vertices.Add(localPosition + new Vector3(0f, 1f, 0f));
-                        _Vertices.Add(localPosition + new Vector3(0f, 0f, traversals));
-                        _Vertices.Add(localPosition + new Vector3(0f, 1f, traversals));
+                        _Vertices.Add(localPosition + new float3(0f, 0f, 0f));
+                        _Vertices.Add(localPosition + new float3(0f, 1f, 0f));
+                        _Vertices.Add(localPosition + new float3(0f, 0f, traversals));
+                        _Vertices.Add(localPosition + new float3(0f, 1f, traversals));
                         uvSize.x = traversals;
                     }
                     else
@@ -710,10 +710,10 @@ namespace Wyd.Game.World.Chunks
                         traversals = GetTraversals(index, globalPosition, localPosition.y, Direction.West, Direction.Up,
                             _VerticalIndexStep, _Size.y);
 
-                        _Vertices.Add(localPosition + new Vector3(0f, 0f, 0f));
-                        _Vertices.Add(localPosition + new Vector3(0f, traversals, 0f));
-                        _Vertices.Add(localPosition + new Vector3(0f, 0f, 1f));
-                        _Vertices.Add(localPosition + new Vector3(0f, traversals, 1f));
+                        _Vertices.Add(localPosition + new float3(0f, 0f, 0f));
+                        _Vertices.Add(localPosition + new float3(0f, traversals, 0f));
+                        _Vertices.Add(localPosition + new float3(0f, 0f, 1f));
+                        _Vertices.Add(localPosition + new float3(0f, traversals, 1f));
                         uvSize.z = traversals;
                     }
                 }
@@ -734,7 +734,7 @@ namespace Wyd.Game.World.Chunks
 
             if (!_Blocks[index].Faces.HasFace(Direction.Up)
                 && (((localPosition.y == (_Size.y - 1))
-                     && WorldController.Current.TryGetBlockAt(globalPosition + Vector3.up, out blockId)
+                     && WorldController.Current.TryGetBlockAt(globalPosition + Directions.Up, out blockId)
                      && BlockController.Current.CheckBlockHasProperties(blockId, BlockDefinition.Property.Transparent))
                     || ((localPosition.y < (_Size.y - 1))
                         && BlockController.Current.CheckBlockHasProperties(_Blocks[index + _VerticalIndexStep].Id,
@@ -744,7 +744,7 @@ namespace Wyd.Game.World.Chunks
                 AddTriangles(Direction.Up);
 
                 int traversals;
-                Vector3 uvSize = Vector3.one;
+                float3 uvSize = new float3(1f);
 
                 if (_AggressiveFaceMerging)
                 {
@@ -753,10 +753,10 @@ namespace Wyd.Game.World.Chunks
 
                     if (traversals > 1)
                     {
-                        _Vertices.Add(localPosition + new Vector3(0f, 1f, 0f));
-                        _Vertices.Add(localPosition + new Vector3(1f, 1f, 0f));
-                        _Vertices.Add(localPosition + new Vector3(0f, 1f, traversals));
-                        _Vertices.Add(localPosition + new Vector3(1f, 1f, traversals));
+                        _Vertices.Add(localPosition + new float3(0f, 1f, 0f));
+                        _Vertices.Add(localPosition + new float3(1f, 1f, 0f));
+                        _Vertices.Add(localPosition + new float3(0f, 1f, traversals));
+                        _Vertices.Add(localPosition + new float3(1f, 1f, traversals));
                         uvSize.x = traversals;
                     }
                     else
@@ -764,10 +764,10 @@ namespace Wyd.Game.World.Chunks
                         traversals = GetTraversals(index, globalPosition, localPosition.x, Direction.Up, Direction.East,
                             1, _Size.x);
 
-                        _Vertices.Add(localPosition + new Vector3(0f, 1f, 0f));
-                        _Vertices.Add(localPosition + new Vector3(traversals, 1f, 0f));
-                        _Vertices.Add(localPosition + new Vector3(0f, 1f, 1f));
-                        _Vertices.Add(localPosition + new Vector3(traversals, 1f, 1f));
+                        _Vertices.Add(localPosition + new float3(0f, 1f, 0f));
+                        _Vertices.Add(localPosition + new float3(traversals, 1f, 0f));
+                        _Vertices.Add(localPosition + new float3(0f, 1f, 1f));
+                        _Vertices.Add(localPosition + new float3(traversals, 1f, 1f));
                         uvSize.z = traversals;
                     }
                 }
@@ -789,7 +789,7 @@ namespace Wyd.Game.World.Chunks
             // ignore the very bottom face of the world to reduce verts/tris
             if (!_Blocks[index].Faces.HasFace(Direction.Down)
                 && (((localPosition.y == 0)
-                     && WorldController.Current.TryGetBlockAt(globalPosition + Vector3.down, out blockId)
+                     && WorldController.Current.TryGetBlockAt(globalPosition + Directions.Down, out blockId)
                      && BlockController.Current.CheckBlockHasProperties(blockId, BlockDefinition.Property.Transparent))
                     || ((localPosition.y > 0)
                         && BlockController.Current.CheckBlockHasProperties(_Blocks[index - _VerticalIndexStep].Id,
@@ -799,7 +799,7 @@ namespace Wyd.Game.World.Chunks
                 AddTriangles(Direction.Down);
 
                 int traversals;
-                Vector3 uvSize = Vector3.one;
+                float3 uvSize = new float3(1f);
 
                 if (_AggressiveFaceMerging)
                 {
@@ -808,10 +808,10 @@ namespace Wyd.Game.World.Chunks
 
                     if (traversals > 1)
                     {
-                        _Vertices.Add(localPosition + new Vector3(0f, 0f, 0f));
-                        _Vertices.Add(localPosition + new Vector3(0f, 0f, traversals));
-                        _Vertices.Add(localPosition + new Vector3(1f, 0f, 0f));
-                        _Vertices.Add(localPosition + new Vector3(1f, 0f, traversals));
+                        _Vertices.Add(localPosition + new float3(0f, 0f, 0f));
+                        _Vertices.Add(localPosition + new float3(0f, 0f, traversals));
+                        _Vertices.Add(localPosition + new float3(1f, 0f, 0f));
+                        _Vertices.Add(localPosition + new float3(1f, 0f, traversals));
                         uvSize.x = traversals;
                     }
                     else
@@ -819,10 +819,10 @@ namespace Wyd.Game.World.Chunks
                         traversals = GetTraversals(index, globalPosition, localPosition.x, Direction.Down,
                             Direction.East, 1, _Size.x);
 
-                        _Vertices.Add(localPosition + new Vector3(0f, 0f, 0f));
-                        _Vertices.Add(localPosition + new Vector3(0f, 0f, 1f));
-                        _Vertices.Add(localPosition + new Vector3(traversals, 0f, 0f));
-                        _Vertices.Add(localPosition + new Vector3(traversals, 0f, 1f));
+                        _Vertices.Add(localPosition + new float3(0f, 0f, 0f));
+                        _Vertices.Add(localPosition + new float3(0f, 0f, 1f));
+                        _Vertices.Add(localPosition + new float3(traversals, 0f, 0f));
+                        _Vertices.Add(localPosition + new float3(traversals, 0f, 1f));
                         uvSize.z = traversals;
                     }
                 }
@@ -857,11 +857,11 @@ namespace Wyd.Game.World.Chunks
             }
         }
 
-        private void AddVertices(Direction direction, Vector3 localPosition)
+        private void AddVertices(Direction direction, int3 localPosition)
         {
-            Vector3[] vertices = BlockFaces.Vertices.FaceVertices[direction];
+            float3[] vertices = BlockFaces.Vertices.FaceVertices[direction];
 
-            foreach (Vector3 vertex in vertices)
+            foreach (float3 vertex in vertices)
             {
                 _Vertices.Add(vertex + localPosition);
             }
@@ -879,8 +879,7 @@ namespace Wyd.Game.World.Chunks
         /// <param name="limitingSliceValue">Maximum amount of traversals in given traversal direction.</param>
         /// <param name="id">Block ID of current block.</param>
         /// <returns><see cref="int" /> representing how many successful traversals were made in the given direction.</returns>
-        private int GetTraversals(
-            int index, Vector3 globalPosition, int slice, Direction faceDirection,
+        private int GetTraversals(int index, int3 globalPosition, int slice, Direction faceDirection,
             Direction traversalDirection, int traversalFactor, int limitingSliceValue, int id = -1)
         {
             // 1 being the current block at `index`
@@ -897,8 +896,6 @@ namespace Wyd.Game.World.Chunks
             // and on y it would be (_Size.x * _Size.z)
             int traversalIndex = index + (traversals * traversalFactor);
 
-            try
-            {
                 while ( // Set traversalIndex and ensure it is within the chunk's bounds
                     ((slice + traversals) < limitingSliceValue)
                     // This check removes the need to check if the adjacent block is transparent,
@@ -907,7 +904,7 @@ namespace Wyd.Game.World.Chunks
                     && !_Blocks[traversalIndex].Faces.HasFace(faceDirection)
                     // ensure the block to the north of our current block is transparent
                     && WorldController.Current.TryGetBlockAt(
-                        globalPosition + (traversals * traversalDirection.AsVector3()) + faceDirection.AsVector3(),
+                        globalPosition + (traversals * traversalDirection.AsInt3()) + faceDirection.AsInt3(),
                         out ushort blockId)
                     && (((id == -1)
                          && BlockController.Current.CheckBlockHasProperties(blockId,
@@ -920,8 +917,6 @@ namespace Wyd.Game.World.Chunks
                     traversals++;
                     traversalIndex = index + (traversals * traversalFactor);
                 }
-            }
-            catch (Exception ex) { }
 
             return traversals;
         }

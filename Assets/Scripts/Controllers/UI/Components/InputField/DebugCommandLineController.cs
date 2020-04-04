@@ -3,6 +3,7 @@
 using System;
 using Serilog;
 using TMPro;
+using Unity.Mathematics;
 using UnityEngine;
 using Wyd.Controllers.State;
 using Wyd.Controllers.World;
@@ -127,7 +128,7 @@ namespace Wyd.Controllers.UI.Components.InputField
                                 return;
                             }
 
-                            Vector3 position = new Vector3(x, y, z);
+                            int3 position = new int3(x, y, z);
 
                             if (!WorldController.Current.TryGetBlockAt(position, out ushort blockId))
                             {
@@ -156,10 +157,9 @@ namespace Wyd.Controllers.UI.Components.InputField
                         break;
                     }
 
-                    Vector3 chunkPosition = new Vector3(x1, y1, z1);
+                    int3 chunkPosition = new int3(x1, y1, z1);
 
-                    if (!WorldController.Current.TryGetChunkAt(chunkPosition,
-                        out ChunkController chunkController))
+                    if (!WorldController.Current.TryGetChunkAt(chunkPosition, out ChunkController chunkController))
                     {
                         Log.Warning($"No chunk at coordinates {chunkPosition}.");
                     }
@@ -181,7 +181,7 @@ namespace Wyd.Controllers.UI.Components.InputField
                         break;
                     }
 
-                    Vector3 chunkPosition2 = new Vector3(x2, y2, z2);
+                    int3 chunkPosition2 = new int3(x2, y2, z2);
 
                     if (!WorldController.Current.TryGetChunkAt(chunkPosition2, out ChunkController _))
                     {

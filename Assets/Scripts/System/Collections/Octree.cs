@@ -2,6 +2,7 @@
 
 using System;
 using System.Collections.Generic;
+using Unity.Mathematics;
 using UnityEngine;
 
 #endregion
@@ -12,14 +13,14 @@ namespace Wyd.System.Collections
     {
         private readonly OctreeNode<T> _Origin;
 
-        public Octree(Vector3 centerPoint, float extent, T value) =>
+        public Octree(float3 centerPoint, float extent, T value) =>
             _Origin = new OctreeNode<T>(centerPoint, extent, value);
 
-        public bool ContainsPoint(Vector3 point) => _Origin.ContainsMinBiased(point);
+        public bool ContainsPoint(float3 point) => _Origin.ContainsMinBiased(point);
 
-        public T GetPoint(Vector3 point) => _Origin.GetPoint(point);
+        public T GetPoint(float3 point) => _Origin.GetPoint(point);
 
-        public void SetPoint(Vector3 point, T newValue)
+        public void SetPoint(float3 point, T newValue)
         {
             _Origin.SetPoint(point, newValue);
         }
@@ -40,13 +41,10 @@ namespace Wyd.System.Collections
 
         public IEnumerable<T> GetAllData()
         {
-            Vector3 size = new Vector3(_Origin.Extent, _Origin.Extent, _Origin.Extent);
-            for (int index = 0; index < size.Product(); index++)
+            int3 size = WydMath.ToInt(_Origin.Bounds.Extents);
+            for (int index = 0; index < WydMath.Product(size); index++)
             {
-                Vector3Int localPosition = WydMath.GetIndexAsVector3Int(index, size.AsVector3Int());
-                Vector3 globalPosition = _Origin.MinPoint + localPosition;
-
-                yield return GetPoint(globalPosition);
+                yield return GetPoint(_Origin.Bounds.MinPoint + WydMath.IndexTo3D(index, size));
             }
         }
     }

@@ -4,6 +4,7 @@ using System;
 using System.Diagnostics;
 using System.Threading;
 using Serilog;
+using Unity.Mathematics;
 using UnityEngine;
 using Wyd.Controllers.State;
 using Wyd.Controllers.System;
@@ -75,28 +76,35 @@ namespace Wyd.Game.World.Chunks
 
         public void Generate()
         {
-            if (_GenerationData.Blocks == default)
+            try
             {
-                Log.Error($"`{nameof(_GenerationData.Blocks)}` has not been set. Aborting generation.");
-                return;
+                if (_GenerationData.Blocks == default)
+                {
+                    Log.Error($"`{nameof(_GenerationData.Blocks)}` has not been set. Aborting generation.");
+                    return;
+                }
+
+                GenerateNoise();
+
+                _Stopwatch.Restart();
+                _GenerationData.Blocks.Collapse(true);
+
+                for (int index = WydMath.Product(ChunkController.Size) - 1; index >= 0; index--)
+                {
+                    float3 globalPosition =
+                        _GenerationData.Bounds.MinPoint + WydMath.IndexTo3D(index, ChunkController.Size);
+                    _GenerationData.Blocks.SetPoint(globalPosition, GetBlockIDAtPosition(globalPosition, index));
+                }
+
+                NoiseValuesCache.CacheItem(ref _NoiseValues);
+
+                _Stopwatch.Stop();
+                TerrainGenerationTimeSpan = _Stopwatch.Elapsed;
             }
-
-            GenerateNoise();
-
-            _Stopwatch.Restart();
-            _GenerationData.Blocks.Collapse(true);
-            Vector3 position = _GenerationData.Bounds.min;
-
-            for (int index = ChunkController.SizeProduct - 1; index >= 0; index--)
+            catch (Exception)
             {
-                Vector3 globalPosition = position + WydMath.GetIndexAsVector3Int(index, ChunkController.Size);
-                _GenerationData.Blocks.SetPoint(globalPosition, GetBlockIDAtPosition(globalPosition, index));
+                throw;
             }
-
-            NoiseValuesCache.CacheItem(ref _NoiseValues);
-
-            _Stopwatch.Stop();
-            TerrainGenerationTimeSpan = _Stopwatch.Elapsed;
         }
 
         private void GenerateNoise()
@@ -120,11 +128,11 @@ namespace Wyd.Game.World.Chunks
             }
             else
             {
-                Vector3 position = _GenerationData.Bounds.min;
-                for (int index = 0; index < _GenerationData.Bounds.size.Product(); index++)
+                for (int index = 0; index < WydMath.Product(_GenerationData.Bounds.Size); index++)
                 {
                     _NoiseValues[index] =
-                        GetNoiseValueByVector3(position + WydMath.GetIndexAsVector3Int(index, ChunkController.Size));
+                        GetNoiseValueByGlobalPosition(_GenerationData.Bounds.MinPoint
+                                                      + WydMath.IndexTo3D(index, ChunkController.Size));
                 }
             }
 
@@ -132,7 +140,7 @@ namespace Wyd.Game.World.Chunks
             NoiseRetrievalTimeSpan = _Stopwatch.Elapsed;
         }
 
-        private ushort GetBlockIDAtPosition(Vector3 globalPosition, int index)
+        private ushort GetBlockIDAtPosition(float3 globalPosition, int index)
         {
             if ((globalPosition.y < 4) && (globalPosition.y <= _Rand.Next(0, 4)))
             {
@@ -154,7 +162,7 @@ namespace Wyd.Game.World.Chunks
             }
         }
 
-        protected float GetNoiseValueByVector3(Vector3 globalPosition)
+        protected float GetNoiseValueByGlobalPosition(float3 globalPosition)
         {
             float noiseValue = OpenSimplex_FastNoise.GetSimplex(WorldController.Current.Seed, _Frequency,
                 globalPosition.x, globalPosition.y, globalPosition.z);

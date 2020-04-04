@@ -1,8 +1,10 @@
 #region
 
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
+using Unity.Mathematics;
 using UnityEngine;
 using Wyd.Controllers.State;
 using Wyd.Controllers.System;
@@ -16,7 +18,7 @@ using Wyd.System.Collections;
 
 namespace Wyd.Controllers.World.Chunk
 {
-    public class ChunkBlocksController : ActivationStateChunkController, IPerFrameUpdate
+    public class ChunkBlocksController : ActivationStateChunkController, IPerFrameIncrementalUpdate
     {
         private static readonly ObjectCache<BlockAction> _BlockActionsCache =
             new ObjectCache<BlockAction>(true, 1024);
@@ -53,31 +55,35 @@ namespace Wyd.Controllers.World.Chunk
         {
             base.Awake();
 
-            Blocks = new Octree<ushort>(_Position + (ChunkController.Size.AsVector3() / 2f), ChunkController.Size.x, 0);
+            Blocks = new Octree<ushort>(_Bounds.MinPoint + (ChunkController.Size / new int3(2)), ChunkController.Size.x,
+                0);
             _BlockActions = new Queue<BlockAction>();
         }
 
-        private void OnEnable()
+        protected override void OnEnable()
         {
+            base.OnEnable();
+
             PerFrameUpdateController.Current.RegisterPerFrameUpdater(30, this);
+            ClearInternalData();
         }
 
-        private void OnDisable()
+        protected override void OnDisable()
         {
+            base.OnDisable();
+
             PerFrameUpdateController.Current.DeregisterPerFrameUpdater(30, this);
+            ClearInternalData();
         }
 
-        public void FrameUpdate()
+        public void FrameUpdate() { }
+
+        public IEnumerable IncrementalFrameUpdate()
         {
-            // if (_BlockActions.Count > 0)
-            // {
-            //     ProcessBlockActions();
-            // }
-            //
-            // if (Blocks.Count != TotalNodes)
-            // {
-            //     UpdateInternalStateInfo();
-            // }
+            if (_BlockActions.Count > 0)
+            {
+                yield return ProcessBlockActions();
+            }
         }
 
         // private void UpdateInternalStateInfo()
@@ -171,18 +177,6 @@ namespace Wyd.Controllers.World.Chunk
 
         #region DE/ACTIVATION
 
-        public override void Activate(Vector3 position, bool setPosition)
-        {
-            base.Activate(position, setPosition);
-            ClearInternalData();
-        }
-
-        public override void Deactivate()
-        {
-            base.Deactivate();
-            ClearInternalData();
-        }
-
         private void ClearInternalData()
         {
             _BlockActions.Clear();
@@ -194,20 +188,22 @@ namespace Wyd.Controllers.World.Chunk
 
         #region TRY GET / PLACE / REMOVE BLOCKS
 
-        private void ProcessBlockActions()
+        private IEnumerable ProcessBlockActions()
         {
             while (_BlockActions.Count > 0)
             {
                 BlockAction blockAction = _BlockActions.Dequeue();
 
                 ModifyBlockPosition(blockAction.GlobalPosition, blockAction.Id);
-                OnBlocksChanged(this, new ChunkChangedEventArgs(_Bounds, Directions.AllDirectionsVector3));
+                OnBlocksChanged(this, new ChunkChangedEventArgs(_Bounds, Directions.AllDirectionAxes));
 
                 _BlockActionsCache.CacheItem(ref blockAction);
+
+                yield return null;
             }
         }
 
-        private void ModifyBlockPosition(Vector3 globalPosition, ushort newId)
+        private void ModifyBlockPosition(int3 globalPosition, ushort newId)
         {
             if (!Blocks.ContainsPoint(globalPosition))
             {
@@ -215,77 +211,9 @@ namespace Wyd.Controllers.World.Chunk
             }
 
             Blocks.SetPoint(globalPosition, newId);
-
-            // uint steppedLength = 0;
-            //
-            // LinkedListNode<RLENode<ushort>> currentNode = Blocks.First;
-            //
-            // while ((steppedLength <= localPosition1d) && (currentNode != null))
-            // {
-            //     if (currentNode.Value.RunLength == 0)
-            //     {
-            //         Blocks.Remove(currentNode);
-            //     }
-            //     else
-            //     {
-            //         uint newSteppedLength = currentNode.Value.RunLength + steppedLength;
-            //
-            //         // in this case, the position exists at the beginning of a node
-            //         if (localPosition1d == (steppedLength + 1))
-            //         {
-            //             // insert node before current node
-            //             Blocks.AddBefore(currentNode, new RLENode<ushort>(1, newId));
-            //             // decrement current node to make room for new node
-            //             currentNode.Value.RunLength -= 1;
-            //         }
-            //         // position exists after end of node
-            //         else if ((localPosition1d == (newSteppedLength + 1))
-            //                  // and ids match so just increment RunLength without any insertions
-            //                  && (newId == currentNode.Value.Value))
-            //         {
-            //             currentNode.Value.RunLength += 1;
-            //
-            //             // make sure next node is not null
-            //             if (currentNode.Next != null)
-            //             {
-            //                 // decrement from the next node so that there's space for the new placement
-            //                 // in currentNode's RunLength
-            //                 currentNode.Next.Value.RunLength -= 1;
-            //             }
-            //         }
-            //         // we've found the node that overlaps the queried position
-            //         else if (newSteppedLength > localPosition1d)
-            //         {
-            //             if (currentNode.Value.Value == newId)
-            //             {
-            //                 // position resulted in already exists block id
-            //                 break;
-            //             }
-            //
-            //             // inserted node will take up 1 position / run length
-            //             LinkedListNode<RLENode<ushort>> insertedNode =
-            //                 Blocks.AddAfter(currentNode, new RLENode<ushort>(1, newId));
-            //             // split CurrentNode's RunLength and -1 to make space for the inserted node
-            //             currentNode.Value.RunLength = localPosition1d - steppedLength - 1;
-            //
-            //             if (localPosition1d != newSteppedLength)
-            //             {
-            //                 // hit is not at end of rle node, so we must add a remainder node
-            //                 Blocks.AddAfter(insertedNode,
-            //                     new RLENode<ushort>(newSteppedLength - localPosition1d, currentNode.Value.Value));
-            //             }
-            //
-            //             break;
-            //         }
-            //
-            //         steppedLength = newSteppedLength;
-            //     }
-            //
-            //     currentNode = currentNode.Next;
-            // }
         }
 
-        public ushort GetBlockAt(Vector3 globalPosition)
+        public ushort GetBlockAt(int3 globalPosition)
         {
             if (!Blocks.ContainsPoint(globalPosition))
             {
@@ -294,29 +222,9 @@ namespace Wyd.Controllers.World.Chunk
             }
 
             return Blocks.GetPoint(globalPosition);
-
-            // int localPosition1d = (globalPosition - _Position).To1D(ChunkController.Size, true);
-            //
-            // uint totalPositions = 0;
-            // LinkedListNode<RLENode<ushort>> currentNode = Blocks.First;
-            //
-            // while ((totalPositions <= localPosition1d) && (currentNode != null))
-            // {
-            //     uint newTotal = currentNode.Value.RunLength + totalPositions;
-            //
-            //     if (newTotal >= localPosition1d)
-            //     {
-            //         return currentNode.Value.Value;
-            //     }
-            //
-            //     totalPositions = newTotal;
-            //     currentNode = currentNode.Next;
-            // }
-            //
-            // return 0;
         }
 
-        public bool TryGetBlockAt(Vector3 globalPosition, out ushort blockId)
+        public bool TryGetBlockAt(int3 globalPosition, out ushort blockId)
         {
             blockId = 0;
 
@@ -330,20 +238,20 @@ namespace Wyd.Controllers.World.Chunk
             return true;
         }
 
-        public bool BlockExistsAt(Vector3 globalPosition) => GetBlockAt(globalPosition) != BlockController.AIR_ID;
+        public bool BlockExistsAt(int3 globalPosition) => GetBlockAt(globalPosition) != BlockController.AIR_ID;
 
-        public bool TryPlaceBlockAt(Vector3 globalPosition, ushort id) =>
+        public bool TryPlaceBlockAt(int3 globalPosition, ushort id) =>
             _Bounds.Contains(globalPosition)
-            && TryAllocateBlockAction(globalPosition - _Position, id);
+            && TryAllocateBlockAction(globalPosition - WydMath.ToInt(_Bounds.MinPoint), id);
 
-        public bool TryRemoveBlockAt(Vector3 globalPosition) =>
+        public bool TryRemoveBlockAt(int3 globalPosition) =>
             _Bounds.Contains(globalPosition)
-            && TryAllocateBlockAction(globalPosition - _Position, BlockController.AIR_ID);
+            && TryAllocateBlockAction(globalPosition - WydMath.ToInt(_Bounds.MinPoint), BlockController.AIR_ID);
 
-        private bool TryAllocateBlockAction(Vector3 localPosition, ushort id)
+        private bool TryAllocateBlockAction(int3 localPosition, ushort id)
         {
             BlockAction blockAction = _BlockActionsCache.Retrieve();
-            blockAction.Initialise(localPosition, id);
+            blockAction.SetData(localPosition, id);
             _BlockActions.Enqueue(blockAction);
             return true;
         }

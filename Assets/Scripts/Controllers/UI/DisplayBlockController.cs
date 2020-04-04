@@ -2,6 +2,7 @@
 
 using System.Collections.Generic;
 using TMPro;
+using Unity.Mathematics;
 using UnityEngine;
 using Wyd.Controllers.State;
 using Wyd.Controllers.World;
@@ -57,7 +58,7 @@ namespace Wyd.Controllers.UI
 
             AddTriangles(Direction.Up);
             AddVertices(Direction.Up, Vector3.zero);
-            if (BlockController.Current.GetBlockSpriteUVs(BlockId, Vector3.positiveInfinity, Direction.Up, Vector3.one,
+            if (BlockController.Current.GetBlockSpriteUVs(BlockId, int3.zero, Direction.Up, new float3(1f),
                 out BlockUVs blockUVs))
             {
                 _UVs.Add(blockUVs[0]);
@@ -68,8 +69,8 @@ namespace Wyd.Controllers.UI
 
             AddTriangles(Direction.North);
             AddVertices(Direction.North, Vector3.zero);
-            if (BlockController.Current.GetBlockSpriteUVs(BlockId, Vector3.positiveInfinity, Direction.North,
-                Vector3.one, out blockUVs))
+            if (BlockController.Current.GetBlockSpriteUVs(BlockId, int3.zero, Direction.North, new float3(1f),
+                out blockUVs))
             {
                 _UVs.Add(blockUVs[1]);
                 _UVs.Add(blockUVs[3]);
@@ -79,8 +80,8 @@ namespace Wyd.Controllers.UI
 
             AddTriangles(Direction.East);
             AddVertices(Direction.East, Vector3.zero);
-            if (BlockController.Current.GetBlockSpriteUVs(BlockId, Vector3.positiveInfinity, Direction.East,
-                Vector3.one, out blockUVs))
+            if (BlockController.Current.GetBlockSpriteUVs(BlockId, int3.zero, Direction.East, new float3(1f),
+                out blockUVs))
             {
                 _UVs.Add(blockUVs[0]);
                 _UVs.Add(blockUVs[1]);
@@ -105,11 +106,11 @@ namespace Wyd.Controllers.UI
             }
         }
 
-        private void AddVertices(Direction direction, Vector3 localPosition)
+        private void AddVertices(Direction direction, float3 localPosition)
         {
-            Vector3[] vertices = BlockFaces.Vertices.FaceVertices[direction];
+            float3[] vertices = BlockFaces.Vertices.FaceVertices[direction];
 
-            foreach (Vector3 vertex in vertices)
+            foreach (float3 vertex in vertices)
             {
                 _Vertices.Add(vertex + localPosition);
             }

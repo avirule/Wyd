@@ -4,6 +4,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using Serilog;
+using Unity.Mathematics;
 using UnityEngine;
 using Wyd.Game;
 using Wyd.Game.World.Blocks;
@@ -30,7 +31,7 @@ namespace Wyd.Controllers.State
         }
 
         public ushort RegisterBlockDefinition(string blockName, Block.Types type,
-            Func<Vector3, Direction, string> uvsRule, params BlockDefinition.Property[] properties)
+            Func<int3, Direction, string> uvsRule, params BlockDefinition.Property[] properties)
         {
             ushort assignedBlockId;
 
@@ -57,7 +58,7 @@ namespace Wyd.Controllers.State
             return assignedBlockId;
         }
 
-        public bool GetBlockSpriteUVs(ushort blockId, Vector3 position, Direction direction, Vector3 size2d,
+        public bool GetBlockSpriteUVs(ushort blockId, int3 position, Direction direction, float3 size2d,
             out BlockUVs blockUVs)
         {
             if (!BlockIdExists(blockId))
@@ -68,7 +69,7 @@ namespace Wyd.Controllers.State
                 return false;
             }
 
-            BlockDefinitions[blockId].ReadUVsRule(blockId, position, direction, out string textureName);
+            BlockDefinitions[blockId].EvaluateUVsRule(blockId, position, direction, out string textureName);
             if (!TextureController.Current.TryGetTextureId(textureName, out int textureId))
             {
                 Log.Warning(
@@ -77,8 +78,8 @@ namespace Wyd.Controllers.State
                 return false;
             }
 
-            blockUVs = new BlockUVs(new Vector3(0, 0, textureId), new Vector3(size2d.x, 0, textureId),
-                new Vector3(0, size2d.z, textureId), new Vector3(size2d.x, size2d.z, textureId));
+            blockUVs = new BlockUVs(new float3(0, 0, textureId), new float3(size2d.x, 0, textureId),
+                new float3(0, size2d.z, textureId), new float3(size2d.x, size2d.z, textureId));
 
             Log.Verbose($"Block `{textureName}:{blockId}` returned block UVs `{blockUVs}`.");
 

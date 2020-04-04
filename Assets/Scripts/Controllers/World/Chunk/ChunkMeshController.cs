@@ -1,5 +1,6 @@
 #region
 
+using Unity.Mathematics;
 using UnityEngine;
 using Wyd.Controllers.System;
 using Wyd.Game;
@@ -84,14 +85,20 @@ namespace Wyd.Controllers.World.Chunk
             };
         }
 
-        private void OnEnable()
+        protected override void OnEnable()
         {
+            base.OnEnable();
+
             PerFrameUpdateController.Current.RegisterPerFrameUpdater(50, this);
+            ClearInternalData();
         }
 
-        private void OnDisable()
+        protected override void OnDisable()
         {
+            base.OnDisable();
+
             PerFrameUpdateController.Current.DeregisterPerFrameUpdater(50, this);
+            ClearInternalData();
         }
 
         public void FrameUpdate()
@@ -100,7 +107,7 @@ namespace Wyd.Controllers.World.Chunk
                 || (BlocksController.QueuedBlockActions > 0)
                 || (TerrainController.CurrentStep != GenerationData.GenerationStep.Complete)
                 || !WorldController.Current.ReadyForGeneration
-                || (WorldController.Current.AggregateNeighborsStep(_Position)
+                || (WorldController.Current.AggregateNeighborsStep(WydMath.ToInt(_Bounds.MinPoint))
                     != GenerationData.GenerationStep.Complete))
             {
                 return;
@@ -110,18 +117,6 @@ namespace Wyd.Controllers.World.Chunk
         }
 
         #region DE/ACTIVATION
-
-        public override void Activate(Vector3 position, bool setPosition)
-        {
-            base.Activate(position, setPosition);
-            ClearInternalData();
-        }
-
-        public override void Deactivate()
-        {
-            base.Deactivate();
-            ClearInternalData();
-        }
 
         private void ClearInternalData()
         {
@@ -168,7 +163,7 @@ namespace Wyd.Controllers.World.Chunk
         private void ApplyMesh(ChunkMeshingJob chunkMeshingJob)
         {
             chunkMeshingJob.SetMesh(ref _Mesh);
-            OnMeshChanged(this, new ChunkChangedEventArgs(_Bounds, Directions.CardinalDirectionsVector3));
+            OnMeshChanged(this, new ChunkChangedEventArgs(_Bounds, Directions.CardinalDirectionAxes));
         }
 
 

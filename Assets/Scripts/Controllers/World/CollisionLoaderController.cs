@@ -28,10 +28,10 @@ namespace Wyd.Controllers.World
 
         private void Update()
         {
-            if (_UpdateColliderMesh)
-            {
-                GenerateColliderMesh();
-            }
+            // if (_UpdateColliderMesh)
+            // {
+            //     GenerateColliderMesh();
+            // }
         }
 
         private void OnApplicationQuit()
@@ -50,28 +50,28 @@ namespace Wyd.Controllers.World
             _CollisionLoaders.Add(collisionLoader);
         }
 
-        private void GenerateColliderMesh()
-        {
-            List<CombineInstance> combines = new List<CombineInstance>();
-
-            foreach (CollisionLoader collisionToken in _CollisionLoaders.Where(loader =>
-                (loader.Mesh != default) && (loader.Mesh.vertexCount > 0)))
-            {
-                CombineInstance combine = new CombineInstance
-                {
-                    mesh = collisionToken.Mesh,
-                    transform = collisionToken.transform.localToWorldMatrix
-                };
-
-                combines.Add(combine);
-            }
-
-            _CombinedColliderMesh.CombineMeshes(combines.ToArray(), true, true);
-            _CombinedColliderMesh.Optimize();
-
-            _MeshCollider.sharedMesh = _CombinedColliderMesh;
-
-            _UpdateColliderMesh = false;
-        }
+        // private void GenerateColliderMesh()
+        // {
+        //     List<CombineInstance> combines = new List<CombineInstance>();
+        //
+        //     foreach (CollisionLoader collisionToken in _CollisionLoaders.Where(loader =>
+        //         (loader.Mesh != default) && (loader.Mesh.vertexCount > 0)))
+        //     {
+        //         CombineInstance combine = new CombineInstance
+        //         {
+        //             mesh = collisionToken.Mesh,
+        //             transform = collisionToken.transform.localToWorldMatrix
+        //         };
+        //
+        //         combines.Add(combine);
+        //     }
+        //
+        //     _CombinedColliderMesh.CombineMeshes(combines.ToArray(), true, true);
+        //     _CombinedColliderMesh.Optimize();
+        //
+        //     _MeshCollider.sharedMesh = _CombinedColliderMesh;
+        //
+        //     _UpdateColliderMesh = false;
+        // }
     }
 }

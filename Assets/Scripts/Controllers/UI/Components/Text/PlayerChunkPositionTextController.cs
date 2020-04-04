@@ -1,5 +1,6 @@
 #region
 
+using Unity.Mathematics;
 using UnityEngine;
 using Wyd.Controllers.Entity;
 
@@ -13,13 +14,13 @@ namespace Wyd.Controllers.UI.Components.Text
         {
             if (PlayerController.Current != default)
             {
-                UpdateText(PlayerController.Current.Position);
+                UpdateText(PlayerController.Current.ChunkPosition);
 
                 PlayerController.Current.ChunkPositionChanged += (sender, position) => { UpdateText(position); };
             }
         }
 
-        private void UpdateText(Vector3 position)
+        private void UpdateText(int3 position)
         {
             TextObject.text = string.Format(Format, position.x, position.y, position.z);
         }

@@ -3,6 +3,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using Unity.Mathematics;
 using UnityEngine;
 
 #endregion
@@ -11,38 +12,29 @@ namespace Wyd.System.Collections
 {
     public class OctreeNode<T> where T : IEquatable<T>
     {
-        private static readonly Vector3[] _Coordinates =
+        private static readonly float3[] _Coordinates =
         {
-            new Vector3(-1, -1, -1),
-            new Vector3(1, -1, -1),
-            new Vector3(-1, -1, 1),
-            new Vector3(1, -1, 1),
+            new float3(-1, -1, -1),
+            new float3(1, -1, -1),
+            new float3(-1, -1, 1),
+            new float3(1, -1, 1),
 
-            new Vector3(-1, 1, -1),
-            new Vector3(1, 1, -1),
-            new Vector3(-1, 1, 1),
-            new Vector3(1, 1, 1)
+            new float3(-1, 1, -1),
+            new float3(1, 1, -1),
+            new float3(-1, 1, 1),
+            new float3(1, 1, 1)
         };
 
         public List<OctreeNode<T>> Nodes;
 
-        public Vector3 CenterPoint { get; }
-        public Vector3 MaxPoint { get; }
-        public Vector3 MinPoint { get; }
-        public float Extent { get; }
+        public Bounds Bounds { get; }
         public T Value { get; private set; }
         public bool IsUniform => Nodes == null;
 
-        public OctreeNode(Vector3 centerPoint, float extent, T value)
+        public OctreeNode(float3 centerPoint, float extent, T value)
         {
-            CenterPoint = centerPoint;
-            Extent = extent;
+            Bounds = new Bounds(centerPoint, new float3(extent));
             Value = value;
-
-            // set min/max points
-            Vector3 extents = new Vector3(Extent, Extent, Extent) / 2f;
-            MaxPoint = CenterPoint + extents;
-            MinPoint = CenterPoint - extents;
         }
 
         public void Collapse()
@@ -52,26 +44,26 @@ namespace Wyd.System.Collections
 
         public void Populate()
         {
-            float newExtent = Extent / 2f;
+            float newExtent = Bounds.Extents.x / 2f;
             float centerOffsetValue = newExtent / 2f;
             Vector3 centerOffset = new Vector3(centerOffsetValue, centerOffsetValue, centerOffsetValue);
 
             Nodes = new List<OctreeNode<T>>
             {
-                new OctreeNode<T>(CenterPoint + _Coordinates[0].MultiplyBy(centerOffset), newExtent, Value),
-                new OctreeNode<T>(CenterPoint + _Coordinates[1].MultiplyBy(centerOffset), newExtent, Value),
-                new OctreeNode<T>(CenterPoint + _Coordinates[2].MultiplyBy(centerOffset), newExtent, Value),
-                new OctreeNode<T>(CenterPoint + _Coordinates[3].MultiplyBy(centerOffset), newExtent, Value),
-                new OctreeNode<T>(CenterPoint + _Coordinates[4].MultiplyBy(centerOffset), newExtent, Value),
-                new OctreeNode<T>(CenterPoint + _Coordinates[5].MultiplyBy(centerOffset), newExtent, Value),
-                new OctreeNode<T>(CenterPoint + _Coordinates[6].MultiplyBy(centerOffset), newExtent, Value),
-                new OctreeNode<T>(CenterPoint + _Coordinates[7].MultiplyBy(centerOffset), newExtent, Value)
+                new OctreeNode<T>(Bounds.CenterPoint + (_Coordinates[0] * centerOffset), newExtent, Value),
+                new OctreeNode<T>(Bounds.CenterPoint + (_Coordinates[1] * centerOffset), newExtent, Value),
+                new OctreeNode<T>(Bounds.CenterPoint + (_Coordinates[2] * centerOffset), newExtent, Value),
+                new OctreeNode<T>(Bounds.CenterPoint + (_Coordinates[3] * centerOffset), newExtent, Value),
+                new OctreeNode<T>(Bounds.CenterPoint + (_Coordinates[4] * centerOffset), newExtent, Value),
+                new OctreeNode<T>(Bounds.CenterPoint + (_Coordinates[5] * centerOffset), newExtent, Value),
+                new OctreeNode<T>(Bounds.CenterPoint + (_Coordinates[6] * centerOffset), newExtent, Value),
+                new OctreeNode<T>(Bounds.CenterPoint + (_Coordinates[7] * centerOffset), newExtent, Value)
             };
         }
 
-        public T GetPoint(Vector3 point)
+        public T GetPoint(float3 point)
         {
-            point = point.Floor();
+            point = math.floor(point);
 
             if (!ContainsMinBiased(point))
             {
@@ -81,9 +73,9 @@ namespace Wyd.System.Collections
             return IsUniform ? Value : Nodes[DetermineOctant(point)].GetPoint(point);
         }
 
-        public void SetPoint(Vector3 point, T newValue)
+        public void SetPoint(float3 point, T newValue)
         {
-            point = point.Floor();
+            point = math.floor(point);
 
             if (!ContainsMinBiased(point))
             {
@@ -96,7 +88,7 @@ namespace Wyd.System.Collections
                 return;
             }
 
-            if (Extent <= 1f)
+            if (Bounds.Extents.x <= 1f)
             {
                 // reached smallest possible depth (usually 1x1x1) so
                 // set value and return
@@ -136,12 +128,12 @@ namespace Wyd.System.Collections
         #region HELPER METHODS
 
         public bool ContainsMinBiased(Vector3 point) =>
-            (point.x < MaxPoint.x)
-            && (point.y < MaxPoint.y)
-            && (point.z < MaxPoint.z)
-            && (point.x >= MinPoint.x)
-            && (point.y >= MinPoint.y)
-            && (point.z >= MinPoint.z);
+            (point.x < Bounds.MaxPoint.x)
+            && (point.y < Bounds.MaxPoint.y)
+            && (point.z < Bounds.MaxPoint.z)
+            && (point.x >= Bounds.MinPoint.x)
+            && (point.y >= Bounds.MinPoint.y)
+            && (point.z >= Bounds.MinPoint.z);
 
         // indexes:
         // bottom half quadrant:
@@ -151,7 +143,9 @@ namespace Wyd.System.Collections
         // 5 7
         // 4 6
         private int DetermineOctant(Vector3 point) =>
-            (point.x < CenterPoint.x ? 0 : 1) + (point.y < CenterPoint.y ? 0 : 4) + (point.z < CenterPoint.z ? 0 : 2);
+            (point.x < Bounds.CenterPoint.x ? 0 : 1)
+            + (point.y < Bounds.CenterPoint.y ? 0 : 4)
+            + (point.z < Bounds.CenterPoint.z ? 0 : 2);
 
         #endregion
     }

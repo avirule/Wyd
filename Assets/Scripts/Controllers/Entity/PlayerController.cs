@@ -3,6 +3,7 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using Unity.Mathematics;
 using UnityEngine;
 using Wyd.Controllers.State;
 using Wyd.Controllers.UI;
@@ -20,18 +21,18 @@ namespace Wyd.Controllers.Entity
     {
         public const int REACH = 5;
 
-        private static readonly TimeSpan RegularCheckWaitInterval = TimeSpan.FromSeconds(1d);
-        private static readonly TimeSpan MinimumActionInterval = TimeSpan.FromSeconds(1f / 4f);
+        private static readonly TimeSpan _RegularCheckWaitInterval = TimeSpan.FromSeconds(1d);
+        private static readonly TimeSpan _MinimumActionInterval = TimeSpan.FromSeconds(1f / 4f);
 
         private Ray _ReachRay;
         private RaycastHit _LastReachRayHit;
         private bool _IsInReachOfValidSurface;
         private Transform _ReachHitSurfaceObjectTransform;
-        private Vector3 _Movement;
+        private float3 _Movement;
         private Stopwatch _ActionCooldown;
         private Stopwatch _RegularCheckWait;
-        private Vector3 _Position;
-        private Vector3 _CurrentChunk;
+        private float3 _Position;
+        private int3 _ChunkPosition;
 
         public Transform CameraTransform;
         public InventoryController Inventory;
@@ -47,13 +48,13 @@ namespace Wyd.Controllers.Entity
         public Rigidbody Rigidbody { get; private set; }
         public Collider Collider { get; private set; }
 
-        public Vector3 CurrentChunk
+        public int3 ChunkPosition
         {
-            get => _CurrentChunk;
+            get => _ChunkPosition;
             private set
             {
-                _CurrentChunk = value;
-                OnChunkChanged(_CurrentChunk);
+                _ChunkPosition = value;
+                OnChunkChanged(_ChunkPosition);
             }
         }
 
@@ -69,8 +70,8 @@ namespace Wyd.Controllers.Entity
 
         public HashSet<string> Tags { get; private set; }
 
-        public event EventHandler<Vector3> PositionChanged;
-        public event EventHandler<Vector3> ChunkPositionChanged;
+        public event EventHandler<float3> PositionChanged;
+        public event EventHandler<int3> ChunkPositionChanged;
         public event EventHandler<IEntity> EntityDestroyed;
 
         private void Awake()
@@ -96,9 +97,12 @@ namespace Wyd.Controllers.Entity
             ReachHitSurfaceObject = Instantiate(ReachHitSurfaceObject);
             _ReachHitSurfaceObjectTransform = ReachHitSurfaceObject.transform;
 
-            CurrentChunk.Set(int.MaxValue, 0, int.MaxValue);
+            ChunkPosition = new int3(int.MaxValue, int.MaxValue, int.MaxValue);
 
-            // todo fix this
+            CheckChangedPosition();
+            CheckChangedChunkPosition();
+
+            // todo fix this being laggy as fuck
 //            PositionChanged += (sender, position) =>
 //            {
 //                const int destruct_radius = 2;
@@ -135,7 +139,7 @@ namespace Wyd.Controllers.Entity
             CalculateRotation();
             CalculateMovement();
             CheckChangedPosition();
-            CheckChangedChunk();
+            CheckChangedChunkPosition();
         }
 
         private void Update()
@@ -146,9 +150,9 @@ namespace Wyd.Controllers.Entity
             UpdateLastLookAtCubeOrigin();
             CheckMouseClickActions();
 
-            if (_RegularCheckWait.Elapsed > RegularCheckWaitInterval)
+            if (_RegularCheckWait.Elapsed > _RegularCheckWaitInterval)
             {
-                CheckChangedChunk();
+                CheckChangedChunkPosition();
 
                 _RegularCheckWait.Restart();
             }
@@ -176,9 +180,10 @@ namespace Wyd.Controllers.Entity
                 return;
             }
 
-            ushort blockId = WorldController.Current.GetBlockAt(_LastReachRayHit.normal.Sum() > 0f
-                ? _LastReachRayHit.point.Floor() - _LastReachRayHit.normal
-                : _LastReachRayHit.point.Floor());
+            ushort blockId = WorldController.Current.GetBlockAt(
+                WydMath.ToInt(math.all(math.csum(_LastReachRayHit.normal) > float3.zero)
+                    ? math.floor(_LastReachRayHit.point) - (float3)_LastReachRayHit.normal
+                    : math.floor(_LastReachRayHit.point)));
 
             if (!BlockController.Current.CheckBlockHasProperties(blockId, BlockDefinition.Property.Destroyable))
             {
@@ -202,12 +207,12 @@ namespace Wyd.Controllers.Entity
             if (normal.Sum() > 0f)
             {
                 _ReachHitSurfaceObjectTransform.position =
-                    (_LastReachRayHit.point.Floor() - (normal.Abs() * 0.4995f)) + WydMath.Half;
+                    (_LastReachRayHit.point.Floor() - (normal.Abs() * 0.4995f)) + WydMath_Old.Half;
             }
             else
             {
                 _ReachHitSurfaceObjectTransform.position =
-                    (_LastReachRayHit.point.Floor() - (normal.Abs() * 0.5005f)) + WydMath.Half;
+                    (_LastReachRayHit.point.Floor() - (normal.Abs() * 0.5005f)) + WydMath_Old.Half;
             }
 
             _ReachHitSurfaceObjectTransform.rotation = Quaternion.LookRotation(-normal);
@@ -217,15 +222,15 @@ namespace Wyd.Controllers.Entity
         {
             if (InputController.Current.GetButton("LeftClick")
                 && _IsInReachOfValidSurface
-                && (_ActionCooldown.Elapsed > MinimumActionInterval))
+                && (_ActionCooldown.Elapsed > _MinimumActionInterval))
             {
-                Vector3 position;
+                int3 position;
 
                 if (((_LastReachRayHit.normal.Sum() > 0f)
                      && WorldController.Current.TryRemoveBlockAt(
-                         position = _LastReachRayHit.point.Floor() - _LastReachRayHit.normal))
+                         position = WydMath.ToInt(math.floor(_LastReachRayHit.point) - (float3)_LastReachRayHit.normal)))
                     || WorldController.Current.TryRemoveBlockAt(
-                        position = _LastReachRayHit.point.Floor()))
+                        position = WydMath.ToInt(math.floor(_LastReachRayHit.point))))
                 {
                     ushort blockId = WorldController.Current.GetBlockAt(position);
 
@@ -241,16 +246,17 @@ namespace Wyd.Controllers.Entity
             if (InputController.Current.GetButton("RightClick")
                 && _IsInReachOfValidSurface
                 && !Collider.bounds.Contains(_LastReachRayHit.point)
-                && (_ActionCooldown.Elapsed > MinimumActionInterval))
+                && (_ActionCooldown.Elapsed > _MinimumActionInterval))
             {
                 if (_LastReachRayHit.normal.Sum() > 0f)
                 {
-                    WorldController.Current.TryPlaceBlockAt(_LastReachRayHit.point.Floor(),
+                    WorldController.Current.TryPlaceBlockAt(WydMath.ToInt(math.floor(_LastReachRayHit.point)),
                         HotbarController.Current.SelectedId);
                 }
                 else
                 {
-                    WorldController.Current.TryPlaceBlockAt(_LastReachRayHit.point.Floor() + _LastReachRayHit.normal,
+                    WorldController.Current.TryPlaceBlockAt(
+                        WydMath.ToInt(math.floor(_LastReachRayHit.point) + (float3)_LastReachRayHit.normal),
                         HotbarController.Current.SelectedId);
                 }
 
@@ -272,17 +278,17 @@ namespace Wyd.Controllers.Entity
             }
         }
 
-        private void CheckChangedChunk()
+        private void CheckChangedChunkPosition()
         {
-            Vector3 chunkPosition = Transform.position.RoundBy(ChunkController.Size);
-            chunkPosition.y = 0;
+            float3 rounded = WydMath.RoundBy(Transform.position, WydMath.ToFloat(ChunkController.Size));
+            int3 chunkPosition = WydMath.ToInt(rounded);
 
-            if (chunkPosition == CurrentChunk)
+            if (math.all(chunkPosition == ChunkPosition))
             {
                 return;
             }
 
-            CurrentChunk = chunkPosition;
+            ChunkPosition = chunkPosition;
         }
 
         #endregion
@@ -297,7 +303,7 @@ namespace Wyd.Controllers.Entity
 
         private void CalculateRotation()
         {
-            Rigidbody.MoveRotation(Quaternion.Euler(0f, CameraTransform.eulerAngles.y, 0f));
+            Rigidbody.MoveRotation(quaternion.Euler(0f, CameraTransform.eulerAngles.y, 0f));
         }
 
         private void CalculateJump()
@@ -313,12 +319,12 @@ namespace Wyd.Controllers.Entity
 
         private void CalculateMovement()
         {
-            if (_Movement == Vector3.zero)
+            if (math.all(_Movement == float3.zero))
             {
                 return;
             }
 
-            Vector3 modifiedMovement = TravelSpeed * Time.fixedDeltaTime * _Movement;
+            float3 modifiedMovement = TravelSpeed * Time.fixedDeltaTime * _Movement;
 
             Rigidbody.MovePosition(Rigidbody.position + Transform.TransformDirection(modifiedMovement));
         }
@@ -328,12 +334,12 @@ namespace Wyd.Controllers.Entity
 
         #region Event Invocators
 
-        private void OnPositionChanged(Vector3 newPosition)
+        private void OnPositionChanged(float3 newPosition)
         {
             PositionChanged?.Invoke(this, newPosition);
         }
 
-        private void OnChunkChanged(Vector3 newChunkPosition)
+        private void OnChunkChanged(int3 newChunkPosition)
         {
             ChunkPositionChanged?.Invoke(this, newChunkPosition);
         }

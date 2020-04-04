@@ -3,7 +3,7 @@
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
-using UnityEngine;
+using Unity.Mathematics;
 using Wyd.Controllers.World.Chunk;
 
 #endregion
@@ -49,23 +49,40 @@ namespace Wyd.Game
 
     public static class Directions
     {
-        public static readonly Vector3[] CardinalDirectionsVector3 =
+        public static int3 North { get; }
+        public static int3 East { get; }
+        public static int3 South { get; }
+        public static int3 West { get; }
+        public static int3 Up { get; }
+        public static int3 Down { get; }
+
+        public static readonly int3[] CardinalDirectionAxes =
         {
-            Vector3.forward,
-            Vector3.right,
-            Vector3.back,
-            Vector3.left
+            North,
+            East,
+            South,
+            West
         };
 
-        public static readonly Vector3[] AllDirectionsVector3 =
+        public static readonly int3[] AllDirectionAxes =
         {
-            Vector3.forward,
-            Vector3.right,
-            Vector3.back,
-            Vector3.left,
-            Vector3.up,
-            Vector3.down
+            North,
+            East,
+            South,
+            West,
+            Up,
+            Down
         };
+
+        static Directions()
+        {
+            North = new int3(0, 0, 1);
+            East = new int3(1, 0, 0);
+            South = new int3(0, 0, -1);
+            West = new int3(-1, 0, 0);
+            Up = new int3(0, 1, 0);
+            Down = new int3(0, -1, 0);
+        }
     }
 
     public static class DirectionExtensions
@@ -84,15 +101,15 @@ namespace Wyd.Game
             DirectionAsOrderPlacement = new ReadOnlyDictionary<Direction, int>(directionAsOrderPlacement);
 
 
-            DirectionsAsVector3 = new Dictionary<Direction, Vector3>
+            DirectionsAsAxes = new Dictionary<Direction, int3>
             {
-                { Direction.North, Vector3.forward },
-                { Direction.East, Vector3.right },
-                { Direction.South, Vector3.back },
-                { Direction.West, Vector3.left },
-                { Direction.Up, Vector3.up },
-                { Direction.Down, Vector3.down },
-                { Direction.All, Vector3.zero }
+                { Direction.North, Directions.North },
+                { Direction.East, Directions.East },
+                { Direction.South, Directions.South },
+                { Direction.West, Directions.West },
+                { Direction.Up, Directions.Up },
+                { Direction.Down, Directions.Down },
+                { Direction.All, int3.zero }
             };
 
             DirectionsAsIndexStep = new Dictionary<Direction, int>
@@ -101,25 +118,25 @@ namespace Wyd.Game
                 { Direction.East, 1 },
                 { Direction.South, -ChunkController.Size.x },
                 { Direction.West, -1 },
-                { Direction.Up, ChunkController.YIndexStep },
-                { Direction.Down, -ChunkController.YIndexStep }
+                { Direction.Up, ChunkController.Size.x * ChunkController.Size.z },
+                { Direction.Down, -(ChunkController.Size.x * ChunkController.Size.z) }
             };
         }
 
         private static readonly IReadOnlyDictionary<Direction, int> DirectionAsOrderPlacement;
-        private static readonly IReadOnlyDictionary<Direction, Vector3> DirectionsAsVector3;
+        private static readonly IReadOnlyDictionary<Direction, int3> DirectionsAsAxes;
         private static readonly IReadOnlyDictionary<Direction, int> DirectionsAsIndexStep;
 
         public static int OrderPlacement(this Direction direction) => DirectionAsOrderPlacement[direction];
 
-        public static Vector3 AsVector3(this Direction direction) => DirectionsAsVector3[direction];
+        public static int3 AsInt3(this Direction direction) => DirectionsAsAxes[direction];
 
         public static int AsIndexStep(this Direction direction) => DirectionsAsIndexStep[direction];
 
         public static bool IsPositiveNormal(this Direction direction) =>
             (direction == Direction.North) || (direction == Direction.East) || (direction == Direction.Up);
 
-        public static float FromVector3Axis(this Direction direction, Vector3Int a)
+        public static float FromVector3Axis(this Direction direction, int3 a)
         {
             switch (direction)
             {

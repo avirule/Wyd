@@ -1,7 +1,9 @@
 #region
 
 using System;
+using Unity.Mathematics;
 using UnityEngine;
+using UnityEngine.Networking.Match;
 using Wyd.Controllers.State;
 using Wyd.Controllers.System;
 using Wyd.Game;
@@ -59,14 +61,20 @@ namespace Wyd.Controllers.World.Chunk
             _NoiseShader.SetFloat("_WorldHeight", WorldController.WORLD_HEIGHT);
         }
 
-        private void OnEnable()
+        protected override void OnEnable()
         {
+            base.OnEnable();
+
             PerFrameUpdateController.Current.RegisterPerFrameUpdater(40, this);
+            ClearInternalData();
         }
 
-        private void OnDisable()
+        protected override void OnDisable()
         {
+            base.OnDisable();
+
             PerFrameUpdateController.Current.DeregisterPerFrameUpdater(40, this);
+            ClearInternalData();
         }
 
         public void FrameUpdate()
@@ -74,7 +82,7 @@ namespace Wyd.Controllers.World.Chunk
             if (Generating
                 || (CurrentStep == GenerationData.GenerationStep.Complete)
                 || ((CurrentStep > GenerationData.GenerationStep.RawTerrain)
-                    && (WorldController.Current.AggregateNeighborsStep(_Position) < CurrentStep)))
+                    && (WorldController.Current.AggregateNeighborsStep(WydMath.ToInt(_Bounds.MinPoint)) < CurrentStep)))
             {
                 return;
             }
@@ -83,18 +91,6 @@ namespace Wyd.Controllers.World.Chunk
         }
 
         #region DE/ACTIVATION
-
-        public override void Activate(Vector3 position, bool setPosition)
-        {
-            base.Activate(position, setPosition);
-            ClearInternalData();
-        }
-
-        public override void Deactivate()
-        {
-            base.Deactivate();
-            ClearInternalData();
-        }
 
         private void ClearInternalData()
         {
@@ -153,14 +149,14 @@ namespace Wyd.Controllers.World.Chunk
 
         private void BeginNoiseGeneration()
         {
-            _NoiseBuffer = new ComputeBuffer(ChunkController.Size.Product(), 4);
+            _NoiseBuffer = new ComputeBuffer(WydMath.Product(ChunkController.Size), 4);
             int kernel = _NoiseShader.FindKernel("CSMain");
-            _NoiseShader.SetVector("_Offset", _Position);
+            _NoiseShader.SetVector("_Offset", new float4(_Bounds.MinPoint.xyzz));
             _NoiseShader.SetFloat("_Frequency", _FREQUENCY);
             _NoiseShader.SetFloat("_Persistence", _PERSISTENCE);
             _NoiseShader.SetBuffer(kernel, "Result", _NoiseBuffer);
             // 1024 is the value set in the shader's [numthreads(--> 1024 <--, 1, 1)]
-            _NoiseShader.Dispatch(kernel, ChunkController.Size.Product() / 1024, 1, 1);
+            _NoiseShader.Dispatch(kernel, WydMath.Product(ChunkController.Size) / 1024, 1, 1);
         }
 
         private void BeginRawTerrainGeneration()
@@ -199,7 +195,7 @@ namespace Wyd.Controllers.World.Chunk
             {
                 case GenerationData.GenerationStep.RawTerrain:
                     OnChunkTerrainChanged(this,
-                        new ChunkChangedEventArgs(_Bounds, Directions.CardinalDirectionsVector3));
+                        new ChunkChangedEventArgs(_Bounds, Directions.CardinalDirectionAxes));
                     break;
                 // case GenerationData.GenerationStep.Accents:
                 //     _AggregateBuildTime += args.Job.ExecutionTime;

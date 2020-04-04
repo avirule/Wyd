@@ -2,6 +2,7 @@
 
 using System;
 using Serilog;
+using Unity.Mathematics;
 using UnityEngine;
 using Random = System.Random;
 
@@ -23,14 +24,14 @@ namespace Wyd.Game.World.Blocks
             LightSource = 16
         }
 
-        private static readonly Func<Vector3, Direction, string> _DefaultUVsRule;
+        private static readonly Func<int3, Direction, string> _DefaultUVsRule;
 
         static BlockDefinition()
         {
             _DefaultUVsRule = (position, direction) => string.Empty;
         }
 
-        private Func<Vector3, Direction, string> UVsRule { get; }
+        private Func<int3, Direction, string> UVsRule { get; }
 
         public ushort Id { get; }
         public string BlockName { get; }
@@ -50,7 +51,7 @@ namespace Wyd.Game.World.Blocks
 
 
         public BlockDefinition(ushort id, string blockName, Block.Types type,
-            Func<Vector3, Direction, string> uvsRule, params Property[] properties)
+            Func<int3, Direction, string> uvsRule, params Property[] properties)
         {
             Id = id;
             BlockName = blockName;
@@ -64,7 +65,7 @@ namespace Wyd.Game.World.Blocks
             UVsRule = uvsRule ?? _DefaultUVsRule;
         }
 
-        public virtual bool ReadUVsRule(ushort blockId, Vector3 position, Direction direction, out string spriteName)
+        public virtual bool EvaluateUVsRule(ushort blockId, int3 position, Direction direction, out string spriteName)
         {
             if (Id != blockId)
             {

@@ -1,6 +1,7 @@
 #region
 
 using System;
+using Unity.Mathematics;
 using UnityEditor;
 using UnityEngine;
 using UnityEngine.SceneManagement;
@@ -35,7 +36,7 @@ namespace Wyd.Controllers.State
             BlockController.Current.RegisterBlockDefinition("grass", Block.Types.Raw,
                 (position, direction) =>
                 {
-                    Vector3 positionAbove = position + Vector3.up;
+                    int3 positionAbove = position + Directions.Up;
                     WorldController.Current.TryGetBlockAt(positionAbove, out ushort blockId);
 
                     if (!BlockController.Current.CheckBlockHasProperties(blockId, BlockDefinition.Property.Transparent))

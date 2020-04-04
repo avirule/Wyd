@@ -4,6 +4,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using Serilog;
+using Unity.Mathematics;
 using UnityEngine;
 using Wyd.Controllers.State;
 using Wyd.Controllers.System;
@@ -24,7 +25,7 @@ namespace Wyd.Controllers.World
     public class WorldController : SingletonController<WorldController>, IPerFrameIncrementalUpdate
     {
         public const float WORLD_HEIGHT = 256f;
-        public static readonly float WorldHeightInChunks = Mathf.Floor(WORLD_HEIGHT / ChunkController.Size.y);
+        public static readonly float WorldHeightInChunks = math.floor(WORLD_HEIGHT / ChunkController.Size.y);
 
 #if UNITY_EDITOR
 
@@ -35,12 +36,12 @@ namespace Wyd.Controllers.World
 #endif
 
         private ChunkController _ChunkControllerPrefab;
-        private Dictionary<Vector3, ChunkController> _Chunks;
+        private Dictionary<int3, ChunkController> _Chunks;
         private ObjectCache<ChunkController> _ChunkCache;
         private Stack<IEntity> _EntitiesPendingChunkBuilding;
         private Stack<ChunkChangedEventArgs> _ChunksPendingDeactivation;
         private WorldSaveFileProvider _SaveFileProvider;
-        private Vector3 _SpawnPoint;
+        private int3 _SpawnPoint;
 
         public CollisionLoaderController CollisionLoaderController;
         public string SeedString;
@@ -61,7 +62,7 @@ namespace Wyd.Controllers.World
         /// <summary>
         ///     X,Z point in the world for spawning the player.
         /// </summary>
-        public Vector3 SpawnPoint
+        public int3 SpawnPoint
         {
             get => _SpawnPoint;
             private set => _SpawnPoint = value;
@@ -102,7 +103,7 @@ namespace Wyd.Controllers.World
                     Destroy(chunkController.gameObject));
 
             Seed = new WorldSeed(SeedString);
-            _Chunks = new Dictionary<Vector3, ChunkController>();
+            _Chunks = new Dictionary<int3, ChunkController>();
             _EntitiesPendingChunkBuilding = new Stack<IEntity>();
             _ChunksPendingDeactivation = new Stack<ChunkChangedEventArgs>();
             _SaveFileProvider = new WorldSaveFileProvider("world");
@@ -121,8 +122,7 @@ namespace Wyd.Controllers.World
             EntityController.Current.RegisterWatchForTag(RegisterLoaderEntity, "loader");
 
             // todo fix spawn point to set to useful value
-            (_SpawnPoint.x, _SpawnPoint.y, _SpawnPoint.z) =
-                WydMath.GetIndexAs3D(Seed, new Vector3Int(int.MaxValue, int.MaxValue, int.MaxValue));
+            _SpawnPoint = WydMath.IndexTo3D(Seed, new int3(int.MaxValue, int.MaxValue, int.MaxValue));
 
 
             if (OptionsController.Current.PreInitializeChunkCache)
@@ -192,7 +192,7 @@ namespace Wyd.Controllers.World
                 ChunkChangedEventArgs args = _ChunksPendingDeactivation.Pop();
 
                 // cache position to avoid multiple native dll calls
-                Vector3 position = args.ChunkBounds.min;
+                int3 position = WydMath.ToInt(args.ChunkBounds.MinPoint);
                 CacheChunk(position);
                 FlagNeighborsForMeshUpdate(position, args.NeighborDirectionsToUpdate);
 
@@ -200,7 +200,7 @@ namespace Wyd.Controllers.World
             }
         }
 
-        private void CacheChunk(Vector3 chunkPosition)
+        private void CacheChunk(int3 chunkPosition)
         {
             if (!_Chunks.TryGetValue(chunkPosition, out ChunkController chunkController))
             {
@@ -257,8 +257,7 @@ namespace Wyd.Controllers.World
                             return;
                         }
 
-                        Vector3 position = loader.CurrentChunk
-                                           + new Vector3(x, y, z).MultiplyBy(ChunkController.Size);
+                        int3 position = loader.ChunkPosition + new int3(x, y, z) * ChunkController.Size;
 
                         // todo
                         // this will run into the issue of two loaders being within the same render distance
@@ -269,40 +268,44 @@ namespace Wyd.Controllers.World
                             continue;
                         }
 
-                        if (!_ChunkCache.TryRetrieve(out ChunkController chunkController))
+                        if (_ChunkCache.TryRetrieve(out ChunkController chunkController))
                         {
-                            chunkController = Instantiate(_ChunkControllerPrefab, position, Quaternion.identity,
-                                transform);
+                            chunkController.Activate(position);
                         }
                         else
                         {
-                            chunkController.Activate(position);
+                            chunkController = Instantiate(_ChunkControllerPrefab, (float3)position, Quaternion.identity, transform);
+                        }
+
+                        if (math.any(chunkController.Position > 10000))
+                        {
+
                         }
 
                         chunkController.Changed += OnChunkMeshChanged;
                         chunkController.DeactivationCallback += OnChunkDeactivationCallback;
 
                         chunkController.AssignLoader(ref loader);
-                        _Chunks.Add(chunkController.Position, chunkController);
+                        _Chunks.Add(position, chunkController);
 
                         // ensures that neighbours update their meshes to cull newly out of sight faces
-                        FlagNeighborsForMeshUpdate(chunkController.Position, Directions.AllDirectionsVector3);
+                        FlagNeighborsForMeshUpdate(position, Directions.AllDirectionAxes);
                     }
                 }
             }
         }
 
-        public void FlagNeighborsForMeshUpdate(Vector3 globalChunkPosition, IEnumerable<Vector3> directions)
+        public void FlagNeighborsForMeshUpdate(int3 globalChunkPosition, IEnumerable<int3> directions)
         {
-            foreach (Vector3 normal in directions)
+            foreach (int3 normal in directions)
             {
-                FlagChunkForUpdateMesh(globalChunkPosition + normal.MultiplyBy(ChunkController.Size));
+                FlagChunkForUpdateMesh(globalChunkPosition + (normal * ChunkController.Size));
             }
         }
 
-        public void FlagChunkForUpdateMesh(Vector3 globalChunkPosition)
+        public void FlagChunkForUpdateMesh(int3 globalChunkPosition)
         {
-            if (TryGetChunkAt(globalChunkPosition.RoundBy(ChunkController.Size),
+            if (TryGetChunkAt(WydMath.ToInt(WydMath.RoundBy(globalChunkPosition, WydMath.ToFloat(ChunkController.Size))),
                 out ChunkController chunkController))
             {
                 chunkController.FlagMeshForUpdate();
@@ -331,14 +334,14 @@ namespace Wyd.Controllers.World
                 return;
             }
 
-            loader.ChunkPositionChanged += (sender, vector3) => { _EntitiesPendingChunkBuilding.Push(loader); };
+            loader.ChunkPositionChanged += (sender, position) => { _EntitiesPendingChunkBuilding.Push(loader); };
             _EntitiesPendingChunkBuilding.Push(loader);
         }
 
 
         private void OnChunkMeshChanged(object sender, ChunkChangedEventArgs args)
         {
-            FlagNeighborsForMeshUpdate(args.ChunkBounds.min, args.NeighborDirectionsToUpdate);
+            FlagNeighborsForMeshUpdate(WydMath.ToInt(args.ChunkBounds.MinPoint), args.NeighborDirectionsToUpdate);
 
             ChunkMeshChanged?.Invoke(sender, args);
         }
@@ -354,21 +357,21 @@ namespace Wyd.Controllers.World
 
         #region GET / EXISTS
 
-        public bool ChunkExistsAt(Vector3 position) => _Chunks.ContainsKey(position);
+        public bool ChunkExistsAt(int3 position) => _Chunks.ContainsKey(position);
 
-        public ChunkController GetChunkAt(Vector3 position)
+        public ChunkController GetChunkAt(int3 position)
         {
             bool trySuccess = _Chunks.TryGetValue(position, out ChunkController chunkController);
 
             return trySuccess ? chunkController : default;
         }
 
-        public bool TryGetChunkAt(Vector3 position, out ChunkController chunkController) =>
+        public bool TryGetChunkAt(int3 position, out ChunkController chunkController) =>
             _Chunks.TryGetValue(position, out chunkController);
 
-        public ushort GetBlockAt(Vector3 globalPosition)
+        public ushort GetBlockAt(int3 globalPosition)
         {
-            Vector3 chunkPosition = globalPosition.RoundBy(ChunkController.Size);
+            int3 chunkPosition = WydMath.ToInt(WydMath.RoundBy(globalPosition, WydMath.ToFloat(ChunkController.Size)));
 
             ChunkController chunkController = GetChunkAt(chunkPosition);
 
@@ -381,76 +384,76 @@ namespace Wyd.Controllers.World
             return chunkController.BlocksController.GetBlockAt(globalPosition);
         }
 
-        public bool TryGetBlockAt(Vector3 globalPosition, out ushort blockId)
+        public bool TryGetBlockAt(int3 globalPosition, out ushort blockId)
         {
             blockId = default;
-            Vector3 chunkPosition = globalPosition.RoundBy(ChunkController.Size);
+            int3 chunkPosition = WydMath.ToInt(WydMath.RoundBy(globalPosition, WydMath.ToFloat(ChunkController.Size)));
 
             return TryGetChunkAt(chunkPosition, out ChunkController chunkController)
                    && chunkController.BlocksController.TryGetBlockAt(globalPosition, out blockId);
         }
 
-        public bool BlockExistsAt(Vector3 globalPosition)
+        public bool BlockExistsAt(int3 globalPosition)
         {
-            Vector3 chunkPosition = globalPosition.RoundBy(ChunkController.Size);
+            int3 chunkPosition = WydMath.ToInt(WydMath.RoundBy(globalPosition, WydMath.ToFloat(ChunkController.Size)));
 
             return TryGetChunkAt(chunkPosition, out ChunkController chunkController)
                    && chunkController.BlocksController.BlockExistsAt(globalPosition);
         }
 
-        public bool TryPlaceBlockAt(Vector3 globalPosition, ushort id)
+        public bool TryPlaceBlockAt(int3 globalPosition, ushort id)
         {
-            Vector3 chunkPosition = globalPosition.RoundBy(ChunkController.Size);
+            int3 chunkPosition = WydMath.ToInt(WydMath.RoundBy(globalPosition, WydMath.ToFloat(ChunkController.Size)));
 
             return TryGetChunkAt(chunkPosition, out ChunkController chunkController)
                    && (chunkController != default)
                    && chunkController.BlocksController.TryPlaceBlockAt(globalPosition, id);
         }
 
-        public bool TryRemoveBlockAt(Vector3 globalPosition)
+        public bool TryRemoveBlockAt(int3 globalPosition)
         {
-            Vector3 chunkPosition = globalPosition.RoundBy(ChunkController.Size);
+            int3 chunkPosition = WydMath.ToInt(WydMath.RoundBy(globalPosition, WydMath.ToFloat(ChunkController.Size)));
 
             return TryGetChunkAt(chunkPosition, out ChunkController chunkController)
                    && (chunkController != default)
                    && chunkController.BlocksController.TryRemoveBlockAt(globalPosition);
         }
 
-        public GenerationData.GenerationStep AggregateNeighborsStep(Vector3 position)
+        public GenerationData.GenerationStep AggregateNeighborsStep(int3 position)
         {
             GenerationData.GenerationStep generationStep = GenerationData.GenerationStep.Complete;
 
-            if (TryGetChunkAt(position + (Vector3.forward * ChunkController.Size.z),
+            if (TryGetChunkAt(position + (Directions.North * ChunkController.Size.z),
                 out ChunkController northChunk))
             {
                 generationStep &= northChunk.CurrentStep;
             }
 
-            if (TryGetChunkAt(position + (Vector3.right * ChunkController.Size.x),
+            if (TryGetChunkAt(position + (Directions.East * ChunkController.Size.x),
                 out ChunkController eastChunk))
             {
                 generationStep &= eastChunk.CurrentStep;
             }
 
-            if (TryGetChunkAt(position + (Vector3.back * ChunkController.Size.z),
+            if (TryGetChunkAt(position + (Directions.South * ChunkController.Size.z),
                 out ChunkController southChunk))
             {
                 generationStep &= southChunk.CurrentStep;
             }
 
-            if (TryGetChunkAt(position + (Vector3.left * ChunkController.Size.x),
+            if (TryGetChunkAt(position + (Directions.West * ChunkController.Size.x),
                 out ChunkController westChunk))
             {
                 generationStep &= westChunk.CurrentStep;
             }
 
-            if (TryGetChunkAt(position + (Vector3.up * ChunkController.Size.x),
+            if (TryGetChunkAt(position + (Directions.Up * ChunkController.Size.x),
                 out ChunkController upChunk))
             {
                 generationStep &= upChunk.CurrentStep;
             }
 
-            if (TryGetChunkAt(position + (Vector3.down * ChunkController.Size.x),
+            if (TryGetChunkAt(position + (Directions.Down * ChunkController.Size.x),
                 out ChunkController downChunk))
             {
                 generationStep &= downChunk.CurrentStep;
@@ -469,7 +472,7 @@ namespace Wyd.Controllers.World
             for (int i = 0; i < (OptionsController.Current.MaximumChunkCacheSize / 2); i++)
             {
                 ChunkController chunkController =
-                    Instantiate(_ChunkControllerPrefab, Vector3.zero, Quaternion.identity, transform);
+                    Instantiate(_ChunkControllerPrefab, float3.zero, Quaternion.identity, transform);
                 chunkController.gameObject.SetActive(false);
                 _ChunkCache.CacheItem(ref chunkController);
             }

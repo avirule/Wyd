@@ -1,7 +1,8 @@
 #region
 
 using System.Collections.Generic;
-using UnityEngine;
+using Unity.Mathematics;
+using Wyd.System;
 
 #endregion
 
@@ -10,9 +11,9 @@ namespace Wyd.Game.World.Chunks.Events
     public class ChunkChangedEventArgs
     {
         public Bounds ChunkBounds { get; }
-        public IEnumerable<Vector3> NeighborDirectionsToUpdate { get; }
+        public IEnumerable<int3> NeighborDirectionsToUpdate { get; }
 
-        public ChunkChangedEventArgs(Bounds chunkBounds, IEnumerable<Vector3> neighborDirectionsToUpdate)
+        public ChunkChangedEventArgs(Bounds chunkBounds, IEnumerable<int3> neighborDirectionsToUpdate)
         {
             ChunkBounds = chunkBounds;
             NeighborDirectionsToUpdate = neighborDirectionsToUpdate;

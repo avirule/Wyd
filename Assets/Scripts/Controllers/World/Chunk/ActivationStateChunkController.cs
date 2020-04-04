@@ -1,6 +1,8 @@
 #region
 
+using Unity.Mathematics;
 using UnityEngine;
+using Bounds = Wyd.System.Bounds;
 
 #endregion
 
@@ -12,32 +14,23 @@ namespace Wyd.Controllers.World.Chunk
 
         protected Transform _SelfTransform;
         protected Bounds _Bounds;
-        protected Vector3 _Position;
 
         #endregion
-
-        public ActivationStateChunkController() { }
-
-        public ActivationStateChunkController(Bounds bounds) => _Bounds = bounds;
 
         protected virtual void Awake()
         {
             _SelfTransform = transform;
-            _Position = _SelfTransform.position;
-            _Bounds.SetMinMax(_Position, _Position + ChunkController.Size);
+            float3 position = _SelfTransform.position;
+            _Bounds.SetMinMaxPoints(position, position + ChunkController.Size);
         }
 
-        public virtual void Activate(Vector3 position, bool setPosition)
+        protected virtual void OnEnable()
         {
-            if (setPosition)
-            {
-                _SelfTransform.position = _Position = position;
-            }
-
-            _Bounds.SetMinMax(_Position, _Position + ChunkController.Size);
+            Vector3 position = _SelfTransform.position;
+            _Bounds.SetMinMaxPoints(position, (float3)position + ChunkController.Size);
         }
 
-        public virtual void Deactivate()
+        protected virtual void OnDisable()
         {
             StopAllCoroutines();
         }

@@ -2,12 +2,14 @@
 
 using System.Collections.Generic;
 using System.Linq;
+using Unity.Mathematics;
 using UnityEngine;
 using Wyd.Controllers.State;
 using Wyd.Controllers.World;
 using Wyd.Game.World.Blocks;
 using Wyd.System;
 using Wyd.System.Collections;
+using Bounds = Wyd.System.Bounds;
 
 #endregion
 
@@ -15,7 +17,7 @@ namespace Wyd.Game
 {
     public class CollisionLoader : MonoBehaviour
     {
-        private static readonly ObjectCache<GameObject> ColliderCubeCache =
+        private static readonly ObjectCache<GameObject> _ColliderCubeCache =
             new ObjectCache<GameObject>(false, -1, DeactivateGameObject);
 
         private static ref GameObject DeactivateGameObject(ref GameObject obj)
@@ -29,15 +31,14 @@ namespace Wyd.Game
         }
 
         private Transform _SelfTransform;
-        private Vector3 _LastCalculatedPosition;
-        private Dictionary<Vector3, GameObject> _ColliderCubes;
+        private int3 _LastCalculatedPosition;
+        private Dictionary<float3, GameObject> _ColliderCubes;
         private bool _ScheduledRecalculation;
 
         public GameObject CollisionCubeObject;
         public Transform AttachedTransform;
         private int _Radius;
 
-        public Mesh Mesh { get; private set; }
         public Bounds BoundingBox { get; private set; }
 
         public int Radius
@@ -58,8 +59,8 @@ namespace Wyd.Game
         private void Awake()
         {
             _SelfTransform = transform;
-            _ColliderCubes = new Dictionary<Vector3, GameObject>();
-            _LocalCacheQueue = new Queue<Vector3>();
+            _ColliderCubes = new Dictionary<float3, GameObject>();
+            _LocalCacheQueue = new Queue<float3>();
         }
 
         private void Start()
@@ -76,19 +77,14 @@ namespace Wyd.Game
                 return;
             }
 
-            Vector3 difference = (_LastCalculatedPosition - AttachedTransform.position).Abs();
+            float3 difference = math.abs(_LastCalculatedPosition - (float3)AttachedTransform.position);
 
-            if (_ScheduledRecalculation || difference.AnyGreaterThanOrEqual(Vector3.one))
+            if (_ScheduledRecalculation || math.any(difference >= 1))
             {
-                _LastCalculatedPosition = AttachedTransform.position.Floor();
+                _LastCalculatedPosition = WydMath.ToInt(math.floor(AttachedTransform.position));
 
                 Recalculate();
             }
-        }
-
-        private void OnDestroy()
-        {
-            Destroy(Mesh);
         }
 
         private void Recalculate()
@@ -106,7 +102,7 @@ namespace Wyd.Game
             // +1 to include center blocks / position
             int size = (Radius * 2) + 1;
 
-            BoundingBox = new Bounds(_LastCalculatedPosition, new Vector3(size, size, size));
+            BoundingBox = new Bounds(_LastCalculatedPosition, new float3(size, size, size));
         }
 
         private void CalculateColliders()
@@ -117,9 +113,9 @@ namespace Wyd.Game
                 {
                     for (int z = -Radius; z < (Radius + 1); z++)
                     {
-                        Vector3 localPosition = new Vector3(x, y, z);
-                        Vector3 globalPosition = _LastCalculatedPosition + localPosition;
-                        Vector3 trueCenterGlobalPosition = globalPosition + WydMath.Half;
+                        int3 localPosition = new int3(x, y, z);
+                        int3 globalPosition = _LastCalculatedPosition + localPosition;
+                        float3 trueCenterGlobalPosition = globalPosition + new float3(0.5f);
 
                         if (!WorldController.Current.TryGetBlockAt(globalPosition, out ushort blockId)
                             || (blockId == BlockController.AIR_ID)
@@ -146,27 +142,27 @@ namespace Wyd.Game
             }
         }
 
-        private Queue<Vector3> _LocalCacheQueue;
+        private Queue<float3> _LocalCacheQueue;
 
         private void CullOutOfBoundsSurfaces()
         {
-            foreach (Vector3 position in _ColliderCubes.Keys.Where(position => !BoundingBox.Contains(position)))
+            foreach (float3 position in _ColliderCubes.Keys.Where(position => !BoundingBox.Contains(position)))
             {
                 _LocalCacheQueue.Enqueue(position);
             }
 
             while (_LocalCacheQueue.Count > 0)
             {
-                Vector3 position = _LocalCacheQueue.Dequeue();
+                float3 position = _LocalCacheQueue.Dequeue();
                 GameObject obj = _ColliderCubes[position];
                 _ColliderCubes.Remove(position);
-                ColliderCubeCache.CacheItem(ref obj);
+                _ColliderCubeCache.CacheItem(ref obj);
             }
         }
 
-        private GameObject GetCollisionCube(Vector3 position)
+        private GameObject GetCollisionCube(float3 position)
         {
-            if (!ColliderCubeCache.TryRetrieve(out GameObject surfaceCollider))
+            if (!_ColliderCubeCache.TryRetrieve(out GameObject surfaceCollider))
             {
                 surfaceCollider = Instantiate(CollisionCubeObject);
             }

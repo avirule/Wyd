@@ -17,7 +17,7 @@ namespace Wyd.Game.World.Chunks
             set => NoiseValues[index] = value;
         }
 
-        public ChunkBuilderNoiseValues() => NoiseValues = new float[ChunkController.Size.Product()];
+        public ChunkBuilderNoiseValues() => NoiseValues = new float[WydMath.Product(ChunkController.Size)];
 
         public static implicit operator float[](ChunkBuilderNoiseValues chunkBuilderNoiseValues) =>
             chunkBuilderNoiseValues.NoiseValues;
