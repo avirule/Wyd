@@ -7,7 +7,7 @@ using UnityEngine;
 
 namespace Wyd.System
 {
-    public static class Mathv
+    public static class WydMath
     {
         #region VECTOR3
 
@@ -254,6 +254,11 @@ namespace Wyd.System
         #region FLOAT
 
         public static Vector3 AsVector3(this float a) => new Vector3(a, a, a);
+
+        public static float RoundBy(this float a, float b)
+        {
+            return Mathf.Floor(a / b) * b;
+        }
 
         #endregion
     }

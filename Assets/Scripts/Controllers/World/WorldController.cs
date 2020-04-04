@@ -122,7 +122,7 @@ namespace Wyd.Controllers.World
 
             // todo fix spawn point to set to useful value
             (_SpawnPoint.x, _SpawnPoint.y, _SpawnPoint.z) =
-                Mathv.GetIndexAs3D(Seed, new Vector3Int(int.MaxValue, int.MaxValue, int.MaxValue));
+                WydMath.GetIndexAs3D(Seed, new Vector3Int(int.MaxValue, int.MaxValue, int.MaxValue));
 
 
             if (OptionsController.Current.PreInitializeChunkCache)

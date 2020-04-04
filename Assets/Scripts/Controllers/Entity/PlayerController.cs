@@ -180,7 +180,7 @@ namespace Wyd.Controllers.Entity
                 ? _LastReachRayHit.point.Floor() - _LastReachRayHit.normal
                 : _LastReachRayHit.point.Floor());
 
-            if (!BlockController.Current.CheckBlockHasProperty(blockId, BlockRule.Property.Destroyable))
+            if (!BlockController.Current.CheckBlockHasProperties(blockId, BlockDefinition.Property.Destroyable))
             {
                 ReachHitSurfaceObject.SetActive(false);
                 _IsInReachOfValidSurface = false;
@@ -202,12 +202,12 @@ namespace Wyd.Controllers.Entity
             if (normal.Sum() > 0f)
             {
                 _ReachHitSurfaceObjectTransform.position =
-                    (_LastReachRayHit.point.Floor() - (normal.Abs() * 0.4995f)) + Mathv.Half;
+                    (_LastReachRayHit.point.Floor() - (normal.Abs() * 0.4995f)) + WydMath.Half;
             }
             else
             {
                 _ReachHitSurfaceObjectTransform.position =
-                    (_LastReachRayHit.point.Floor() - (normal.Abs() * 0.5005f)) + Mathv.Half;
+                    (_LastReachRayHit.point.Floor() - (normal.Abs() * 0.5005f)) + WydMath.Half;
             }
 
             _ReachHitSurfaceObjectTransform.rotation = Quaternion.LookRotation(-normal);
@@ -229,7 +229,7 @@ namespace Wyd.Controllers.Entity
                 {
                     ushort blockId = WorldController.Current.GetBlockAt(position);
 
-                    if (BlockController.Current.CheckBlockHasProperty(blockId, BlockRule.Property.Collectible))
+                    if (BlockController.Current.CheckBlockHasProperties(blockId, BlockDefinition.Property.Collectible))
                     {
                         Inventory.AddItem(blockId, 1);
                     }

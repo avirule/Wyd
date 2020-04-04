@@ -56,6 +56,7 @@ namespace Wyd.Controllers.World.Chunk
             _NoiseShader.SetInt("_NoiseSeed", WorldController.Current.Seed);
             _NoiseShader.SetVector("_MaximumSize", new Vector4(ChunkController.Size.x, ChunkController.Size.y,
                 ChunkController.Size.z, 0f));
+            _NoiseShader.SetFloat("_WorldHeight", WorldController.WORLD_HEIGHT);
         }
 
         private void OnEnable()

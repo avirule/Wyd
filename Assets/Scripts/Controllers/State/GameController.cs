@@ -29,16 +29,16 @@ namespace Wyd.Controllers.State
 
         private void RegisterDefaultBlocks()
         {
-            BlockController.Current.RegisterBlockRule("bedrock", Block.Types.None, null,
-                BlockRule.Property.Collideable);
+            BlockController.Current.RegisterBlockDefinition("bedrock", Block.Types.None, null,
+                BlockDefinition.Property.Collideable);
 
-            BlockController.Current.RegisterBlockRule("grass", Block.Types.Raw,
+            BlockController.Current.RegisterBlockDefinition("grass", Block.Types.Raw,
                 (position, direction) =>
                 {
                     Vector3 positionAbove = position + Vector3.up;
                     WorldController.Current.TryGetBlockAt(positionAbove, out ushort blockId);
 
-                    if (!BlockController.Current.CheckBlockHasProperty(blockId, BlockRule.Property.Transparent))
+                    if (!BlockController.Current.CheckBlockHasProperties(blockId, BlockDefinition.Property.Transparent))
                     {
                         return "dirt";
                     }
@@ -75,34 +75,34 @@ namespace Wyd.Controllers.State
                         default:
                             throw new ArgumentOutOfRangeException(nameof(direction), direction, null);
                     }
-                }, BlockRule.Property.Collectible, BlockRule.Property.Collideable,
-                BlockRule.Property.Destroyable);
+                }, BlockDefinition.Property.Collectible, BlockDefinition.Property.Collideable,
+                BlockDefinition.Property.Destroyable);
 
-            BlockController.Current.RegisterBlockRule("dirt", Block.Types.Raw, null,
-                BlockRule.Property.Collectible, BlockRule.Property.Collideable,
-                BlockRule.Property.Destroyable);
+            BlockController.Current.RegisterBlockDefinition("dirt", Block.Types.Raw, null,
+                BlockDefinition.Property.Collectible, BlockDefinition.Property.Collideable,
+                BlockDefinition.Property.Destroyable);
 
-            BlockController.Current.RegisterBlockRule("stone", Block.Types.None, null,
-                BlockRule.Property.Collectible, BlockRule.Property.Collideable,
-                BlockRule.Property.Destroyable);
+            BlockController.Current.RegisterBlockDefinition("stone", Block.Types.None, null,
+                BlockDefinition.Property.Collectible, BlockDefinition.Property.Collideable,
+                BlockDefinition.Property.Destroyable);
 
-            BlockController.Current.RegisterBlockRule("glass", Block.Types.Raw, null,
-                BlockRule.Property.Transparent, BlockRule.Property.Collectible,
-                BlockRule.Property.Collideable, BlockRule.Property.Destroyable);
+            BlockController.Current.RegisterBlockDefinition("glass", Block.Types.Raw, null,
+                BlockDefinition.Property.Transparent, BlockDefinition.Property.Collectible,
+                BlockDefinition.Property.Collideable, BlockDefinition.Property.Destroyable);
 
-            BlockController.Current.RegisterBlockRule("coal_ore", Block.Types.Ore, null,
-                BlockRule.Property.Collectible, BlockRule.Property.Collideable,
-                BlockRule.Property.Destroyable);
+            BlockController.Current.RegisterBlockDefinition("coal_ore", Block.Types.Ore, null,
+                BlockDefinition.Property.Collectible, BlockDefinition.Property.Collideable,
+                BlockDefinition.Property.Destroyable);
 
-            BlockController.Current.RegisterBlockRule("gold_ore", Block.Types.Ore, null,
-                BlockRule.Property.Collectible, BlockRule.Property.Collideable,
-                BlockRule.Property.Destroyable);
+            BlockController.Current.RegisterBlockDefinition("gold_ore", Block.Types.Ore, null,
+                BlockDefinition.Property.Collectible, BlockDefinition.Property.Collideable,
+                BlockDefinition.Property.Destroyable);
 
-            BlockController.Current.RegisterBlockRule("diamond_ore", Block.Types.Ore, null,
-                BlockRule.Property.Collectible, BlockRule.Property.Collideable,
-                BlockRule.Property.Destroyable);
+            BlockController.Current.RegisterBlockDefinition("diamond_ore", Block.Types.Ore, null,
+                BlockDefinition.Property.Collectible, BlockDefinition.Property.Collideable,
+                BlockDefinition.Property.Destroyable);
 
-            BlockController.Current.RegisterBlockRule("oak_log", Block.Types.None,
+            BlockController.Current.RegisterBlockDefinition("oak_log", Block.Types.None,
                 (vector3, direction) =>
                 {
                     switch (direction)
@@ -119,23 +119,23 @@ namespace Wyd.Controllers.State
                             throw new ArgumentOutOfRangeException(nameof(direction), direction, null);
                     }
                 },
-                BlockRule.Property.Collectible, BlockRule.Property.Collideable,
-                BlockRule.Property.Destroyable);
+                BlockDefinition.Property.Collectible, BlockDefinition.Property.Collideable,
+                BlockDefinition.Property.Destroyable);
 
-            BlockController.Current.RegisterBlockRule("oak_leaf", Block.Types.None, null,
-                BlockRule.Property.Collectible, BlockRule.Property.Collideable,
-                BlockRule.Property.Destroyable);
+            BlockController.Current.RegisterBlockDefinition("oak_leaf", Block.Types.None, null,
+                BlockDefinition.Property.Collectible, BlockDefinition.Property.Collideable,
+                BlockDefinition.Property.Destroyable);
 
-            BlockController.Current.RegisterBlockRule("oak_leaf_apple", Block.Types.None, null,
-                BlockRule.Property.Collectible, BlockRule.Property.Collideable,
-                BlockRule.Property.Destroyable);
+            BlockController.Current.RegisterBlockDefinition("oak_leaf_apple", Block.Types.None, null,
+                BlockDefinition.Property.Collectible, BlockDefinition.Property.Collideable,
+                BlockDefinition.Property.Destroyable);
 
-            BlockController.Current.RegisterBlockRule("sand", Block.Types.Raw, null,
-                BlockRule.Property.Collectible, BlockRule.Property.Collideable,
-                BlockRule.Property.Destroyable);
+            BlockController.Current.RegisterBlockDefinition("sand", Block.Types.Raw, null,
+                BlockDefinition.Property.Collectible, BlockDefinition.Property.Collideable,
+                BlockDefinition.Property.Destroyable);
 
-            BlockController.Current.RegisterBlockRule("water", Block.Types.Raw, null,
-                BlockRule.Property.Transparent);
+            BlockController.Current.RegisterBlockDefinition("water", Block.Types.Raw, null,
+                BlockDefinition.Property.Transparent);
         }
 
         public static T LoadResource<T>(string path) where T : Object

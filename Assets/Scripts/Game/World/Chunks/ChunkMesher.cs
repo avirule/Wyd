@@ -153,9 +153,9 @@ namespace Wyd.Game.World.Chunks
                 }
 
                 Vector3Int localPosition =
-                    Mathv.GetIndexAsVector3Int(index, _GenerationData.Bounds.size.AsVector3Int());
+                    WydMath.GetIndexAsVector3Int(index, _GenerationData.Bounds.size.AsVector3Int());
 
-                if (BlockController.Current.CheckBlockHasProperty(block.Id, BlockRule.Property.Transparent))
+                if (BlockController.Current.CheckBlockHasProperties(block.Id, BlockDefinition.Property.Transparent))
                 {
                     //TraverseIndexTransparent(index, localPosition);
                 }
@@ -512,11 +512,11 @@ namespace Wyd.Game.World.Chunks
                 // check if we're on the far edge of the chunk, and if so, query WorldController for blocks in adjacent chunk
                 && (((localPosition.z == (_Size.z - 1))
                      && WorldController.Current.TryGetBlockAt(globalPosition + Vector3.forward, out ushort blockId)
-                     && BlockController.Current.CheckBlockHasProperty(blockId, BlockRule.Property.Transparent))
+                     && BlockController.Current.CheckBlockHasProperties(blockId, BlockDefinition.Property.Transparent))
                     // however if we're inside the chunk, use the proper Blocks[] array index for check
                     || ((localPosition.z < (_Size.z - 1))
-                        && BlockController.Current.CheckBlockHasProperty(_Blocks[index + _Size.x].Id,
-                            BlockRule.Property.Transparent))))
+                        && BlockController.Current.CheckBlockHasProperties(_Blocks[index + _Size.x].Id,
+                            BlockDefinition.Property.Transparent))))
             {
                 // set face of current block so it isn't traversed over
                 _Blocks[index].Faces.SetFace(Direction.North, true);
@@ -576,10 +576,10 @@ namespace Wyd.Game.World.Chunks
             if (!_Blocks[index].Faces.HasFace(Direction.East)
                 && (((localPosition.x == (_Size.x - 1))
                      && WorldController.Current.TryGetBlockAt(globalPosition + Vector3.right, out blockId)
-                     && BlockController.Current.CheckBlockHasProperty(blockId, BlockRule.Property.Transparent))
+                     && BlockController.Current.CheckBlockHasProperties(blockId, BlockDefinition.Property.Transparent))
                     || ((localPosition.x < (_Size.x - 1))
-                        && BlockController.Current.CheckBlockHasProperty(_Blocks[index + 1].Id,
-                            BlockRule.Property.Transparent))))
+                        && BlockController.Current.CheckBlockHasProperties(_Blocks[index + 1].Id,
+                            BlockDefinition.Property.Transparent))))
             {
                 _Blocks[index].Faces.SetFace(Direction.East, true);
                 AddTriangles(Direction.East);
@@ -631,10 +631,10 @@ namespace Wyd.Game.World.Chunks
             if (!_Blocks[index].Faces.HasFace(Direction.South)
                 && (((localPosition.z == 0)
                      && WorldController.Current.TryGetBlockAt(globalPosition + Vector3.back, out blockId)
-                     && BlockController.Current.CheckBlockHasProperty(blockId, BlockRule.Property.Transparent))
+                     && BlockController.Current.CheckBlockHasProperties(blockId, BlockDefinition.Property.Transparent))
                     || ((localPosition.z > 0)
-                        && BlockController.Current.CheckBlockHasProperty(_Blocks[index - _Size.x].Id,
-                            BlockRule.Property.Transparent))))
+                        && BlockController.Current.CheckBlockHasProperties(_Blocks[index - _Size.x].Id,
+                            BlockDefinition.Property.Transparent))))
             {
                 _Blocks[index].Faces.SetFace(Direction.South, true);
                 AddTriangles(Direction.South);
@@ -686,10 +686,10 @@ namespace Wyd.Game.World.Chunks
             if (!_Blocks[index].Faces.HasFace(Direction.West)
                 && (((localPosition.x == 0)
                      && WorldController.Current.TryGetBlockAt(globalPosition + Vector3.left, out blockId)
-                     && BlockController.Current.CheckBlockHasProperty(blockId, BlockRule.Property.Transparent))
+                     && BlockController.Current.CheckBlockHasProperties(blockId, BlockDefinition.Property.Transparent))
                     || ((localPosition.x > 0)
-                        && BlockController.Current.CheckBlockHasProperty(_Blocks[index - 1].Id,
-                            BlockRule.Property.Transparent))))
+                        && BlockController.Current.CheckBlockHasProperties(_Blocks[index - 1].Id,
+                            BlockDefinition.Property.Transparent))))
             {
                 _Blocks[index].Faces.SetFace(Direction.West, true);
                 AddTriangles(Direction.West);
@@ -740,10 +740,10 @@ namespace Wyd.Game.World.Chunks
             if (!_Blocks[index].Faces.HasFace(Direction.Up)
                 && (((localPosition.y == (_Size.y - 1))
                      && WorldController.Current.TryGetBlockAt(globalPosition + Vector3.up, out blockId)
-                     && BlockController.Current.CheckBlockHasProperty(blockId, BlockRule.Property.Transparent))
+                     && BlockController.Current.CheckBlockHasProperties(blockId, BlockDefinition.Property.Transparent))
                     || ((localPosition.y < (_Size.y - 1))
-                        && BlockController.Current.CheckBlockHasProperty(_Blocks[index + _VerticalIndexStep].Id,
-                            BlockRule.Property.Transparent))))
+                        && BlockController.Current.CheckBlockHasProperties(_Blocks[index + _VerticalIndexStep].Id,
+                            BlockDefinition.Property.Transparent))))
             {
                 _Blocks[index].Faces.SetFace(Direction.Up, true);
                 AddTriangles(Direction.Up);
@@ -795,10 +795,10 @@ namespace Wyd.Game.World.Chunks
             if (!_Blocks[index].Faces.HasFace(Direction.Down)
                 && (((localPosition.y == 0)
                      && WorldController.Current.TryGetBlockAt(globalPosition + Vector3.down, out blockId)
-                     && BlockController.Current.CheckBlockHasProperty(blockId, BlockRule.Property.Transparent))
+                     && BlockController.Current.CheckBlockHasProperties(blockId, BlockDefinition.Property.Transparent))
                     || ((localPosition.y > 0)
-                        && BlockController.Current.CheckBlockHasProperty(_Blocks[index - _VerticalIndexStep].Id,
-                            BlockRule.Property.Transparent))))
+                        && BlockController.Current.CheckBlockHasProperties(_Blocks[index - _VerticalIndexStep].Id,
+                            BlockDefinition.Property.Transparent))))
             {
                 _Blocks[index].Faces.SetFace(Direction.Down, true);
                 AddTriangles(Direction.Down);
@@ -916,7 +916,7 @@ namespace Wyd.Game.World.Chunks
                         globalPosition + (traversals * traversalDirection.AsVector3()) + faceDirection.AsVector3(),
                         out ushort blockId)
                     && (((id == -1)
-                         && BlockController.Current.CheckBlockHasProperty(blockId, BlockRule.Property.Transparent))
+                         && BlockController.Current.CheckBlockHasProperties(blockId, BlockDefinition.Property.Transparent))
                         || ((id > -1) && (id != blockId))))
                 {
                     _Blocks[traversalIndex].Faces.SetFace(faceDirection, true);

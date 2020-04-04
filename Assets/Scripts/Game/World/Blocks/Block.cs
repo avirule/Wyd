@@ -70,7 +70,7 @@ namespace Wyd.Game.World.Blocks
             Faces = faces;
             Damage = damage;
 
-            if (BlockController.Current.TryGetBlockRule(id, out IReadOnlyBlockRule blockRule))
+            if (BlockController.Current.TryGetBlockRule(id, out IReadOnlyBlockDefinition blockRule))
             {
                 Transparent = blockRule.Transparent;
                 LightLevel = blockRule.LightLevel;

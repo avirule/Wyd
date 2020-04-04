@@ -16,38 +16,27 @@ namespace Wyd.Controllers.State
     public class BlockController : SingletonController<BlockController>
     {
         public const ushort AIR_ID = 0;
-
-        private Dictionary<BlockRule.Property, HashSet<ushort>> _BlockPropertiesRegistry;
-
         public Dictionary<string, ushort> BlockNames;
-        public List<IBlockRule> BlockRules;
+        public List<IBlockDefinition> BlockDefinitions;
 
         private void Awake()
         {
             AssignSingletonInstance(this);
 
-            _BlockPropertiesRegistry = new Dictionary<BlockRule.Property, HashSet<ushort>>();
-
-            // add registry entry for each property type
-            foreach (BlockRule.Property property in Enum.GetValues(typeof(BlockRule.Property)))
-            {
-                _BlockPropertiesRegistry.Add(property, new HashSet<ushort>());
-            }
-
             BlockNames = new Dictionary<string, ushort>();
-            BlockRules = new List<IBlockRule>();
+            BlockDefinitions = new List<IBlockDefinition>();
 
-            RegisterBlockRule("Air", Block.Types.None, null, BlockRule.Property.Transparent);
+            RegisterBlockDefinition("Air", Block.Types.None, null, BlockDefinition.Property.Transparent);
         }
 
-        public ushort RegisterBlockRule(string blockName, Block.Types type,
-            Func<Vector3, Direction, string> uvsRule, params BlockRule.Property[] properties)
+        public ushort RegisterBlockDefinition(string blockName, Block.Types type,
+            Func<Vector3, Direction, string> uvsRule, params BlockDefinition.Property[] properties)
         {
             ushort assignedBlockId;
 
             try
             {
-                assignedBlockId = (ushort)BlockRules.Count;
+                assignedBlockId = (ushort)BlockDefinitions.Count;
             }
             catch (OverflowException)
             {
@@ -60,13 +49,8 @@ namespace Wyd.Controllers.State
                 uvsRule = (position, direction) => blockName;
             }
 
-            BlockRules.Add(new BlockRule(assignedBlockId, blockName, type, uvsRule, properties));
+            BlockDefinitions.Add(new BlockDefinition(assignedBlockId, blockName, type, uvsRule, properties));
             BlockNames.Add(blockName, assignedBlockId);
-
-            foreach (BlockRule.Property property in properties)
-            {
-                _BlockPropertiesRegistry[property].Add(assignedBlockId);
-            }
 
             Log.Information($"Successfully added block `{blockName}` with ID: {assignedBlockId}");
 
@@ -84,7 +68,7 @@ namespace Wyd.Controllers.State
                 return false;
             }
 
-            BlockRules[blockId].ReadUVsRule(blockId, position, direction, out string textureName);
+            BlockDefinitions[blockId].ReadUVsRule(blockId, position, direction, out string textureName);
             if (!TextureController.Current.TryGetTextureId(textureName, out int textureId))
             {
                 Log.Warning(
@@ -101,7 +85,7 @@ namespace Wyd.Controllers.State
             return true;
         }
 
-        public bool BlockIdExists(ushort blockId) => blockId < BlockRules.Count;
+        public bool BlockIdExists(ushort blockId) => blockId < BlockDefinitions.Count;
 
         public ushort GetBlockId(string blockName)
         {
@@ -129,44 +113,53 @@ namespace Wyd.Controllers.State
         {
             if (BlockIdExists(blockId))
             {
-                return BlockRules[blockId].BlockName;
+                return BlockDefinitions[blockId].BlockName;
             }
 
             Log.Warning($"Failed to return block name for block id `{blockId}`: block does not exist.");
             return "null";
         }
 
-        public IReadOnlyBlockRule GetBlockRule(ushort blockId)
+        public IReadOnlyBlockDefinition GetBlockDefinition(ushort blockId)
         {
             if (BlockIdExists(blockId))
             {
-                return BlockRules[blockId];
+                return BlockDefinitions[blockId];
             }
 
             Log.Error($"Failed to return block rule for block with id `{blockId}`: block does not exist.");
             return null;
         }
 
-        public bool TryGetBlockRule(ushort blockId, out IReadOnlyBlockRule blockRule)
+        public bool TryGetBlockRule(ushort blockId, out IReadOnlyBlockDefinition blockDefinition)
         {
             if (BlockIdExists(blockId))
             {
-                blockRule = BlockRules[blockId];
+                blockDefinition = BlockDefinitions[blockId];
                 return true;
             }
 
             Log.Error($"Failed to return block rule for block with id `{blockId}`: block does not exist.");
 
-            blockRule = default;
+            blockDefinition = default;
             return false;
         }
 
-        public IEnumerable<IBlockRule> GetBlocksOfType(Block.Types type)
+        public IEnumerable<IBlockDefinition> GetBlockDefinitionsByType(Block.Types type)
         {
-            return BlockRules.Where(block => block.Type == type);
+            return BlockDefinitions.Where(block => block.Type == type);
         }
 
-        public bool CheckBlockHasProperty(ushort blockId, BlockRule.Property property) =>
-            _BlockPropertiesRegistry[property].Contains(blockId);
+        public bool CheckBlockHasProperties(ushort blockId, BlockDefinition.Property property)
+        {
+            if (blockId < BlockDefinitions.Count)
+            {
+                return (BlockDefinitions[blockId].Properties & property) > 0;
+            }
+            else
+            {
+                return false;
+            }
+        }
     }
 }

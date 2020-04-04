@@ -119,11 +119,11 @@ namespace Wyd.Game
                     {
                         Vector3 localPosition = new Vector3(x, y, z);
                         Vector3 globalPosition = _LastCalculatedPosition + localPosition;
-                        Vector3 trueCenterGlobalPosition = globalPosition + Mathv.Half;
+                        Vector3 trueCenterGlobalPosition = globalPosition + WydMath.Half;
 
                         if (!WorldController.Current.TryGetBlockAt(globalPosition, out ushort blockId)
                             || (blockId == BlockController.AIR_ID)
-                            || !BlockController.Current.CheckBlockHasProperty(blockId, BlockRule.Property.Collideable))
+                            || !BlockController.Current.CheckBlockHasProperties(blockId, BlockDefinition.Property.Collideable))
                         {
                             if (_ColliderCubes.ContainsKey(trueCenterGlobalPosition))
                             {

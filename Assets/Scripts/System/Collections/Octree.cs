@@ -43,7 +43,7 @@ namespace Wyd.System.Collections
             Vector3 size = new Vector3(_Origin.Extent, _Origin.Extent, _Origin.Extent);
             for (int index = 0; index < size.Product(); index++)
             {
-                Vector3Int localPosition = Mathv.GetIndexAsVector3Int(index, size.AsVector3Int());
+                Vector3Int localPosition = WydMath.GetIndexAsVector3Int(index, size.AsVector3Int());
                 Vector3 globalPosition = _Origin.MinPoint + localPosition;
 
                 yield return GetPoint(globalPosition);

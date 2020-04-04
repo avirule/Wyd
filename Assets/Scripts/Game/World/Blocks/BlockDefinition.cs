@@ -12,7 +12,7 @@ using Random = System.Random;
 
 namespace Wyd.Game.World.Blocks
 {
-    public class BlockRule : IBlockRule
+    public class BlockDefinition : IBlockDefinition
     {
         [Flags]
         public enum Property
@@ -26,21 +26,18 @@ namespace Wyd.Game.World.Blocks
 
         private static readonly Func<Vector3, Direction, string> _DefaultUVsRule;
 
-        static BlockRule()
+        static BlockDefinition()
         {
             _DefaultUVsRule = (position, direction) => string.Empty;
         }
 
         private Func<Vector3, Direction, string> UVsRule { get; }
 
-        private BitVector32 _Bits;
-
         public ushort Id { get; }
-
         public string BlockName { get; }
         public Property Properties { get; }
-
         public Block.Types Type { get; }
+        public byte LightLevel { get; }
 
         public bool Transparent => (Properties & Property.Transparent) > 0;
 
@@ -51,13 +48,11 @@ namespace Wyd.Game.World.Blocks
         public bool Collectible => (Properties & Property.Collectible) > 0;
 
         public bool LightSource => (Properties & Property.LightSource) > 0;
-        public byte LightLevel { get; }
 
-        public BlockRule(ushort id, string blockName, Block.Types type,
+
+        public BlockDefinition(ushort id, string blockName, Block.Types type,
             Func<Vector3, Direction, string> uvsRule, params Property[] properties)
         {
-            _Bits = new BitVector32(0);
-
             Id = id;
             BlockName = blockName;
             Type = type;

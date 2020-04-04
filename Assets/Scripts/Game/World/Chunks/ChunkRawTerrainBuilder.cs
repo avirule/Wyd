@@ -90,7 +90,7 @@ namespace Wyd.Game.World.Chunks
 
             for (int index = ChunkController.SizeProduct - 1; index >= 0; index--)
             {
-                Vector3 globalPosition = position + Mathv.GetIndexAsVector3Int(index, ChunkController.Size);
+                Vector3 globalPosition = position + WydMath.GetIndexAsVector3Int(index, ChunkController.Size);
                 _GenerationData.Blocks.SetPoint(globalPosition, GetBlockIDAtPosition(globalPosition, index));
             }
 
@@ -125,7 +125,7 @@ namespace Wyd.Game.World.Chunks
                 for (int index = 0; index < _GenerationData.Bounds.size.Product(); index++)
                 {
                     _NoiseValues[index] =
-                        GetNoiseValueByVector3(position + Mathv.GetIndexAsVector3Int(index, ChunkController.Size));
+                        GetNoiseValueByVector3(position + WydMath.GetIndexAsVector3Int(index, ChunkController.Size));
                 }
             }
 
@@ -140,29 +140,27 @@ namespace Wyd.Game.World.Chunks
                 return GetCachedBlockID("bedrock");
             }
 
-            if (_NoiseValues[index] >= 0.01f)
+            if (_NoiseValues[index] < 0.01f)
             {
-                if ((globalPosition.y > 135)
-                    && BlockController.Current.CheckBlockHasProperty(
-                        _GenerationData.Blocks.GetPoint(globalPosition + Vector3.up),
-                        BlockRule.Property.Transparent))
-                {
-                    return GetCachedBlockID("grass");
-                }
-                else
-                {
-                    return GetCachedBlockID("stone");
-                }
+                return BlockController.AIR_ID;
             }
 
-            return BlockController.AIR_ID;
+            if (globalPosition.y > 135)
+            {
+                return GetCachedBlockID("grass");
+            }
+            else
+            {
+                return GetCachedBlockID("stone");
+            }
+
         }
 
         protected float GetNoiseValueByVector3(Vector3 globalPosition)
         {
             float noiseValue = OpenSimplex_FastNoise.GetSimplex(WorldController.Current.Seed, _Frequency,
                 globalPosition.x, globalPosition.y, globalPosition.z);
-            noiseValue += 5f * (1f - Mathf.InverseLerp(0f, ChunkController.Size.y, globalPosition.y));
+            noiseValue += 5f * (1f - Mathf.InverseLerp(0f, WorldController.WORLD_HEIGHT, globalPosition.y));
             noiseValue /= globalPosition.y + (-1f * _Persistence);
 
             return noiseValue;
