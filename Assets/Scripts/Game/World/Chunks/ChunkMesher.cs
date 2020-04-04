@@ -283,7 +283,6 @@ namespace Wyd.Game.World.Chunks
                 if (BlockController.Current.GetBlockSpriteUVs(_Blocks[index].Id, globalPosition,
                     Direction.East, uvSize, out BlockUVs blockUVs))
                 {
-
                     _UVs.Add(blockUVs.BottomLeft);
                     _UVs.Add(blockUVs.TopLeft);
                     _UVs.Add(blockUVs.BottomRight);
@@ -338,7 +337,6 @@ namespace Wyd.Game.World.Chunks
                 if (BlockController.Current.GetBlockSpriteUVs(_Blocks[index].Id, globalPosition,
                     Direction.South, uvSize, out BlockUVs blockUVs))
                 {
-
                     _UVs.Add(blockUVs.BottomLeft);
                     _UVs.Add(blockUVs.TopLeft);
                     _UVs.Add(blockUVs.BottomRight);
@@ -494,7 +492,6 @@ namespace Wyd.Game.World.Chunks
                 if (BlockController.Current.GetBlockSpriteUVs(_Blocks[index].Id, globalPosition,
                     Direction.Down, uvSize, out BlockUVs blockUVs))
                 {
-
                     _UVs.Add(blockUVs.BottomLeft);
                     _UVs.Add(blockUVs.TopLeft);
                     _UVs.Add(blockUVs.BottomRight);
@@ -620,7 +617,6 @@ namespace Wyd.Game.World.Chunks
                 if (BlockController.Current.GetBlockSpriteUVs(_Blocks[index].Id, globalPosition,
                     Direction.East, uvSize, out BlockUVs blockUVs))
                 {
-
                     _UVs.Add(blockUVs.BottomLeft);
                     _UVs.Add(blockUVs.TopLeft);
                     _UVs.Add(blockUVs.BottomRight);
@@ -675,7 +671,6 @@ namespace Wyd.Game.World.Chunks
                 if (BlockController.Current.GetBlockSpriteUVs(_Blocks[index].Id, globalPosition,
                     Direction.South, uvSize, out BlockUVs blockUVs))
                 {
-
                     _UVs.Add(blockUVs.BottomLeft);
                     _UVs.Add(blockUVs.TopLeft);
                     _UVs.Add(blockUVs.BottomRight);
@@ -839,7 +834,6 @@ namespace Wyd.Game.World.Chunks
                 if (BlockController.Current.GetBlockSpriteUVs(_Blocks[index].Id, globalPosition,
                     Direction.Down, uvSize, out BlockUVs blockUVs))
                 {
-
                     _UVs.Add(blockUVs.BottomLeft);
                     _UVs.Add(blockUVs.TopLeft);
                     _UVs.Add(blockUVs.BottomRight);
@@ -916,7 +910,8 @@ namespace Wyd.Game.World.Chunks
                         globalPosition + (traversals * traversalDirection.AsVector3()) + faceDirection.AsVector3(),
                         out ushort blockId)
                     && (((id == -1)
-                         && BlockController.Current.CheckBlockHasProperties(blockId, BlockDefinition.Property.Transparent))
+                         && BlockController.Current.CheckBlockHasProperties(blockId,
+                             BlockDefinition.Property.Transparent))
                         || ((id > -1) && (id != blockId))))
                 {
                     _Blocks[traversalIndex].Faces.SetFace(faceDirection, true);

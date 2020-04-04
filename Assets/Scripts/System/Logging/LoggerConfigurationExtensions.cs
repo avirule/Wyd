@@ -13,7 +13,8 @@ namespace Wyd.System.Logging
     public static class LoggerConfigurationExtensions
     {
         public static LoggerConfiguration UnityDebugSink(this LoggerSinkConfiguration sinkConfiguration,
-            string outputTemplate, LogEventLevel minimumLevel = LogEventLevel.Debug) => sinkConfiguration.Sink(new UnityDebugLoggerSink(outputTemplate, minimumLevel));
+            string outputTemplate, LogEventLevel minimumLevel = LogEventLevel.Debug) =>
+            sinkConfiguration.Sink(new UnityDebugLoggerSink(outputTemplate, minimumLevel));
 
         public static LoggerConfiguration MemorySink(this LoggerSinkConfiguration sinkConfiguration,
             ref List<LogEvent> logEvents) => sinkConfiguration.Sink(new MemorySink(ref logEvents));

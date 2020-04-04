@@ -9,7 +9,6 @@ using Wyd.Controllers.State;
 using Wyd.Controllers.System;
 using Wyd.Controllers.World;
 using Wyd.Controllers.World.Chunk;
-using Wyd.Game.World.Blocks;
 using Wyd.System;
 using Wyd.System.Jobs;
 using Wyd.System.Noise;
@@ -153,7 +152,6 @@ namespace Wyd.Game.World.Chunks
             {
                 return GetCachedBlockID("stone");
             }
-
         }
 
         protected float GetNoiseValueByVector3(Vector3 globalPosition)

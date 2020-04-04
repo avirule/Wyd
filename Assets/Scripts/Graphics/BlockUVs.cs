@@ -36,10 +36,8 @@ namespace Wyd.Graphics
             TopRight = topRight;
         }
 
-        public override string ToString()
-        {
-            return $"[{nameof(BottomLeft)}: {BottomLeft}], [{nameof(TopLeft)}: {TopLeft}], "
-                   + $"[{nameof(BottomRight)}: {BottomRight}], [{nameof(TopRight)}: {TopRight}]";
-        }
+        public override string ToString() =>
+            $"[{nameof(BottomLeft)}: {BottomLeft}], [{nameof(TopLeft)}: {TopLeft}], "
+            + $"[{nameof(BottomRight)}: {BottomRight}], [{nameof(TopRight)}: {TopRight}]";
     }
 }

@@ -131,7 +131,7 @@ namespace Wyd.Controllers.State
             return null;
         }
 
-        public bool TryGetBlockRule(ushort blockId, out IReadOnlyBlockDefinition blockDefinition)
+        public bool TryGetBlockDefinition(ushort blockId, out IReadOnlyBlockDefinition blockDefinition)
         {
             if (BlockIdExists(blockId))
             {
@@ -145,7 +145,7 @@ namespace Wyd.Controllers.State
             return false;
         }
 
-        public IEnumerable<IBlockDefinition> GetBlockDefinitionsByType(Block.Types type)
+        public IEnumerable<IReadOnlyBlockDefinition> GetBlockDefinitionsByType(Block.Types type)
         {
             return BlockDefinitions.Where(block => block.Type == type);
         }

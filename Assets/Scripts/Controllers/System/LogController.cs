@@ -6,7 +6,6 @@ using Serilog;
 using Serilog.Events;
 using UnityEngine;
 using Wyd.System.Logging;
-using Wyd.System.Logging.Sinks;
 
 #endregion
 

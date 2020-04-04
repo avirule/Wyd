@@ -123,7 +123,8 @@ namespace Wyd.Game
 
                         if (!WorldController.Current.TryGetBlockAt(globalPosition, out ushort blockId)
                             || (blockId == BlockController.AIR_ID)
-                            || !BlockController.Current.CheckBlockHasProperties(blockId, BlockDefinition.Property.Collideable))
+                            || !BlockController.Current.CheckBlockHasProperties(blockId,
+                                BlockDefinition.Property.Collideable))
                         {
                             if (_ColliderCubes.ContainsKey(trueCenterGlobalPosition))
                             {
