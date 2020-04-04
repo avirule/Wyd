@@ -5,9 +5,11 @@ using System.Diagnostics;
 using System.Threading;
 using Serilog;
 using UnityEngine;
+using Wyd.Controllers.State;
 using Wyd.Controllers.System;
 using Wyd.Controllers.World;
 using Wyd.Controllers.World.Chunk;
+using Wyd.Game.World.Blocks;
 using Wyd.System;
 using Wyd.System.Jobs;
 using Wyd.System.Noise;
@@ -67,7 +69,7 @@ namespace Wyd.Game.World.Chunks
 
         private void GetComputeBufferData()
         {
-            _NoiseValuesBuffer.GetData(_NoiseValues.NoiseValues);
+            _NoiseValuesBuffer.GetData(_NoiseValues);
             _NoiseValuesBuffer.Release();
             NoiseValuesReady = true;
         }
@@ -80,26 +82,7 @@ namespace Wyd.Game.World.Chunks
                 return;
             }
 
-            if (_GpuAcceleration && (_NoiseValuesBuffer != null))
-            {
-                _Stopwatch.Restart();
-
-                _NoiseValues = NoiseValuesCache.Retrieve() ?? new ChunkBuilderNoiseValues();
-
-                ManualResetEvent manualResetEvent = new ManualResetEvent(false);
-                MainThreadActionsController.Current.PushAction(new MainThreadAction(manualResetEvent,
-                    GetComputeBufferData));
-                manualResetEvent.WaitOne();
-
-                _Stopwatch.Stop();
-                NoiseRetrievalTimeSpan = _Stopwatch.Elapsed;
-            }
-            else if (_GpuAcceleration && (_NoiseValuesBuffer == null))
-            {
-                Log.Warning(
-                    $"`{nameof(_GpuAcceleration)}` is set to true, but no noise values were provided. Defaulting to CPU-bound generation.");
-                _GpuAcceleration = false;
-            }
+            GenerateNoise();
 
             _Stopwatch.Restart();
             _GenerationData.Blocks.Collapse(true);
@@ -108,16 +91,7 @@ namespace Wyd.Game.World.Chunks
             for (int index = ChunkController.SizeProduct - 1; index >= 0; index--)
             {
                 Vector3 globalPosition = position + Mathv.GetIndexAsVector3Int(index, ChunkController.Size);
-                //ushort id = _NoiseValues.NoiseValues[index] > ChunkTerrainController.THRESHOLD ? (ushort)1 : BlockController.AIR_ID;
-
-                ushort id = 0;
-
-                if (_NoiseValues.NoiseValues[index] > 0.01f)
-                {
-                    id = 4;
-                }
-
-                _GenerationData.Blocks.SetPoint(globalPosition, id);
+                _GenerationData.Blocks.SetPoint(globalPosition, GetBlockIDAtPosition(globalPosition, index));
             }
 
             NoiseValuesCache.CacheItem(ref _NoiseValues);
@@ -126,51 +100,70 @@ namespace Wyd.Game.World.Chunks
             TerrainGenerationTimeSpan = _Stopwatch.Elapsed;
         }
 
-        //            if ((position.y < 4) && (position.y <= _Rand.Next(0, 4)))
-        //            {
-        //                return _BlockIdBedrock;
-        //            }
-        // // add non-local values to current stack
-        // int sizeProduct = ChunkController.SizeProduct;
-        // int yIndexStep = ChunkController.YIndexStep;
-        //
-        // // these seems inefficient, but the CPU branch predictor will pick up on it pretty quick
-        // // so the slowdown from this check is nonexistent, since useGpu shouldn't change in this context.
-        // float noiseValue = useGpu ? noiseValues[index] : GetNoiseValueByVector3(position);
-        //
-        // if (noiseValue >= 0.01f)
-        // {
-        //     int indexAbove = index + yIndexStep;
-        //
-        //     if ((position.y > 135)
-        //         && BlockController.Current.CheckBlockHasProperty(LocalBlocksCache[sizeProduct - indexAbove],
-        //             BlockRule.Property.Transparent))
-        //     {
-        //         return _BlockIdGrass;
-        //     }
-        //     // todo fix this
-        //     // else if (IdExistsAboveWithinRange(index, 2, blockIdGrass))
-        //     // {
-        //     //     AddBlockSequentialAware(blockIdDirt);
-        //     // }
-        //     else
-        //     {
-        //         return _BlockIdStone;
-        //     }
-        // }
-        // else if ((position.y <= 155) && (position.y > 135))
-        // {
-        //     return _BlockIdWater;
-        // }
-        //
-        // return BlockController.AIR_ID;
+        private void GenerateNoise()
+        {
+            _Stopwatch.Restart();
 
-        protected float GetNoiseValueByVector3(Vector3 pos3d)
+            _NoiseValues = NoiseValuesCache.Retrieve() ?? new ChunkBuilderNoiseValues();
+
+            if (_GpuAcceleration && (_NoiseValuesBuffer != null))
+            {
+                ManualResetEvent manualResetEvent = new ManualResetEvent(false);
+                MainThreadActionsController.Current.PushAction(new MainThreadAction(manualResetEvent,
+                    GetComputeBufferData));
+                manualResetEvent.WaitOne();
+            }
+            else if (_GpuAcceleration && (_NoiseValuesBuffer == null))
+            {
+                Log.Warning(
+                    $"`{nameof(_GpuAcceleration)}` is set to true, but no noise values were provided. Defaulting to CPU-bound generation.");
+                _GpuAcceleration = false;
+            }
+            else
+            {
+                Vector3 position = _GenerationData.Bounds.min;
+                for (int index = 0; index < _GenerationData.Bounds.size.Product(); index++)
+                {
+                    _NoiseValues[index] =
+                        GetNoiseValueByVector3(position + Mathv.GetIndexAsVector3Int(index, ChunkController.Size));
+                }
+            }
+
+            _Stopwatch.Stop();
+            NoiseRetrievalTimeSpan = _Stopwatch.Elapsed;
+        }
+
+        private ushort GetBlockIDAtPosition(Vector3 globalPosition, int index)
+        {
+            if ((globalPosition.y < 4) && (globalPosition.y <= _Rand.Next(0, 4)))
+            {
+                return GetCachedBlockID("bedrock");
+            }
+
+            if (_NoiseValues[index] >= 0.01f)
+            {
+                if ((globalPosition.y > 135)
+                    && BlockController.Current.CheckBlockHasProperty(
+                        _GenerationData.Blocks.GetPoint(globalPosition + Vector3.up),
+                        BlockRule.Property.Transparent))
+                {
+                    return GetCachedBlockID("grass");
+                }
+                else
+                {
+                    return GetCachedBlockID("stone");
+                }
+            }
+
+            return BlockController.AIR_ID;
+        }
+
+        protected float GetNoiseValueByVector3(Vector3 globalPosition)
         {
             float noiseValue = OpenSimplex_FastNoise.GetSimplex(WorldController.Current.Seed, _Frequency,
-                pos3d.x, pos3d.y, pos3d.z);
-            noiseValue += 5f * (1f - Mathf.InverseLerp(0f, ChunkController.Size.y, pos3d.y));
-            noiseValue /= pos3d.y + (-1f * _Persistence);
+                globalPosition.x, globalPosition.y, globalPosition.z);
+            noiseValue += 5f * (1f - Mathf.InverseLerp(0f, ChunkController.Size.y, globalPosition.y));
+            noiseValue /= globalPosition.y + (-1f * _Persistence);
 
             return noiseValue;
         }

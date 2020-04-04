@@ -1,6 +1,9 @@
 #region
 
 using System;
+using System.Collections.Generic;
+using Wyd.Controllers.State;
+using Wyd.Controllers.System;
 using Wyd.Controllers.World;
 using Wyd.System;
 using Wyd.System.Collections;
@@ -15,7 +18,10 @@ namespace Wyd.Game.World.Chunks
             new ObjectCache<ChunkBuilderNoiseValues>();
 
         protected Random _Rand;
+        protected readonly Dictionary<string, ushort> BlockIDCache;
         protected GenerationData _GenerationData;
+
+        public ChunkBuilder() => BlockIDCache = new Dictionary<string, ushort>();
 
         /// <summary>
         ///     Prepares job for new execution.
@@ -24,6 +30,21 @@ namespace Wyd.Game.World.Chunks
         {
             _Rand = new Random(WorldController.Current.Seed);
             _GenerationData = generationData;
+        }
+
+        protected ushort GetCachedBlockID(string blockName)
+        {
+            if (BlockIDCache.TryGetValue(blockName, out ushort id))
+            {
+                return id;
+            }
+            else if (BlockController.Current.TryGetBlockId(blockName, out id))
+            {
+                BlockIDCache.Add(blockName, id);
+                return id;
+            }
+
+            return BlockController.AIR_ID;
         }
     }
 }
