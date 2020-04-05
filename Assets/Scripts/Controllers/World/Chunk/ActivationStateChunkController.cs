@@ -20,14 +20,12 @@ namespace Wyd.Controllers.World.Chunk
         protected virtual void Awake()
         {
             _SelfTransform = transform;
-            float3 position = _SelfTransform.position;
-            _Bounds.SetMinMaxPoints(position, position + ChunkController.Size);
         }
 
         protected virtual void OnEnable()
         {
-            Vector3 position = _SelfTransform.position;
-            _Bounds.SetMinMaxPoints(position, (float3)position + ChunkController.Size);
+            float3 position = _SelfTransform.position;
+            _Bounds.SetMinMaxPoints(position, position + ChunkController.Size);
         }
 
         protected virtual void OnDisable()

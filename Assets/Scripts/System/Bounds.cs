@@ -1,5 +1,8 @@
+#region
+
 using Unity.Mathematics;
-using UnityEngine;
+
+#endregion
 
 namespace Wyd.System
 {
@@ -29,9 +32,8 @@ namespace Wyd.System
             CenterPoint = MinPoint + Extents;
         }
 
-        public bool Contains(float3 point)
-        {
-            return math.all(point < MaxPoint) && math.all(point > MinPoint);
-        }
+        public bool Contains(float3 point) => math.all(point < MaxPoint) && math.all(point > MinPoint);
+
+        public override string ToString() => $"(center: {CenterPoint}, size: {Size}, min: {MinPoint}, max: {MaxPoint})";
     }
 }

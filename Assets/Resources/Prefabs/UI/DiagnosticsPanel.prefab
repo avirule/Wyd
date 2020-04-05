@@ -786,12 +786,12 @@ PrefabInstance:
     - target: {fileID: 5521364810674680098, guid: 522502ab0fcea204c846d784c30e0957,
         type: 3}
       propertyPath: m_textInfo.characterCount
-      value: 28
+      value: 34
       objectReference: {fileID: 0}
     - target: {fileID: 5521364810674680098, guid: 522502ab0fcea204c846d784c30e0957,
         type: 3}
       propertyPath: m_textInfo.wordCount
-      value: 6
+      value: 8
       objectReference: {fileID: 0}
     - target: {fileID: 5521364810674680098, guid: 522502ab0fcea204c846d784c30e0957,
         type: 3}
@@ -806,12 +806,12 @@ PrefabInstance:
     - target: {fileID: 5521364810674680098, guid: 522502ab0fcea204c846d784c30e0957,
         type: 3}
       propertyPath: m_text
-      value: 'Chunk Position: (x{0}, z{2})'
+      value: 'Chunk Position: (x{0}, y{1}, z{2})'
       objectReference: {fileID: 0}
     - target: {fileID: 5521364810674680098, guid: 522502ab0fcea204c846d784c30e0957,
         type: 3}
       propertyPath: m_textInfo.spaceCount
-      value: 3
+      value: 4
       objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 522502ab0fcea204c846d784c30e0957, type: 3}

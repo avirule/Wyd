@@ -78,6 +78,27 @@ namespace Wyd.Controllers.World.Chunk
         [SerializeField]
         private ChunkMeshController MeshController;
 
+        #if UNITY_EDITOR
+
+        [SerializeField]
+        [ReadOnlyInspectorField]
+        public Vector3 TransformPosition;
+
+        [SerializeField]
+        [ReadOnlyInspectorField]
+        public Vector3 MinimumPoint;
+
+        [SerializeField]
+        [ReadOnlyInspectorField]
+        public Vector3 MaximumPoint;
+
+        [SerializeField]
+        [ReadOnlyInspectorField]
+        public Vector3 Extents;
+
+
+        #endif
+
         #endregion
 
         protected override void Awake()
@@ -124,6 +145,10 @@ namespace Wyd.Controllers.World.Chunk
         {
             base.OnEnable();
 
+            TransformPosition = _SelfTransform.position;
+            MinimumPoint = _Bounds.MinPoint;
+            MaximumPoint = _Bounds.MaxPoint;
+            Extents = _Bounds.Extents;
             _Visible = MeshRenderer.enabled;
         }
 

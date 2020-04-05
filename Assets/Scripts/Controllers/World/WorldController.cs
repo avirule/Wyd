@@ -257,7 +257,9 @@ namespace Wyd.Controllers.World
                             return;
                         }
 
-                        int3 position = loader.ChunkPosition + new int3(x, y, z) * ChunkController.Size;
+                        int3 chunkPosition = loader.ChunkPosition;
+                        chunkPosition.y = 0;
+                        int3 position = chunkPosition + (new int3(x, y, z) * ChunkController.Size);
 
                         // todo
                         // this will run into the issue of two loaders being within the same render distance
@@ -274,12 +276,7 @@ namespace Wyd.Controllers.World
                         }
                         else
                         {
-                            chunkController = Instantiate(_ChunkControllerPrefab, (float3)position, Quaternion.identity, transform);
-                        }
-
-                        if (math.any(chunkController.Position > 10000))
-                        {
-
+                            chunkController = Instantiate(_ChunkControllerPrefab, (float3)position, quaternion.identity, transform);
                         }
 
                         chunkController.Changed += OnChunkMeshChanged;
@@ -287,6 +284,8 @@ namespace Wyd.Controllers.World
 
                         chunkController.AssignLoader(ref loader);
                         _Chunks.Add(position, chunkController);
+
+                        Log.Verbose($"Created chunk at {position}.");
 
                         // ensures that neighbours update their meshes to cull newly out of sight faces
                         FlagNeighborsForMeshUpdate(position, Directions.AllDirectionAxes);

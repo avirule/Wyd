@@ -19,12 +19,10 @@ namespace Wyd.System.Jobs
 
     public sealed class JobScheduler
     {
-        private bool _Disposed;
-
         private readonly Thread _OperationThread;
+        private readonly AutoResetEvent _WorkFinishedResetEvent;
         private readonly List<JobWorker> _Workers;
         private readonly SpinLockCollection<Job> _JobQueue;
-        private readonly SpinLockCollection<JobWorker> _FreeJobWorkers;
         private readonly CancellationTokenSource _AbortTokenSource;
 
         private CancellationToken _AbortToken;
@@ -83,12 +81,15 @@ namespace Wyd.System.Jobs
             ThreadingMode = threadingMode;
             ModifyWorkerThreadCount(workerCount);
 
-            _OperationThread = new Thread(ExecuteScheduler);
+            _OperationThread = new Thread(ExecuteScheduler)
+            {
+                Priority = ThreadPriority.BelowNormal
+            };
+            _WorkFinishedResetEvent = new AutoResetEvent(true);
             _JobQueue = new SpinLockCollection<Job>();
             _Workers = new List<JobWorker>(WorkerThreadCount);
             _AbortTokenSource = new CancellationTokenSource();
             _AbortToken = _AbortTokenSource.Token;
-            _FreeJobWorkers = new SpinLockCollection<JobWorker>();
 
             Running = false;
 
@@ -138,6 +139,7 @@ namespace Wyd.System.Jobs
             OnWorkerCountChanged(this, WorkerThreadCount);
         }
 
+
         #region STATE
 
         /// <summary>
@@ -177,7 +179,7 @@ namespace Wyd.System.Jobs
 
             foreach (JobWorker jobWorker in _Workers)
             {
-                while (!jobWorker.InternalThread.ThreadState.HasFlag(ThreadState.Aborted))
+                while (!jobWorker.State.HasFlag(ThreadState.Aborted))
                 {
                     if (DateTime.UtcNow <= maximumWorkerLifetime)
                     {
@@ -189,7 +191,7 @@ namespace Wyd.System.Jobs
                         safeAbort = false;
                     }
 
-                    jobWorker.InternalThread.Join();
+                    jobWorker.Join();
                 }
             }
 
@@ -197,6 +199,7 @@ namespace Wyd.System.Jobs
         }
 
         #endregion
+
 
         #region RUNTIME
 
@@ -240,16 +243,11 @@ namespace Wyd.System.Jobs
 
         private void SpawnJobWorker()
         {
-            JobWorker jobWorker = new JobWorker(WaitTimeout, _AbortToken);
+            JobWorker jobWorker = new JobWorker(WaitTimeout, _AbortToken, _WorkFinishedResetEvent);
             jobWorker.JobStarted += OnJobStarted;
-            jobWorker.JobFinished += (sender, args) =>
-            {
-                _FreeJobWorkers.Add(jobWorker);
-                OnJobFinished(sender, args);
-            };
+            jobWorker.JobFinished += OnJobFinished;
             jobWorker.Start();
             _Workers.Add(jobWorker);
-            _FreeJobWorkers.Add(jobWorker);
         }
 
         /// <summary>
@@ -265,46 +263,23 @@ namespace Wyd.System.Jobs
                     job.Execute();
                     break;
                 case ThreadingMode.Multi:
-                    DelegateJobByWorkload(job);
-                    //DelegateJobToFreeWorker(job);
+                    //DelegateJobByWorkload(job);
+                    JobWorker jobWorker;
+
+                    while (!TryGetFirstFreeWorker(out jobWorker))
+                    {
+                        _WorkFinishedResetEvent.WaitOne();
+                    }
+
+                    jobWorker.QueueJob(job);
+                    Log.Debug(
+                        $"{nameof(JobScheduler)} queued job (`{job.Identity}`) to {nameof(JobWorker)} with ID {jobWorker.ManagedThreadID}.");
 
                     OnJobDelegated(this, new JobEventArgs(job));
                     break;
                 default:
                     throw new ArgumentOutOfRangeException();
             }
-        }
-
-        private void DelegateJobByWorkload(Job job)
-        {
-            int index = GetLowestWorkloadJobWorkerIndex();
-
-            _Workers[index].QueueJob(job);
-        }
-
-        private void DelegateJobToFreeWorker(Job job)
-        {
-            JobWorker jobWorker = _FreeJobWorkers.Take();
-            jobWorker.QueueJob(job);
-        }
-
-        private int GetLowestWorkloadJobWorkerIndex()
-        {
-            int jobWorkerIndex = 0;
-            long lowestWorkload = int.MaxValue;
-
-            for (int index = 0; index < _Workers.Count; index++)
-            {
-                long jobsQueued = _Workers[index].JobsQueued;
-
-                if (jobsQueued < lowestWorkload)
-                {
-                    jobWorkerIndex = index;
-                    lowestWorkload = jobsQueued;
-                }
-            }
-
-            return jobWorkerIndex;
         }
 
         /// <summary>
@@ -321,11 +296,12 @@ namespace Wyd.System.Jobs
         /// </returns>
         private bool TryGetFirstFreeWorker(out JobWorker jobWorker)
         {
-            jobWorker = _Workers.FirstOrDefault(worker => !worker.Executing && (worker.JobsQueued == 0));
+            jobWorker = _Workers.FirstOrDefault(worker => worker.Waiting);
             return jobWorker != null;
         }
 
         #endregion
+
 
         #region EVENTS
 

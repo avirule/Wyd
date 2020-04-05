@@ -44,20 +44,19 @@ namespace Wyd.System.Collections
 
         public void Populate()
         {
-            float newExtent = Bounds.Extents.x / 2f;
-            float centerOffsetValue = newExtent / 2f;
-            Vector3 centerOffset = new Vector3(centerOffsetValue, centerOffsetValue, centerOffsetValue);
+            float centerOffsetValue = Bounds.Extents.x / 2f;
+            float3 centerOffset = new float3(centerOffsetValue);
 
             Nodes = new List<OctreeNode<T>>
             {
-                new OctreeNode<T>(Bounds.CenterPoint + (_Coordinates[0] * centerOffset), newExtent, Value),
-                new OctreeNode<T>(Bounds.CenterPoint + (_Coordinates[1] * centerOffset), newExtent, Value),
-                new OctreeNode<T>(Bounds.CenterPoint + (_Coordinates[2] * centerOffset), newExtent, Value),
-                new OctreeNode<T>(Bounds.CenterPoint + (_Coordinates[3] * centerOffset), newExtent, Value),
-                new OctreeNode<T>(Bounds.CenterPoint + (_Coordinates[4] * centerOffset), newExtent, Value),
-                new OctreeNode<T>(Bounds.CenterPoint + (_Coordinates[5] * centerOffset), newExtent, Value),
-                new OctreeNode<T>(Bounds.CenterPoint + (_Coordinates[6] * centerOffset), newExtent, Value),
-                new OctreeNode<T>(Bounds.CenterPoint + (_Coordinates[7] * centerOffset), newExtent, Value)
+                new OctreeNode<T>(Bounds.CenterPoint + (_Coordinates[0] * centerOffset), Bounds.Extents.x, Value),
+                new OctreeNode<T>(Bounds.CenterPoint + (_Coordinates[1] * centerOffset), Bounds.Extents.x, Value),
+                new OctreeNode<T>(Bounds.CenterPoint + (_Coordinates[2] * centerOffset), Bounds.Extents.x, Value),
+                new OctreeNode<T>(Bounds.CenterPoint + (_Coordinates[3] * centerOffset), Bounds.Extents.x, Value),
+                new OctreeNode<T>(Bounds.CenterPoint + (_Coordinates[4] * centerOffset), Bounds.Extents.x, Value),
+                new OctreeNode<T>(Bounds.CenterPoint + (_Coordinates[5] * centerOffset), Bounds.Extents.x, Value),
+                new OctreeNode<T>(Bounds.CenterPoint + (_Coordinates[6] * centerOffset), Bounds.Extents.x, Value),
+                new OctreeNode<T>(Bounds.CenterPoint + (_Coordinates[7] * centerOffset), Bounds.Extents.x, Value)
             };
         }
 
@@ -67,7 +66,7 @@ namespace Wyd.System.Collections
 
             if (!ContainsMinBiased(point))
             {
-                throw new ArgumentOutOfRangeException(nameof(point));
+                throw new ArgumentOutOfRangeException($"Cannot get point: specified point {point} not contained within bounds {Bounds}.");
             }
 
             return IsUniform ? Value : Nodes[DetermineOctant(point)].GetPoint(point);
@@ -79,7 +78,7 @@ namespace Wyd.System.Collections
 
             if (!ContainsMinBiased(point))
             {
-                throw new ArgumentOutOfRangeException(nameof(point));
+                throw new ArgumentOutOfRangeException($"Cannot set point: specified point {point} not contained within bounds {Bounds}.");
             }
 
             if (IsUniform && Value.Equals(newValue))
@@ -88,7 +87,7 @@ namespace Wyd.System.Collections
                 return;
             }
 
-            if (Bounds.Extents.x <= 1f)
+            if (Bounds.Size.x <= 1f)
             {
                 // reached smallest possible depth (usually 1x1x1) so
                 // set value and return
@@ -120,6 +119,16 @@ namespace Wyd.System.Collections
 
         private bool CheckShouldCollapse()
         {
+            if (Nodes == null)
+            {
+                return false;
+            }
+
+            if (Nodes.Count == 0)
+            {
+                return true;
+            }
+
             T firstValue = Nodes[0].Value;
             return Nodes.All(node => node.IsUniform) && Nodes.All(node => node.Value.Equals(firstValue));
         }
@@ -127,7 +136,7 @@ namespace Wyd.System.Collections
 
         #region HELPER METHODS
 
-        public bool ContainsMinBiased(Vector3 point) =>
+        public bool ContainsMinBiased(float3 point) =>
             (point.x < Bounds.MaxPoint.x)
             && (point.y < Bounds.MaxPoint.y)
             && (point.z < Bounds.MaxPoint.z)
@@ -142,7 +151,7 @@ namespace Wyd.System.Collections
         // top half quadrant:
         // 5 7
         // 4 6
-        private int DetermineOctant(Vector3 point) =>
+        private int DetermineOctant(float3 point) =>
             (point.x < Bounds.CenterPoint.x ? 0 : 1)
             + (point.y < Bounds.CenterPoint.y ? 0 : 4)
             + (point.z < Bounds.CenterPoint.z ? 0 : 2);

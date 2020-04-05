@@ -13,26 +13,16 @@ namespace Wyd.System
         [Flags]
         public enum GenerationStep : ushort
         {
-            Noise,
-            NoiseWaitFrameOne,
-            NoiseWaitFrameTwo,
-            RawTerrain,
-            Complete
+            Noise = 1,
+            NoiseWaitFrameOne = 2,
+            NoiseWaitFrameTwo = 4,
+            RawTerrain = 8,
+            AwaitingRawTerrain = 16,
+            Complete = 0xFFFF
         }
 
-        public enum MeshingState
-        {
-            Unmeshed,
-            UpdateRequested,
-            PendingGeneration,
-            Meshed
-        }
-
-        public const GenerationStep INITIAL_TERRAIN_STEP = GenerationStep.RawTerrain;
-        public const GenerationStep FINAL_TERRAIN_STEP = GenerationStep.RawTerrain;
-
-        public Bounds Bounds { get; private set; }
-        public Octree<ushort> Blocks { get; private set; }
+        public Bounds Bounds { get; }
+        public Octree<ushort> Blocks { get; }
 
         public GenerationData(Bounds bounds, Octree<ushort> blocks) => (Bounds, Blocks) = (bounds, blocks);
     }

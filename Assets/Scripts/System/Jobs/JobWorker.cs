@@ -12,16 +12,20 @@ namespace Wyd.System.Jobs
     public class JobWorker
     {
         private readonly object _Handle;
+        private readonly Thread _InternalThread;
         private readonly SpinLockCollection<Job> _JobQueue;
         private readonly CancellationToken _AbortToken;
+        private readonly AutoResetEvent _WorkFinishedResetEvent;
 
         private bool _Executing;
         private long _JobsQueued;
 
         public TimeSpan WaitTimeout { get; }
-        public Thread InternalThread { get; }
 
-        public bool Running { get; private set; }
+        public int ManagedThreadID => _InternalThread.ManagedThreadId;
+        public ThreadState State => _InternalThread.ThreadState;
+        public bool Running => _InternalThread.IsAlive;
+        public bool Waiting => !Executing && JobsQueued == 0;
 
         public bool Executing
         {
@@ -50,20 +54,23 @@ namespace Wyd.System.Jobs
         public event JobEventHandler JobStarted;
         public event JobEventHandler JobFinished;
 
-        public JobWorker(TimeSpan waitTimeout, CancellationToken abortToken)
+        public JobWorker(TimeSpan waitTimeout, CancellationToken abortToken, AutoResetEvent workFinishedResetEvent)
         {
             _Handle = new object();
-            InternalThread = new Thread(ProcessItemQueue);
+            _InternalThread = new Thread(ProcessItemQueue)
+            {
+                Priority = ThreadPriority.BelowNormal
+            };
 
             _AbortToken = abortToken;
             _JobQueue = new SpinLockCollection<Job>();
+            _WorkFinishedResetEvent = workFinishedResetEvent;
             WaitTimeout = waitTimeout;
         }
 
         public void Start()
         {
-            InternalThread.Start();
-            Running = true;
+            _InternalThread.Start();
         }
 
         /// <summary>
@@ -77,8 +84,8 @@ namespace Wyd.System.Jobs
                 return;
             }
 
-            InternalThread.Abort();
-            Log.Warning($"{nameof(JobWorker)} ID {InternalThread.ManagedThreadId} forced to abort.");
+            _InternalThread.Abort();
+            Log.Warning($"{nameof(JobWorker)} ID {_InternalThread.ManagedThreadId} forced to abort.");
         }
 
         public void QueueJob(Job job)
@@ -100,21 +107,26 @@ namespace Wyd.System.Jobs
 
                     ExecuteJob(job);
                     Interlocked.Decrement(ref _JobsQueued);
+
+                    if (_JobsQueued == 0)
+                    {
+                        _WorkFinishedResetEvent.Set();
+                    }
                 }
             }
             catch (OperationCanceledException)
             {
                 // Thread aborted
-                Log.Warning($"{nameof(JobWorker)} (ID {InternalThread.ManagedThreadId}) has critically aborted.");
+                Log.Warning($"{nameof(JobWorker)} (ID {_InternalThread.ManagedThreadId}) has critically aborted.");
             }
             catch (Exception ex)
             {
                 Log.Error(
-                    $"Error in {nameof(JobWorker)} (ID {InternalThread.ManagedThreadId}): {ex.Message}\r\n{ex.StackTrace}");
+                    $"Error in {nameof(JobWorker)} (ID {_InternalThread.ManagedThreadId}): {ex.Message}\r\n{ex.StackTrace}");
             }
             finally
             {
-                Running = Executing = false;
+                Executing = false;
             }
         }
 
@@ -129,6 +141,13 @@ namespace Wyd.System.Jobs
             Executing = false;
         }
 
+        public void Join()
+        {
+            _InternalThread.Join();
+        }
+
+        #region Events
+
         private void OnJobStarted(object sender, JobEventArgs args)
         {
             JobStarted?.Invoke(sender, args);
@@ -138,5 +157,7 @@ namespace Wyd.System.Jobs
         {
             JobFinished?.Invoke(sender, args);
         }
+
+        #endregion
     }
 }

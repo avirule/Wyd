@@ -55,8 +55,8 @@ namespace Wyd.Controllers.World.Chunk
         {
             base.Awake();
 
-            Blocks = new Octree<ushort>(_Bounds.MinPoint + (ChunkController.Size / new int3(2)), ChunkController.Size.x,
-                0);
+            Blocks = new Octree<ushort>(_Bounds.MinPoint + (ChunkController.Size / new float3(2f)),
+                ChunkController.Size.x, 0);
             _BlockActions = new Queue<BlockAction>();
         }
 
@@ -66,6 +66,9 @@ namespace Wyd.Controllers.World.Chunk
 
             PerFrameUpdateController.Current.RegisterPerFrameUpdater(30, this);
             ClearInternalData();
+
+            Blocks = new Octree<ushort>(_Bounds.MinPoint + (ChunkController.Size / new float3(2f)),
+                ChunkController.Size.x, 0);
         }
 
         protected override void OnDisable()

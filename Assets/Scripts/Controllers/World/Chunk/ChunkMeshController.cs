@@ -108,7 +108,7 @@ namespace Wyd.Controllers.World.Chunk
                 || (TerrainController.CurrentStep != GenerationData.GenerationStep.Complete)
                 || !WorldController.Current.ReadyForGeneration
                 || (WorldController.Current.AggregateNeighborsStep(WydMath.ToInt(_Bounds.MinPoint))
-                    != GenerationData.GenerationStep.Complete))
+                    < GenerationData.GenerationStep.Complete))
             {
                 return;
             }

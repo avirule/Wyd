@@ -3,7 +3,6 @@
 using System;
 using Unity.Mathematics;
 using UnityEngine;
-using UnityEngine.Networking.Match;
 using Wyd.Controllers.State;
 using Wyd.Controllers.System;
 using Wyd.Game;
@@ -31,7 +30,6 @@ namespace Wyd.Controllers.World.Chunk
         private object _JobIdentity;
 
         public GenerationData.GenerationStep CurrentStep { get; private set; }
-        public bool Generating { get; private set; }
 
         #endregion
 
@@ -79,9 +77,9 @@ namespace Wyd.Controllers.World.Chunk
 
         public void FrameUpdate()
         {
-            if (Generating
-                || (CurrentStep == GenerationData.GenerationStep.Complete)
-                || ((CurrentStep > GenerationData.GenerationStep.RawTerrain)
+            if ((CurrentStep == GenerationData.GenerationStep.Complete)
+                || !WorldController.Current.ReadyForGeneration
+                || ((CurrentStep > GenerationData.GenerationStep.NoiseWaitFrameTwo)
                     && (WorldController.Current.AggregateNeighborsStep(WydMath.ToInt(_Bounds.MinPoint)) < CurrentStep)))
             {
                 return;
@@ -97,23 +95,22 @@ namespace Wyd.Controllers.World.Chunk
             _NoiseBuffer?.Release();
             TimesTerrainChanged = 0;
             _JobIdentity = null;
-            CurrentStep = 0;
-            Generating = false;
+            CurrentStep = (GenerationData.GenerationStep)1;
         }
 
         #endregion
 
         #region RUNTIME
 
-        private void QueueJob(Job job)
+        private bool QueueJob(Job job)
         {
             if (!SystemController.Current.TryQueueJob(job, out _JobIdentity))
             {
-                return;
+                return false;
             }
 
             SystemController.Current.JobFinished += OnJobFinished;
-            Generating = true;
+            return true;
         }
 
         private void ExecuteStep(GenerationData.GenerationStep step)
@@ -139,9 +136,9 @@ namespace Wyd.Controllers.World.Chunk
                 case GenerationData.GenerationStep.RawTerrain:
                     BeginRawTerrainGeneration();
                     break;
+                case GenerationData.GenerationStep.AwaitingRawTerrain:
                 case GenerationData.GenerationStep.Complete:
                     break;
-
                 default:
                     throw new ArgumentOutOfRangeException(nameof(step), step, null);
             }
@@ -161,15 +158,13 @@ namespace Wyd.Controllers.World.Chunk
 
         private void BeginRawTerrainGeneration()
         {
-            if (Generating)
-            {
-                return;
-            }
-
             ChunkBuildingJob job = new ChunkBuildingJob(new GenerationData(_Bounds, BlocksController.Blocks),
                 _FREQUENCY, _PERSISTENCE, OptionsController.Current.GPUAcceleration, _NoiseBuffer);
 
-            QueueJob(job);
+            if (QueueJob(job))
+            {
+                CurrentStep = GenerationData.GenerationStep.AwaitingRawTerrain;
+            }
         }
 
         #endregion
@@ -193,32 +188,27 @@ namespace Wyd.Controllers.World.Chunk
 
             switch (CurrentStep)
             {
-                case GenerationData.GenerationStep.RawTerrain:
-                    OnChunkTerrainChanged(this,
-                        new ChunkChangedEventArgs(_Bounds, Directions.CardinalDirectionAxes));
+                case GenerationData.GenerationStep.AwaitingRawTerrain:
+                    OnChunkTerrainChanged(this, new ChunkChangedEventArgs(_Bounds, Directions.CardinalDirectionAxes));
                     break;
-                // case GenerationData.GenerationStep.Accents:
-                //     _AggregateBuildTime += args.Job.ExecutionTime;
-                //     OnChunkTerrainChanged(this, new ChunkChangedEventArgs(_Bounds, Enumerable.Empty<Vector3>()));
-                //     break;
-                case GenerationData.GenerationStep.Complete:
                 case GenerationData.GenerationStep.Noise:
                 case GenerationData.GenerationStep.NoiseWaitFrameOne:
                 case GenerationData.GenerationStep.NoiseWaitFrameTwo:
+                case GenerationData.GenerationStep.RawTerrain:
+                case GenerationData.GenerationStep.Complete:
                     break;
                 default:
                     throw new ArgumentOutOfRangeException();
             }
 
-            // this check always BEFORE incrementing the step
-            if (CurrentStep == GenerationData.FINAL_TERRAIN_STEP)
+            CurrentStep = CurrentStep.Next();
+
+            if (CurrentStep == GenerationData.GenerationStep.Complete)
             {
                 TotalTimesTerrainChanged += 1;
                 TimesTerrainChanged += 1;
             }
 
-            CurrentStep = CurrentStep.Next();
-            Generating = false;
             _JobIdentity = null;
             SystemController.Current.JobFinished -= OnJobFinished;
         }

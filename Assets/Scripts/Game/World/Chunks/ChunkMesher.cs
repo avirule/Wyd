@@ -108,19 +108,26 @@ namespace Wyd.Game.World.Chunks
         {
             int index = 0;
 
-            foreach (ushort id in blocks)
+            try
             {
-                if (_Blocks[index] == null)
+                foreach (ushort id in blocks)
                 {
-                    _Blocks[index] = new MeshBlock(id);
-                }
-                else
-                {
-                    _Blocks[index].Id = id;
-                    _Blocks[index].Faces.ClearFaces();
-                }
+                    if (_Blocks[index] == null)
+                    {
+                        _Blocks[index] = new MeshBlock(id);
+                    }
+                    else
+                    {
+                        _Blocks[index].Id = id;
+                        _Blocks[index].Faces.ClearFaces();
+                    }
 
-                index += 1;
+                    index += 1;
+                }
+            }
+            catch (Exception)
+            {
+
             }
         }
 

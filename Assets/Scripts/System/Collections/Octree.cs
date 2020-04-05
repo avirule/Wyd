@@ -3,7 +3,6 @@
 using System;
 using System.Collections.Generic;
 using Unity.Mathematics;
-using UnityEngine;
 
 #endregion
 
@@ -41,10 +40,11 @@ namespace Wyd.System.Collections
 
         public IEnumerable<T> GetAllData()
         {
-            int3 size = WydMath.ToInt(_Origin.Bounds.Extents);
-            for (int index = 0; index < WydMath.Product(size); index++)
+            for (int x = 0; x < _Origin.Bounds.Size.x; x++)
+            for (int y = 0; y < _Origin.Bounds.Size.x; y++)
+            for (int z = 0; z < _Origin.Bounds.Size.x; z++)
             {
-                yield return GetPoint(_Origin.Bounds.MinPoint + WydMath.IndexTo3D(index, size));
+                yield return GetPoint(_Origin.Bounds.MinPoint + new float3(x, y, z));
             }
         }
     }
