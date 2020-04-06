@@ -11,14 +11,14 @@ namespace Wyd.System
     public class GenerationData
     {
         [Flags]
-        public enum GenerationStep : ushort
+        public enum GenerationStep : byte
         {
-            Noise = 1,
-            NoiseWaitFrameOne = 2,
-            NoiseWaitFrameTwo = 4,
-            RawTerrain = 8,
-            AwaitingRawTerrain = 16,
-            Complete = 0xFFFF
+            Noise = 0b0000_0001,
+            NoiseWaitFrameOne = 0b0000_0011,
+            NoiseWaitFrameTwo = 0b0000_0111,
+            RawTerrain = 0b0000_1111,
+            AwaitingRawTerrain = 0b0001_1111,
+            Complete = 0b1111_1111
         }
 
         public Bounds Bounds { get; }

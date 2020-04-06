@@ -87,7 +87,10 @@ namespace Wyd.Controllers.World.Chunk
 
         public void FrameUpdate()
         {
-            if (StepIntoFrameUpdate) { }
+            if (StepIntoFrameUpdate)
+            {
+                StepIntoFrameUpdate = false;
+            }
 
             if ((CurrentStep == GenerationData.GenerationStep.Complete)
                 || !WorldController.Current.ReadyForGeneration
