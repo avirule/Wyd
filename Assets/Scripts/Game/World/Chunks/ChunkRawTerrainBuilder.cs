@@ -142,6 +142,8 @@ namespace Wyd.Game.World.Chunks
 
         private ushort GetBlockIDAtPosition(float3 globalPosition, int index)
         {
+            return _NoiseValues[index] <= 0.01f ? (ushort)1 : (ushort)0;
+
             if ((globalPosition.y < 4) && (globalPosition.y <= _Rand.Next(0, 4)))
             {
                 return GetCachedBlockID("bedrock");

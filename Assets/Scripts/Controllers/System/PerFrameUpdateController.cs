@@ -47,8 +47,22 @@ namespace Wyd.Controllers.System
             {
                 ProcessPerFrameUpdateModifications();
 
-                foreach ((int _, List<IPerFrameUpdate> perFrameUpdaters) in _PerFrameUpdates)
+                bool firstRun = true;
+                int previousSortValue = int.MinValue;
+
+                foreach ((int sortValue, List<IPerFrameUpdate> perFrameUpdaters) in _PerFrameUpdates)
                 {
+                    if (firstRun)
+                    {
+                        firstRun = false;
+                    }
+                    else if (previousSortValue > sortValue)
+                    {
+                        Log.Warning($"{nameof(PerFrameUpdateController)} is updating in descending order ({previousSortValue} < {sortValue}).");
+                    }
+
+                    previousSortValue = sortValue;
+
                     foreach (IPerFrameUpdate perFrameUpdate in perFrameUpdaters)
                     {
                         if (!IsInSafeFrameTime())

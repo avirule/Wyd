@@ -167,11 +167,11 @@ uniform float3 _MaximumSize;
 uniform float _WorldHeight;
 uniform float _Threshold;
 
-RWStructuredBuffer<float> Result;
-
 float _Frequency;
 float _Peristence;
 float3 _Offset;
+
+RWStructuredBuffer<float> Result;
 
 float customSimplexNoise(float3 xyz)
 {

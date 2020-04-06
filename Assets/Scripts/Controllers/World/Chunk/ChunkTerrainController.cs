@@ -29,7 +29,11 @@ namespace Wyd.Controllers.World.Chunk
 
         private object _JobIdentity;
 
-        public GenerationData.GenerationStep CurrentStep { get; private set; }
+        public GenerationData.GenerationStep CurrentStep
+        {
+            get => InternalGenerationStep;
+            private set => InternalGenerationStep = value;
+        }
 
         #endregion
 
@@ -45,6 +49,12 @@ namespace Wyd.Controllers.World.Chunk
         [SerializeField]
         [ReadOnlyInspectorField]
         private int TimesTerrainChanged;
+
+        [SerializeField]
+        private GenerationData.GenerationStep InternalGenerationStep;
+
+        [SerializeField]
+        private bool StepIntoFrameUpdate;
 
         #endregion
 
@@ -77,10 +87,11 @@ namespace Wyd.Controllers.World.Chunk
 
         public void FrameUpdate()
         {
+            if (StepIntoFrameUpdate) { }
+
             if ((CurrentStep == GenerationData.GenerationStep.Complete)
                 || !WorldController.Current.ReadyForGeneration
-                || ((CurrentStep > GenerationData.GenerationStep.NoiseWaitFrameTwo)
-                    && (WorldController.Current.AggregateNeighborsStep(WydMath.ToInt(_Bounds.MinPoint)) < CurrentStep)))
+                || (WorldController.Current.AggregateNeighborsStep(WydMath.ToInt(_Bounds.MinPoint)) < CurrentStep))
             {
                 return;
             }
