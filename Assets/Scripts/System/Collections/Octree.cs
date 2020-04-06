@@ -8,7 +8,7 @@ using Unity.Mathematics;
 
 namespace Wyd.System.Collections
 {
-    public class Octree<T> where T : IEquatable<T>
+    public class Octree<T> where T : unmanaged
     {
         private readonly OctreeNode<T> _Origin;
 
@@ -26,7 +26,7 @@ namespace Wyd.System.Collections
 
         public void Collapse(bool collapse)
         {
-            if (collapse)
+            if (collapse && !_Origin.IsUniform)
             {
                 _Origin.Collapse();
             }

@@ -43,18 +43,22 @@ namespace Wyd.Controllers.World.Chunk
         private ChunkBlocksController BlocksController;
 
         [SerializeField]
-        [ReadOnlyInspectorField]
-        private int TotalTimesTerrainChanged;
-
-        [SerializeField]
-        [ReadOnlyInspectorField]
-        private int TimesTerrainChanged;
-
-        [SerializeField]
         private GenerationData.GenerationStep InternalGenerationStep;
+
+#if UNITY_EDITOR
+
+        [SerializeField]
+        [ReadOnlyInspectorField]
+        private long TotalTimesTerrainChanged;
+
+        [SerializeField]
+        [ReadOnlyInspectorField]
+        private long TimesTerrainChanged;
 
         [SerializeField]
         private bool StepIntoFrameUpdate;
+
+#endif
 
         #endregion
 
@@ -87,10 +91,14 @@ namespace Wyd.Controllers.World.Chunk
 
         public void FrameUpdate()
         {
+#if UNITY_EDITOR
+
             if (StepIntoFrameUpdate)
             {
                 StepIntoFrameUpdate = false;
             }
+
+#endif
 
             if ((CurrentStep == GenerationData.GenerationStep.Complete)
                 || !WorldController.Current.ReadyForGeneration
@@ -107,9 +115,14 @@ namespace Wyd.Controllers.World.Chunk
         private void ClearInternalData()
         {
             _NoiseBuffer?.Release();
-            TimesTerrainChanged = 0;
             _JobIdentity = null;
             CurrentStep = (GenerationData.GenerationStep)1;
+
+#if UNITY_EDITOR
+
+            TimesTerrainChanged = 0;
+
+#endif
         }
 
         #endregion
@@ -217,11 +230,15 @@ namespace Wyd.Controllers.World.Chunk
 
             CurrentStep = CurrentStep.Next();
 
+#if UNITY_EDITOR
+
             if (CurrentStep == GenerationData.GenerationStep.Complete)
             {
                 TotalTimesTerrainChanged += 1;
                 TimesTerrainChanged += 1;
             }
+
+#endif
 
             _JobIdentity = null;
             SystemController.Current.JobFinished -= OnJobFinished;

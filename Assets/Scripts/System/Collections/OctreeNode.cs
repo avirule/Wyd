@@ -1,15 +1,13 @@
 #region
 
 using System;
-using System.Collections.Generic;
-using System.Linq;
 using Unity.Mathematics;
 
 #endregion
 
 namespace Wyd.System.Collections
 {
-    public class OctreeNode<T> where T : IEquatable<T>
+    public class OctreeNode<T> where T : unmanaged
     {
         private static readonly float3[] _Coordinates =
         {
@@ -24,21 +22,29 @@ namespace Wyd.System.Collections
             new float3(1, 1, 1)
         };
 
-        public List<OctreeNode<T>> Nodes;
+        private OctreeNode<T>[] _Nodes;
 
         public Volume Volume { get; }
         public T Value { get; private set; }
-        public bool IsUniform => Nodes == null;
+        public bool IsUniform { get; private set; }
 
         public OctreeNode(float3 centerPoint, float extent, T value)
         {
             Volume = new Volume(centerPoint, new float3(extent));
             Value = value;
+            IsUniform = true;
         }
 
         public void Collapse()
         {
-            Nodes = null;
+            if (IsUniform)
+            {
+                return;
+            }
+
+            Value = _Nodes[0].Value;
+            _Nodes = null;
+            IsUniform = true;
         }
 
         public void Populate()
@@ -46,7 +52,7 @@ namespace Wyd.System.Collections
             float centerOffsetValue = Volume.Extents.x / 2f;
             float3 centerOffset = new float3(centerOffsetValue);
 
-            Nodes = new List<OctreeNode<T>>
+            _Nodes = new[]
             {
                 new OctreeNode<T>(Volume.CenterPoint + (_Coordinates[0] * centerOffset), Volume.Extents.x, Value),
                 new OctreeNode<T>(Volume.CenterPoint + (_Coordinates[1] * centerOffset), Volume.Extents.x, Value),
@@ -57,6 +63,8 @@ namespace Wyd.System.Collections
                 new OctreeNode<T>(Volume.CenterPoint + (_Coordinates[6] * centerOffset), Volume.Extents.x, Value),
                 new OctreeNode<T>(Volume.CenterPoint + (_Coordinates[7] * centerOffset), Volume.Extents.x, Value)
             };
+
+            IsUniform = false;
         }
 
         public T GetPoint(float3 point)
@@ -69,7 +77,7 @@ namespace Wyd.System.Collections
                     $"Cannot get point: specified point {point} not contained within bounds {Volume}.");
             }
 
-            return IsUniform ? Value : Nodes[DetermineOctant(point)].GetPoint(point);
+            return IsUniform ? Value : _Nodes[DetermineOctant(point)].GetPoint(point);
         }
 
         public void SetPoint(float3 point, T newValue)
@@ -104,34 +112,33 @@ namespace Wyd.System.Collections
 
             int octant = DetermineOctant(point);
 
-            // recursively dig into octree
-            Nodes[octant].SetPoint(point, newValue);
+            // recursively dig into octree and set
+            _Nodes[octant].SetPoint(point, newValue);
 
             // on each recursion back-step, ensure integrity of node
-            // and collapse child nodes if all are equal
-            if (!CheckShouldCollapse())
+            // and collapse if all child node values are equal
+            if (CheckShouldCollapse())
             {
-                return;
+                Collapse();
             }
-
-            Value = Nodes[0].Value;
-            Collapse();
         }
 
         private bool CheckShouldCollapse()
         {
-            if (Nodes == null)
+            T firstValue = _Nodes[0].Value;
+
+            // avoiding using linq here for performance sensitivity
+            for (int index = 0; index < 8 /* octants! */; index++)
             {
-                return false;
+                OctreeNode<T> node = _Nodes[index];
+
+                if (!node.IsUniform || !node.Value.Equals(firstValue))
+                {
+                    return false;
+                }
             }
 
-            if (Nodes.Count == 0)
-            {
-                return true;
-            }
-
-            T firstValue = Nodes[0].Value;
-            return Nodes.All(node => node.IsUniform) && Nodes.All(node => node.Value.Equals(firstValue));
+            return true;
         }
 
 

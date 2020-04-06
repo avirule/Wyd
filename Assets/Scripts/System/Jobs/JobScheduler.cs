@@ -162,19 +162,13 @@ namespace Wyd.System.Jobs
 
         private void AttemptSafeAbort()
         {
-            if (CheckAllJobWorkersAborted())
-            {
-                Log.Information($"{nameof(JobScheduler)} (ID {_OperationThread.ManagedThreadId}) has safely aborted.");
-            }
-            else
-            {
-                Log.Warning($"{nameof(JobScheduler)} (ID {_OperationThread.ManagedThreadId}) failed to safely abort.");
-            }
+            AbortAndJoinWorkers();
+
+            Log.Information($"{nameof(JobScheduler)} (ID {_OperationThread.ManagedThreadId}) has aborted.");
         }
 
-        private bool CheckAllJobWorkersAborted()
+        private void AbortAndJoinWorkers()
         {
-            bool safeAbort = true;
             DateTime maximumWorkerLifetime = DateTime.UtcNow + TimeSpan.FromSeconds(2);
 
             foreach (JobWorker jobWorker in _Workers)
@@ -183,19 +177,18 @@ namespace Wyd.System.Jobs
                 {
                     if (DateTime.UtcNow <= maximumWorkerLifetime)
                     {
-                        Thread.Sleep(0);
+                        Thread.Sleep(1);
                     }
                     else
                     {
                         jobWorker.ForceAbort(true);
-                        safeAbort = false;
+
+                        Log.Warning($"Forcefully aborted {nameof(JobWorker)} with ID {jobWorker.ManagedThreadID}.");
                     }
 
                     jobWorker.Join();
                 }
             }
-
-            return safeAbort;
         }
 
         #endregion
@@ -272,7 +265,7 @@ namespace Wyd.System.Jobs
                     }
 
                     jobWorker.QueueJob(job);
-                    Log.Debug(
+                    Log.Verbose(
                         $"{nameof(JobScheduler)} queued job (`{job.Identity}`) to {nameof(JobWorker)} with ID {jobWorker.ManagedThreadID}.");
 
                     OnJobDelegated(this, new JobEventArgs(job));
