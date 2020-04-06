@@ -27,13 +27,13 @@ namespace Wyd.System.Collections
 
         public List<OctreeNode<T>> Nodes;
 
-        public Bounds Bounds { get; }
+        public Volume Volume { get; }
         public T Value { get; private set; }
         public bool IsUniform => Nodes == null;
 
         public OctreeNode(float3 centerPoint, float extent, T value)
         {
-            Bounds = new Bounds(centerPoint, new float3(extent));
+            Volume = new Volume(centerPoint, new float3(extent));
             Value = value;
         }
 
@@ -44,19 +44,19 @@ namespace Wyd.System.Collections
 
         public void Populate()
         {
-            float centerOffsetValue = Bounds.Extents.x / 2f;
+            float centerOffsetValue = Volume.Extents.x / 2f;
             float3 centerOffset = new float3(centerOffsetValue);
 
             Nodes = new List<OctreeNode<T>>
             {
-                new OctreeNode<T>(Bounds.CenterPoint + (_Coordinates[0] * centerOffset), Bounds.Extents.x, Value),
-                new OctreeNode<T>(Bounds.CenterPoint + (_Coordinates[1] * centerOffset), Bounds.Extents.x, Value),
-                new OctreeNode<T>(Bounds.CenterPoint + (_Coordinates[2] * centerOffset), Bounds.Extents.x, Value),
-                new OctreeNode<T>(Bounds.CenterPoint + (_Coordinates[3] * centerOffset), Bounds.Extents.x, Value),
-                new OctreeNode<T>(Bounds.CenterPoint + (_Coordinates[4] * centerOffset), Bounds.Extents.x, Value),
-                new OctreeNode<T>(Bounds.CenterPoint + (_Coordinates[5] * centerOffset), Bounds.Extents.x, Value),
-                new OctreeNode<T>(Bounds.CenterPoint + (_Coordinates[6] * centerOffset), Bounds.Extents.x, Value),
-                new OctreeNode<T>(Bounds.CenterPoint + (_Coordinates[7] * centerOffset), Bounds.Extents.x, Value)
+                new OctreeNode<T>(Volume.CenterPoint + (_Coordinates[0] * centerOffset), Volume.Extents.x, Value),
+                new OctreeNode<T>(Volume.CenterPoint + (_Coordinates[1] * centerOffset), Volume.Extents.x, Value),
+                new OctreeNode<T>(Volume.CenterPoint + (_Coordinates[2] * centerOffset), Volume.Extents.x, Value),
+                new OctreeNode<T>(Volume.CenterPoint + (_Coordinates[3] * centerOffset), Volume.Extents.x, Value),
+                new OctreeNode<T>(Volume.CenterPoint + (_Coordinates[4] * centerOffset), Volume.Extents.x, Value),
+                new OctreeNode<T>(Volume.CenterPoint + (_Coordinates[5] * centerOffset), Volume.Extents.x, Value),
+                new OctreeNode<T>(Volume.CenterPoint + (_Coordinates[6] * centerOffset), Volume.Extents.x, Value),
+                new OctreeNode<T>(Volume.CenterPoint + (_Coordinates[7] * centerOffset), Volume.Extents.x, Value)
             };
         }
 
@@ -66,7 +66,7 @@ namespace Wyd.System.Collections
 
             if (!ContainsMinBiased(point))
             {
-                throw new ArgumentOutOfRangeException($"Cannot get point: specified point {point} not contained within bounds {Bounds}.");
+                throw new ArgumentOutOfRangeException($"Cannot get point: specified point {point} not contained within bounds {Volume}.");
             }
 
             return IsUniform ? Value : Nodes[DetermineOctant(point)].GetPoint(point);
@@ -78,7 +78,7 @@ namespace Wyd.System.Collections
 
             if (!ContainsMinBiased(point))
             {
-                throw new ArgumentOutOfRangeException($"Cannot set point: specified point {point} not contained within bounds {Bounds}.");
+                throw new ArgumentOutOfRangeException($"Cannot set point: specified point {point} not contained within bounds {Volume}.");
             }
 
             if (IsUniform && Value.Equals(newValue))
@@ -87,7 +87,7 @@ namespace Wyd.System.Collections
                 return;
             }
 
-            if (Bounds.Size.x <= 1f)
+            if (Volume.Size.x <= 1f)
             {
                 // reached smallest possible depth (usually 1x1x1) so
                 // set value and return
@@ -137,12 +137,12 @@ namespace Wyd.System.Collections
         #region HELPER METHODS
 
         public bool ContainsMinBiased(float3 point) =>
-            (point.x < Bounds.MaxPoint.x)
-            && (point.y < Bounds.MaxPoint.y)
-            && (point.z < Bounds.MaxPoint.z)
-            && (point.x >= Bounds.MinPoint.x)
-            && (point.y >= Bounds.MinPoint.y)
-            && (point.z >= Bounds.MinPoint.z);
+            (point.x < Volume.MaxPoint.x)
+            && (point.y < Volume.MaxPoint.y)
+            && (point.z < Volume.MaxPoint.z)
+            && (point.x >= Volume.MinPoint.x)
+            && (point.y >= Volume.MinPoint.y)
+            && (point.z >= Volume.MinPoint.z);
 
         // indexes:
         // bottom half quadrant:
@@ -152,9 +152,9 @@ namespace Wyd.System.Collections
         // 5 7
         // 4 6
         private int DetermineOctant(float3 point) =>
-            (point.x < Bounds.CenterPoint.x ? 0 : 1)
-            + (point.y < Bounds.CenterPoint.y ? 0 : 4)
-            + (point.z < Bounds.CenterPoint.z ? 0 : 2);
+            (point.x < Volume.CenterPoint.x ? 0 : 1)
+            + (point.y < Volume.CenterPoint.y ? 0 : 4)
+            + (point.z < Volume.CenterPoint.z ? 0 : 2);
 
         #endregion
     }

@@ -6,7 +6,7 @@ using Unity.Mathematics;
 
 namespace Wyd.System
 {
-    public struct Bounds
+    public struct Volume
     {
         public float3 CenterPoint { get; private set; }
         public float3 MinPoint { get; private set; }
@@ -14,7 +14,7 @@ namespace Wyd.System
         public float3 Extents { get; private set; }
         public float3 Size { get; private set; }
 
-        public Bounds(float3 centerPoint, float3 size)
+        public Volume(float3 centerPoint, float3 size)
         {
             CenterPoint = centerPoint;
             Size = size;

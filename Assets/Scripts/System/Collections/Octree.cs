@@ -40,11 +40,10 @@ namespace Wyd.System.Collections
 
         public IEnumerable<T> GetAllData()
         {
-            for (int x = 0; x < _Origin.Bounds.Size.x; x++)
-            for (int y = 0; y < _Origin.Bounds.Size.x; y++)
-            for (int z = 0; z < _Origin.Bounds.Size.x; z++)
+            for (int index = 0; index < WydMath.Product(_Origin.Volume.Size); index++)
             {
-                yield return GetPoint(_Origin.Bounds.MinPoint + new float3(x, y, z));
+                yield return GetPoint(_Origin.Volume.MinPoint
+                                      + WydMath.IndexTo3D(index, WydMath.ToInt(_Origin.Volume.Size)));
             }
         }
     }

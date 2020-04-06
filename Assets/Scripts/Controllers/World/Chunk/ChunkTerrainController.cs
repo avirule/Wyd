@@ -94,7 +94,7 @@ namespace Wyd.Controllers.World.Chunk
 
             if ((CurrentStep == GenerationData.GenerationStep.Complete)
                 || !WorldController.Current.ReadyForGeneration
-                || (WorldController.Current.AggregateNeighborsStep(WydMath.ToInt(_Bounds.MinPoint)) < CurrentStep))
+                || (WorldController.Current.AggregateNeighborsStep(WydMath.ToInt(_Volume.MinPoint)) < CurrentStep))
             {
                 return;
             }
@@ -162,7 +162,7 @@ namespace Wyd.Controllers.World.Chunk
         {
             _NoiseBuffer = new ComputeBuffer(WydMath.Product(ChunkController.Size), 4);
             int kernel = _NoiseShader.FindKernel("CSMain");
-            _NoiseShader.SetVector("_Offset", new float4(_Bounds.MinPoint.xyzz));
+            _NoiseShader.SetVector("_Offset", new float4(_Volume.MinPoint.xyzz));
             _NoiseShader.SetFloat("_Frequency", _FREQUENCY);
             _NoiseShader.SetFloat("_Persistence", _PERSISTENCE);
             _NoiseShader.SetBuffer(kernel, "Result", _NoiseBuffer);
@@ -172,7 +172,7 @@ namespace Wyd.Controllers.World.Chunk
 
         private void BeginRawTerrainGeneration()
         {
-            ChunkBuildingJob job = new ChunkBuildingJob(new GenerationData(_Bounds, BlocksController.Blocks),
+            ChunkBuildingJob job = new ChunkBuildingJob(new GenerationData(_Volume, BlocksController.Blocks),
                 _FREQUENCY, _PERSISTENCE, OptionsController.Current.GPUAcceleration, _NoiseBuffer);
 
             if (QueueJob(job))
@@ -203,7 +203,7 @@ namespace Wyd.Controllers.World.Chunk
             switch (CurrentStep)
             {
                 case GenerationData.GenerationStep.AwaitingRawTerrain:
-                    OnChunkTerrainChanged(this, new ChunkChangedEventArgs(_Bounds, Directions.CardinalDirectionAxes));
+                    OnChunkTerrainChanged(this, new ChunkChangedEventArgs(_Volume, Directions.CardinalDirectionAxes));
                     break;
                 case GenerationData.GenerationStep.Noise:
                 case GenerationData.GenerationStep.NoiseWaitFrameOne:

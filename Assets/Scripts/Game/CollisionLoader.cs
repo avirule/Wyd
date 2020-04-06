@@ -9,7 +9,6 @@ using Wyd.Controllers.World;
 using Wyd.Game.World.Blocks;
 using Wyd.System;
 using Wyd.System.Collections;
-using Bounds = Wyd.System.Bounds;
 
 #endregion
 
@@ -39,7 +38,7 @@ namespace Wyd.Game
         public Transform AttachedTransform;
         private int _Radius;
 
-        public Bounds BoundingBox { get; private set; }
+        public Volume BoundingBox { get; private set; }
 
         public int Radius
         {
@@ -102,7 +101,7 @@ namespace Wyd.Game
             // +1 to include center blocks / position
             int size = (Radius * 2) + 1;
 
-            BoundingBox = new Bounds(_LastCalculatedPosition, new float3(size, size, size));
+            BoundingBox = new Volume(_LastCalculatedPosition, new float3(size, size, size));
         }
 
         private void CalculateColliders()

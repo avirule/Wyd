@@ -1,7 +1,6 @@
 #region
 
 using System;
-using UnityEngine;
 using Wyd.System.Collections;
 
 #endregion
@@ -21,9 +20,9 @@ namespace Wyd.System
             Complete = 0b1111_1111
         }
 
-        public Bounds Bounds { get; }
+        public Volume Volume { get; }
         public Octree<ushort> Blocks { get; }
 
-        public GenerationData(Bounds bounds, Octree<ushort> blocks) => (Bounds, Blocks) = (bounds, blocks);
+        public GenerationData(Volume volume, Octree<ushort> blocks) => (Volume, Blocks) = (volume, blocks);
     }
 }

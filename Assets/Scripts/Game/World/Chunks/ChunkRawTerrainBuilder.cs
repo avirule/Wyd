@@ -92,7 +92,7 @@ namespace Wyd.Game.World.Chunks
                 for (int index = WydMath.Product(ChunkController.Size) - 1; index >= 0; index--)
                 {
                     float3 globalPosition =
-                        _GenerationData.Bounds.MinPoint + WydMath.IndexTo3D(index, ChunkController.Size);
+                        _GenerationData.Volume.MinPoint + WydMath.IndexTo3D(index, ChunkController.Size);
                     _GenerationData.Blocks.SetPoint(globalPosition, GetBlockIDAtPosition(globalPosition, index));
                 }
 
@@ -128,10 +128,10 @@ namespace Wyd.Game.World.Chunks
             }
             else
             {
-                for (int index = 0; index < WydMath.Product(_GenerationData.Bounds.Size); index++)
+                for (int index = 0; index < WydMath.Product(_GenerationData.Volume.Size); index++)
                 {
                     _NoiseValues[index] =
-                        GetNoiseValueByGlobalPosition(_GenerationData.Bounds.MinPoint
+                        GetNoiseValueByGlobalPosition(_GenerationData.Volume.MinPoint
                                                       + WydMath.IndexTo3D(index, ChunkController.Size));
                 }
             }
@@ -142,8 +142,6 @@ namespace Wyd.Game.World.Chunks
 
         private ushort GetBlockIDAtPosition(float3 globalPosition, int index)
         {
-            return globalPosition.y == 1f ? (ushort)1 : (ushort)0;
-
             if ((globalPosition.y < 4) && (globalPosition.y <= _Rand.Next(0, 4)))
             {
                 return GetCachedBlockID("bedrock");

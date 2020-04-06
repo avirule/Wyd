@@ -1,6 +1,5 @@
 #region
 
-using Unity.Mathematics;
 using UnityEngine;
 using Wyd.Controllers.System;
 using Wyd.Game;
@@ -107,7 +106,7 @@ namespace Wyd.Controllers.World.Chunk
                 || (BlocksController.QueuedBlockActions > 0)
                 || (TerrainController.CurrentStep != GenerationData.GenerationStep.Complete)
                 || !WorldController.Current.ReadyForGeneration
-                || (WorldController.Current.AggregateNeighborsStep(WydMath.ToInt(_Bounds.MinPoint))
+                || (WorldController.Current.AggregateNeighborsStep(WydMath.ToInt(_Volume.MinPoint))
                     < GenerationData.GenerationStep.Complete))
             {
                 return;
@@ -148,7 +147,7 @@ namespace Wyd.Controllers.World.Chunk
             }
 
             ChunkMeshingJob chunkMeshingJob =
-                new ChunkMeshingJob(new GenerationData(_Bounds, BlocksController.Blocks), true);
+                new ChunkMeshingJob(new GenerationData(_Volume, BlocksController.Blocks), true);
 
             if (!SystemController.Current.TryQueueJob(chunkMeshingJob, out _JobIdentity))
             {
@@ -163,7 +162,7 @@ namespace Wyd.Controllers.World.Chunk
         private void ApplyMesh(ChunkMeshingJob chunkMeshingJob)
         {
             chunkMeshingJob.SetMesh(ref _Mesh);
-            OnMeshChanged(this, new ChunkChangedEventArgs(_Bounds, Directions.CardinalDirectionAxes));
+            OnMeshChanged(this, new ChunkChangedEventArgs(_Volume, Directions.CardinalDirectionAxes));
         }
 
 

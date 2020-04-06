@@ -51,10 +51,10 @@ namespace Wyd.Game.World.Chunks
             bool aggressiveFaceMerging)
         {
             _GenerationData = generationData;
-            _Size = WydMath.ToInt(_GenerationData.Bounds.Size);
-            _VerticalIndexStep = (int)(_GenerationData.Bounds.Size.x * _GenerationData.Bounds.Size.z);
+            _Size = WydMath.ToInt(_GenerationData.Volume.Size);
+            _VerticalIndexStep = (int)(_GenerationData.Volume.Size.x * _GenerationData.Volume.Size.z);
 
-            int sizeProduct = (int)WydMath.Product(_GenerationData.Bounds.Size);
+            int sizeProduct = (int)WydMath.Product(_GenerationData.Volume.Size);
             if (_Blocks.Length != sizeProduct)
             {
                 _Blocks = new MeshBlock[sizeProduct];
@@ -168,7 +168,7 @@ namespace Wyd.Game.World.Chunks
                 }
                 else
                 {
-                    TraverseIndex(WydMath.ToInt(_GenerationData.Bounds.MinPoint), index, localPosition);
+                    TraverseIndex(WydMath.ToInt(_GenerationData.Volume.MinPoint), index, localPosition);
                 }
             }
 
@@ -911,7 +911,7 @@ namespace Wyd.Game.World.Chunks
                     && !_Blocks[traversalIndex].Faces.HasFace(faceDirection)
                     // ensure the block to the north of our current block is transparent
                     && WorldController.Current.TryGetBlockAt(
-                        globalPosition + (traversals * traversalDirection.AsInt3()) + faceDirection.AsInt3(),
+                        globalPosition + (traversals * traversalDirection.ToInt3()) + faceDirection.ToInt3(),
                         out ushort blockId)
                     && (((id == -1)
                          && BlockController.Current.CheckBlockHasProperties(blockId,

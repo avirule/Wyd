@@ -55,7 +55,7 @@ namespace Wyd.Controllers.World.Chunk
         {
             base.Awake();
 
-            Blocks = new Octree<ushort>(_Bounds.MinPoint + (ChunkController.Size / new float3(2f)),
+            Blocks = new Octree<ushort>(_Volume.MinPoint + (ChunkController.Size / new float3(2f)),
                 ChunkController.Size.x, 0);
             _BlockActions = new Queue<BlockAction>();
         }
@@ -67,7 +67,7 @@ namespace Wyd.Controllers.World.Chunk
             PerFrameUpdateController.Current.RegisterPerFrameUpdater(30, this);
             ClearInternalData();
 
-            Blocks = new Octree<ushort>(_Bounds.MinPoint + (ChunkController.Size / new float3(2f)),
+            Blocks = new Octree<ushort>(_Volume.MinPoint + (ChunkController.Size / new float3(2f)),
                 ChunkController.Size.x, 0);
         }
 
@@ -198,7 +198,7 @@ namespace Wyd.Controllers.World.Chunk
                 BlockAction blockAction = _BlockActions.Dequeue();
 
                 ModifyBlockPosition(blockAction.GlobalPosition, blockAction.Id);
-                OnBlocksChanged(this, new ChunkChangedEventArgs(_Bounds, Directions.AllDirectionAxes));
+                OnBlocksChanged(this, new ChunkChangedEventArgs(_Volume, Directions.AllDirectionAxes));
 
                 _BlockActionsCache.CacheItem(ref blockAction);
 
@@ -244,12 +244,12 @@ namespace Wyd.Controllers.World.Chunk
         public bool BlockExistsAt(int3 globalPosition) => GetBlockAt(globalPosition) != BlockController.AIR_ID;
 
         public bool TryPlaceBlockAt(int3 globalPosition, ushort id) =>
-            _Bounds.Contains(globalPosition)
-            && TryAllocateBlockAction(globalPosition - WydMath.ToInt(_Bounds.MinPoint), id);
+            _Volume.Contains(globalPosition)
+            && TryAllocateBlockAction(globalPosition - WydMath.ToInt(_Volume.MinPoint), id);
 
         public bool TryRemoveBlockAt(int3 globalPosition) =>
-            _Bounds.Contains(globalPosition)
-            && TryAllocateBlockAction(globalPosition - WydMath.ToInt(_Bounds.MinPoint), BlockController.AIR_ID);
+            _Volume.Contains(globalPosition)
+            && TryAllocateBlockAction(globalPosition - WydMath.ToInt(_Volume.MinPoint), BlockController.AIR_ID);
 
         private bool TryAllocateBlockAction(int3 localPosition, ushort id)
         {

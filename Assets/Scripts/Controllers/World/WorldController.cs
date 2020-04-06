@@ -192,7 +192,7 @@ namespace Wyd.Controllers.World
                 ChunkChangedEventArgs args = _ChunksPendingDeactivation.Pop();
 
                 // cache position to avoid multiple native dll calls
-                int3 position = WydMath.ToInt(args.ChunkBounds.MinPoint);
+                int3 position = WydMath.ToInt(args.ChunkVolume.MinPoint);
                 CacheChunk(position);
                 FlagNeighborsForMeshUpdate(position, args.NeighborDirectionsToUpdate);
 
@@ -340,7 +340,7 @@ namespace Wyd.Controllers.World
 
         private void OnChunkMeshChanged(object sender, ChunkChangedEventArgs args)
         {
-            FlagNeighborsForMeshUpdate(WydMath.ToInt(args.ChunkBounds.MinPoint), args.NeighborDirectionsToUpdate);
+            FlagNeighborsForMeshUpdate(WydMath.ToInt(args.ChunkVolume.MinPoint), args.NeighborDirectionsToUpdate);
 
             ChunkMeshChanged?.Invoke(sender, args);
         }

@@ -2,7 +2,7 @@
 
 using Unity.Mathematics;
 using UnityEngine;
-using Bounds = Wyd.System.Bounds;
+using Wyd.System;
 
 #endregion
 
@@ -13,7 +13,7 @@ namespace Wyd.Controllers.World.Chunk
         #region INSTANCE MEMBERS
 
         protected Transform _SelfTransform;
-        protected Bounds _Bounds;
+        protected Volume _Volume;
 
         #endregion
 
@@ -25,7 +25,7 @@ namespace Wyd.Controllers.World.Chunk
         protected virtual void OnEnable()
         {
             float3 position = _SelfTransform.position;
-            _Bounds.SetMinMaxPoints(position, position + ChunkController.Size);
+            _Volume.SetMinMaxPoints(position, position + ChunkController.Size);
         }
 
         protected virtual void OnDisable()

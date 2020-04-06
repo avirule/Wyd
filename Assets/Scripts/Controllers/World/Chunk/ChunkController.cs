@@ -10,7 +10,6 @@ using Wyd.Game;
 using Wyd.Game.Entities;
 using Wyd.Game.World.Chunks.Events;
 using Wyd.System;
-using Bounds = Wyd.System.Bounds;
 
 #endregion
 
@@ -27,7 +26,7 @@ namespace Wyd.Controllers.World.Chunk
         private bool _Visible;
         private bool _RenderShadows;
 
-        public int3 Position => WydMath.ToInt(_Bounds.MinPoint);
+        public int3 Position => WydMath.ToInt(_Volume.MinPoint);
         public GenerationData.GenerationStep CurrentStep => TerrainController.CurrentStep;
 
         public bool RenderShadows
@@ -79,10 +78,6 @@ namespace Wyd.Controllers.World.Chunk
         private ChunkMeshController MeshController;
 
         #if UNITY_EDITOR
-
-        [SerializeField]
-        [ReadOnlyInspectorField]
-        public Vector3 TransformPosition;
 
         [SerializeField]
         [ReadOnlyInspectorField]
@@ -145,10 +140,14 @@ namespace Wyd.Controllers.World.Chunk
         {
             base.OnEnable();
 
-            TransformPosition = _SelfTransform.position;
-            MinimumPoint = _Bounds.MinPoint;
-            MaximumPoint = _Bounds.MaxPoint;
-            Extents = _Bounds.Extents;
+            #if UNITY_EDITOR
+
+            MinimumPoint = _Volume.MinPoint;
+            MaximumPoint = _Volume.MaxPoint;
+            Extents = _Volume.Extents;
+
+            #endif
+
             _Visible = MeshRenderer.enabled;
         }
 
@@ -165,7 +164,7 @@ namespace Wyd.Controllers.World.Chunk
 
         private void OnDestroy()
         {
-            OnDestroyed(this, new ChunkChangedEventArgs(_Bounds, Directions.CardinalDirectionAxes));
+            OnDestroyed(this, new ChunkChangedEventArgs(_Volume, Directions.CardinalDirectionAxes));
         }
 
         public void FlagMeshForUpdate()
@@ -250,7 +249,7 @@ namespace Wyd.Controllers.World.Chunk
             if (!IsWithinLoaderRange(difference))
             {
                 DeactivationCallback?.Invoke(this,
-                    new ChunkChangedEventArgs(_Bounds, Directions.CardinalDirectionAxes));
+                    new ChunkChangedEventArgs(_Volume, Directions.CardinalDirectionAxes));
                 return;
             }
 

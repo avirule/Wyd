@@ -129,7 +129,7 @@ namespace Wyd.Game
 
         public static int OrderPlacement(this Direction direction) => DirectionAsOrderPlacement[direction];
 
-        public static int3 AsInt3(this Direction direction) => DirectionsAsAxes[direction];
+        public static int3 ToInt3(this Direction direction) => DirectionsAsAxes[direction];
 
         public static int AsIndexStep(this Direction direction) => DirectionsAsIndexStep[direction];
 
