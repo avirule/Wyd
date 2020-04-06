@@ -41,7 +41,6 @@ namespace Wyd.Controllers.World
         private Stack<IEntity> _EntitiesPendingChunkBuilding;
         private Stack<ChunkChangedEventArgs> _ChunksPendingDeactivation;
         private WorldSaveFileProvider _SaveFileProvider;
-        private int3 _SpawnPoint;
 
         public CollisionLoaderController CollisionLoaderController;
         public string SeedString;
@@ -62,11 +61,7 @@ namespace Wyd.Controllers.World
         /// <summary>
         ///     X,Z point in the world for spawning the player.
         /// </summary>
-        public int3 SpawnPoint
-        {
-            get => _SpawnPoint;
-            private set => _SpawnPoint = value;
-        }
+        public int3 SpawnPoint { get; private set; }
 
         public event EventHandler<ChunkChangedEventArgs> ChunkMeshChanged;
 
@@ -122,7 +117,7 @@ namespace Wyd.Controllers.World
             EntityController.Current.RegisterWatchForTag(RegisterLoaderEntity, "loader");
 
             // todo fix spawn point to set to useful value
-            _SpawnPoint = WydMath.IndexTo3D(Seed, new int3(int.MaxValue, int.MaxValue, int.MaxValue));
+            SpawnPoint = WydMath.IndexTo3D(Seed, new int3(int.MaxValue, int.MaxValue, int.MaxValue));
 
 
             if (OptionsController.Current.PreInitializeChunkCache)
@@ -276,7 +271,8 @@ namespace Wyd.Controllers.World
                         }
                         else
                         {
-                            chunkController = Instantiate(_ChunkControllerPrefab, (float3)position, quaternion.identity, transform);
+                            chunkController = Instantiate(_ChunkControllerPrefab, (float3)position, quaternion.identity,
+                                transform);
                         }
 
                         chunkController.Changed += OnChunkMeshChanged;
@@ -304,7 +300,8 @@ namespace Wyd.Controllers.World
 
         public void FlagChunkForUpdateMesh(int3 globalChunkPosition)
         {
-            if (TryGetChunkAt(WydMath.ToInt(WydMath.RoundBy(globalChunkPosition, WydMath.ToFloat(ChunkController.Size))),
+            if (TryGetChunkAt(
+                WydMath.ToInt(WydMath.RoundBy(globalChunkPosition, WydMath.ToFloat(ChunkController.Size))),
                 out ChunkController chunkController))
             {
                 chunkController.FlagMeshForUpdate();

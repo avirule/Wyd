@@ -58,7 +58,8 @@ namespace Wyd.Controllers.System
                     }
                     else if (previousSortValue > sortValue)
                     {
-                        Log.Warning($"{nameof(PerFrameUpdateController)} is updating in descending order ({previousSortValue} < {sortValue}).");
+                        Log.Warning(
+                            $"{nameof(PerFrameUpdateController)} is updating in descending order ({previousSortValue} < {sortValue}).");
                     }
 
                     previousSortValue = sortValue;

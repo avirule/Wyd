@@ -125,10 +125,7 @@ namespace Wyd.Game.World.Chunks
                     index += 1;
                 }
             }
-            catch (Exception)
-            {
-
-            }
+            catch (Exception) { }
         }
 
         public void GenerateMesh()
@@ -903,27 +900,27 @@ namespace Wyd.Game.World.Chunks
             // and on y it would be (_Size.x * _Size.z)
             int traversalIndex = index + (traversals * traversalFactor);
 
-                while ( // Set traversalIndex and ensure it is within the chunk's bounds
-                    ((slice + traversals) < limitingSliceValue)
-                    // This check removes the need to check if the adjacent block is transparent,
-                    // as our current block will never be transparent
-                    && (_Blocks[index].Id == _Blocks[traversalIndex].Id)
-                    && !_Blocks[traversalIndex].Faces.HasFace(faceDirection)
-                    // ensure the block to the north of our current block is transparent
-                    && WorldController.Current.TryGetBlockAt(
-                        globalPosition + (traversals * traversalDirection.ToInt3()) + faceDirection.ToInt3(),
-                        out ushort blockId)
-                    && (((id == -1)
-                         && BlockController.Current.CheckBlockHasProperties(blockId,
-                             BlockDefinition.Property.Transparent))
-                        || ((id > -1) && (id != blockId))))
-                {
-                    _Blocks[traversalIndex].Faces.SetFace(faceDirection, true);
+            while ( // Set traversalIndex and ensure it is within the chunk's bounds
+                ((slice + traversals) < limitingSliceValue)
+                // This check removes the need to check if the adjacent block is transparent,
+                // as our current block will never be transparent
+                && (_Blocks[index].Id == _Blocks[traversalIndex].Id)
+                && !_Blocks[traversalIndex].Faces.HasFace(faceDirection)
+                // ensure the block to the north of our current block is transparent
+                && WorldController.Current.TryGetBlockAt(
+                    globalPosition + (traversals * traversalDirection.ToInt3()) + faceDirection.ToInt3(),
+                    out ushort blockId)
+                && (((id == -1)
+                     && BlockController.Current.CheckBlockHasProperties(blockId,
+                         BlockDefinition.Property.Transparent))
+                    || ((id > -1) && (id != blockId))))
+            {
+                _Blocks[traversalIndex].Faces.SetFace(faceDirection, true);
 
-                    // increment and set traversal values
-                    traversals++;
-                    traversalIndex = index + (traversals * traversalFactor);
-                }
+                // increment and set traversal values
+                traversals++;
+                traversalIndex = index + (traversals * traversalFactor);
+            }
 
             return traversals;
         }

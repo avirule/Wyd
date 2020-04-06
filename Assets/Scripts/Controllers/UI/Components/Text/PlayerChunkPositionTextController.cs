@@ -1,7 +1,6 @@
 #region
 
 using Unity.Mathematics;
-using UnityEngine;
 using Wyd.Controllers.Entity;
 
 #endregion

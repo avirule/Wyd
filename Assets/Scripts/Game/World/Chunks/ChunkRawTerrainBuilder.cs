@@ -76,35 +76,28 @@ namespace Wyd.Game.World.Chunks
 
         public void Generate()
         {
-            try
+            if (_GenerationData.Blocks == default)
             {
-                if (_GenerationData.Blocks == default)
-                {
-                    Log.Error($"`{nameof(_GenerationData.Blocks)}` has not been set. Aborting generation.");
-                    return;
-                }
-
-                GenerateNoise();
-
-                _Stopwatch.Restart();
-                _GenerationData.Blocks.Collapse(true);
-
-                for (int index = WydMath.Product(ChunkController.Size) - 1; index >= 0; index--)
-                {
-                    float3 globalPosition =
-                        _GenerationData.Volume.MinPoint + WydMath.IndexTo3D(index, ChunkController.Size);
-                    _GenerationData.Blocks.SetPoint(globalPosition, GetBlockIDAtPosition(globalPosition, index));
-                }
-
-                NoiseValuesCache.CacheItem(ref _NoiseValues);
-
-                _Stopwatch.Stop();
-                TerrainGenerationTimeSpan = _Stopwatch.Elapsed;
+                Log.Error($"`{nameof(_GenerationData.Blocks)}` has not been set. Aborting generation.");
+                return;
             }
-            catch (Exception)
+
+            GenerateNoise();
+
+            _Stopwatch.Restart();
+            _GenerationData.Blocks.Collapse(true);
+
+            for (int index = WydMath.Product(ChunkController.Size) - 1; index >= 0; index--)
             {
-                throw;
+                float3 globalPosition =
+                    _GenerationData.Volume.MinPoint + WydMath.IndexTo3D(index, ChunkController.Size);
+                _GenerationData.Blocks.SetPoint(globalPosition, GetBlockIDAtPosition(globalPosition, index));
             }
+
+            NoiseValuesCache.CacheItem(ref _NoiseValues);
+
+            _Stopwatch.Stop();
+            TerrainGenerationTimeSpan = _Stopwatch.Elapsed;
         }
 
         private void GenerateNoise()

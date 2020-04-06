@@ -25,7 +25,7 @@ namespace Wyd.System.Jobs
         public int ManagedThreadID => _InternalThread.ManagedThreadId;
         public ThreadState State => _InternalThread.ThreadState;
         public bool Running => _InternalThread.IsAlive;
-        public bool Waiting => !Executing && JobsQueued == 0;
+        public bool Waiting => !Executing && (JobsQueued == 0);
 
         public bool Executing
         {

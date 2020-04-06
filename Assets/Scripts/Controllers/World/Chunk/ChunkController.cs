@@ -1,6 +1,5 @@
 #region
 
-using System.Linq;
 using Serilog;
 using Unity.Mathematics;
 using UnityEngine;
@@ -77,7 +76,7 @@ namespace Wyd.Controllers.World.Chunk
         [SerializeField]
         private ChunkMeshController MeshController;
 
-        #if UNITY_EDITOR
+#if UNITY_EDITOR
 
         [SerializeField]
         [ReadOnlyInspectorField]
@@ -92,7 +91,7 @@ namespace Wyd.Controllers.World.Chunk
         public Vector3 Extents;
 
 
-        #endif
+#endif
 
         #endregion
 
@@ -140,13 +139,13 @@ namespace Wyd.Controllers.World.Chunk
         {
             base.OnEnable();
 
-            #if UNITY_EDITOR
+#if UNITY_EDITOR
 
             MinimumPoint = _Volume.MinPoint;
             MaximumPoint = _Volume.MaxPoint;
             Extents = _Volume.Extents;
 
-            #endif
+#endif
 
             _Visible = MeshRenderer.enabled;
         }

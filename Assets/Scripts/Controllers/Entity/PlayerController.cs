@@ -89,7 +89,7 @@ namespace Wyd.Controllers.Entity
             {
                 "player",
                 "loader",
-                "collider",
+                "collider"
             });
 
             ReachHitSurfaceObject = Instantiate(ReachHitSurfaceObject);
@@ -226,7 +226,8 @@ namespace Wyd.Controllers.Entity
 
                 if (((math.csum(_LastReachRayHit.normal) > 0f)
                      && WorldController.Current.TryRemoveBlockAt(
-                         position = WydMath.ToInt(math.floor(_LastReachRayHit.point) - (float3)_LastReachRayHit.normal)))
+                         position = WydMath.ToInt(math.floor(_LastReachRayHit.point) - (float3)_LastReachRayHit.normal))
+                    )
                     || WorldController.Current.TryRemoveBlockAt(
                         position = WydMath.ToInt(math.floor(_LastReachRayHit.point))))
                 {

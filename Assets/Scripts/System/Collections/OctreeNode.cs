@@ -4,7 +4,6 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using Unity.Mathematics;
-using UnityEngine;
 
 #endregion
 
@@ -66,7 +65,8 @@ namespace Wyd.System.Collections
 
             if (!ContainsMinBiased(point))
             {
-                throw new ArgumentOutOfRangeException($"Cannot get point: specified point {point} not contained within bounds {Volume}.");
+                throw new ArgumentOutOfRangeException(
+                    $"Cannot get point: specified point {point} not contained within bounds {Volume}.");
             }
 
             return IsUniform ? Value : Nodes[DetermineOctant(point)].GetPoint(point);
@@ -78,7 +78,8 @@ namespace Wyd.System.Collections
 
             if (!ContainsMinBiased(point))
             {
-                throw new ArgumentOutOfRangeException($"Cannot set point: specified point {point} not contained within bounds {Volume}.");
+                throw new ArgumentOutOfRangeException(
+                    $"Cannot set point: specified point {point} not contained within bounds {Volume}.");
             }
 
             if (IsUniform && Value.Equals(newValue))
