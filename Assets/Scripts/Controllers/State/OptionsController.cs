@@ -337,7 +337,7 @@ namespace Wyd.Controllers.State
 
             if (!GetSetting("Graphics", nameof(MaximumFrameRateBufferSize), out _MaximumFrameRateBufferSize)
                 || (MaximumFrameRateBufferSize < 0)
-                || (MaximumFrameRateBufferSize > 120))
+                || (MaximumFrameRateBufferSize > 360))
             {
                 LogSettingLoadError(nameof(MaximumFrameRateBufferSize), Defaults.MAXIMUM_FRAME_RATE_BUFFER_SIZE);
                 MaximumFrameRateBufferSize = Defaults.MAXIMUM_FRAME_RATE_BUFFER_SIZE;
@@ -406,7 +406,7 @@ namespace Wyd.Controllers.State
             }
 
             if (!GetSetting("Chunking", nameof(MaximumChunkLoadTimeBufferSize), out _MaximumChunkLoadTimeBufferSize)
-                || (MaximumFrameRateBufferSize < 0)
+                || (MaximumFrameRateBufferSize < 1)
                 || (MaximumChunkLoadTimeBufferSize > 6000))
             {
                 LogSettingLoadError(nameof(MaximumChunkLoadTimeBufferSize),
@@ -501,7 +501,7 @@ namespace Wyd.Controllers.State
             _Configuration["Chunking"][nameof(MaximumChunkLoadTimeBufferSize)].PreComment =
                 "Lower values give a more accurate frame-to-frame reading, with higher\r\n"
                 + "values giving more long-term accuracy.";
-            _Configuration["Chunking"][nameof(MaximumChunkLoadTimeBufferSize)].Comment = "(min 0, max 120)";
+            _Configuration["Chunking"][nameof(MaximumChunkLoadTimeBufferSize)].Comment = "(min 1, max 6000)";
             _Configuration["Chunking"][nameof(MaximumChunkLoadTimeBufferSize)].IntValue =
                 Defaults.MAXIMUM_CHUNK_LOAD_TIME_BUFFER_SIZE;
 
