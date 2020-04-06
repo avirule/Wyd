@@ -116,7 +116,10 @@ namespace Wyd.Controllers.World.Chunk
                 || (TerrainController.CurrentStep != GenerationData.GenerationStep.Complete)
                 || !WorldController.Current.ReadyForGeneration
                 || (WorldController.Current.AggregateNeighborsStep(WydMath.ToInt(_Volume.MinPoint))
-                    < GenerationData.GenerationStep.Complete))
+                    < GenerationData.GenerationStep.Complete)
+
+
+                || _Volume.MinPoint.y < 100f)
             {
                 return;
             }

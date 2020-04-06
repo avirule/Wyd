@@ -125,6 +125,11 @@ namespace Wyd.System.Collections
 
         private bool CheckShouldCollapse()
         {
+            if (_Nodes[0] == null)
+            {
+
+            }
+
             T firstValue = _Nodes[0].Value;
 
             // avoiding using linq here for performance sensitivity

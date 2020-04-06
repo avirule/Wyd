@@ -1,5 +1,6 @@
 #region
 
+using Unity.Mathematics;
 using UnityEngine;
 using Wyd.Controllers.Entity;
 using Wyd.Controllers.State;
@@ -10,6 +11,7 @@ namespace Wyd.Controllers.Graphics
 {
     public class CameraController : MonoBehaviour
     {
+        private Transform _SelfTransform;
         private Camera _Camera;
         private float _Pitch;
         private float _RotationSensitivity;
@@ -17,6 +19,7 @@ namespace Wyd.Controllers.Graphics
 
         private void Start()
         {
+            _SelfTransform = transform;
             _Camera = GetComponent<Camera>();
             _Camera.depthTextureMode = DepthTextureMode.None;
             _RotationSensitivity = PlayerController.Current.RotationSensitivity;
@@ -24,17 +27,18 @@ namespace Wyd.Controllers.Graphics
 
         private void FixedUpdate()
         {
-            Transform self = transform;
-
-            self.rotation =
-                Quaternion.Euler(new Vector3(Mathf.Clamp(-_Pitch * Time.fixedDeltaTime, -90f, 90f),
+            _SelfTransform.rotation =
+                quaternion.Euler(new float3(math.clamp(-_Pitch * Time.fixedDeltaTime, -90f, 90f),
                     _Yaw * Time.fixedDeltaTime, 0f));
         }
 
         private void Update()
         {
-            _Pitch += _RotationSensitivity * InputController.Current.GetAxis("Mouse Y");
-            _Yaw += _RotationSensitivity * InputController.Current.GetAxis("Mouse X");
+            float axisY = InputController.Current.GetAxis("Mouse Y");
+            float axisX = InputController.Current.GetAxis("Mouse X");
+
+            _Pitch += _RotationSensitivity * axisY;
+            _Yaw += _RotationSensitivity * axisX;
         }
     }
 }

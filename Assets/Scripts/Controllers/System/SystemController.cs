@@ -2,6 +2,7 @@
 
 using System;
 using System.Threading;
+using TMPro;
 using UnityEngine;
 using Wyd.Controllers.State;
 using Wyd.System.Jobs;
@@ -30,7 +31,7 @@ namespace Wyd.Controllers.System
             AssignSingletonInstance(this);
             DontDestroyOnLoad(this);
 
-            //TextObject = GameController.LoadResource<>()
+            TextObject = LoadResource<GameObject>(@"Prefabs\UI\Components\Text\DiagnosticText");
         }
 
         private void Start()

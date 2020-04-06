@@ -146,9 +146,18 @@ namespace Wyd.Game.World.Chunks
                 return BlockController.AIR_ID;
             }
 
-            if (globalPosition.y > 135)
+            // TERRAIN GEN NOTES ON NOISE RANGES
+            // Between: 0.0110f to 0.01f = surface crust
+            // Between: 0.0105f to 0.01f = grass layer
+            // Follows: 0.0105f to 0.0110f = dirt layer
+
+            if (_NoiseMap[index] < 0.0105f)
             {
                 return GetCachedBlockID("grass");
+            }
+            else if (_NoiseMap[index] < 0.011f)
+            {
+                return GetCachedBlockID("dirt");
             }
             else
             {
