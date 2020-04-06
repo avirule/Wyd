@@ -87,11 +87,9 @@ namespace Wyd.Controllers.Entity
             Collider = GetComponent<CapsuleCollider>();
             Tags = new HashSet<string>(new[]
             {
-                "primary",
                 "player",
                 "loader",
                 "collider",
-                "collector"
             });
 
             ReachHitSurfaceObject = Instantiate(ReachHitSurfaceObject);
@@ -204,15 +202,15 @@ namespace Wyd.Controllers.Entity
 
         private void OrientReachHitSurfaceObject(Vector3 normal)
         {
-            if (normal.Sum() > 0f)
+            if (math.csum(normal) > 0f)
             {
                 _ReachHitSurfaceObjectTransform.position =
-                    (_LastReachRayHit.point.Floor() - (normal.Abs() * 0.4995f)) + WydMath_Old.Half;
+                    (math.floor(_LastReachRayHit.point) - (math.abs(normal) * 0.4995f)) + new float3(0.5f);
             }
             else
             {
                 _ReachHitSurfaceObjectTransform.position =
-                    (_LastReachRayHit.point.Floor() - (normal.Abs() * 0.5005f)) + WydMath_Old.Half;
+                    (math.floor(_LastReachRayHit.point) - (math.abs(normal) * 0.5005f)) + new float3(0.5f);
             }
 
             _ReachHitSurfaceObjectTransform.rotation = Quaternion.LookRotation(-normal);
@@ -226,7 +224,7 @@ namespace Wyd.Controllers.Entity
             {
                 int3 position;
 
-                if (((_LastReachRayHit.normal.Sum() > 0f)
+                if (((math.csum(_LastReachRayHit.normal) > 0f)
                      && WorldController.Current.TryRemoveBlockAt(
                          position = WydMath.ToInt(math.floor(_LastReachRayHit.point) - (float3)_LastReachRayHit.normal)))
                     || WorldController.Current.TryRemoveBlockAt(
@@ -248,7 +246,7 @@ namespace Wyd.Controllers.Entity
                 && !Collider.bounds.Contains(_LastReachRayHit.point)
                 && (_ActionCooldown.Elapsed > _MinimumActionInterval))
             {
-                if (_LastReachRayHit.normal.Sum() > 0f)
+                if (math.csum(_LastReachRayHit.normal) > 0f)
                 {
                     WorldController.Current.TryPlaceBlockAt(WydMath.ToInt(math.floor(_LastReachRayHit.point)),
                         HotbarController.Current.SelectedId);

@@ -142,14 +142,12 @@ namespace Wyd.Controllers.State
         public static T LoadResource<T>(string path) where T : Object
         {
             T resource = Resources.Load<T>(path);
-            Resources.UnloadUnusedAssets();
             return resource;
         }
 
         public static T[] LoadAllResources<T>(string path) where T : Object
         {
             T[] resources = Resources.LoadAll<T>(path);
-            Resources.UnloadUnusedAssets();
             return resources;
         }
 
