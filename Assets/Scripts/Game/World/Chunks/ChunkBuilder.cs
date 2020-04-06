@@ -13,8 +13,8 @@ namespace Wyd.Game.World.Chunks
 {
     public class ChunkBuilder
     {
-        protected static readonly ObjectCache<ChunkBuilderNoiseValues> NoiseValuesCache =
-            new ObjectCache<ChunkBuilderNoiseValues>();
+        protected static readonly ObjectCache<NoiseMap> NoiseValuesCache =
+            new ObjectCache<NoiseMap>();
 
         protected Random _Rand;
         protected readonly Dictionary<string, ushort> BlockIDCache;

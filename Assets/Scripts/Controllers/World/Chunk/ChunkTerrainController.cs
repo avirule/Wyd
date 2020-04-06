@@ -6,6 +6,7 @@ using UnityEngine;
 using Wyd.Controllers.State;
 using Wyd.Controllers.System;
 using Wyd.Game;
+using Wyd.Game.World.Chunks;
 using Wyd.Game.World.Chunks.Events;
 using Wyd.System;
 using Wyd.System.Extensions;
@@ -22,11 +23,11 @@ namespace Wyd.Controllers.World.Chunk
 
         public const float THRESHOLD = 0.01f;
 
+        private static ComputeShader _noiseShader;
+
         #region INSTANCE MEMBERS
 
-        private ComputeShader _NoiseShader;
         private ComputeBuffer _NoiseBuffer;
-
         private object _JobIdentity;
 
         public GenerationData.GenerationStep CurrentStep
@@ -66,11 +67,14 @@ namespace Wyd.Controllers.World.Chunk
         {
             base.Awake();
 
-            _NoiseShader = GameController.LoadResource<ComputeShader>(@"Graphics\Shaders\NoiseComputationShader");
-            _NoiseShader.SetInt("_NoiseSeed", WorldController.Current.Seed);
-            _NoiseShader.SetVector("_MaximumSize", new Vector4(ChunkController.Size.x, ChunkController.Size.y,
-                ChunkController.Size.z, 0f));
-            _NoiseShader.SetFloat("_WorldHeight", WorldController.WORLD_HEIGHT);
+            if (_noiseShader == null)
+            {
+                _noiseShader = SystemController.LoadResource<ComputeShader>(@"Graphics\Shaders\NoiseComputationShader");
+                _noiseShader.SetInt("_NoiseSeed", WorldController.Current.Seed);
+                _noiseShader.SetVector("_MaximumSize", new Vector4(ChunkController.Size.x, ChunkController.Size.y,
+                    ChunkController.Size.z, 0f));
+                _noiseShader.SetFloat("_WorldHeight", WorldController.WORLD_HEIGHT);
+            }
         }
 
         protected override void OnEnable()
@@ -174,13 +178,13 @@ namespace Wyd.Controllers.World.Chunk
         private void BeginNoiseGeneration()
         {
             _NoiseBuffer = new ComputeBuffer(WydMath.Product(ChunkController.Size), 4);
-            int kernel = _NoiseShader.FindKernel("CSMain");
-            _NoiseShader.SetVector("_Offset", new float4(_Volume.MinPoint.xyzz));
-            _NoiseShader.SetFloat("_Frequency", _FREQUENCY);
-            _NoiseShader.SetFloat("_Persistence", _PERSISTENCE);
-            _NoiseShader.SetBuffer(kernel, "Result", _NoiseBuffer);
+            int kernel = _noiseShader.FindKernel("CSMain");
+            _noiseShader.SetVector("_Offset", new float4(_Volume.MinPoint.xyzz));
+            _noiseShader.SetFloat("_Frequency", _FREQUENCY);
+            _noiseShader.SetFloat("_Persistence", _PERSISTENCE);
+            _noiseShader.SetBuffer(kernel, "Result", _NoiseBuffer);
             // 1024 is the value set in the shader's [numthreads(--> 1024 <--, 1, 1)]
-            _NoiseShader.Dispatch(kernel, WydMath.Product(ChunkController.Size) / 1024, 1, 1);
+            _noiseShader.Dispatch(kernel, WydMath.Product(ChunkController.Size) / 1024, 1, 1);
         }
 
         private void BeginRawTerrainGeneration()

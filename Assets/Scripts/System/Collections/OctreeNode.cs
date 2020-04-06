@@ -132,7 +132,7 @@ namespace Wyd.System.Collections
             {
                 OctreeNode<T> node = _Nodes[index];
 
-                if (!node.IsUniform || node.Value.GetHashCode() != firstValue.GetHashCode())
+                if (!node.IsUniform || (node.Value.GetHashCode() != firstValue.GetHashCode()))
                 {
                     return false;
                 }

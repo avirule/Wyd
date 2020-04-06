@@ -11,6 +11,7 @@ using Wyd.Controllers.System;
 using Wyd.Controllers.World;
 using Wyd.Controllers.World.Chunk;
 using Wyd.System;
+using Wyd.System.Collections;
 using Wyd.System.Jobs;
 using Wyd.System.Noise;
 
@@ -28,7 +29,7 @@ namespace Wyd.Game.World.Chunks
 
         private bool _NoiseValuesReady;
         private bool _GpuAcceleration;
-        private ChunkBuilderNoiseValues _NoiseValues;
+        private NoiseMap _NoiseMap;
 
         public TimeSpan NoiseRetrievalTimeSpan { get; private set; }
         public TimeSpan TerrainGenerationTimeSpan { get; private set; }
@@ -69,7 +70,7 @@ namespace Wyd.Game.World.Chunks
 
         private void GetComputeBufferData()
         {
-            _NoiseValuesBuffer.GetData(_NoiseValues);
+            _NoiseValuesBuffer.GetData(_NoiseMap);
             _NoiseValuesBuffer.Release();
             NoiseValuesReady = true;
         }
@@ -94,7 +95,7 @@ namespace Wyd.Game.World.Chunks
                 _GenerationData.Blocks.SetPoint(globalPosition, GetBlockIDAtPosition(globalPosition, index));
             }
 
-            NoiseValuesCache.CacheItem(ref _NoiseValues);
+            NoiseValuesCache.CacheItem(ref _NoiseMap);
 
             _Stopwatch.Stop();
             TerrainGenerationTimeSpan = _Stopwatch.Elapsed;
@@ -104,7 +105,7 @@ namespace Wyd.Game.World.Chunks
         {
             _Stopwatch.Restart();
 
-            _NoiseValues = NoiseValuesCache.Retrieve() ?? new ChunkBuilderNoiseValues();
+            _NoiseMap = NoiseValuesCache.Retrieve() ?? new NoiseMap();
 
             if (_GpuAcceleration && (_NoiseValuesBuffer != null))
             {
@@ -123,7 +124,7 @@ namespace Wyd.Game.World.Chunks
             {
                 for (int index = 0; index < WydMath.Product(_GenerationData.Volume.Size); index++)
                 {
-                    _NoiseValues[index] =
+                    _NoiseMap[index] =
                         GetNoiseValueByGlobalPosition(_GenerationData.Volume.MinPoint
                                                       + WydMath.IndexTo3D(index, ChunkController.Size));
                 }
@@ -140,7 +141,7 @@ namespace Wyd.Game.World.Chunks
                 return GetCachedBlockID("bedrock");
             }
 
-            if (_NoiseValues[index] < 0.01f)
+            if (_NoiseMap[index] < 0.01f)
             {
                 return BlockController.AIR_ID;
             }

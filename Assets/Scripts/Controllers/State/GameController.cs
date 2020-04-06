@@ -8,7 +8,6 @@ using UnityEngine.SceneManagement;
 using Wyd.Controllers.World;
 using Wyd.Game;
 using Wyd.Game.World.Blocks;
-using Object = UnityEngine.Object;
 
 #endregion
 
@@ -137,18 +136,6 @@ namespace Wyd.Controllers.State
 
             BlockController.Current.RegisterBlockDefinition("water", Block.Types.Raw, null,
                 BlockDefinition.Property.Transparent);
-        }
-
-        public static T LoadResource<T>(string path) where T : Object
-        {
-            T resource = Resources.Load<T>(path);
-            return resource;
-        }
-
-        public static T[] LoadAllResources<T>(string path) where T : Object
-        {
-            T[] resources = Resources.LoadAll<T>(path);
-            return resources;
         }
 
         public static void QuitToMainMenu()

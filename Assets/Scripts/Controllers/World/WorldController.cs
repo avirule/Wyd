@@ -82,7 +82,7 @@ namespace Wyd.Controllers.World
             AssignSingletonInstance(this);
             SetTickRate();
 
-            _ChunkControllerPrefab = GameController.LoadResource<ChunkController>(@"Prefabs/Chunk");
+            _ChunkControllerPrefab = SystemController.LoadResource<ChunkController>(@"Prefabs/Chunk");
 
             _ChunkCache = new ObjectCache<ChunkController>(false, -1,
                 (ref ChunkController chunkController) =>
@@ -109,7 +109,7 @@ namespace Wyd.Controllers.World
         {
             _ChunkCache.MaximumSize = OptionsController.Current.MaximumChunkCacheSize;
 
-            TerrainMaterial = GameController.LoadResource<Material>(@"Materials\TerrainMaterial");
+            TerrainMaterial = SystemController.LoadResource<Material>(@"Materials\TerrainMaterial");
             TerrainMaterial.SetTexture(TextureController.MainTexPropertyID,
                 TextureController.Current.TerrainTexture);
 

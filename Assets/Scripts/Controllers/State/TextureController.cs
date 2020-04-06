@@ -3,6 +3,7 @@
 using System.Collections.Generic;
 using Serilog;
 using UnityEngine;
+using Wyd.Controllers.System;
 
 #endregion
 
@@ -38,7 +39,7 @@ namespace Wyd.Controllers.State
 
         private void ProcessSprites()
         {
-            Sprite[] sprites = GameController.LoadAllResources<Sprite>(@"Graphics/Textures/Blocks/");
+            Sprite[] sprites = SystemController.LoadAllResources<Sprite>(@"Graphics/Textures/Blocks/");
 
             TerrainTexture = new Texture2DArray((int)sprites[0].rect.width, (int)sprites[0].rect.height,
                 sprites.Length, TextureFormat.RGBA32, true, false)

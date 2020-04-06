@@ -2,11 +2,12 @@
 
 using UnityEngine;
 using Wyd.Controllers.System;
-using Wyd.Game.World.Chunks;
+using Wyd.System;
+using Wyd.System.Jobs;
 
 #endregion
 
-namespace Wyd.System.Jobs
+namespace Wyd.Game.World.Chunks
 {
     public class ChunkBuildingJob : Job
     {
