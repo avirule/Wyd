@@ -16,6 +16,14 @@ namespace Wyd.Controllers.UI.Components.Text
         private double _RecentMeshingSetBlockTime;
         private double _RecentMeshingTime;
 
+        protected override void Awake()
+        {
+            base.Awake();
+
+            SetRecentAverages(0d, 0d, 0d, 0d);
+            UpdateChunkLoadTimeText();
+        }
+
         protected override void TimedUpdate()
         {
             double averageNoiseRetrievalTime = DiagnosticsController.Current.AverageNoiseRetrievalTime;
