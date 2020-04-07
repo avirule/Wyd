@@ -4,7 +4,7 @@ using Wyd.Controllers.System;
 
 #endregion
 
-namespace Wyd.Controllers.UI.Components.Text
+namespace Wyd.Controllers.UI.Components.Text.Diagnostic
 {
     public class JobSchedulerInfoTextController : FormattedTextController
     {

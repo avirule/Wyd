@@ -5,7 +5,7 @@ using Wyd.Controllers.State;
 
 #endregion
 
-namespace Wyd.Controllers.UI.Components.Text
+namespace Wyd.Controllers.UI.Components.Text.Diagnostic
 {
     public class CPUCoreUtilizationTextController : OptionDisplayTextController
     {

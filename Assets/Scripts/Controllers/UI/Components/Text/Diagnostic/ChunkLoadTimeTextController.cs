@@ -5,7 +5,7 @@ using Wyd.Controllers.System;
 
 #endregion
 
-namespace Wyd.Controllers.UI.Components.Text
+namespace Wyd.Controllers.UI.Components.Text.Diagnostic
 {
     public class ChunkLoadTimeTextController : UpdatingFormattedTextController
     {
@@ -20,6 +20,7 @@ namespace Wyd.Controllers.UI.Components.Text
         {
             base.Awake();
 
+            UpdatesPerSecond = 1f;
             SetRecentAverages(0d, 0d, 0d, 0d);
             UpdateChunkLoadTimeText();
         }

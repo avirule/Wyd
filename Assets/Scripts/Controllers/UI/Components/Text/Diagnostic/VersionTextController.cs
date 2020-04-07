@@ -5,7 +5,7 @@ using UnityEngine;
 
 #endregion
 
-namespace Wyd.Controllers.UI.Components.Text
+namespace Wyd.Controllers.UI.Components.Text.Diagnostic
 {
     public class VersionTextController : MonoBehaviour
     {

@@ -6,7 +6,7 @@ using Wyd.System.Collections;
 
 #endregion
 
-namespace Wyd.Controllers.UI.Components.Text
+namespace Wyd.Controllers.UI.Components.Text.Diagnostic
 {
     public class FPSTextController : UpdatingFormattedTextController
     {

@@ -4,7 +4,7 @@ using UnityEngine.Profiling;
 
 #endregion
 
-namespace Wyd.Controllers.UI.Components.Text
+namespace Wyd.Controllers.UI.Components.Text.Diagnostic
 {
     public class UsedMemoryTextController : UpdatingFormattedTextController
     {
@@ -13,6 +13,13 @@ namespace Wyd.Controllers.UI.Components.Text
         private long _ReservedMemory;
         private long _AllocatedMemory;
         private long _HeapMemory;
+
+        protected override void Awake()
+        {
+            base.Awake();
+
+            UpdatesPerSecond = 0.5f;
+        }
 
         protected override void TimedUpdate()
         {

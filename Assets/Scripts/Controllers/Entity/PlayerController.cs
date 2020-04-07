@@ -302,7 +302,7 @@ namespace Wyd.Controllers.Entity
 
         private void CalculateRotation()
         {
-            Rigidbody.MoveRotation(quaternion.Euler(0f, CameraTransform.eulerAngles.y, 0f));
+            //Rigidbody.MoveRotation(quaternion.Euler(0f, CameraTransform.eulerAngles.y, 0f));
         }
 
         private void CalculateJump()

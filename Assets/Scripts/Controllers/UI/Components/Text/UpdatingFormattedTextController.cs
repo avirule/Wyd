@@ -10,17 +10,25 @@ namespace Wyd.Controllers.UI.Components.Text
 {
     public class UpdatingFormattedTextController : FormattedTextController
     {
-        [SerializeField]
-        private int UpdatesPerSecond = 4;
-
+        private float _UpdatesPerSecond;
         private TimeSpan _UpdatesPerSecondTimeSpan;
         private Stopwatch _UpdateTimer;
+
+        protected float UpdatesPerSecond
+        {
+            get => _UpdatesPerSecond;
+            set
+            {
+                _UpdatesPerSecond = value;
+                _UpdatesPerSecondTimeSpan = TimeSpan.FromSeconds(1d / _UpdatesPerSecond);
+            }
+        }
 
         protected override void Awake()
         {
             base.Awake();
 
-            _UpdatesPerSecondTimeSpan = TimeSpan.FromSeconds(1d / UpdatesPerSecond);
+            UpdatesPerSecond = 4f;
             _UpdateTimer = Stopwatch.StartNew();
         }
 

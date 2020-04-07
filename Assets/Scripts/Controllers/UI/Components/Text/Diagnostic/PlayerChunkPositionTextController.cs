@@ -5,7 +5,7 @@ using Wyd.Controllers.Entity;
 
 #endregion
 
-namespace Wyd.Controllers.UI.Components.Text
+namespace Wyd.Controllers.UI.Components.Text.Diagnostic
 {
     public class PlayerChunkPositionTextController : FormattedTextController
     {
