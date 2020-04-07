@@ -18,7 +18,10 @@ namespace Wyd.Controllers.UI.Components.Text.Diagnostic
                 UpdateText(PlayerController.Current.Position, PlayerController.Current.ChunkPosition);
 
                 PlayerController.Current.PositionChanged += (sender, position) => { _UpdateTextOnNextFrame = true; };
-                PlayerController.Current.ChunkPositionChanged += (sender, position) => { _UpdateTextOnNextFrame = true; };
+                PlayerController.Current.ChunkPositionChanged += (sender, position) =>
+                {
+                    _UpdateTextOnNextFrame = true;
+                };
             }
         }
 

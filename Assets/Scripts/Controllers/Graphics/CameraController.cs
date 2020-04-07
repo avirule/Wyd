@@ -2,7 +2,6 @@
 
 using Unity.Mathematics;
 using UnityEngine;
-using Wyd.Controllers.Entity;
 using Wyd.Controllers.State;
 
 #endregion

@@ -119,10 +119,9 @@ namespace Wyd.Controllers.World.Chunk
 
             normals = WydMath.ToComponents(WydMath.ToInt(math.floor(localPositionAbs / 16f) * localPositionSign));
             return true;
-
         }
 
-        
+
         #region DE/ACTIVATION
 
         private void ClearInternalData()
