@@ -1,6 +1,6 @@
 namespace Wyd.Game.World.Blocks
 {
-    public class MeshBlock
+    public struct MeshBlock
     {
         public ushort Id;
         public BlockFaces Faces;

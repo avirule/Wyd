@@ -1,5 +1,6 @@
 #region
 
+using System.ComponentModel;
 using Serilog;
 using Unity.Mathematics;
 using UnityEngine;
@@ -17,7 +18,7 @@ namespace Wyd.Controllers.World.Chunk
     public class ChunkController : ActivationStateChunkController
     {
         // todo Size should be somewhere that makes more sense, I think
-        public static readonly int3 Size = new int3(32, 32, 32);
+        public static readonly int3 Size = new int3(16);
 
         #region INSTANCE MEMBERS
 
@@ -133,13 +134,7 @@ namespace Wyd.Controllers.World.Chunk
                 OnCurrentLoaderChangedChunk(this, _CurrentLoader.ChunkPosition);
             }
 
-            OptionsController.Current.PropertyChanged += (sender, args) =>
-            {
-                if (args.PropertyName.Equals(nameof(OptionsController.Current.ShadowDistance)))
-                {
-                    RenderShadows = IsWithinShadowsDistance(math.abs(Position - _CurrentLoader.ChunkPosition));
-                }
-            };
+            OptionsController.Current.PropertyChanged += OnShadowDistanceChanged;
         }
 
         protected override void OnEnable()
@@ -171,6 +166,11 @@ namespace Wyd.Controllers.World.Chunk
         private void OnDestroy()
         {
             OnDestroyed(this, new ChunkChangedEventArgs(_Volume, Directions.CardinalDirectionAxes));
+
+            if (OptionsController.Current != null)
+            {
+                OptionsController.Current.PropertyChanged -= OnShadowDistanceChanged;
+            }
         }
 
         public void FlagMeshForUpdate()
@@ -261,6 +261,14 @@ namespace Wyd.Controllers.World.Chunk
 
             Visible = IsWithinRenderDistance(difference);
             RenderShadows = IsWithinShadowsDistance(difference);
+        }
+
+        private void OnShadowDistanceChanged(object sender, PropertyChangedEventArgs args)
+        {
+            if (args.PropertyName.Equals(nameof(OptionsController.Current.ShadowDistance)))
+            {
+                RenderShadows = IsWithinShadowsDistance(math.abs(Position - _CurrentLoader.ChunkPosition));
+            }
         }
 
         #endregion
