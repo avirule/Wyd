@@ -50,13 +50,16 @@ namespace Wyd.Controllers.UI.Components.Text
 
         public IEnumerable IncrementalFrameUpdate()
         {
-            while ((_LogMessageQueue.Count > 0) && (WorldController.Current != null))
-            {
-                _LogMessageQueue.TryDequeue(out string result);
-                AppendDebugText(result);
+            // todo fix this so it doesn't just append text endlessly
+            // while ((_LogMessageQueue.Count > 0) && (WorldController.Current != null))
+            // {
+            //     _LogMessageQueue.TryDequeue(out string result);
+            //     AppendDebugText(result);
+            //
+            //     yield return null;
+            // }
 
-                yield return null;
-            }
+            yield return null;
         }
 
         private void AppendDebugText(string text)

@@ -19,8 +19,7 @@ namespace Wyd.Controllers.System
 
         private JobScheduler _JobExecutionScheduler;
 
-        public long JobCount => _JobExecutionScheduler.JobCount;
-        public long DelegatedJobCount => _JobExecutionScheduler.DelegatedJobCount;
+        public long JobsQueued => _JobExecutionScheduler.JobsQueued;
         public long ProcessingJobCount => _JobExecutionScheduler.ProcessingJobCount;
         public long WorkerThreadCount => _JobExecutionScheduler.WorkerThreadCount;
 
@@ -35,9 +34,7 @@ namespace Wyd.Controllers.System
 
         private void Start()
         {
-            _JobExecutionScheduler = new JobScheduler(TimeSpan.FromMilliseconds(5),
-                OptionsController.Current.ThreadingMode,
-                OptionsController.Current.CPUCoreUtilization);
+            _JobExecutionScheduler = new JobScheduler(OptionsController.Current.CPUCoreUtilization);
             _JobExecutionScheduler.WorkerCountChanged += OnWorkerCountChanged;
             _JobExecutionScheduler.JobQueued += OnJobQueued;
             _JobExecutionScheduler.JobStarted += OnJobStarted;
@@ -45,17 +42,13 @@ namespace Wyd.Controllers.System
 
             OptionsController.Current.PropertyChanged += (sender, args) =>
             {
-                if (args.PropertyName.Equals(nameof(OptionsController.Current.ThreadingMode)))
-                {
-                    _JobExecutionScheduler.ThreadingMode = OptionsController.Current.ThreadingMode;
-                }
-                else if (args.PropertyName.Equals(nameof(OptionsController.Current.CPUCoreUtilization)))
+                if (args.PropertyName.Equals(nameof(OptionsController.Current.CPUCoreUtilization)))
                 {
                     _JobExecutionScheduler.ModifyWorkerThreadCount(OptionsController.Current.CPUCoreUtilization);
                 }
             };
 
-            _JobExecutionScheduler.Start();
+            _JobExecutionScheduler.SpawnWorkers();
         }
 
         private void OnDestroy()
@@ -84,7 +77,6 @@ namespace Wyd.Controllers.System
         public event JobEventHandler JobStarted;
         public event JobEventHandler JobFinished;
         public event EventHandler<long> JobCountChanged;
-        public event EventHandler<long> DelegatedJobCountChanged;
         public event EventHandler<long> ProcessingJobCountChanged;
         public event EventHandler<long> WorkerThreadCountChanged;
 
@@ -95,26 +87,20 @@ namespace Wyd.Controllers.System
 
         private void OnJobQueued(object sender, JobEventArgs args)
         {
-            JobCountChanged?.Invoke(sender, JobCount);
-        }
-
-        private void OnJobDelegated(object sender, JobEventArgs args)
-        {
-            DelegatedJobCountChanged?.Invoke(sender, DelegatedJobCount);
+            JobCountChanged?.Invoke(sender, JobsQueued);
         }
 
         private void OnJobStarted(object sender, JobEventArgs args)
         {
             JobStarted?.Invoke(sender, args);
-            JobCountChanged?.Invoke(sender, JobCount);
+            JobCountChanged?.Invoke(sender, JobsQueued);
             ProcessingJobCountChanged?.Invoke(sender, ProcessingJobCount);
         }
 
         private void OnJobFinished(object sender, JobEventArgs args)
         {
             JobFinished?.Invoke(sender, args);
-            JobCountChanged?.Invoke(sender, JobCount);
-            DelegatedJobCountChanged?.Invoke(sender, DelegatedJobCount);
+            JobCountChanged?.Invoke(sender, JobsQueued);
             ProcessingJobCountChanged?.Invoke(sender, ProcessingJobCount);
         }
 

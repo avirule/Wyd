@@ -45,29 +45,11 @@ namespace Wyd.Controllers.State
 
                     switch (direction)
                     {
-                        // todo decide on whether to use this ??
-//                    case Direction.North:
-//                        string northCheck = worldController.GetBlockAtPosition(position + new Vector3Int(0, -1, 1));
-//
-//                        return northCheck.Equals("Grass") ? "Grass" : "Grass_Side";
-//                    case Direction.East:
-//                        string eastCheck = worldController.GetBlockAtPosition(position + new Vector3Int(1, -1, 0));
-//
-//                        return eastCheck.Equals("Grass") ? "Grass" : "Grass_Side";
-//                    case Direction.South:
-//                        string southCheck = worldController.GetBlockAtPosition(position + new Vector3Int(0, -1, -1));
-//
-//                        return southCheck.Equals("Grass") ? "Grass" : "Grass_Side";
-//                    case Direction.West:
-//                        string westCheck = worldController.GetBlockAtPosition(position + new Vector3Int(-1, -1, 0));
-//
-//                        return westCheck.Equals("Grass") ? "Grass" : "Grass_Side";
-
                         case Direction.North:
                         case Direction.East:
                         case Direction.South:
                         case Direction.West:
-                            return "grass_side";
+                            //return "grass_side";
                         case Direction.Up:
                             return "grass";
                         case Direction.Down:

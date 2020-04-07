@@ -35,8 +35,8 @@ namespace Wyd.Game.World
         {
             WorldSaveFileDirectory = $@"{Application.persistentDataPath}\saves\";
 
-            _QueryExecutionScheduler = new JobScheduler(TimeSpan.FromMilliseconds(200), ThreadingMode.Single);
-            _QueryExecutionScheduler.Start();
+            //_QueryExecutionScheduler = new JobScheduler(TimeSpan.FromMilliseconds(200), ThreadingMode.Single);
+            //_QueryExecutionScheduler.SpawnWorkers();
         }
 
         private string WorldFilePath { get; }
@@ -149,7 +149,6 @@ namespace Wyd.Game.World
 
         public void CompressAndCommitThreaded(Vector3 position, byte[] data)
         {
-            // todo cache the jobs
             _QueryExecutionScheduler.TryQueueJob(new Job(() => CompressAndCommit(position, data)), out object _);
         }
 

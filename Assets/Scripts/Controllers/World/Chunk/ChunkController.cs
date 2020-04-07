@@ -17,7 +17,6 @@ namespace Wyd.Controllers.World.Chunk
 {
     public class ChunkController : ActivationStateChunkController
     {
-        // todo Size should be somewhere that makes more sense, I think
         public static readonly int3 Size = new int3(32);
 
         #region INSTANCE MEMBERS
@@ -113,13 +112,6 @@ namespace Wyd.Controllers.World.Chunk
 
             MeshRenderer.materials = TextureController.Current.TerrainMaterials;
             _Visible = MeshRenderer.enabled;
-
-            // todo implement chunk ticks
-//            double waitTime = TimeSpan
-//                .FromTicks((DateTime.Now.Ticks - WorldController.Current.InitialTick) %
-//                           WorldController.Current.WorldTickRate.Ticks)
-//                .TotalSeconds;
-//            InvokeRepeating(nameof(Tick), (float) waitTime, (float) WorldController.Current.WorldTickRate.TotalSeconds);
         }
 
         private void Start()
@@ -224,9 +216,7 @@ namespace Wyd.Controllers.World.Chunk
         #endregion
 
 
-        #region EVENTS
-
-        // todo chunk load failed event
+        #region EVENT
 
         public event ChunkChangedEventHandler Changed;
         public event ChunkChangedEventHandler DeactivationCallback;
@@ -270,60 +260,6 @@ namespace Wyd.Controllers.World.Chunk
                 RenderShadows = IsWithinShadowsDistance(math.abs(Position - _CurrentLoader.ChunkPosition));
             }
         }
-
-        #endregion
-
-
-        #region SERIALIZATION
-
-        // public byte[] ToSerialized()
-        // {
-        //     const byte run_length_size = sizeof(uint);
-        //     const byte value_size = sizeof(ushort);
-        //     const byte node_size = value_size + run_length_size;
-        //
-        //     // 8 bytes for runlength and value
-        //     byte[] bytes = new byte[_Blocks.Count * node_size];
-        //
-        //     uint index = 0;
-        //     foreach (RLENode<ushort> node in _Blocks)
-        //     {
-        //         // copy runlength (int, 4 bytes) to position of i
-        //         Array.Copy(BitConverter.GetBytes(node.RunLength), 0, bytes, index, run_length_size);
-        //         // copy node value, also 4 bytes, to position of i + 4 bytes from runlength
-        //         Array.Copy(BitConverter.GetBytes(node.Value), 0, bytes, index + value_size, value_size);
-        //
-        //         index += node_size;
-        //     }
-        //
-        //     return bytes;
-        // }
-        //
-        // public bool FromSerialized(byte[] data)
-        // {
-        //     const byte run_length_size = sizeof(uint);
-        //     const byte value_size = sizeof(ushort);
-        //     const byte node_size = value_size + run_length_size;
-        //
-        //     if ((data.Length % node_size) != 0)
-        //     {
-        //         // data is misformatted, so do nothing
-        //         return false;
-        //     }
-        //
-        //     for (int i = 0; i < data.Length; i += node_size)
-        //     {
-        //         // todo fix this to work with linked list
-        //         uint runLength = BitConverter.ToUInt32(data, i);
-        //         ushort value = BitConverter.ToUInt16(data, i + run_length_size);
-        //
-        //         _Blocks.AddLast(new RLENode<ushort>(runLength, value));
-        //     }
-        //
-        //     _ChunkGenerator.SetSkipBuilding(true);
-        //
-        //     return true;
-        // }
 
         #endregion
     }

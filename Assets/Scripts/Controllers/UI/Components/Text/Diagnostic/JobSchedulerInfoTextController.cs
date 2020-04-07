@@ -12,8 +12,6 @@ namespace Wyd.Controllers.UI.Components.Text.Diagnostic
 
         private void Start()
         {
-            SystemController.Current.JobCountChanged += (sender, args) => _UpdateDiagInfo = true;
-            SystemController.Current.DelegatedJobCountChanged += (sender, args) => _UpdateDiagInfo = true;
             SystemController.Current.ProcessingJobCountChanged += (sender, args) => _UpdateDiagInfo = true;
             SystemController.Current.WorkerThreadCountChanged += (sender, args) => _UpdateDiagInfo = true;
             _UpdateDiagInfo = true;
@@ -23,10 +21,7 @@ namespace Wyd.Controllers.UI.Components.Text.Diagnostic
         {
             if (_UpdateDiagInfo)
             {
-                TextObject.text = string.Format(Format,
-                    SystemController.Current.WorkerThreadCount,
-                    SystemController.Current.JobCount,
-                    SystemController.Current.DelegatedJobCount,
+                TextObject.text = string.Format(Format, SystemController.Current.WorkerThreadCount,
                     SystemController.Current.ProcessingJobCount);
 
                 _UpdateDiagInfo = false;
