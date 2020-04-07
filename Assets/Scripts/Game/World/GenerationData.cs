@@ -1,11 +1,12 @@
 #region
 
 using System;
+using Wyd.System;
 using Wyd.System.Collections;
 
 #endregion
 
-namespace Wyd.System
+namespace Wyd.Game.World
 {
     public class GenerationData
     {

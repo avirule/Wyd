@@ -6,6 +6,7 @@ using UnityEngine;
 using Wyd.Controllers.State;
 using Wyd.Controllers.System;
 using Wyd.Game;
+using Wyd.Game.World;
 using Wyd.Game.World.Chunks;
 using Wyd.Game.World.Chunks.Events;
 using Wyd.System;
