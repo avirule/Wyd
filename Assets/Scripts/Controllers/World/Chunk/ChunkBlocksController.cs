@@ -3,12 +3,11 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
-using System.Diagnostics.CodeAnalysis;
+using System.Linq;
 using Unity.Mathematics;
 using UnityEngine;
 using Wyd.Controllers.State;
 using Wyd.Controllers.System;
-using Wyd.Game;
 using Wyd.Game.World.Blocks;
 using Wyd.Game.World.Chunks.Events;
 using Wyd.System;
@@ -87,8 +86,7 @@ namespace Wyd.Controllers.World.Chunk
             {
                 BlockAction blockAction = _BlockActions.Dequeue();
 
-                ModifyBlockPosition(blockAction.GlobalPosition, blockAction.Id);
-                OnBlocksChanged(this, new ChunkChangedEventArgs(_Volume, Directions.AllDirectionAxes));
+                ProcessBlockAction(blockAction);
 
                 _BlockActionsCache.CacheItem(ref blockAction);
 
@@ -96,95 +94,35 @@ namespace Wyd.Controllers.World.Chunk
             }
         }
 
-        // private void UpdateInternalStateInfo()
-        // {
-        //     TotalNodes = Blocks.Count;
-        //
-        //     HashSet<ushort> uniqueBlockIds = new HashSet<ushort>();
-        //     NonAirBlocks = 0;
-        //
-        //     foreach (RLENode<ushort> node in Blocks)
-        //     {
-        //         if (!uniqueBlockIds.Contains(node.Value))
-        //         {
-        //             uniqueBlockIds.Add(node.Value);
-        //         }
-        //
-        //         if (node.Value != 0)
-        //         {
-        //             NonAirBlocks += node.RunLength;
-        //         }
-        //     }
-        //
-        //     UniqueNodes = (uint)uniqueBlockIds.Count;
-        // }
-
-        [SuppressMessage("ReSharper", "InconsistentNaming")]
-        private static IEnumerable<Vector3> DetermineDirectionsForNeighborUpdate(Vector3 localPosition)
+        private void ProcessBlockAction(BlockAction blockAction)
         {
-            // topleft & bottomright x computation value
-            float tl_br_x = localPosition.x * ChunkController.Size.x;
-            // topleft & bottomright y computation value
-            float tl_br_y = localPosition.z * ChunkController.Size.z;
+            ModifyBlockPosition(blockAction.GlobalPosition, blockAction.Id);
 
-            // topright & bottomleft left-side computation value
-            float tr_bl_l = localPosition.x + localPosition.z;
-            // topright & bottomleft right-side computation value
-            float tr_bl_r = (ChunkController.Size.x + ChunkController.Size.z) / 2f;
-
-            // `half` refers to the diagonal half of the chunk the point lies in.
-            // If the point does not lie in a diagonal half, its a center block, and we don't need to update chunks.
-
-            bool isInTopLeftHalf = tl_br_x > tl_br_y;
-            bool isInBottomRightHalf = tl_br_x < tl_br_y;
-            bool isInTopRightHalf = tr_bl_l > tr_bl_r;
-            bool isInBottomLeftHalf = tr_bl_l < tr_bl_r;
-
-            if (isInTopRightHalf && isInTopLeftHalf)
-            {
-                yield return Vector3.right;
-            }
-            else if (isInTopRightHalf && isInBottomRightHalf)
-            {
-                yield return Vector3.forward;
-            }
-            else if (isInBottomRightHalf && isInBottomLeftHalf)
-            {
-                yield return Vector3.left;
-            }
-            else if (isInBottomLeftHalf && isInTopLeftHalf)
-            {
-                yield return Vector3.back;
-            }
-            else if (!isInTopRightHalf && !isInBottomLeftHalf)
-            {
-                if (isInTopLeftHalf)
-                {
-                    yield return Vector3.back;
-                    yield return Vector3.left;
-                }
-                else if (isInBottomRightHalf)
-                {
-                    yield return Vector3.back;
-                    yield return Vector3.right;
-                }
-            }
-            else if (!isInTopLeftHalf && !isInBottomRightHalf)
-            {
-                if (isInTopRightHalf)
-                {
-                    yield return Vector3.forward;
-                    yield return Vector3.right;
-                }
-                else if (isInBottomLeftHalf)
-                {
-                    yield return Vector3.forward;
-                    yield return Vector3.left;
-                }
-            }
+            OnBlocksChanged(this,
+                TryUpdateGetNeighborNormals(blockAction.GlobalPosition, out IEnumerable<int3> normals)
+                    ? new ChunkChangedEventArgs(_Volume, normals)
+                    : new ChunkChangedEventArgs(_Volume, Enumerable.Empty<int3>()));
         }
 
+        private bool TryUpdateGetNeighborNormals(float3 globalPosition, out IEnumerable<int3> normals)
+        {
+            normals = Enumerable.Empty<int3>();
 
+            float3 localPosition = globalPosition - _Volume.CenterPoint;
+            float3 localPositionSign = math.sign(localPosition);
+            float3 localPositionAbs = math.abs(math.ceil(localPosition + (new float3(0.5f) * localPositionSign)));
+
+            if (!math.any(localPositionAbs == 16f))
+            {
+                return false;
+            }
+
+            normals = WydMath.ToComponents(WydMath.ToInt(math.floor(localPositionAbs / 16f) * localPositionSign));
+            return true;
+
+        }
+
+        
         #region DE/ACTIVATION
 
         private void ClearInternalData()

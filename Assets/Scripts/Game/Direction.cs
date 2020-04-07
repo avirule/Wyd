@@ -83,6 +83,36 @@ namespace Wyd.Game
             Up = new int3(0, 1, 0);
             Down = new int3(0, -1, 0);
         }
+
+        public static IEnumerable<Direction> NormalToDirections(float3 normal)
+        {
+            if (normal.x > 0)
+            {
+                yield return Direction.East;
+            }
+            else if (normal.x < 0)
+            {
+                yield return Direction.West;
+            }
+
+            if (normal.y > 0)
+            {
+                yield return Direction.Up;
+            }
+            else if (normal.y < 0)
+            {
+                yield return Direction.Down;
+            }
+
+            if (normal.z > 0)
+            {
+                yield return Direction.North;
+            }
+            else if (normal.z < 0)
+            {
+                yield return Direction.South;
+            }
+        }
     }
 
     public static class DirectionExtensions

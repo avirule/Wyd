@@ -1,6 +1,7 @@
 #region
 
 using System;
+using System.Collections.Generic;
 using Unity.Mathematics;
 
 #endregion
@@ -16,6 +17,28 @@ namespace Wyd.System
             int y = zQuotient % bounds.y;
             return new int3(x, y, z);
         }
+
+        #region ToComponents()
+
+        public static IEnumerable<int3> ToComponents(int3 a)
+        {
+            if (a.x != 0)
+            {
+                yield return new int3(a.x, 0, 0);
+            }
+
+            if (a.y != 0)
+            {
+                yield return new int3(0, a.y, 0);
+            }
+
+            if (a.z != 0)
+            {
+                yield return new int3(0, 0, a.z);
+            }
+        }
+
+        #endregion
 
         #region ToFloat()
 
