@@ -18,7 +18,7 @@ namespace Wyd.Controllers.World.Chunk
     public class ChunkController : ActivationStateChunkController
     {
         // todo Size should be somewhere that makes more sense, I think
-        public static readonly int3 Size = new int3(16);
+        public static readonly int3 Size = new int3(32);
 
         #region INSTANCE MEMBERS
 

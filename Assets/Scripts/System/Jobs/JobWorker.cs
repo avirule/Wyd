@@ -85,7 +85,7 @@ namespace Wyd.System.Jobs
             }
 
             _InternalThread.Abort();
-            Log.Warning($"{nameof(JobWorker)} ID {_InternalThread.ManagedThreadId} forced to abort.");
+            Log.Warning($"{nameof(JobWorker)} ID {ManagedThreadID} forced to abort.");
         }
 
         public void QueueJob(Job job)
@@ -117,12 +117,12 @@ namespace Wyd.System.Jobs
             catch (OperationCanceledException)
             {
                 // Thread aborted
-                Log.Warning($"{nameof(JobWorker)} (ID {_InternalThread.ManagedThreadId}) has critically aborted.");
+                Log.Warning($"{nameof(JobWorker)} (ID {ManagedThreadID}) has critically aborted.");
             }
             catch (Exception ex)
             {
                 Log.Error(
-                    $"Error in {nameof(JobWorker)} (ID {_InternalThread.ManagedThreadId}): {ex.Message}\r\n{ex.StackTrace}");
+                    $"Error in {nameof(JobWorker)} (ID {ManagedThreadID}): {ex.Message}\r\n{ex.StackTrace}");
             }
             finally
             {
