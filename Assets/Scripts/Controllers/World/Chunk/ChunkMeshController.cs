@@ -1,5 +1,7 @@
 #region
 
+using System.Linq;
+using Unity.Mathematics;
 using UnityEngine;
 using Wyd.Controllers.System;
 using Wyd.Game;
@@ -111,15 +113,13 @@ namespace Wyd.Controllers.World.Chunk
 
         public void FrameUpdate()
         {
-            if (!_UpdateRequested
+            if (Meshing
+                || !_UpdateRequested
                 || (BlocksController.QueuedBlockActions > 0)
                 || (TerrainController.CurrentStep != GenerationData.GenerationStep.Complete)
                 || !WorldController.Current.ReadyForGeneration
                 || (WorldController.Current.AggregateNeighborsStep(WydMath.ToInt(_Volume.MinPoint))
-                    < GenerationData.GenerationStep.Complete)
-
-
-                || _Volume.MinPoint.y < 100f)
+                    < GenerationData.GenerationStep.Complete))
             {
                 return;
             }
@@ -173,13 +173,14 @@ namespace Wyd.Controllers.World.Chunk
 
             SystemController.Current.JobFinished += OnJobFinished;
 
+            Meshed = _UpdateRequested = false;
             Meshing = true;
         }
 
         private void ApplyMesh(ChunkMeshingJob chunkMeshingJob)
         {
             chunkMeshingJob.SetMesh(ref _Mesh);
-            OnMeshChanged(this, new ChunkChangedEventArgs(_Volume, Directions.CardinalDirectionAxes));
+            OnMeshChanged(this, new ChunkChangedEventArgs(_Volume, Enumerable.Empty<int3>()));
         }
 
 
@@ -203,6 +204,8 @@ namespace Wyd.Controllers.World.Chunk
                 () => ApplyMesh(chunkMeshingJob)));
             SystemController.Current.JobFinished -= OnJobFinished;
             _JobIdentity = null;
+            Meshing = false;
+            Meshed = true;
         }
 
         #endregion

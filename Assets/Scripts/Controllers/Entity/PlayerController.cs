@@ -142,6 +142,11 @@ namespace Wyd.Controllers.Entity
 
         private void Update()
         {
+            if (InputController.Current.GetKey(KeyCode.F6))
+            {
+                Rigidbody.useGravity = !Rigidbody.useGravity;
+            }
+
             UpdateMovement();
             CalculateJump();
             UpdateReachRay();
@@ -225,11 +230,10 @@ namespace Wyd.Controllers.Entity
                 int3 position;
 
                 if (((math.csum(_LastReachRayHit.normal) > 0f)
-                     && WorldController.Current.TryRemoveBlockAt(
-                         position = WydMath.ToInt(math.floor(_LastReachRayHit.point) - (float3)_LastReachRayHit.normal))
-                    )
-                    || WorldController.Current.TryRemoveBlockAt(
-                        position = WydMath.ToInt(math.floor(_LastReachRayHit.point))))
+                     && WorldController.Current.TryRemoveBlockAt(position = WydMath.ToInt(
+                             math.floor(_LastReachRayHit.point) - (float3)_LastReachRayHit.normal)))
+                    || WorldController.Current.TryRemoveBlockAt(position = WydMath.ToInt(math.floor(
+                        _LastReachRayHit.point))))
                 {
                     ushort blockId = WorldController.Current.GetBlockAt(position);
 

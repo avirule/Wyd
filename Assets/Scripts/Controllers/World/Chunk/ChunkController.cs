@@ -99,9 +99,16 @@ namespace Wyd.Controllers.World.Chunk
         {
             base.Awake();
 
-            BlocksController.BlocksChanged += (sender, args) => MeshController.FlagForUpdate();
-            TerrainController.TerrainChanged += (sender, args) => MeshController.FlagForUpdate();
-            MeshController.MeshChanged += OnChanged;
+            BlocksController.BlocksChanged += (sender, args) =>
+            {
+                MeshController.FlagForUpdate();
+                OnChanged(sender, args);
+            };
+            TerrainController.TerrainChanged += (sender, args) =>
+            {
+                MeshController.FlagForUpdate();
+                OnChanged(sender, args);
+            };
 
             MeshRenderer.materials = TextureController.Current.TerrainMaterials;
             _Visible = MeshRenderer.enabled;

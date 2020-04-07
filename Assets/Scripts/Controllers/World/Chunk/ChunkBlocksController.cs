@@ -83,9 +83,16 @@ namespace Wyd.Controllers.World.Chunk
 
         public IEnumerable IncrementalFrameUpdate()
         {
-            if (_BlockActions.Count > 0)
+            while (_BlockActions.Count > 0)
             {
-                yield return ProcessBlockActions();
+                BlockAction blockAction = _BlockActions.Dequeue();
+
+                ModifyBlockPosition(blockAction.GlobalPosition, blockAction.Id);
+                OnBlocksChanged(this, new ChunkChangedEventArgs(_Volume, Directions.AllDirectionAxes));
+
+                _BlockActionsCache.CacheItem(ref blockAction);
+
+                yield return null;
             }
         }
 
@@ -191,21 +198,6 @@ namespace Wyd.Controllers.World.Chunk
 
         #region TRY GET / PLACE / REMOVE BLOCKS
 
-        private IEnumerable ProcessBlockActions()
-        {
-            while (_BlockActions.Count > 0)
-            {
-                BlockAction blockAction = _BlockActions.Dequeue();
-
-                ModifyBlockPosition(blockAction.GlobalPosition, blockAction.Id);
-                OnBlocksChanged(this, new ChunkChangedEventArgs(_Volume, Directions.AllDirectionAxes));
-
-                _BlockActionsCache.CacheItem(ref blockAction);
-
-                yield return null;
-            }
-        }
-
         private void ModifyBlockPosition(int3 globalPosition, ushort newId)
         {
             if (!Blocks.ContainsPoint(globalPosition))
@@ -245,16 +237,16 @@ namespace Wyd.Controllers.World.Chunk
 
         public bool TryPlaceBlockAt(int3 globalPosition, ushort id) =>
             _Volume.Contains(globalPosition)
-            && TryAllocateBlockAction(globalPosition - WydMath.ToInt(_Volume.MinPoint), id);
+            && TryAllocateBlockAction(globalPosition, id);
 
         public bool TryRemoveBlockAt(int3 globalPosition) =>
             _Volume.Contains(globalPosition)
-            && TryAllocateBlockAction(globalPosition - WydMath.ToInt(_Volume.MinPoint), BlockController.AIR_ID);
+            && TryAllocateBlockAction(globalPosition, BlockController.AIR_ID);
 
-        private bool TryAllocateBlockAction(int3 localPosition, ushort id)
+        private bool TryAllocateBlockAction(int3 globalPosition, ushort id)
         {
             BlockAction blockAction = _BlockActionsCache.Retrieve();
-            blockAction.SetData(localPosition, id);
+            blockAction.SetData(globalPosition, id);
             _BlockActions.Enqueue(blockAction);
             return true;
         }
