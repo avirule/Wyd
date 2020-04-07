@@ -31,14 +31,10 @@ namespace Wyd.Game.World
 
         public static string WorldSaveFileDirectory { get; }
 
-        static WorldSaveFileProvider()
-        {
-            WorldSaveFileDirectory = $@"{Application.persistentDataPath}\saves\";
+        static WorldSaveFileProvider() => WorldSaveFileDirectory = $@"{Application.persistentDataPath}\saves\";
 
-            //_QueryExecutionScheduler = new JobScheduler(TimeSpan.FromMilliseconds(200), ThreadingMode.Single);
-            //_QueryExecutionScheduler.SpawnWorkers();
-        }
-
+        //_QueryExecutionScheduler = new JobScheduler(TimeSpan.FromMilliseconds(200), ThreadingMode.Single);
+        //_QueryExecutionScheduler.SpawnWorkers();
         private string WorldFilePath { get; }
         private string ConnectionString { get; }
 

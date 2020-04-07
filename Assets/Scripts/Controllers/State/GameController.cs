@@ -49,7 +49,7 @@ namespace Wyd.Controllers.State
                         case Direction.East:
                         case Direction.South:
                         case Direction.West:
-                            //return "grass_side";
+                        //return "grass_side";
                         case Direction.Up:
                             return "grass";
                         case Direction.Down:

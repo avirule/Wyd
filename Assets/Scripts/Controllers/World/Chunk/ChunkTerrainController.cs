@@ -241,7 +241,8 @@ namespace Wyd.Controllers.World.Chunk
                 TotalTimesTerrainChanged += 1;
                 TimesTerrainChanged += 1;
 
-                WorldController.Current.FlagNeighborsForMeshUpdate(WydMath.ToInt(_Volume.MinPoint), Directions.AllDirectionAxes);
+                WorldController.Current.FlagNeighborsForMeshUpdate(WydMath.ToInt(_Volume.MinPoint),
+                    Directions.AllDirectionAxes);
             }
 
 #endif
