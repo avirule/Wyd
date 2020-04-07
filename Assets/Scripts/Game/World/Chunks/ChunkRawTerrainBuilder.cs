@@ -109,10 +109,12 @@ namespace Wyd.Game.World.Chunks
 
             if (_GpuAcceleration && (_NoiseValuesBuffer != null))
             {
-                ManualResetEvent manualResetEvent = new ManualResetEvent(false);
-                MainThreadActionsController.Current.PushAction(new MainThreadAction(manualResetEvent,
-                    GetComputeBufferData));
-                manualResetEvent.WaitOne();
+                using (ManualResetEvent manualResetEvent = new ManualResetEvent(false))
+                {
+                    MainThreadActionsController.Current.PushAction(new MainThreadAction(manualResetEvent,
+                        GetComputeBufferData));
+                    manualResetEvent.WaitOne();
+                }
             }
             else if (_GpuAcceleration && (_NoiseValuesBuffer == null))
             {
@@ -124,9 +126,8 @@ namespace Wyd.Game.World.Chunks
             {
                 for (int index = 0; index < WydMath.Product(_GenerationData.Volume.Size); index++)
                 {
-                    _NoiseMap[index] =
-                        GetNoiseValueByGlobalPosition(_GenerationData.Volume.MinPoint
-                                                      + WydMath.IndexTo3D(index, ChunkController.Size));
+                    _NoiseMap[index] = GetNoiseValueByGlobalPosition(_GenerationData.Volume.MinPoint
+                                                                     + WydMath.IndexTo3D(index, ChunkController.Size));
                 }
             }
 

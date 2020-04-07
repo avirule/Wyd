@@ -32,7 +32,9 @@ namespace Wyd.System
             CenterPoint = MinPoint + Extents;
         }
 
-        public bool Contains(float3 point) => math.all(point < MaxPoint) && math.all(point > MinPoint);
+        public bool Contains(float3 point) => math.all(point > MinPoint) && math.all(point < MaxPoint);
+        public bool ContainsMinBiased(float3 point) => math.all(point >= MinPoint) && math.all(point < MaxPoint);
+        public bool ContainsMaxBiased(float3 point) => math.all(point > MinPoint) && math.all(point <= MaxPoint);
 
         public override string ToString() => $"(center: {CenterPoint}, size: {Size}, min: {MinPoint}, max: {MaxPoint})";
     }

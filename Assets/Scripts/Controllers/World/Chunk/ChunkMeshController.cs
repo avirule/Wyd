@@ -115,7 +115,7 @@ namespace Wyd.Controllers.World.Chunk
         {
             if (Meshing
                 || !_UpdateRequested
-                || (BlocksController.QueuedBlockActions > 0)
+                || (BlocksController.PendingBlockActions > 0)
                 || (TerrainController.CurrentStep != GenerationData.GenerationStep.Complete)
                 || !WorldController.Current.ReadyForGeneration
                 || (WorldController.Current.AggregateNeighborsStep(WydMath.ToInt(_Volume.MinPoint))

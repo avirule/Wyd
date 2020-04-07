@@ -29,7 +29,7 @@ namespace Wyd.Controllers.World.Chunk
         private Queue<BlockAction> _BlockActions;
 
         public Octree<ushort> Blocks { get; private set; }
-        public int QueuedBlockActions => _BlockActions.Count;
+        public int PendingBlockActions => _BlockActions.Count;
 
         #endregion
 
@@ -236,11 +236,11 @@ namespace Wyd.Controllers.World.Chunk
         public bool BlockExistsAt(int3 globalPosition) => GetBlockAt(globalPosition) != BlockController.AIR_ID;
 
         public bool TryPlaceBlockAt(int3 globalPosition, ushort id) =>
-            _Volume.Contains(globalPosition)
+            _Volume.ContainsMinBiased(globalPosition)
             && TryAllocateBlockAction(globalPosition, id);
 
         public bool TryRemoveBlockAt(int3 globalPosition) =>
-            _Volume.Contains(globalPosition)
+            _Volume.ContainsMinBiased(globalPosition)
             && TryAllocateBlockAction(globalPosition, BlockController.AIR_ID);
 
         private bool TryAllocateBlockAction(int3 globalPosition, ushort id)
