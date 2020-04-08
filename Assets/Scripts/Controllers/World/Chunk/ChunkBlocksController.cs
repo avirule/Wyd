@@ -35,6 +35,8 @@ namespace Wyd.Controllers.World.Chunk
 
         #region SERIALIZED MEMBERS
 
+#if UNITY_EDITOR
+
         [SerializeField]
         [ReadOnlyInspectorField]
         private int TotalNodes = -1;
@@ -46,6 +48,8 @@ namespace Wyd.Controllers.World.Chunk
         [SerializeField]
         [ReadOnlyInspectorField]
         private uint NonAirBlocks;
+
+#endif
 
         #endregion
 
@@ -195,7 +199,7 @@ namespace Wyd.Controllers.World.Chunk
 
         public event EventHandler<ChunkChangedEventArgs> BlocksChanged;
 
-        protected virtual void OnBlocksChanged(object sender, ChunkChangedEventArgs args)
+        private void OnBlocksChanged(object sender, ChunkChangedEventArgs args)
         {
             BlocksChanged?.Invoke(sender, args);
         }

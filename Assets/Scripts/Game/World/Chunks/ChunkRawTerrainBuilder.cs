@@ -13,7 +13,6 @@ using Wyd.Controllers.World.Chunk;
 using Wyd.System;
 using Wyd.System.Collections;
 using Wyd.System.Jobs;
-using Wyd.System.Noise;
 
 #endregion
 
@@ -47,11 +46,6 @@ namespace Wyd.Game.World.Chunks
 
         private void GetComputeBufferData()
         {
-            if (_NoiseValuesBuffer == null || _NoiseMap == null)
-            {
-
-            }
-
             _NoiseValuesBuffer.GetData(_NoiseMap);
             _NoiseValuesBuffer.Release();
         }
@@ -149,8 +143,7 @@ namespace Wyd.Game.World.Chunks
 
         protected float GetNoiseValueByGlobalPosition(float3 globalPosition)
         {
-            float noiseValue = OpenSimplex_FastNoise.GetSimplex(WorldController.Current.Seed, _Frequency,
-                globalPosition.x, globalPosition.y, globalPosition.z);
+            float noiseValue = OpenSimplexSlim.GetSimplex(WorldController.Current.Seed, _Frequency, globalPosition);
             noiseValue += 5f * (1f - Mathf.InverseLerp(0f, WorldController.WORLD_HEIGHT, globalPosition.y));
             noiseValue /= globalPosition.y + (-1f * _Persistence);
 
