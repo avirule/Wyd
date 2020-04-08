@@ -117,7 +117,6 @@ namespace Wyd.System.Jobs
                     }
 
                     await ExecuteJob(asyncJob);
-                    Interlocked.Decrement(ref _jobsQueued);
                 }
             }
             catch (OperationCanceledException)
