@@ -10,7 +10,6 @@ namespace Wyd.System.Logging.Sinks
 {
     public class MemorySink : ILogEventSink
     {
-        // todo put these in a sensible location
         public const string ERROR_COLOR = "#FF6961";
         public const string WARN_COLOR = "#FFFF99";
 

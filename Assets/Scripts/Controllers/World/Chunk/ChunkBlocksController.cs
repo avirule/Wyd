@@ -4,6 +4,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading.Tasks;
 using Unity.Mathematics;
 using UnityEngine;
 using Wyd.Controllers.State;
@@ -78,9 +79,9 @@ namespace Wyd.Controllers.World.Chunk
             ClearInternalData();
         }
 
-        public void FrameUpdate() { }
+        public Task FrameUpdate() => Task.CompletedTask;
 
-        public IEnumerable IncrementalFrameUpdate()
+        public async IAsyncEnumerable<object> IncrementalFrameUpdate()
         {
             while (_BlockActions.Count > 0)
             {
@@ -89,6 +90,8 @@ namespace Wyd.Controllers.World.Chunk
                 ProcessBlockAction(blockAction);
 
                 _BlockActionsCache.CacheItem(ref blockAction);
+
+                await Task.Delay(0);
 
                 yield return null;
             }

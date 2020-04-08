@@ -116,7 +116,6 @@ namespace Wyd.Controllers.World
             EntityController.Current.RegisterWatchForTag(RegisterCollideableEntity, "collider");
             EntityController.Current.RegisterWatchForTag(RegisterLoaderEntity, "loader");
 
-            // todo fix spawn point to set to useful value
             SpawnPoint = WydMath.IndexTo3D(Seed, new int3(int.MaxValue, int.MaxValue, int.MaxValue));
 
 
@@ -255,11 +254,7 @@ namespace Wyd.Controllers.World
                         int3 chunkPosition = loader.ChunkPosition;
                         chunkPosition.y = 0;
                         int3 position = chunkPosition + (new int3(x, y, z) * ChunkController.Size);
-
-                        // todo
-                        // this will run into the issue of two loaders being within the same render distance
-                        // and chunks getting unloaded relative to their loader, but needing to be loaded in
-                        // for the other loader sharing render distance
+                        
                         if (ChunkExistsAt(position))
                         {
                             continue;

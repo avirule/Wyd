@@ -100,7 +100,6 @@ namespace Wyd.Controllers.Entity
             CheckChangedPosition();
             CheckChangedChunkPosition();
 
-            // todo fix this being laggy as fuck
 //            PositionChanged += (sender, position) =>
 //            {
 //                const int destruct_radius = 2;

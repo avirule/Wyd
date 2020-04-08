@@ -1,5 +1,6 @@
 #region
 
+using System.Threading.Tasks;
 using UnityEngine;
 using Wyd.Controllers.System;
 using Wyd.System;
@@ -9,7 +10,7 @@ using Wyd.System.Jobs;
 
 namespace Wyd.Game.World.Chunks
 {
-    public class ChunkBuildingJob : Job
+    public class ChunkBuildingJob : AsyncJob
     {
         private readonly GenerationData _GenerationData;
         private readonly ComputeBuffer _NoiseValuesBuffer;
@@ -29,18 +30,22 @@ namespace Wyd.Game.World.Chunks
             _NoiseValuesBuffer = noiseValuesBuffer;
         }
 
-        protected override void Process()
+        protected override Task Process()
         {
             _TerrainBuilder = new ChunkRawTerrainBuilder(_GenerationData, _Frequency,
                 _Persistence, _GpuAcceleration, _NoiseValuesBuffer);
             _TerrainBuilder.Generate();
+
+            return Task.CompletedTask;
         }
 
-        protected override void ProcessFinished()
+        protected override Task ProcessFinished()
         {
             DiagnosticsController.Current.RollingNoiseRetrievalTimes.Enqueue(_TerrainBuilder.NoiseRetrievalTimeSpan);
             DiagnosticsController.Current.RollingTerrainGenerationTimes.Enqueue(_TerrainBuilder
                 .TerrainGenerationTimeSpan);
+
+            return Task.CompletedTask;
         }
     }
 }

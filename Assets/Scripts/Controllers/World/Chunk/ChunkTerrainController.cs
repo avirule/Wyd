@@ -1,6 +1,7 @@
 #region
 
 using System;
+using System.Threading.Tasks;
 using Unity.Mathematics;
 using UnityEngine;
 using Wyd.Controllers.State;
@@ -134,14 +135,18 @@ namespace Wyd.Controllers.World.Chunk
 
         #region RUNTIME
 
-        private bool QueueJob(Job job)
+        private async Task<bool> QueueAsyncJob(AsyncJob asyncJob)
         {
-            if (!SystemController.Current.TryQueueJob(job, out _JobIdentity))
+            object identity = await SystemController.Current.QueueAsyncJob(asyncJob);
+
+            if (identity == null)
             {
                 return false;
             }
 
+            _JobIdentity = identity;
             SystemController.Current.JobFinished += OnJobFinished;
+
             return true;
         }
 
@@ -190,10 +195,10 @@ namespace Wyd.Controllers.World.Chunk
 
         private void BeginRawTerrainGeneration()
         {
-            ChunkBuildingJob job = new ChunkBuildingJob(new GenerationData(_Volume, BlocksController.Blocks),
+            ChunkBuildingJob asyncJob = new ChunkBuildingJob(new GenerationData(_Volume, BlocksController.Blocks),
                 _FREQUENCY, _PERSISTENCE, OptionsController.Current.GPUAcceleration, _NoiseBuffer);
 
-            if (QueueJob(job))
+            if (!await QueueAsyncJob(asyncJob))
             {
                 CurrentStep = GenerationData.GenerationStep.AwaitingRawTerrain;
             }
@@ -211,9 +216,9 @@ namespace Wyd.Controllers.World.Chunk
             TerrainChanged?.Invoke(sender, args);
         }
 
-        private void OnJobFinished(object sender, JobEventArgs args)
+        private void OnJobFinished(object sender, AsyncJobEventArgs args)
         {
-            if (args.Job.Identity != _JobIdentity)
+            if (args.AsyncJob.Identity != _JobIdentity)
             {
                 return;
             }
@@ -235,18 +240,19 @@ namespace Wyd.Controllers.World.Chunk
 
             CurrentStep = CurrentStep.Next();
 
-#if UNITY_EDITOR
-
             if (CurrentStep == GenerationData.GenerationStep.Complete)
             {
+
+#if UNITY_EDITOR
+
                 TotalTimesTerrainChanged += 1;
                 TimesTerrainChanged += 1;
+
+#endif
 
                 WorldController.Current.FlagNeighborsForMeshUpdate(WydMath.ToInt(_Volume.MinPoint),
                     Directions.AllDirectionAxes);
             }
-
-#endif
 
             _JobIdentity = null;
             SystemController.Current.JobFinished -= OnJobFinished;

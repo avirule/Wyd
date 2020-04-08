@@ -49,7 +49,6 @@ namespace Wyd.Controllers.UI.Components.Text
 
         public IEnumerable IncrementalFrameUpdate()
         {
-            // todo fix this so it doesn't just append text endlessly
             // while ((_LogMessageQueue.Count > 0) && (WorldController.Current != null))
             // {
             //     _LogMessageQueue.TryDequeue(out string result);

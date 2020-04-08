@@ -24,7 +24,6 @@ namespace Wyd.Controllers.Graphics
 
         private void FixedUpdate()
         {
-            // todo limit vertical rotation
             _SelfTransform.rotation = quaternion.Euler(-_Pitch * Time.fixedDeltaTime, _Yaw * Time.fixedDeltaTime, 0f);
         }
 

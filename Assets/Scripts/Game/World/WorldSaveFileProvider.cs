@@ -145,7 +145,7 @@ namespace Wyd.Game.World
 
         public void CompressAndCommitThreaded(Vector3 position, byte[] data)
         {
-            _QueryExecutionScheduler.TryQueueJob(new Job(() => CompressAndCommit(position, data)), out object _);
+            //_QueryExecutionScheduler.TryQueueJob(new Job(() => CompressAndCommit(position, data)), out object _);
         }
 
         public void Commit(Vector3 position, byte[] chunkData)

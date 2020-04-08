@@ -1,9 +1,9 @@
 #region
 
+using System.Threading.Tasks;
 using Serilog;
 using UnityEngine;
 using Wyd.Controllers.System;
-using Wyd.System;
 using Wyd.System.Collections;
 using Wyd.System.Jobs;
 
@@ -11,7 +11,7 @@ using Wyd.System.Jobs;
 
 namespace Wyd.Game.World.Chunks
 {
-    public class ChunkMeshingJob : Job
+    public class ChunkMeshingJob : AsyncJob
     {
         private static readonly ObjectCache<ChunkMesher> _ChunkMesherCache = new ObjectCache<ChunkMesher>();
 
@@ -26,7 +26,7 @@ namespace Wyd.Game.World.Chunks
             _AggressiveFaceMerging = aggressiveFaceMerging;
         }
 
-        protected override void Process()
+        protected override Task Process()
         {
             ChunkMesher mesher = _ChunkMesherCache.Retrieve() ?? new ChunkMesher();
             mesher.SetRuntimeFields(_GenerationData, AbortToken, _AggressiveFaceMerging);
@@ -34,12 +34,16 @@ namespace Wyd.Game.World.Chunks
             mesher.GenerateMesh();
 
             _Mesher = mesher;
+
+            return Task.CompletedTask;
         }
 
-        protected override void ProcessFinished()
+        protected override Task ProcessFinished()
         {
             DiagnosticsController.Current.RollingMeshingSetBlockTimes.Enqueue(_Mesher.SetBlockTimeSpan);
             DiagnosticsController.Current.RollingMeshingTimes.Enqueue(_Mesher.MeshingTimeSpan);
+
+            return Task.CompletedTask;
         }
 
         public bool SetMesh(ref Mesh mesh)

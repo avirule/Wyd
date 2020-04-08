@@ -19,7 +19,7 @@ namespace Wyd.System.Jobs
     public sealed class JobScheduler
     {
         private readonly CancellationTokenSource _AbortTokenSource;
-        private readonly AsyncCollection<Job> _JobQueue;
+        private readonly AsyncCollection<AsyncJob> _AsyncJobQueue;
 
         private CancellationToken _AbortToken;
         private int _WorkerThreadCount;
@@ -41,7 +41,7 @@ namespace Wyd.System.Jobs
         {
             ModifyWorkerThreadCount(workerCount);
 
-            _JobQueue = new AsyncCollection<Job>();
+            _AsyncJobQueue = new AsyncCollection<AsyncJob>();
             _AbortTokenSource = new CancellationTokenSource();
             _AbortToken = _AbortTokenSource.Token;
 
@@ -58,22 +58,19 @@ namespace Wyd.System.Jobs
         /// <summary>
         ///     Adds specified <see cref="Job" /> to internal queue and returns a unique identity.
         /// </summary>
-        /// <param name="job"><see cref="Job" /> to be added.</param>
-        /// <param name="identifier">A unique <see cref="object" /> identity.</param>
-        public bool TryQueueJob(Job job, out object identifier)
+        /// <param name="asyncJob"><see cref="Job" /> to be added.</param>
+        public async Task<object> QueueAsyncJob(AsyncJob asyncJob)
         {
-            identifier = null;
-
             if (_AbortToken.IsCancellationRequested)
             {
-                return false;
+                return null;
             }
 
-            job.Initialize(Guid.NewGuid().ToString(), _AbortToken);
-            Task.Run(() => _JobQueue.PushAsync(job, _AbortToken), _AbortToken);
-            OnJobQueued(this, new JobEventArgs(job));
-            identifier = job.Identity;
-            return true;
+            asyncJob.Initialize(Guid.NewGuid(), _AbortToken);
+            await _AsyncJobQueue.PushAsync(asyncJob, _AbortToken);
+            OnJobQueued(this, new AsyncJobEventArgs(asyncJob));
+
+            return asyncJob.Identity;
         }
 
 
@@ -123,7 +120,7 @@ namespace Wyd.System.Jobs
             {
                 while (!_AbortToken.IsCancellationRequested)
                 {
-                    ExecuteJob(await _JobQueue.TakeAsync(_AbortToken));
+                    await ExecuteJob(await _AsyncJobQueue.TakeAsync(_AbortToken));
                     Interlocked.Decrement(ref _JobsQueued);
                 }
             }
@@ -139,11 +136,11 @@ namespace Wyd.System.Jobs
             }
         }
 
-        private void ExecuteJob(Job job)
+        private async Task ExecuteJob(AsyncJob asyncJob)
         {
-            OnJobStarted(this, new JobEventArgs(job));
-            job.Execute();
-            OnJobFinished(this, new JobEventArgs(job));
+            OnJobStarted(this, new AsyncJobEventArgs(asyncJob));
+            await asyncJob.Execute();
+            OnJobFinished(this, new AsyncJobEventArgs(asyncJob));
         }
 
         #endregion
@@ -171,17 +168,17 @@ namespace Wyd.System.Jobs
 
         public event EventHandler<int> WorkerCountChanged;
 
-        private void OnJobQueued(object sender, JobEventArgs args)
+        private void OnJobQueued(object sender, AsyncJobEventArgs args)
         {
             JobQueued?.Invoke(sender, args);
         }
 
-        private void OnJobStarted(object sender, JobEventArgs args)
+        private void OnJobStarted(object sender, AsyncJobEventArgs args)
         {
             JobStarted?.Invoke(sender, args);
         }
 
-        private void OnJobFinished(object sender, JobEventArgs args)
+        private void OnJobFinished(object sender, AsyncJobEventArgs args)
         {
             JobFinished?.Invoke(sender, args);
         }

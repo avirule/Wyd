@@ -878,7 +878,6 @@ namespace Wyd.Game.World.Chunks
             // 1 being the current block at `index`
             int traversals = 1;
 
-            // todo make aggressive face merging compatible with special block shapes
             if (!_AggressiveFaceMerging)
             {
                 return traversals;

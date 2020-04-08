@@ -54,8 +54,6 @@ namespace Wyd.Controllers.UI
             _Triangles.Clear();
             _UVs.Clear();
 
-            // todo make this work with special block forms
-
             AddTriangles(Direction.Up);
             AddVertices(Direction.Up, Vector3.zero);
             if (BlockController.Current.GetBlockSpriteUVs(BlockId, int3.zero, Direction.Up, new float3(1f),

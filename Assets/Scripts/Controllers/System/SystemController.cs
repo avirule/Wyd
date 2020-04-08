@@ -2,6 +2,7 @@
 
 using System;
 using System.Threading;
+using System.Threading.Tasks;
 using UnityEngine;
 using Wyd.Controllers.State;
 using Wyd.System.Jobs;
@@ -17,11 +18,11 @@ namespace Wyd.Controllers.System
 
         public static GameObject TextObject { get; private set; }
 
-        private JobScheduler _JobExecutionScheduler;
+        private JobScheduler _JobScheduler;
 
-        public long JobsQueued => _JobExecutionScheduler.JobsQueued;
-        public long ProcessingJobCount => _JobExecutionScheduler.ProcessingJobCount;
-        public long WorkerThreadCount => _JobExecutionScheduler.WorkerThreadCount;
+        public long JobsQueued => _JobScheduler.JobsQueued;
+        public long ProcessingJobCount => _JobScheduler.ProcessingJobCount;
+        public long WorkerThreadCount => _JobScheduler.WorkerThreadCount;
 
 
         private void Awake()
@@ -34,29 +35,32 @@ namespace Wyd.Controllers.System
 
         private void Start()
         {
-            _JobExecutionScheduler = new JobScheduler(OptionsController.Current.CPUCoreUtilization);
-            _JobExecutionScheduler.WorkerCountChanged += OnWorkerCountChanged;
-            _JobExecutionScheduler.JobQueued += OnJobQueued;
-            _JobExecutionScheduler.JobStarted += OnJobStarted;
-            _JobExecutionScheduler.JobFinished += OnJobFinished;
+            _JobScheduler = new JobScheduler(OptionsController.Current.CPUCoreUtilization);
+            _JobScheduler.WorkerCountChanged += OnWorkerCountChanged;
+            _JobScheduler.JobQueued += OnJobQueued;
+            _JobScheduler.JobStarted += OnJobStarted;
+            _JobScheduler.JobFinished += OnJobFinished;
 
             OptionsController.Current.PropertyChanged += (sender, args) =>
             {
                 if (args.PropertyName.Equals(nameof(OptionsController.Current.CPUCoreUtilization)))
                 {
-                    _JobExecutionScheduler.ModifyWorkerThreadCount(OptionsController.Current.CPUCoreUtilization);
+                    _JobScheduler.ModifyWorkerThreadCount(OptionsController.Current.CPUCoreUtilization);
                 }
             };
 
-            _JobExecutionScheduler.SpawnWorkers();
+            _JobScheduler.SpawnWorkers();
         }
 
         private void OnDestroy()
         {
-            _JobExecutionScheduler.Abort();
+            _JobScheduler.Abort();
         }
 
-        public bool TryQueueJob(Job job, out object identity) => _JobExecutionScheduler.TryQueueJob(job, out identity);
+        public async Task<object> QueueAsyncJob(AsyncJob asyncJob)
+        {
+            return await _JobScheduler.QueueAsyncJob(asyncJob);
+        }
 
 
         public static T LoadResource<T>(string path) where T : Object
@@ -85,19 +89,19 @@ namespace Wyd.Controllers.System
             WorkerThreadCountChanged?.Invoke(sender, args);
         }
 
-        private void OnJobQueued(object sender, JobEventArgs args)
+        private void OnJobQueued(object sender, AsyncJobEventArgs args)
         {
             JobCountChanged?.Invoke(sender, JobsQueued);
         }
 
-        private void OnJobStarted(object sender, JobEventArgs args)
+        private void OnJobStarted(object sender, AsyncJobEventArgs args)
         {
             JobStarted?.Invoke(sender, args);
             JobCountChanged?.Invoke(sender, JobsQueued);
             ProcessingJobCountChanged?.Invoke(sender, ProcessingJobCount);
         }
 
-        private void OnJobFinished(object sender, JobEventArgs args)
+        private void OnJobFinished(object sender, AsyncJobEventArgs args)
         {
             JobFinished?.Invoke(sender, args);
             JobCountChanged?.Invoke(sender, JobsQueued);
