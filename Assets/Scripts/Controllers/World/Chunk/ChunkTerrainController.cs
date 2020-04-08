@@ -137,6 +137,8 @@ namespace Wyd.Controllers.World.Chunk
             asyncJob.WorkFinished += OnJobFinished;
 
             JobScheduler.QueueAsyncJob(asyncJob).ConfigureAwait(false);
+
+            CurrentStep = CurrentStep.Next();
         }
 
         private void ExecuteStep(GenerationData.GenerationStep step)

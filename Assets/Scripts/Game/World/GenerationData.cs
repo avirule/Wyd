@@ -22,8 +22,8 @@ namespace Wyd.Game.World
         }
 
         public Volume Volume { get; }
-        public Octree<ushort> Blocks { get; }
+        public OctreeNode<ushort> Blocks { get; }
 
-        public GenerationData(Volume volume, Octree<ushort> blocks) => (Volume, Blocks) = (volume, blocks);
+        public GenerationData(Volume volume, OctreeNode<ushort> blocks) => (Volume, Blocks) = (volume, blocks);
     }
 }

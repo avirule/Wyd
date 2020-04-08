@@ -67,7 +67,7 @@ namespace Wyd.Game.World.Chunks
             GenerateNoise();
 
             _Stopwatch.Restart();
-            _GenerationData.Blocks.Collapse(true);
+            _GenerationData.Blocks.Collapse();
 
             for (int index = WydMath.Product(ChunkController.Size) - 1; index >= 0; index--)
             {

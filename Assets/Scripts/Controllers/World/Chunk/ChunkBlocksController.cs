@@ -4,7 +4,6 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
-using System.Threading.Tasks;
 using Unity.Mathematics;
 using UnityEngine;
 using Wyd.Controllers.State;
@@ -28,7 +27,7 @@ namespace Wyd.Controllers.World.Chunk
 
         private Queue<BlockAction> _BlockActions;
 
-        public Octree<ushort> Blocks { get; private set; }
+        public OctreeNode<ushort> Blocks { get; private set; }
         public int PendingBlockActions => _BlockActions.Count;
 
         #endregion
@@ -55,7 +54,7 @@ namespace Wyd.Controllers.World.Chunk
         {
             base.Awake();
 
-            Blocks = new Octree<ushort>(_Volume.MinPoint + (ChunkController.Size / new float3(2f)),
+            Blocks = new OctreeNode<ushort>(_Volume.MinPoint + (ChunkController.Size / new float3(2f)),
                 ChunkController.Size.x, 0);
             _BlockActions = new Queue<BlockAction>();
         }
@@ -67,7 +66,7 @@ namespace Wyd.Controllers.World.Chunk
             PerFrameUpdateController.Current.RegisterPerFrameUpdater(30, this);
             ClearInternalData();
 
-            Blocks = new Octree<ushort>(_Volume.MinPoint + (ChunkController.Size / new float3(2f)),
+            Blocks = new OctreeNode<ushort>(_Volume.MinPoint + (ChunkController.Size / new float3(2f)),
                 ChunkController.Size.x, 0);
         }
 
@@ -128,7 +127,7 @@ namespace Wyd.Controllers.World.Chunk
         private void ClearInternalData()
         {
             _BlockActions.Clear();
-            Blocks.Collapse(true);
+            Blocks.Collapse();
         }
 
         #endregion
@@ -138,7 +137,7 @@ namespace Wyd.Controllers.World.Chunk
 
         private void ModifyBlockPosition(int3 globalPosition, ushort newId)
         {
-            if (!Blocks.ContainsPoint(globalPosition))
+            if (!Blocks.ContainsMinBiased(globalPosition))
             {
                 return;
             }
@@ -148,7 +147,7 @@ namespace Wyd.Controllers.World.Chunk
 
         public ushort GetBlockAt(int3 globalPosition)
         {
-            if (!Blocks.ContainsPoint(globalPosition))
+            if (!Blocks.ContainsMinBiased(globalPosition))
             {
                 throw new ArgumentOutOfRangeException(nameof(globalPosition),
                     "Given position must be within chunk's bounds.");
@@ -161,7 +160,7 @@ namespace Wyd.Controllers.World.Chunk
         {
             blockId = 0;
 
-            if (!Blocks.ContainsPoint(globalPosition))
+            if (!Blocks.ContainsMinBiased(globalPosition))
             {
                 return false;
             }
