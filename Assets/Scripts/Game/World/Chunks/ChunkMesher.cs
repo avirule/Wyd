@@ -119,7 +119,7 @@ namespace Wyd.Game.World.Chunks
 
         public void GenerateMesh()
         {
-            if (_GenerationData.Blocks.IsUniform && _GenerationData.Blocks.Value == BlockController.AIR_ID)
+            if (_GenerationData.Blocks.IsUniform && (_GenerationData.Blocks.Value == BlockController.AIR_ID))
             {
                 return;
             }

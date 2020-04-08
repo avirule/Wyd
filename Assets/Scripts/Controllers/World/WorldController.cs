@@ -254,7 +254,7 @@ namespace Wyd.Controllers.World
                         int3 chunkPosition = loader.ChunkPosition;
                         chunkPosition.y = 0;
                         int3 position = chunkPosition + (new int3(x, y, z) * ChunkController.Size);
-                        
+
                         if (ChunkExistsAt(position))
                         {
                             continue;

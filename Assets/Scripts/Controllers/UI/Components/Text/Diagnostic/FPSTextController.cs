@@ -21,11 +21,11 @@ namespace Wyd.Controllers.UI.Components.Text.Diagnostic
             _FrameTimes = new FixedConcurrentQueue<float>(_ACCURACY);
         }
 
-        protected override void Update()
+        public override void FrameUpdate()
         {
             _FrameTimes.Enqueue(Time.deltaTime);
 
-            base.Update();
+            base.FrameUpdate();
         }
 
         protected override void TimedUpdate()

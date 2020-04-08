@@ -2,12 +2,14 @@
 
 using System;
 using System.Diagnostics;
+using Wyd.Controllers.System;
+using Wyd.System;
 
 #endregion
 
 namespace Wyd.Controllers.UI.Components.Text
 {
-    public class UpdatingFormattedTextController : FormattedTextController
+    public class UpdatingFormattedTextController : FormattedTextController, IPerFrameUpdate
     {
         private float _UpdatesPerSecond;
         private TimeSpan _UpdatesPerSecondTimeSpan;
@@ -31,7 +33,17 @@ namespace Wyd.Controllers.UI.Components.Text
             _UpdateTimer = Stopwatch.StartNew();
         }
 
-        protected virtual void Update()
+        protected void OnEnable()
+        {
+            PerFrameUpdateController.Current.RegisterPerFrameUpdater(150, this);
+        }
+
+        protected void OnDisable()
+        {
+            PerFrameUpdateController.Current.DeregisterPerFrameUpdater(150, this);
+        }
+
+        public virtual void FrameUpdate()
         {
             if (_UpdateTimer.Elapsed < _UpdatesPerSecondTimeSpan)
             {

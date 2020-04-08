@@ -1,7 +1,6 @@
 #region
 
 using System;
-using System.Collections.Generic;
 using Unity.Mathematics;
 
 #endregion
@@ -79,14 +78,6 @@ namespace Wyd.System.Collections
             }
 
             return IsUniform ? Value : _Nodes[DetermineOctant(point)].GetPoint(point);
-        }
-
-        public IEnumerable<T> GetAllData()
-        {
-            for (int index = 0; index < WydMath.Product(Volume.Size); index++)
-            {
-                yield return GetPoint(Volume.MinPoint + WydMath.IndexTo3D(index, WydMath.ToInt(Volume.Size)));
-            }
         }
 
         public void SetPoint(float3 point, T newValue)
