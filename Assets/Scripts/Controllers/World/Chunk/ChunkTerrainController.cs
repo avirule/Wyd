@@ -158,7 +158,6 @@ namespace Wyd.Controllers.World.Chunk
 
                     break;
                 case GenerationData.GenerationStep.NoiseWaitFrameOne:
-                case GenerationData.GenerationStep.NoiseWaitFrameTwo:
                     CurrentStep = CurrentStep.Next();
                     break;
                 case GenerationData.GenerationStep.RawTerrain:
@@ -206,37 +205,18 @@ namespace Wyd.Controllers.World.Chunk
 
         private void OnJobFinished(object sender, AsyncJobEventArgs args)
         {
-            switch (CurrentStep)
-            {
-                case GenerationData.GenerationStep.AwaitingRawTerrain:
-                    OnChunkTerrainChanged(this, new ChunkChangedEventArgs(_Volume, Directions.CardinalDirectionAxes));
-                    break;
-                case GenerationData.GenerationStep.Noise:
-                case GenerationData.GenerationStep.NoiseWaitFrameOne:
-                case GenerationData.GenerationStep.NoiseWaitFrameTwo:
-                case GenerationData.GenerationStep.RawTerrain:
-                case GenerationData.GenerationStep.Complete:
-                    break;
-                default:
-                    throw new ArgumentOutOfRangeException();
-            }
-
+            OnChunkTerrainChanged(this, new ChunkChangedEventArgs(_Volume, Directions.CardinalDirectionAxes));
+            args.AsyncJob.WorkFinished -= OnJobFinished;
             CurrentStep = CurrentStep.Next();
+
+#if UNITY_EDITOR
 
             if (CurrentStep == GenerationData.GenerationStep.Complete)
             {
-#if UNITY_EDITOR
-
                 TotalTimesTerrainChanged += 1;
                 TimesTerrainChanged += 1;
-
-#endif
-
-                WorldController.Current.FlagNeighborsForMeshUpdate(WydMath.ToInt(_Volume.MinPoint),
-                    Directions.AllDirectionAxes);
             }
-
-            args.AsyncJob.WorkFinished -= OnJobFinished;
+#endif
         }
 
         #endregion

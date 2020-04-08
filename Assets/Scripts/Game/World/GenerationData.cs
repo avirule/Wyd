@@ -10,15 +10,21 @@ namespace Wyd.Game.World
 {
     public class GenerationData
     {
-        [Flags]
         public enum GenerationStep : byte
         {
             Noise = 0b0000_0001,
             NoiseWaitFrameOne = 0b0000_0011,
-            NoiseWaitFrameTwo = 0b0000_0111,
-            RawTerrain = 0b0000_1111,
-            AwaitingRawTerrain = 0b0001_1111,
+            RawTerrain = 0b0000_0111,
+            AwaitingRawTerrain = 0b0000_1111,
             Complete = 0b1111_1111
+        }
+
+        [Flags]
+        public enum MeshState : byte
+        {
+            UpdateRequested = 1,
+            Meshing = 2,
+            Meshed = 4
         }
 
         public Volume Volume { get; }

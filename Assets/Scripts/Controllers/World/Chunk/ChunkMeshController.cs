@@ -18,11 +18,31 @@ namespace Wyd.Controllers.World.Chunk
     {
         #region INSTANCE MEMBERS
 
-        private Mesh _Mesh;
-        private bool _UpdateRequested;
+        private object _MeshStateHandle;
 
-        public bool Meshed { get; private set; }
-        public bool Meshing { get; private set; }
+        private Mesh _Mesh;
+
+        public GenerationData.MeshState MeshState
+        {
+            get
+            {
+                GenerationData.MeshState tmp;
+
+                lock (_MeshStateHandle)
+                {
+                    tmp = _MeshState;
+                }
+
+                return tmp;
+            }
+            private set
+            {
+                lock (_MeshStateHandle)
+                {
+                    _MeshState = value;
+                }
+            }
+        }
 
         #endregion
 
@@ -36,6 +56,9 @@ namespace Wyd.Controllers.World.Chunk
 
         [SerializeField]
         private ChunkTerrainController TerrainController;
+
+        [SerializeField]
+        private GenerationData.MeshState _MeshState;
 
 #if UNITY_EDITOR
 
@@ -75,9 +98,10 @@ namespace Wyd.Controllers.World.Chunk
         {
             base.Awake();
 
+            _MeshStateHandle = new object();
             _Mesh = new Mesh();
             MeshFilter.sharedMesh = _Mesh;
-            Meshed = Meshing = false;
+            MeshState = 0;
 
 #if UNITY_EDITOR
 
@@ -112,8 +136,8 @@ namespace Wyd.Controllers.World.Chunk
 
         public void FrameUpdate()
         {
-            if (Meshing
-                || !_UpdateRequested
+            if (MeshState.HasFlag(GenerationData.MeshState.Meshing)
+                || !MeshState.HasFlag(GenerationData.MeshState.UpdateRequested)
                 || (BlocksController.PendingBlockActions > 0)
                 || (TerrainController.CurrentStep != GenerationData.GenerationStep.Complete)
                 || !WorldController.Current.ReadyForGeneration
@@ -135,7 +159,7 @@ namespace Wyd.Controllers.World.Chunk
                 _Mesh.Clear();
             }
 
-            Meshing = Meshed = false;
+            MeshState = 0;
 
 #if UNITY_EDITOR
 
@@ -148,25 +172,19 @@ namespace Wyd.Controllers.World.Chunk
 
         public void FlagForUpdate()
         {
-            if (!_UpdateRequested)
+            if (!MeshState.HasFlag(GenerationData.MeshState.UpdateRequested))
             {
-                _UpdateRequested = true;
+                MeshState |= GenerationData.MeshState.UpdateRequested;
             }
         }
 
         private void BeginGeneratingMesh()
         {
-            if (Meshing)
-            {
-                return;
-            }
-
             ChunkMeshingJob asyncJob = new ChunkMeshingJob(new GenerationData(_Volume, BlocksController.Blocks), true);
 
             QueueAsyncJob(asyncJob);
 
-            Meshed = _UpdateRequested = false;
-            Meshing = true;
+            MeshState = GenerationData.MeshState.Meshing;
         }
 
         private void ApplyMesh(ChunkMeshingJob chunkMeshingJob)
@@ -193,10 +211,16 @@ namespace Wyd.Controllers.World.Chunk
 
         private void OnJobFinished(object sender, AsyncJobEventArgs args)
         {
+            if (!(sender is ChunkMeshingJob meshingJob))
+            {
+                return;
+            }
+
+            meshingJob.WorkFinished -= OnJobFinished;
             MainThreadActionsController.Current.PushAction(new MainThreadAction(default,
-                () => ApplyMesh((ChunkMeshingJob)args.AsyncJob)));
-            Meshing = false;
-            Meshed = true;
+                () => ApplyMesh(meshingJob)));
+
+            MeshState = (MeshState | GenerationData.MeshState.Meshed) & ~GenerationData.MeshState.Meshing;
         }
 
         #endregion

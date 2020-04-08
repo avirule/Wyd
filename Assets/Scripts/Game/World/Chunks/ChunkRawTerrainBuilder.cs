@@ -25,8 +25,8 @@ namespace Wyd.Game.World.Chunks
         private readonly Stopwatch _Stopwatch;
         private readonly float _Frequency;
         private readonly float _Persistence;
-        private readonly ComputeBuffer _NoiseValuesBuffer;
 
+        private ComputeBuffer _NoiseValuesBuffer;
         private bool _GpuAcceleration;
         private float[] _NoiseMap;
 
@@ -48,6 +48,7 @@ namespace Wyd.Game.World.Chunks
         {
             _NoiseValuesBuffer.GetData(_NoiseMap);
             _NoiseValuesBuffer.Release();
+            _NoiseValuesBuffer = null;
         }
 
         public void Generate()
