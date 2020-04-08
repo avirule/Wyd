@@ -1,9 +1,11 @@
 #region
 
-using System;
 using System.Collections.Generic;
+using Unity.Mathematics;
 using Wyd.Controllers.State;
 using Wyd.Controllers.World;
+using Wyd.System.Collections;
+using Random = System.Random;
 
 #endregion
 
@@ -11,19 +13,19 @@ namespace Wyd.Game.World.Chunks
 {
     public class ChunkBuilder
     {
-        protected Random _Rand;
         protected readonly Dictionary<string, ushort> BlockIDCache;
-        protected GenerationData _GenerationData;
+        protected readonly Random SeededRandom;
 
-        public ChunkBuilder() => BlockIDCache = new Dictionary<string, ushort>();
+        protected float3 _OriginPoint;
+        protected OctreeNode<ushort> _Blocks;
 
-        /// <summary>
-        ///     Prepares job for new execution.
-        /// </summary>
-        public void SetGenerationData(GenerationData generationData)
+        public ChunkBuilder(float3 originPoint, ref OctreeNode<ushort> blocks)
         {
-            _Rand = new Random(WorldController.Current.Seed);
-            _GenerationData = generationData;
+            SeededRandom = new Random(WorldController.Current.Seed);
+            _OriginPoint = originPoint;
+            _Blocks = blocks;
+
+            BlockIDCache = new Dictionary<string, ushort>();
         }
 
         protected ushort GetCachedBlockID(string blockName)

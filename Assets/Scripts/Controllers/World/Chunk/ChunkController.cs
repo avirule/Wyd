@@ -9,6 +9,7 @@ using Wyd.Controllers.State;
 using Wyd.Game;
 using Wyd.Game.Entities;
 using Wyd.Game.World;
+using Wyd.Game.World.Chunks;
 using Wyd.Game.World.Chunks.Events;
 using Wyd.System;
 
@@ -26,8 +27,7 @@ namespace Wyd.Controllers.World.Chunk
         private bool _Visible;
         private bool _RenderShadows;
 
-        public int3 Position => WydMath.ToInt(_Volume.MinPoint);
-        public GenerationData.GenerationStep CurrentStep => TerrainController.CurrentStep;
+        public TerrainStep CurrentStep => TerrainController.CurrentStep;
 
         public bool RenderShadows
         {
@@ -120,7 +120,7 @@ namespace Wyd.Controllers.World.Chunk
             if (_CurrentLoader == default)
             {
                 Log.Warning(
-                    $"Chunk at position {Position} has been initialized without a loader. This is possibly an error.");
+                    $"Chunk at position {OriginPoint} has been initialized without a loader. This is possibly an error.");
             }
             else
             {
@@ -136,9 +136,9 @@ namespace Wyd.Controllers.World.Chunk
 
 #if UNITY_EDITOR
 
-            MinimumPoint = _Volume.MinPoint;
-            MaximumPoint = _Volume.MaxPoint;
-            Extents = _Volume.Extents;
+            MinimumPoint = OriginPoint;
+            MaximumPoint = OriginPoint + Size;
+            Extents = WydMath.ToFloat(Size) / 2f;
 
 #endif
 
@@ -158,7 +158,7 @@ namespace Wyd.Controllers.World.Chunk
 
         private void OnDestroy()
         {
-            OnDestroyed(this, new ChunkChangedEventArgs(_Volume, Directions.CardinalDirectionAxes));
+            OnDestroyed(this, new ChunkChangedEventArgs(OriginPoint, Directions.CardinalDirectionAxes));
 
             if (OptionsController.Current != null)
             {
@@ -235,18 +235,18 @@ namespace Wyd.Controllers.World.Chunk
 
         private void OnCurrentLoaderChangedChunk(object sender, int3 newChunkPosition)
         {
-            if (math.all(Position == newChunkPosition))
+            if (math.all(OriginPoint == newChunkPosition))
             {
                 return;
             }
 
-            float3 difference = math.abs(Position - newChunkPosition);
+            float3 difference = math.abs(OriginPoint - newChunkPosition);
             difference.y = 0; // always load all chunks on y axis
 
             if (!IsWithinLoaderRange(difference))
             {
                 DeactivationCallback?.Invoke(this,
-                    new ChunkChangedEventArgs(_Volume, Directions.CardinalDirectionAxes));
+                    new ChunkChangedEventArgs(OriginPoint, Directions.CardinalDirectionAxes));
                 return;
             }
 
@@ -258,7 +258,7 @@ namespace Wyd.Controllers.World.Chunk
         {
             if (args.PropertyName.Equals(nameof(OptionsController.Current.ShadowDistance)))
             {
-                RenderShadows = IsWithinShadowsDistance(math.abs(Position - _CurrentLoader.ChunkPosition));
+                RenderShadows = IsWithinShadowsDistance(math.abs(OriginPoint - _CurrentLoader.ChunkPosition));
             }
         }
 

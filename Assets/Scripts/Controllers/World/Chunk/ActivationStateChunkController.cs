@@ -13,7 +13,8 @@ namespace Wyd.Controllers.World.Chunk
         #region INSTANCE MEMBERS
 
         protected Transform _SelfTransform;
-        protected Volume _Volume;
+
+        public float3 OriginPoint { get; private set; }
 
         #endregion
 
@@ -24,8 +25,7 @@ namespace Wyd.Controllers.World.Chunk
 
         protected virtual void OnEnable()
         {
-            float3 position = _SelfTransform.position;
-            _Volume.SetMinMaxPoints(position, position + ChunkController.Size);
+            OriginPoint = _SelfTransform.position;
         }
 
         protected virtual void OnDisable()

@@ -1,8 +1,10 @@
 #region
 
 using System.Threading.Tasks;
+using Unity.Mathematics;
 using UnityEngine;
 using Wyd.Controllers.System;
+using Wyd.System.Collections;
 using Wyd.System.Jobs;
 
 #endregion
@@ -11,18 +13,20 @@ namespace Wyd.Game.World.Chunks
 {
     public class ChunkBuildingJob : AsyncJob
     {
-        private readonly GenerationData _GenerationData;
+        private readonly float3 _OriginPoint;
         private readonly ComputeBuffer _NoiseValuesBuffer;
         private readonly float _Frequency;
         private readonly float _Persistence;
         private readonly bool _GpuAcceleration;
 
+        private OctreeNode<ushort> _Blocks;
         private ChunkRawTerrainBuilder _TerrainBuilder;
 
-        public ChunkBuildingJob(GenerationData generationData, float frequency, float persistence,
+        public ChunkBuildingJob(float3 originPoint, ref OctreeNode<ushort> blocks, float frequency, float persistence,
             bool gpuAcceleration = false, ComputeBuffer noiseValuesBuffer = null)
         {
-            _GenerationData = generationData;
+            _OriginPoint = originPoint;
+            _Blocks = blocks;
             _Frequency = frequency;
             _Persistence = persistence;
             _GpuAcceleration = gpuAcceleration;
@@ -31,8 +35,8 @@ namespace Wyd.Game.World.Chunks
 
         protected override Task Process()
         {
-            _TerrainBuilder = new ChunkRawTerrainBuilder(_GenerationData, _Frequency,
-                _Persistence, _GpuAcceleration, _NoiseValuesBuffer);
+            _TerrainBuilder = new ChunkRawTerrainBuilder(_OriginPoint, ref _Blocks, _Frequency, _Persistence,
+                _GpuAcceleration, _NoiseValuesBuffer);
             _TerrainBuilder.Generate();
 
             return Task.CompletedTask;

@@ -33,10 +33,9 @@ namespace Wyd.Game.World.Chunks
         public TimeSpan NoiseRetrievalTimeSpan { get; private set; }
         public TimeSpan TerrainGenerationTimeSpan { get; private set; }
 
-        public ChunkRawTerrainBuilder(GenerationData generationData, float frequency, float persistence,
-            bool gpuAcceleration = false, ComputeBuffer noiseValuesBuffer = null)
+        public ChunkRawTerrainBuilder(float3 originPoint, ref OctreeNode<ushort> blocks, float frequency, float persistence,
+            bool gpuAcceleration = false, ComputeBuffer noiseValuesBuffer = null) : base(originPoint, ref blocks)
         {
-            SetGenerationData(generationData);
             _Stopwatch = new Stopwatch();
             _Frequency = frequency;
             _Persistence = persistence;
@@ -53,22 +52,21 @@ namespace Wyd.Game.World.Chunks
 
         public void Generate()
         {
-            if (_GenerationData.Blocks == default)
+            if (_Blocks == default)
             {
-                Log.Error($"`{nameof(_GenerationData.Blocks)}` has not been set. Aborting generation.");
+                Log.Error($"`{nameof(_Blocks)}` has not been set. Aborting generation.");
                 return;
             }
 
             GenerateNoise();
 
             _Stopwatch.Restart();
-            _GenerationData.Blocks.Collapse();
+            _Blocks.Collapse();
 
             for (int index = WydMath.Product(ChunkController.Size) - 1; index >= 0; index--)
             {
-                float3 globalPosition =
-                    _GenerationData.Volume.MinPoint + WydMath.IndexTo3D(index, ChunkController.Size);
-                _GenerationData.Blocks.SetPoint(globalPosition, GetBlockIDAtPosition(globalPosition, index));
+                float3 globalPosition = _OriginPoint + WydMath.IndexTo3D(index, ChunkController.Size);
+                _Blocks.SetPoint(globalPosition, GetBlockIDAtPosition(globalPosition, index));
             }
 
             _NoiseValuesCache.CacheItem(ref _NoiseMap);
@@ -100,10 +98,9 @@ namespace Wyd.Game.World.Chunks
             }
             else
             {
-                for (int index = 0; index < WydMath.Product(_GenerationData.Volume.Size); index++)
+                for (int index = 0; index < WydMath.Product(_Blocks.Volume.Size); index++)
                 {
-                    _NoiseMap[index] = GetNoiseValueByGlobalPosition(_GenerationData.Volume.MinPoint
-                                                                     + WydMath.IndexTo3D(index, ChunkController.Size));
+                    _NoiseMap[index] = GetNoiseValueByGlobalPosition(_OriginPoint + WydMath.IndexTo3D(index, ChunkController.Size));
                 }
             }
 
@@ -113,7 +110,7 @@ namespace Wyd.Game.World.Chunks
 
         private ushort GetBlockIDAtPosition(float3 globalPosition, int index)
         {
-            if ((globalPosition.y < 4) && (globalPosition.y <= _Rand.Next(0, 4)))
+            if ((globalPosition.y < 4) && (globalPosition.y <= SeededRandom.Next(0, 4)))
             {
                 return GetCachedBlockID("bedrock");
             }

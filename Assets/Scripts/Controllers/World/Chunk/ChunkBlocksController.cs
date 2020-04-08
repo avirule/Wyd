@@ -27,7 +27,8 @@ namespace Wyd.Controllers.World.Chunk
 
         private Queue<BlockAction> _BlockActions;
 
-        public OctreeNode<ushort> Blocks { get; private set; }
+        public ref OctreeNode<ushort> Blocks => ref _Blocks;
+
         public int PendingBlockActions => _BlockActions.Count;
 
         #endregion
@@ -49,6 +50,8 @@ namespace Wyd.Controllers.World.Chunk
         [ReadOnlyInspectorField]
         private uint NonAirBlocks;
 
+        private OctreeNode<ushort> _Blocks;
+
 #endif
 
         #endregion
@@ -58,9 +61,10 @@ namespace Wyd.Controllers.World.Chunk
         {
             base.Awake();
 
-            Blocks = new OctreeNode<ushort>(_Volume.MinPoint + (ChunkController.Size / new float3(2f)),
-                ChunkController.Size.x, 0);
             _BlockActions = new Queue<BlockAction>();
+
+            Blocks = new OctreeNode<ushort>(OriginPoint + (ChunkController.Size / new float3(2f)),
+                ChunkController.Size.x, 0);
         }
 
         protected override void OnEnable()
@@ -70,7 +74,7 @@ namespace Wyd.Controllers.World.Chunk
             PerFrameUpdateController.Current.RegisterPerFrameUpdater(30, this);
             ClearInternalData();
 
-            Blocks = new OctreeNode<ushort>(_Volume.MinPoint + (ChunkController.Size / new float3(2f)),
+            Blocks = new OctreeNode<ushort>(OriginPoint + (ChunkController.Size / new float3(2f)),
                 ChunkController.Size.x, 0);
         }
 
@@ -104,15 +108,15 @@ namespace Wyd.Controllers.World.Chunk
 
             OnBlocksChanged(this,
                 TryUpdateGetNeighborNormals(blockAction.GlobalPosition, out IEnumerable<int3> normals)
-                    ? new ChunkChangedEventArgs(_Volume, normals)
-                    : new ChunkChangedEventArgs(_Volume, Enumerable.Empty<int3>()));
+                    ? new ChunkChangedEventArgs(OriginPoint, normals)
+                    : new ChunkChangedEventArgs(OriginPoint, Enumerable.Empty<int3>()));
         }
 
         private bool TryUpdateGetNeighborNormals(float3 globalPosition, out IEnumerable<int3> normals)
         {
             normals = Enumerable.Empty<int3>();
 
-            float3 localPosition = globalPosition - _Volume.CenterPoint;
+            float3 localPosition = globalPosition - (OriginPoint + (WydMath.ToFloat(ChunkController.Size) / 2f));
             float3 localPositionSign = math.sign(localPosition);
             float3 localPositionAbs = math.abs(math.ceil(localPosition + (new float3(0.5f) * localPositionSign)));
 
@@ -139,7 +143,7 @@ namespace Wyd.Controllers.World.Chunk
 
         #region TRY GET / PLACE / REMOVE BLOCKS
 
-        private void ModifyBlockPosition(int3 globalPosition, ushort newId)
+        private void ModifyBlockPosition(float3 globalPosition, ushort newId)
         {
             if (!Blocks.ContainsMinBiased(globalPosition))
             {
@@ -149,7 +153,7 @@ namespace Wyd.Controllers.World.Chunk
             Blocks.SetPoint(globalPosition, newId);
         }
 
-        public ushort GetBlockAt(int3 globalPosition)
+        public ushort GetBlockAt(float3 globalPosition)
         {
             if (!Blocks.ContainsMinBiased(globalPosition))
             {
@@ -160,7 +164,7 @@ namespace Wyd.Controllers.World.Chunk
             return Blocks.GetPoint(globalPosition);
         }
 
-        public bool TryGetBlockAt(int3 globalPosition, out ushort blockId)
+        public bool TryGetBlockAt(float3 globalPosition, out ushort blockId)
         {
             blockId = 0;
 
@@ -174,17 +178,17 @@ namespace Wyd.Controllers.World.Chunk
             return true;
         }
 
-        public bool BlockExistsAt(int3 globalPosition) => GetBlockAt(globalPosition) != BlockController.AIR_ID;
+        public bool BlockExistsAt(float3 globalPosition) => GetBlockAt(globalPosition) != BlockController.AIR_ID;
 
-        public bool TryPlaceBlockAt(int3 globalPosition, ushort id) =>
-            _Volume.ContainsMinBiased(globalPosition)
+        public bool TryPlaceBlockAt(float3 globalPosition, ushort id) =>
+            Blocks.ContainsMinBiased(globalPosition)
             && TryAllocateBlockAction(globalPosition, id);
 
-        public bool TryRemoveBlockAt(int3 globalPosition) =>
-            _Volume.ContainsMinBiased(globalPosition)
+        public bool TryRemoveBlockAt(float3 globalPosition) =>
+            Blocks.ContainsMinBiased(globalPosition)
             && TryAllocateBlockAction(globalPosition, BlockController.AIR_ID);
 
-        private bool TryAllocateBlockAction(int3 globalPosition, ushort id)
+        private bool TryAllocateBlockAction(float3 globalPosition, ushort id)
         {
             BlockAction blockAction = _BlockActionsCache.Retrieve();
             blockAction.SetData(globalPosition, id);

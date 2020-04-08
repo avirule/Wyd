@@ -12,6 +12,7 @@ using Wyd.Controllers.World.Chunk;
 using Wyd.Game;
 using Wyd.Game.Entities;
 using Wyd.Game.World;
+using Wyd.Game.World.Chunks;
 using Wyd.Game.World.Chunks.Events;
 using Wyd.System;
 using Wyd.System.Collections;
@@ -36,7 +37,7 @@ namespace Wyd.Controllers.World
 #endif
 
         private ChunkController _ChunkControllerPrefab;
-        private Dictionary<int3, ChunkController> _Chunks;
+        private Dictionary<float3, ChunkController> _Chunks;
         private ObjectCache<ChunkController> _ChunkCache;
         private Stack<IEntity> _EntitiesPendingChunkBuilding;
         private Stack<ChunkChangedEventArgs> _ChunksPendingDeactivation;
@@ -68,18 +69,6 @@ namespace Wyd.Controllers.World
 
         public event EventHandler<ChunkChangedEventArgs> ChunkMeshChanged;
 
-        #region DEBUG
-
-#if UNITY_EDITOR
-
-        public bool IgnoreInternalFrameLimit;
-        public bool StepIntoSelectedChunkStep;
-        public GenerationData.GenerationStep SelectedStep;
-
-#endif
-
-        #endregion
-
         private void Awake()
         {
             AssignSingletonInstance(this);
@@ -101,7 +90,7 @@ namespace Wyd.Controllers.World
                     Destroy(chunkController.gameObject));
 
             Seed = new WorldSeed(SeedString);
-            _Chunks = new Dictionary<int3, ChunkController>();
+            _Chunks = new Dictionary<float3, ChunkController>();
             _EntitiesPendingChunkBuilding = new Stack<IEntity>();
             _ChunksPendingDeactivation = new Stack<ChunkChangedEventArgs>();
             _SaveFileProvider = new WorldSaveFileProvider("world");
@@ -191,7 +180,7 @@ namespace Wyd.Controllers.World
                 ChunkChangedEventArgs args = _ChunksPendingDeactivation.Pop();
 
                 // cache position to avoid multiple native dll calls
-                int3 position = WydMath.ToInt(args.ChunkVolume.MinPoint);
+                int3 position = WydMath.ToInt(args.OriginPoint);
                 CacheChunk(position);
                 FlagNeighborsForMeshUpdate(position, args.NeighborDirectionsToUpdate);
 
@@ -290,19 +279,17 @@ namespace Wyd.Controllers.World
             _BuildingChunks = false;
         }
 
-        private void FlagNeighborsForMeshUpdate(int3 globalChunkPosition, IEnumerable<int3> directions)
+        private void FlagNeighborsForMeshUpdate(float3 globalChunkPosition, IEnumerable<int3> directions)
         {
-            foreach (int3 normal in directions)
+            foreach (float3 normal in directions)
             {
                 FlagChunkForUpdateMesh(globalChunkPosition + (normal * ChunkController.Size));
             }
         }
 
-        private void FlagChunkForUpdateMesh(int3 globalChunkPosition)
+        private void FlagChunkForUpdateMesh(float3 globalChunkPosition)
         {
-            if (TryGetChunkAt(
-                WydMath.ToInt(WydMath.RoundBy(globalChunkPosition, WydMath.ToFloat(ChunkController.Size))),
-                out ChunkController chunkController))
+            if (TryGetChunkAt(WydMath.RoundBy(globalChunkPosition, WydMath.ToFloat(ChunkController.Size)), out ChunkController chunkController))
             {
                 chunkController.FlagMeshForUpdate();
             }
@@ -337,7 +324,7 @@ namespace Wyd.Controllers.World
 
         private void OnChunkMeshChanged(object sender, ChunkChangedEventArgs args)
         {
-            FlagNeighborsForMeshUpdate(WydMath.ToInt(args.ChunkVolume.MinPoint), args.NeighborDirectionsToUpdate);
+            FlagNeighborsForMeshUpdate(args.OriginPoint, args.NeighborDirectionsToUpdate);
 
             ChunkMeshChanged?.Invoke(sender, args);
         }
@@ -353,21 +340,21 @@ namespace Wyd.Controllers.World
 
         #region GET / EXISTS
 
-        public bool ChunkExistsAt(int3 position) => _Chunks.ContainsKey(position);
+        public bool ChunkExistsAt(float3 position) => _Chunks.ContainsKey(position);
 
-        public ChunkController GetChunkAt(int3 position)
+        public ChunkController GetChunkAt(float3 position)
         {
             bool trySuccess = _Chunks.TryGetValue(position, out ChunkController chunkController);
 
             return trySuccess ? chunkController : default;
         }
 
-        public bool TryGetChunkAt(int3 position, out ChunkController chunkController) =>
+        public bool TryGetChunkAt(float3 position, out ChunkController chunkController) =>
             _Chunks.TryGetValue(position, out chunkController);
 
-        public ushort GetBlockAt(int3 globalPosition)
+        public ushort GetBlockAt(float3 globalPosition)
         {
-            int3 chunkPosition = WydMath.ToInt(WydMath.RoundBy(globalPosition, WydMath.ToFloat(ChunkController.Size)));
+            float3 chunkPosition = WydMath.RoundBy(globalPosition, WydMath.ToFloat(ChunkController.Size));
 
             ChunkController chunkController = GetChunkAt(chunkPosition);
 
@@ -380,26 +367,26 @@ namespace Wyd.Controllers.World
             return chunkController.BlocksController.GetBlockAt(globalPosition);
         }
 
-        public bool TryGetBlockAt(int3 globalPosition, out ushort blockId)
+        public bool TryGetBlockAt(float3 globalPosition, out ushort blockId)
         {
             blockId = default;
-            int3 chunkPosition = WydMath.ToInt(WydMath.RoundBy(globalPosition, WydMath.ToFloat(ChunkController.Size)));
+            float3 chunkPosition = WydMath.RoundBy(globalPosition, WydMath.ToFloat(ChunkController.Size));
 
             return TryGetChunkAt(chunkPosition, out ChunkController chunkController)
                    && chunkController.BlocksController.TryGetBlockAt(globalPosition, out blockId);
         }
 
-        public bool BlockExistsAt(int3 globalPosition)
+        public bool BlockExistsAt(float3 globalPosition)
         {
-            int3 chunkPosition = WydMath.ToInt(WydMath.RoundBy(globalPosition, WydMath.ToFloat(ChunkController.Size)));
+            float3 chunkPosition = WydMath.RoundBy(globalPosition, WydMath.ToFloat(ChunkController.Size));
 
             return TryGetChunkAt(chunkPosition, out ChunkController chunkController)
                    && chunkController.BlocksController.BlockExistsAt(globalPosition);
         }
 
-        public bool TryPlaceBlockAt(int3 globalPosition, ushort id)
+        public bool TryPlaceBlockAt(float3 globalPosition, ushort id)
         {
-            int3 chunkPosition = WydMath.ToInt(WydMath.RoundBy(globalPosition, WydMath.ToFloat(ChunkController.Size)));
+            float3 chunkPosition = WydMath.RoundBy(globalPosition, WydMath.ToFloat(ChunkController.Size));
 
             return TryGetChunkAt(chunkPosition, out ChunkController chunkController)
                    && (chunkController != default)
@@ -408,16 +395,16 @@ namespace Wyd.Controllers.World
 
         public bool TryRemoveBlockAt(int3 globalPosition)
         {
-            int3 chunkPosition = WydMath.ToInt(WydMath.RoundBy(globalPosition, WydMath.ToFloat(ChunkController.Size)));
+            float3 chunkPosition = WydMath.RoundBy(globalPosition, WydMath.ToFloat(ChunkController.Size));
 
             return TryGetChunkAt(chunkPosition, out ChunkController chunkController)
                    && (chunkController != default)
                    && chunkController.BlocksController.TryRemoveBlockAt(globalPosition);
         }
 
-        public GenerationData.GenerationStep AggregateNeighborsStep(int3 position)
+        public TerrainStep AggregateNeighborsStep(float3 position)
         {
-            GenerationData.GenerationStep generationStep = GenerationData.GenerationStep.Complete;
+            TerrainStep generationStep = TerrainStep.Complete;
 
             if (TryGetChunkAt(position + (Directions.North * ChunkController.Size.z),
                 out ChunkController northChunk))

@@ -32,11 +32,11 @@ namespace Wyd.Controllers.World.Chunk
         private object _GenerationStepHandle;
         private ComputeBuffer _NoiseBuffer;
 
-        public GenerationData.GenerationStep CurrentStep
+        public TerrainStep CurrentStep
         {
             get
             {
-                GenerationData.GenerationStep tmp;
+                TerrainStep tmp;
 
                 lock (_GenerationStepHandle)
                 {
@@ -62,7 +62,7 @@ namespace Wyd.Controllers.World.Chunk
         private ChunkBlocksController BlocksController;
 
         [SerializeField]
-        private GenerationData.GenerationStep GenerationStep;
+        private TerrainStep GenerationStep;
 
 #if UNITY_EDITOR
 
@@ -124,9 +124,9 @@ namespace Wyd.Controllers.World.Chunk
 
 #endif
 
-            if ((CurrentStep == GenerationData.GenerationStep.Complete)
+            if ((CurrentStep == TerrainStep.Complete)
                 || !WorldController.Current.ReadyForGeneration
-                || (WorldController.Current.AggregateNeighborsStep(WydMath.ToInt(_Volume.MinPoint)) < CurrentStep))
+                || (WorldController.Current.AggregateNeighborsStep(WydMath.ToInt(OriginPoint)) < CurrentStep))
             {
                 return;
             }
@@ -139,7 +139,7 @@ namespace Wyd.Controllers.World.Chunk
         private void ClearInternalData()
         {
             _NoiseBuffer?.Release();
-            CurrentStep = (GenerationData.GenerationStep)1;
+            CurrentStep = (TerrainStep)1;
 
 #if UNITY_EDITOR
 
@@ -161,11 +161,11 @@ namespace Wyd.Controllers.World.Chunk
             CurrentStep = CurrentStep.Next();
         }
 
-        private void ExecuteStep(GenerationData.GenerationStep step)
+        private void ExecuteStep(TerrainStep step)
         {
             switch (step)
             {
-                case GenerationData.GenerationStep.Noise:
+                case TerrainStep.Noise:
                     if (OptionsController.Current.GPUAcceleration)
                     {
                         BeginNoiseGeneration();
@@ -174,15 +174,15 @@ namespace Wyd.Controllers.World.Chunk
                     }
                     else
                     {
-                        CurrentStep = GenerationData.GenerationStep.RawTerrain;
+                        CurrentStep = TerrainStep.RawTerrain;
                         break;
                     }
 
-                case GenerationData.GenerationStep.RawTerrain:
+                case TerrainStep.RawTerrain:
                     BeginRawTerrainGeneration();
                     break;
-                case GenerationData.GenerationStep.AwaitingRawTerrain:
-                case GenerationData.GenerationStep.Complete:
+                case TerrainStep.AwaitingRawTerrain:
+                case TerrainStep.Complete:
                     break;
                 default:
                     throw new ArgumentOutOfRangeException(nameof(step), step, null);
@@ -193,7 +193,7 @@ namespace Wyd.Controllers.World.Chunk
         {
             _NoiseBuffer = new ComputeBuffer(WydMath.Product(ChunkController.Size), 4);
             int kernel = _noiseShader.FindKernel("CSMain");
-            _noiseShader.SetVector("_Offset", new float4(_Volume.MinPoint.xyzz));
+            _noiseShader.SetVector("_Offset", new float4(OriginPoint.xyzz));
             _noiseShader.SetFloat("_Frequency", _FREQUENCY);
             _noiseShader.SetFloat("_Persistence", _PERSISTENCE);
             _noiseShader.SetBuffer(kernel, "Result", _NoiseBuffer);
@@ -203,7 +203,7 @@ namespace Wyd.Controllers.World.Chunk
 
         private void BeginRawTerrainGeneration()
         {
-            ChunkBuildingJob asyncJob = new ChunkBuildingJob(new GenerationData(_Volume, BlocksController.Blocks),
+            ChunkBuildingJob asyncJob = new ChunkBuildingJob(OriginPoint, ref BlocksController.Blocks,
                 _FREQUENCY, _PERSISTENCE, OptionsController.Current.GPUAcceleration, _NoiseBuffer);
 
             QueueAsyncJob(asyncJob);
@@ -223,13 +223,13 @@ namespace Wyd.Controllers.World.Chunk
 
         private void OnJobFinished(object sender, AsyncJobEventArgs args)
         {
-            OnChunkTerrainChanged(this, new ChunkChangedEventArgs(_Volume, Directions.CardinalDirectionAxes));
+            OnChunkTerrainChanged(this, new ChunkChangedEventArgs(OriginPoint, Directions.CardinalDirectionAxes));
             args.AsyncJob.WorkFinished -= OnJobFinished;
             CurrentStep = CurrentStep.Next();
 
 #if UNITY_EDITOR
 
-            if (CurrentStep == GenerationData.GenerationStep.Complete)
+            if (CurrentStep == TerrainStep.Complete)
             {
                 TotalTimesTerrainChanged += 1;
                 TimesTerrainChanged += 1;

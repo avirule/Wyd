@@ -5,7 +5,6 @@ using System.Threading.Tasks;
 using Unity.Mathematics;
 using UnityEngine;
 using Wyd.Controllers.System;
-using Wyd.Game.World;
 using Wyd.Game.World.Chunks;
 using Wyd.Game.World.Chunks.Events;
 using Wyd.System;
@@ -23,11 +22,11 @@ namespace Wyd.Controllers.World.Chunk
 
         private Mesh _Mesh;
 
-        public GenerationData.MeshState MeshState
+        public MeshState MeshState
         {
             get
             {
-                GenerationData.MeshState tmp;
+                MeshState tmp;
 
                 lock (_MeshStateHandle)
                 {
@@ -59,7 +58,7 @@ namespace Wyd.Controllers.World.Chunk
         private ChunkTerrainController TerrainController;
 
         [SerializeField]
-        private GenerationData.MeshState _MeshState;
+        private MeshState _MeshState;
 
 #if UNITY_EDITOR
 
@@ -137,13 +136,13 @@ namespace Wyd.Controllers.World.Chunk
 
         public void FrameUpdate()
         {
-            if (MeshState.HasFlag(GenerationData.MeshState.Meshing)
-                || !MeshState.HasFlag(GenerationData.MeshState.UpdateRequested)
+            if (MeshState.HasFlag(MeshState.Meshing)
+                || !MeshState.HasFlag(MeshState.UpdateRequested)
                 || (BlocksController.PendingBlockActions > 0)
-                || (TerrainController.CurrentStep != GenerationData.GenerationStep.Complete)
+                || (TerrainController.CurrentStep != TerrainStep.Complete)
                 || !WorldController.Current.ReadyForGeneration
-                || (WorldController.Current.AggregateNeighborsStep(WydMath.ToInt(_Volume.MinPoint))
-                    < GenerationData.GenerationStep.Complete))
+                || (WorldController.Current.AggregateNeighborsStep(OriginPoint)
+                    < TerrainStep.Complete))
             {
                 return;
             }
@@ -173,15 +172,15 @@ namespace Wyd.Controllers.World.Chunk
 
         public void FlagForUpdate()
         {
-            if (!MeshState.HasFlag(GenerationData.MeshState.UpdateRequested))
+            if (!MeshState.HasFlag(MeshState.UpdateRequested))
             {
-                MeshState |= GenerationData.MeshState.UpdateRequested;
+                MeshState |= MeshState.UpdateRequested;
             }
         }
 
         private void BeginGeneratingMesh()
         {
-            ChunkMeshingJob asyncJob = new ChunkMeshingJob(new GenerationData(_Volume, BlocksController.Blocks), true);
+            ChunkMeshingJob asyncJob = new ChunkMeshingJob(OriginPoint, BlocksController.Blocks, true);
 
             QueueAsyncJob(asyncJob);
         }
@@ -189,7 +188,7 @@ namespace Wyd.Controllers.World.Chunk
         private void ApplyMesh(ChunkMeshingJob chunkMeshingJob)
         {
             chunkMeshingJob.SetMesh(ref _Mesh);
-            OnMeshChanged(this, new ChunkChangedEventArgs(_Volume, Enumerable.Empty<int3>()));
+            OnMeshChanged(this, new ChunkChangedEventArgs(OriginPoint, Enumerable.Empty<int3>()));
         }
 
         private void QueueAsyncJob(AsyncJob asyncJob)
@@ -198,7 +197,7 @@ namespace Wyd.Controllers.World.Chunk
 
             Task.Run(async () => await JobScheduler.QueueAsyncJob(asyncJob));
 
-            MeshState = GenerationData.MeshState.Meshing;
+            MeshState = MeshState.Meshing;
         }
 
         #region EVENTS
@@ -221,7 +220,7 @@ namespace Wyd.Controllers.World.Chunk
             MainThreadActionsController.Current.PushAction(new MainThreadAction(default,
                 () => ApplyMesh(meshingJob)));
 
-            MeshState = (MeshState | GenerationData.MeshState.Meshed) & ~GenerationData.MeshState.Meshing;
+            MeshState = (MeshState | MeshState.Meshed) & ~MeshState.Meshing;
         }
 
         #endregion

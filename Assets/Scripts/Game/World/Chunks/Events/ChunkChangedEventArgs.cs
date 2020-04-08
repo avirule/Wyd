@@ -10,12 +10,12 @@ namespace Wyd.Game.World.Chunks.Events
 {
     public class ChunkChangedEventArgs
     {
-        public Volume ChunkVolume { get; }
+        public float3 OriginPoint { get; }
         public IEnumerable<int3> NeighborDirectionsToUpdate { get; }
 
-        public ChunkChangedEventArgs(Volume chunkVolume, IEnumerable<int3> neighborDirectionsToUpdate)
+        public ChunkChangedEventArgs(float3 originPoint, IEnumerable<int3> neighborDirectionsToUpdate)
         {
-            ChunkVolume = chunkVolume;
+            OriginPoint = originPoint;
             NeighborDirectionsToUpdate = neighborDirectionsToUpdate;
         }
     }

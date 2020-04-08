@@ -2,6 +2,7 @@
 
 using System.Threading.Tasks;
 using Serilog;
+using Unity.Mathematics;
 using UnityEngine;
 using Wyd.Controllers.System;
 using Wyd.System.Collections;
@@ -16,20 +17,22 @@ namespace Wyd.Game.World.Chunks
         private static readonly ObjectCache<ChunkMesher> _ChunkMesherCache = new ObjectCache<ChunkMesher>();
 
         private ChunkMesher _Mesher;
-        private readonly GenerationData _GenerationData;
+        private readonly float3 _OriginPoint;
+        private readonly OctreeNode<ushort> _Blocks;
         private readonly bool _AggressiveFaceMerging;
 
-        public ChunkMeshingJob(GenerationData generationData, bool aggressiveFaceMerging)
+        public ChunkMeshingJob(float3 originPoint, OctreeNode<ushort> blocks, bool aggressiveFaceMerging)
         {
             _Mesher = null;
-            _GenerationData = generationData;
+            _OriginPoint = originPoint;
+            _Blocks = blocks;
             _AggressiveFaceMerging = aggressiveFaceMerging;
         }
 
         protected override Task Process()
         {
             ChunkMesher mesher = _ChunkMesherCache.Retrieve() ?? new ChunkMesher();
-            mesher.SetRuntimeFields(_GenerationData, JobScheduler.AbortToken, _AggressiveFaceMerging);
+            mesher.SetData(_OriginPoint, _Blocks, JobScheduler.AbortToken, _AggressiveFaceMerging);
             mesher.ClearExistingData();
             mesher.GenerateMesh();
 
