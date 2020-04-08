@@ -14,29 +14,31 @@ namespace Wyd.Controllers.UI.Components.Text.Diagnostic
 
         private void Start()
         {
-            int chunksQueuedForCreation = WorldController.Current.ChunkRegionsQueuedForCreation;
-            int chunksActive = WorldController.Current.ChunkRegionsActiveCount;
-            int chunksCached = WorldController.Current.ChunkRegionsCachedCount;
+            int chunksQueued = WorldController.Current.ChunksQueuedCount;
+            int chunksActive = WorldController.Current.ChunksActiveCount;
+            int chunksCached = WorldController.Current.ChunksCachedCount;
 
-            UpdateChunkRegionsLoadedText(chunksQueuedForCreation, chunksActive, chunksCached);
+            UpdateChunkRegionsLoadedText(chunksQueued, chunksActive, chunksCached,
+                WorldController.Current.AverageChunkStateVerificationTime);
         }
 
         private void Update()
         {
-            int chunksQueuedForCreation = WorldController.Current.ChunkRegionsQueuedForCreation;
-            int chunksActive = WorldController.Current.ChunkRegionsActiveCount;
-            int chunksCached = WorldController.Current.ChunkRegionsCachedCount;
+            int chunksQueued = WorldController.Current.ChunksQueuedCount;
+            int chunksActive = WorldController.Current.ChunksActiveCount;
+            int chunksCached = WorldController.Current.ChunksCachedCount;
 
-            if ((chunksQueuedForCreation != _LastQueuedForCreationCount)
+            if ((chunksQueued != _LastQueuedForCreationCount)
                 || (chunksActive != _LastChunkRegionsActiveCount)
                 || (chunksCached != _LastChunkRegionsCachedCount))
             {
-                UpdateChunkRegionsLoadedText(chunksQueuedForCreation, chunksActive, chunksCached);
+                UpdateChunkRegionsLoadedText(chunksQueued, chunksActive, chunksCached,
+                    WorldController.Current.AverageChunkStateVerificationTime);
             }
         }
 
         private void UpdateChunkRegionsLoadedText(int chunksQueuedForCreation, int chunksActive,
-            int chunksCached)
+            int chunksCached, double averageStateVerificationTime)
         {
             _LastQueuedForCreationCount = chunksQueuedForCreation;
             _LastChunkRegionsActiveCount = chunksActive;
@@ -45,7 +47,8 @@ namespace Wyd.Controllers.UI.Components.Text.Diagnostic
             TextObject.text = string.Format(Format,
                 _LastQueuedForCreationCount,
                 _LastChunkRegionsActiveCount,
-                _LastChunkRegionsCachedCount);
+                _LastChunkRegionsCachedCount,
+                averageStateVerificationTime);
         }
     }
 }

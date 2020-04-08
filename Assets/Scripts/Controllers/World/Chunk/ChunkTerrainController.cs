@@ -30,7 +30,6 @@ namespace Wyd.Controllers.World.Chunk
         #region INSTANCE MEMBERS
 
         private object _GenerationStepHandle;
-        private ComputeBuffer _NoiseBuffer;
 
         public TerrainStep CurrentStep
         {
@@ -138,7 +137,6 @@ namespace Wyd.Controllers.World.Chunk
 
         private void ClearInternalData()
         {
-            _NoiseBuffer?.Release();
             CurrentStep = (TerrainStep)1;
 
 #if UNITY_EDITOR
@@ -165,19 +163,6 @@ namespace Wyd.Controllers.World.Chunk
         {
             switch (step)
             {
-                case TerrainStep.Noise:
-                    if (OptionsController.Current.GPUAcceleration)
-                    {
-                        BeginNoiseGeneration();
-                        CurrentStep = CurrentStep.Next();
-                        break;
-                    }
-                    else
-                    {
-                        CurrentStep = TerrainStep.RawTerrain;
-                        break;
-                    }
-
                 case TerrainStep.RawTerrain:
                     BeginRawTerrainGeneration();
                     break;
@@ -189,22 +174,28 @@ namespace Wyd.Controllers.World.Chunk
             }
         }
 
-        private void BeginNoiseGeneration()
-        {
-            _NoiseBuffer = new ComputeBuffer(WydMath.Product(ChunkController.Size), 4);
-            int kernel = _noiseShader.FindKernel("CSMain");
-            _noiseShader.SetVector("_Offset", new float4(OriginPoint.xyzz));
-            _noiseShader.SetFloat("_Frequency", _FREQUENCY);
-            _noiseShader.SetFloat("_Persistence", _PERSISTENCE);
-            _noiseShader.SetBuffer(kernel, "Result", _NoiseBuffer);
-            // 1024 is the value set in the shader's [numthreads(--> 1024 <--, 1, 1)]
-            _noiseShader.Dispatch(kernel, WydMath.Product(ChunkController.Size) / 1024, 1, 1);
-        }
-
         private void BeginRawTerrainGeneration()
         {
-            ChunkBuildingJob asyncJob = new ChunkBuildingJob(OriginPoint, ref BlocksController.Blocks,
-                _FREQUENCY, _PERSISTENCE, OptionsController.Current.GPUAcceleration, _NoiseBuffer);
+            ChunkBuildingJob asyncJob;
+
+            if (OptionsController.Current.GPUAcceleration)
+            {
+                ComputeBuffer noiseBuffer = new ComputeBuffer(WydMath.Product(ChunkController.Size), 4);
+                int kernel = _noiseShader.FindKernel("CSMain");
+                _noiseShader.SetVector("_Offset", new float4(OriginPoint.xyzz));
+                _noiseShader.SetFloat("_Frequency", _FREQUENCY);
+                _noiseShader.SetFloat("_Persistence", _PERSISTENCE);
+                _noiseShader.SetBuffer(kernel, "Result", noiseBuffer);
+                // 1024 is the value set in the shader's [numthreads(--> 1024 <--, 1, 1)]
+                _noiseShader.Dispatch(kernel, WydMath.Product(ChunkController.Size) / 1024, 1, 1);
+
+                asyncJob = new ChunkBuildingJob(OriginPoint, ref BlocksController.Blocks,
+                    _FREQUENCY, _PERSISTENCE, OptionsController.Current.GPUAcceleration, noiseBuffer);
+            }
+            else
+            {
+                asyncJob = new ChunkBuildingJob(OriginPoint, ref BlocksController.Blocks, _FREQUENCY, _PERSISTENCE);
+            }
 
             QueueAsyncJob(asyncJob);
         }
@@ -216,14 +207,14 @@ namespace Wyd.Controllers.World.Chunk
 
         public event ChunkChangedEventHandler TerrainChanged;
 
-        private void OnTerrainChanged(object sender, ChunkChangedEventArgs args)
+        private void OnLocalTerrainChanged(object sender, ChunkChangedEventArgs args)
         {
             TerrainChanged?.Invoke(sender, args);
         }
 
         private void OnJobFinished(object sender, AsyncJobEventArgs args)
         {
-            OnTerrainChanged(this, new ChunkChangedEventArgs(OriginPoint, Directions.CardinalDirectionAxes));
+            OnLocalTerrainChanged(this, new ChunkChangedEventArgs(OriginPoint, Directions.AllDirectionAxes));
             args.AsyncJob.WorkFinished -= OnJobFinished;
             CurrentStep = CurrentStep.Next();
 

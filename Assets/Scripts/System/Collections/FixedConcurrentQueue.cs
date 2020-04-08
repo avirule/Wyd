@@ -21,9 +21,10 @@ namespace Wyd.System.Collections
             throw new NotSupportedException(
                 "The SyncRoot property may not be used for the synchronization of concurrent collections.");
 
-        public readonly int MaximumSize;
+        public int MaximumSize { get; }
+        public bool IsEmpty => _InternalQueue.IsEmpty;
+
         public int Count => _Count;
-        public bool IsEmpty { get; private set; }
 
         public FixedConcurrentQueue(int maximumSize)
         {
@@ -35,13 +36,11 @@ namespace Wyd.System.Collections
         {
             _InternalQueue = new ConcurrentQueue<T>(collection);
             MaximumSize = _Count = _InternalQueue.Count;
-            IsEmpty = _InternalQueue.IsEmpty;
         }
 
         public void Enqueue(T item)
         {
             _InternalQueue.Enqueue(item);
-            IsEmpty = false;
 
             if (Count == MaximumSize)
             {

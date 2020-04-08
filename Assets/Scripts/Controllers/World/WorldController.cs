@@ -2,7 +2,11 @@
 
 using System;
 using System.Collections;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Diagnostics;
+using System.Linq;
+using System.Threading.Tasks;
 using Serilog;
 using Unity.Mathematics;
 using UnityEngine;
@@ -16,6 +20,7 @@ using Wyd.Game.World.Chunks;
 using Wyd.Game.World.Chunks.Events;
 using Wyd.System;
 using Wyd.System.Collections;
+using Wyd.System.Extensions;
 
 // ReSharper disable UnusedAutoPropertyAccessor.Global
 
@@ -36,27 +41,59 @@ namespace Wyd.Controllers.World
         public MeshRenderer MeshRenderer;
 #endif
 
+        private object _VerifyChunkStatesHandle;
         private ChunkController _ChunkControllerPrefab;
         private Dictionary<float3, ChunkController> _Chunks;
         private ObjectCache<ChunkController> _ChunkCache;
-        private Stack<IEntity> _EntitiesPendingChunkBuilding;
-        private Stack<ChunkChangedEventArgs> _ChunksPendingDeactivation;
+        private ConcurrentStack<PendingChunkActivation> _ChunksPendingActivation;
+        private ConcurrentStack<float3> _ChunksPendingDeactivation;
+        private List<IEntity> _EntityLoaders;
         private WorldSaveFileProvider _SaveFileProvider;
-        private bool _BuildingChunks;
+        private bool _LoaderChangedChunk;
+        private bool _VerifyingChunkStates;
+
+        public bool VerifyingChunkStates
+        {
+            get
+            {
+                bool tmp;
+
+                lock (_VerifyChunkStatesHandle)
+                {
+                    tmp = _VerifyingChunkStates;
+                }
+
+                return tmp;
+            }
+            set
+            {
+                lock (_VerifyChunkStatesHandle)
+                {
+                    _VerifyingChunkStates = value;
+                }
+            }
+        }
 
         public CollisionLoaderController CollisionLoaderController;
         public string SeedString;
         public float TicksPerSecond;
 
         public bool ReadyForGeneration =>
-            (_EntitiesPendingChunkBuilding.Count == 0)
+            (_ChunksPendingActivation.Count == 0)
             && (_ChunksPendingDeactivation.Count == 0)
-            && !_BuildingChunks;
+            && !VerifyingChunkStates;
 
-        public int ChunkRegionsActiveCount => _Chunks.Count;
-        public int ChunkRegionsCachedCount => _ChunkCache.Size;
-        public int ChunkRegionsQueuedForCreation => _EntitiesPendingChunkBuilding.Count;
+        public int ChunksQueuedCount => _ChunksPendingActivation.Count;
+        public int ChunksActiveCount => _Chunks.Count;
+        public int ChunksCachedCount => _ChunkCache.Size;
 
+        public double AverageChunkStateVerificationTime =>
+            (ChunkStateVerificationTimes != null)
+            && (ChunkStateVerificationTimes.Count > 0)
+                ? ChunkStateVerificationTimes.Average(time => time.Milliseconds)
+                : 0d;
+
+        public FixedConcurrentQueue<TimeSpan> ChunkStateVerificationTimes { get; private set; }
         public WorldSeed Seed { get; private set; }
         public long InitialTick { get; private set; }
         public TimeSpan WorldTickRate { get; private set; }
@@ -74,8 +111,9 @@ namespace Wyd.Controllers.World
             AssignSingletonInstance(this);
             SetTickRate();
 
+            _VerifyChunkStatesHandle = new object();
             _ChunkControllerPrefab = SystemController.LoadResource<ChunkController>(@"Prefabs/Chunk");
-
+            _EntityLoaders = new List<IEntity>();
             _ChunkCache = new ObjectCache<ChunkController>(false, -1,
                 (ref ChunkController chunkController) =>
                 {
@@ -91,8 +129,8 @@ namespace Wyd.Controllers.World
 
             Seed = new WorldSeed(SeedString);
             _Chunks = new Dictionary<float3, ChunkController>();
-            _EntitiesPendingChunkBuilding = new Stack<IEntity>();
-            _ChunksPendingDeactivation = new Stack<ChunkChangedEventArgs>();
+            _ChunksPendingActivation = new ConcurrentStack<PendingChunkActivation>();
+            _ChunksPendingDeactivation = new ConcurrentStack<float3>();
             _SaveFileProvider = new WorldSaveFileProvider("world");
             _SaveFileProvider.Initialise().ConfigureAwait(false);
         }
@@ -110,6 +148,8 @@ namespace Wyd.Controllers.World
 
             SpawnPoint = WydMath.IndexTo3D(Seed, new int3(int.MaxValue, int.MaxValue, int.MaxValue));
 
+            ChunkStateVerificationTimes =
+                new FixedConcurrentQueue<TimeSpan>(OptionsController.Current.MaximumChunkLoadTimeBufferSize);
 
             if (OptionsController.Current.PreInitializeChunkCache)
             {
@@ -165,43 +205,70 @@ namespace Wyd.Controllers.World
 
         public IEnumerable IncrementalFrameUpdate()
         {
-            while (_EntitiesPendingChunkBuilding.Count > 0)
+            if (_LoaderChangedChunk)
             {
-                _BuildingChunks = true;
+                Task.Run(VerifyAllChunkStatesAroundLoaders);
+                _LoaderChangedChunk = false;
+            }
 
-                IEntity loader = _EntitiesPendingChunkBuilding.Pop();
-                BuildChunksAroundEntity(loader);
+            while (_ChunksPendingActivation.Count > 0)
+            {
+                if (!_ChunksPendingActivation.TryPop(out PendingChunkActivation pendingChunkActivation)
+                    || ChunkExistsAt(pendingChunkActivation.Origin))
+                {
+                    continue;
+                }
+
+                if (_ChunkCache.TryRetrieve(out ChunkController chunkController))
+                {
+                    chunkController.Activate(pendingChunkActivation.Origin);
+                }
+                else
+                {
+                    chunkController = Instantiate(_ChunkControllerPrefab, pendingChunkActivation.Origin,
+                        quaternion.identity, transform);
+                }
+
+                chunkController.TerrainChanged += OnChunkTerrainChanged;
+                chunkController.Visible = IsWithinRenderDistance(pendingChunkActivation.LoaderDifference);
+                chunkController.RenderShadows = IsWithinShadowsDistance(pendingChunkActivation.LoaderDifference);
+                _Chunks.Add(pendingChunkActivation.Origin, chunkController);
+
+                Log.Verbose($"Created chunk at {pendingChunkActivation}.");
 
                 yield return null;
             }
 
             while (_ChunksPendingDeactivation.Count > 0)
             {
-                ChunkChangedEventArgs args = _ChunksPendingDeactivation.Pop();
+                if (!_ChunksPendingDeactivation.TryPop(out float3 origin)
+                    || !TryGetChunkAt(origin, out ChunkController _))
+                {
+                    continue;
+                }
 
                 // cache position to avoid multiple native dll calls
-                int3 position = WydMath.ToInt(args.OriginPoint);
-                CacheChunk(position);
-                FlagNeighborsForMeshUpdate(position, args.NeighborDirectionsToUpdate);
+                CacheChunk(origin);
 
                 yield return null;
             }
         }
 
-        private void CacheChunk(int3 chunkPosition)
+        private void CacheChunk(float3 chunkOrigin)
         {
-            if (!_Chunks.TryGetValue(chunkPosition, out ChunkController chunkController))
+            if (!_Chunks.TryGetValue(chunkOrigin, out ChunkController chunkController))
             {
                 return;
             }
 
-            chunkController.TerrainChanged -= OnChunkMeshTerrainChanged;
-            chunkController.DeactivationCallback -= OnChunkDeactivationCallback;
+            chunkController.TerrainChanged -= OnChunkTerrainChanged;
 
-            _Chunks.Remove(chunkPosition);
+            _Chunks.Remove(chunkOrigin);
 
             // Chunk is automatically deactivated by ObjectCache
             _ChunkCache.CacheItem(ref chunkController);
+
+            FlagOriginAndNeighborsForMeshUpdate(chunkOrigin, Directions.AllDirectionAxes);
         }
 
 
@@ -227,69 +294,80 @@ namespace Wyd.Controllers.World
 
         #region CHUNK BUILDING
 
-        public void BuildChunksAroundEntity(IEntity loader)
+        private void VerifyAllChunkStatesAroundLoaders()
         {
-            int radius = loader.Tags.Contains("player")
-                ? OptionsController.Current.RenderDistance + OptionsController.Current.PreLoadChunkDistance
-                : 1;
+            Stopwatch stopwatch = Stopwatch.StartNew();
 
-            for (int x = -radius; x < (radius + 1); x++)
+            VerifyingChunkStates = true;
+            List<float3> chunksRequiringDeactivation = new List<float3>();
+
+            // get total list of out of bounds chunks
+            foreach (IEntity loader in _EntityLoaders)
             {
-                for (int y = 0; y < WorldHeightInChunks; y++)
+                foreach ((float3 origin, ChunkController _) in _Chunks)
                 {
-                    for (int z = -radius; z < (radius + 1); z++)
+                    float3 difference = math.abs(origin - loader.ChunkPosition);
+                    difference.y = 0; // always load all chunks on y axis
+
+                    if (!IsWithinMaxRenderDistance(difference) || !IsWithinLoaderRange(difference))
                     {
-                        if (!PerFrameUpdateController.Current.IsInSafeFrameTime())
-                        {
-                            _EntitiesPendingChunkBuilding.Push(loader);
-                            _BuildingChunks = false;
-                            return;
-                        }
-
-                        int3 chunkPosition = loader.ChunkPosition;
-                        chunkPosition.y = 0;
-                        int3 position = chunkPosition + (new int3(x, y, z) * ChunkController.Size);
-
-                        if (ChunkExistsAt(position))
-                        {
-                            continue;
-                        }
-
-                        if (_ChunkCache.TryRetrieve(out ChunkController chunkController))
-                        {
-                            chunkController.Activate(position);
-                        }
-                        else
-                        {
-                            chunkController = Instantiate(_ChunkControllerPrefab, (float3)position, quaternion.identity,
-                                transform);
-                        }
-
-                        chunkController.TerrainChanged += OnChunkMeshTerrainChanged;
-                        chunkController.DeactivationCallback += OnChunkDeactivationCallback;
-
-                        chunkController.AssignLoader(ref loader);
-                        _Chunks.Add(position, chunkController);
-
-                        Log.Verbose($"Created chunk at {position}.");
+                        chunksRequiringDeactivation.Add(origin);
                     }
                 }
             }
 
-            _BuildingChunks = false;
+            foreach (IEntity loader in _EntityLoaders)
+            {
+                VerifyChunkStatesByLoader(loader, out HashSet<float3> originsAlreadyGenerated,
+                    ref chunksRequiringDeactivation);
+
+                int renderRadius = OptionsController.Current.RenderDistance
+                                   + OptionsController.Current.PreLoadChunkDistance;
+
+                for (int x = -renderRadius; x < (renderRadius + 1); x++)
+                for (int z = -renderRadius; z < (renderRadius + 1); z++)
+                for (int y = 0; y < WorldHeightInChunks; y++)
+                {
+                    float3 localOrigin = new float3(x, y, z) * ChunkController.Size;
+                    float3 origin = localOrigin + new float3(loader.ChunkPosition.x, 0, loader.ChunkPosition.z);
+
+                    if (originsAlreadyGenerated.Contains(origin))
+                    {
+                        continue;
+                    }
+
+                    float3 difference = math.abs(localOrigin);
+                    difference.y = 0; // always load all chunks on y axis
+
+                    _ChunksPendingActivation.Push(new PendingChunkActivation(origin, difference));
+                }
+            }
+
+            foreach (float3 origin in chunksRequiringDeactivation)
+            {
+                _ChunksPendingDeactivation.Push(origin);
+            }
+
+            VerifyingChunkStates = false;
+            ChunkStateVerificationTimes.Enqueue(stopwatch.Elapsed);
+            stopwatch.Reset();
         }
 
-        private void FlagNeighborsForMeshUpdate(float3 globalChunkPosition, IEnumerable<int3> directions)
+
+        private void FlagOriginAndNeighborsForMeshUpdate(float3 origin, IEnumerable<int3> directions)
         {
+            FlagChunkForUpdateMesh(origin);
+
             foreach (float3 normal in directions)
             {
-                FlagChunkForUpdateMesh(globalChunkPosition + (normal * ChunkController.Size));
+                FlagChunkForUpdateMesh(origin + (normal * ChunkController.Size));
             }
         }
 
-        private void FlagChunkForUpdateMesh(float3 globalChunkPosition)
+        private void FlagChunkForUpdateMesh(float3 origin)
         {
-            if (TryGetChunkAt(WydMath.RoundBy(globalChunkPosition, WydMath.ToFloat(ChunkController.Size)), out ChunkController chunkController))
+            if (TryGetChunkAt(WydMath.RoundBy(origin, WydMath.ToFloat(ChunkController.Size)),
+                out ChunkController chunkController))
             {
                 chunkController.FlagMeshForUpdate();
             }
@@ -297,6 +375,64 @@ namespace Wyd.Controllers.World
 
         #endregion
 
+        #region INTERNAL STATE CHECKS
+
+        private void VerifyChunkStatesByLoader(IEntity loader, out HashSet<float3> originsAlreadyGenerated,
+            ref List<float3> originsNotWithinAnyLoaderRanges)
+        {
+            originsAlreadyGenerated = new HashSet<float3>();
+
+            foreach ((float3 originPoint, ChunkController chunk) in _Chunks)
+            {
+                float3 difference = math.abs(originPoint - loader.ChunkPosition);
+                difference.y = 0; // always load all chunks on y axis
+
+                if (!IsWithinMaxRenderDistance(difference) || !IsWithinLoaderRange(difference))
+                {
+                    continue;
+                }
+                else if (originsNotWithinAnyLoaderRanges.Contains(originPoint))
+                {
+                    originsNotWithinAnyLoaderRanges.Remove(originPoint);
+                }
+
+                originsAlreadyGenerated.Add(originPoint);
+
+                chunk.Visible = IsWithinRenderDistance(difference);
+                chunk.RenderShadows = IsWithinShadowsDistance(difference);
+            }
+        }
+
+        private static bool IsWithinMaxRenderDistance(float3 difference) =>
+            math.all(difference <= (ChunkController.Size * OptionsController.MAXIMUM_RENDER_DISTANCE));
+
+        private static bool IsWithinLoaderRange(float3 difference) =>
+            math.all(difference
+                     <= (ChunkController.Size
+                         * (OptionsController.Current.RenderDistance
+                            + OptionsController.Current.PreLoadChunkDistance)));
+
+        private static bool IsWithinRenderDistance(float3 difference) =>
+            math.all(difference <= (ChunkController.Size * OptionsController.Current.RenderDistance));
+
+        private static bool IsWithinShadowsDistance(float3 difference) =>
+            math.all(difference <= (ChunkController.Size * OptionsController.Current.ShadowDistance));
+
+        private static IEnumerable<int3> GetFlattenedOriginMatrixByRenderDistance()
+        {
+            int renderDistanceDiameter = (OptionsController.Current.RenderDistance * 2) + 1;
+            int3 renderDistanceBounds =
+                new int3(renderDistanceDiameter, (int)WorldHeightInChunks, renderDistanceDiameter);
+            int3 offset = new int3(renderDistanceBounds.x / 2, 0, renderDistanceBounds.z / 2);
+
+
+            for (int index = 0; index < WydMath.Product(renderDistanceBounds); index++)
+            {
+                yield return ChunkController.Size * (WydMath.IndexTo3D(index, renderDistanceBounds) - offset);
+            }
+        }
+
+        #endregion
 
         #region EVENTS
 
@@ -317,22 +453,17 @@ namespace Wyd.Controllers.World
                 return;
             }
 
-            loader.ChunkPositionChanged += (sender, position) => { _EntitiesPendingChunkBuilding.Push(loader); };
-            _EntitiesPendingChunkBuilding.Push(loader);
+            loader.ChunkPositionChanged += (sender, position) => _LoaderChangedChunk = true;
+            _LoaderChangedChunk = true;
+            _EntityLoaders.Add(loader);
         }
 
 
-        private void OnChunkMeshTerrainChanged(object sender, ChunkChangedEventArgs args)
+        private void OnChunkTerrainChanged(object sender, ChunkChangedEventArgs args)
         {
-            FlagNeighborsForMeshUpdate(args.OriginPoint, args.NeighborDirectionsToUpdate);
+            FlagOriginAndNeighborsForMeshUpdate(args.OriginPoint, args.NeighborDirectionsToUpdate);
 
             ChunkMeshChanged?.Invoke(sender, args);
-        }
-
-        private void OnChunkDeactivationCallback(object sender, ChunkChangedEventArgs args)
-        {
-            // queue chunk for deactivation so deactivations can be processed in a frame-time sensitive manner
-            _ChunksPendingDeactivation.Push(args);
         }
 
         #endregion

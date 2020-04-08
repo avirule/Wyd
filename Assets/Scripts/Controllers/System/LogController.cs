@@ -67,7 +67,7 @@ namespace Wyd.Controllers.System
                         outputTemplate: _DEFAULT_TEMPLATE,
                         retainedFileCountLimit: 31,
                         rollOnFileSizeLimit: true,
-                        restrictedToMinimumLevel: LogEventLevel.Information))
+                        restrictedToMinimumLevel: LogEventLevel.Debug))
                 // error log output
                 .WriteTo.Async(configuration =>
                     configuration.File(
