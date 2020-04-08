@@ -2,7 +2,6 @@
 
 using System;
 using System.Diagnostics;
-using System.Threading;
 using System.Threading.Tasks;
 
 #endregion
@@ -11,7 +10,7 @@ namespace Wyd.System.Jobs
 {
     public class AsyncJob
     {
-        private Stopwatch _Stopwatch;
+        private readonly Stopwatch _Stopwatch;
 
         /// <summary>
         ///     Allows jobs to be created on-the-fly with delegates,
@@ -25,9 +24,9 @@ namespace Wyd.System.Jobs
         public object Identity { get; private set; }
 
         /// <summary>
-        ///     Token signalling cancellation of internal process.
+        ///     Thread-safe determination of execution status.
         /// </summary>
-        public CancellationToken AbortToken { get; private set; }
+        public bool IsWorkFinished { get; set; }
 
         /// <summary>
         ///     Elapsed time of specifically the <see cref="Process" /> function.
@@ -39,26 +38,18 @@ namespace Wyd.System.Jobs
         /// </summary>
         public TimeSpan ExecutionTime { get; private set; }
 
-        public event EventHandler Finished;
+        public event AsyncJobEventHandler WorkFinished;
 
         /// <summary>
         ///     Instantiates a new instance of the <see cref="Job" /> class.
         /// </summary>
-        public AsyncJob() => Done = false;
-
-        public AsyncJob(Func<Task> invocation) : this() => Invocation = invocation;
-
-        /// <summary>
-        ///     Thread-safe determination of execution status.
-        /// </summary>
-        public bool Done { get; set; }
-
-        internal virtual void Initialize(object identity, CancellationToken abortToken)
+        public AsyncJob(Func<Task> invocation = null)
         {
             _Stopwatch = new Stopwatch();
 
-            Identity = identity;
-            AbortToken = abortToken;
+            Identity = Guid.NewGuid();
+            Invocation = invocation ?? (() => Task.CompletedTask);
+            IsWorkFinished = false;
         }
 
         /// <summary>
@@ -78,8 +69,8 @@ namespace Wyd.System.Jobs
             _Stopwatch.Stop();
             _Stopwatch.Reset();
 
-            Done = true;
-            Finished?.Invoke(this, EventArgs.Empty);
+            IsWorkFinished = true;
+            WorkFinished?.Invoke(this, new AsyncJobEventArgs(this));
         }
 
         /// <summary>

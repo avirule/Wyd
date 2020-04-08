@@ -29,7 +29,7 @@ namespace Wyd.Game.World.Chunks
         protected override Task Process()
         {
             ChunkMesher mesher = _ChunkMesherCache.Retrieve() ?? new ChunkMesher();
-            mesher.SetRuntimeFields(_GenerationData, AbortToken, _AggressiveFaceMerging);
+            mesher.SetRuntimeFields(_GenerationData, JobScheduler.AbortToken, _AggressiveFaceMerging);
             mesher.ClearExistingData();
             mesher.GenerateMesh();
 

@@ -79,9 +79,9 @@ namespace Wyd.Controllers.World.Chunk
             ClearInternalData();
         }
 
-        public Task FrameUpdate() => Task.CompletedTask;
+        public void FrameUpdate() { }
 
-        public async IAsyncEnumerable<object> IncrementalFrameUpdate()
+        public IEnumerable IncrementalFrameUpdate()
         {
             while (_BlockActions.Count > 0)
             {
@@ -90,8 +90,6 @@ namespace Wyd.Controllers.World.Chunk
                 ProcessBlockAction(blockAction);
 
                 _BlockActionsCache.CacheItem(ref blockAction);
-
-                await Task.Delay(0);
 
                 yield return null;
             }

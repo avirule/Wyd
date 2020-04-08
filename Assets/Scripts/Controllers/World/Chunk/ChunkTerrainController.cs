@@ -1,7 +1,6 @@
 #region
 
 using System;
-using System.Threading.Tasks;
 using Unity.Mathematics;
 using UnityEngine;
 using Wyd.Controllers.State;
@@ -30,7 +29,6 @@ namespace Wyd.Controllers.World.Chunk
         #region INSTANCE MEMBERS
 
         private ComputeBuffer _NoiseBuffer;
-        private object _JobIdentity;
 
         public GenerationData.GenerationStep CurrentStep
         {
@@ -121,7 +119,6 @@ namespace Wyd.Controllers.World.Chunk
         private void ClearInternalData()
         {
             _NoiseBuffer?.Release();
-            _JobIdentity = null;
             CurrentStep = (GenerationData.GenerationStep)1;
 
 #if UNITY_EDITOR
@@ -135,19 +132,11 @@ namespace Wyd.Controllers.World.Chunk
 
         #region RUNTIME
 
-        private async Task<bool> QueueAsyncJob(AsyncJob asyncJob)
+        private void QueueAsyncJob(AsyncJob asyncJob)
         {
-            object identity = await SystemController.Current.QueueAsyncJob(asyncJob);
+            asyncJob.WorkFinished += OnJobFinished;
 
-            if (identity == null)
-            {
-                return false;
-            }
-
-            _JobIdentity = identity;
-            SystemController.Current.JobFinished += OnJobFinished;
-
-            return true;
+            JobScheduler.QueueAsyncJob(asyncJob).ConfigureAwait(false);
         }
 
         private void ExecuteStep(GenerationData.GenerationStep step)
@@ -198,10 +187,7 @@ namespace Wyd.Controllers.World.Chunk
             ChunkBuildingJob asyncJob = new ChunkBuildingJob(new GenerationData(_Volume, BlocksController.Blocks),
                 _FREQUENCY, _PERSISTENCE, OptionsController.Current.GPUAcceleration, _NoiseBuffer);
 
-            if (!await QueueAsyncJob(asyncJob))
-            {
-                CurrentStep = GenerationData.GenerationStep.AwaitingRawTerrain;
-            }
+            QueueAsyncJob(asyncJob);
         }
 
         #endregion
@@ -218,11 +204,6 @@ namespace Wyd.Controllers.World.Chunk
 
         private void OnJobFinished(object sender, AsyncJobEventArgs args)
         {
-            if (args.AsyncJob.Identity != _JobIdentity)
-            {
-                return;
-            }
-
             switch (CurrentStep)
             {
                 case GenerationData.GenerationStep.AwaitingRawTerrain:
@@ -242,7 +223,6 @@ namespace Wyd.Controllers.World.Chunk
 
             if (CurrentStep == GenerationData.GenerationStep.Complete)
             {
-
 #if UNITY_EDITOR
 
                 TotalTimesTerrainChanged += 1;
@@ -254,8 +234,7 @@ namespace Wyd.Controllers.World.Chunk
                     Directions.AllDirectionAxes);
             }
 
-            _JobIdentity = null;
-            SystemController.Current.JobFinished -= OnJobFinished;
+            args.AsyncJob.WorkFinished -= OnJobFinished;
         }
 
         #endregion

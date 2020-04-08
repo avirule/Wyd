@@ -27,7 +27,7 @@ namespace Wyd.Game.World
                  COMMIT;
             ";
 
-        private static readonly JobScheduler _QueryExecutionScheduler;
+        //private static readonly JobScheduler _QueryExecutionScheduler;
 
         public static string WorldSaveFileDirectory { get; }
 
@@ -193,7 +193,7 @@ namespace Wyd.Game.World
 
         public static void ApplicationQuit()
         {
-            _QueryExecutionScheduler?.Abort();
+            //_QueryExecutionScheduler?.Abort();
         }
 
         public void Dispose()

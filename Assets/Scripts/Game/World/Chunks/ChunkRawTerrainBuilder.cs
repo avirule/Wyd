@@ -21,40 +21,18 @@ namespace Wyd.Game.World.Chunks
 {
     public class ChunkRawTerrainBuilder : ChunkBuilder
     {
-        private readonly object _NoiseValuesReadyHandle = new object();
+        private static readonly ObjectCache<float[]> _NoiseValuesCache = new ObjectCache<float[]>();
+
         private readonly Stopwatch _Stopwatch;
         private readonly float _Frequency;
         private readonly float _Persistence;
         private readonly ComputeBuffer _NoiseValuesBuffer;
 
-        private bool _NoiseValuesReady;
         private bool _GpuAcceleration;
-        private NoiseMap _NoiseMap;
+        private float[] _NoiseMap;
 
         public TimeSpan NoiseRetrievalTimeSpan { get; private set; }
         public TimeSpan TerrainGenerationTimeSpan { get; private set; }
-
-        private bool NoiseValuesReady
-        {
-            get
-            {
-                bool tmp;
-
-                lock (_NoiseValuesReadyHandle)
-                {
-                    tmp = _NoiseValuesReady;
-                }
-
-                return tmp;
-            }
-            set
-            {
-                lock (_NoiseValuesReadyHandle)
-                {
-                    _NoiseValuesReady = value;
-                }
-            }
-        }
 
         public ChunkRawTerrainBuilder(GenerationData generationData, float frequency, float persistence,
             bool gpuAcceleration = false, ComputeBuffer noiseValuesBuffer = null)
@@ -65,14 +43,17 @@ namespace Wyd.Game.World.Chunks
             _Persistence = persistence;
             _GpuAcceleration = gpuAcceleration;
             _NoiseValuesBuffer = noiseValuesBuffer;
-            NoiseValuesReady = false;
         }
 
         private void GetComputeBufferData()
         {
+            if (_NoiseValuesBuffer == null || _NoiseMap == null)
+            {
+
+            }
+
             _NoiseValuesBuffer.GetData(_NoiseMap);
             _NoiseValuesBuffer.Release();
-            NoiseValuesReady = true;
         }
 
         public void Generate()
@@ -95,7 +76,7 @@ namespace Wyd.Game.World.Chunks
                 _GenerationData.Blocks.SetPoint(globalPosition, GetBlockIDAtPosition(globalPosition, index));
             }
 
-            NoiseValuesCache.CacheItem(ref _NoiseMap);
+            _NoiseValuesCache.CacheItem(ref _NoiseMap);
 
             _Stopwatch.Stop();
             TerrainGenerationTimeSpan = _Stopwatch.Elapsed;
@@ -105,7 +86,7 @@ namespace Wyd.Game.World.Chunks
         {
             _Stopwatch.Restart();
 
-            _NoiseMap = NoiseValuesCache.Retrieve() ?? new NoiseMap();
+            _NoiseMap = _NoiseValuesCache.Retrieve() ?? new float[WydMath.Product(ChunkController.Size)];
 
             if (_GpuAcceleration && (_NoiseValuesBuffer != null))
             {

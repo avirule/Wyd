@@ -1,6 +1,8 @@
 #region
 
+using System;
 using Wyd.Controllers.System;
+using Wyd.System.Jobs;
 
 #endregion
 
@@ -12,8 +14,9 @@ namespace Wyd.Controllers.UI.Components.Text.Diagnostic
 
         private void Start()
         {
-            SystemController.Current.ProcessingJobCountChanged += (sender, args) => _UpdateDiagInfo = true;
-            SystemController.Current.WorkerThreadCountChanged += (sender, args) => _UpdateDiagInfo = true;
+            JobScheduler.JobQueued += (sender, args) => _UpdateDiagInfo = true;
+            JobScheduler.JobStarted += (sender, args) => _UpdateDiagInfo = true;
+            JobScheduler.JobFinished += (sender, args) => _UpdateDiagInfo = true;
             _UpdateDiagInfo = true;
         }
 
@@ -21,8 +24,8 @@ namespace Wyd.Controllers.UI.Components.Text.Diagnostic
         {
             if (_UpdateDiagInfo)
             {
-                TextObject.text = string.Format(Format, SystemController.Current.WorkerThreadCount,
-                    SystemController.Current.ProcessingJobCount);
+                TextObject.text = string.Format(Format, JobScheduler.WorkerThreadCount,JobScheduler.ProcessingJobCount,
+                    JobScheduler.JobsQueued);
 
                 _UpdateDiagInfo = false;
             }

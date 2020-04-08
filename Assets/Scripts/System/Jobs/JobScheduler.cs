@@ -16,83 +16,73 @@ namespace Wyd.System.Jobs
         Multi
     }
 
-    public sealed class JobScheduler
+    public static class JobScheduler
     {
-        private readonly CancellationTokenSource _AbortTokenSource;
-        private readonly AsyncCollection<AsyncJob> _AsyncJobQueue;
+        private static readonly CancellationTokenSource _AbortTokenSource;
+        private static readonly AsyncCollection<AsyncJob> _AsyncJobQueue;
 
-        private CancellationToken _AbortToken;
-        private int _WorkerThreadCount;
+        private static int _workerThreadCount;
 
 
-        private long _JobsQueued;
-        private long _DelegatedJobCount;
-        private long _ProcessingJobCount;
+        private static long _jobsQueued;
+        private static long _processingJobCount;
 
-        public int WorkerThreadCount => _WorkerThreadCount;
-        public long JobsQueued => Interlocked.Read(ref _JobsQueued);
-        public long ProcessingJobCount => Interlocked.Read(ref _ProcessingJobCount);
-
+        public static CancellationToken AbortToken => _AbortTokenSource.Token;
+        public static int WorkerThreadCount => _workerThreadCount;
+        public static long JobsQueued => Interlocked.Read(ref _jobsQueued);
+        public static long ProcessingJobCount => Interlocked.Read(ref _processingJobCount);
 
         /// <summary>
         ///     Initializes a new instance of <see cref="JobScheduler" /> class.
         /// </summary>
-        public JobScheduler(int workerCount = 1)
+        static JobScheduler()
         {
-            ModifyWorkerThreadCount(workerCount);
+            ModifyWorkerThreadCount(Environment.ProcessorCount - 1 /* to facilitate main thread */);
 
             _AsyncJobQueue = new AsyncCollection<AsyncJob>();
             _AbortTokenSource = new CancellationTokenSource();
-            _AbortToken = _AbortTokenSource.Token;
 
-            JobQueued += (sender, args) => Interlocked.Increment(ref _JobsQueued);
-            JobStarted += (sender, args) => Interlocked.Increment(ref _ProcessingJobCount);
+            JobQueued += (sender, args) => Interlocked.Increment(ref _jobsQueued);
+            JobStarted += (sender, args) => Interlocked.Increment(ref _processingJobCount);
             JobFinished += (sender, args) =>
             {
-                Interlocked.Decrement(ref _JobsQueued);
-                Interlocked.Decrement(ref _DelegatedJobCount);
-                Interlocked.Decrement(ref _ProcessingJobCount);
+                Interlocked.Decrement(ref _jobsQueued);
+                Interlocked.Decrement(ref _processingJobCount);
             };
+
+            for (int i = 0; i < WorkerThreadCount; i++)
+            {
+                Task.Run(ProcessItemQueue, AbortToken);
+            }
         }
 
         /// <summary>
         ///     Adds specified <see cref="Job" /> to internal queue and returns a unique identity.
         /// </summary>
         /// <param name="asyncJob"><see cref="Job" /> to be added.</param>
-        public async Task<object> QueueAsyncJob(AsyncJob asyncJob)
+        public static async Task QueueAsyncJob(AsyncJob asyncJob)
         {
-            if (_AbortToken.IsCancellationRequested)
+            if (AbortToken.IsCancellationRequested)
             {
-                return null;
+                return;
             }
 
-            asyncJob.Initialize(Guid.NewGuid(), _AbortToken);
-            await _AsyncJobQueue.PushAsync(asyncJob, _AbortToken);
-            OnJobQueued(this, new AsyncJobEventArgs(asyncJob));
-
-            return asyncJob.Identity;
+            await _AsyncJobQueue.PushAsync(asyncJob, AbortToken);
+            OnJobQueued(new AsyncJobEventArgs(asyncJob));
         }
 
 
         #region STATE
 
         /// <summary>
-        ///     Begins execution of internal threaded process.
-        /// </summary>
-        public void SpawnWorkers()
-        {
-            for (int i = 0; i < WorkerThreadCount; i++)
-            {
-                Task.Run(ProcessItemQueue, _AbortToken);
-            }
-        }
-
-        /// <summary>
         ///     Aborts execution of internal threaded process.
         /// </summary>
-        public void Abort()
+        public static void Abort(bool abort)
         {
-            _AbortTokenSource.Cancel();
+            if (abort)
+            {
+                _AbortTokenSource.Cancel();
+            }
         }
 
         /// <summary>
@@ -103,10 +93,9 @@ namespace Wyd.System.Jobs
         ///     more idiomatically constrain the total to a positive value.
         /// </remarks>
         /// <param name="newTotal"></param>
-        public void ModifyWorkerThreadCount(int newTotal)
+        private static void ModifyWorkerThreadCount(int newTotal)
         {
-            Interlocked.Exchange(ref _WorkerThreadCount, Math.Max(newTotal, 1));
-            OnWorkerCountChanged(this, WorkerThreadCount);
+            Interlocked.Exchange(ref _workerThreadCount, Math.Max(newTotal, 1));
         }
 
         #endregion
@@ -114,14 +103,21 @@ namespace Wyd.System.Jobs
 
         #region RUNTIME
 
-        private async Task ProcessItemQueue()
+        private static async Task ProcessItemQueue()
         {
             try
             {
-                while (!_AbortToken.IsCancellationRequested)
+                while (!AbortToken.IsCancellationRequested)
                 {
-                    await ExecuteJob(await _AsyncJobQueue.TakeAsync(_AbortToken));
-                    Interlocked.Decrement(ref _JobsQueued);
+                    AsyncJob asyncJob = await _AsyncJobQueue.TakeAsync(AbortToken);
+
+                    if (asyncJob == null)
+                    {
+                        continue;
+                    }
+
+                    await ExecuteJob(asyncJob);
+                    Interlocked.Decrement(ref _jobsQueued);
                 }
             }
             catch (OperationCanceledException)
@@ -136,11 +132,11 @@ namespace Wyd.System.Jobs
             }
         }
 
-        private async Task ExecuteJob(AsyncJob asyncJob)
+        private static async Task ExecuteJob(AsyncJob asyncJob)
         {
-            OnJobStarted(this, new AsyncJobEventArgs(asyncJob));
+            OnJobStarted(new AsyncJobEventArgs(asyncJob));
             await asyncJob.Execute();
-            OnJobFinished(this, new AsyncJobEventArgs(asyncJob));
+            OnJobFinished(new AsyncJobEventArgs(asyncJob));
         }
 
         #endregion
@@ -152,40 +148,33 @@ namespace Wyd.System.Jobs
         ///     Called when a job is queued.
         /// </summary>
         /// <remarks>This event will not necessarily happen synchronously with the main thread.</remarks>
-        public event JobEventHandler JobQueued;
+        public static event AsyncJobEventHandler JobQueued;
 
         /// <summary>
         ///     Called when a job starts execution.
         /// </summary>
         /// <remarks>This event will not necessarily happen synchronously with the main thread.</remarks>
-        public event JobEventHandler JobStarted;
+        public static event AsyncJobEventHandler JobStarted;
 
         /// <summary>
         ///     Called when a job finishes execution.
         /// </summary>
         /// <remarks>This event will not necessarily happen synchronously with the main thread.</remarks>
-        public event JobEventHandler JobFinished;
+        public static event AsyncJobEventHandler JobFinished;
 
-        public event EventHandler<int> WorkerCountChanged;
-
-        private void OnJobQueued(object sender, AsyncJobEventArgs args)
+        private static void OnJobQueued(AsyncJobEventArgs args)
         {
-            JobQueued?.Invoke(sender, args);
+            JobQueued?.Invoke(JobQueued, args);
         }
 
-        private void OnJobStarted(object sender, AsyncJobEventArgs args)
+        private static void OnJobStarted(AsyncJobEventArgs args)
         {
-            JobStarted?.Invoke(sender, args);
+            JobStarted?.Invoke(JobStarted, args);
         }
 
-        private void OnJobFinished(object sender, AsyncJobEventArgs args)
+        private static void OnJobFinished(AsyncJobEventArgs args)
         {
-            JobFinished?.Invoke(sender, args);
-        }
-
-        private void OnWorkerCountChanged(object sender, int newCount)
-        {
-            WorkerCountChanged?.Invoke(sender, newCount);
+            JobFinished?.Invoke(JobFinished, args);
         }
 
         #endregion

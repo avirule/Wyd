@@ -20,7 +20,6 @@ namespace Wyd.Controllers.World.Chunk
         #region INSTANCE MEMBERS
 
         private Mesh _Mesh;
-        private object _JobIdentity;
         private bool _UpdateRequested;
 
         public bool Meshed { get; private set; }
@@ -112,7 +111,7 @@ namespace Wyd.Controllers.World.Chunk
             ClearInternalData();
         }
 
-        public async Task FrameUpdate()
+        public void FrameUpdate()
         {
             if (Meshing
                 || !_UpdateRequested
@@ -125,7 +124,7 @@ namespace Wyd.Controllers.World.Chunk
                 return;
             }
 
-            await BeginGeneratingMesh();
+            BeginGeneratingMesh();
         }
 
         #region DE/ACTIVATION
@@ -137,7 +136,6 @@ namespace Wyd.Controllers.World.Chunk
                 _Mesh.Clear();
             }
 
-            _JobIdentity = null;
             Meshing = Meshed = false;
 
 #if UNITY_EDITOR
@@ -157,7 +155,7 @@ namespace Wyd.Controllers.World.Chunk
             }
         }
 
-        private async Task BeginGeneratingMesh()
+        private void BeginGeneratingMesh()
         {
             if (Meshing)
             {
@@ -166,12 +164,8 @@ namespace Wyd.Controllers.World.Chunk
 
             ChunkMeshingJob asyncJob = new ChunkMeshingJob(new GenerationData(_Volume, BlocksController.Blocks), true);
 
-            if (!await QueueAsyncJob(asyncJob))
-            {
-                return;
-            }
+            QueueAsyncJob(asyncJob);
 
-            SystemController.Current.JobFinished += OnJobFinished;
             Meshed = _UpdateRequested = false;
             Meshing = true;
         }
@@ -182,19 +176,11 @@ namespace Wyd.Controllers.World.Chunk
             OnMeshChanged(this, new ChunkChangedEventArgs(_Volume, Enumerable.Empty<int3>()));
         }
 
-        private async Task<bool> QueueAsyncJob(AsyncJob asyncJob)
+        private void QueueAsyncJob(AsyncJob asyncJob)
         {
-            object identity = await SystemController.Current.QueueAsyncJob(asyncJob);
+            asyncJob.WorkFinished += OnJobFinished;
 
-            if (identity == null)
-            {
-                return false;
-            }
-
-            _JobIdentity = identity;
-            SystemController.Current.JobFinished += OnJobFinished;
-
-            return true;
+            JobScheduler.QueueAsyncJob(asyncJob).ConfigureAwait(false);
         }
 
         #region EVENTS
@@ -208,15 +194,8 @@ namespace Wyd.Controllers.World.Chunk
 
         private void OnJobFinished(object sender, AsyncJobEventArgs args)
         {
-            if ((args.AsyncJob.Identity != _JobIdentity) || !(args.AsyncJob is ChunkMeshingJob chunkMeshingJob))
-            {
-                return;
-            }
-
             MainThreadActionsController.Current.PushAction(new MainThreadAction(default,
-                () => ApplyMesh(chunkMeshingJob)));
-            SystemController.Current.JobFinished -= OnJobFinished;
-            _JobIdentity = null;
+                () => ApplyMesh((ChunkMeshingJob)args.AsyncJob)));
             Meshing = false;
             Meshed = true;
         }
