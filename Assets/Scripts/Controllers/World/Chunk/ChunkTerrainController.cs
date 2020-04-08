@@ -216,14 +216,14 @@ namespace Wyd.Controllers.World.Chunk
 
         public event ChunkChangedEventHandler TerrainChanged;
 
-        private void OnChunkTerrainChanged(object sender, ChunkChangedEventArgs args)
+        private void OnTerrainChanged(object sender, ChunkChangedEventArgs args)
         {
             TerrainChanged?.Invoke(sender, args);
         }
 
         private void OnJobFinished(object sender, AsyncJobEventArgs args)
         {
-            OnChunkTerrainChanged(this, new ChunkChangedEventArgs(OriginPoint, Directions.CardinalDirectionAxes));
+            OnTerrainChanged(this, new ChunkChangedEventArgs(OriginPoint, Directions.CardinalDirectionAxes));
             args.AsyncJob.WorkFinished -= OnJobFinished;
             CurrentStep = CurrentStep.Next();
 

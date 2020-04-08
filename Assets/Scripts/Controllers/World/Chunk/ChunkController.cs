@@ -103,13 +103,14 @@ namespace Wyd.Controllers.World.Chunk
             BlocksController.BlocksChanged += (sender, args) =>
             {
                 MeshController.FlagForUpdate();
-                OnChanged(sender, args);
+                OnTerrainChanged(sender, args);
             };
             TerrainController.TerrainChanged += (sender, args) =>
             {
                 MeshController.FlagForUpdate();
-                OnChanged(sender, args);
+                OnTerrainChanged(sender, args);
             };
+            MeshController.MeshChanged += OnMeshChanged;
 
             MeshRenderer.materials = TextureController.Current.TerrainMaterials;
             _Visible = MeshRenderer.enabled;
@@ -126,8 +127,6 @@ namespace Wyd.Controllers.World.Chunk
             {
                 OnCurrentLoaderChangedChunk(this, _CurrentLoader.ChunkPosition);
             }
-
-            OptionsController.Current.PropertyChanged += OnShadowDistanceChanged;
         }
 
         protected override void OnEnable()
@@ -143,6 +142,11 @@ namespace Wyd.Controllers.World.Chunk
 #endif
 
             _Visible = MeshRenderer.enabled;
+
+            if (OptionsController.Current != null)
+            {
+                OptionsController.Current.PropertyChanged += OnShadowDistanceChanged;
+            }
         }
 
         protected override void OnDisable()
@@ -154,11 +158,6 @@ namespace Wyd.Controllers.World.Chunk
                 _CurrentLoader.ChunkPositionChanged -= OnCurrentLoaderChangedChunk;
                 _CurrentLoader = default;
             }
-        }
-
-        private void OnDestroy()
-        {
-            OnDestroyed(this, new ChunkChangedEventArgs(OriginPoint, Directions.CardinalDirectionAxes));
 
             if (OptionsController.Current != null)
             {
@@ -219,18 +218,18 @@ namespace Wyd.Controllers.World.Chunk
 
         #region EVENT
 
-        public event ChunkChangedEventHandler Changed;
+        public event ChunkChangedEventHandler TerrainChanged;
+        public event ChunkChangedEventHandler MeshChanged;
         public event ChunkChangedEventHandler DeactivationCallback;
-        public event ChunkChangedEventHandler Destroyed;
 
-        private void OnChanged(object sender, ChunkChangedEventArgs args)
+        private void OnTerrainChanged(object sender, ChunkChangedEventArgs args)
         {
-            Changed?.Invoke(sender, args);
+            TerrainChanged?.Invoke(sender, args);
         }
 
-        protected virtual void OnDestroyed(object sender, ChunkChangedEventArgs args)
+        private void OnMeshChanged(object sender, ChunkChangedEventArgs args)
         {
-            Destroyed?.Invoke(sender, args);
+            MeshChanged?.Invoke(sender, args);
         }
 
         private void OnCurrentLoaderChangedChunk(object sender, int3 newChunkPosition)

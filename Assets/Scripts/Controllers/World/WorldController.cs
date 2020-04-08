@@ -195,7 +195,7 @@ namespace Wyd.Controllers.World
                 return;
             }
 
-            chunkController.Changed -= OnChunkMeshChanged;
+            chunkController.TerrainChanged -= OnChunkMeshTerrainChanged;
             chunkController.DeactivationCallback -= OnChunkDeactivationCallback;
 
             _Chunks.Remove(chunkPosition);
@@ -265,7 +265,7 @@ namespace Wyd.Controllers.World
                                 transform);
                         }
 
-                        chunkController.Changed += OnChunkMeshChanged;
+                        chunkController.TerrainChanged += OnChunkMeshTerrainChanged;
                         chunkController.DeactivationCallback += OnChunkDeactivationCallback;
 
                         chunkController.AssignLoader(ref loader);
@@ -322,7 +322,7 @@ namespace Wyd.Controllers.World
         }
 
 
-        private void OnChunkMeshChanged(object sender, ChunkChangedEventArgs args)
+        private void OnChunkMeshTerrainChanged(object sender, ChunkChangedEventArgs args)
         {
             FlagNeighborsForMeshUpdate(args.OriginPoint, args.NeighborDirectionsToUpdate);
 
