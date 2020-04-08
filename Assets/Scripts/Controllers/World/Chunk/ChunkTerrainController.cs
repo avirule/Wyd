@@ -170,16 +170,14 @@ namespace Wyd.Controllers.World.Chunk
                     {
                         BeginNoiseGeneration();
                         CurrentStep = CurrentStep.Next();
+                        break;
                     }
                     else
                     {
                         CurrentStep = GenerationData.GenerationStep.RawTerrain;
+                        break;
                     }
 
-                    break;
-                case GenerationData.GenerationStep.NoiseWaitFrameOne:
-                    CurrentStep = CurrentStep.Next();
-                    break;
                 case GenerationData.GenerationStep.RawTerrain:
                     BeginRawTerrainGeneration();
                     break;

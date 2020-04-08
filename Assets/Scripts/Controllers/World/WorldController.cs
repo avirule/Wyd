@@ -41,13 +41,16 @@ namespace Wyd.Controllers.World
         private Stack<IEntity> _EntitiesPendingChunkBuilding;
         private Stack<ChunkChangedEventArgs> _ChunksPendingDeactivation;
         private WorldSaveFileProvider _SaveFileProvider;
+        private bool _BuildingChunks;
 
         public CollisionLoaderController CollisionLoaderController;
         public string SeedString;
         public float TicksPerSecond;
 
         public bool ReadyForGeneration =>
-            (_EntitiesPendingChunkBuilding.Count == 0) && (_ChunksPendingDeactivation.Count == 0);
+            (_EntitiesPendingChunkBuilding.Count == 0)
+            && (_ChunksPendingDeactivation.Count == 0)
+            && !_BuildingChunks;
 
         public int ChunkRegionsActiveCount => _Chunks.Count;
         public int ChunkRegionsCachedCount => _ChunkCache.Size;
@@ -175,6 +178,8 @@ namespace Wyd.Controllers.World
         {
             while (_EntitiesPendingChunkBuilding.Count > 0)
             {
+                _BuildingChunks = true;
+
                 IEntity loader = _EntitiesPendingChunkBuilding.Pop();
                 BuildChunksAroundEntity(loader);
 
@@ -248,6 +253,7 @@ namespace Wyd.Controllers.World
                         if (!PerFrameUpdateController.Current.IsInSafeFrameTime())
                         {
                             _EntitiesPendingChunkBuilding.Push(loader);
+                            _BuildingChunks = false;
                             return;
                         }
 
@@ -277,15 +283,14 @@ namespace Wyd.Controllers.World
                         _Chunks.Add(position, chunkController);
 
                         Log.Verbose($"Created chunk at {position}.");
-
-                        // ensures that neighbours update their meshes to cull newly out of sight faces
-                        FlagNeighborsForMeshUpdate(position, Directions.AllDirectionAxes);
                     }
                 }
             }
+
+            _BuildingChunks = false;
         }
 
-        public void FlagNeighborsForMeshUpdate(int3 globalChunkPosition, IEnumerable<int3> directions)
+        private void FlagNeighborsForMeshUpdate(int3 globalChunkPosition, IEnumerable<int3> directions)
         {
             foreach (int3 normal in directions)
             {
@@ -293,7 +298,7 @@ namespace Wyd.Controllers.World
             }
         }
 
-        public void FlagChunkForUpdateMesh(int3 globalChunkPosition)
+        private void FlagChunkForUpdateMesh(int3 globalChunkPosition)
         {
             if (TryGetChunkAt(
                 WydMath.ToInt(WydMath.RoundBy(globalChunkPosition, WydMath.ToFloat(ChunkController.Size))),
