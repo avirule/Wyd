@@ -1,6 +1,7 @@
 #region
 
 using System.Linq;
+using System.Threading.Tasks;
 using Unity.Mathematics;
 using UnityEngine;
 using Wyd.Controllers.System;
@@ -183,8 +184,6 @@ namespace Wyd.Controllers.World.Chunk
             ChunkMeshingJob asyncJob = new ChunkMeshingJob(new GenerationData(_Volume, BlocksController.Blocks), true);
 
             QueueAsyncJob(asyncJob);
-
-            MeshState = GenerationData.MeshState.Meshing;
         }
 
         private void ApplyMesh(ChunkMeshingJob chunkMeshingJob)
@@ -197,7 +196,9 @@ namespace Wyd.Controllers.World.Chunk
         {
             asyncJob.WorkFinished += OnJobFinished;
 
-            JobScheduler.QueueAsyncJob(asyncJob).ConfigureAwait(false);
+            Task.Run(async () => await JobScheduler.QueueAsyncJob(asyncJob));
+
+            MeshState = GenerationData.MeshState.Meshing;
         }
 
         #region EVENTS

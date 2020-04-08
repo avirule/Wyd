@@ -1,6 +1,7 @@
 #region
 
 using System;
+using System.Threading.Tasks;
 using Unity.Mathematics;
 using UnityEngine;
 using Wyd.Controllers.State;
@@ -28,12 +29,29 @@ namespace Wyd.Controllers.World.Chunk
 
         #region INSTANCE MEMBERS
 
+        private object _GenerationStepHandle;
         private ComputeBuffer _NoiseBuffer;
 
         public GenerationData.GenerationStep CurrentStep
         {
-            get => InternalGenerationStep;
-            private set => InternalGenerationStep = value;
+            get
+            {
+                GenerationData.GenerationStep tmp;
+
+                lock (_GenerationStepHandle)
+                {
+                    tmp = GenerationStep;
+                }
+
+                return tmp;
+            }
+            private set
+            {
+                lock (_GenerationStepHandle)
+                {
+                    GenerationStep = value;
+                }
+            }
         }
 
         #endregion
@@ -44,7 +62,7 @@ namespace Wyd.Controllers.World.Chunk
         private ChunkBlocksController BlocksController;
 
         [SerializeField]
-        private GenerationData.GenerationStep InternalGenerationStep;
+        private GenerationData.GenerationStep GenerationStep;
 
 #if UNITY_EDITOR
 
@@ -66,6 +84,8 @@ namespace Wyd.Controllers.World.Chunk
         protected override void Awake()
         {
             base.Awake();
+
+            _GenerationStepHandle = new object();
 
             if (_noiseShader == null)
             {
@@ -136,7 +156,7 @@ namespace Wyd.Controllers.World.Chunk
         {
             asyncJob.WorkFinished += OnJobFinished;
 
-            JobScheduler.QueueAsyncJob(asyncJob).ConfigureAwait(false);
+            Task.Run(async () => await JobScheduler.QueueAsyncJob(asyncJob));
 
             CurrentStep = CurrentStep.Next();
         }
