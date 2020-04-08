@@ -16,7 +16,7 @@ namespace Wyd.System.Jobs
         Multi
     }
 
-    public static class JobScheduler
+    public static class AsyncJobScheduler
     {
         private static readonly CancellationTokenSource _AbortTokenSource;
         private static readonly AsyncCollection<AsyncJob> _AsyncJobQueue;
@@ -33,9 +33,9 @@ namespace Wyd.System.Jobs
         public static long ProcessingJobCount => Interlocked.Read(ref _processingJobCount);
 
         /// <summary>
-        ///     Initializes a new instance of <see cref="JobScheduler" /> class.
+        ///     Initializes a new instance of <see cref="AsyncJobScheduler" /> class.
         /// </summary>
-        static JobScheduler()
+        static AsyncJobScheduler()
         {
             ModifyWorkerThreadCount(Environment.ProcessorCount - 1 /* to facilitate main thread */);
 
@@ -122,12 +122,12 @@ namespace Wyd.System.Jobs
             catch (OperationCanceledException)
             {
                 // Thread aborted
-                Log.Warning($"{nameof(JobScheduler)} has critically aborted.");
+                Log.Warning($"{nameof(AsyncJobScheduler)} has critically aborted.");
             }
             catch (Exception ex)
             {
                 Log.Error(
-                    $"Error in {nameof(JobScheduler)}: {ex.Message}\r\n{ex.StackTrace}");
+                    $"Error in {nameof(AsyncJobScheduler)}: {ex.Message}\r\n{ex.StackTrace}");
             }
         }
 

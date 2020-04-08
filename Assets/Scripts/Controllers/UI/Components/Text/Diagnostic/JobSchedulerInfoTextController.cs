@@ -12,9 +12,9 @@ namespace Wyd.Controllers.UI.Components.Text.Diagnostic
 
         private void Start()
         {
-            JobScheduler.JobQueued += (sender, args) => _UpdateDiagInfo = true;
-            JobScheduler.JobStarted += (sender, args) => _UpdateDiagInfo = true;
-            JobScheduler.JobFinished += (sender, args) => _UpdateDiagInfo = true;
+            AsyncJobScheduler.JobQueued += (sender, args) => _UpdateDiagInfo = true;
+            AsyncJobScheduler.JobStarted += (sender, args) => _UpdateDiagInfo = true;
+            AsyncJobScheduler.JobFinished += (sender, args) => _UpdateDiagInfo = true;
             _UpdateDiagInfo = true;
         }
 
@@ -22,8 +22,8 @@ namespace Wyd.Controllers.UI.Components.Text.Diagnostic
         {
             if (_UpdateDiagInfo)
             {
-                TextObject.text = string.Format(Format, JobScheduler.WorkerThreadCount, JobScheduler.ProcessingJobCount,
-                    JobScheduler.JobsQueued);
+                TextObject.text = string.Format(Format, AsyncJobScheduler.WorkerThreadCount, AsyncJobScheduler.ProcessingJobCount,
+                    AsyncJobScheduler.JobsQueued);
 
                 _UpdateDiagInfo = false;
             }

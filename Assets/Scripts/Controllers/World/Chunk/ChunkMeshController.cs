@@ -195,7 +195,7 @@ namespace Wyd.Controllers.World.Chunk
         {
             asyncJob.WorkFinished += OnJobFinished;
 
-            Task.Run(async () => await JobScheduler.QueueAsyncJob(asyncJob));
+            Task.Run(async () => await AsyncJobScheduler.QueueAsyncJob(asyncJob));
 
             MeshState = MeshState.Meshing;
         }

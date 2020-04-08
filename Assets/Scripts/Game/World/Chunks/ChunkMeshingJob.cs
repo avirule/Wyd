@@ -32,7 +32,7 @@ namespace Wyd.Game.World.Chunks
         protected override Task Process()
         {
             ChunkMesher mesher = _ChunkMesherCache.Retrieve() ?? new ChunkMesher();
-            mesher.SetData(_OriginPoint, _Blocks, JobScheduler.AbortToken, _AggressiveFaceMerging);
+            mesher.SetData(_OriginPoint, _Blocks, AsyncJobScheduler.AbortToken, _AggressiveFaceMerging);
             mesher.ClearExistingData();
             mesher.GenerateMesh();
 
