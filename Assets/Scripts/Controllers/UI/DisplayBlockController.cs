@@ -5,7 +5,6 @@ using TMPro;
 using Unity.Mathematics;
 using UnityEngine;
 using Wyd.Controllers.State;
-using Wyd.Controllers.World;
 using Wyd.Game;
 using Wyd.Game.Entities.Inventory;
 using Wyd.Game.World.Blocks;

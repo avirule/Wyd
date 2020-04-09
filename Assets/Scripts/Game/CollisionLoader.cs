@@ -11,7 +11,6 @@ using Wyd.Game.World.Blocks;
 using Wyd.Game.World.Chunks.Events;
 using Wyd.System;
 using Wyd.System.Collections;
-using NotImplementedException = System.NotImplementedException;
 
 #endregion
 

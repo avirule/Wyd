@@ -1,6 +1,5 @@
 #region
 
-using System;
 using System.Linq;
 using UnityEngine;
 using Wyd.Controllers.State;
