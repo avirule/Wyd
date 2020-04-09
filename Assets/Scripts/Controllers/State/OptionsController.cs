@@ -11,7 +11,6 @@ using Serilog;
 using SharpConfig;
 using UnityEngine;
 using Wyd.Graphics;
-using Wyd.System.Jobs;
 
 #endregion
 
@@ -52,13 +51,14 @@ namespace Wyd.Controllers.State
             public const int PRE_LOAD_CHUNK_DISTANCE = 1;
         }
 
-        public const int MAXIMUM_RENDER_DISTANCE = 32;
+        public const int MAXIMUM_RENDER_DISTANCE = 16;
 
         public static string ConfigPath { get; private set; }
         public TimeSpan TargetFrameRateTimeSpan { get; private set; }
 
         public static readonly WindowMode MaximumWindowModeValue =
             Enum.GetValues(typeof(WindowMode)).Cast<WindowMode>().Last();
+
 
         #region PRIVATE FIELDS
 
@@ -207,6 +207,7 @@ namespace Wyd.Controllers.State
 
         #endregion
 
+
         public event PropertyChangedEventHandler PropertyChanged;
 
         private void Awake()
@@ -238,7 +239,7 @@ namespace Wyd.Controllers.State
 
             if (!GetSetting("General", nameof(RenderDistance), out _RenderDistance)
                 || (RenderDistance < 0)
-                || (RenderDistance > 48))
+                || (RenderDistance > MAXIMUM_RENDER_DISTANCE))
             {
                 LogSettingLoadError(nameof(RenderDistance), Defaults.RENDER_DISTANCE);
                 RenderDistance = Defaults.RENDER_DISTANCE;
@@ -247,7 +248,7 @@ namespace Wyd.Controllers.State
 
             if (!GetSetting("General", nameof(ShadowDistance), out _ShadowDistance)
                 || (ShadowDistance < 0)
-                || (ShadowDistance > 48))
+                || (ShadowDistance > MAXIMUM_RENDER_DISTANCE))
             {
                 LogSettingLoadError(nameof(ShadowDistance), Defaults.SHADOW_DISTANCE);
                 ShadowDistance = Defaults.SHADOW_DISTANCE;
@@ -255,8 +256,8 @@ namespace Wyd.Controllers.State
             }
 
             if (!GetSetting("General", nameof(MaximumDiagnosticBuffersSize), out _MaximumDiagnosticBuffersSize)
-                || MaximumDiagnosticBuffersSize < 30
-                || MaximumDiagnosticBuffersSize > 6000)
+                || (MaximumDiagnosticBuffersSize < 30)
+                || (MaximumDiagnosticBuffersSize > 6000))
             {
                 LogSettingLoadError(nameof(MaximumDiagnosticBuffersSize), Defaults.MAXIMUM_DIAGNOSTIC_BUFFERS_LENGTH);
                 MaximumDiagnosticBuffersSize = Defaults.MAXIMUM_DIAGNOSTIC_BUFFERS_LENGTH;
@@ -266,8 +267,8 @@ namespace Wyd.Controllers.State
             // Graphics
 
             if (!GetSetting("Graphics", nameof(TargetFrameRate), out _TargetFrameRate)
-                || (TargetFrameRate < 0)
-                || (TargetFrameRate > 120))
+                || (TargetFrameRate < 15)
+                || (TargetFrameRate > 300))
             {
                 LogSettingLoadError(nameof(TargetFrameRate), Defaults.TARGET_FRAME_RATE);
                 TargetFrameRate = Defaults.TARGET_FRAME_RATE;
@@ -276,7 +277,7 @@ namespace Wyd.Controllers.State
 
             TargetFrameRateTimeSpan = TimeSpan.FromSeconds(1d / TargetFrameRate);
 
-            if (!GetSetting("Graphics", nameof(VSyncLevel), out int vSyncLevel) || (vSyncLevel < 0) || (vSyncLevel > 4))
+            if (!GetSetting("Graphics", nameof(VSyncLevel), out int vSyncLevel) || (vSyncLevel < 0) || (vSyncLevel > 1))
             {
                 LogSettingLoadError(nameof(vSyncLevel), Defaults.VSYNC_LEVEL);
                 VSyncLevel = Defaults.VSYNC_LEVEL;
@@ -304,7 +305,8 @@ namespace Wyd.Controllers.State
             // Chunking
 
             if (!GetSetting("Chunking", nameof(PreLoadChunkDistance), out _PreLoadChunkDistance)
-                || (PreLoadChunkDistance < 0))
+                || (PreLoadChunkDistance < 0)
+                || (PreLoadChunkDistance > 4))
             {
                 LogSettingLoadError(nameof(PreLoadChunkDistance), Defaults.PRE_LOAD_CHUNK_DISTANCE);
                 PreLoadChunkDistance = Defaults.PRE_LOAD_CHUNK_DISTANCE;
@@ -323,31 +325,40 @@ namespace Wyd.Controllers.State
             // General
 
             _Configuration["General"][nameof(GPUAcceleration)].PreComment =
-                "Determines whether the GPU will be more heavily utilized to increase overall performance.\r\n"
-                + "Turning this off will create more work for the CPU.";
+                "Determines whether the GPU will be used for operations other than rendering.\r\n"
+                + "Note: disabling this will create more work for the CPU.";
             _Configuration["General"][nameof(GPUAcceleration)].BoolValue = Defaults.GPU_ACCELERATION;
 
             _Configuration["General"][nameof(ShadowDistance)].PreComment =
                 "Defines radius in chunks around player to draw shadows.";
-            _Configuration["General"][nameof(ShadowDistance)].Comment = "(min 1, max 48)";
+            _Configuration["General"][nameof(ShadowDistance)].Comment = $"(min 1, max {MAXIMUM_RENDER_DISTANCE})";
             _Configuration["General"][nameof(ShadowDistance)].IntValue = Defaults.SHADOW_DISTANCE;
 
             _Configuration["General"][nameof(RenderDistance)].PreComment =
                 "Defines radius in regions around player to load chunks.";
-            _Configuration["General"][nameof(RenderDistance)].Comment = "(min 1, max 48)";
+            _Configuration["General"][nameof(RenderDistance)].Comment = $"(min 1, max {MAXIMUM_RENDER_DISTANCE})";
             _Configuration["General"][nameof(RenderDistance)].IntValue = Defaults.RENDER_DISTANCE;
+
+            _Configuration["General"][nameof(MaximumDiagnosticBuffersSize)].PreComment =
+                "Determines maximum length of internal buffers used to allocate diagnostic data.";
+            _Configuration["General"][nameof(MaximumDiagnosticBuffersSize)].Comment = "(min 30, max 6000)";
+            _Configuration["General"][nameof(MaximumDiagnosticBuffersSize)].IntValue =
+                Defaults.MAXIMUM_DIAGNOSTIC_BUFFERS_LENGTH;
+
 
             // Graphics
 
             _Configuration["Graphics"][nameof(TargetFrameRate)].PreComment =
-                "Minimum number of frames internal systems will target to lapse during updates.";
+                "Target FPS internal updaters will attempt to maintain.\r\n"
+                + "Note: this is a soft limitation. Some operations will blatantly exceed the internal time constraint.";
             _Configuration["Graphics"][nameof(TargetFrameRate)].Comment =
-                "Higher values decrease overall CPU stress (min 15, max 120).";
+                "Higher values decrease overall CPU stress (min 15, max 300).";
             _Configuration["Graphics"][nameof(TargetFrameRate)].IntValue =
                 Defaults.TARGET_FRAME_RATE;
 
             _Configuration["Graphics"][nameof(VSyncLevel)].PreComment =
-                "Each level increases the number of screen updates to wait before rendering to the screen.";
+                "When enabled, internal update loop will sleep until enough time has passed to synchronize with monitor framerate.\r\n"
+                + "Note: this introduces one frame of delay.";
             _Configuration["Graphics"][nameof(VSyncLevel)].Comment = "(0 = Disabled, 1 = Enabled)";
             _Configuration["Graphics"][nameof(VSyncLevel)].IntValue = Defaults.VSYNC_LEVEL;
 
@@ -359,8 +370,9 @@ namespace Wyd.Controllers.State
             // Chunking
 
             _Configuration["Chunking"][nameof(PreLoadChunkDistance)].PreComment =
-                "Defines radius of chunks to pre-load.\r\n"
-                + "This distance begins at the edge of the render distance.";
+                "Defines radius of chunks to pre-load (generate terrain data in-memory, but avoid meshing and rendering).\r\n"
+                + "Note: This distance begins at the edge of the render distance.";
+            _Configuration["Chunking"][nameof(PreLoadChunkDistance)].Comment = "(min 0, max 4)";
             _Configuration["Chunking"][nameof(PreLoadChunkDistance)].IntValue =
                 Defaults.PRE_LOAD_CHUNK_DISTANCE;
 
