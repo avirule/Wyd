@@ -33,19 +33,19 @@ namespace Wyd.Controllers.UI.Components.Text
             _UpdateTimer = Stopwatch.StartNew();
         }
 
-        protected void OnEnable()
+        private void OnEnable()
         {
             PerFrameUpdateController.Current.RegisterPerFrameUpdater(150, this);
         }
 
-        protected void OnDisable()
+        private void OnDisable()
         {
             PerFrameUpdateController.Current.DeregisterPerFrameUpdater(150, this);
         }
 
         public virtual void FrameUpdate()
         {
-            if (_UpdateTimer.Elapsed < _UpdatesPerSecondTimeSpan)
+            if ((_UpdateTimer == null) || (_UpdateTimer.Elapsed < _UpdatesPerSecondTimeSpan))
             {
                 return;
             }

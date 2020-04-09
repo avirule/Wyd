@@ -54,7 +54,7 @@ namespace Wyd.Controllers.System
                 // verbose log output
                 .WriteTo.Async(configuration =>
                     configuration.File(
-                        $@"{_logPath}\runtime-verbose_.log",
+                        $@"{_logPath}\verbose\runtime-verbose_.log",
                         rollingInterval: RollingInterval.Day,
                         outputTemplate: _DEFAULT_TEMPLATE,
                         retainedFileCountLimit: 31,
@@ -62,16 +62,16 @@ namespace Wyd.Controllers.System
                 // default log output
                 .WriteTo.Async(configuration =>
                     configuration.File(
-                        $@"{_logPath}\runtime_.log",
+                        $@"{_logPath}\info\runtime_.log",
                         rollingInterval: RollingInterval.Day,
                         outputTemplate: _DEFAULT_TEMPLATE,
                         retainedFileCountLimit: 31,
                         rollOnFileSizeLimit: true,
-                        restrictedToMinimumLevel: LogEventLevel.Debug))
+                        restrictedToMinimumLevel: LogEventLevel.Information))
                 // error log output
                 .WriteTo.Async(configuration =>
                     configuration.File(
-                        $@"{_logPath}\runtime-error_.log",
+                        $@"{_logPath}\error\runtime-error_.log",
                         rollingInterval: RollingInterval.Day,
                         outputTemplate: _DEFAULT_TEMPLATE,
                         retainedFileCountLimit: 31,

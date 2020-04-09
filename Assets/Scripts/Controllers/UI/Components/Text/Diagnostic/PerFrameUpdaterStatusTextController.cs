@@ -12,7 +12,7 @@ namespace Wyd.Controllers.UI.Components.Text.Diagnostic
     {
         private const int _STALL_THRESHOLD = 10;
 
-        private int _StalledFrames;
+        private int _UnityUpdateCounter;
         private bool _TextNotifiesStalled;
 
         protected override void Awake()
@@ -34,16 +34,23 @@ namespace Wyd.Controllers.UI.Components.Text.Diagnostic
 
         private void Update()
         {
-            _StalledFrames += 1;
+            if ((_UnityUpdateCounter >= _STALL_THRESHOLD) && !_TextNotifiesStalled)
+            {
+                UpdateText(true);
+            }
+            else if ((_UnityUpdateCounter == 0) && _TextNotifiesStalled)
+            {
+                UpdateText(false);
+            }
 
-            UpdateText((_StalledFrames >= _STALL_THRESHOLD) && !_TextNotifiesStalled);
+            _UnityUpdateCounter += 1;
         }
 
         public void FrameUpdate()
         {
             if (PerFrameUpdateController.Current.IsSafeFrameTime())
             {
-                _StalledFrames = 0;
+                _UnityUpdateCounter = 0;
             }
         }
 

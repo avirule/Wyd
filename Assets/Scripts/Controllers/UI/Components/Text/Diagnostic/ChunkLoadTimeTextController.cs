@@ -15,14 +15,6 @@ namespace Wyd.Controllers.UI.Components.Text.Diagnostic
         private double _RecentTerrainGenerationTime;
         private double _RecentMeshingSetBlockTime;
         private double _RecentMeshingTime;
-        private bool _TextRequiresUpdate;
-
-        protected override void Awake()
-        {
-            base.Awake();
-
-            _TextRequiresUpdate = true;
-        }
 
         protected override void TimedUpdate()
         {
