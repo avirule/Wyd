@@ -53,8 +53,7 @@ namespace Wyd.System.Collections
 
         public void Populate()
         {
-            float offsetValue = _Volume.Extents.x / 2f;
-            float3 offset = new float3(offsetValue);
+            float3 offset = new float3(_Volume.Extents / 2f);
 
             _Nodes.Clear();
 

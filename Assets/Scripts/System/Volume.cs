@@ -9,18 +9,16 @@ namespace Wyd.System
     public class Volume
     {
         public float3 CenterPoint { get; }
-        public float3 MinPoint { get; }
-        public float3 MaxPoint { get; }
         public float3 Extents { get; }
-        public float3 Size { get; }
+
+        public float3 MinPoint => CenterPoint - Extents;
+        public float3 MaxPoint => CenterPoint + Extents;
+        public float3 Size => Extents * 2f;
 
         public Volume(float3 centerPoint, float3 size)
         {
             CenterPoint = centerPoint;
-            Size = size;
-            Extents = Size / 2f;
-            MinPoint = CenterPoint - Extents;
-            MaxPoint = CenterPoint + Extents;
+            Extents = size / 2f;
         }
 
         public bool Contains(float3 point) => math.all(point > MinPoint) && math.all(point < MaxPoint);

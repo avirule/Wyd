@@ -17,12 +17,12 @@ namespace Wyd.Game.World.Chunks
     {
         private readonly CancellationToken _CancellationToken;
         private readonly float3 _OriginPoint;
-        private readonly OctreeNode _Blocks;
         private readonly bool _AggressiveFaceMerging;
 
+        private OctreeNode _Blocks;
         private ChunkMesher _Mesher;
 
-        public ChunkMeshingJob(CancellationToken cancellationToken, float3 originPoint, OctreeNode blocks,
+        public ChunkMeshingJob(CancellationToken cancellationToken, float3 originPoint, ref OctreeNode blocks,
             bool aggressiveFaceMerging) : base(cancellationToken)
         {
             _CancellationToken = cancellationToken;
@@ -33,7 +33,7 @@ namespace Wyd.Game.World.Chunks
 
         protected override Task Process()
         {
-            _Mesher = new ChunkMesher(_CancellationToken, _OriginPoint, _Blocks, AsyncJobScheduler.AbortToken,
+            _Mesher = new ChunkMesher(_CancellationToken, _OriginPoint, ref _Blocks, AsyncJobScheduler.AbortToken,
                 _AggressiveFaceMerging);
             _Mesher.GenerateMesh();
 
