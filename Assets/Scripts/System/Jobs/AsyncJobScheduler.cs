@@ -37,7 +37,7 @@ namespace Wyd.System.Jobs
         /// </summary>
         static AsyncJobScheduler()
         {
-            ModifyWorkerThreadCount(Environment.ProcessorCount - 1 /* to facilitate main thread */);
+            ModifyWorkerThreadCount(Environment.ProcessorCount - 2 /* to facilitate main thread */);
 
             _AsyncJobQueue = new AsyncCollection<AsyncJob>();
             _AbortTokenSource = new CancellationTokenSource();

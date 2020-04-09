@@ -8,11 +8,11 @@ namespace Wyd.System
 {
     public struct Volume
     {
-        public float3 CenterPoint { get; private set; }
-        public float3 MinPoint { get; private set; }
-        public float3 MaxPoint { get; private set; }
-        public float3 Extents { get; private set; }
-        public float3 Size { get; private set; }
+        public float3 CenterPoint { get; }
+        public float3 MinPoint { get; }
+        public float3 MaxPoint { get; }
+        public float3 Extents { get; }
+        public float3 Size { get; }
 
         public Volume(float3 centerPoint, float3 size)
         {
@@ -21,15 +21,6 @@ namespace Wyd.System
             Extents = Size / 2f;
             MinPoint = CenterPoint - Extents;
             MaxPoint = CenterPoint + Extents;
-        }
-
-        public void SetMinMaxPoints(float3 minPoint, float3 maxPoint)
-        {
-            MinPoint = minPoint;
-            MaxPoint = maxPoint;
-            Size = MaxPoint - MinPoint;
-            Extents = Size / 2f;
-            CenterPoint = MinPoint + Extents;
         }
 
         public bool Contains(float3 point) => math.all(point > MinPoint) && math.all(point < MaxPoint);

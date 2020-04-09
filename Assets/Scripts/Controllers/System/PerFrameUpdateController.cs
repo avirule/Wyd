@@ -28,7 +28,7 @@ namespace Wyd.Controllers.System
         private SortedList<int, List<IPerFrameUpdate>> _PerFrameUpdates;
         private Stack<PerFrameUpdateCollectionModification> _PerFrameUpdateCollectionModifications;
 
-        public bool IsInSafeFrameTime() => _FrameTimer.Elapsed <= OptionsController.Current.MaximumInternalFrameTime;
+        public bool IsSafeFrameTime() => _FrameTimer.Elapsed <= OptionsController.Current.MaximumInternalFrameTime;
 
         private void Awake()
         {
@@ -66,23 +66,21 @@ namespace Wyd.Controllers.System
 
                     foreach (IPerFrameUpdate perFrameUpdate in perFrameUpdaters)
                     {
-                        if (!IsInSafeFrameTime())
+                        if (!IsSafeFrameTime())
                         {
                             return;
                         }
 
                         perFrameUpdate.FrameUpdate();
 
-                        if (!(perFrameUpdate is IPerFrameIncrementalUpdate perFrameIncrementalUpdate))
+                        if (perFrameUpdate is IPerFrameIncrementalUpdate perFrameIncrementalUpdate)
                         {
-                            continue;
-                        }
-
-                        foreach (object _ in perFrameIncrementalUpdate.IncrementalFrameUpdate())
-                        {
-                            if (!IsInSafeFrameTime())
+                            foreach (object _ in perFrameIncrementalUpdate.IncrementalFrameUpdate())
                             {
-                                return;
+                                if (!IsSafeFrameTime())
+                                {
+                                    return;
+                                }
                             }
                         }
                     }
