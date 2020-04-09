@@ -31,51 +31,44 @@ namespace Wyd.Controllers.World
     public class WorldController : SingletonController<WorldController>, IPerFrameIncrementalUpdate
     {
         public const float WORLD_HEIGHT = 256f;
+
         public static readonly float WorldHeightInChunks = math.floor(WORLD_HEIGHT / ChunkController.Size.y);
 
-#if UNITY_EDITOR
-
-        private Mesh _Mesh;
-
-        public MeshFilter MeshFilter;
-        public MeshRenderer MeshRenderer;
-
-#endif
+        #region Serialized Members
 
         public CollisionLoaderController CollisionLoaderController;
         public ChunkController ChunkControllerPrefab;
         public string SeedString;
-        public float TicksPerSecond;
+
+        #endregion
 
 
-        private object _VerifyChunkStatesHandle;
-        private Dictionary<float3, ChunkController> _Chunks;
         private ObjectCache<ChunkController> _ChunkCache;
+        private Dictionary<float3, ChunkController> _Chunks;
         private ConcurrentStack<PendingChunkActivation> _ChunksPendingActivation;
         private ConcurrentStack<float3> _ChunksPendingDeactivation;
         private List<IEntity> _EntityLoaders;
-        private WorldSaveFileProvider _SaveFileProvider;
-        private bool _LoaderChangedChunk;
-        private bool _VerifyingChunkStates;
+        private object _WorldStateHandle;
+        private WorldState _WorldState;
 
-        public bool VerifyingChunkStates
+        public WorldState WorldState
         {
             get
             {
-                bool tmp;
+                WorldState tmp;
 
-                lock (_VerifyChunkStatesHandle)
+                lock (_WorldStateHandle)
                 {
-                    tmp = _VerifyingChunkStates;
+                    tmp = _WorldState;
                 }
 
                 return tmp;
             }
             set
             {
-                lock (_VerifyChunkStatesHandle)
+                lock (_WorldStateHandle)
                 {
-                    _VerifyingChunkStates = value;
+                    _WorldState = value;
                 }
             }
         }
@@ -83,7 +76,7 @@ namespace Wyd.Controllers.World
         public bool ReadyForGeneration =>
             (_ChunksPendingActivation.Count == 0)
             && (_ChunksPendingDeactivation.Count == 0)
-            && !VerifyingChunkStates;
+            && !WorldState.HasFlag(WorldState.VerifyingState);
 
         public int ChunksQueuedCount => _ChunksPendingActivation.Count;
         public int ChunksActiveCount => _Chunks.Count;
@@ -97,13 +90,6 @@ namespace Wyd.Controllers.World
 
         public FixedConcurrentQueue<TimeSpan> ChunkStateVerificationTimes { get; private set; }
         public WorldSeed Seed { get; private set; }
-        public long InitialTick { get; private set; }
-        public TimeSpan WorldTickRate { get; private set; }
-        public Material TerrainMaterial { get; private set; }
-
-        /// <summary>
-        ///     X,Z point in the world for spawning the player.
-        /// </summary>
         public int3 SpawnPoint { get; private set; }
 
         public event EventHandler<ChunkChangedEventArgs> ChunkMeshChanged;
@@ -111,10 +97,7 @@ namespace Wyd.Controllers.World
         private void Awake()
         {
             AssignSingletonInstance(this);
-            SetTickRate();
 
-            _VerifyChunkStatesHandle = new object();
-            _EntityLoaders = new List<IEntity>();
             _ChunkCache = new ObjectCache<ChunkController>(false, -1,
                 (ref ChunkController chunkController) =>
                 {
@@ -128,21 +111,20 @@ namespace Wyd.Controllers.World
                 (ref ChunkController chunkController) =>
                     Destroy(chunkController.gameObject));
 
-            Seed = new WorldSeed(SeedString);
             _Chunks = new Dictionary<float3, ChunkController>();
             _ChunksPendingActivation = new ConcurrentStack<PendingChunkActivation>();
             _ChunksPendingDeactivation = new ConcurrentStack<float3>();
-            _SaveFileProvider = new WorldSaveFileProvider("world");
-            _SaveFileProvider.Initialise().ConfigureAwait(false);
+            _EntityLoaders = new List<IEntity>();
+            _WorldStateHandle = new object();
+
+            Seed = new WorldSeed(SeedString);
         }
 
         private void Start()
         {
-            _ChunkCache.MaximumSize = OptionsController.Current.MaximumChunkCacheSize;
-
-            TerrainMaterial = SystemController.LoadResource<Material>(@"Materials\TerrainMaterial");
-            TerrainMaterial.SetTexture(TextureController.MainTexPropertyID,
-                TextureController.Current.TerrainTexture);
+            int totalRenderDistance =
+                OptionsController.Current.RenderDistance + OptionsController.Current.PreLoadChunkDistance + 1;
+            _ChunkCache.MaximumSize = (totalRenderDistance * 2) - 1;
 
             EntityController.Current.RegisterWatchForTag(RegisterCollideableEntity, "collider");
             EntityController.Current.RegisterWatchForTag(RegisterLoaderEntity, "loader");
@@ -150,40 +132,7 @@ namespace Wyd.Controllers.World
             SpawnPoint = WydMath.IndexTo3D(Seed, new int3(int.MaxValue, int.MaxValue, int.MaxValue));
 
             ChunkStateVerificationTimes =
-                new FixedConcurrentQueue<TimeSpan>(OptionsController.Current.MaximumChunkLoadTimeBufferSize);
-
-            if (OptionsController.Current.PreInitializeChunkCache)
-            {
-                InitialiseChunkCache();
-            }
-
-            // _Mesh = new Mesh();
-            // MeshFilter.sharedMesh = _Mesh;
-            // MeshRenderer.material.SetTexture(TextureController.MainTexPropertyID, TextureController.Current.TerrainTexture);
-            //
-            // List<Vector3> vertices = new List<Vector3>();
-            // List<int> triangles = new List<int>();
-            // List<Vector3> uvs = new List<Vector3>();
-            //
-            // Vector3[] verts = BlockFaces.Vertices.North;
-            // Vector3[] uvsApply = {
-            //     new Vector3(1, 0, 0),
-            //     new Vector3(1, 1, 0),
-            //     new Vector3(0, 0, 0),
-            //     new Vector3(0, 1, 0),
-            // };
-            //
-            // for (int i = 0; i < TextureController.Current.TerrainTexture.depth; i++)
-            // {
-            //     triangles.AddRange(BlockFaces.Triangles.North.Select(tri => tri + vertices.Count));
-            //     vertices.AddRange(verts.Select(vert => vert + Vector3.forward * i));
-            //     uvs.AddRange(uvsApply.Select(uv => uv + Vector3.forward * i));
-            // }
-            //
-            // _Mesh.SetVertices(vertices);
-            // _Mesh.SetTriangles(triangles, 0);
-            // _Mesh.SetUVs(0, uvs);
-            // _Mesh.Optimize();
+                new FixedConcurrentQueue<TimeSpan>(OptionsController.Current.MaximumDiagnosticBuffersSize);
         }
 
         private void OnEnable()
@@ -196,20 +145,14 @@ namespace Wyd.Controllers.World
             PerFrameUpdateController.Current.DeregisterPerFrameUpdater(10, this);
         }
 
-        private void OnApplicationQuit()
-        {
-            WorldSaveFileProvider.ApplicationQuit();
-            _SaveFileProvider.Dispose();
-        }
-
         public void FrameUpdate() { }
 
         public IEnumerable IncrementalFrameUpdate()
         {
-            if (_LoaderChangedChunk)
+            if (WorldState.HasFlag(WorldState.RequiresStateVerification))
             {
                 Task.Run(VerifyAllChunkStatesAroundLoaders);
-                _LoaderChangedChunk = false;
+                WorldState &= ~WorldState.RequiresStateVerification;
             }
 
             while (_ChunksPendingActivation.Count > 0)
@@ -273,33 +216,13 @@ namespace Wyd.Controllers.World
         }
 
 
-        #region TICKS / TIME
-
-        private void SetTickRate()
-        {
-            if (TicksPerSecond < 1)
-            {
-                Log.Error(
-                    "World tick rate cannot be set to less than 1tick/s. Exiting game.");
-                GameController.ApplicationClose();
-                return;
-            }
-
-            WorldTickRate = TimeSpan.FromSeconds(1d / TicksPerSecond);
-
-            InitialTick = DateTime.Now.Ticks;
-        }
-
-        #endregion
-
-
         #region CHUNK BUILDING
 
         private void VerifyAllChunkStatesAroundLoaders()
         {
             Stopwatch stopwatch = Stopwatch.StartNew();
 
-            VerifyingChunkStates = true;
+            WorldState |= WorldState.VerifyingState;
             List<float3> chunksRequiringDeactivation = new List<float3>();
 
             // get total list of out of bounds chunks
@@ -349,7 +272,7 @@ namespace Wyd.Controllers.World
                 _ChunksPendingDeactivation.Push(origin);
             }
 
-            VerifyingChunkStates = false;
+            WorldState &= ~WorldState.VerifyingState;
             ChunkStateVerificationTimes.Enqueue(stopwatch.Elapsed);
             stopwatch.Reset();
         }
@@ -419,20 +342,6 @@ namespace Wyd.Controllers.World
         private static bool IsWithinShadowsDistance(float3 difference) =>
             math.all(difference <= (ChunkController.Size * OptionsController.Current.ShadowDistance));
 
-        private static IEnumerable<int3> GetFlattenedOriginMatrixByRenderDistance()
-        {
-            int renderDistanceDiameter = (OptionsController.Current.RenderDistance * 2) + 1;
-            int3 renderDistanceBounds =
-                new int3(renderDistanceDiameter, (int)WorldHeightInChunks, renderDistanceDiameter);
-            int3 offset = new int3(renderDistanceBounds.x / 2, 0, renderDistanceBounds.z / 2);
-
-
-            for (int index = 0; index < WydMath.Product(renderDistanceBounds); index++)
-            {
-                yield return ChunkController.Size * (WydMath.IndexTo3D(index, renderDistanceBounds) - offset);
-            }
-        }
-
         #endregion
 
         #region EVENTS
@@ -454,8 +363,8 @@ namespace Wyd.Controllers.World
                 return;
             }
 
-            loader.ChunkPositionChanged += (sender, position) => _LoaderChangedChunk = true;
-            _LoaderChangedChunk = true;
+            loader.ChunkPositionChanged += (sender, position) => WorldState |= WorldState.RequiresStateVerification;
+            WorldState |= WorldState.RequiresStateVerification;
             _EntityLoaders.Add(loader);
         }
 
@@ -575,22 +484,6 @@ namespace Wyd.Controllers.World
             }
 
             return generationStep;
-        }
-
-        #endregion
-
-
-        #region MISC
-
-        private void InitialiseChunkCache()
-        {
-            for (int i = 0; i < (OptionsController.Current.MaximumChunkCacheSize / 2); i++)
-            {
-                ChunkController chunkController =
-                    Instantiate(ChunkControllerPrefab, float3.zero, Quaternion.identity, transform);
-                chunkController.gameObject.SetActive(false);
-                _ChunkCache.CacheItem(ref chunkController);
-            }
         }
 
         #endregion

@@ -74,7 +74,7 @@ namespace Wyd.Controllers.State
         private int _MaximumFrameRateBufferSize;
         private bool _PreInitializeChunkCache;
         private int _MaximumChunkCacheSize;
-        private int _MaximumChunkLoadTimeBufferSize;
+        private int _MaximumDiagnosticBuffersSize;
         private int _PreLoadChunkDistance;
         private int _ShadowDistance;
         private int _RenderDistance;
@@ -250,14 +250,14 @@ namespace Wyd.Controllers.State
             }
         }
 
-        public int MaximumChunkLoadTimeBufferSize
+        public int MaximumDiagnosticBuffersSize
         {
-            get => _MaximumChunkLoadTimeBufferSize;
+            get => _MaximumDiagnosticBuffersSize;
             set
             {
-                _MaximumChunkLoadTimeBufferSize = value;
-                _Configuration["Chunking"][nameof(MaximumChunkLoadTimeBufferSize)].IntValue =
-                    _MaximumChunkLoadTimeBufferSize;
+                _MaximumDiagnosticBuffersSize = value;
+                _Configuration["Chunking"][nameof(MaximumDiagnosticBuffersSize)].IntValue =
+                    _MaximumDiagnosticBuffersSize;
                 SaveSettings();
                 OnPropertyChanged();
             }
@@ -405,13 +405,13 @@ namespace Wyd.Controllers.State
                 SaveSettings();
             }
 
-            if (!GetSetting("Chunking", nameof(MaximumChunkLoadTimeBufferSize), out _MaximumChunkLoadTimeBufferSize)
+            if (!GetSetting("Chunking", nameof(MaximumDiagnosticBuffersSize), out _MaximumDiagnosticBuffersSize)
                 || (MaximumFrameRateBufferSize < 1)
-                || (MaximumChunkLoadTimeBufferSize > 6000))
+                || (MaximumDiagnosticBuffersSize > 6000))
             {
-                LogSettingLoadError(nameof(MaximumChunkLoadTimeBufferSize),
+                LogSettingLoadError(nameof(MaximumDiagnosticBuffersSize),
                     Defaults.MAXIMUM_CHUNK_LOAD_TIME_BUFFER_SIZE);
-                MaximumChunkLoadTimeBufferSize = Defaults.MAXIMUM_CHUNK_LOAD_TIME_BUFFER_SIZE;
+                MaximumDiagnosticBuffersSize = Defaults.MAXIMUM_CHUNK_LOAD_TIME_BUFFER_SIZE;
                 SaveSettings();
             }
 
@@ -498,11 +498,11 @@ namespace Wyd.Controllers.State
             _Configuration["Chunking"][nameof(MaximumChunkCacheSize)].IntValue =
                 Defaults.MAXIMUM_CHUNK_CACHE_SIZE;
 
-            _Configuration["Chunking"][nameof(MaximumChunkLoadTimeBufferSize)].PreComment =
+            _Configuration["Chunking"][nameof(MaximumDiagnosticBuffersSize)].PreComment =
                 "Lower values give a more accurate frame-to-frame reading, with higher\r\n"
                 + "values giving more long-term accuracy.";
-            _Configuration["Chunking"][nameof(MaximumChunkLoadTimeBufferSize)].Comment = "(min 1, max 6000)";
-            _Configuration["Chunking"][nameof(MaximumChunkLoadTimeBufferSize)].IntValue =
+            _Configuration["Chunking"][nameof(MaximumDiagnosticBuffersSize)].Comment = "(min 1, max 6000)";
+            _Configuration["Chunking"][nameof(MaximumDiagnosticBuffersSize)].IntValue =
                 Defaults.MAXIMUM_CHUNK_LOAD_TIME_BUFFER_SIZE;
 
             _Configuration["Chunking"][nameof(PreLoadChunkDistance)].PreComment =

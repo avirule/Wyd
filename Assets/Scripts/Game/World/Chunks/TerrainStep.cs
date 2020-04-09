@@ -1,5 +1,8 @@
+using System;
+
 namespace Wyd.Game.World.Chunks
 {
+    [Flags]
     public enum TerrainStep : byte
     {
         RawTerrain = 0b0000_0001,
