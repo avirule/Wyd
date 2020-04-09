@@ -7,9 +7,9 @@ using Wyd.Controllers.Entity;
 
 namespace Wyd.Controllers.UI.Components.Text.Diagnostic
 {
-    public class PlayerPositionTextController : FormattedTextController
+    public class PlayerPositionTextController : UpdatingFormattedTextController
     {
-        private bool _UpdateTextOnNextFrame;
+        private bool _TextRequiresUpdate;
 
         private void Start()
         {
@@ -17,24 +17,21 @@ namespace Wyd.Controllers.UI.Components.Text.Diagnostic
             {
                 UpdateText(PlayerController.Current.Position, PlayerController.Current.ChunkPosition);
 
-                PlayerController.Current.PositionChanged += (sender, position) => { _UpdateTextOnNextFrame = true; };
-                PlayerController.Current.ChunkPositionChanged += (sender, position) =>
-                {
-                    _UpdateTextOnNextFrame = true;
-                };
+                PlayerController.Current.PositionChanged += (sender, position) => { _TextRequiresUpdate = true; };
+                PlayerController.Current.ChunkPositionChanged += (sender, position) => { _TextRequiresUpdate = true; };
             }
         }
 
-        private void Update()
+        protected override void TimedUpdate()
         {
-            if (!_UpdateTextOnNextFrame)
+            if (!_TextRequiresUpdate)
             {
                 return;
             }
 
             UpdateText(PlayerController.Current.Position, PlayerController.Current.ChunkPosition);
 
-            _UpdateTextOnNextFrame = false;
+            _TextRequiresUpdate = false;
         }
 
         private void UpdateText(float3 playerPosition, int3 chunkPosition)

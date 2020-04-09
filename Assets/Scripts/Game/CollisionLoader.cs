@@ -5,16 +5,19 @@ using System.Linq;
 using Unity.Mathematics;
 using UnityEngine;
 using Wyd.Controllers.State;
+using Wyd.Controllers.System;
 using Wyd.Controllers.World;
 using Wyd.Game.World.Blocks;
+using Wyd.Game.World.Chunks.Events;
 using Wyd.System;
 using Wyd.System.Collections;
+using NotImplementedException = System.NotImplementedException;
 
 #endregion
 
 namespace Wyd.Game
 {
-    public class CollisionLoader : MonoBehaviour
+    public class CollisionLoader : MonoBehaviour, IPerFrameUpdate
     {
         private static readonly ObjectCache<GameObject> _ColliderCubeCache =
             new ObjectCache<GameObject>(false, -1, DeactivateGameObject);
@@ -64,18 +67,26 @@ namespace Wyd.Game
 
         private void Start()
         {
-            WorldController.Current.ChunkMeshChanged += (sender, bounds) => { _ScheduledRecalculation = true; };
             // always do an initial pass to create colliders
             _ScheduledRecalculation = true;
         }
 
-        private void Update()
+        private void OnEnable()
         {
-            if (AttachedTransform == default)
-            {
-                return;
-            }
+            PerFrameUpdateController.Current.RegisterPerFrameUpdater(70, this);
 
+            WorldController.Current.ChunkMeshChanged += OnChunkMeshChanged;
+        }
+
+        private void OnDisable()
+        {
+            PerFrameUpdateController.Current.DeregisterPerFrameUpdater(70, this);
+
+            WorldController.Current.ChunkMeshChanged -= OnChunkMeshChanged;
+        }
+
+        public void FrameUpdate()
+        {
             float3 difference = math.abs(_LastCalculatedPosition - (float3)AttachedTransform.position);
 
             if (_ScheduledRecalculation || math.any(difference >= 1))
@@ -172,6 +183,11 @@ namespace Wyd.Game
             surfaceCollider.SetActive(true);
 
             return surfaceCollider;
+        }
+
+        private void OnChunkMeshChanged(object sender, ChunkChangedEventArgs args)
+        {
+            _ScheduledRecalculation = true;
         }
     }
 }

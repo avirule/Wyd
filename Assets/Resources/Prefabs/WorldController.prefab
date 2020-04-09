@@ -69,11 +69,10 @@ MonoBehaviour:
   MeshFilter: {fileID: 1461272640}
   MeshRenderer: {fileID: 1461272637}
   CollisionLoaderController: {fileID: 7365152893649235730}
+  ChunkControllerPrefab: {fileID: 2133818191605063653, guid: 658d411ab6088c145829e69b230fce2c,
+    type: 3}
   SeedString: hopperberry
   TicksPerSecond: 15
-  IgnoreInternalFrameLimit: 0
-  StepIntoSelectedChunkStep: 0
-  SelectedStep: 0
 --- !u!114 &7365152893649235730
 MonoBehaviour:
   m_ObjectHideFlags: 0

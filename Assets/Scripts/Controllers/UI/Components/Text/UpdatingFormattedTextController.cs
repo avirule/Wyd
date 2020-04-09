@@ -21,7 +21,7 @@ namespace Wyd.Controllers.UI.Components.Text
             set
             {
                 _UpdatesPerSecond = value;
-                _UpdatesPerSecondTimeSpan = TimeSpan.FromSeconds(1d / _UpdatesPerSecond);
+                _UpdatesPerSecondTimeSpan = TimeSpan.FromSeconds(1d / UpdatesPerSecond);
             }
         }
 
@@ -29,7 +29,7 @@ namespace Wyd.Controllers.UI.Components.Text
         {
             base.Awake();
 
-            UpdatesPerSecond = 4f;
+            UpdatesPerSecond = 1f;
             _UpdateTimer = Stopwatch.StartNew();
         }
 

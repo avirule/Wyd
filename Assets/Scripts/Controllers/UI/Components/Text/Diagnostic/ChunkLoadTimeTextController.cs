@@ -15,14 +15,13 @@ namespace Wyd.Controllers.UI.Components.Text.Diagnostic
         private double _RecentTerrainGenerationTime;
         private double _RecentMeshingSetBlockTime;
         private double _RecentMeshingTime;
+        private bool _TextRequiresUpdate;
 
         protected override void Awake()
         {
             base.Awake();
 
-            UpdatesPerSecond = 1f;
-            SetRecentAverages(0d, 0d, 0d, 0d);
-            UpdateChunkLoadTimeText();
+            _TextRequiresUpdate = true;
         }
 
         protected override void TimedUpdate()

@@ -206,12 +206,7 @@ namespace Wyd.System.Collections
         #region HELPER METHODS
 
         public bool ContainsMinBiased(float3 point) =>
-            (point.x < _Volume.MaxPoint.x)
-            && (point.y < _Volume.MaxPoint.y)
-            && (point.z < _Volume.MaxPoint.z)
-            && (point.x >= _Volume.MinPoint.x)
-            && (point.y >= _Volume.MinPoint.y)
-            && (point.z >= _Volume.MinPoint.z);
+            Volume.ContainsMinBiased(point);
 
         // indexes:
         // bottom half quadrant:

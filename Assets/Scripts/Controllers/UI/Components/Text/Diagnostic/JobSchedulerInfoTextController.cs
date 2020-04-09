@@ -6,11 +6,11 @@ using Wyd.System.Jobs;
 
 namespace Wyd.Controllers.UI.Components.Text.Diagnostic
 {
-    public class JobSchedulerInfoTextController : FormattedTextController
+    public class JobSchedulerInfoTextController : UpdatingFormattedTextController
     {
         private bool _UpdateDiagInfo;
 
-        private void Start()
+        protected override void Awake()
         {
             AsyncJobScheduler.JobQueued += (sender, args) => _UpdateDiagInfo = true;
             AsyncJobScheduler.JobStarted += (sender, args) => _UpdateDiagInfo = true;
@@ -18,7 +18,7 @@ namespace Wyd.Controllers.UI.Components.Text.Diagnostic
             _UpdateDiagInfo = true;
         }
 
-        private void Update()
+        protected override void TimedUpdate()
         {
             if (_UpdateDiagInfo)
             {

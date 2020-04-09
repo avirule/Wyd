@@ -1,5 +1,6 @@
 #region
 
+using System;
 using UnityEngine;
 
 #endregion
@@ -10,6 +11,7 @@ namespace Wyd.Controllers.UI.Components.Text.Diagnostic
     {
         private Camera _MainCamera;
         private Transform _MainCameraTransform;
+        private float _LastEulerY;
 
         protected override void Awake()
         {
@@ -30,7 +32,15 @@ namespace Wyd.Controllers.UI.Components.Text.Diagnostic
                 return;
             }
 
-            TextObject.text = string.Format(Format, _MainCameraTransform.eulerAngles.y);
+            float eulerY = _MainCameraTransform.eulerAngles.y;
+
+            if (Math.Abs(eulerY - _LastEulerY) < 0.1f)
+            {
+                return;
+            }
+
+            _LastEulerY = eulerY;
+            TextObject.text = string.Format(Format, _LastEulerY);
         }
     }
 }

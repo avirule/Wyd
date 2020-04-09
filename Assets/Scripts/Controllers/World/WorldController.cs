@@ -39,10 +39,16 @@ namespace Wyd.Controllers.World
 
         public MeshFilter MeshFilter;
         public MeshRenderer MeshRenderer;
+
 #endif
 
+        public CollisionLoaderController CollisionLoaderController;
+        public ChunkController ChunkControllerPrefab;
+        public string SeedString;
+        public float TicksPerSecond;
+
+
         private object _VerifyChunkStatesHandle;
-        private ChunkController _ChunkControllerPrefab;
         private Dictionary<float3, ChunkController> _Chunks;
         private ObjectCache<ChunkController> _ChunkCache;
         private ConcurrentStack<PendingChunkActivation> _ChunksPendingActivation;
@@ -73,10 +79,6 @@ namespace Wyd.Controllers.World
                 }
             }
         }
-
-        public CollisionLoaderController CollisionLoaderController;
-        public string SeedString;
-        public float TicksPerSecond;
 
         public bool ReadyForGeneration =>
             (_ChunksPendingActivation.Count == 0)
@@ -112,7 +114,6 @@ namespace Wyd.Controllers.World
             SetTickRate();
 
             _VerifyChunkStatesHandle = new object();
-            _ChunkControllerPrefab = SystemController.LoadResource<ChunkController>(@"Prefabs/Chunk");
             _EntityLoaders = new List<IEntity>();
             _ChunkCache = new ObjectCache<ChunkController>(false, -1,
                 (ref ChunkController chunkController) =>
@@ -225,7 +226,7 @@ namespace Wyd.Controllers.World
                 }
                 else
                 {
-                    chunkController = Instantiate(_ChunkControllerPrefab, pendingChunkActivation.Origin,
+                    chunkController = Instantiate(ChunkControllerPrefab, pendingChunkActivation.Origin,
                         quaternion.identity, transform);
                 }
 
@@ -586,7 +587,7 @@ namespace Wyd.Controllers.World
             for (int i = 0; i < (OptionsController.Current.MaximumChunkCacheSize / 2); i++)
             {
                 ChunkController chunkController =
-                    Instantiate(_ChunkControllerPrefab, float3.zero, Quaternion.identity, transform);
+                    Instantiate(ChunkControllerPrefab, float3.zero, Quaternion.identity, transform);
                 chunkController.gameObject.SetActive(false);
                 _ChunkCache.CacheItem(ref chunkController);
             }

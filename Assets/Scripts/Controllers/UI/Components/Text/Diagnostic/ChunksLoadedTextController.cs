@@ -6,7 +6,7 @@ using Wyd.Controllers.World;
 
 namespace Wyd.Controllers.UI.Components.Text.Diagnostic
 {
-    public class ChunksLoadedTextController : FormattedTextController
+    public class ChunksLoadedTextController : UpdatingFormattedTextController
     {
         private int _LastQueuedForCreationCount;
         private int _LastChunkRegionsActiveCount;
@@ -22,7 +22,7 @@ namespace Wyd.Controllers.UI.Components.Text.Diagnostic
                 WorldController.Current.AverageChunkStateVerificationTime);
         }
 
-        private void Update()
+        protected override void TimedUpdate()
         {
             int chunksQueued = WorldController.Current.ChunksQueuedCount;
             int chunksActive = WorldController.Current.ChunksActiveCount;

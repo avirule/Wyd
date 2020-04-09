@@ -14,13 +14,6 @@ namespace Wyd.Controllers.UI.Components.Text.Diagnostic
         private long _AllocatedMemory;
         private long _HeapMemory;
 
-        protected override void Awake()
-        {
-            base.Awake();
-
-            UpdatesPerSecond = 0.5f;
-        }
-
         protected override void TimedUpdate()
         {
             (long reservedMemory, long allocatedMemory, long heapMemory) = GetUsedMemory();
