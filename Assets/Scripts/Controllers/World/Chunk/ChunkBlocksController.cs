@@ -83,7 +83,6 @@ namespace Wyd.Controllers.World.Chunk
 
             PerFrameUpdateController.Current.DeregisterPerFrameUpdater(30, this);
             _BlockActions.Clear();
-
         }
 
         public void FrameUpdate() { }
