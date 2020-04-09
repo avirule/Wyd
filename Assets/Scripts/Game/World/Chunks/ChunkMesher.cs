@@ -32,7 +32,7 @@ namespace Wyd.Game.World.Chunks
 
         private readonly CancellationToken _CancellationToken;
         private readonly float3 _OriginPoint;
-        private readonly OctreeNode<ushort> _Blocks;
+        private readonly OctreeNode _Blocks;
         private readonly CancellationToken _AbortToken;
         private readonly bool _AggressiveFaceMerging;
         private readonly int3 _Size;
@@ -43,8 +43,7 @@ namespace Wyd.Game.World.Chunks
         public TimeSpan SetBlockTimeSpan { get; private set; }
         public TimeSpan MeshingTimeSpan { get; private set; }
 
-        public ChunkMesher(CancellationToken cancellationToken, float3 originPoint, OctreeNode<ushort> blocks,
-            CancellationToken abortToken, bool aggressiveFaceMerging)
+        public ChunkMesher(CancellationToken cancellationToken, float3 originPoint, OctreeNode blocks, CancellationToken abortToken, bool aggressiveFaceMerging)
         {
             _Stopwatch = new Stopwatch();
             _Mask = new MeshBlock[0];

@@ -17,12 +17,12 @@ namespace Wyd.Game.World.Chunks
     {
         private readonly CancellationToken _CancellationToken;
         private readonly float3 _OriginPoint;
-        private readonly OctreeNode<ushort> _Blocks;
+        private readonly OctreeNode _Blocks;
         private readonly bool _AggressiveFaceMerging;
 
         private ChunkMesher _Mesher;
 
-        public ChunkMeshingJob(CancellationToken cancellationToken, float3 originPoint, OctreeNode<ushort> blocks,
+        public ChunkMeshingJob(CancellationToken cancellationToken, float3 originPoint, OctreeNode blocks,
             bool aggressiveFaceMerging) : base(cancellationToken)
         {
             _CancellationToken = cancellationToken;

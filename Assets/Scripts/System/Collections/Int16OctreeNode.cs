@@ -9,7 +9,7 @@ using Unity.Mathematics;
 
 namespace Wyd.System.Collections
 {
-    public class OctreeNode<T> where T : unmanaged
+    public class OctreeNode
     {
         private static readonly float3[] _Coordinates =
         {
@@ -25,16 +25,16 @@ namespace Wyd.System.Collections
         };
 
 
-        private readonly List<OctreeNode<T>> _Nodes;
+        private readonly List<OctreeNode> _Nodes;
         private readonly Volume _Volume;
 
         public Volume Volume => _Volume;
-        public T Value { get; private set; }
+        public ushort Value { get; private set; }
         public bool IsUniform => _Nodes.Count == 0;
-    
-        public OctreeNode(float3 centerPoint, float size, T value)
+
+        public OctreeNode(float3 centerPoint, float size, ushort value)
         {
-            _Nodes = new List<OctreeNode<T>>();
+            _Nodes = new List<OctreeNode>();
 
             _Volume = new Volume(centerPoint, new float3(size));
             Value = value;
@@ -53,37 +53,22 @@ namespace Wyd.System.Collections
 
         public void Populate()
         {
-            float centerOffsetValue = _Volume.Extents.x / 2f;
-            float3 centerOffset = new float3(centerOffsetValue);
+            float offsetValue = _Volume.Extents.x / 2f;
+            float3 offset = new float3(offsetValue);
 
             _Nodes.Clear();
 
-            _Nodes.Add(new OctreeNode<T>(_Volume.CenterPoint + (_Coordinates[0] * centerOffset),
-                _Volume.Extents.x, Value));
-
-            _Nodes.Add(new OctreeNode<T>(_Volume.CenterPoint + (_Coordinates[1] * centerOffset),
-                _Volume.Extents.x, Value));
-
-            _Nodes.Add(new OctreeNode<T>(_Volume.CenterPoint + (_Coordinates[2] * centerOffset),
-                _Volume.Extents.x, Value));
-
-            _Nodes.Add(new OctreeNode<T>(_Volume.CenterPoint + (_Coordinates[3] * centerOffset),
-                _Volume.Extents.x, Value));
-
-            _Nodes.Add(new OctreeNode<T>(_Volume.CenterPoint + (_Coordinates[4] * centerOffset),
-                _Volume.Extents.x, Value));
-
-            _Nodes.Add(new OctreeNode<T>(_Volume.CenterPoint + (_Coordinates[5] * centerOffset),
-                _Volume.Extents.x, Value));
-
-            _Nodes.Add(new OctreeNode<T>(_Volume.CenterPoint + (_Coordinates[6] * centerOffset),
-                _Volume.Extents.x, Value));
-
-            _Nodes.Add(new OctreeNode<T>(_Volume.CenterPoint + (_Coordinates[7] * centerOffset),
-                _Volume.Extents.x, Value));
+            _Nodes.Add(new OctreeNode(_Volume.CenterPoint + (_Coordinates[0] * offset), _Volume.Extents.x, Value));
+            _Nodes.Add(new OctreeNode(_Volume.CenterPoint + (_Coordinates[1] * offset), _Volume.Extents.x, Value));
+            _Nodes.Add(new OctreeNode(_Volume.CenterPoint + (_Coordinates[2] * offset), _Volume.Extents.x, Value));
+            _Nodes.Add(new OctreeNode(_Volume.CenterPoint + (_Coordinates[3] * offset), _Volume.Extents.x, Value));
+            _Nodes.Add(new OctreeNode(_Volume.CenterPoint + (_Coordinates[4] * offset), _Volume.Extents.x, Value));
+            _Nodes.Add(new OctreeNode(_Volume.CenterPoint + (_Coordinates[5] * offset), _Volume.Extents.x, Value));
+            _Nodes.Add(new OctreeNode(_Volume.CenterPoint + (_Coordinates[6] * offset), _Volume.Extents.x, Value));
+            _Nodes.Add(new OctreeNode(_Volume.CenterPoint + (_Coordinates[7] * offset), _Volume.Extents.x, Value));
         }
 
-        public T GetPoint(float3 point)
+        public ushort GetPoint(float3 point)
         {
             point = math.floor(point);
 
@@ -123,7 +108,7 @@ namespace Wyd.System.Collections
             }
         }
 
-        public void SetPoint(float3 point, T newValue)
+        public void SetPoint(float3 point, ushort newValue)
         {
             point = math.floor(point);
 
@@ -193,12 +178,12 @@ namespace Wyd.System.Collections
                         : string.Empty));
             }
 
-            T firstValue = _Nodes[0].Value;
+            ushort firstValue = _Nodes[0].Value;
 
             // avoiding using linq here for performance sensitivity
             for (int index = 0; index < 8 /* octants! */; index++)
             {
-                OctreeNode<T> node = _Nodes[index];
+                OctreeNode node = _Nodes[index];
 
                 if (!node.IsUniform || (node.Value.GetHashCode() != firstValue.GetHashCode()))
                 {
@@ -209,7 +194,7 @@ namespace Wyd.System.Collections
             return true;
         }
 
-        public IEnumerable<T> GetAllData()
+        public IEnumerable<ushort> GetAllData()
         {
             for (int index = 0; index < WydMath.Product(_Volume.Size); index++)
             {

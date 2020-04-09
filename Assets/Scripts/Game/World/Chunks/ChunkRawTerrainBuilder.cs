@@ -34,7 +34,7 @@ namespace Wyd.Game.World.Chunks
         public TimeSpan TerrainGenerationTimeSpan { get; private set; }
 
         public ChunkRawTerrainBuilder(CancellationToken cancellationToken, float3 originPoint,
-            ref OctreeNode<ushort> blocks, float frequency, float persistence, bool gpuAcceleration = false,
+            ref OctreeNode blocks, float frequency, float persistence, bool gpuAcceleration = false,
             ComputeBuffer noiseValuesBuffer = null) : base(cancellationToken, originPoint, ref blocks)
         {
             _Stopwatch = new Stopwatch();

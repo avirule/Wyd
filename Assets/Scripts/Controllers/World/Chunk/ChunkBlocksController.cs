@@ -25,10 +25,10 @@ namespace Wyd.Controllers.World.Chunk
 
         #region INSTANCE MEMBERS
 
-        private OctreeNode<ushort> _Blocks;
+        private OctreeNode _Blocks;
         private Queue<BlockAction> _BlockActions;
 
-        public ref OctreeNode<ushort> Blocks => ref _Blocks;
+        public ref OctreeNode Blocks => ref _Blocks;
 
         public int PendingBlockActions => _BlockActions.Count;
 
@@ -62,7 +62,7 @@ namespace Wyd.Controllers.World.Chunk
 
             _BlockActions = new Queue<BlockAction>();
 
-            Blocks = new OctreeNode<ushort>(OriginPoint + (ChunkController.Size / new float3(2f)),
+            Blocks = new OctreeNode(OriginPoint + (ChunkController.Size / new float3(2f)),
                 ChunkController.Size.x, 0);
         }
 
@@ -73,7 +73,7 @@ namespace Wyd.Controllers.World.Chunk
             PerFrameUpdateController.Current.RegisterPerFrameUpdater(30, this);
             _BlockActions.Clear();
 
-            Blocks = new OctreeNode<ushort>(OriginPoint + (ChunkController.Size / new float3(2f)),
+            Blocks = new OctreeNode(OriginPoint + (ChunkController.Size / new float3(2f)),
                 ChunkController.Size.x, 0);
         }
 

@@ -21,10 +21,10 @@ namespace Wyd.Game.World.Chunks
         private readonly float _Persistence;
         private readonly bool _GpuAcceleration;
 
-        private OctreeNode<ushort> _Blocks;
+        private OctreeNode _Blocks;
         private ChunkRawTerrainBuilder _TerrainBuilder;
 
-        public ChunkBuildingJob(CancellationToken cancellationToken, float3 originPoint, ref OctreeNode<ushort> blocks,
+        public ChunkBuildingJob(CancellationToken cancellationToken, float3 originPoint, ref OctreeNode blocks,
             float frequency, float persistence, bool gpuAcceleration = false, ComputeBuffer noiseValuesBuffer = null) :
             base(cancellationToken)
         {
