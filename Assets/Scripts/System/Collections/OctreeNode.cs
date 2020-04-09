@@ -31,7 +31,7 @@ namespace Wyd.System.Collections
         public Volume Volume => _Volume;
         public T Value { get; private set; }
         public bool IsUniform => _Nodes.Count == 0;
-    
+
         public OctreeNode(float3 centerPoint, float size, T value)
         {
             _Nodes = new List<OctreeNode<T>>();

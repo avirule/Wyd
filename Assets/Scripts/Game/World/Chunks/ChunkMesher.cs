@@ -43,7 +43,8 @@ namespace Wyd.Game.World.Chunks
         public TimeSpan SetBlockTimeSpan { get; private set; }
         public TimeSpan MeshingTimeSpan { get; private set; }
 
-        public ChunkMesher(CancellationToken cancellationToken, float3 originPoint, OctreeNode blocks, CancellationToken abortToken, bool aggressiveFaceMerging)
+        public ChunkMesher(CancellationToken cancellationToken, float3 originPoint, OctreeNode blocks,
+            CancellationToken abortToken, bool aggressiveFaceMerging)
         {
             _Stopwatch = new Stopwatch();
             _Mask = new MeshBlock[0];
