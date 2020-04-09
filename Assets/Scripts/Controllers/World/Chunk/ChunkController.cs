@@ -21,7 +21,7 @@ namespace Wyd.Controllers.World.Chunk
         private bool _Visible;
         private bool _RenderShadows;
 
-        public TerrainStep CurrentStep => TerrainController.CurrentStep;
+        public TerrainStep CurrentStep => TerrainController.TerrainStep;
 
         public bool RenderShadows
         {

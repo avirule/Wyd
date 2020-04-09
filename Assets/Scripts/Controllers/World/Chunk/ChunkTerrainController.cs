@@ -1,13 +1,13 @@
 #region
 
 using System;
+using System.Threading;
 using System.Threading.Tasks;
 using Unity.Mathematics;
 using UnityEngine;
 using Wyd.Controllers.State;
 using Wyd.Controllers.System;
 using Wyd.Game;
-using Wyd.Game.World;
 using Wyd.Game.World.Chunks;
 using Wyd.Game.World.Chunks.Events;
 using Wyd.System;
@@ -29,15 +29,16 @@ namespace Wyd.Controllers.World.Chunk
 
         #region INSTANCE MEMBERS
 
-        private object _GenerationStepHandle;
+        private object _TerrainStepHandle;
+        private CancellationTokenSource _CancellationTokenSource;
 
-        public TerrainStep CurrentStep
+        public TerrainStep TerrainStep
         {
             get
             {
                 TerrainStep tmp;
 
-                lock (_GenerationStepHandle)
+                lock (_TerrainStepHandle)
                 {
                     tmp = GenerationStep;
                 }
@@ -46,7 +47,7 @@ namespace Wyd.Controllers.World.Chunk
             }
             private set
             {
-                lock (_GenerationStepHandle)
+                lock (_TerrainStepHandle)
                 {
                     GenerationStep = value;
                 }
@@ -84,7 +85,7 @@ namespace Wyd.Controllers.World.Chunk
         {
             base.Awake();
 
-            _GenerationStepHandle = new object();
+            _TerrainStepHandle = new object();
 
             if (_noiseShader == null)
             {
@@ -102,6 +103,8 @@ namespace Wyd.Controllers.World.Chunk
 
             PerFrameUpdateController.Current.RegisterPerFrameUpdater(40, this);
             ClearInternalData();
+
+            _CancellationTokenSource = new CancellationTokenSource();
         }
 
         protected override void OnDisable()
@@ -110,6 +113,8 @@ namespace Wyd.Controllers.World.Chunk
 
             PerFrameUpdateController.Current.DeregisterPerFrameUpdater(40, this);
             ClearInternalData();
+
+            _CancellationTokenSource.Cancel();
         }
 
         public void FrameUpdate()
@@ -123,21 +128,21 @@ namespace Wyd.Controllers.World.Chunk
 
 #endif
 
-            if ((CurrentStep == TerrainStep.Complete)
+            if ((TerrainStep == TerrainStep.Complete)
                 || !WorldController.Current.ReadyForGeneration
-                || (WorldController.Current.AggregateNeighborsStep(WydMath.ToInt(OriginPoint)) < CurrentStep))
+                || (WorldController.Current.AggregateNeighborsStep(WydMath.ToInt(OriginPoint)) < TerrainStep))
             {
                 return;
             }
 
-            ExecuteStep(CurrentStep);
+            ExecuteStep(TerrainStep);
         }
 
         #region DE/ACTIVATION
 
         private void ClearInternalData()
         {
-            CurrentStep = (TerrainStep)1;
+            TerrainStep = (TerrainStep)1;
 
 #if UNITY_EDITOR
 
@@ -156,7 +161,7 @@ namespace Wyd.Controllers.World.Chunk
 
             Task.Run(async () => await AsyncJobScheduler.QueueAsyncJob(asyncJob));
 
-            CurrentStep = CurrentStep.Next();
+            TerrainStep = TerrainStep.Next();
         }
 
         private void ExecuteStep(TerrainStep step)
@@ -189,12 +194,14 @@ namespace Wyd.Controllers.World.Chunk
                 // 1024 is the value set in the shader's [numthreads(--> 1024 <--, 1, 1)]
                 _noiseShader.Dispatch(kernel, WydMath.Product(ChunkController.Size) / 1024, 1, 1);
 
-                asyncJob = new ChunkBuildingJob(OriginPoint, ref BlocksController.Blocks,
-                    _FREQUENCY, _PERSISTENCE, OptionsController.Current.GPUAcceleration, noiseBuffer);
+                asyncJob = new ChunkBuildingJob(_CancellationTokenSource.Token, OriginPoint,
+                    ref BlocksController.Blocks, _FREQUENCY, _PERSISTENCE, OptionsController.Current.GPUAcceleration,
+                    noiseBuffer);
             }
             else
             {
-                asyncJob = new ChunkBuildingJob(OriginPoint, ref BlocksController.Blocks, _FREQUENCY, _PERSISTENCE);
+                asyncJob = new ChunkBuildingJob(_CancellationTokenSource.Token, OriginPoint,
+                    ref BlocksController.Blocks, _FREQUENCY, _PERSISTENCE);
             }
 
             QueueAsyncJob(asyncJob);
@@ -216,11 +223,11 @@ namespace Wyd.Controllers.World.Chunk
         {
             OnLocalTerrainChanged(this, new ChunkChangedEventArgs(OriginPoint, Directions.AllDirectionAxes));
             args.AsyncJob.WorkFinished -= OnJobFinished;
-            CurrentStep = CurrentStep.Next();
+            TerrainStep = TerrainStep.Next();
 
 #if UNITY_EDITOR
 
-            if (CurrentStep == TerrainStep.Complete)
+            if (TerrainStep == TerrainStep.Complete)
             {
                 TotalTimesTerrainChanged += 1;
                 TimesTerrainChanged += 1;

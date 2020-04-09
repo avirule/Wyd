@@ -1,6 +1,7 @@
 #region
 
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using Unity.Mathematics;
 using UnityEngine;
@@ -19,7 +20,7 @@ namespace Wyd.Controllers.World.Chunk
         #region INSTANCE MEMBERS
 
         private object _MeshStateHandle;
-
+        private CancellationTokenSource _CancellationTokenSource;
         private Mesh _Mesh;
 
         public MeshState MeshState
@@ -124,6 +125,8 @@ namespace Wyd.Controllers.World.Chunk
 
             PerFrameUpdateController.Current.RegisterPerFrameUpdater(50, this);
             ClearInternalData();
+
+            _CancellationTokenSource = new CancellationTokenSource();
         }
 
         protected override void OnDisable()
@@ -132,6 +135,8 @@ namespace Wyd.Controllers.World.Chunk
 
             PerFrameUpdateController.Current.DeregisterPerFrameUpdater(50, this);
             ClearInternalData();
+
+            _CancellationTokenSource.Cancel();
         }
 
         public void FrameUpdate()
@@ -139,7 +144,7 @@ namespace Wyd.Controllers.World.Chunk
             if (MeshState.HasFlag(MeshState.Meshing)
                 || !MeshState.HasFlag(MeshState.UpdateRequested)
                 || (BlocksController.PendingBlockActions > 0)
-                || (TerrainController.CurrentStep != TerrainStep.Complete)
+                || (TerrainController.TerrainStep != TerrainStep.Complete)
                 || !WorldController.Current.ReadyForGeneration
                 || (WorldController.Current.AggregateNeighborsStep(OriginPoint)
                     < TerrainStep.Complete))
@@ -180,7 +185,8 @@ namespace Wyd.Controllers.World.Chunk
 
         private void BeginGeneratingMesh()
         {
-            ChunkMeshingJob asyncJob = new ChunkMeshingJob(OriginPoint, BlocksController.Blocks, true);
+            ChunkMeshingJob asyncJob = new ChunkMeshingJob(_CancellationTokenSource.Token, OriginPoint,
+                BlocksController.Blocks, true);
 
             QueueAsyncJob(asyncJob);
         }

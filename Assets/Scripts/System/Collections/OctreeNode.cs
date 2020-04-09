@@ -179,6 +179,15 @@ namespace Wyd.System.Collections
 
         private bool CheckShouldCollapse()
         {
+            if (IsUniform)
+            {
+                throw new ArgumentOutOfRangeException($"Attempted to check for required collapsing of {nameof(OctreeNode<ushort>)} and failed..\r\n"
+                                                      + $"State Information: [Volume {Volume}], [{nameof(IsUniform)} {IsUniform}], [Branches {_Nodes.Count}], "
+                                                      + (_Nodes.Count > 0
+                                                          ? $"[Branch Values {string.Join(", ", _Nodes.Select(node => node.Value))}]"
+                                                          : string.Empty));
+            }
+
             T firstValue = _Nodes[0].Value;
 
             // avoiding using linq here for performance sensitivity

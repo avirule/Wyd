@@ -2,6 +2,7 @@
 
 using System;
 using System.Diagnostics;
+using System.Threading;
 using System.Threading.Tasks;
 
 #endregion
@@ -21,7 +22,12 @@ namespace Wyd.System.Jobs
         /// <summary>
         ///     Identity of <see cref="Job" />.
         /// </summary>
-        public object Identity { get; private set; }
+        public object Identity { get; }
+
+        /// <summary>
+        ///     Token that can be passed into constructor to allow jobs to observe cancellation.
+        /// </summary>
+        public CancellationToken CancellationToken { get; }
 
         /// <summary>
         ///     Thread-safe determination of execution status.
@@ -43,11 +49,11 @@ namespace Wyd.System.Jobs
         /// <summary>
         ///     Instantiates a new instance of the <see cref="Job" /> class.
         /// </summary>
-        public AsyncJob(Func<Task> invocation = null)
+        public AsyncJob(CancellationToken cancellationToken, Func<Task> invocation = null)
         {
             _Stopwatch = new Stopwatch();
-
             Identity = Guid.NewGuid();
+            CancellationToken = cancellationToken;
             Invocation = invocation ?? (() => Task.CompletedTask);
             IsWorkFinished = false;
         }

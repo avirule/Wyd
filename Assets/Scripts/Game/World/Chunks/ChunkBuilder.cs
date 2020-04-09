@@ -1,6 +1,7 @@
 #region
 
 using System.Collections.Generic;
+using System.Threading;
 using Unity.Mathematics;
 using Wyd.Controllers.State;
 using Wyd.Controllers.World;
@@ -16,16 +17,19 @@ namespace Wyd.Game.World.Chunks
         protected readonly Dictionary<string, ushort> BlockIDCache;
         protected readonly Random SeededRandom;
 
-        protected float3 _OriginPoint;
-        protected OctreeNode<ushort> _Blocks;
+        protected readonly CancellationToken CancellationToken;
+        protected readonly float3 OriginPoint;
+        protected readonly OctreeNode<ushort> Blocks;
 
-        public ChunkBuilder(float3 originPoint, ref OctreeNode<ushort> blocks)
+        public ChunkBuilder(CancellationToken cancellationToken, float3 originPoint, ref OctreeNode<ushort> blocks)
         {
-            SeededRandom = new Random(WorldController.Current.Seed);
-            _OriginPoint = originPoint;
-            _Blocks = blocks;
-
             BlockIDCache = new Dictionary<string, ushort>();
+            SeededRandom = new Random(WorldController.Current.Seed);
+
+            CancellationToken = cancellationToken;
+            OriginPoint = originPoint;
+            Blocks = blocks;
+
         }
 
         protected ushort GetCachedBlockID(string blockName)

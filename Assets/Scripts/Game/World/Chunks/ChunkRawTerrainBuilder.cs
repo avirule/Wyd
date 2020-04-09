@@ -33,8 +33,9 @@ namespace Wyd.Game.World.Chunks
         public TimeSpan NoiseRetrievalTimeSpan { get; private set; }
         public TimeSpan TerrainGenerationTimeSpan { get; private set; }
 
-        public ChunkRawTerrainBuilder(float3 originPoint, ref OctreeNode<ushort> blocks, float frequency, float persistence,
-            bool gpuAcceleration = false, ComputeBuffer noiseValuesBuffer = null) : base(originPoint, ref blocks)
+        public ChunkRawTerrainBuilder(CancellationToken cancellationToken, float3 originPoint,
+            ref OctreeNode<ushort> blocks, float frequency, float persistence, bool gpuAcceleration = false,
+            ComputeBuffer noiseValuesBuffer = null) : base(cancellationToken, originPoint, ref blocks)
         {
             _Stopwatch = new Stopwatch();
             _Frequency = frequency;
@@ -52,9 +53,9 @@ namespace Wyd.Game.World.Chunks
 
         public void Generate()
         {
-            if (_Blocks == default)
+            if (Blocks == default)
             {
-                Log.Error($"`{nameof(_Blocks)}` has not been set. Aborting generation.");
+                Log.Error($"`{nameof(Blocks)}` has not been set. Aborting generation.");
                 return;
             }
 
@@ -64,8 +65,8 @@ namespace Wyd.Game.World.Chunks
 
             for (int index = WydMath.Product(ChunkController.Size) - 1; index >= 0; index--)
             {
-                float3 globalPosition = _OriginPoint + WydMath.IndexTo3D(index, ChunkController.Size);
-                _Blocks.SetPoint(globalPosition, GetBlockIDAtPosition(globalPosition, index));
+                float3 globalPosition = OriginPoint + WydMath.IndexTo3D(index, ChunkController.Size);
+                Blocks.SetPoint(globalPosition, GetBlockIDAtPosition(globalPosition, index));
             }
 
             _NoiseValuesCache.CacheItem(ref _NoiseMap);
@@ -97,9 +98,15 @@ namespace Wyd.Game.World.Chunks
             }
             else
             {
-                for (int index = 0; index < WydMath.Product(_Blocks.Volume.Size); index++)
+                for (int index = 0; index < WydMath.Product(Blocks.Volume.Size); index++)
                 {
-                    _NoiseMap[index] = GetNoiseValueByGlobalPosition(_OriginPoint + WydMath.IndexTo3D(index, ChunkController.Size));
+                    if (CancellationToken.IsCancellationRequested)
+                    {
+                        return;
+                    }
+
+                    _NoiseMap[index] =
+                        GetNoiseValueByGlobalPosition(OriginPoint + WydMath.IndexTo3D(index, ChunkController.Size));
                 }
             }
 

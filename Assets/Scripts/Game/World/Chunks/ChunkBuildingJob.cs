@@ -1,5 +1,6 @@
 #region
 
+using System.Threading;
 using System.Threading.Tasks;
 using Unity.Mathematics;
 using UnityEngine;
@@ -13,6 +14,7 @@ namespace Wyd.Game.World.Chunks
 {
     public class ChunkBuildingJob : AsyncJob
     {
+        private readonly CancellationToken _CancellationToken;
         private readonly float3 _OriginPoint;
         private readonly ComputeBuffer _NoiseValuesBuffer;
         private readonly float _Frequency;
@@ -22,9 +24,11 @@ namespace Wyd.Game.World.Chunks
         private OctreeNode<ushort> _Blocks;
         private ChunkRawTerrainBuilder _TerrainBuilder;
 
-        public ChunkBuildingJob(float3 originPoint, ref OctreeNode<ushort> blocks, float frequency, float persistence,
-            bool gpuAcceleration = false, ComputeBuffer noiseValuesBuffer = null)
+        public ChunkBuildingJob(CancellationToken cancellationToken, float3 originPoint, ref OctreeNode<ushort> blocks,
+            float frequency, float persistence, bool gpuAcceleration = false, ComputeBuffer noiseValuesBuffer = null) :
+            base(cancellationToken)
         {
+            _CancellationToken = cancellationToken;
             _OriginPoint = originPoint;
             _Blocks = blocks;
             _Frequency = frequency;
@@ -35,8 +39,8 @@ namespace Wyd.Game.World.Chunks
 
         protected override Task Process()
         {
-            _TerrainBuilder = new ChunkRawTerrainBuilder(_OriginPoint, ref _Blocks, _Frequency, _Persistence,
-                _GpuAcceleration, _NoiseValuesBuffer);
+            _TerrainBuilder = new ChunkRawTerrainBuilder(_CancellationToken, _OriginPoint, ref _Blocks, _Frequency,
+                _Persistence, _GpuAcceleration, _NoiseValuesBuffer);
             _TerrainBuilder.Generate();
 
             return Task.CompletedTask;

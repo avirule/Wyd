@@ -29,6 +29,8 @@ namespace Wyd.Game.World.Chunks
         private readonly List<int> _Triangles;
         private readonly List<int> _TransparentTriangles;
         private readonly List<Vector3> _UVs;
+
+        private readonly CancellationToken _CancellationToken;
         private readonly float3 _OriginPoint;
         private readonly OctreeNode<ushort> _Blocks;
         private readonly CancellationToken _AbortToken;
@@ -41,7 +43,8 @@ namespace Wyd.Game.World.Chunks
         public TimeSpan SetBlockTimeSpan { get; private set; }
         public TimeSpan MeshingTimeSpan { get; private set; }
 
-        public ChunkMesher(float3 originPoint, OctreeNode<ushort> blocks, CancellationToken abortToken, bool aggressiveFaceMerging)
+        public ChunkMesher(CancellationToken cancellationToken, float3 originPoint, OctreeNode<ushort> blocks,
+            CancellationToken abortToken, bool aggressiveFaceMerging)
         {
             _Stopwatch = new Stopwatch();
             _Mask = new MeshBlock[0];
@@ -50,6 +53,7 @@ namespace Wyd.Game.World.Chunks
             _Triangles = new List<int>();
             _TransparentTriangles = new List<int>();
 
+            _CancellationToken = cancellationToken;
             _OriginPoint = originPoint;
             _Blocks = blocks;
             _Size = WydMath.ToInt(_Blocks.Volume.Size);
@@ -113,6 +117,11 @@ namespace Wyd.Game.World.Chunks
 
             foreach (ushort id in blocks)
             {
+                if (_CancellationToken.IsCancellationRequested)
+                {
+                    return;
+                }
+
                 _Mask[index].Id = id;
                 _Mask[index].Faces.ClearFaces();
 
@@ -136,6 +145,11 @@ namespace Wyd.Game.World.Chunks
             int index = -1;
             foreach (MeshBlock block in _Mask)
             {
+                if (_CancellationToken.IsCancellationRequested)
+                {
+                    return;
+                }
+
                 index += 1;
 
                 if (_AbortToken.IsCancellationRequested)

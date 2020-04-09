@@ -1,5 +1,6 @@
 #region
 
+using System.Threading;
 using System.Threading.Tasks;
 using Serilog;
 using Unity.Mathematics;
@@ -14,14 +15,17 @@ namespace Wyd.Game.World.Chunks
 {
     public class ChunkMeshingJob : AsyncJob
     {
-        private ChunkMesher _Mesher;
+        private readonly CancellationToken _CancellationToken;
         private readonly float3 _OriginPoint;
         private readonly OctreeNode<ushort> _Blocks;
         private readonly bool _AggressiveFaceMerging;
 
-        public ChunkMeshingJob(float3 originPoint, OctreeNode<ushort> blocks, bool aggressiveFaceMerging)
+        private ChunkMesher _Mesher;
+
+        public ChunkMeshingJob(CancellationToken cancellationToken, float3 originPoint, OctreeNode<ushort> blocks,
+            bool aggressiveFaceMerging) : base(cancellationToken)
         {
-            _Mesher = null;
+            _CancellationToken = cancellationToken;
             _OriginPoint = originPoint;
             _Blocks = blocks;
             _AggressiveFaceMerging = aggressiveFaceMerging;
@@ -29,7 +33,7 @@ namespace Wyd.Game.World.Chunks
 
         protected override Task Process()
         {
-            _Mesher = new ChunkMesher(_OriginPoint, _Blocks, AsyncJobScheduler.AbortToken,
+            _Mesher = new ChunkMesher(_CancellationToken, _OriginPoint, _Blocks, AsyncJobScheduler.AbortToken,
                 _AggressiveFaceMerging);
             _Mesher.GenerateMesh();
 
