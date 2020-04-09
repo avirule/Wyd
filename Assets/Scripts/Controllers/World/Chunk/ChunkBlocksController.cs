@@ -25,6 +25,7 @@ namespace Wyd.Controllers.World.Chunk
 
         #region INSTANCE MEMBERS
 
+        private OctreeNode<ushort> _Blocks;
         private Queue<BlockAction> _BlockActions;
 
         public ref OctreeNode<ushort> Blocks => ref _Blocks;
@@ -50,8 +51,6 @@ namespace Wyd.Controllers.World.Chunk
         [ReadOnlyInspectorField]
         private uint NonAirBlocks;
 
-        private OctreeNode<ushort> _Blocks;
-
 #endif
 
         #endregion
@@ -72,7 +71,7 @@ namespace Wyd.Controllers.World.Chunk
             base.OnEnable();
 
             PerFrameUpdateController.Current.RegisterPerFrameUpdater(30, this);
-            ClearInternalData();
+            _BlockActions.Clear();
 
             Blocks = new OctreeNode<ushort>(OriginPoint + (ChunkController.Size / new float3(2f)),
                 ChunkController.Size.x, 0);
@@ -83,7 +82,8 @@ namespace Wyd.Controllers.World.Chunk
             base.OnDisable();
 
             PerFrameUpdateController.Current.DeregisterPerFrameUpdater(30, this);
-            ClearInternalData();
+            _BlockActions.Clear();
+
         }
 
         public void FrameUpdate() { }
@@ -128,17 +128,6 @@ namespace Wyd.Controllers.World.Chunk
             normals = WydMath.ToComponents(WydMath.ToInt(math.floor(localPositionAbs / 16f) * localPositionSign));
             return true;
         }
-
-
-        #region DE/ACTIVATION
-
-        private void ClearInternalData()
-        {
-            _BlockActions.Clear();
-            Blocks.Collapse();
-        }
-
-        #endregion
 
 
         #region TRY GET / PLACE / REMOVE BLOCKS

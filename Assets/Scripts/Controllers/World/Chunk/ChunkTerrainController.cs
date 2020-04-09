@@ -30,7 +30,7 @@ namespace Wyd.Controllers.World.Chunk
         #region INSTANCE MEMBERS
 
         private object _TerrainStepHandle;
-        private CancellationTokenSource _CancellationTokenSource;
+        private CancellationTokenSource _CurrentJobCancellationTokenSource;
 
         public TerrainStep TerrainStep
         {
@@ -104,7 +104,7 @@ namespace Wyd.Controllers.World.Chunk
             PerFrameUpdateController.Current.RegisterPerFrameUpdater(40, this);
             ClearInternalData();
 
-            _CancellationTokenSource = new CancellationTokenSource();
+            _CurrentJobCancellationTokenSource = new CancellationTokenSource();
         }
 
         protected override void OnDisable()
@@ -114,7 +114,7 @@ namespace Wyd.Controllers.World.Chunk
             PerFrameUpdateController.Current.DeregisterPerFrameUpdater(40, this);
             ClearInternalData();
 
-            _CancellationTokenSource.Cancel();
+            _CurrentJobCancellationTokenSource.Cancel();
         }
 
         public void FrameUpdate()
@@ -194,13 +194,13 @@ namespace Wyd.Controllers.World.Chunk
                 // 1024 is the value set in the shader's [numthreads(--> 1024 <--, 1, 1)]
                 _noiseShader.Dispatch(kernel, WydMath.Product(ChunkController.Size) / 1024, 1, 1);
 
-                asyncJob = new ChunkBuildingJob(_CancellationTokenSource.Token, OriginPoint,
+                asyncJob = new ChunkBuildingJob(_CurrentJobCancellationTokenSource.Token, OriginPoint,
                     ref BlocksController.Blocks, _FREQUENCY, _PERSISTENCE, OptionsController.Current.GPUAcceleration,
                     noiseBuffer);
             }
             else
             {
-                asyncJob = new ChunkBuildingJob(_CancellationTokenSource.Token, OriginPoint,
+                asyncJob = new ChunkBuildingJob(_CurrentJobCancellationTokenSource.Token, OriginPoint,
                     ref BlocksController.Blocks, _FREQUENCY, _PERSISTENCE);
             }
 
