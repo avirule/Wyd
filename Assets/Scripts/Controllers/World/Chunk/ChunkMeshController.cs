@@ -185,6 +185,9 @@ namespace Wyd.Controllers.World.Chunk
 
         private void BeginGeneratingMesh()
         {
+            _CancellationTokenSource?.Cancel();
+            _CancellationTokenSource = new CancellationTokenSource();
+
             ChunkMeshingJob asyncJob = new ChunkMeshingJob(_CancellationTokenSource.Token, OriginPoint,
                 BlocksController.Blocks, true);
 
@@ -194,6 +197,7 @@ namespace Wyd.Controllers.World.Chunk
         private void ApplyMesh(ChunkMeshingJob chunkMeshingJob)
         {
             chunkMeshingJob.SetMesh(ref _Mesh);
+            MeshState = (MeshState | MeshState.Meshed) & ~MeshState.Meshing;
             OnMeshChanged(this, new ChunkChangedEventArgs(OriginPoint, Enumerable.Empty<int3>()));
         }
 
@@ -225,8 +229,6 @@ namespace Wyd.Controllers.World.Chunk
             meshingJob.WorkFinished -= OnJobFinished;
             MainThreadActionsController.Current.PushAction(new MainThreadAction(default,
                 () => ApplyMesh(meshingJob)));
-
-            MeshState = (MeshState | MeshState.Meshed) & ~MeshState.Meshing;
         }
 
         #endregion

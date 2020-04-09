@@ -30,7 +30,7 @@ namespace Wyd.Controllers.World.Chunk
         #region INSTANCE MEMBERS
 
         private object _TerrainStepHandle;
-        private CancellationTokenSource _CurrentJobCancellationTokenSource;
+        private CancellationTokenSource _CancellationTokenSource;
 
         public TerrainStep TerrainStep
         {
@@ -103,8 +103,6 @@ namespace Wyd.Controllers.World.Chunk
 
             PerFrameUpdateController.Current.RegisterPerFrameUpdater(40, this);
             ClearInternalData();
-
-            _CurrentJobCancellationTokenSource = new CancellationTokenSource();
         }
 
         protected override void OnDisable()
@@ -114,7 +112,7 @@ namespace Wyd.Controllers.World.Chunk
             PerFrameUpdateController.Current.DeregisterPerFrameUpdater(40, this);
             ClearInternalData();
 
-            _CurrentJobCancellationTokenSource.Cancel();
+            _CancellationTokenSource?.Cancel();
         }
 
         public void FrameUpdate()
@@ -183,6 +181,9 @@ namespace Wyd.Controllers.World.Chunk
         {
             ChunkBuildingJob asyncJob;
 
+            _CancellationTokenSource?.Cancel();
+            _CancellationTokenSource = new CancellationTokenSource();
+
             if (OptionsController.Current.GPUAcceleration)
             {
                 ComputeBuffer noiseBuffer = new ComputeBuffer(WydMath.Product(ChunkController.Size), 4);
@@ -194,13 +195,13 @@ namespace Wyd.Controllers.World.Chunk
                 // 1024 is the value set in the shader's [numthreads(--> 1024 <--, 1, 1)]
                 _noiseShader.Dispatch(kernel, WydMath.Product(ChunkController.Size) / 1024, 1, 1);
 
-                asyncJob = new ChunkBuildingJob(_CurrentJobCancellationTokenSource.Token, OriginPoint,
+                asyncJob = new ChunkBuildingJob(_CancellationTokenSource.Token, OriginPoint,
                     ref BlocksController.Blocks, _FREQUENCY, _PERSISTENCE, OptionsController.Current.GPUAcceleration,
                     noiseBuffer);
             }
             else
             {
-                asyncJob = new ChunkBuildingJob(_CurrentJobCancellationTokenSource.Token, OriginPoint,
+                asyncJob = new ChunkBuildingJob(_CancellationTokenSource.Token, OriginPoint,
                     ref BlocksController.Blocks, _FREQUENCY, _PERSISTENCE);
             }
 
