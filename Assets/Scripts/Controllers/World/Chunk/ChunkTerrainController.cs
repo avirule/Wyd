@@ -40,7 +40,7 @@ namespace Wyd.Controllers.World.Chunk
 
                 lock (_TerrainStepHandle)
                 {
-                    tmp = GenerationStep;
+                    tmp = _TerrainStep;
                 }
 
                 return tmp;
@@ -49,7 +49,7 @@ namespace Wyd.Controllers.World.Chunk
             {
                 lock (_TerrainStepHandle)
                 {
-                    GenerationStep = value;
+                    _TerrainStep = value;
                 }
             }
         }
@@ -62,7 +62,7 @@ namespace Wyd.Controllers.World.Chunk
         private ChunkBlocksController BlocksController;
 
         [SerializeField]
-        private TerrainStep GenerationStep;
+        private TerrainStep _TerrainStep;
 
 #if UNITY_EDITOR
 

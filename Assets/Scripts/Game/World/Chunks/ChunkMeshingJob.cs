@@ -42,8 +42,11 @@ namespace Wyd.Game.World.Chunks
 
         protected override Task ProcessFinished()
         {
-            DiagnosticsController.Current.RollingMeshingSetBlockTimes.Enqueue(_Mesher.SetBlockTimeSpan);
-            DiagnosticsController.Current.RollingMeshingTimes.Enqueue(_Mesher.MeshingTimeSpan);
+            if (!_CancellationToken.IsCancellationRequested)
+            {
+                DiagnosticsController.Current.RollingMeshingSetBlockTimes.Enqueue(_Mesher.SetBlockTimeSpan);
+                DiagnosticsController.Current.RollingMeshingTimes.Enqueue(_Mesher.MeshingTimeSpan);
+            }
 
             return Task.CompletedTask;
         }

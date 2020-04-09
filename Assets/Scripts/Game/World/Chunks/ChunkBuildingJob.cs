@@ -48,9 +48,12 @@ namespace Wyd.Game.World.Chunks
 
         protected override Task ProcessFinished()
         {
-            DiagnosticsController.Current.RollingNoiseRetrievalTimes.Enqueue(_TerrainBuilder.NoiseRetrievalTimeSpan);
-            DiagnosticsController.Current.RollingTerrainGenerationTimes.Enqueue(_TerrainBuilder
-                .TerrainGenerationTimeSpan);
+            if (!_CancellationToken.IsCancellationRequested)
+            {
+                DiagnosticsController.Current.RollingNoiseRetrievalTimes.Enqueue(_TerrainBuilder.NoiseRetrievalTimeSpan);
+                DiagnosticsController.Current.RollingTerrainGenerationTimes.Enqueue(_TerrainBuilder
+                    .TerrainGenerationTimeSpan);
+            }
 
             return Task.CompletedTask;
         }
