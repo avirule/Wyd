@@ -22,25 +22,26 @@ namespace Wyd.Game.World.Chunks
 {
     public class ChunkMesher
     {
+        private static readonly ObjectCache<MeshBlock[]> _MasksCache = new ObjectCache<MeshBlock[]>();
+
         private readonly Stopwatch _Stopwatch;
         private readonly List<Vector3> _Vertices;
         private readonly List<int> _Triangles;
         private readonly List<int> _TransparentTriangles;
         private readonly List<Vector3> _UVs;
+        private readonly float3 _OriginPoint;
+        private readonly OctreeNode<ushort> _Blocks;
+        private readonly CancellationToken _AbortToken;
+        private readonly bool _AggressiveFaceMerging;
+        private readonly int3 _Size;
+        private readonly int _VerticalIndexStep;
 
         private MeshBlock[] _Mask;
-
-        private float3 _OriginPoint;
-        private OctreeNode<ushort> _Blocks;
-        private int3 _Size;
-        private int _VerticalIndexStep;
-        private bool _AggressiveFaceMerging;
-        private CancellationToken _AbortToken;
 
         public TimeSpan SetBlockTimeSpan { get; private set; }
         public TimeSpan MeshingTimeSpan { get; private set; }
 
-        public ChunkMesher()
+        public ChunkMesher(float3 originPoint, OctreeNode<ushort> blocks, CancellationToken abortToken, bool aggressiveFaceMerging)
         {
             _Stopwatch = new Stopwatch();
             _Mask = new MeshBlock[0];
@@ -48,10 +49,7 @@ namespace Wyd.Game.World.Chunks
             _UVs = new List<Vector3>();
             _Triangles = new List<int>();
             _TransparentTriangles = new List<int>();
-        }
 
-        public void SetData(float3 originPoint, OctreeNode<ushort> blocks, CancellationToken abortToken, bool aggressiveFaceMerging)
-        {
             _OriginPoint = originPoint;
             _Blocks = blocks;
             _Size = WydMath.ToInt(_Blocks.Volume.Size);
@@ -65,6 +63,8 @@ namespace Wyd.Game.World.Chunks
 
             _AbortToken = abortToken;
             _AggressiveFaceMerging = aggressiveFaceMerging;
+
+            _Mask = _MasksCache.Retrieve() ?? new MeshBlock[sizeProduct];
         }
 
         public void ClearExistingData()
@@ -160,6 +160,7 @@ namespace Wyd.Game.World.Chunks
                 }
             }
 
+            _MasksCache.CacheItem(ref _Mask);
             _Stopwatch.Stop();
             MeshingTimeSpan = _Stopwatch.Elapsed;
         }
@@ -495,9 +496,9 @@ namespace Wyd.Game.World.Chunks
         //     }
         // }
 
-        private void TraverseIndex(int3 position, int index, int3 localPosition)
+        private void TraverseIndex(int3 origin, int index, int3 localPosition)
         {
-            int3 globalPosition = position + localPosition;
+            int3 globalPosition = origin + localPosition;
 
             // ensure this block face hasn't already been traversed
             if (!_Mask[index].Faces.HasFace(Direction.North)
@@ -505,7 +506,7 @@ namespace Wyd.Game.World.Chunks
                 && (((localPosition.z == (_Size.z - 1))
                      && WorldController.Current.TryGetBlockAt(globalPosition + Directions.North, out ushort blockId)
                      && BlockController.Current.CheckBlockHasProperties(blockId, BlockDefinition.Property.Transparent))
-                    // however if we're inside the chunk, use the proper Blocks[] array index for check
+                    // however if we're inside the chunk, use the _Mask[] array index for check
                     || ((localPosition.z < (_Size.z - 1))
                         && BlockController.Current.CheckBlockHasProperties(_Mask[index + _Size.x].Id,
                             BlockDefinition.Property.Transparent))))

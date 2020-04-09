@@ -1,7 +1,8 @@
 #region
 
-using System;
 using System.Collections.Generic;
+using System.Linq;
+using Serilog;
 using Unity.Mathematics;
 
 #endregion
@@ -87,11 +88,40 @@ namespace Wyd.System.Collections
 
             if (!ContainsMinBiased(point))
             {
-                throw new ArgumentOutOfRangeException(
-                    $"Cannot get point: specified point {point} not contained within bounds {Volume}.");
+                Log.Error(
+                    $"Attempted to get point {point} in {nameof(OctreeNode<ushort>)}, but {nameof(Volume)} does not contain it.\r\n"
+                    + $"State Information: [Volume {Volume}], [{nameof(IsUniform)} {IsUniform}], [Branches {_Nodes.Count}], "
+                    + (_Nodes.Count > 0
+                        ? $"[Branch Values {string.Join(", ", _Nodes.Select(node => node.Value))}"
+                        : string.Empty));
+                return default;
             }
 
-            return IsUniform ? Value : _Nodes[DetermineOctant(point)].GetPoint(point);
+
+            if (!IsUniform)
+            {
+                int octant = DetermineOctant(point);
+
+                if (octant >= _Nodes.Count)
+                {
+                    Log.Error(
+                        $"Attempted to step into octant of {nameof(OctreeNode<ushort>)} and failed ({nameof(GetPoint)}).\r\n"
+                        + $"State Information: [Volume {Volume}], [{nameof(IsUniform)} {IsUniform}], [Branches {_Nodes.Count}], "
+                        + (_Nodes.Count > 0
+                            ? $"[Branch Values {string.Join(", ", _Nodes.Select(node => node.Value))}]"
+                            : string.Empty)
+                        + $"[Octant {octant}]");
+                    return default;
+                }
+                else
+                {
+                    return _Nodes[octant].GetPoint(point);
+                }
+            }
+            else
+            {
+                return Value;
+            }
         }
 
         public void SetPoint(float3 point, T newValue)
@@ -100,8 +130,13 @@ namespace Wyd.System.Collections
 
             if (!ContainsMinBiased(point))
             {
-                throw new ArgumentOutOfRangeException(
-                    $"Cannot set point: specified point {point} not contained within bounds {Volume}.");
+                Log.Error(
+                    $"Attempted to set point {point} in {nameof(OctreeNode<ushort>)}, but {nameof(Volume)} does not contain it.\r\n"
+                    + $"State Information: [Volume {Volume}], [{nameof(IsUniform)} {IsUniform}], [Branches {_Nodes.Count}], "
+                    + (_Nodes.Count > 0
+                        ? $"[Branch Values {string.Join(", ", _Nodes.Select(node => node.Value))}"
+                        : string.Empty));
+                return;
             }
 
             if (IsUniform && Value.Equals(newValue))
@@ -126,12 +161,24 @@ namespace Wyd.System.Collections
 
             int octant = DetermineOctant(point);
 
+            if (octant >= _Nodes.Count)
+            {
+                Log.Error(
+                    $"Attempted to step into octant of {nameof(OctreeNode<ushort>)} and failed ({nameof(SetPoint)}).\r\n"
+                    + $"State Information: [Volume {Volume}], [{nameof(IsUniform)} {IsUniform}], [Branches {_Nodes.Count}], "
+                    + (_Nodes.Count > 0
+                        ? $"[Branch Values {string.Join(", ", _Nodes.Select(node => node.Value))}]"
+                        : string.Empty)
+                    + $"[Octant {octant}]");
+                return;
+            }
+
             // recursively dig into octree and set
             _Nodes[octant].SetPoint(point, newValue);
 
             // on each recursion back-step, ensure integrity of node
             // and collapse if all child node values are equal
-            if (CheckShouldCollapse())
+            if (!IsUniform && CheckShouldCollapse())
             {
                 Collapse();
             }
