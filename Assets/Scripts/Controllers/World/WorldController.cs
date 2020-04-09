@@ -9,7 +9,6 @@ using System.Linq;
 using System.Threading.Tasks;
 using Serilog;
 using Unity.Mathematics;
-using UnityEngine;
 using Wyd.Controllers.State;
 using Wyd.Controllers.System;
 using Wyd.Controllers.World.Chunk;
@@ -124,9 +123,9 @@ namespace Wyd.Controllers.World
         {
             int totalRenderDistance =
                 OptionsController.Current.RenderDistance + OptionsController.Current.PreLoadChunkDistance + 1;
-            _ChunkCache.MaximumSize = (totalRenderDistance * 2) - 1;
-
-            EntityController.Current.RegisterWatchForTag(RegisterCollideableEntity, "collider");
+            _ChunkCache.MaximumSize = ((totalRenderDistance * 2) - 1) * (int)WorldHeightInChunks;
+            OptionsController.Current.PropertyChanged += (sender, args) =>
+                EntityController.Current.RegisterWatchForTag(RegisterCollideableEntity, "collider");
             EntityController.Current.RegisterWatchForTag(RegisterLoaderEntity, "loader");
 
             SpawnPoint = WydMath.IndexTo3D(Seed, new int3(int.MaxValue, int.MaxValue, int.MaxValue));
@@ -215,8 +214,70 @@ namespace Wyd.Controllers.World
             FlagOriginAndNeighborsForMeshUpdate(chunkOrigin, Directions.AllDirectionAxes);
         }
 
+        private void FlagOriginAndNeighborsForMeshUpdate(float3 origin, IEnumerable<int3> directions)
+        {
+            FlagChunkForUpdateMesh(origin);
 
-        #region CHUNK BUILDING
+            foreach (float3 normal in directions)
+            {
+                FlagChunkForUpdateMesh(origin + (normal * ChunkController.Size));
+            }
+        }
+
+        private void FlagChunkForUpdateMesh(float3 origin)
+        {
+            if (TryGetChunkAt(WydMath.RoundBy(origin, WydMath.ToFloat(ChunkController.Size)),
+                out ChunkController chunkController))
+            {
+                chunkController.FlagMeshForUpdate();
+            }
+        }
+
+        public TerrainStep AggregateNeighborsStep(float3 position)
+        {
+            TerrainStep generationStep = TerrainStep.Complete;
+
+            if (TryGetChunkAt(position + (Directions.North * ChunkController.Size.z),
+                out ChunkController northChunk))
+            {
+                generationStep &= northChunk.CurrentStep;
+            }
+
+            if (TryGetChunkAt(position + (Directions.East * ChunkController.Size.x),
+                out ChunkController eastChunk))
+            {
+                generationStep &= eastChunk.CurrentStep;
+            }
+
+            if (TryGetChunkAt(position + (Directions.South * ChunkController.Size.z),
+                out ChunkController southChunk))
+            {
+                generationStep &= southChunk.CurrentStep;
+            }
+
+            if (TryGetChunkAt(position + (Directions.West * ChunkController.Size.x),
+                out ChunkController westChunk))
+            {
+                generationStep &= westChunk.CurrentStep;
+            }
+
+            if (TryGetChunkAt(position + (Directions.Up * ChunkController.Size.x),
+                out ChunkController upChunk))
+            {
+                generationStep &= upChunk.CurrentStep;
+            }
+
+            if (TryGetChunkAt(position + (Directions.Down * ChunkController.Size.x),
+                out ChunkController downChunk))
+            {
+                generationStep &= downChunk.CurrentStep;
+            }
+
+            return generationStep;
+        }
+        
+
+        #region State Management
 
         private void VerifyAllChunkStatesAroundLoaders()
         {
@@ -277,30 +338,6 @@ namespace Wyd.Controllers.World
             stopwatch.Reset();
         }
 
-
-        private void FlagOriginAndNeighborsForMeshUpdate(float3 origin, IEnumerable<int3> directions)
-        {
-            FlagChunkForUpdateMesh(origin);
-
-            foreach (float3 normal in directions)
-            {
-                FlagChunkForUpdateMesh(origin + (normal * ChunkController.Size));
-            }
-        }
-
-        private void FlagChunkForUpdateMesh(float3 origin)
-        {
-            if (TryGetChunkAt(WydMath.RoundBy(origin, WydMath.ToFloat(ChunkController.Size)),
-                out ChunkController chunkController))
-            {
-                chunkController.FlagMeshForUpdate();
-            }
-        }
-
-        #endregion
-
-        #region INTERNAL STATE CHECKS
-
         private void VerifyChunkStatesByLoader(IEntity loader, out HashSet<float3> originsAlreadyGenerated,
             ref List<float3> originsNotWithinAnyLoaderRanges)
         {
@@ -344,7 +381,8 @@ namespace Wyd.Controllers.World
 
         #endregion
 
-        #region EVENTS
+
+        #region Event Subscriptors
 
         public void RegisterCollideableEntity(IEntity attachTo)
         {
@@ -379,7 +417,7 @@ namespace Wyd.Controllers.World
         #endregion
 
 
-        #region GET / EXISTS
+        #region Chunk Block Operations
 
         public bool ChunkExistsAt(float3 position) => _Chunks.ContainsKey(position);
 
@@ -441,49 +479,6 @@ namespace Wyd.Controllers.World
             return TryGetChunkAt(chunkPosition, out ChunkController chunkController)
                    && (chunkController != default)
                    && chunkController.BlocksController.TryRemoveBlockAt(globalPosition);
-        }
-
-        public TerrainStep AggregateNeighborsStep(float3 position)
-        {
-            TerrainStep generationStep = TerrainStep.Complete;
-
-            if (TryGetChunkAt(position + (Directions.North * ChunkController.Size.z),
-                out ChunkController northChunk))
-            {
-                generationStep &= northChunk.CurrentStep;
-            }
-
-            if (TryGetChunkAt(position + (Directions.East * ChunkController.Size.x),
-                out ChunkController eastChunk))
-            {
-                generationStep &= eastChunk.CurrentStep;
-            }
-
-            if (TryGetChunkAt(position + (Directions.South * ChunkController.Size.z),
-                out ChunkController southChunk))
-            {
-                generationStep &= southChunk.CurrentStep;
-            }
-
-            if (TryGetChunkAt(position + (Directions.West * ChunkController.Size.x),
-                out ChunkController westChunk))
-            {
-                generationStep &= westChunk.CurrentStep;
-            }
-
-            if (TryGetChunkAt(position + (Directions.Up * ChunkController.Size.x),
-                out ChunkController upChunk))
-            {
-                generationStep &= upChunk.CurrentStep;
-            }
-
-            if (TryGetChunkAt(position + (Directions.Down * ChunkController.Size.x),
-                out ChunkController downChunk))
-            {
-                generationStep &= downChunk.CurrentStep;
-            }
-
-            return generationStep;
         }
 
         #endregion

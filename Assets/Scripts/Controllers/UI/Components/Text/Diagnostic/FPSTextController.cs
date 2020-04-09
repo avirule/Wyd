@@ -1,7 +1,9 @@
 #region
 
+using System;
 using System.Linq;
 using UnityEngine;
+using Wyd.Controllers.State;
 using Wyd.System.Collections;
 
 #endregion
@@ -10,7 +12,6 @@ namespace Wyd.Controllers.UI.Components.Text.Diagnostic
 {
     public class FPSTextController : FormattedTextController
     {
-        private const int _ACCURACY = 300;
         private int _FramesWaited;
 
         private FixedConcurrentQueue<float> _FrameTimes;
@@ -19,8 +20,12 @@ namespace Wyd.Controllers.UI.Components.Text.Diagnostic
         {
             base.Awake();
 
-            _FrameTimes = new FixedConcurrentQueue<float>(_ACCURACY);
             _FramesWaited = 0;
+        }
+
+        private void Start()
+        {
+            _FrameTimes = new FixedConcurrentQueue<float>(OptionsController.Current.MaximumDiagnosticBuffersSize);
         }
 
         private void Update()

@@ -10,12 +10,6 @@ using Wyd.System.Collections;
 
 namespace Wyd.System.Jobs
 {
-    public enum ThreadingMode
-    {
-        Single,
-        Multi
-    }
-
     public static class AsyncJobScheduler
     {
         private static readonly CancellationTokenSource _AbortTokenSource;
@@ -56,21 +50,6 @@ namespace Wyd.System.Jobs
             }
         }
 
-        /// <summary>
-        ///     Adds specified <see cref="Job" /> to internal queue and returns a unique identity.
-        /// </summary>
-        /// <param name="asyncJob"><see cref="Job" /> to be added.</param>
-        public static async Task QueueAsyncJob(AsyncJob asyncJob)
-        {
-            if (AbortToken.IsCancellationRequested)
-            {
-                return;
-            }
-
-            await _AsyncJobQueue.PushAsync(asyncJob, AbortToken);
-            OnJobQueued(new AsyncJobEventArgs(asyncJob));
-        }
-
 
         #region STATE
 
@@ -96,6 +75,17 @@ namespace Wyd.System.Jobs
         private static void ModifyWorkerThreadCount(int newTotal)
         {
             Interlocked.Exchange(ref _workerThreadCount, Math.Max(newTotal, 1));
+        }
+
+        public static async Task QueueAsyncJob(AsyncJob asyncJob)
+        {
+            if (AbortToken.IsCancellationRequested)
+            {
+                return;
+            }
+
+            await _AsyncJobQueue.PushAsync(asyncJob, AbortToken);
+            OnJobQueued(new AsyncJobEventArgs(asyncJob));
         }
 
         #endregion

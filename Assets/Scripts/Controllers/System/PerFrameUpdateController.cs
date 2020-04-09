@@ -28,7 +28,7 @@ namespace Wyd.Controllers.System
         private SortedList<int, List<IPerFrameUpdate>> _PerFrameUpdates;
         private Stack<PerFrameUpdateCollectionModification> _PerFrameUpdateCollectionModifications;
 
-        public bool IsSafeFrameTime() => _FrameTimer.Elapsed <= OptionsController.Current.MaximumInternalFrameTime;
+        public bool IsSafeFrameTime() => _FrameTimer.Elapsed <= OptionsController.Current.TargetFrameRateTimeSpan;
 
         private void Awake()
         {
