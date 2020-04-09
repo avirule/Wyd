@@ -12,6 +12,8 @@ namespace Wyd.Controllers.UI.Components.Text.Diagnostic
 
         protected override void Awake()
         {
+            base.Awake();
+
             AsyncJobScheduler.JobQueued += (sender, args) => _UpdateDiagInfo = true;
             AsyncJobScheduler.JobStarted += (sender, args) => _UpdateDiagInfo = true;
             AsyncJobScheduler.JobFinished += (sender, args) => _UpdateDiagInfo = true;
