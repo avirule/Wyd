@@ -22,7 +22,8 @@ namespace Wyd.Controllers.UI.Components.Text.Diagnostic
         {
             if (_UpdateDiagInfo)
             {
-                TextObject.text = string.Format(Format, AsyncJobScheduler.WorkerThreadCount, AsyncJobScheduler.ProcessingJobCount,
+                TextObject.text = string.Format(Format, AsyncJobScheduler.WorkerThreadCount,
+                    AsyncJobScheduler.ProcessingJobCount,
                     AsyncJobScheduler.JobsQueued);
 
                 _UpdateDiagInfo = false;

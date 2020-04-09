@@ -1,7 +1,3 @@
-#region
-
-#endregion
-
 namespace Wyd.Game.World.Blocks
 {
     public struct MeshBlock

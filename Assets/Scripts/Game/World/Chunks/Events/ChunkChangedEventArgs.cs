@@ -2,7 +2,6 @@
 
 using System.Collections.Generic;
 using Unity.Mathematics;
-using Wyd.System;
 
 #endregion
 

@@ -3,7 +3,6 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using Serilog;
 using Unity.Mathematics;
 
 #endregion
@@ -89,11 +88,12 @@ namespace Wyd.System.Collections
 
             if (!ContainsMinBiased(point))
             {
-                throw new ArgumentOutOfRangeException($"Attempted to get point {point} in {nameof(OctreeNode<ushort>)}, but {nameof(Volume)} does not contain it.\r\n"
-                                                      + $"State Information: [Volume {Volume}], [{nameof(IsUniform)} {IsUniform}], [Branches {_Nodes.Count}], "
-                                                      + (_Nodes.Count > 0
-                                                          ? $"[Branch Values {string.Join(", ", _Nodes.Select(node => node.Value))}"
-                                                          : string.Empty));
+                throw new ArgumentOutOfRangeException(
+                    $"Attempted to get point {point} in {nameof(OctreeNode<ushort>)}, but {nameof(Volume)} does not contain it.\r\n"
+                    + $"State Information: [Volume {Volume}], [{nameof(IsUniform)} {IsUniform}], [Branches {_Nodes.Count}], "
+                    + (_Nodes.Count > 0
+                        ? $"[Branch Values {string.Join(", ", _Nodes.Select(node => node.Value))}"
+                        : string.Empty));
             }
 
 
@@ -103,12 +103,13 @@ namespace Wyd.System.Collections
 
                 if (octant >= _Nodes.Count)
                 {
-                    throw new ArgumentOutOfRangeException($"Attempted to step into octant of {nameof(OctreeNode<ushort>)} and failed ({nameof(GetPoint)}).\r\n"
-                                                          + $"State Information: [Volume {Volume}], [{nameof(IsUniform)} {IsUniform}], [Branches {_Nodes.Count}], "
-                                                          + (_Nodes.Count > 0
-                                                              ? $"[Branch Values {string.Join(", ", _Nodes.Select(node => node.Value))}]"
-                                                              : string.Empty)
-                                                          + $"[Octant {octant}]");
+                    throw new ArgumentOutOfRangeException(
+                        $"Attempted to step into octant of {nameof(OctreeNode<ushort>)} and failed ({nameof(GetPoint)}).\r\n"
+                        + $"State Information: [Volume {Volume}], [{nameof(IsUniform)} {IsUniform}], [Branches {_Nodes.Count}], "
+                        + (_Nodes.Count > 0
+                            ? $"[Branch Values {string.Join(", ", _Nodes.Select(node => node.Value))}]"
+                            : string.Empty)
+                        + $"[Octant {octant}]");
                 }
                 else
                 {
@@ -127,11 +128,12 @@ namespace Wyd.System.Collections
 
             if (!ContainsMinBiased(point))
             {
-                throw new ArgumentOutOfRangeException($"Attempted to set point {point} in {nameof(OctreeNode<ushort>)}, but {nameof(Volume)} does not contain it.\r\n"
-                                                      + $"State Information: [Volume {Volume}], [{nameof(IsUniform)} {IsUniform}], [Branches {_Nodes.Count}], "
-                                                      + (_Nodes.Count > 0
-                                                          ? $"[Branch Values {string.Join(", ", _Nodes.Select(node => node.Value))}"
-                                                          : string.Empty));
+                throw new ArgumentOutOfRangeException(
+                    $"Attempted to set point {point} in {nameof(OctreeNode<ushort>)}, but {nameof(Volume)} does not contain it.\r\n"
+                    + $"State Information: [Volume {Volume}], [{nameof(IsUniform)} {IsUniform}], [Branches {_Nodes.Count}], "
+                    + (_Nodes.Count > 0
+                        ? $"[Branch Values {string.Join(", ", _Nodes.Select(node => node.Value))}"
+                        : string.Empty));
             }
 
             if (IsUniform && Value.Equals(newValue))
@@ -158,12 +160,13 @@ namespace Wyd.System.Collections
 
             if (octant >= _Nodes.Count)
             {
-                throw new ArgumentOutOfRangeException($"Attempted to step into octant of {nameof(OctreeNode<ushort>)} and failed ({nameof(SetPoint)}).\r\n"
-                                                      + $"State Information: [Volume {Volume}], [{nameof(IsUniform)} {IsUniform}], [Branches {_Nodes.Count}], "
-                                                      + (_Nodes.Count > 0
-                                                          ? $"[Branch Values {string.Join(", ", _Nodes.Select(node => node.Value))}]"
-                                                          : string.Empty)
-                                                      + $"[Octant {octant}]");
+                throw new ArgumentOutOfRangeException(
+                    $"Attempted to step into octant of {nameof(OctreeNode<ushort>)} and failed ({nameof(SetPoint)}).\r\n"
+                    + $"State Information: [Volume {Volume}], [{nameof(IsUniform)} {IsUniform}], [Branches {_Nodes.Count}], "
+                    + (_Nodes.Count > 0
+                        ? $"[Branch Values {string.Join(", ", _Nodes.Select(node => node.Value))}]"
+                        : string.Empty)
+                    + $"[Octant {octant}]");
             }
 
             // recursively dig into octree and set
@@ -181,11 +184,12 @@ namespace Wyd.System.Collections
         {
             if (IsUniform)
             {
-                throw new ArgumentOutOfRangeException($"Attempted to check for required collapsing of {nameof(OctreeNode<ushort>)} and failed..\r\n"
-                                                      + $"State Information: [Volume {Volume}], [{nameof(IsUniform)} {IsUniform}], [Branches {_Nodes.Count}], "
-                                                      + (_Nodes.Count > 0
-                                                          ? $"[Branch Values {string.Join(", ", _Nodes.Select(node => node.Value))}]"
-                                                          : string.Empty));
+                throw new ArgumentOutOfRangeException(
+                    $"Attempted to check for required collapsing of {nameof(OctreeNode<ushort>)} and failed..\r\n"
+                    + $"State Information: [Volume {Volume}], [{nameof(IsUniform)} {IsUniform}], [Branches {_Nodes.Count}], "
+                    + (_Nodes.Count > 0
+                        ? $"[Branch Values {string.Join(", ", _Nodes.Select(node => node.Value))}]"
+                        : string.Empty));
             }
 
             T firstValue = _Nodes[0].Value;

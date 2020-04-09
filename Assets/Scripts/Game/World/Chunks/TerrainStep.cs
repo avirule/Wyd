@@ -1,5 +1,3 @@
-using System;
-
 namespace Wyd.Game.World.Chunks
 {
     public enum TerrainStep : byte

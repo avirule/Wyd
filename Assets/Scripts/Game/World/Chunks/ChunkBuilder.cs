@@ -29,7 +29,6 @@ namespace Wyd.Game.World.Chunks
             CancellationToken = cancellationToken;
             OriginPoint = originPoint;
             Blocks = blocks;
-
         }
 
         protected ushort GetCachedBlockID(string blockName)
