@@ -146,8 +146,7 @@ namespace Wyd.Controllers.World.Chunk
                 || (BlocksController.PendingBlockActions > 0)
                 || (TerrainController.TerrainStep != TerrainStep.Complete)
                 || !WorldController.Current.ReadyForGeneration
-                || (WorldController.Current.AggregateNeighborsStep(OriginPoint)
-                    < TerrainStep.Complete))
+                || (WorldController.Current.AggregateNeighborsStep(OriginPoint) < TerrainStep.Complete))
             {
                 return;
             }

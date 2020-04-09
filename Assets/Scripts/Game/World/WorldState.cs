@@ -7,9 +7,9 @@ using System;
 namespace Wyd.Game.World
 {
     [Flags]
-    public enum WorldState
+    public enum WorldState : byte
     {
-        RequiresStateVerification,
-        VerifyingState
+        RequiresStateVerification = 1,
+        VerifyingState = 2
     }
 }

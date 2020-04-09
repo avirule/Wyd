@@ -42,6 +42,7 @@ namespace Wyd.Controllers.World
         #endregion
 
 
+        private Stopwatch _Stopwatch;
         private ObjectCache<ChunkController> _ChunkCache;
         private Dictionary<float3, ChunkController> _Chunks;
         private ConcurrentStack<PendingChunkActivation> _ChunksPendingActivation;
@@ -97,6 +98,7 @@ namespace Wyd.Controllers.World
         {
             AssignSingletonInstance(this);
 
+            _Stopwatch = new Stopwatch();
             _ChunkCache = new ObjectCache<ChunkController>(false, -1,
                 (ref ChunkController chunkController) =>
                 {
@@ -148,7 +150,8 @@ namespace Wyd.Controllers.World
 
         public IEnumerable IncrementalFrameUpdate()
         {
-            if (WorldState.HasFlag(WorldState.RequiresStateVerification))
+            if (WorldState.HasFlag(WorldState.RequiresStateVerification)
+            && !WorldState.HasFlag(WorldState.VerifyingState))
             {
                 Task.Run(VerifyAllChunkStatesAroundLoaders);
                 WorldState &= ~WorldState.RequiresStateVerification;
@@ -281,7 +284,7 @@ namespace Wyd.Controllers.World
 
         private void VerifyAllChunkStatesAroundLoaders()
         {
-            Stopwatch stopwatch = Stopwatch.StartNew();
+            _Stopwatch.Restart();
 
             WorldState |= WorldState.VerifyingState;
             List<float3> chunksRequiringDeactivation = new List<float3>();
@@ -334,8 +337,8 @@ namespace Wyd.Controllers.World
             }
 
             WorldState &= ~WorldState.VerifyingState;
-            ChunkStateVerificationTimes.Enqueue(stopwatch.Elapsed);
-            stopwatch.Reset();
+            ChunkStateVerificationTimes.Enqueue(_Stopwatch.Elapsed);
+            _Stopwatch.Reset();
         }
 
         private void VerifyChunkStatesByLoader(IEntity loader, out HashSet<float3> originsAlreadyGenerated,

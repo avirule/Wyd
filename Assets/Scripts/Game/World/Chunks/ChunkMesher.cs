@@ -111,24 +111,6 @@ namespace Wyd.Game.World.Chunks
             }
         }
 
-        private void SetBlockData(IEnumerable<ushort> blocks)
-        {
-            int index = 0;
-
-            foreach (ushort id in blocks)
-            {
-                if (_CancellationToken.IsCancellationRequested)
-                {
-                    return;
-                }
-
-                _Mask[index].Id = id;
-                _Mask[index].Faces.ClearFaces();
-
-                index += 1;
-            }
-        }
-
         public void GenerateMesh()
         {
             if (_Blocks.IsUniform && (_Blocks.Value == BlockController.AIR_ID))
@@ -177,6 +159,24 @@ namespace Wyd.Game.World.Chunks
             _MasksCache.CacheItem(ref _Mask);
             _Stopwatch.Stop();
             MeshingTimeSpan = _Stopwatch.Elapsed;
+        }
+
+        private void SetBlockData(IEnumerable<ushort> blocks)
+        {
+            int index = 0;
+
+            foreach (ushort id in blocks)
+            {
+                if (_CancellationToken.IsCancellationRequested)
+                {
+                    return;
+                }
+
+                _Mask[index].Id = id;
+                _Mask[index].Faces.ClearFaces();
+
+                index += 1;
+            }
         }
 
         #region TRAVERSAL MESHING

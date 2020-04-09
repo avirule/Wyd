@@ -19,8 +19,7 @@ namespace Wyd.Controllers.World.Chunk
 {
     public class ChunkBlocksController : ActivationStateChunkController, IPerFrameIncrementalUpdate
     {
-        private static readonly ObjectCache<BlockAction> _BlockActionsCache =
-            new ObjectCache<BlockAction>(true, 1024);
+        private static readonly ObjectCache<BlockAction> _BlockActionsCache = new ObjectCache<BlockAction>(true, 1024);
 
 
         #region INSTANCE MEMBERS

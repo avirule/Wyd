@@ -23,8 +23,6 @@ namespace Wyd.Controllers.World.Chunk
         private const float _FREQUENCY = 0.01f;
         private const float _PERSISTENCE = -1f;
 
-        public const float THRESHOLD = 0.01f;
-
         private static ComputeShader _noiseShader;
 
         #region INSTANCE MEMBERS
@@ -74,9 +72,6 @@ namespace Wyd.Controllers.World.Chunk
         [ReadOnlyInspectorField]
         private long TimesTerrainChanged;
 
-        [SerializeField]
-        private bool StepIntoFrameUpdate;
-
 #endif
 
         #endregion
@@ -117,15 +112,6 @@ namespace Wyd.Controllers.World.Chunk
 
         public void FrameUpdate()
         {
-#if UNITY_EDITOR
-
-            if (StepIntoFrameUpdate)
-            {
-                StepIntoFrameUpdate = false;
-            }
-
-#endif
-
             if ((TerrainStep == TerrainStep.Complete)
                 || !WorldController.Current.ReadyForGeneration
                 || (WorldController.Current.AggregateNeighborsStep(WydMath.ToInt(OriginPoint)) < TerrainStep))
