@@ -5,6 +5,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using Unity.Mathematics;
 using UnityEngine;
+using UnityEngine.InputSystem;
 using Wyd.Controllers.State;
 using Wyd.Controllers.UI;
 using Wyd.Controllers.World;
@@ -28,11 +29,13 @@ namespace Wyd.Controllers.Entity
         private RaycastHit _LastReachRayHit;
         private bool _IsInReachOfValidSurface;
         private Transform _ReachHitSurfaceObjectTransform;
-        private float3 _Movement;
+        private float2 _Movement;
         private Stopwatch _ActionCooldown;
         private Stopwatch _RegularCheckWait;
         private float3 _Position;
         private int3 _ChunkPosition;
+
+        private PlayerInputActions _PlayerInputActions;
 
         public Transform CameraTransform;
         public InventoryController Inventory;
@@ -78,6 +81,12 @@ namespace Wyd.Controllers.Entity
         {
             AssignSingletonInstance(this);
 
+            _PlayerInputActions = new PlayerInputActions();
+            _PlayerInputActions.PlayerControls.Move.performed += ctx => _Movement = ctx.ReadValue<Vector2>();
+            _PlayerInputActions.PlayerControls.Look.performed += ctx =>
+            {
+                Vector2 s = ctx.ReadValue<Vector2>();
+            };
             _ReachRay = new Ray();
             _ActionCooldown = Stopwatch.StartNew();
             _RegularCheckWait = Stopwatch.StartNew();
@@ -146,7 +155,6 @@ namespace Wyd.Controllers.Entity
                 Rigidbody.useGravity = !Rigidbody.useGravity;
             }
 
-            UpdateMovement();
             CalculateJump();
             UpdateReachRay();
             UpdateLastLookAtCubeOrigin();
@@ -297,15 +305,10 @@ namespace Wyd.Controllers.Entity
 
         #region MOVEMENT
 
-        private void UpdateMovement()
-        {
-            _Movement.x = InputController.Current.GetAxisRaw("Horizontal");
-            _Movement.z = InputController.Current.GetAxisRaw("Vertical");
-        }
-
         private void CalculateRotation()
         {
-            //Rigidbody.MoveRotation(quaternion.Euler(0f, CameraTransform.eulerAngles.y, 0f));
+            float3 eulerAngles = CameraTransform.eulerAngles;
+            Rigidbody.MoveRotation(quaternion.Euler(0f, eulerAngles.y, 0f));
         }
 
         private void CalculateJump()
@@ -321,14 +324,16 @@ namespace Wyd.Controllers.Entity
 
         private void CalculateMovement()
         {
-            if (math.all(_Movement == float3.zero))
+            if (math.all(_Movement == float2.zero))
             {
                 return;
             }
 
-            float3 modifiedMovement = TravelSpeed * Time.fixedDeltaTime * _Movement;
+            float3 interpolatedMovement = TravelSpeed * Time.fixedDeltaTime * new float3(_Movement.x, 0f, _Movement.y);
+            float3 finalMovement = CameraTransform.TransformDirection(interpolatedMovement);
 
-            Rigidbody.MovePosition(Rigidbody.position + Transform.TransformDirection(modifiedMovement));
+            // todo don't move relative to camera, it's fuckin dumb
+            Rigidbody.MovePosition(Rigidbody.position + (Vector3)finalMovement);
         }
 
         #endregion

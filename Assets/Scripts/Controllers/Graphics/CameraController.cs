@@ -24,7 +24,7 @@ namespace Wyd.Controllers.Graphics
 
         private void FixedUpdate()
         {
-            _SelfTransform.rotation = quaternion.Euler(-_Pitch * Time.fixedDeltaTime, _Yaw * Time.fixedDeltaTime, 0f);
+            //_SelfTransform.rotation = quaternion.Euler(-_Pitch * Time.fixedDeltaTime, _Yaw * Time.fixedDeltaTime, 0f);
         }
 
         private void Update()
@@ -32,8 +32,8 @@ namespace Wyd.Controllers.Graphics
             float axisY = InputController.Current.GetAxis("Mouse Y");
             float axisX = InputController.Current.GetAxis("Mouse X");
 
-            _Pitch += 2 * axisY;
-            _Yaw += 2 * axisX;
+            _Pitch += 2f * axisY;
+            _Yaw += 2f * axisX;
         }
     }
 }
