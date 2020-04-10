@@ -10,6 +10,7 @@ using JetBrains.Annotations;
 using Serilog;
 using SharpConfig;
 using UnityEngine;
+using UnityEngine.AI;
 using Wyd.Graphics;
 
 #endregion
@@ -37,15 +38,17 @@ namespace Wyd.Controllers.State
         public static class Defaults
         {
             // General
+            // ReSharper disable once InconsistentNaming
+            public static int ASYNC_WORKER_COUNT = Environment.ProcessorCount - 1;
             public const bool GPU_ACCELERATION = true;
             public const int MAXIMUM_DIAGNOSTIC_BUFFERS_LENGTH = 600;
+            public const int RENDER_DISTANCE = 4;
+            public const int SHADOW_DISTANCE = 4;
 
             // Graphics
             public const int TARGET_FRAME_RATE = 60;
             public const int VSYNC_LEVEL = 1;
             public const int WINDOW_MODE = (int)WindowMode.Fullscreen;
-            public const int RENDER_DISTANCE = 4;
-            public const int SHADOW_DISTANCE = 4;
 
             // Chunking
             public const int PRE_LOAD_CHUNK_DISTANCE = 1;
@@ -63,6 +66,7 @@ namespace Wyd.Controllers.State
         #region PRIVATE FIELDS
 
         private Configuration _Configuration;
+        private int _AsyncWorkerCount;
         private bool _GPUAcceleration;
         private int _TargetFrameRate;
         private int _MaximumDiagnosticBuffersSize;
@@ -75,6 +79,18 @@ namespace Wyd.Controllers.State
 
 
         #region GENERAL OPTIONS MEMBERS
+
+        public int AsyncWorkerCount
+        {
+            get => _AsyncWorkerCount;
+            set
+            {
+                _AsyncWorkerCount = value;
+                _Configuration["General"][nameof(AsyncWorkerCount)].IntValue = _AsyncWorkerCount;
+                SaveSettings();
+                OnPropertyChanged();
+            }
+        }
 
         public bool GPUAcceleration
         {
@@ -230,6 +246,15 @@ namespace Wyd.Controllers.State
 
             // General
 
+            if (!GetSetting("Genera;", nameof(AsyncWorkerCount), out _AsyncWorkerCount)
+                || AsyncWorkerCount > Environment.ProcessorCount
+                || AsyncWorkerCount < 1)
+            {
+                LogSettingLoadError(nameof(AsyncWorkerCount), Defaults.ASYNC_WORKER_COUNT);
+                AsyncWorkerCount = Defaults.ASYNC_WORKER_COUNT;
+                SaveSettings();
+            }
+
             if (!GetSetting("General", nameof(GPUAcceleration), out _GPUAcceleration))
             {
                 LogSettingLoadError(nameof(GPUAcceleration), Defaults.GPU_ACCELERATION);
@@ -323,6 +348,12 @@ namespace Wyd.Controllers.State
             _Configuration = new Configuration();
 
             // General
+
+            _Configuration["General"][nameof(AsyncWorkerCount)].PreComment =
+                "Total number of asynchronous workers to initialize.\r\n"
+                + "Note: maximum number of workers is equal to your logical core count."
+                + "On most machines, this will be: (core count x 2).";
+            _Configuration["General"][nameof(AsyncWorkerCount)].IntValue = Defaults.ASYNC_WORKER_COUNT;
 
             _Configuration["General"][nameof(GPUAcceleration)].PreComment =
                 "Determines whether the GPU will be used for operations other than rendering.\r\n"

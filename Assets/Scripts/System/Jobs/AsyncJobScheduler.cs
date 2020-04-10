@@ -12,14 +12,14 @@ namespace Wyd.System.Jobs
 {
     public static class AsyncJobScheduler
     {
-        private static readonly CancellationTokenSource _AbortTokenSource;
         private static readonly AsyncCollection<AsyncJob> _AsyncJobQueue;
 
+        private static CancellationTokenSource _abortTokenSource;
         private static int _workerThreadCount;
         private static long _jobsQueued;
         private static long _processingJobCount;
 
-        public static CancellationToken AbortToken => _AbortTokenSource.Token;
+        public static CancellationToken AbortToken => _abortTokenSource.Token;
         public static int WorkerThreadCount => _workerThreadCount;
         public static long JobsQueued => Interlocked.Read(ref _jobsQueued);
         public static long ProcessingJobCount => Interlocked.Read(ref _processingJobCount);
@@ -29,10 +29,8 @@ namespace Wyd.System.Jobs
         /// </summary>
         static AsyncJobScheduler()
         {
-            ModifyWorkerThreadCount(Environment.ProcessorCount - 1 /* to facilitate main thread */);
-
             _AsyncJobQueue = new AsyncCollection<AsyncJob>();
-            _AbortTokenSource = new CancellationTokenSource();
+            _abortTokenSource = new CancellationTokenSource();
 
             JobQueued += (sender, args) => Interlocked.Increment(ref _jobsQueued);
             JobStarted += (sender, args) => Interlocked.Increment(ref _processingJobCount);
@@ -42,10 +40,7 @@ namespace Wyd.System.Jobs
                 Interlocked.Decrement(ref _processingJobCount);
             };
 
-            for (int i = 0; i < WorkerThreadCount; i++)
-            {
-                Task.Run(ProcessItemQueue, AbortToken);
-            }
+            ModifyWorkerThreadCount(Environment.ProcessorCount - 1 /* to facilitate main thread */);
         }
 
 
@@ -58,7 +53,7 @@ namespace Wyd.System.Jobs
         {
             if (abort)
             {
-                _AbortTokenSource.Cancel();
+                _abortTokenSource.Cancel();
             }
         }
 
@@ -68,11 +63,26 @@ namespace Wyd.System.Jobs
         /// <remarks>
         ///     This separate-method approach is taken to make intent clear, and to
         ///     more idiomatically constrain the total to a positive value.
+        ///
+        ///     Additionally, modifying this value causes a total cancel on all active workers.
+        ///     Therefore, it's advised to not use it unless absolutely necessary.
         /// </remarks>
         /// <param name="newTotal"></param>
         private static void ModifyWorkerThreadCount(int newTotal)
         {
             Interlocked.Exchange(ref _workerThreadCount, Math.Max(newTotal, 1));
+
+            _abortTokenSource.Cancel();
+            _abortTokenSource = new CancellationTokenSource();
+            SpawnWorkers();
+        }
+
+        private static void SpawnWorkers()
+        {
+            for (int i = 0; i < WorkerThreadCount; i++)
+            {
+                Task.Run(ProcessItemQueue, AbortToken);
+            }
         }
 
         public static async Task QueueAsyncJob(AsyncJob asyncJob)
