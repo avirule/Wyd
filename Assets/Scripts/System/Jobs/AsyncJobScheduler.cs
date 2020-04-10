@@ -16,8 +16,6 @@ namespace Wyd.System.Jobs
         private static readonly AsyncCollection<AsyncJob> _AsyncJobQueue;
 
         private static int _workerThreadCount;
-
-
         private static long _jobsQueued;
         private static long _processingJobCount;
 
@@ -51,7 +49,7 @@ namespace Wyd.System.Jobs
         }
 
 
-        #region STATE
+        #region State
 
         /// <summary>
         ///     Aborts execution of internal threaded process.
@@ -91,7 +89,7 @@ namespace Wyd.System.Jobs
         #endregion
 
 
-        #region RUNTIME
+        #region Runtime
 
         private static async Task ProcessItemQueue()
         {
@@ -131,7 +129,7 @@ namespace Wyd.System.Jobs
         #endregion
 
 
-        #region EVENTS
+        #region Events
 
         /// <summary>
         ///     Called when a job is queued.
