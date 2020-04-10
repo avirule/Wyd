@@ -20,16 +20,21 @@ namespace Wyd.System.Collections
             _Writer = channel.Writer;
         }
 
-        public async Task PushAsync(T item, CancellationToken cancellationToken = default)
-        {
+        public async ValueTask AddAsync(T item, CancellationToken cancellationToken = default) =>
             await _Writer.WriteAsync(item, cancellationToken);
-        }
 
-        public async Task<T> TakeAsync(CancellationToken cancellationToken = default)
+        public async ValueTask<T> TakeAsync(CancellationToken cancellationToken = default)
         {
-            while (await _Reader.WaitToReadAsync(cancellationToken))
+            while (!cancellationToken.IsCancellationRequested)
             {
-                return await _Reader.ReadAsync(cancellationToken);
+                if (_Reader.TryRead(out T item))
+                {
+                    return item;
+                }
+                else
+                {
+                    await Task.Delay(1, cancellationToken);
+                }
             }
 
             return default;

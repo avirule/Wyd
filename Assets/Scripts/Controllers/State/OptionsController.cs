@@ -240,13 +240,13 @@ namespace Wyd.Controllers.State
 
         private void LoadConfig()
         {
-            _Configuration = !File.Exists(ConfigPath)
-                ? InitialiseDefaultConfig()
-                : Configuration.LoadFromFile(ConfigPath);
+            _Configuration = File.Exists(ConfigPath)
+                ? Configuration.LoadFromFile(ConfigPath)
+                : InitialiseDefaultConfig();
 
             // General
 
-            if (!GetSetting("Genera;", nameof(AsyncWorkerCount), out _AsyncWorkerCount)
+            if (!GetSetting("General", nameof(AsyncWorkerCount), out _AsyncWorkerCount)
                 || AsyncWorkerCount > Environment.ProcessorCount
                 || AsyncWorkerCount < 1)
             {
@@ -351,7 +351,7 @@ namespace Wyd.Controllers.State
 
             _Configuration["General"][nameof(AsyncWorkerCount)].PreComment =
                 "Total number of asynchronous workers to initialize.\r\n"
-                + "Note: maximum number of workers is equal to your logical core count."
+                + "Note: maximum number of workers is equal to your logical core count.\r\n"
                 + "On most machines, this will be: (core count x 2).";
             _Configuration["General"][nameof(AsyncWorkerCount)].IntValue = Defaults.ASYNC_WORKER_COUNT;
 

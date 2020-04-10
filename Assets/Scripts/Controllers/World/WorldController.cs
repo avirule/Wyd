@@ -6,7 +6,6 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
-using System.Threading.Tasks;
 using Serilog;
 using Unity.Mathematics;
 using Wyd.Controllers.State;
@@ -123,11 +122,16 @@ namespace Wyd.Controllers.World
 
         private void Start()
         {
-            int totalRenderDistance =
-                OptionsController.Current.RenderDistance + OptionsController.Current.PreLoadChunkDistance + 1;
-            _ChunkCache.MaximumSize = ((totalRenderDistance * 2) - 1) * (int)WorldHeightInChunks;
+            SetMaximumChunkCacheSize();
             OptionsController.Current.PropertyChanged += (sender, args) =>
-                EntityController.Current.RegisterWatchForTag(RegisterCollideableEntity, "collider");
+            {
+                if (args.PropertyName.Equals(nameof(OptionsController.Current.RenderDistance)))
+                {
+                    SetMaximumChunkCacheSize();
+                }
+            };
+
+            EntityController.Current.RegisterWatchForTag(RegisterCollideableEntity, "collider");
             EntityController.Current.RegisterWatchForTag(RegisterLoaderEntity, "loader");
 
             SpawnPoint = WydMath.IndexTo3D(Seed, new int3(int.MaxValue, int.MaxValue, int.MaxValue));
@@ -151,7 +155,7 @@ namespace Wyd.Controllers.World
         public IEnumerable IncrementalFrameUpdate()
         {
             if (WorldState.HasFlag(WorldState.RequiresStateVerification)
-            && !WorldState.HasFlag(WorldState.VerifyingState))
+                && !WorldState.HasFlag(WorldState.VerifyingState))
             {
                 VerifyAllChunkStatesAroundLoaders();
                 WorldState &= ~WorldState.RequiresStateVerification;
@@ -281,6 +285,18 @@ namespace Wyd.Controllers.World
 
 
         #region State Management
+
+        private void SetMaximumChunkCacheSize()
+        {
+            if (OptionsController.Current == null)
+            {
+                return;
+            }
+
+            int totalRenderDistance =
+                OptionsController.Current.RenderDistance + OptionsController.Current.PreLoadChunkDistance + 1;
+            _ChunkCache.MaximumSize = ((totalRenderDistance * 2) - 1) * (int)WorldHeightInChunks;
+        }
 
         private void VerifyAllChunkStatesAroundLoaders()
         {

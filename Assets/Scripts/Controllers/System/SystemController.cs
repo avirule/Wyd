@@ -1,7 +1,11 @@
 #region
 
+using System;
 using System.Threading;
 using UnityEngine;
+using Wyd.Controllers.State;
+using Wyd.System.Jobs;
+using Object = UnityEngine.Object;
 
 #endregion
 
@@ -21,6 +25,10 @@ namespace Wyd.Controllers.System
             TextObject = LoadResource<GameObject>(@"Prefabs\UI\Components\Text\DiagnosticText");
         }
 
+        private void OnDestroy()
+        {
+            AsyncJobScheduler.Abort(true);
+        }
 
         public static T LoadResource<T>(string path) where T : Object
         {

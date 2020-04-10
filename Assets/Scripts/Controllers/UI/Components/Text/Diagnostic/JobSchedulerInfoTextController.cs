@@ -1,5 +1,6 @@
 #region
 
+using System;
 using Wyd.System.Jobs;
 
 #endregion
@@ -24,7 +25,8 @@ namespace Wyd.Controllers.UI.Components.Text.Diagnostic
         {
             if (_UpdateDiagInfo)
             {
-                TextObject.text = string.Format(Format, AsyncJobScheduler.WorkerThreadCount,
+                TextObject.text = string.Format(Format,
+                    AsyncJobScheduler.AsyncWorkerCount,
                     AsyncJobScheduler.ProcessingJobCount,
                     AsyncJobScheduler.JobsQueued);
 

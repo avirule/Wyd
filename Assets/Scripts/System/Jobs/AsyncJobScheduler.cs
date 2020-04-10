@@ -2,9 +2,9 @@
 
 using System;
 using System.Threading;
+using System.Threading.Channels;
 using System.Threading.Tasks;
 using Serilog;
-using Wyd.System.Collections;
 
 #endregion
 
@@ -12,15 +12,16 @@ namespace Wyd.System.Jobs
 {
     public static class AsyncJobScheduler
     {
-        private static readonly AsyncCollection<AsyncJob> _AsyncJobQueue;
+        private static readonly CancellationTokenSource _AbortTokenSource;
+        private static readonly ChannelReader<AsyncJob> _Reader;
+        private static readonly ChannelWriter<AsyncJob> _Writer;
 
-        private static CancellationTokenSource _abortTokenSource;
-        private static int _workerThreadCount;
+        private static long _asyncWorkerCount;
         private static long _jobsQueued;
         private static long _processingJobCount;
 
-        public static CancellationToken AbortToken => _abortTokenSource.Token;
-        public static int WorkerThreadCount => _workerThreadCount;
+        public static CancellationToken AbortToken => _AbortTokenSource.Token;
+        public static long AsyncWorkerCount => Interlocked.Read(ref _asyncWorkerCount);
         public static long JobsQueued => Interlocked.Read(ref _jobsQueued);
         public static long ProcessingJobCount => Interlocked.Read(ref _processingJobCount);
 
@@ -29,8 +30,10 @@ namespace Wyd.System.Jobs
         /// </summary>
         static AsyncJobScheduler()
         {
-            _AsyncJobQueue = new AsyncCollection<AsyncJob>();
-            _abortTokenSource = new CancellationTokenSource();
+            _AbortTokenSource = new CancellationTokenSource();
+            Channel<AsyncJob> channel = Channel.CreateUnbounded<AsyncJob>();
+            _Reader = channel.Reader;
+            _Writer = channel.Writer;
 
             JobQueued += (sender, args) => Interlocked.Increment(ref _jobsQueued);
             JobStarted += (sender, args) => Interlocked.Increment(ref _processingJobCount);
@@ -40,7 +43,8 @@ namespace Wyd.System.Jobs
                 Interlocked.Decrement(ref _processingJobCount);
             };
 
-            ModifyWorkerThreadCount(Environment.ProcessorCount - 1 /* to facilitate main thread */);
+            ModifyAsyncWorkerCount(Environment.ProcessorCount - 2);
+            SpawnWorkers(AsyncWorkerCount);
         }
 
 
@@ -53,7 +57,15 @@ namespace Wyd.System.Jobs
         {
             if (abort)
             {
-                _abortTokenSource.Cancel();
+                _AbortTokenSource.Cancel();
+            }
+        }
+
+        private static void SpawnWorkers(long workerCount)
+        {
+            for (int i = 0; i < workerCount; i++)
+            {
+                Task.Run(ProcessItemQueue, AbortToken);
             }
         }
 
@@ -64,25 +76,14 @@ namespace Wyd.System.Jobs
         ///     This separate-method approach is taken to make intent clear, and to
         ///     more idiomatically constrain the total to a positive value.
         ///
-        ///     Additionally, modifying this value causes a total cancel on all active workers.
+        ///     Additionally, modifying this value causes an abrupt cancel on all active workers.
         ///     Therefore, it's advised to not use it unless absolutely necessary.
         /// </remarks>
-        /// <param name="newTotal"></param>
-        private static void ModifyWorkerThreadCount(int newTotal)
+        /// <param name="newWorkerCount"></param>
+        [Obsolete("This method currently does not do anything. Worker count is Logical Core Count - 2.")]
+        public static void ModifyAsyncWorkerCount(int newWorkerCount)
         {
-            Interlocked.Exchange(ref _workerThreadCount, Math.Max(newTotal, 1));
-
-            _abortTokenSource.Cancel();
-            _abortTokenSource = new CancellationTokenSource();
-            SpawnWorkers();
-        }
-
-        private static void SpawnWorkers()
-        {
-            for (int i = 0; i < WorkerThreadCount; i++)
-            {
-                Task.Run(ProcessItemQueue, AbortToken);
-            }
+            Interlocked.Exchange(ref _asyncWorkerCount, newWorkerCount);
         }
 
         public static async Task QueueAsyncJob(AsyncJob asyncJob)
@@ -92,7 +93,7 @@ namespace Wyd.System.Jobs
                 return;
             }
 
-            await _AsyncJobQueue.PushAsync(asyncJob, AbortToken);
+            await _Writer.WriteAsync(asyncJob, AbortToken);
             OnJobQueued(new AsyncJobEventArgs(asyncJob));
         }
 
@@ -105,27 +106,27 @@ namespace Wyd.System.Jobs
         {
             try
             {
-                while (!AbortToken.IsCancellationRequested)
+                while (await _Reader.WaitToReadAsync(AbortToken))
                 {
-                    AsyncJob asyncJob = await _AsyncJobQueue.TakeAsync(AbortToken);
-
-                    if (asyncJob == null)
+                    while (!AbortToken.IsCancellationRequested && _Reader.TryRead(out AsyncJob asyncJob))
                     {
-                        continue;
-                    }
+                        if (asyncJob == null)
+                        {
+                            continue;
+                        }
 
-                    await ExecuteJob(asyncJob);
+                        await ExecuteJob(asyncJob);
+                    }
                 }
             }
             catch (OperationCanceledException)
             {
-                // Thread aborted
-                Log.Warning($"{nameof(AsyncJobScheduler)} has critically aborted.");
+                // cancelled token
+                Log.Warning($"{nameof(AsyncJobScheduler)} worker encountered {nameof(OperationCanceledException)}.");
             }
             catch (Exception ex)
             {
-                Log.Error(
-                    $"Error in {nameof(AsyncJobScheduler)}: {ex.Message}\r\n{ex.StackTrace}");
+                Log.Error($"Error in {nameof(AsyncJobScheduler)}: {ex.Message}\r\n{ex.StackTrace}");
             }
         }
 
@@ -158,6 +159,7 @@ namespace Wyd.System.Jobs
         /// </summary>
         /// <remarks>This event will not necessarily happen synchronously with the main thread.</remarks>
         public static event AsyncJobEventHandler JobFinished;
+
 
         private static void OnJobQueued(AsyncJobEventArgs args)
         {
