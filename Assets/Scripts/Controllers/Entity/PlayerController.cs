@@ -5,7 +5,6 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using Unity.Mathematics;
 using UnityEngine;
-using UnityEngine.InputSystem;
 using Wyd.Controllers.State;
 using Wyd.Controllers.UI;
 using Wyd.Controllers.World;
@@ -18,7 +17,7 @@ using Wyd.System;
 
 namespace Wyd.Controllers.Entity
 {
-    public class PlayerController : SingletonController<PlayerController>, IEntity, ICollideable
+    public class PlayerController : SingletonController<PlayerController>, IEntity
     {
         public const int REACH = 5;
 
@@ -29,27 +28,46 @@ namespace Wyd.Controllers.Entity
         private RaycastHit _LastReachRayHit;
         private bool _IsInReachOfValidSurface;
         private Transform _ReachHitSurfaceObjectTransform;
-        private float2 _Movement;
+        private float3 _Movement;
         private Stopwatch _ActionCooldown;
         private Stopwatch _RegularCheckWait;
         private float3 _Position;
         private int3 _ChunkPosition;
 
-        private PlayerInputActions _PlayerInputActions;
+        [SerializeField]
+        private Transform CameraTransform;
 
-        public Transform CameraTransform;
-        public InventoryController Inventory;
-        public GameObject ReachHitSurfaceObject;
-        public LayerMask GroundedMask;
-        public LayerMask RaycastLayerMask;
-        public float RotationSensitivity;
-        public float TravelSpeed;
-        public float JumpForce;
-        public bool Grounded;
+        [SerializeField]
+        private Rigidbody Rigidbody;
+
+        [SerializeField]
+        private Collider Collider;
+
+        [SerializeField]
+        private InventoryController Inventory;
+
+        [SerializeField]
+        private GameObject ReachHitSurfaceObject;
+
+        [SerializeField]
+        private LayerMask GroundedMask;
+
+        [SerializeField]
+        private LayerMask RaycastLayerMask;
+
+        [SerializeField]
+        private float RotationSensitivity;
+
+        [SerializeField]
+        private float TravelSpeed;
+
+        [SerializeField]
+        private float JumpForce;
+
+        [SerializeField]
+        private bool Grounded;
 
         public Transform Transform { get; private set; }
-        public Rigidbody Rigidbody { get; private set; }
-        public Collider Collider { get; private set; }
 
         public int3 ChunkPosition
         {
@@ -81,19 +99,11 @@ namespace Wyd.Controllers.Entity
         {
             AssignSingletonInstance(this);
 
-            _PlayerInputActions = new PlayerInputActions();
-            _PlayerInputActions.PlayerControls.Move.performed += ctx => _Movement = ctx.ReadValue<Vector2>();
-            _PlayerInputActions.PlayerControls.Look.performed += ctx =>
-            {
-                Vector2 s = ctx.ReadValue<Vector2>();
-            };
             _ReachRay = new Ray();
             _ActionCooldown = Stopwatch.StartNew();
             _RegularCheckWait = Stopwatch.StartNew();
 
             Transform = transform;
-            Rigidbody = GetComponent<Rigidbody>();
-            Collider = GetComponent<CapsuleCollider>();
             Tags = new HashSet<string>(new[]
             {
                 "player",
@@ -155,6 +165,7 @@ namespace Wyd.Controllers.Entity
                 Rigidbody.useGravity = !Rigidbody.useGravity;
             }
 
+            UpdateMovement();
             CalculateJump();
             UpdateReachRay();
             UpdateLastLookAtCubeOrigin();
@@ -174,6 +185,13 @@ namespace Wyd.Controllers.Entity
         }
 
         #region UPDATE
+
+        private void UpdateMovement()
+        {
+            _Movement.x = InputController.Current.GetAxisRaw("Horizontal");
+            _Movement.z = InputController.Current.GetAxisRaw("Vertical");
+        }
+
 
         private void UpdateReachRay()
         {
@@ -307,8 +325,7 @@ namespace Wyd.Controllers.Entity
 
         private void CalculateRotation()
         {
-            float3 eulerAngles = CameraTransform.eulerAngles;
-            Rigidbody.MoveRotation(quaternion.Euler(0f, eulerAngles.y, 0f));
+            //Rigidbody.MoveRotation(quaternion.Euler(0f, CameraTransform.rotation.eulerAngles.y, 0f));
         }
 
         private void CalculateJump()
@@ -324,12 +341,12 @@ namespace Wyd.Controllers.Entity
 
         private void CalculateMovement()
         {
-            if (math.all(_Movement == float2.zero))
+            if (math.all(_Movement == float3.zero))
             {
                 return;
             }
 
-            float3 interpolatedMovement = TravelSpeed * Time.fixedDeltaTime * new float3(_Movement.x, 0f, _Movement.y);
+            float3 interpolatedMovement = TravelSpeed * Time.fixedDeltaTime * _Movement;
             float3 finalMovement = CameraTransform.TransformDirection(interpolatedMovement);
 
             // todo don't move relative to camera, it's fuckin dumb

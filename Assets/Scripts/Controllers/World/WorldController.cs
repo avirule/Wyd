@@ -153,7 +153,7 @@ namespace Wyd.Controllers.World
             if (WorldState.HasFlag(WorldState.RequiresStateVerification)
             && !WorldState.HasFlag(WorldState.VerifyingState))
             {
-                Task.Run(VerifyAllChunkStatesAroundLoaders);
+                VerifyAllChunkStatesAroundLoaders();
                 WorldState &= ~WorldState.RequiresStateVerification;
             }
 

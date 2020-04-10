@@ -69,7 +69,7 @@ namespace Wyd.Controllers.UI
 
         private void Start()
         {
-            PlayerController.Current.Inventory.HotbarChanged += OnHotbarCollectionChanged;
+            //PlayerController.Current.Inventory.HotbarChanged += OnHotbarCollectionChanged;
         }
 
         private void Update()

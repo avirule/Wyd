@@ -3,6 +3,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using Serilog;
 using Wyd.Game.Entities;
 using Wyd.System.Extensions;
 
@@ -32,12 +33,16 @@ namespace Wyd.Controllers.State
 
             _EntityRegister[identifyingType].Add(entity);
 
+            Log.Information($"Registered entity {identifyingType} (tags: {string.Join(", ", entity.Tags)}).");
+
             // check for and execute for watched tags
             foreach (string watchedEntityTag in GetMatchedWatchedTags(entity.Tags))
             {
                 foreach (Action<IEntity> watchedEntityTagAction in _EntityTagWatchers[watchedEntityTag])
                 {
                     watchedEntityTagAction.Invoke(entity);
+
+                    Log.Information($"WatchForTag `{watchedEntityTag}` invoked ({watchedEntityTagAction}).");
                 }
             }
         }

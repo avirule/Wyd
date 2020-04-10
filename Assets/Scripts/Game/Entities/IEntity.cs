@@ -12,7 +12,6 @@ namespace Wyd.Game.Entities
     public interface IEntity
     {
         Transform Transform { get; }
-        Rigidbody Rigidbody { get; }
         int3 ChunkPosition { get; }
         HashSet<string> Tags { get; }
 
