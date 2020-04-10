@@ -1,11 +1,9 @@
 #region
 
-using System;
 using System.Threading;
 using UnityEngine;
 using Wyd.Controllers.State;
 using Wyd.System.Jobs;
-using Object = UnityEngine.Object;
 
 #endregion
 
@@ -23,6 +21,11 @@ namespace Wyd.Controllers.System
             DontDestroyOnLoad(this);
 
             TextObject = LoadResource<GameObject>(@"Prefabs\UI\Components\Text\DiagnosticText");
+        }
+
+        private void Start()
+        {
+            AsyncJobScheduler.ModifyActiveAsyncWorkerCount((ulong)OptionsController.Current.AsyncWorkerCount);
         }
 
         private void OnDestroy()

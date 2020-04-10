@@ -1,6 +1,7 @@
 #region
 
 using System;
+using System.Collections.Concurrent;
 using System.Threading;
 using System.Threading.Channels;
 using System.Threading.Tasks;
@@ -15,6 +16,7 @@ namespace Wyd.System.Jobs
         private static readonly CancellationTokenSource _AbortTokenSource;
         private static readonly ChannelReader<AsyncJob> _Reader;
         private static readonly ChannelWriter<AsyncJob> _Writer;
+        private static readonly ConcurrentStack<CancellationTokenSource> _WorkerCancellationTokens;
 
         private static long _asyncWorkerCount;
         private static long _jobsQueued;
@@ -34,6 +36,7 @@ namespace Wyd.System.Jobs
             Channel<AsyncJob> channel = Channel.CreateUnbounded<AsyncJob>();
             _Reader = channel.Reader;
             _Writer = channel.Writer;
+            _WorkerCancellationTokens = new ConcurrentStack<CancellationTokenSource>();
 
             JobQueued += (sender, args) => Interlocked.Increment(ref _jobsQueued);
             JobStarted += (sender, args) => Interlocked.Increment(ref _processingJobCount);
@@ -42,9 +45,6 @@ namespace Wyd.System.Jobs
                 Interlocked.Decrement(ref _jobsQueued);
                 Interlocked.Decrement(ref _processingJobCount);
             };
-
-            ModifyAsyncWorkerCount(Environment.ProcessorCount - 2);
-            SpawnWorkers(AsyncWorkerCount);
         }
 
 
@@ -61,29 +61,37 @@ namespace Wyd.System.Jobs
             }
         }
 
-        private static void SpawnWorkers(long workerCount)
-        {
-            for (int i = 0; i < workerCount; i++)
-            {
-                Task.Run(ProcessItemQueue, AbortToken);
-            }
-        }
-
         /// <summary>
-        ///     Modifies total number of available worker threads for JobQueue.
+        ///     Modifies total number of available workers for the internal job queue.
         /// </summary>
         /// <remarks>
         ///     This separate-method approach is taken to make intent clear, and to
         ///     more idiomatically constrain the total to a positive value.
-        ///
         ///     Additionally, modifying this value causes an abrupt cancel on all active workers.
         ///     Therefore, it's advised to not use it unless absolutely necessary.
         /// </remarks>
-        /// <param name="newWorkerCount"></param>
-        [Obsolete("This method currently does not do anything. Worker count is Logical Core Count - 2.")]
-        public static void ModifyAsyncWorkerCount(int newWorkerCount)
+        /// <param name="newWorkerCount">Modified count of workers for <see cref="AsyncJobScheduler" /> to initialize.</param>
+        public static void ModifyActiveAsyncWorkerCount(ulong newWorkerCount)
         {
-            Interlocked.Exchange(ref _asyncWorkerCount, newWorkerCount);
+            if (newWorkerCount == 0)
+            {
+                return;
+            }
+
+            Interlocked.Exchange(ref _asyncWorkerCount, (long)newWorkerCount);
+
+            while (_WorkerCancellationTokens.TryPop(out CancellationTokenSource tokenSource))
+            {
+                tokenSource.Cancel();
+            }
+
+            for (int i = 0; i < AsyncWorkerCount; i++)
+            {
+                CancellationTokenSource tokenSource = new CancellationTokenSource();
+                _WorkerCancellationTokens.Push(tokenSource);
+
+                Task.Run(async () => await ProcessItemQueue(tokenSource.Token), AbortToken);
+            }
         }
 
         public static async Task QueueAsyncJob(AsyncJob asyncJob)
@@ -91,6 +99,12 @@ namespace Wyd.System.Jobs
             if (AbortToken.IsCancellationRequested)
             {
                 return;
+            }
+
+            if (AsyncWorkerCount == 0)
+            {
+                Log.Warning(
+                    $"{nameof(AsyncWorkerCount)} is 0. Any jobs queued will not be completed until `{nameof(ModifyActiveAsyncWorkerCount)}()` is called with a non-zero value.");
             }
 
             await _Writer.WriteAsync(asyncJob, AbortToken);
@@ -102,13 +116,16 @@ namespace Wyd.System.Jobs
 
         #region Runtime
 
-        private static async Task ProcessItemQueue()
+        private static async Task ProcessItemQueue(CancellationToken token)
         {
             try
             {
-                while (await _Reader.WaitToReadAsync(AbortToken))
+                CancellationToken combinedToken =
+                    CancellationTokenSource.CreateLinkedTokenSource(AbortToken, token).Token;
+
+                while (await _Reader.WaitToReadAsync(combinedToken))
                 {
-                    while (!AbortToken.IsCancellationRequested && _Reader.TryRead(out AsyncJob asyncJob))
+                    while (!combinedToken.IsCancellationRequested && _Reader.TryRead(out AsyncJob asyncJob))
                     {
                         if (asyncJob == null)
                         {
@@ -119,11 +136,7 @@ namespace Wyd.System.Jobs
                     }
                 }
             }
-            catch (OperationCanceledException)
-            {
-                // cancelled token
-                Log.Warning($"{nameof(AsyncJobScheduler)} worker encountered {nameof(OperationCanceledException)}.");
-            }
+            catch (OperationCanceledException) { }
             catch (Exception ex)
             {
                 Log.Error($"Error in {nameof(AsyncJobScheduler)}: {ex.Message}\r\n{ex.StackTrace}");
