@@ -33,9 +33,9 @@ namespace Wyd.Game.World.Chunks
         public TimeSpan NoiseRetrievalTimeSpan { get; private set; }
         public TimeSpan TerrainGenerationTimeSpan { get; private set; }
 
-        public ChunkRawTerrainBuilder(CancellationToken cancellationToken, float3 originPoint,
-            ref OctreeNode blocks, float frequency, float persistence, bool gpuAcceleration = false,
-            ComputeBuffer noiseValuesBuffer = null) : base(cancellationToken, originPoint, ref blocks)
+        public ChunkRawTerrainBuilder(CancellationToken cancellationToken, float3 originPoint, OctreeNode blocks,
+            float frequency, float persistence, bool gpuAcceleration = false, ComputeBuffer noiseValuesBuffer = null) :
+            base(cancellationToken, originPoint, blocks)
         {
             _Stopwatch = new Stopwatch();
             _Frequency = frequency;
@@ -58,7 +58,11 @@ namespace Wyd.Game.World.Chunks
         {
             if (Blocks == default)
             {
-                Log.Error($"`{nameof(Blocks)}` has not been set. Aborting generation.");
+                Log.Warning($"`{nameof(Blocks)}` has not been set (chunk may have been cached). Aborting generation.");
+
+                MainThreadActionsController.Current.PushAction(new MainThreadAction(null,
+                    () => _NoiseValuesBuffer?.Release()));
+
                 return;
             }
 

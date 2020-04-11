@@ -137,6 +137,7 @@ namespace Wyd.Controllers.World.Chunk
 
         #endregion
 
+
         #region RUNTIME
 
         private void QueueAsyncJob(AsyncJob asyncJob)
@@ -181,14 +182,11 @@ namespace Wyd.Controllers.World.Chunk
                 // 1024 is the value set in the shader's [numthreads(--> 1024 <--, 1, 1)]
                 _noiseShader.Dispatch(kernel, WydMath.Product(ChunkController.Size) / 1024, 1, 1);
 
-                asyncJob = new ChunkBuildingJob(_CancellationTokenSource.Token, OriginPoint,
-                    ref BlocksController.Blocks, _FREQUENCY, _PERSISTENCE, OptionsController.Current.GPUAcceleration,
-                    noiseBuffer);
+                asyncJob = new ChunkBuildingJob(_CancellationTokenSource.Token, OriginPoint, BlocksController.Blocks, _FREQUENCY, _PERSISTENCE, OptionsController.Current.GPUAcceleration, noiseBuffer);
             }
             else
             {
-                asyncJob = new ChunkBuildingJob(_CancellationTokenSource.Token, OriginPoint,
-                    ref BlocksController.Blocks, _FREQUENCY, _PERSISTENCE);
+                asyncJob = new ChunkBuildingJob(_CancellationTokenSource.Token, OriginPoint, BlocksController.Blocks, _FREQUENCY, _PERSISTENCE);
             }
 
             QueueAsyncJob(asyncJob);

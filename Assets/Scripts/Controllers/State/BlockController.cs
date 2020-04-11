@@ -145,21 +145,9 @@ namespace Wyd.Controllers.State
             return false;
         }
 
-        public IEnumerable<IReadOnlyBlockDefinition> GetBlockDefinitionsByType(Block.Types type)
-        {
-            return BlockDefinitions.Where(block => block.Type == type);
-        }
-
         public bool CheckBlockHasProperties(ushort blockId, BlockDefinition.Property property)
         {
-            if (blockId < BlockDefinitions.Count)
-            {
-                return (BlockDefinitions[blockId].Properties & property) > 0;
-            }
-            else
-            {
-                return false;
-            }
+            return BlockIdExists(blockId) && BlockDefinitions[blockId].Properties.HasFlag(property);
         }
     }
 }

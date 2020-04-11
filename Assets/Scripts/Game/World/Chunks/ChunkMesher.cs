@@ -33,7 +33,6 @@ namespace Wyd.Game.World.Chunks
         private readonly CancellationToken _CancellationToken;
         private readonly float3 _OriginPoint;
         private readonly OctreeNode _Blocks;
-        private readonly CancellationToken _AbortToken;
         private readonly bool _AggressiveFaceMerging;
         private readonly int3 _Size;
         private readonly int _VerticalIndexStep;
@@ -43,9 +42,13 @@ namespace Wyd.Game.World.Chunks
         public TimeSpan SetBlockTimeSpan { get; private set; }
         public TimeSpan MeshingTimeSpan { get; private set; }
 
-        public ChunkMesher(CancellationToken cancellationToken, float3 originPoint, ref OctreeNode blocks,
-            CancellationToken abortToken, bool aggressiveFaceMerging)
+        public ChunkMesher(CancellationToken cancellationToken, float3 originPoint, OctreeNode blocks, bool aggressiveFaceMerging)
         {
+            if (_Blocks == null)
+            {
+                return;
+            }
+
             _Stopwatch = new Stopwatch();
             _Mask = new MeshBlock[0];
             _Vertices = new List<Vector3>();
@@ -65,7 +68,6 @@ namespace Wyd.Game.World.Chunks
                 _Mask = new MeshBlock[sizeProduct];
             }
 
-            _AbortToken = abortToken;
             _AggressiveFaceMerging = aggressiveFaceMerging;
 
             _Mask = _MasksCache.Retrieve() ?? new MeshBlock[sizeProduct];
@@ -113,7 +115,7 @@ namespace Wyd.Game.World.Chunks
 
         public void GenerateMesh()
         {
-            if (_Blocks.IsUniform && (_Blocks.Value == BlockController.AIR_ID))
+            if (_Blocks == null || _Blocks.IsUniform && (_Blocks.Value == BlockController.AIR_ID))
             {
                 return;
             }
@@ -133,11 +135,6 @@ namespace Wyd.Game.World.Chunks
                 }
 
                 index += 1;
-
-                if (_AbortToken.IsCancellationRequested)
-                {
-                    return;
-                }
 
                 if (block.Id == BlockController.AIR_ID)
                 {

@@ -21,7 +21,7 @@ namespace Wyd.Game.World.Chunks
         protected readonly float3 OriginPoint;
         protected readonly OctreeNode Blocks;
 
-        public ChunkBuilder(CancellationToken cancellationToken, float3 originPoint, ref OctreeNode blocks)
+        public ChunkBuilder(CancellationToken cancellationToken, float3 originPoint, OctreeNode blocks)
         {
             BlockIDCache = new Dictionary<string, ushort>();
             SeededRandom = new Random(WorldController.Current.Seed);

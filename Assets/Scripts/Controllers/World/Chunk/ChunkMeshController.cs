@@ -187,8 +187,7 @@ namespace Wyd.Controllers.World.Chunk
             _CancellationTokenSource?.Cancel();
             _CancellationTokenSource = new CancellationTokenSource();
 
-            ChunkMeshingJob asyncJob = new ChunkMeshingJob(_CancellationTokenSource.Token, OriginPoint,
-                ref BlocksController.Blocks, true);
+            ChunkMeshingJob asyncJob = new ChunkMeshingJob(_CancellationTokenSource.Token, OriginPoint, BlocksController.Blocks, true);
 
             QueueAsyncJob(asyncJob);
         }

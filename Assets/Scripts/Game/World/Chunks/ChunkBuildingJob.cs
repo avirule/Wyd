@@ -15,20 +15,21 @@ namespace Wyd.Game.World.Chunks
     public class ChunkBuildingJob : AsyncJob
     {
         private readonly CancellationToken _CancellationToken;
+        private readonly OctreeNode _Blocks;
         private readonly float3 _OriginPoint;
         private readonly ComputeBuffer _NoiseValuesBuffer;
         private readonly float _Frequency;
         private readonly float _Persistence;
         private readonly bool _GpuAcceleration;
 
-        private OctreeNode _Blocks;
         private ChunkRawTerrainBuilder _TerrainBuilder;
 
-        public ChunkBuildingJob(CancellationToken cancellationToken, float3 originPoint, ref OctreeNode blocks,
+        public ChunkBuildingJob(CancellationToken cancellationToken, float3 originPoint, OctreeNode blocks,
             float frequency, float persistence, bool gpuAcceleration = false, ComputeBuffer noiseValuesBuffer = null) :
             base(cancellationToken)
         {
-            _CancellationToken = cancellationToken;
+            _CancellationToken = CancellationTokenSource.CreateLinkedTokenSource(AsyncJobScheduler.AbortToken,
+                cancellationToken).Token;
             _OriginPoint = originPoint;
             _Blocks = blocks;
             _Frequency = frequency;
@@ -39,7 +40,7 @@ namespace Wyd.Game.World.Chunks
 
         protected override Task Process()
         {
-            _TerrainBuilder = new ChunkRawTerrainBuilder(_CancellationToken, _OriginPoint, ref _Blocks, _Frequency,
+            _TerrainBuilder = new ChunkRawTerrainBuilder(_CancellationToken, _OriginPoint, _Blocks, _Frequency,
                 _Persistence, _GpuAcceleration, _NoiseValuesBuffer);
             _TerrainBuilder.Generate();
 

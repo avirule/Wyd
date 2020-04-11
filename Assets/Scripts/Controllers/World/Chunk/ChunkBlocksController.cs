@@ -60,9 +60,6 @@ namespace Wyd.Controllers.World.Chunk
             base.Awake();
 
             _BlockActions = new Queue<BlockAction>();
-
-            Blocks = new OctreeNode(OriginPoint + (ChunkController.Size / new float3(2f)),
-                ChunkController.Size.x, 0);
         }
 
         protected override void OnEnable()
@@ -82,6 +79,7 @@ namespace Wyd.Controllers.World.Chunk
 
             PerFrameUpdateController.Current.DeregisterPerFrameUpdater(30, this);
             _BlockActions.Clear();
+            Blocks = null;
         }
 
         public void FrameUpdate() { }
