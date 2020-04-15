@@ -59,7 +59,7 @@ namespace Wyd.System.Jobs
         }
 
         /// <summary>
-        ///     Begins executing the <see cref="Job" />.
+        ///     Begins executing the <see cref="AsyncJob" />.
         /// </summary>
         public async Task Execute()
         {

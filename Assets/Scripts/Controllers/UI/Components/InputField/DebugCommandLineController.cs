@@ -130,7 +130,7 @@ namespace Wyd.Controllers.UI.Components.InputField
 
                             int3 position = new int3(x, y, z);
 
-                            if (!WorldController.Current.TryGetBlockAt(position, out ushort blockId))
+                            if (!WorldController.Current.TryGetBlock(position, out ushort blockId))
                             {
                                 Log.Warning($"Failed to get block at position: {position}");
                             }
@@ -159,7 +159,7 @@ namespace Wyd.Controllers.UI.Components.InputField
 
                     int3 chunkPosition = new int3(x1, y1, z1);
 
-                    if (!WorldController.Current.TryGetChunkAt(chunkPosition, out ChunkController chunkController))
+                    if (!WorldController.Current.TryGetChunk(chunkPosition, out ChunkController chunkController))
                     {
                         Log.Warning($"No chunk at coordinates {chunkPosition}.");
                     }
@@ -183,7 +183,7 @@ namespace Wyd.Controllers.UI.Components.InputField
 
                     int3 chunkPosition2 = new int3(x2, y2, z2);
 
-                    if (!WorldController.Current.TryGetChunkAt(chunkPosition2, out ChunkController _))
+                    if (!WorldController.Current.TryGetChunk(chunkPosition2, out ChunkController _))
                     {
                         Log.Warning($"No chunk at coordinates {chunkPosition2}.");
                     }

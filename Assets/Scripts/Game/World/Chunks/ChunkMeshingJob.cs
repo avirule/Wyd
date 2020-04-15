@@ -51,21 +51,6 @@ namespace Wyd.Game.World.Chunks
             return Task.CompletedTask;
         }
 
-        public bool SetMesh(ref Mesh mesh)
-        {
-            if (_Mesher != null)
-            {
-                _Mesher.SetMesh(ref mesh);
-                _Mesher.ClearExistingData();
-                _Mesher = null;
-                return true;
-            }
-            else
-            {
-                Log.Error(
-                    $"Attempted to use `{nameof(SetMesh)}` when no ChunkMesher has been processed. This could be from a previous `{nameof(SetMesh)}` call, or improper initialization.");
-                return false;
-            }
-        }
+        public ChunkMeshData GetMeshData() => _Mesher.MeshData;
     }
 }

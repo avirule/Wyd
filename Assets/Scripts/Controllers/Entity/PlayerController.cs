@@ -208,10 +208,9 @@ namespace Wyd.Controllers.Entity
                 return;
             }
 
-            ushort blockId = WorldController.Current.GetBlockAt(
-                WydMath.ToInt(math.all(math.csum(_LastReachRayHit.normal) > float3.zero)
-                    ? math.floor(_LastReachRayHit.point) - (float3)_LastReachRayHit.normal
-                    : math.floor(_LastReachRayHit.point)));
+            WorldController.Current.TryGetBlock(math.all(math.csum(_LastReachRayHit.normal) > float3.zero)
+                ? math.floor(_LastReachRayHit.point) - (float3)_LastReachRayHit.normal
+                : math.floor(_LastReachRayHit.point), out ushort blockId);
 
             if (!BlockController.Current.CheckBlockHasProperties(blockId, BlockDefinition.Property.Destroyable))
             {
@@ -255,12 +254,13 @@ namespace Wyd.Controllers.Entity
                 int3 position;
 
                 if (((math.csum(_LastReachRayHit.normal) > 0f)
-                     && WorldController.Current.TryRemoveBlockAt(position =
-                         WydMath.ToInt(math.floor(_LastReachRayHit.point) - (float3)_LastReachRayHit.normal)))
-                    || WorldController.Current.TryRemoveBlockAt(position =
-                        WydMath.ToInt(math.floor(_LastReachRayHit.point))))
+                     && WorldController.Current.TryPlaceBlock(
+                         position = WydMath.ToInt(math.floor(_LastReachRayHit.point) - (float3)_LastReachRayHit.normal),
+                         BlockController.AIR_ID))
+                    || WorldController.Current.TryPlaceBlock(
+                        position = WydMath.ToInt(math.floor(_LastReachRayHit.point)), BlockController.AIR_ID))
                 {
-                    ushort blockId = WorldController.Current.GetBlockAt(position);
+                    WorldController.Current.TryGetBlock(position, out ushort blockId);
 
                     if (BlockController.Current.CheckBlockHasProperties(blockId, BlockDefinition.Property.Collectible))
                     {
@@ -278,12 +278,12 @@ namespace Wyd.Controllers.Entity
             {
                 if (math.csum(_LastReachRayHit.normal) > 0f)
                 {
-                    WorldController.Current.TryPlaceBlockAt(WydMath.ToInt(math.floor(_LastReachRayHit.point)),
+                    WorldController.Current.TryPlaceBlock(WydMath.ToInt(math.floor(_LastReachRayHit.point)),
                         HotbarController.Current.SelectedId);
                 }
                 else
                 {
-                    WorldController.Current.TryPlaceBlockAt(
+                    WorldController.Current.TryPlaceBlock(
                         WydMath.ToInt(math.floor(_LastReachRayHit.point) + (float3)_LastReachRayHit.normal),
                         HotbarController.Current.SelectedId);
                 }

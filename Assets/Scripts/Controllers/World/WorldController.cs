@@ -164,7 +164,7 @@ namespace Wyd.Controllers.World
             while (_ChunksPendingActivation.Count > 0)
             {
                 if (!_ChunksPendingActivation.TryPop(out PendingChunkActivation pendingChunkActivation)
-                    || ChunkExistsAt(pendingChunkActivation.Origin))
+                    || TryGetChunk(pendingChunkActivation.Origin, out ChunkController _))
                 {
                     continue;
                 }
@@ -192,7 +192,7 @@ namespace Wyd.Controllers.World
             while (_ChunksPendingDeactivation.Count > 0)
             {
                 if (!_ChunksPendingDeactivation.TryPop(out float3 origin)
-                    || !TryGetChunkAt(origin, out ChunkController _))
+                    || !TryGetChunk(origin, out ChunkController _))
                 {
                     continue;
                 }
@@ -233,54 +233,52 @@ namespace Wyd.Controllers.World
 
         private void FlagChunkForUpdateMesh(float3 origin)
         {
-            if (TryGetChunkAt(WydMath.RoundBy(origin, WydMath.ToFloat(ChunkController.Size)),
+            if (TryGetChunk(WydMath.RoundBy(origin, WydMath.ToFloat(ChunkController.Size)),
                 out ChunkController chunkController))
             {
                 chunkController.FlagMeshForUpdate();
             }
         }
 
-        public TerrainStep AggregateNeighborsStep(float3 position)
+        public bool NeighborTerrainComplete(float3 position)
         {
-            TerrainStep generationStep = TerrainStep.Complete;
-
-            if (TryGetChunkAt(position + (Directions.North * ChunkController.Size.z),
-                out ChunkController northChunk))
+            if (TryGetChunk(position + (Directions.North * ChunkController.Size.z), out ChunkController northChunk)
+                && ((northChunk.State & Chunk.State.TerrainComplete) != Chunk.State.TerrainComplete))
             {
-                generationStep &= northChunk.CurrentStep;
+                return false;
             }
 
-            if (TryGetChunkAt(position + (Directions.East * ChunkController.Size.x),
-                out ChunkController eastChunk))
+            if (TryGetChunk(position + (Directions.East * ChunkController.Size.x), out ChunkController eastChunk)
+                && ((eastChunk.State & Chunk.State.TerrainComplete) != Chunk.State.TerrainComplete))
             {
-                generationStep &= eastChunk.CurrentStep;
+                return false;
             }
 
-            if (TryGetChunkAt(position + (Directions.South * ChunkController.Size.z),
-                out ChunkController southChunk))
+            if (TryGetChunk(position + (Directions.South * ChunkController.Size.z), out ChunkController southChunk)
+                && ((southChunk.State & Chunk.State.TerrainComplete) != Chunk.State.TerrainComplete))
             {
-                generationStep &= southChunk.CurrentStep;
+                return false;
             }
 
-            if (TryGetChunkAt(position + (Directions.West * ChunkController.Size.x),
-                out ChunkController westChunk))
+            if (TryGetChunk(position + (Directions.West * ChunkController.Size.x), out ChunkController westChunk)
+                && ((westChunk.State & Chunk.State.TerrainComplete) != Chunk.State.TerrainComplete))
             {
-                generationStep &= westChunk.CurrentStep;
+                return false;
             }
 
-            if (TryGetChunkAt(position + (Directions.Up * ChunkController.Size.x),
-                out ChunkController upChunk))
+            if (TryGetChunk(position + (Directions.Up * ChunkController.Size.x), out ChunkController upChunk)
+                && ((upChunk.State & Chunk.State.TerrainComplete) != Chunk.State.TerrainComplete))
             {
-                generationStep &= upChunk.CurrentStep;
+                return false;
             }
 
-            if (TryGetChunkAt(position + (Directions.Down * ChunkController.Size.x),
-                out ChunkController downChunk))
+            if (TryGetChunk(position + (Directions.Down * ChunkController.Size.x), out ChunkController downChunk)
+                && ((downChunk.State & Chunk.State.TerrainComplete) != Chunk.State.TerrainComplete))
             {
-                generationStep &= downChunk.CurrentStep;
+                return false;
             }
 
-            return generationStep;
+            return true;
         }
 
 
@@ -438,66 +436,25 @@ namespace Wyd.Controllers.World
 
         #region Chunk Block Operations
 
-        public bool ChunkExistsAt(float3 position) => _Chunks.ContainsKey(position);
-
-        public ChunkController GetChunkAt(float3 position)
-        {
-            bool trySuccess = _Chunks.TryGetValue(position, out ChunkController chunkController);
-
-            return trySuccess ? chunkController : default;
-        }
-
-        public bool TryGetChunkAt(float3 position, out ChunkController chunkController) =>
+        public bool TryGetChunk(float3 position, out ChunkController chunkController) =>
             _Chunks.TryGetValue(position, out chunkController);
 
-        public ushort GetBlockAt(float3 globalPosition)
-        {
-            float3 chunkPosition = WydMath.RoundBy(globalPosition, WydMath.ToFloat(ChunkController.Size));
-
-            ChunkController chunkController = GetChunkAt(chunkPosition);
-
-            if (chunkController == default)
-            {
-                throw new ArgumentOutOfRangeException(
-                    $"Position `{globalPosition}` outside of current loaded radius.");
-            }
-
-            return chunkController.BlocksController.GetBlockAt(globalPosition);
-        }
-
-        public bool TryGetBlockAt(float3 globalPosition, out ushort blockId)
+        public bool TryGetBlock(float3 globalPosition, out ushort blockId)
         {
             blockId = default;
             float3 chunkPosition = WydMath.RoundBy(globalPosition, WydMath.ToFloat(ChunkController.Size));
 
-            return TryGetChunkAt(chunkPosition, out ChunkController chunkController)
-                   && chunkController.BlocksController.TryGetBlockAt(globalPosition, out blockId);
+            return TryGetChunk(chunkPosition, out ChunkController chunkController)
+                   && chunkController.TryGetBlockAt(globalPosition, out blockId);
         }
 
-        public bool BlockExistsAt(float3 globalPosition)
+        public bool TryPlaceBlock(float3 globalPosition, ushort id)
         {
             float3 chunkPosition = WydMath.RoundBy(globalPosition, WydMath.ToFloat(ChunkController.Size));
 
-            return TryGetChunkAt(chunkPosition, out ChunkController chunkController)
-                   && chunkController.BlocksController.BlockExistsAt(globalPosition);
-        }
-
-        public bool TryPlaceBlockAt(float3 globalPosition, ushort id)
-        {
-            float3 chunkPosition = WydMath.RoundBy(globalPosition, WydMath.ToFloat(ChunkController.Size));
-
-            return TryGetChunkAt(chunkPosition, out ChunkController chunkController)
+            return TryGetChunk(chunkPosition, out ChunkController chunkController)
                    && (chunkController != default)
-                   && chunkController.BlocksController.TryPlaceBlockAt(globalPosition, id);
-        }
-
-        public bool TryRemoveBlockAt(int3 globalPosition)
-        {
-            float3 chunkPosition = WydMath.RoundBy(globalPosition, WydMath.ToFloat(ChunkController.Size));
-
-            return TryGetChunkAt(chunkPosition, out ChunkController chunkController)
-                   && (chunkController != default)
-                   && chunkController.BlocksController.TryRemoveBlockAt(globalPosition);
+                   && chunkController.TryPlaceBlockAt(globalPosition, id);
         }
 
         #endregion

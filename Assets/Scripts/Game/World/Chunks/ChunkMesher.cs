@@ -22,7 +22,7 @@ namespace Wyd.Game.World.Chunks
 {
     public class ChunkMesher
     {
-        private static readonly ObjectCache<MeshBlock[]> _MasksCache = new ObjectCache<MeshBlock[]>();
+        private static readonly ObjectCache<MeshBlock[]> _masksCache = new ObjectCache<MeshBlock[]>();
 
         private readonly Stopwatch _Stopwatch;
         private readonly List<Vector3> _Vertices;
@@ -41,6 +41,7 @@ namespace Wyd.Game.World.Chunks
 
         public TimeSpan SetBlockTimeSpan { get; private set; }
         public TimeSpan MeshingTimeSpan { get; private set; }
+        public ChunkMeshData MeshData { get; private set; }
 
         public ChunkMesher(CancellationToken cancellationToken, float3 originPoint, OctreeNode blocks, bool aggressiveFaceMerging)
         {
@@ -70,7 +71,7 @@ namespace Wyd.Game.World.Chunks
 
             _AggressiveFaceMerging = aggressiveFaceMerging;
 
-            _Mask = _MasksCache.Retrieve() ?? new MeshBlock[sizeProduct];
+            _Mask = _masksCache.Retrieve() ?? new MeshBlock[sizeProduct];
         }
 
         public void ClearExistingData()
@@ -81,36 +82,6 @@ namespace Wyd.Game.World.Chunks
             _Triangles.Clear();
             _TransparentTriangles.Clear();
             _UVs.Clear();
-        }
-
-        /// <summary>
-        ///     Applies and returns processed <see cref="UnityEngine.Mesh" />.
-        /// </summary>
-        /// <param name="mesh">Given <see cref="UnityEngine.Mesh" /> to apply processed data to.</param>
-        public void SetMesh(ref Mesh mesh)
-        {
-            if ((_Vertices.Count == 0) || ((_Triangles.Count == 0) && (_TransparentTriangles.Count == 0)))
-            {
-                return;
-            }
-
-            mesh.Clear();
-
-            mesh.subMeshCount = 2;
-            mesh.indexFormat = _Vertices.Count > 65000
-                ? IndexFormat.UInt32
-                : IndexFormat.UInt16;
-
-            mesh.MarkDynamic();
-            mesh.SetVertices(_Vertices);
-            mesh.SetTriangles(_Triangles, 0);
-            mesh.SetTriangles(_TransparentTriangles, 1);
-
-            // check uvs count in case of no UVs to apply to mesh
-            if (_UVs.Count > 0)
-            {
-                mesh.SetUVs(0, _UVs);
-            }
         }
 
         public void GenerateMesh()
@@ -153,7 +124,10 @@ namespace Wyd.Game.World.Chunks
                 }
             }
 
-            _MasksCache.CacheItem(ref _Mask);
+            _masksCache.CacheItem(ref _Mask);
+
+            MeshData = new ChunkMeshData(_Vertices, _Triangles, _TransparentTriangles, _UVs);
+
             _Stopwatch.Stop();
             MeshingTimeSpan = _Stopwatch.Elapsed;
         }
@@ -515,7 +489,7 @@ namespace Wyd.Game.World.Chunks
             if (!_Mask[index].Faces.HasFace(Direction.North)
                 // check if we're on the far edge of the chunk, and if so, query WorldController for blocks in adjacent chunk
                 && (((localPosition.z == (_Size.z - 1))
-                     && WorldController.Current.TryGetBlockAt(globalPosition + Directions.North, out ushort blockId)
+                     && WorldController.Current.TryGetBlock(globalPosition + Directions.North, out ushort blockId)
                      && BlockController.Current.CheckBlockHasProperties(blockId, BlockDefinition.Property.Transparent))
                     // however if we're inside the chunk, use the _Mask[] array index for check
                     || ((localPosition.z < (_Size.z - 1))
@@ -579,7 +553,7 @@ namespace Wyd.Game.World.Chunks
 
             if (!_Mask[index].Faces.HasFace(Direction.East)
                 && (((localPosition.x == (_Size.x - 1))
-                     && WorldController.Current.TryGetBlockAt(globalPosition + Directions.East, out blockId)
+                     && WorldController.Current.TryGetBlock(globalPosition + Directions.East, out blockId)
                      && BlockController.Current.CheckBlockHasProperties(blockId, BlockDefinition.Property.Transparent))
                     || ((localPosition.x < (_Size.x - 1))
                         && BlockController.Current.CheckBlockHasProperties(_Mask[index + 1].Id,
@@ -633,7 +607,7 @@ namespace Wyd.Game.World.Chunks
 
             if (!_Mask[index].Faces.HasFace(Direction.South)
                 && (((localPosition.z == 0)
-                     && WorldController.Current.TryGetBlockAt(globalPosition + Directions.South, out blockId)
+                     && WorldController.Current.TryGetBlock(globalPosition + Directions.South, out blockId)
                      && BlockController.Current.CheckBlockHasProperties(blockId, BlockDefinition.Property.Transparent))
                     || ((localPosition.z > 0)
                         && BlockController.Current.CheckBlockHasProperties(_Mask[index - _Size.x].Id,
@@ -687,7 +661,7 @@ namespace Wyd.Game.World.Chunks
 
             if (!_Mask[index].Faces.HasFace(Direction.West)
                 && (((localPosition.x == 0)
-                     && WorldController.Current.TryGetBlockAt(globalPosition + Directions.West, out blockId)
+                     && WorldController.Current.TryGetBlock(globalPosition + Directions.West, out blockId)
                      && BlockController.Current.CheckBlockHasProperties(blockId, BlockDefinition.Property.Transparent))
                     || ((localPosition.x > 0)
                         && BlockController.Current.CheckBlockHasProperties(_Mask[index - 1].Id,
@@ -741,7 +715,7 @@ namespace Wyd.Game.World.Chunks
 
             if (!_Mask[index].Faces.HasFace(Direction.Up)
                 && (((localPosition.y == (_Size.y - 1))
-                     && WorldController.Current.TryGetBlockAt(globalPosition + Directions.Up, out blockId)
+                     && WorldController.Current.TryGetBlock(globalPosition + Directions.Up, out blockId)
                      && BlockController.Current.CheckBlockHasProperties(blockId, BlockDefinition.Property.Transparent))
                     || ((localPosition.y < (_Size.y - 1))
                         && BlockController.Current.CheckBlockHasProperties(_Mask[index + _VerticalIndexStep].Id,
@@ -796,7 +770,7 @@ namespace Wyd.Game.World.Chunks
             // ignore the very bottom face of the world to reduce verts/tris
             if (!_Mask[index].Faces.HasFace(Direction.Down)
                 && (((localPosition.y == 0)
-                     && WorldController.Current.TryGetBlockAt(globalPosition + Directions.Down, out blockId)
+                     && WorldController.Current.TryGetBlock(globalPosition + Directions.Down, out blockId)
                      && BlockController.Current.CheckBlockHasProperties(blockId, BlockDefinition.Property.Transparent))
                     || ((localPosition.y > 0)
                         && BlockController.Current.CheckBlockHasProperties(_Mask[index - _VerticalIndexStep].Id,
@@ -909,7 +883,7 @@ namespace Wyd.Game.World.Chunks
                 && (_Mask[index].Id == _Mask[traversalIndex].Id)
                 && !_Mask[traversalIndex].Faces.HasFace(faceDirection)
                 // ensure the block to the north of our current block is transparent
-                && WorldController.Current.TryGetBlockAt(
+                && WorldController.Current.TryGetBlock(
                     globalPosition + (traversals * traversalDirection.ToInt3()) + faceDirection.ToInt3(),
                     out ushort blockId)
                 && (((id == -1)

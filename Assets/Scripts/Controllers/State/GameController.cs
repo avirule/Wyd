@@ -36,7 +36,7 @@ namespace Wyd.Controllers.State
                 (position, direction) =>
                 {
                     int3 positionAbove = position + Directions.Up;
-                    WorldController.Current.TryGetBlockAt(positionAbove, out ushort blockId);
+                    WorldController.Current.TryGetBlock(positionAbove, out ushort blockId);
 
                     if (!BlockController.Current.CheckBlockHasProperties(blockId, BlockDefinition.Property.Transparent))
                     {

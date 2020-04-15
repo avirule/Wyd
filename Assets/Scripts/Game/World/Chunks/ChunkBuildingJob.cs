@@ -15,16 +15,16 @@ namespace Wyd.Game.World.Chunks
     public class ChunkBuildingJob : AsyncJob
     {
         private readonly CancellationToken _CancellationToken;
-        private readonly OctreeNode _Blocks;
         private readonly float3 _OriginPoint;
         private readonly ComputeBuffer _NoiseValuesBuffer;
         private readonly float _Frequency;
         private readonly float _Persistence;
         private readonly bool _GpuAcceleration;
 
-        private ChunkRawTerrainBuilder _TerrainBuilder;
+        private OctreeNode _Blocks;
+        private ChunkBuilder _Builder;
 
-        public ChunkBuildingJob(CancellationToken cancellationToken, float3 originPoint, OctreeNode blocks,
+        public ChunkBuildingJob(CancellationToken cancellationToken, float3 originPoint, ref OctreeNode blocks,
             float frequency, float persistence, bool gpuAcceleration = false, ComputeBuffer noiseValuesBuffer = null) :
             base(cancellationToken)
         {
@@ -40,9 +40,9 @@ namespace Wyd.Game.World.Chunks
 
         protected override Task Process()
         {
-            _TerrainBuilder = new ChunkRawTerrainBuilder(_CancellationToken, _OriginPoint, _Blocks, _Frequency,
-                _Persistence, _GpuAcceleration, _NoiseValuesBuffer);
-            _TerrainBuilder.Generate();
+            _Builder = new ChunkBuilder(_CancellationToken, _OriginPoint, ref _Blocks, _Frequency, _Persistence,
+                _GpuAcceleration, _NoiseValuesBuffer);
+            _Builder.Generate();
 
             return Task.CompletedTask;
         }
@@ -51,9 +51,9 @@ namespace Wyd.Game.World.Chunks
         {
             if (!_CancellationToken.IsCancellationRequested)
             {
-                DiagnosticsController.Current.RollingNoiseRetrievalTimes.Enqueue(_TerrainBuilder
+                DiagnosticsController.Current.RollingNoiseRetrievalTimes.Enqueue(_Builder
                     .NoiseRetrievalTimeSpan);
-                DiagnosticsController.Current.RollingTerrainGenerationTimes.Enqueue(_TerrainBuilder
+                DiagnosticsController.Current.RollingTerrainGenerationTimes.Enqueue(_Builder
                     .TerrainGenerationTimeSpan);
             }
 

@@ -1,27 +1,81 @@
 #region
 
+using System;
+using System.Collections;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading;
 using Unity.Mathematics;
 using UnityEngine;
 using UnityEngine.Rendering;
 using Wyd.Controllers.State;
+using Wyd.Controllers.System;
+using Wyd.Game;
+using Wyd.Game.World.Blocks;
 using Wyd.Game.World.Chunks;
 using Wyd.Game.World.Chunks.Events;
 using Wyd.System;
+using Wyd.System.Collections;
+using Wyd.System.Jobs;
 
 #endregion
 
 namespace Wyd.Controllers.World.Chunk
 {
-    public class ChunkController : ActivationStateChunkController
+    [Flags]
+    public enum State : byte
     {
+        Terrain = 0b0000_0001,
+        AwaitingTerrain = 0b0000_0011,
+        TerrainComplete = 0b0000_1111,
+        MeshUpdate = 0b0001_0000,
+        Meshing = 0b0010_0000,
+        MeshDataPending = 0b0100_0000,
+        Meshed = 0b1000_0000
+    }
+
+    public class ChunkController : ActivationStateChunkController, IPerFrameIncrementalUpdate
+    {
+        private static readonly ObjectCache<BlockAction> _blockActionsCache = new ObjectCache<BlockAction>(true, 1024);
+
         public static readonly int3 Size = new int3(32);
 
         #region INSTANCE MEMBERS
 
+        private CancellationTokenSource _CancellationTokenSource;
+        private Queue<BlockAction> _BlockActions;
+        private OctreeNode _Blocks;
+        private Mesh _Mesh;
         private bool _Visible;
         private bool _RenderShadows;
 
-        public TerrainStep CurrentStep => TerrainController.TerrainStep;
+        private State _State;
+        private object _StateHandle;
+        private ChunkMeshData _PendingMeshData;
+
+        public ref OctreeNode Blocks => ref _Blocks;
+
+        public State State
+        {
+            get
+            {
+                State tmp;
+
+                lock (_StateHandle)
+                {
+                    tmp = _State;
+                }
+
+                return tmp;
+            }
+            private set
+            {
+                lock (_StateHandle)
+                {
+                    _State = value;
+                }
+            }
+        }
 
         public bool RenderShadows
         {
@@ -56,14 +110,10 @@ namespace Wyd.Controllers.World.Chunk
 
         #endregion
 
-
         #region SERIALIZED MEMBERS
 
         [SerializeField]
         private MeshRenderer MeshRenderer;
-
-        [SerializeField]
-        public ChunkBlocksController BlocksController;
 
         [SerializeField]
         private ChunkTerrainController TerrainController;
@@ -85,26 +135,26 @@ namespace Wyd.Controllers.World.Chunk
         [ReadOnlyInspectorField]
         public Vector3 Extents;
 
-
 #endif
 
         #endregion
+
 
         protected override void Awake()
         {
             base.Awake();
 
-            BlocksController.BlocksChanged += (sender, args) =>
+            _BlockActions = new Queue<BlockAction>();
+            _Mesh = new Mesh();
+            _StateHandle = new object();
+
+            void FlagUpdateMesh(object sender, ChunkChangedEventArgs args)
             {
-                MeshController.FlagForUpdate();
-                OnLocalTerrainChanged(sender, args);
-            };
-            TerrainController.TerrainChanged += (sender, args) =>
-            {
-                MeshController.FlagForUpdate();
-                OnLocalTerrainChanged(sender, args);
-            };
-            MeshController.MeshChanged += OnMeshChanged;
+                FlagMeshForUpdate();
+            }
+
+            BlocksChanged += FlagUpdateMesh;
+            TerrainChanged += FlagUpdateMesh;
 
             MeshRenderer.materials = TextureController.Current.TerrainMaterials;
             _Visible = MeshRenderer.enabled;
@@ -114,6 +164,14 @@ namespace Wyd.Controllers.World.Chunk
         {
             base.OnEnable();
 
+            PerFrameUpdateController.Current.RegisterPerFrameUpdater(20, this);
+            _CancellationTokenSource = new CancellationTokenSource();
+            _Visible = MeshRenderer.enabled;
+            _BlockActions.Clear();
+
+            Blocks = new OctreeNode(OriginPoint + (Size / new float3(2f)), Size.x, 0);
+            State = State.Terrain;
+
 #if UNITY_EDITOR
 
             MinimumPoint = OriginPoint;
@@ -121,15 +179,73 @@ namespace Wyd.Controllers.World.Chunk
             Extents = WydMath.ToFloat(Size) / 2f;
 
 #endif
-
-            _Visible = MeshRenderer.enabled;
         }
 
-        public void FlagMeshForUpdate()
+        protected override void OnDisable()
         {
-            MeshController.FlagForUpdate();
+            base.OnDisable();
+
+            PerFrameUpdateController.Current.DeregisterPerFrameUpdater(20, this);
+
+            if (_Mesh != null)
+            {
+                _Mesh.Clear();
+            }
+
+            _BlockActions.Clear();
         }
 
+        public void FrameUpdate()
+        {
+            if (State.HasFlag(State.Terrain)
+                && !State.HasFlag(State.AwaitingTerrain)
+                && WorldController.Current.ReadyForGeneration)
+            {
+                State |= (State & ~State.TerrainComplete) | State.AwaitingTerrain;
+                TerrainController.BeginTerrainGeneration(ref Blocks, _CancellationTokenSource.Token,
+                    OnTerrainGenerationFinished);
+            }
+
+            if (!State.HasFlag(State.TerrainComplete))
+            {
+                return;
+            }
+
+            if (State.HasFlag(State.MeshDataPending) && (_PendingMeshData != null))
+            {
+                MeshController.ApplyMesh(_PendingMeshData);
+                _PendingMeshData = null;
+                State = (State & ~State.MeshDataPending) | State.Meshed;
+                OnMeshChanged(this, new ChunkChangedEventArgs(OriginPoint, Enumerable.Empty<int3>()));
+            }
+
+            if (!State.HasFlag(State.Meshing)
+                && (!State.HasFlag(State.Meshed) || State.HasFlag(State.MeshUpdate))
+                && WorldController.Current.NeighborTerrainComplete(OriginPoint))
+            {
+                State = (State & ~(State.Meshed & State.MeshUpdate)) | State.Meshing;
+                MeshController.BeginGeneratingMesh(Blocks, _CancellationTokenSource.Token, OnMeshingFinished);
+            }
+        }
+
+        public IEnumerable IncrementalFrameUpdate()
+        {
+            if (!State.HasFlag(State.TerrainComplete))
+            {
+                yield break;
+            }
+
+            while (_BlockActions.Count > 0)
+            {
+                BlockAction blockAction = _BlockActions.Dequeue();
+
+                ProcessBlockAction(blockAction);
+
+                _blockActionsCache.CacheItem(ref blockAction);
+
+                yield return null;
+            }
+        }
 
         #region DE/ACTIVATION
 
@@ -148,19 +264,124 @@ namespace Wyd.Controllers.World.Chunk
         #endregion
 
 
-        #region EVENT
+        #region Block Actions
 
+        private void ProcessBlockAction(BlockAction blockAction)
+        {
+            ModifyBlockPosition(blockAction.GlobalPosition, blockAction.Id);
+
+            OnBlocksChanged(this,
+                TryUpdateGetNeighborNormals(blockAction.GlobalPosition, out IEnumerable<int3> normals)
+                    ? new ChunkChangedEventArgs(OriginPoint, normals)
+                    : new ChunkChangedEventArgs(OriginPoint, Enumerable.Empty<int3>()));
+        }
+
+        private bool TryUpdateGetNeighborNormals(float3 globalPosition, out IEnumerable<int3> normals)
+        {
+            normals = Enumerable.Empty<int3>();
+
+            float3 localPosition = globalPosition - (OriginPoint + (WydMath.ToFloat(Size) / 2f));
+            float3 localPositionSign = math.sign(localPosition);
+            float3 localPositionAbs = math.abs(math.ceil(localPosition + (new float3(0.5f) * localPositionSign)));
+
+            if (!math.any(localPositionAbs == 16f))
+            {
+                return false;
+            }
+
+            normals = WydMath.ToComponents(WydMath.ToInt(math.floor(localPositionAbs / 16f) * localPositionSign));
+            return true;
+        }
+
+        private void ModifyBlockPosition(float3 globalPosition, ushort newId)
+        {
+            if (!Blocks.ContainsMinBiased(globalPosition))
+            {
+                return;
+            }
+
+            Blocks.SetPoint(globalPosition, newId);
+        }
+
+        public bool TryGetBlockAt(float3 globalPosition, out ushort blockId)
+        {
+            blockId = 0;
+
+            if (!Blocks.ContainsMinBiased(globalPosition))
+            {
+                return false;
+            }
+
+            blockId = Blocks.GetPoint(globalPosition);
+
+            return true;
+        }
+
+        public bool TryPlaceBlockAt(float3 globalPosition, ushort newBlockId) =>
+            Blocks.ContainsMinBiased(globalPosition)
+            && TryGetBlockAt(globalPosition, out ushort blockId)
+            && (blockId != newBlockId)
+            && AllocateBlockAction(globalPosition, newBlockId);
+
+        private bool AllocateBlockAction(float3 globalPosition, ushort id)
+        {
+            BlockAction blockAction = _blockActionsCache.Retrieve();
+            blockAction.SetData(globalPosition, id);
+            _BlockActions.Enqueue(blockAction);
+            return true;
+        }
+
+        #endregion
+
+
+        public void FlagMeshForUpdate()
+        {
+            if (!State.HasFlag(State.MeshUpdate))
+            {
+                State |= State.MeshUpdate;
+            }
+        }
+
+
+        #region Events
+
+        public event ChunkChangedEventHandler BlocksChanged;
         public event ChunkChangedEventHandler TerrainChanged;
         public event ChunkChangedEventHandler MeshChanged;
+
+
+        private void OnBlocksChanged(object sender, ChunkChangedEventArgs args)
+        {
+            BlocksChanged?.Invoke(sender, args);
+        }
 
         private void OnLocalTerrainChanged(object sender, ChunkChangedEventArgs args)
         {
             TerrainChanged?.Invoke(sender, args);
         }
 
+        private void OnTerrainGenerationFinished(object sender, AsyncJobEventArgs args)
+        {
+            State |= State.TerrainComplete;
+            args.AsyncJob.WorkFinished -= OnTerrainGenerationFinished;
+            OnLocalTerrainChanged(sender, new ChunkChangedEventArgs(OriginPoint, Directions.AllDirectionAxes));
+        }
+
         private void OnMeshChanged(object sender, ChunkChangedEventArgs args)
         {
             MeshChanged?.Invoke(sender, args);
+        }
+
+        private void OnMeshingFinished(object sender, AsyncJobEventArgs args)
+        {
+            if (!(args.AsyncJob is ChunkMeshingJob chunkMeshingJob))
+            {
+                return;
+            }
+
+            _PendingMeshData = chunkMeshingJob.GetMeshData();
+            State = (State & ~State.Meshing) | State.MeshDataPending;
+            args.AsyncJob.WorkFinished -= OnMeshingFinished;
         }
 
         #endregion
