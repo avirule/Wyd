@@ -16,6 +16,7 @@ using Wyd.Game.World.Chunks;
 using Wyd.Game.World.Chunks.Events;
 using Wyd.System;
 using Wyd.System.Collections;
+using Wyd.System.Extensions;
 using Wyd.System.Jobs;
 
 #endregion
@@ -191,16 +192,16 @@ namespace Wyd.Controllers.World.Chunk
 
         public void FrameUpdate()
         {
-            if (State.HasFlag(State.TerrainComplete)
-                && State.HasFlag(State.Meshed)
-                && !State.HasFlag(State.UpdateMesh))
+            if (State.HasState(State.TerrainComplete)
+                && State.HasState(State.Meshed)
+                && !State.HasState(State.UpdateMesh))
             {
                 return;
             }
 
 
-            if (State.HasFlag(State.Terrain)
-                && !State.HasFlag(State.AwaitingTerrain)
+            if (State.HasState(State.Terrain)
+                && !State.HasState(State.AwaitingTerrain)
                 && WorldController.Current.ReadyForGeneration)
             {
                 State |= (State & ~State.TerrainComplete) | State.AwaitingTerrain;
@@ -208,12 +209,12 @@ namespace Wyd.Controllers.World.Chunk
                     OnTerrainGenerationFinished);
             }
 
-            if (!State.HasFlag(State.TerrainComplete))
+            if (!State.HasState(State.TerrainComplete))
             {
                 return;
             }
 
-            if (State.HasFlag(State.MeshDataPending) && (_PendingMeshData != null))
+            if (State.HasState(State.MeshDataPending) && (_PendingMeshData != null))
             {
                 MeshController.ApplyMesh(_PendingMeshData);
                 _PendingMeshData = null;
@@ -221,9 +222,9 @@ namespace Wyd.Controllers.World.Chunk
                 OnMeshChanged(this, new ChunkChangedEventArgs(OriginPoint, Enumerable.Empty<int3>()));
             }
 
-            if (!State.HasFlag(State.Meshing)
-                && !State.HasFlag(State.MeshDataPending)
-                && (!State.HasFlag(State.Meshed) || State.HasFlag(State.UpdateMesh))
+            if (!State.HasState(State.Meshing)
+                && !State.HasState(State.MeshDataPending)
+                && (!State.HasState(State.Meshed) || State.HasState(State.UpdateMesh))
                 && WorldController.Current.NeighborsTerrainComplete(OriginPoint))
             {
                 State = (State & ~(State.Meshed | State.UpdateMesh)) | State.Meshing;
@@ -233,7 +234,7 @@ namespace Wyd.Controllers.World.Chunk
 
         public IEnumerable IncrementalFrameUpdate()
         {
-            if (!State.HasFlag(State.TerrainComplete))
+            if (!State.HasState(State.TerrainComplete))
             {
                 yield break;
             }
@@ -339,7 +340,7 @@ namespace Wyd.Controllers.World.Chunk
 
         public void FlagMeshForUpdate()
         {
-            if (!State.HasFlag(State.UpdateMesh))
+            if (!State.HasState(State.UpdateMesh))
             {
                 State |= State.UpdateMesh;
             }

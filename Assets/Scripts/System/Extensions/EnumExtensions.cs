@@ -1,6 +1,7 @@
 #region
 
 using System;
+using Wyd.Controllers.World.Chunk;
 
 #endregion
 
@@ -15,11 +16,11 @@ namespace Wyd.System.Extensions
             return arr.Length == j ? arr[0] : arr[j];
         }
 
-        public static bool HasFlag(this Enum value, Enum flag)
+        public static bool HasState(this State state, State flag)
         {
-            int intValue = Convert.ToInt32(value);
-            int intFlag = Convert.ToInt32(flag);
-            return (intValue & intFlag) == intFlag;
+            int intState = (int)state;
+            int intFlag = (int)flag;
+            return (intState & intFlag) == intFlag;
         }
     }
 }
