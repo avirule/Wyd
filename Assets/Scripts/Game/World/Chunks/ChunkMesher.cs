@@ -45,7 +45,7 @@ namespace Wyd.Game.World.Chunks
 
         public ChunkMesher(CancellationToken cancellationToken, float3 originPoint, OctreeNode blocks, bool aggressiveFaceMerging)
         {
-            if (_Blocks == null)
+            if (blocks == null)
             {
                 return;
             }
@@ -74,16 +74,6 @@ namespace Wyd.Game.World.Chunks
             _Mask = _masksCache.Retrieve() ?? new MeshBlock[sizeProduct];
         }
 
-        public void ClearExistingData()
-        {
-            SetBlockTimeSpan = MeshingTimeSpan = TimeSpan.Zero;
-            _Stopwatch.Reset();
-            _Vertices.Clear();
-            _Triangles.Clear();
-            _TransparentTriangles.Clear();
-            _UVs.Clear();
-        }
-
         public void GenerateMesh()
         {
             if (_Blocks == null || _Blocks.IsUniform && (_Blocks.Value == BlockController.AIR_ID))
@@ -92,7 +82,7 @@ namespace Wyd.Game.World.Chunks
             }
 
             _Stopwatch.Restart();
-            SetBlockData(_Blocks.GetAllData());
+            SetBlockData(_Blocks.UncheckedGetAllData());
             _Stopwatch.Stop();
             SetBlockTimeSpan = _Stopwatch.Elapsed;
 

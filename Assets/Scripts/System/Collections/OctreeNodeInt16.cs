@@ -11,7 +11,7 @@ namespace Wyd.System.Collections
 {
     public class OctreeNode
     {
-        private static readonly float3[] _Coordinates =
+        private static readonly float3[] _coordinates =
         {
             new float3(-1, -1, -1),
             new float3(1, -1, -1),
@@ -29,8 +29,9 @@ namespace Wyd.System.Collections
         private readonly Volume _Volume;
 
         public Volume Volume => _Volume;
-        public ushort Value { get; private set; }
         public bool IsUniform => _Nodes.Count == 0;
+
+        public ushort Value { get; private set; }
 
         public OctreeNode(float3 centerPoint, float size, ushort value)
         {
@@ -57,14 +58,14 @@ namespace Wyd.System.Collections
 
             _Nodes.Clear();
 
-            _Nodes.Add(new OctreeNode(_Volume.CenterPoint + (_Coordinates[0] * offset), _Volume.Extents.x, Value));
-            _Nodes.Add(new OctreeNode(_Volume.CenterPoint + (_Coordinates[1] * offset), _Volume.Extents.x, Value));
-            _Nodes.Add(new OctreeNode(_Volume.CenterPoint + (_Coordinates[2] * offset), _Volume.Extents.x, Value));
-            _Nodes.Add(new OctreeNode(_Volume.CenterPoint + (_Coordinates[3] * offset), _Volume.Extents.x, Value));
-            _Nodes.Add(new OctreeNode(_Volume.CenterPoint + (_Coordinates[4] * offset), _Volume.Extents.x, Value));
-            _Nodes.Add(new OctreeNode(_Volume.CenterPoint + (_Coordinates[5] * offset), _Volume.Extents.x, Value));
-            _Nodes.Add(new OctreeNode(_Volume.CenterPoint + (_Coordinates[6] * offset), _Volume.Extents.x, Value));
-            _Nodes.Add(new OctreeNode(_Volume.CenterPoint + (_Coordinates[7] * offset), _Volume.Extents.x, Value));
+            _Nodes.Add(new OctreeNode(_Volume.CenterPoint + (_coordinates[0] * offset), _Volume.Extents.x, Value));
+            _Nodes.Add(new OctreeNode(_Volume.CenterPoint + (_coordinates[1] * offset), _Volume.Extents.x, Value));
+            _Nodes.Add(new OctreeNode(_Volume.CenterPoint + (_coordinates[2] * offset), _Volume.Extents.x, Value));
+            _Nodes.Add(new OctreeNode(_Volume.CenterPoint + (_coordinates[3] * offset), _Volume.Extents.x, Value));
+            _Nodes.Add(new OctreeNode(_Volume.CenterPoint + (_coordinates[4] * offset), _Volume.Extents.x, Value));
+            _Nodes.Add(new OctreeNode(_Volume.CenterPoint + (_coordinates[5] * offset), _Volume.Extents.x, Value));
+            _Nodes.Add(new OctreeNode(_Volume.CenterPoint + (_coordinates[6] * offset), _Volume.Extents.x, Value));
+            _Nodes.Add(new OctreeNode(_Volume.CenterPoint + (_coordinates[7] * offset), _Volume.Extents.x, Value));
         }
 
         public ushort GetPoint(float3 point)
@@ -100,6 +101,21 @@ namespace Wyd.System.Collections
                 {
                     return _Nodes[octant].GetPoint(point);
                 }
+            }
+            else
+            {
+                return Value;
+            }
+        }
+
+        public ushort UncheckedGetPoint(float3 point)
+        {
+            point = math.floor(point);
+
+            if (!IsUniform)
+            {
+                int octant = DetermineOctant(point);
+                return _Nodes[octant].GetPoint(point);
             }
             else
             {
@@ -195,12 +211,23 @@ namespace Wyd.System.Collections
 
         public IEnumerable<ushort> GetAllData()
         {
+            int3 sizeInt = WydMath.ToInt(_Volume.Size);
+
             for (int index = 0; index < WydMath.Product(_Volume.Size); index++)
             {
-                yield return GetPoint(_Volume.MinPoint + WydMath.IndexTo3D(index, WydMath.ToInt(_Volume.Size)));
+                yield return GetPoint(_Volume.MinPoint + WydMath.IndexTo3D(index, sizeInt));
             }
         }
 
+        public IEnumerable<ushort> UncheckedGetAllData()
+        {
+            int3 sizeInt = WydMath.ToInt(_Volume.Size);
+
+            for (int index = 0; index < WydMath.Product(_Volume.Size); index++)
+            {
+                yield return UncheckedGetPoint(_Volume.MinPoint + WydMath.IndexTo3D(index, sizeInt));
+            }
+        }
 
         #region HELPER METHODS
 

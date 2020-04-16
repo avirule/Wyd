@@ -8,6 +8,7 @@ using Unity.Mathematics;
 using Wyd.Game;
 using Wyd.Game.World.Blocks;
 using Wyd.Graphics;
+using Wyd.System.Extensions;
 
 #endregion
 
@@ -147,7 +148,7 @@ namespace Wyd.Controllers.State
 
         public bool CheckBlockHasProperties(ushort blockId, BlockDefinition.Property property)
         {
-            return BlockIdExists(blockId) && BlockDefinitions[blockId].Properties.HasFlag(property);
+            return BlockIdExists(blockId) && BlockDefinitions[blockId].Properties.UncheckedHasFlag(property);
         }
     }
 }
