@@ -6,7 +6,6 @@ using System.Diagnostics;
 using System.Threading;
 using Unity.Mathematics;
 using UnityEngine;
-using UnityEngine.Rendering;
 using Wyd.Controllers.State;
 using Wyd.Controllers.World;
 using Wyd.Game.World.Blocks;
@@ -43,7 +42,8 @@ namespace Wyd.Game.World.Chunks
         public TimeSpan MeshingTimeSpan { get; private set; }
         public ChunkMeshData MeshData { get; private set; }
 
-        public ChunkMesher(CancellationToken cancellationToken, float3 originPoint, OctreeNode blocks, bool aggressiveFaceMerging)
+        public ChunkMesher(CancellationToken cancellationToken, float3 originPoint, OctreeNode blocks,
+            bool aggressiveFaceMerging)
         {
             if (blocks == null)
             {
@@ -76,7 +76,7 @@ namespace Wyd.Game.World.Chunks
 
         public void GenerateMesh()
         {
-            if (_Blocks == null || _Blocks.IsUniform && (_Blocks.Value == BlockController.AIR_ID))
+            if ((_Blocks == null) || (_Blocks.IsUniform && (_Blocks.Value == BlockController.AIR_ID)))
             {
                 return;
             }

@@ -1,6 +1,5 @@
 #region
 
-using Unity.Mathematics;
 using UnityEngine;
 using Wyd.Controllers.State;
 
@@ -25,7 +24,8 @@ namespace Wyd.Controllers.Graphics
         private void FixedUpdate()
         {
             Quaternion rotation = _SelfTransform.rotation;
-            _SelfTransform.rotation = Quaternion.Euler(-_Pitch * Time.fixedDeltaTime, _Yaw * Time.fixedDeltaTime, rotation.z);
+            _SelfTransform.rotation =
+                Quaternion.Euler(-_Pitch * Time.fixedDeltaTime, _Yaw * Time.fixedDeltaTime, rotation.z);
         }
 
         private void Update()

@@ -37,7 +37,8 @@ namespace Wyd.Controllers.World.Chunk
             }
         }
 
-        public void BeginTerrainGeneration(ref OctreeNode blocks, CancellationToken token, AsyncJobEventHandler callback)
+        public void BeginTerrainGeneration(ref OctreeNode blocks, CancellationToken token,
+            AsyncJobEventHandler callback)
         {
             ChunkBuildingJob asyncJob;
 

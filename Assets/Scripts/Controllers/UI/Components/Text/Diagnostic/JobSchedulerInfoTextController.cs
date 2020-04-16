@@ -1,6 +1,5 @@
 #region
 
-using System;
 using Wyd.System.Jobs;
 
 #endregion

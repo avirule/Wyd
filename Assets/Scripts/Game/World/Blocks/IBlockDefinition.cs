@@ -1,8 +1,6 @@
 #region
 
 using Unity.Mathematics;
-using UnityEngine;
-using Random = System.Random;
 
 #endregion
 

@@ -2,7 +2,6 @@
 
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using Serilog;
 using Unity.Mathematics;
 using Wyd.Game;
@@ -146,9 +145,7 @@ namespace Wyd.Controllers.State
             return false;
         }
 
-        public bool CheckBlockHasProperties(ushort blockId, BlockDefinition.Property property)
-        {
-            return BlockIdExists(blockId) && BlockDefinitions[blockId].Properties.UncheckedHasFlag(property);
-        }
+        public bool CheckBlockHasProperties(ushort blockId, BlockDefinition.Property property) =>
+            BlockIdExists(blockId) && BlockDefinitions[blockId].Properties.UncheckedHasFlag(property);
     }
 }

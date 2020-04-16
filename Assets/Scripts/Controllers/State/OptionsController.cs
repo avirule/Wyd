@@ -10,7 +10,6 @@ using JetBrains.Annotations;
 using Serilog;
 using SharpConfig;
 using UnityEngine;
-using UnityEngine.AI;
 using Wyd.Graphics;
 
 #endregion
@@ -247,8 +246,8 @@ namespace Wyd.Controllers.State
             // General
 
             if (!GetSetting("General", nameof(AsyncWorkerCount), out _AsyncWorkerCount)
-                || AsyncWorkerCount > Environment.ProcessorCount
-                || AsyncWorkerCount < 1)
+                || (AsyncWorkerCount > Environment.ProcessorCount)
+                || (AsyncWorkerCount < 1))
             {
                 LogSettingLoadError(nameof(AsyncWorkerCount), Defaults.ASYNC_WORKER_COUNT);
                 AsyncWorkerCount = Defaults.ASYNC_WORKER_COUNT;

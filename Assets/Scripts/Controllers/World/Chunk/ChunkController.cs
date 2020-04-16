@@ -4,7 +4,6 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
-using System.Net.Mail;
 using System.Threading;
 using Unity.Mathematics;
 using UnityEngine;
@@ -75,7 +74,12 @@ namespace Wyd.Controllers.World.Chunk
                 lock (_StateHandle)
                 {
                     _State = value;
+
+                    #if UNITY_EDITOR
+
                     BinaryState = Convert.ToString((byte)_State, 2);
+
+                    #endif
                 }
             }
         }

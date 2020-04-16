@@ -1,3 +1,1 @@
-namespace Wyd.System.Jobs
-{
-}
+namespace Wyd.System.Jobs {}
