@@ -24,7 +24,7 @@ using Wyd.System.Jobs;
 namespace Wyd.Controllers.World.Chunk
 {
     [Flags]
-    public enum State
+    public enum ChunkState
     {
         Terrain = 0b0000_0001,
         AwaitingTerrain = 0b0000_0011,
@@ -41,6 +41,7 @@ namespace Wyd.Controllers.World.Chunk
 
         public static readonly int3 Size = new int3(32);
 
+
         #region INSTANCE MEMBERS
 
         private CancellationTokenSource _CancellationTokenSource;
@@ -55,16 +56,16 @@ namespace Wyd.Controllers.World.Chunk
 
         public ref OctreeNode Blocks => ref _Blocks;
 
-        public State State
+        public ChunkState ChunkState
         {
-            get => (State)Interlocked.Read(ref _State);
+            get => (ChunkState)Interlocked.Read(ref _State);
             private set
             {
                 Interlocked.Exchange(ref _State, (long)value);
 
 #if UNITY_EDITOR
 
-                BinaryState = Convert.ToString(unchecked((byte)State), 2);
+                BinaryState = Convert.ToString(unchecked((byte)ChunkState), 2);
 
 #endif
             }
@@ -102,6 +103,7 @@ namespace Wyd.Controllers.World.Chunk
         }
 
         #endregion
+
 
         #region SERIALIZED MEMBERS
 
@@ -189,54 +191,54 @@ namespace Wyd.Controllers.World.Chunk
             _BlockActions.Clear();
             _Blocks = null;
 
-            State = State.Terrain;
+            ChunkState = ChunkState.Terrain;
         }
 
         public void FrameUpdate()
         {
-            if (State.HasState(State.TerrainComplete)
-                && State.HasState(State.Meshed)
-                && !State.HasState(State.UpdateMesh))
+            if (ChunkState.HasState(ChunkState.TerrainComplete)
+                && ChunkState.HasState(ChunkState.Meshed)
+                && !ChunkState.HasState(ChunkState.UpdateMesh))
             {
                 return;
             }
 
 
-            if (State.HasState(State.Terrain)
-                && !State.HasState(State.AwaitingTerrain)
+            if (ChunkState.HasState(ChunkState.Terrain)
+                && !ChunkState.HasState(ChunkState.AwaitingTerrain)
                 && WorldController.Current.ReadyForGeneration)
             {
-                State |= (State & ~State.TerrainComplete) | State.AwaitingTerrain;
+                ChunkState |= (ChunkState & ~ChunkState.TerrainComplete) | ChunkState.AwaitingTerrain;
                 TerrainController.BeginTerrainGeneration(ref Blocks, _CancellationTokenSource.Token,
                     OnTerrainGenerationFinished);
             }
 
-            if (!State.HasState(State.TerrainComplete))
+            if (!ChunkState.HasState(ChunkState.TerrainComplete))
             {
                 return;
             }
 
-            if (State.HasState(State.MeshDataPending) && (_PendingMeshData != null))
+            if (ChunkState.HasState(ChunkState.MeshDataPending) && (_PendingMeshData != null))
             {
                 MeshController.ApplyMesh(_PendingMeshData);
                 _PendingMeshData = null;
-                State = (State & ~State.MeshDataPending) | State.Meshed;
+                ChunkState = (ChunkState & ~ChunkState.MeshDataPending) | ChunkState.Meshed;
                 OnMeshChanged(this, new ChunkChangedEventArgs(OriginPoint, Enumerable.Empty<int3>()));
             }
 
-            if (!State.HasState(State.Meshing)
-                && !State.HasState(State.MeshDataPending)
-                && (!State.HasState(State.Meshed) || State.HasState(State.UpdateMesh))
+            if (!ChunkState.HasState(ChunkState.Meshing)
+                && !ChunkState.HasState(ChunkState.MeshDataPending)
+                && (!ChunkState.HasState(ChunkState.Meshed) || ChunkState.HasState(ChunkState.UpdateMesh))
                 && WorldController.Current.NeighborsTerrainComplete(OriginPoint))
             {
-                State = (State & ~(State.Meshed | State.UpdateMesh)) | State.Meshing;
+                ChunkState = (ChunkState & ~(ChunkState.Meshed | ChunkState.UpdateMesh)) | ChunkState.Meshing;
                 MeshController.BeginGeneratingMesh(Blocks, _CancellationTokenSource.Token, OnMeshingFinished);
             }
         }
 
         public IEnumerable IncrementalFrameUpdate()
         {
-            if (!State.HasState(State.TerrainComplete))
+            if (!ChunkState.HasState(ChunkState.TerrainComplete))
             {
                 yield break;
             }
@@ -253,7 +255,16 @@ namespace Wyd.Controllers.World.Chunk
             }
         }
 
-        #region DE/ACTIVATION
+        public void FlagMeshForUpdate()
+        {
+            if (!ChunkState.HasState(ChunkState.UpdateMesh))
+            {
+                ChunkState |= ChunkState.UpdateMesh;
+            }
+        }
+
+
+        #region De/Activation
 
         public void Activate(float3 position)
         {
@@ -340,14 +351,6 @@ namespace Wyd.Controllers.World.Chunk
         #endregion
 
 
-        public void FlagMeshForUpdate()
-        {
-            if (!State.HasState(State.UpdateMesh))
-            {
-                State |= State.UpdateMesh;
-            }
-        }
-
 
         #region Events
 
@@ -368,7 +371,7 @@ namespace Wyd.Controllers.World.Chunk
 
         private void OnTerrainGenerationFinished(object sender, AsyncJobEventArgs args)
         {
-            State |= State.TerrainComplete;
+            ChunkState |= ChunkState.TerrainComplete;
             args.AsyncJob.WorkFinished -= OnTerrainGenerationFinished;
             OnLocalTerrainChanged(sender, new ChunkChangedEventArgs(OriginPoint, Directions.AllDirectionAxes));
         }
@@ -386,7 +389,7 @@ namespace Wyd.Controllers.World.Chunk
             }
 
             _PendingMeshData = chunkMeshingJob.GetMeshData();
-            State = (State & ~State.Meshing) | State.MeshDataPending;
+            ChunkState = (ChunkState & ~ChunkState.Meshing) | ChunkState.MeshDataPending;
             args.AsyncJob.WorkFinished -= OnMeshingFinished;
         }
 

@@ -75,7 +75,7 @@ namespace Wyd.Controllers.World
         public bool ReadyForGeneration =>
             (_ChunksPendingActivation.Count == 0)
             && (_ChunksPendingDeactivation.Count == 0)
-            && !WorldState.HasFlag(WorldState.VerifyingState);
+            && !WorldState.HasState(WorldState.VerifyingState);
 
         public int ChunksQueuedCount => _ChunksPendingActivation.Count;
         public int ChunksActiveCount => _Chunks.Count;
@@ -90,8 +90,6 @@ namespace Wyd.Controllers.World
         public FixedConcurrentQueue<TimeSpan> ChunkStateVerificationTimes { get; private set; }
         public WorldSeed Seed { get; private set; }
         public int3 SpawnPoint { get; private set; }
-
-        public event EventHandler<ChunkChangedEventArgs> ChunkMeshChanged;
 
         private void Awake()
         {
@@ -154,8 +152,8 @@ namespace Wyd.Controllers.World
 
         public IEnumerable IncrementalFrameUpdate()
         {
-            if (WorldState.HasFlag(WorldState.RequiresStateVerification)
-                && !WorldState.HasFlag(WorldState.VerifyingState))
+            if (WorldState.HasState(WorldState.RequiresStateVerification)
+                && !WorldState.HasState(WorldState.VerifyingState))
             {
                 VerifyAllChunkStatesAroundLoaders();
                 WorldState &= ~WorldState.RequiresStateVerification;
@@ -197,7 +195,6 @@ namespace Wyd.Controllers.World
                     continue;
                 }
 
-                // cache position to avoid multiple native dll calls
                 CacheChunk(origin);
 
                 yield return null;
@@ -243,37 +240,37 @@ namespace Wyd.Controllers.World
         public bool NeighborsTerrainComplete(float3 position)
         {
             if (TryGetChunk(position + (Directions.North * ChunkController.Size.z), out ChunkController northChunk)
-                && ((northChunk.State & Chunk.State.TerrainComplete) != Chunk.State.TerrainComplete))
+                && ((northChunk.ChunkState & Chunk.ChunkState.TerrainComplete) != Chunk.ChunkState.TerrainComplete))
             {
                 return false;
             }
 
             if (TryGetChunk(position + (Directions.East * ChunkController.Size.x), out ChunkController eastChunk)
-                && ((eastChunk.State & Chunk.State.TerrainComplete) != Chunk.State.TerrainComplete))
+                && ((eastChunk.ChunkState & Chunk.ChunkState.TerrainComplete) != Chunk.ChunkState.TerrainComplete))
             {
                 return false;
             }
 
             if (TryGetChunk(position + (Directions.South * ChunkController.Size.z), out ChunkController southChunk)
-                && ((southChunk.State & Chunk.State.TerrainComplete) != Chunk.State.TerrainComplete))
+                && ((southChunk.ChunkState & Chunk.ChunkState.TerrainComplete) != Chunk.ChunkState.TerrainComplete))
             {
                 return false;
             }
 
             if (TryGetChunk(position + (Directions.West * ChunkController.Size.x), out ChunkController westChunk)
-                && ((westChunk.State & Chunk.State.TerrainComplete) != Chunk.State.TerrainComplete))
+                && ((westChunk.ChunkState & Chunk.ChunkState.TerrainComplete) != Chunk.ChunkState.TerrainComplete))
             {
                 return false;
             }
 
             if (TryGetChunk(position + (Directions.Up * ChunkController.Size.x), out ChunkController upChunk)
-                && ((upChunk.State & Chunk.State.TerrainComplete) != Chunk.State.TerrainComplete))
+                && ((upChunk.ChunkState & Chunk.ChunkState.TerrainComplete) != Chunk.ChunkState.TerrainComplete))
             {
                 return false;
             }
 
             if (TryGetChunk(position + (Directions.Down * ChunkController.Size.x), out ChunkController downChunk)
-                && ((downChunk.State & Chunk.State.TerrainComplete) != Chunk.State.TerrainComplete))
+                && ((downChunk.ChunkState & Chunk.ChunkState.TerrainComplete) != Chunk.ChunkState.TerrainComplete))
             {
                 return false;
             }
@@ -427,8 +424,6 @@ namespace Wyd.Controllers.World
         private void OnChunkTerrainChanged(object sender, ChunkChangedEventArgs args)
         {
             FlagOriginAndNeighborsForMeshUpdate(args.OriginPoint, args.NeighborDirectionsToUpdate);
-
-            ChunkMeshChanged?.Invoke(sender, args);
         }
 
         #endregion

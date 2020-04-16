@@ -49,7 +49,7 @@ namespace Wyd.Controllers.State
         {
             foreach (BlockDefinition.Property property in EnumExtensions.GetEnumsList<BlockDefinition.Property>())
             {
-                if (blockDefinition.Properties.HasFlag(property))
+                if (blockDefinition.Properties.HasProperty(property))
                 {
                     _PropertiesBuckets[property].Add(blockDefinition.Id);
                 }
@@ -67,7 +67,7 @@ namespace Wyd.Controllers.State
             }
             catch (OverflowException)
             {
-                Log.Error("BlockController has registered too many blocks and is out of valid block ids.");
+                Log.Error($"{nameof(BlockController)} has registered too many blocks and is out of valid block ids.");
                 return;
             }
 

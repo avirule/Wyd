@@ -2,8 +2,9 @@
 
 using System;
 using System.Collections.Generic;
-using UnityEditor;
 using Wyd.Controllers.World.Chunk;
+using Wyd.Game.World;
+using Wyd.Game.World.Blocks;
 
 #endregion
 
@@ -19,13 +20,30 @@ namespace Wyd.System.Extensions
         }
 
         public static IEnumerable<TEnum> GetEnumsList<TEnum>() where TEnum : Enum =>
-            ((TEnum[])Enum.GetValues(typeof(TEnum)));
+            (TEnum[])Enum.GetValues(typeof(TEnum));
 
-        public static bool HasState(this State state, State flag)
+        public static bool HasState(this WorldState worldState, WorldState flag)
         {
-            int intState = (int)state;
+            int intState = (int)worldState;
             int intFlag = (int)flag;
+
             return (intState & intFlag) == intFlag;
+        }
+
+        public static bool HasState(this ChunkState chunkState, ChunkState flag)
+        {
+            int intState = (int)chunkState;
+            int intFlag = (int)flag;
+
+            return (intState & intFlag) == intFlag;
+        }
+
+        public static bool HasProperty(this BlockDefinition.Property property, BlockDefinition.Property flag)
+        {
+            int intProperty = (int)property;
+            int intFlag = (int)flag;
+
+            return (intProperty & intFlag) == intFlag;
         }
     }
 }
