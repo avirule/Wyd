@@ -40,7 +40,7 @@ namespace Wyd.Controllers.UI.Components.Text.Diagnostic
             }
 
             _LastEulerY = eulerY;
-            TextObject.text = string.Format(Format, _LastEulerY);
+            _TextObject.text = string.Format(_Format, _LastEulerY);
         }
     }
 }

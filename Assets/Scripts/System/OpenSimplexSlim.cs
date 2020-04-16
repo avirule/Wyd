@@ -18,7 +18,7 @@ namespace Wyd.System
         private const float _G3 = (float)(1.0 / 6.0);
         private const float _G33 = (_G3 * 3) - 1;
 
-        private static readonly float3[] _Grad3D =
+        private static readonly float3[] _grad3D =
         {
             new float3(1, 1, 0),
             new float3(-1, 1, 0),
@@ -52,7 +52,7 @@ namespace Wyd.System
             hash = hash * hash * hash * 60493;
             hash = (hash >> 13) ^ hash;
 
-            float3 g = _Grad3D[hash & 15];
+            float3 g = _grad3D[hash & 15];
 
             return (xd * g.x) + (yd * g.y) + (zd * g.z);
         }

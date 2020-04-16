@@ -5,7 +5,6 @@ using System.Collections.Concurrent;
 using System.Threading;
 using System.Threading.Channels;
 using System.Threading.Tasks;
-using Serilog;
 
 #endregion
 
@@ -13,37 +12,37 @@ namespace Wyd.System.Jobs
 {
     public static class AsyncJobScheduler
     {
-        private static readonly CancellationTokenSource _AbortTokenSource;
-        private static readonly ChannelReader<AsyncJob> _Reader;
-        private static readonly ChannelWriter<AsyncJob> _Writer;
-        private static readonly ConcurrentStack<CancellationTokenSource> _WorkerCancellationTokens;
+        private static readonly CancellationTokenSource _abortTokenSource;
+        private static readonly ChannelReader<AsyncJob> _reader;
+        private static readonly ChannelWriter<AsyncJob> _writer;
+        private static readonly ConcurrentStack<CancellationTokenSource> _workerCancellationTokens;
 
-        private static long _asyncWorkerCount;
-        private static long _jobsQueued;
-        private static long _processingJobCount;
+        private static long _AsyncWorkerCount;
+        private static long _JobsQueued;
+        private static long _ProcessingJobCount;
 
-        public static CancellationToken AbortToken => _AbortTokenSource.Token;
-        public static long AsyncWorkerCount => Interlocked.Read(ref _asyncWorkerCount);
-        public static long JobsQueued => Interlocked.Read(ref _jobsQueued);
-        public static long ProcessingJobCount => Interlocked.Read(ref _processingJobCount);
+        public static CancellationToken AbortToken => _abortTokenSource.Token;
+        public static long AsyncWorkerCount => Interlocked.Read(ref _AsyncWorkerCount);
+        public static long JobsQueued => Interlocked.Read(ref _JobsQueued);
+        public static long ProcessingJobCount => Interlocked.Read(ref _ProcessingJobCount);
 
         /// <summary>
         ///     Initializes a new instance of <see cref="AsyncJobScheduler" /> class.
         /// </summary>
         static AsyncJobScheduler()
         {
-            _AbortTokenSource = new CancellationTokenSource();
+            _abortTokenSource = new CancellationTokenSource();
             Channel<AsyncJob> channel = Channel.CreateUnbounded<AsyncJob>();
-            _Reader = channel.Reader;
-            _Writer = channel.Writer;
-            _WorkerCancellationTokens = new ConcurrentStack<CancellationTokenSource>();
+            _reader = channel.Reader;
+            _writer = channel.Writer;
+            _workerCancellationTokens = new ConcurrentStack<CancellationTokenSource>();
 
-            JobQueued += (sender, args) => Interlocked.Increment(ref _jobsQueued);
-            JobStarted += (sender, args) => Interlocked.Increment(ref _processingJobCount);
+            JobQueued += (sender, args) => Interlocked.Increment(ref _JobsQueued);
+            JobStarted += (sender, args) => Interlocked.Increment(ref _ProcessingJobCount);
             JobFinished += (sender, args) =>
             {
-                Interlocked.Decrement(ref _jobsQueued);
-                Interlocked.Decrement(ref _processingJobCount);
+                Interlocked.Decrement(ref _JobsQueued);
+                Interlocked.Decrement(ref _ProcessingJobCount);
             };
         }
 
@@ -57,7 +56,7 @@ namespace Wyd.System.Jobs
         {
             if (abort)
             {
-                _AbortTokenSource.Cancel();
+                _abortTokenSource.Cancel();
             }
         }
 
@@ -78,9 +77,11 @@ namespace Wyd.System.Jobs
                 return;
             }
 
-            Interlocked.Exchange(ref _asyncWorkerCount, (long)newWorkerCount);
+            OnLogged(1, $"Modifying worker count: from '{_AsyncWorkerCount}' to '{newWorkerCount}'.");
 
-            while (_WorkerCancellationTokens.TryPop(out CancellationTokenSource tokenSource))
+            Interlocked.Exchange(ref _AsyncWorkerCount, (long)newWorkerCount);
+
+            while (_workerCancellationTokens.TryPop(out CancellationTokenSource tokenSource))
             {
                 tokenSource.Cancel();
             }
@@ -88,7 +89,7 @@ namespace Wyd.System.Jobs
             for (int i = 0; i < AsyncWorkerCount; i++)
             {
                 CancellationTokenSource tokenSource = new CancellationTokenSource();
-                _WorkerCancellationTokens.Push(tokenSource);
+                _workerCancellationTokens.Push(tokenSource);
 
                 Task.Run(async () => await ProcessItemQueue(tokenSource.Token), AbortToken);
             }
@@ -103,11 +104,13 @@ namespace Wyd.System.Jobs
 
             if (AsyncWorkerCount == 0)
             {
-                Log.Warning(
+                OnLogged(3,
                     $"{nameof(AsyncWorkerCount)} is 0. Any jobs queued will not be completed until `{nameof(ModifyActiveAsyncWorkerCount)}()` is called with a non-zero value.");
             }
 
-            await _Writer.WriteAsync(asyncJob, AbortToken);
+            OnLogged(1, $"Queued new {nameof(AsyncJob)} for completion (type: {asyncJob.GetType().Name})");
+
+            await _writer.WriteAsync(asyncJob, AbortToken);
             OnJobQueued(new AsyncJobEventArgs(asyncJob));
         }
 
@@ -123,9 +126,9 @@ namespace Wyd.System.Jobs
                 CancellationToken combinedToken =
                     CancellationTokenSource.CreateLinkedTokenSource(AbortToken, token).Token;
 
-                while (await _Reader.WaitToReadAsync(combinedToken))
+                while (await _reader.WaitToReadAsync(combinedToken))
                 {
-                    while (!combinedToken.IsCancellationRequested && _Reader.TryRead(out AsyncJob asyncJob))
+                    while (!combinedToken.IsCancellationRequested && _reader.TryRead(out AsyncJob asyncJob))
                     {
                         if (asyncJob == null)
                         {
@@ -139,7 +142,7 @@ namespace Wyd.System.Jobs
             catch (OperationCanceledException) { }
             catch (Exception ex)
             {
-                Log.Error($"Error in {nameof(AsyncJobScheduler)}: {ex.Message}\r\n{ex.StackTrace}");
+                OnLogged(4, $"Error in {nameof(AsyncJobScheduler)}: {ex.Message}\r\n{ex.StackTrace}");
             }
         }
 
@@ -173,6 +176,8 @@ namespace Wyd.System.Jobs
         /// <remarks>This event will not necessarily happen synchronously with the main thread.</remarks>
         public static event AsyncJobEventHandler JobFinished;
 
+        public static event AsyncJobSchedulerLogEventHandler Logged;
+
 
         private static void OnJobQueued(AsyncJobEventArgs args)
         {
@@ -187,6 +192,11 @@ namespace Wyd.System.Jobs
         private static void OnJobFinished(AsyncJobEventArgs args)
         {
             JobFinished?.Invoke(JobFinished, args);
+        }
+
+        private static void OnLogged(byte logLevel, string logText)
+        {
+            Logged?.Invoke(Logged, new AsyncJobSchedulerLogEventArgs(logLevel, logText));
         }
 
         #endregion

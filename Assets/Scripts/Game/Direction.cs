@@ -128,10 +128,10 @@ namespace Wyd.Game
                 index += 1;
             }
 
-            DirectionAsOrderPlacement = new ReadOnlyDictionary<Direction, int>(directionAsOrderPlacement);
+            _directionAsOrderPlacement = new ReadOnlyDictionary<Direction, int>(directionAsOrderPlacement);
 
 
-            DirectionsAsAxes = new Dictionary<Direction, int3>
+            _directionsAsAxes = new Dictionary<Direction, int3>
             {
                 { Direction.North, Directions.North },
                 { Direction.East, Directions.East },
@@ -142,7 +142,7 @@ namespace Wyd.Game
                 { Direction.All, int3.zero }
             };
 
-            DirectionsAsIndexStep = new Dictionary<Direction, int>
+            _directionsAsIndexStep = new Dictionary<Direction, int>
             {
                 { Direction.North, ChunkController.Size.x },
                 { Direction.East, 1 },
@@ -153,15 +153,15 @@ namespace Wyd.Game
             };
         }
 
-        private static readonly IReadOnlyDictionary<Direction, int> DirectionAsOrderPlacement;
-        private static readonly IReadOnlyDictionary<Direction, int3> DirectionsAsAxes;
-        private static readonly IReadOnlyDictionary<Direction, int> DirectionsAsIndexStep;
+        private static readonly IReadOnlyDictionary<Direction, int> _directionAsOrderPlacement;
+        private static readonly IReadOnlyDictionary<Direction, int3> _directionsAsAxes;
+        private static readonly IReadOnlyDictionary<Direction, int> _directionsAsIndexStep;
 
-        public static int OrderPlacement(this Direction direction) => DirectionAsOrderPlacement[direction];
+        public static int OrderPlacement(this Direction direction) => _directionAsOrderPlacement[direction];
 
-        public static int3 ToInt3(this Direction direction) => DirectionsAsAxes[direction];
+        public static int3 ToInt3(this Direction direction) => _directionsAsAxes[direction];
 
-        public static int AsIndexStep(this Direction direction) => DirectionsAsIndexStep[direction];
+        public static int AsIndexStep(this Direction direction) => _directionsAsIndexStep[direction];
 
         public static bool IsPositiveNormal(this Direction direction) =>
             (direction == Direction.North) || (direction == Direction.East) || (direction == Direction.Up);

@@ -150,7 +150,7 @@ namespace Wyd.Game.World.Blocks
                 };
         }
 
-        private const byte FACES_MASK = 0b0011_1111;
+        private const byte _FACES_MASK = 0b0011_1111;
 
         public byte RawValue;
 
@@ -158,7 +158,7 @@ namespace Wyd.Game.World.Blocks
 
         public bool HasAnyFaces() => RawValue > 0;
 
-        public bool HasAllFaces() => (RawValue & FACES_MASK) >= FACES_MASK;
+        public bool HasAllFaces() => (RawValue & _FACES_MASK) >= _FACES_MASK;
 
         public bool HasFace(Direction direction) => (RawValue & (byte)direction) > 0;
 

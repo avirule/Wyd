@@ -146,6 +146,6 @@ namespace Wyd.Controllers.State
         }
 
         public bool CheckBlockHasProperties(ushort blockId, BlockDefinition.Property property) =>
-            BlockIdExists(blockId) && BlockDefinitions[blockId].Properties.UncheckedHasFlag(property);
+            BlockIdExists(blockId) && BlockDefinitions[blockId].Properties.HasFlag(property);
     }
 }

@@ -10,7 +10,7 @@ namespace Wyd.Graphics
 {
     public class WireframeCube
     {
-        private static readonly Color LineColor = new Color(50f, 50f, 50f, 1f);
+        private static readonly Color _lineColor = new Color(50f, 50f, 50f, 1f);
 
         private readonly Material _LineMaterial;
 
@@ -61,7 +61,7 @@ namespace Wyd.Graphics
         {
             GL.Begin(GL.LINES);
             _LineMaterial.SetPass(0);
-            GL.Color(LineColor);
+            GL.Color(_lineColor);
             GL.Vertex3(a.x, a.y, a.z);
             GL.Vertex3(b.x, b.y, b.z);
             GL.End();

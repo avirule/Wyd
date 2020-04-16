@@ -41,7 +41,7 @@ namespace Wyd.Controllers.UI.Components.Text.Diagnostic
             float averageFPS = 1f / _FrameTimes.Average();
             float averageFrameTimeMilliseconds = (1f / averageFPS) * 1000f;
 
-            TextObject.text = string.Format(Format, averageFPS, averageFrameTimeMilliseconds);
+            _TextObject.text = string.Format(_Format, averageFPS, averageFrameTimeMilliseconds);
             _FramesWaited = 0;
         }
     }

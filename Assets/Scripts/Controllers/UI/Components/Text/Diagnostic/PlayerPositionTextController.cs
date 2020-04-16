@@ -36,7 +36,7 @@ namespace Wyd.Controllers.UI.Components.Text.Diagnostic
 
         private void UpdateText(float3 playerPosition, int3 chunkPosition)
         {
-            TextObject.text = string.Format(Format,
+            _TextObject.text = string.Format(_Format,
                 playerPosition.x, playerPosition.y, playerPosition.z,
                 chunkPosition.x, chunkPosition.y, chunkPosition.z);
         }

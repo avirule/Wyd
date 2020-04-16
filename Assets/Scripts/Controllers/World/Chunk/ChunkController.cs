@@ -16,7 +16,6 @@ using Wyd.Game.World.Chunks;
 using Wyd.Game.World.Chunks.Events;
 using Wyd.System;
 using Wyd.System.Collections;
-using Wyd.System.Extensions;
 using Wyd.System.Jobs;
 
 #endregion
@@ -24,12 +23,12 @@ using Wyd.System.Jobs;
 namespace Wyd.Controllers.World.Chunk
 {
     [Flags]
-    public enum State : byte
+    public enum State
     {
         Terrain = 0b0000_0001,
         AwaitingTerrain = 0b0000_0011,
         TerrainComplete = 0b0000_1111,
-        MeshUpdate = 0b0001_0000,
+        UpdateMesh = 0b0001_0000,
         Meshing = 0b0010_0000,
         MeshDataPending = 0b0100_0000,
         Meshed = 0b1000_0000
@@ -50,37 +49,23 @@ namespace Wyd.Controllers.World.Chunk
         private bool _Visible;
         private bool _RenderShadows;
 
-        private State _State;
-        private object _StateHandle;
+        private long _State;
         private ChunkMeshData _PendingMeshData;
 
         public ref OctreeNode Blocks => ref _Blocks;
 
         public State State
         {
-            get
-            {
-                State tmp;
-
-                lock (_StateHandle)
-                {
-                    tmp = _State;
-                }
-
-                return tmp;
-            }
+            get => (State)Interlocked.Read(ref _State);
             private set
             {
-                lock (_StateHandle)
-                {
-                    _State = value;
+                Interlocked.Exchange(ref _State, (long)value);
 
-                    #if UNITY_EDITOR
+#if UNITY_EDITOR
 
-                    BinaryState = Convert.ToString((byte)_State, 2);
+                BinaryState = Convert.ToString(unchecked((byte)State), 2);
 
-                    #endif
-                }
+#endif
             }
         }
 
@@ -156,7 +141,6 @@ namespace Wyd.Controllers.World.Chunk
 
             _BlockActions = new Queue<BlockAction>();
             _Mesh = new Mesh();
-            _StateHandle = new object();
 
             void FlagUpdateMesh(object sender, ChunkChangedEventArgs args)
             {
@@ -207,16 +191,16 @@ namespace Wyd.Controllers.World.Chunk
 
         public void FrameUpdate()
         {
-            if (State.UncheckedHasFlag(State.TerrainComplete)
-                && State.UncheckedHasFlag(State.Meshed)
-                && !State.UncheckedHasFlag(State.MeshUpdate))
+            if (State.HasFlag(State.TerrainComplete)
+                && State.HasFlag(State.Meshed)
+                && !State.HasFlag(State.UpdateMesh))
             {
                 return;
             }
 
 
-            if (State.UncheckedHasFlag(State.Terrain)
-                && !State.UncheckedHasFlag(State.AwaitingTerrain)
+            if (State.HasFlag(State.Terrain)
+                && !State.HasFlag(State.AwaitingTerrain)
                 && WorldController.Current.ReadyForGeneration)
             {
                 State |= (State & ~State.TerrainComplete) | State.AwaitingTerrain;
@@ -224,12 +208,12 @@ namespace Wyd.Controllers.World.Chunk
                     OnTerrainGenerationFinished);
             }
 
-            if (!State.UncheckedHasFlag(State.TerrainComplete))
+            if (!State.HasFlag(State.TerrainComplete))
             {
                 return;
             }
 
-            if (State.UncheckedHasFlag(State.MeshDataPending) && (_PendingMeshData != null))
+            if (State.HasFlag(State.MeshDataPending) && (_PendingMeshData != null))
             {
                 MeshController.ApplyMesh(_PendingMeshData);
                 _PendingMeshData = null;
@@ -237,18 +221,19 @@ namespace Wyd.Controllers.World.Chunk
                 OnMeshChanged(this, new ChunkChangedEventArgs(OriginPoint, Enumerable.Empty<int3>()));
             }
 
-            if (!State.UncheckedHasFlag(State.Meshing)
-                && (!State.UncheckedHasFlag(State.Meshed) || State.UncheckedHasFlag(State.MeshUpdate))
-                && WorldController.Current.NeighborTerrainComplete(OriginPoint))
+            if (!State.HasFlag(State.Meshing)
+                && !State.HasFlag(State.MeshDataPending)
+                && (!State.HasFlag(State.Meshed) || State.HasFlag(State.UpdateMesh))
+                && WorldController.Current.NeighborsTerrainComplete(OriginPoint))
             {
-                State = (State & ~(State.Meshed | State.MeshUpdate)) | State.Meshing;
+                State = (State & ~(State.Meshed | State.UpdateMesh)) | State.Meshing;
                 MeshController.BeginGeneratingMesh(Blocks, _CancellationTokenSource.Token, OnMeshingFinished);
             }
         }
 
         public IEnumerable IncrementalFrameUpdate()
         {
-            if (!State.UncheckedHasFlag(State.TerrainComplete))
+            if (!State.HasFlag(State.TerrainComplete))
             {
                 yield break;
             }
@@ -289,12 +274,12 @@ namespace Wyd.Controllers.World.Chunk
             ModifyBlockPosition(blockAction.GlobalPosition, blockAction.Id);
 
             OnBlocksChanged(this,
-                TryUpdateGetNeighborNormals(blockAction.GlobalPosition, out IEnumerable<int3> normals)
+                TryGetNeighborsRequiringUpdateNormals(blockAction.GlobalPosition, out IEnumerable<int3> normals)
                     ? new ChunkChangedEventArgs(OriginPoint, normals)
                     : new ChunkChangedEventArgs(OriginPoint, Enumerable.Empty<int3>()));
         }
 
-        private bool TryUpdateGetNeighborNormals(float3 globalPosition, out IEnumerable<int3> normals)
+        private bool TryGetNeighborsRequiringUpdateNormals(float3 globalPosition, out IEnumerable<int3> normals)
         {
             normals = Enumerable.Empty<int3>();
 
@@ -354,9 +339,9 @@ namespace Wyd.Controllers.World.Chunk
 
         public void FlagMeshForUpdate()
         {
-            if (!State.UncheckedHasFlag(State.MeshUpdate))
+            if (!State.HasFlag(State.UpdateMesh))
             {
-                State |= State.MeshUpdate;
+                State |= State.UpdateMesh;
             }
         }
 

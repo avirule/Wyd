@@ -13,7 +13,7 @@ namespace Wyd.Controllers.UI.Components.Text
         {
             if (force || args.PropertyName.Equals(nameof(OptionsController.Current.ShadowDistance)))
             {
-                TextObject.text = string.Format(Format, OptionsController.Current.ShadowDistance);
+                _TextObject.text = string.Format(_Format, OptionsController.Current.ShadowDistance);
             }
         }
     }

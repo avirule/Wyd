@@ -240,7 +240,7 @@ namespace Wyd.Controllers.World
             }
         }
 
-        public bool NeighborTerrainComplete(float3 position)
+        public bool NeighborsTerrainComplete(float3 position)
         {
             if (TryGetChunk(position + (Directions.North * ChunkController.Size.z), out ChunkController northChunk)
                 && ((northChunk.State & Chunk.State.TerrainComplete) != Chunk.State.TerrainComplete))

@@ -15,9 +15,9 @@ namespace Wyd.Game.World
 {
     public class WorldSaveFileProvider : IDisposable
     {
-        private const int MAXIMUM_QUERY_RETRIES = 5;
+        private const int _MAXIMUM_QUERY_RETRIES = 5;
 
-        private const string DEFAULT_CREATION_SQL_QUERY =
+        private const string _DEFAULT_CREATION_SQL_QUERY =
             @"
                  BEGIN TRANSACTION;
 
@@ -63,7 +63,7 @@ namespace Wyd.Game.World
 
                     using (SQLiteCommand command = new SQLiteCommand(connection))
                     {
-                        command.CommandText = DEFAULT_CREATION_SQL_QUERY;
+                        command.CommandText = _DEFAULT_CREATION_SQL_QUERY;
                         await command.ExecuteNonQueryAsync();
                     }
                 }
@@ -151,7 +151,7 @@ namespace Wyd.Game.World
         {
             int tries = 0;
 
-            while (tries < (MAXIMUM_QUERY_RETRIES + 1))
+            while (tries < (_MAXIMUM_QUERY_RETRIES + 1))
             {
                 try
                 {
@@ -180,7 +180,7 @@ namespace Wyd.Game.World
                 {
                     tries += 1;
 
-                    if (tries == MAXIMUM_QUERY_RETRIES)
+                    if (tries == _MAXIMUM_QUERY_RETRIES)
                     {
                         Log.Warning($"Failed to commit chunk data: {ex.Message}");
                     }

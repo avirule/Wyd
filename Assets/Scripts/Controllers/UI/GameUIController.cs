@@ -6,7 +6,7 @@ using UnityEngine;
 
 namespace Wyd.Controllers.UI
 {
-    public class GameUIController : MonoBehaviour
+    public class GameUiController : MonoBehaviour
     {
         // Update is called once per frame
     }

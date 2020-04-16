@@ -32,7 +32,7 @@ namespace Wyd.Controllers.UI.Components.Text.Diagnostic
             _AllocatedMemory = allocatedMemory;
             _HeapMemory = heapMemory;
 
-            TextObject.text = string.Format(Format,
+            _TextObject.text = string.Format(_Format,
                 _ReservedMemory / _MEGABYTE_VALUE,
                 _AllocatedMemory / _MEGABYTE_VALUE,
                 _HeapMemory / _MEGABYTE_VALUE);

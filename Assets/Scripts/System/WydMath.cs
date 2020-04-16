@@ -69,7 +69,7 @@ namespace Wyd.System
 
         #region Bitwise / Bytes
 
-        private static readonly byte[] MultiplyDeBruijnBitPosition =
+        private static readonly byte[] _multiplyDeBruijnBitPosition =
         {
             0,
             1,
@@ -116,14 +116,14 @@ namespace Wyd.System
 
         public static bool ContainsAllBits(this byte a, byte b) => (a & b) == b;
 
-        public static int MostSigBitDigit(this int a) => MultiplyDeBruijnBitPosition[(a * 0x077CB531U) >> 27];
-        public static int MostSigBitDigit(this uint a) => MultiplyDeBruijnBitPosition[(a * 0x077CB531U) >> 27];
+        public static int MostSigBitDigit(this int a) => _multiplyDeBruijnBitPosition[(a * 0x077CB531U) >> 27];
+        public static int MostSigBitDigit(this uint a) => _multiplyDeBruijnBitPosition[(a * 0x077CB531U) >> 27];
 
         public static int LeastSigBitDigit(this byte a) =>
-            MultiplyDeBruijnBitPosition[(uint)((a & -a) * 0x077CB531U) >> 27];
+            _multiplyDeBruijnBitPosition[(uint)((a & -a) * 0x077CB531U) >> 27];
 
         public static int LeastSigBitDigit(this int a) =>
-            MultiplyDeBruijnBitPosition[(uint)((a & -a) * 0x077CB531U) >> 27];
+            _multiplyDeBruijnBitPosition[(uint)((a & -a) * 0x077CB531U) >> 27];
 
         public static byte SetBitByBoolWithMask(this byte a, byte mask, bool value) =>
             (byte)((a & ~mask) | (value.ToByte() << mask.LeastSigBitDigit()));

@@ -58,14 +58,14 @@ namespace Wyd.Controllers.UI.Components.Text.Diagnostic
         {
             if (stalled)
             {
-                TextObject.text = "STALLING";
-                TextObject.color = Color.red;
+                _TextObject.text = "STALLING";
+                _TextObject.color = Color.red;
                 _TextNotifiesStalled = true;
             }
             else
             {
-                TextObject.text = "NORMAL";
-                TextObject.color = Color.green;
+                _TextObject.text = "NORMAL";
+                _TextObject.color = Color.green;
                 _TextNotifiesStalled = false;
             }
         }

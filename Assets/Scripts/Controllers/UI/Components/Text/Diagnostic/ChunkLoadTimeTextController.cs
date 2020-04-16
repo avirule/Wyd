@@ -51,7 +51,7 @@ namespace Wyd.Controllers.UI.Components.Text.Diagnostic
 
         private void UpdateChunkLoadTimeText()
         {
-            TextObject.text = string.Format(Format,
+            _TextObject.text = string.Format(_Format,
                 _RecentNoiseRetrievalTime,
                 _RecentTerrainGenerationTime,
                 _RecentMeshingSetBlockTime,

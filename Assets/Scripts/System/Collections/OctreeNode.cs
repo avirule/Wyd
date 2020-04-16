@@ -11,7 +11,7 @@ namespace Wyd.System.Collections
 {
     public class OctreeNode<T> where T : unmanaged
     {
-        private static readonly float3[] _Coordinates =
+        private static readonly float3[] _coordinates =
         {
             new float3(-1, -1, -1),
             new float3(1, -1, -1),
@@ -58,28 +58,28 @@ namespace Wyd.System.Collections
 
             _Nodes.Clear();
 
-            _Nodes.Add(new OctreeNode<T>(_Volume.CenterPoint + (_Coordinates[0] * centerOffset),
+            _Nodes.Add(new OctreeNode<T>(_Volume.CenterPoint + (_coordinates[0] * centerOffset),
                 _Volume.Extents.x, Value));
 
-            _Nodes.Add(new OctreeNode<T>(_Volume.CenterPoint + (_Coordinates[1] * centerOffset),
+            _Nodes.Add(new OctreeNode<T>(_Volume.CenterPoint + (_coordinates[1] * centerOffset),
                 _Volume.Extents.x, Value));
 
-            _Nodes.Add(new OctreeNode<T>(_Volume.CenterPoint + (_Coordinates[2] * centerOffset),
+            _Nodes.Add(new OctreeNode<T>(_Volume.CenterPoint + (_coordinates[2] * centerOffset),
                 _Volume.Extents.x, Value));
 
-            _Nodes.Add(new OctreeNode<T>(_Volume.CenterPoint + (_Coordinates[3] * centerOffset),
+            _Nodes.Add(new OctreeNode<T>(_Volume.CenterPoint + (_coordinates[3] * centerOffset),
                 _Volume.Extents.x, Value));
 
-            _Nodes.Add(new OctreeNode<T>(_Volume.CenterPoint + (_Coordinates[4] * centerOffset),
+            _Nodes.Add(new OctreeNode<T>(_Volume.CenterPoint + (_coordinates[4] * centerOffset),
                 _Volume.Extents.x, Value));
 
-            _Nodes.Add(new OctreeNode<T>(_Volume.CenterPoint + (_Coordinates[5] * centerOffset),
+            _Nodes.Add(new OctreeNode<T>(_Volume.CenterPoint + (_coordinates[5] * centerOffset),
                 _Volume.Extents.x, Value));
 
-            _Nodes.Add(new OctreeNode<T>(_Volume.CenterPoint + (_Coordinates[6] * centerOffset),
+            _Nodes.Add(new OctreeNode<T>(_Volume.CenterPoint + (_coordinates[6] * centerOffset),
                 _Volume.Extents.x, Value));
 
-            _Nodes.Add(new OctreeNode<T>(_Volume.CenterPoint + (_Coordinates[7] * centerOffset),
+            _Nodes.Add(new OctreeNode<T>(_Volume.CenterPoint + (_coordinates[7] * centerOffset),
                 _Volume.Extents.x, Value));
         }
 

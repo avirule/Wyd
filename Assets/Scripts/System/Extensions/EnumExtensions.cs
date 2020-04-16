@@ -15,7 +15,7 @@ namespace Wyd.System.Extensions
             return arr.Length == j ? arr[0] : arr[j];
         }
 
-        public static bool UncheckedHasFlag(this Enum value, Enum flag)
+        public static bool HasFlag(this Enum value, Enum flag)
         {
             int intValue = Convert.ToInt32(value);
             int intFlag = Convert.ToInt32(flag);

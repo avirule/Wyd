@@ -44,7 +44,7 @@ namespace Wyd.Controllers.UI.Components.Text.Diagnostic
             _LastChunkRegionsActiveCount = chunksActive;
             _LastChunkRegionsCachedCount = chunksCached;
 
-            TextObject.text = string.Format(Format,
+            _TextObject.text = string.Format(_Format,
                 _LastQueuedForCreationCount,
                 _LastChunkRegionsActiveCount,
                 _LastChunkRegionsCachedCount,

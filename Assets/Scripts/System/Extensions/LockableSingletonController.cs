@@ -8,32 +8,32 @@ namespace Wyd.System.Extensions
 {
     public abstract class LockableSingletonController<T> : SingletonController<T> where T : class
     {
-        protected object KeyMaster;
-        protected bool Locked;
+        protected object _KeyMaster;
+        protected bool _Locked;
 
-        public virtual bool IsLockedFor(object keyMaster) => !Locked || (KeyMaster == keyMaster);
+        public virtual bool IsLockedFor(object keyMaster) => !_Locked || (_KeyMaster == keyMaster);
 
         public virtual bool Lock(object keyMaster)
         {
-            if (Locked)
+            if (_Locked)
             {
-                return KeyMaster == keyMaster;
+                return _KeyMaster == keyMaster;
             }
 
-            KeyMaster = keyMaster;
-            Locked = true;
+            _KeyMaster = keyMaster;
+            _Locked = true;
             return true;
         }
 
         public virtual bool Unlock(object keyMaster)
         {
-            if (!Locked)
+            if (!_Locked)
             {
-                return KeyMaster == keyMaster;
+                return _KeyMaster == keyMaster;
             }
 
-            KeyMaster = null;
-            Locked = false;
+            _KeyMaster = null;
+            _Locked = false;
             return true;
         }
     }
