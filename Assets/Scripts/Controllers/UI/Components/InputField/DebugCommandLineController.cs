@@ -135,9 +135,10 @@ namespace Wyd.Controllers.UI.Components.InputField
                                 Log.Warning($"Failed to get block at position: {position}");
                             }
 
-                            string blockName = BlockController.Current.GetBlockName(blockId);
-
-                            Log.Information($"Request for block at position {position} returned `{blockName}`.");
+                            if (BlockController.Current.TryGetBlockName(blockId, out string blockName))
+                            {
+                                Log.Information($"Request for block at position {position} returned `{blockName}`.");
+                            }
                         }
                     }
 

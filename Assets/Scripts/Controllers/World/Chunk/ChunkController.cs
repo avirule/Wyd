@@ -152,7 +152,6 @@ namespace Wyd.Controllers.World.Chunk
             TerrainChanged += FlagUpdateMesh;
 
             MeshRenderer.materials = TextureController.Current.TerrainMaterials;
-            _Visible = MeshRenderer.enabled;
         }
 
         protected override void OnEnable()
@@ -160,12 +159,11 @@ namespace Wyd.Controllers.World.Chunk
             base.OnEnable();
 
             PerFrameUpdateController.Current.RegisterPerFrameUpdater(20, this);
+
             _CancellationTokenSource = new CancellationTokenSource();
             _Visible = MeshRenderer.enabled;
-            _BlockActions.Clear();
 
             Blocks = new OctreeNode(OriginPoint + (Size / new float3(2f)), Size.x, 0);
-            State = State.Terrain;
 
 #if UNITY_EDITOR
 
@@ -187,7 +185,11 @@ namespace Wyd.Controllers.World.Chunk
                 _Mesh.Clear();
             }
 
+            _CancellationTokenSource.Cancel();
             _BlockActions.Clear();
+            _Blocks = null;
+
+            State = State.Terrain;
         }
 
         public void FrameUpdate()

@@ -1,6 +1,8 @@
 #region
 
 using System;
+using System.Collections.Generic;
+using UnityEditor;
 using Wyd.Controllers.World.Chunk;
 
 #endregion
@@ -15,6 +17,9 @@ namespace Wyd.System.Extensions
             int j = Array.IndexOf(arr, src) + 1;
             return arr.Length == j ? arr[0] : arr[j];
         }
+
+        public static IEnumerable<TEnum> GetEnumsList<TEnum>() where TEnum : Enum =>
+            ((TEnum[])Enum.GetValues(typeof(TEnum)));
 
         public static bool HasState(this State state, State flag)
         {

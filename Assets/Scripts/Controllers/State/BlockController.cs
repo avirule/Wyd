@@ -19,6 +19,8 @@ namespace Wyd.Controllers.State
         public Dictionary<string, ushort> BlockNames;
         public List<IBlockDefinition> BlockDefinitions;
 
+        private Dictionary<BlockDefinition.Property, HashSet<ushort>> _PropertiesBuckets;
+
         private void Awake()
         {
             AssignSingletonInstance(this);
@@ -26,10 +28,35 @@ namespace Wyd.Controllers.State
             BlockNames = new Dictionary<string, ushort>();
             BlockDefinitions = new List<IBlockDefinition>();
 
+            InitializeBlockPropertiesBuckets();
+
             RegisterBlockDefinition("Air", Block.Types.None, null, BlockDefinition.Property.Transparent);
         }
 
-        public ushort RegisterBlockDefinition(string blockName, Block.Types type,
+        private void InitializeBlockPropertiesBuckets()
+        {
+            _PropertiesBuckets = new Dictionary<BlockDefinition.Property, HashSet<ushort>>();
+
+            Log.Debug($"Initializing property buckets for all {nameof(BlockDefinition.Property)}s.");
+
+            foreach (BlockDefinition.Property property in EnumExtensions.GetEnumsList<BlockDefinition.Property>())
+            {
+                _PropertiesBuckets.Add(property, new HashSet<ushort>());
+            }
+        }
+
+        private void SortBlockDefinitionPropertiesToBuckets(BlockDefinition blockDefinition)
+        {
+            foreach (BlockDefinition.Property property in EnumExtensions.GetEnumsList<BlockDefinition.Property>())
+            {
+                if (blockDefinition.Properties.HasFlag(property))
+                {
+                    _PropertiesBuckets[property].Add(blockDefinition.Id);
+                }
+            }
+        }
+
+        public void RegisterBlockDefinition(string blockName, Block.Types type,
             Func<int3, Direction, string> uvsRule, params BlockDefinition.Property[] properties)
         {
             ushort assignedBlockId;
@@ -41,7 +68,7 @@ namespace Wyd.Controllers.State
             catch (OverflowException)
             {
                 Log.Error("BlockController has registered too many blocks and is out of valid block ids.");
-                return ushort.MaxValue;
+                return;
             }
 
             if (uvsRule == default)
@@ -49,12 +76,14 @@ namespace Wyd.Controllers.State
                 uvsRule = (position, direction) => blockName;
             }
 
-            BlockDefinitions.Add(new BlockDefinition(assignedBlockId, blockName, type, uvsRule, properties));
+            BlockDefinition blockDefinition =
+                new BlockDefinition(assignedBlockId, blockName, type, uvsRule, properties);
+
+            BlockDefinitions.Add(blockDefinition);
             BlockNames.Add(blockName, assignedBlockId);
+            SortBlockDefinitionPropertiesToBuckets(blockDefinition);
 
             Log.Information($"Successfully added block `{blockName}` with ID: {assignedBlockId}");
-
-            return assignedBlockId;
         }
 
         public bool GetBlockSpriteUVs(ushort blockId, int3 position, Direction direction, float3 size2d,
@@ -87,17 +116,6 @@ namespace Wyd.Controllers.State
 
         public bool BlockIdExists(ushort blockId) => blockId < BlockDefinitions.Count;
 
-        public ushort GetBlockId(string blockName)
-        {
-            if (!BlockNames.TryGetValue(blockName, out ushort blockId))
-            {
-                Log.Warning($"Failed to return block id for block `{blockName}`: block does not exist.");
-                return AIR_ID;
-            }
-
-            return blockId;
-        }
-
         public bool TryGetBlockId(string blockName, out ushort blockId)
         {
             if (!BlockNames.TryGetValue(blockName, out blockId))
@@ -109,15 +127,17 @@ namespace Wyd.Controllers.State
             return true;
         }
 
-        public string GetBlockName(ushort blockId)
+        public bool TryGetBlockName(ushort blockId, out string blockName)
         {
-            if (BlockIdExists(blockId))
+            blockName = string.Empty;
+
+            if (!BlockIdExists(blockId))
             {
-                return BlockDefinitions[blockId].BlockName;
+                return false;
             }
 
-            Log.Warning($"Failed to return block name for block id `{blockId}`: block does not exist.");
-            return "null";
+            blockName = BlockDefinitions[blockId].BlockName;
+            return true;
         }
 
         public IReadOnlyBlockDefinition GetBlockDefinition(ushort blockId)
@@ -146,6 +166,6 @@ namespace Wyd.Controllers.State
         }
 
         public bool CheckBlockHasProperties(ushort blockId, BlockDefinition.Property property) =>
-            BlockIdExists(blockId) && BlockDefinitions[blockId].Properties.HasFlag(property);
+            _PropertiesBuckets[property].Contains(blockId);
     }
 }
