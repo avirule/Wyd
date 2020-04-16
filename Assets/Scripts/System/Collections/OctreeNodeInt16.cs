@@ -115,7 +115,7 @@ namespace Wyd.System.Collections
             if (!IsUniform)
             {
                 int octant = DetermineOctant(point);
-                return _Nodes[octant].GetPoint(point);
+                return _Nodes[octant].UncheckedGetPoint(point);
             }
             else
             {
@@ -172,6 +172,43 @@ namespace Wyd.System.Collections
 
             // recursively dig into octree and set
             _Nodes[octant].SetPoint(point, newValue);
+
+            // on each recursion back-step, ensure integrity of node
+            // and collapse if all child node values are equal
+            if (!IsUniform && CheckShouldCollapse())
+            {
+                Collapse();
+            }
+        }
+
+        public void UncheckedSetPoint(float3 point, ushort newValue)
+        {
+            point = math.floor(point);
+
+            if (IsUniform && Value.Equals(newValue))
+            {
+                // operation does nothing, so return
+                return;
+            }
+
+            if (_Volume.Size.x <= 1f)
+            {
+                // reached smallest possible depth (usually 1x1x1) so
+                // set value and return
+                Value = newValue;
+                return;
+            }
+
+            if (IsUniform)
+            {
+                // node has no child nodes to traverse, so populate
+                Populate();
+            }
+
+            int octant = DetermineOctant(point);
+
+            // recursively dig into octree and set
+            _Nodes[octant].UncheckedSetPoint(point, newValue);
 
             // on each recursion back-step, ensure integrity of node
             // and collapse if all child node values are equal

@@ -109,7 +109,7 @@ namespace Wyd.Game.World.Chunks
                 }
 
                 float3 globalPosition = _OriginPoint + WydMath.IndexTo3D(index, ChunkController.Size);
-                _Blocks.SetPoint(globalPosition, GetBlockIDAtPosition(globalPosition, index));
+                _Blocks.UncheckedSetPoint(globalPosition, GetBlockIDAtPosition(globalPosition, index));
             }
 
             _noiseValuesCache.CacheItem(ref _NoiseMap);
