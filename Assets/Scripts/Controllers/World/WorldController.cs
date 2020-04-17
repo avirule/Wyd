@@ -32,6 +32,7 @@ namespace Wyd.Controllers.World
 
         public static readonly float WorldHeightInChunks = math.floor(WORLD_HEIGHT / ChunkController.Size.y);
 
+
         #region Serialized Members
 
         public CollisionLoaderController CollisionLoaderController;
@@ -41,10 +42,12 @@ namespace Wyd.Controllers.World
         #endregion
 
 
+        #region Instance Members
+
         private Stopwatch _Stopwatch;
         private ObjectCache<ChunkController> _ChunkCache;
         private Dictionary<float3, ChunkController> _Chunks;
-        private ConcurrentStack<PendingChunkActivation> _ChunksPendingActivation;
+        private ConcurrentStack<float3> _ChunksPendingActivation;
         private ConcurrentStack<float3> _ChunksPendingDeactivation;
         private List<IEntity> _EntityLoaders;
         private object _WorldStateHandle;
@@ -91,6 +94,9 @@ namespace Wyd.Controllers.World
         public WorldSeed Seed { get; private set; }
         public int3 SpawnPoint { get; private set; }
 
+        #endregion
+
+
         private void Awake()
         {
             AssignSingletonInstance(this);
@@ -110,7 +116,7 @@ namespace Wyd.Controllers.World
                     Destroy(chunkController.gameObject));
 
             _Chunks = new Dictionary<float3, ChunkController>();
-            _ChunksPendingActivation = new ConcurrentStack<PendingChunkActivation>();
+            _ChunksPendingActivation = new ConcurrentStack<float3>();
             _ChunksPendingDeactivation = new ConcurrentStack<float3>();
             _EntityLoaders = new List<IEntity>();
             _WorldStateHandle = new object();
@@ -161,28 +167,27 @@ namespace Wyd.Controllers.World
 
             while (_ChunksPendingActivation.Count > 0)
             {
-                if (!_ChunksPendingActivation.TryPop(out PendingChunkActivation pendingChunkActivation)
-                    || TryGetChunk(pendingChunkActivation.Origin, out ChunkController _))
+                if (!_ChunksPendingActivation.TryPop(out float3 origin)
+                    || TryGetChunk(origin, out ChunkController _))
                 {
                     continue;
                 }
 
                 if (_ChunkCache.TryRetrieve(out ChunkController chunkController))
                 {
-                    chunkController.Activate(pendingChunkActivation.Origin);
+                    chunkController.Activate(origin);
                 }
                 else
                 {
-                    chunkController = Instantiate(ChunkControllerPrefab, pendingChunkActivation.Origin,
+                    chunkController = Instantiate(ChunkControllerPrefab, origin,
                         quaternion.identity, transform);
                 }
 
                 chunkController.TerrainChanged += OnChunkTerrainChanged;
-                chunkController.Visible = IsWithinRenderDistance(pendingChunkActivation.LoaderDifference);
-                chunkController.RenderShadows = IsWithinShadowsDistance(pendingChunkActivation.LoaderDifference);
-                _Chunks.Add(pendingChunkActivation.Origin, chunkController);
+                chunkController.MeshChanged += OnChunkMeshChanged;
+                _Chunks.Add(origin, chunkController);
 
-                Log.Verbose($"Created chunk at {pendingChunkActivation}.");
+                Log.Verbose($"Created chunk at {origin}.");
 
                 yield return null;
             }
@@ -240,37 +245,37 @@ namespace Wyd.Controllers.World
         public bool NeighborsTerrainComplete(float3 position)
         {
             if (TryGetChunk(position + (Directions.North * ChunkController.Size.z), out ChunkController northChunk)
-                && ((northChunk.ChunkState & Chunk.ChunkState.TerrainComplete) != Chunk.ChunkState.TerrainComplete))
+                && ((northChunk.ChunkState & ChunkState.TerrainComplete) != ChunkState.TerrainComplete))
             {
                 return false;
             }
 
             if (TryGetChunk(position + (Directions.East * ChunkController.Size.x), out ChunkController eastChunk)
-                && ((eastChunk.ChunkState & Chunk.ChunkState.TerrainComplete) != Chunk.ChunkState.TerrainComplete))
+                && ((eastChunk.ChunkState & ChunkState.TerrainComplete) != ChunkState.TerrainComplete))
             {
                 return false;
             }
 
             if (TryGetChunk(position + (Directions.South * ChunkController.Size.z), out ChunkController southChunk)
-                && ((southChunk.ChunkState & Chunk.ChunkState.TerrainComplete) != Chunk.ChunkState.TerrainComplete))
+                && ((southChunk.ChunkState & ChunkState.TerrainComplete) != ChunkState.TerrainComplete))
             {
                 return false;
             }
 
             if (TryGetChunk(position + (Directions.West * ChunkController.Size.x), out ChunkController westChunk)
-                && ((westChunk.ChunkState & Chunk.ChunkState.TerrainComplete) != Chunk.ChunkState.TerrainComplete))
+                && ((westChunk.ChunkState & ChunkState.TerrainComplete) != ChunkState.TerrainComplete))
             {
                 return false;
             }
 
             if (TryGetChunk(position + (Directions.Up * ChunkController.Size.x), out ChunkController upChunk)
-                && ((upChunk.ChunkState & Chunk.ChunkState.TerrainComplete) != Chunk.ChunkState.TerrainComplete))
+                && ((upChunk.ChunkState & ChunkState.TerrainComplete) != ChunkState.TerrainComplete))
             {
                 return false;
             }
 
             if (TryGetChunk(position + (Directions.Down * ChunkController.Size.x), out ChunkController downChunk)
-                && ((downChunk.ChunkState & Chunk.ChunkState.TerrainComplete) != Chunk.ChunkState.TerrainComplete))
+                && ((downChunk.ChunkState & ChunkState.TerrainComplete) != ChunkState.TerrainComplete))
             {
                 return false;
             }
@@ -298,28 +303,28 @@ namespace Wyd.Controllers.World
             _Stopwatch.Restart();
 
             WorldState |= WorldState.VerifyingState;
-            List<float3> chunksRequiringDeactivation = new List<float3>();
+            HashSet<float3> chunksRequiringDeactivation = new HashSet<float3>();
+            HashSet<float3> chunksRequiringActivation = new HashSet<float3>();
 
             // get total list of out of bounds chunks
             foreach (IEntity loader in _EntityLoaders)
             {
+                // allocate list of chunks requiring deactivation
                 foreach ((float3 origin, ChunkController _) in _Chunks)
                 {
                     float3 difference = math.abs(origin - loader.ChunkPosition);
                     difference.y = 0; // always load all chunks on y axis
 
-                    if (!IsWithinMaxRenderDistance(difference) || !IsWithinLoaderRange(difference))
+                    if (!IsWithinLoaderRange(difference))
                     {
                         chunksRequiringDeactivation.Add(origin);
+                    } else if (chunksRequiringDeactivation.Contains(origin))
+                    {
+                        chunksRequiringDeactivation.Remove(origin);
                     }
                 }
-            }
 
-            foreach (IEntity loader in _EntityLoaders)
-            {
-                VerifyChunkStatesByLoader(loader, out HashSet<float3> originsAlreadyGenerated,
-                    ref chunksRequiringDeactivation);
-
+                // todo this should be some setting inside loader
                 int renderRadius = OptionsController.Current.RenderDistance
                                    + OptionsController.Current.PreLoadChunkDistance;
 
@@ -330,15 +335,12 @@ namespace Wyd.Controllers.World
                     float3 localOrigin = new float3(x, y, z) * ChunkController.Size;
                     float3 origin = localOrigin + new float3(loader.ChunkPosition.x, 0, loader.ChunkPosition.z);
 
-                    if (originsAlreadyGenerated.Contains(origin))
+                    if (chunksRequiringActivation.Contains(origin))
                     {
                         continue;
                     }
 
-                    float3 difference = math.abs(localOrigin);
-                    difference.y = 0; // always load all chunks on y axis
-
-                    _ChunksPendingActivation.Push(new PendingChunkActivation(origin, difference));
+                    chunksRequiringActivation.Add(origin);
                 }
             }
 
@@ -347,56 +349,31 @@ namespace Wyd.Controllers.World
                 _ChunksPendingDeactivation.Push(origin);
             }
 
+            foreach (float3 origin in chunksRequiringActivation)
+            {
+                _ChunksPendingActivation.Push(origin);
+            }
+
             WorldState &= ~WorldState.VerifyingState;
             ChunkStateVerificationTimes.Enqueue(_Stopwatch.Elapsed);
             _Stopwatch.Reset();
         }
 
-        private void VerifyChunkStatesByLoader(IEntity loader, out HashSet<float3> originsAlreadyGenerated,
-            ref List<float3> originsNotWithinAnyLoaderRanges)
-        {
-            originsAlreadyGenerated = new HashSet<float3>();
-
-            foreach ((float3 originPoint, ChunkController chunk) in _Chunks)
-            {
-                float3 difference = math.abs(originPoint - loader.ChunkPosition);
-                difference.y = 0; // always load all chunks on y axis
-
-                if (!IsWithinMaxRenderDistance(difference) || !IsWithinLoaderRange(difference))
-                {
-                    continue;
-                }
-                else if (originsNotWithinAnyLoaderRanges.Contains(originPoint))
-                {
-                    originsNotWithinAnyLoaderRanges.Remove(originPoint);
-                }
-
-                originsAlreadyGenerated.Add(originPoint);
-
-                chunk.Visible = IsWithinRenderDistance(difference);
-                chunk.RenderShadows = IsWithinShadowsDistance(difference);
-            }
-        }
-
-        private static bool IsWithinMaxRenderDistance(float3 difference) =>
-            math.all(difference <= (ChunkController.Size * OptionsController.MAXIMUM_RENDER_DISTANCE));
-
         private static bool IsWithinLoaderRange(float3 difference) =>
-            math.all(difference
-                     <= (ChunkController.Size
-                         * (OptionsController.Current.RenderDistance
-                            + OptionsController.Current.PreLoadChunkDistance)));
-
-        private static bool IsWithinRenderDistance(float3 difference) =>
             math.all(difference <= (ChunkController.Size * OptionsController.Current.RenderDistance));
-
-        private static bool IsWithinShadowsDistance(float3 difference) =>
-            math.all(difference <= (ChunkController.Size * OptionsController.Current.ShadowDistance));
 
         #endregion
 
 
-        #region Event Subscriptors
+        #region Events
+
+        public event ChunkChangedEventHandler ChunkMeshChanged;
+
+
+        private void OnChunkMeshChanged(object sender, ChunkChangedEventArgs args)
+        {
+            ChunkMeshChanged?.Invoke(sender, args);
+        }
 
         public void RegisterCollideableEntity(IEntity attachTo)
         {

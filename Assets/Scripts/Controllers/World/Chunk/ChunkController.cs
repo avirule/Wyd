@@ -48,8 +48,6 @@ namespace Wyd.Controllers.World.Chunk
         private Queue<BlockAction> _BlockActions;
         private OctreeNode _Blocks;
         private Mesh _Mesh;
-        private bool _Visible;
-        private bool _RenderShadows;
 
         private long _State;
         private ChunkMeshData _PendingMeshData;
@@ -68,37 +66,6 @@ namespace Wyd.Controllers.World.Chunk
                 BinaryState = Convert.ToString(unchecked((byte)ChunkState), 2);
 
 #endif
-            }
-        }
-
-        public bool RenderShadows
-        {
-            get => _RenderShadows;
-            set
-            {
-                if (_RenderShadows == value)
-                {
-                    return;
-                }
-
-                _RenderShadows = value;
-                MeshRenderer.receiveShadows = _RenderShadows;
-                MeshRenderer.shadowCastingMode = _RenderShadows ? ShadowCastingMode.On : ShadowCastingMode.Off;
-            }
-        }
-
-        public bool Visible
-        {
-            get => _Visible;
-            set
-            {
-                if (_Visible == value)
-                {
-                    return;
-                }
-
-                _Visible = value;
-                MeshRenderer.enabled = _Visible;
             }
         }
 
@@ -163,7 +130,6 @@ namespace Wyd.Controllers.World.Chunk
             PerFrameUpdateController.Current.RegisterPerFrameUpdater(20, this);
 
             _CancellationTokenSource = new CancellationTokenSource();
-            _Visible = MeshRenderer.enabled;
 
             Blocks = new OctreeNode(OriginPoint + (Size / new float3(2f)), Size.x, 0);
 
