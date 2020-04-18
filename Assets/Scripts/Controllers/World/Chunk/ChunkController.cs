@@ -131,7 +131,7 @@ namespace Wyd.Controllers.World.Chunk
 
             _CancellationTokenSource = new CancellationTokenSource();
 
-            Blocks = new OctreeNode(OriginPoint + (Size / new float3(2f)), Size.x, 0);
+            ChunkState = ChunkState.Terrain;
 
 #if UNITY_EDITOR
 
@@ -175,8 +175,7 @@ namespace Wyd.Controllers.World.Chunk
                 && WorldController.Current.ReadyForGeneration)
             {
                 ChunkState |= (ChunkState & ~ChunkState.TerrainComplete) | ChunkState.AwaitingTerrain;
-                TerrainController.BeginTerrainGeneration(ref Blocks, _CancellationTokenSource.Token,
-                    OnTerrainGenerationFinished);
+                TerrainController.BeginTerrainGeneration(_CancellationTokenSource.Token, OnTerrainFinished);
             }
 
             if (!ChunkState.HasState(ChunkState.TerrainComplete))
@@ -335,10 +334,11 @@ namespace Wyd.Controllers.World.Chunk
             TerrainChanged?.Invoke(sender, args);
         }
 
-        private void OnTerrainGenerationFinished(object sender, AsyncJobEventArgs args)
+        private void OnTerrainFinished(object sender, AsyncJobEventArgs args)
         {
+            ((ChunkBuildingJob)args.AsyncJob).GetGeneratedBlockData(out _Blocks);
             ChunkState |= ChunkState.TerrainComplete;
-            args.AsyncJob.WorkFinished -= OnTerrainGenerationFinished;
+            args.AsyncJob.WorkFinished -= OnTerrainFinished;
             OnLocalTerrainChanged(sender, new ChunkChangedEventArgs(OriginPoint, Directions.AllDirectionAxes));
         }
 

@@ -31,6 +31,8 @@ namespace Wyd.Controllers.UI.Components.Text
 
             UpdatesPerSecond = 1f;
             _UpdateTimer = Stopwatch.StartNew();
+
+            _TextObject.text = string.Format(_Format, "0", "0", "0", "0", "0", "0");
         }
 
         private void OnEnable()

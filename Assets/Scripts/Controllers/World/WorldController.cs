@@ -214,6 +214,7 @@ namespace Wyd.Controllers.World
             }
 
             chunkController.TerrainChanged -= OnChunkTerrainChanged;
+            chunkController.MeshChanged -= OnChunkMeshChanged;
 
             _Chunks.Remove(chunkOrigin);
 
@@ -303,8 +304,8 @@ namespace Wyd.Controllers.World
             _Stopwatch.Restart();
 
             WorldState |= WorldState.VerifyingState;
-            HashSet<float3> chunksRequiringDeactivation = new HashSet<float3>();
             HashSet<float3> chunksRequiringActivation = new HashSet<float3>();
+            HashSet<float3> chunksRequiringDeactivation = new HashSet<float3>();
 
             // get total list of out of bounds chunks
             foreach (IEntity loader in _EntityLoaders)
@@ -344,14 +345,16 @@ namespace Wyd.Controllers.World
                 }
             }
 
-            foreach (float3 origin in chunksRequiringDeactivation)
-            {
-                _ChunksPendingDeactivation.Push(origin);
-            }
+            Log.Debug($"{nameof(WorldController)} state check resulted in '{chunksRequiringActivation.Count}' activations and '{chunksRequiringDeactivation.Count}' deactivations.");
 
             foreach (float3 origin in chunksRequiringActivation)
             {
                 _ChunksPendingActivation.Push(origin);
+            }
+
+            foreach (float3 origin in chunksRequiringDeactivation)
+            {
+                _ChunksPendingDeactivation.Push(origin);
             }
 
             WorldState &= ~WorldState.VerifyingState;

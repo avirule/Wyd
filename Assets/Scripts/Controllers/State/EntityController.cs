@@ -11,17 +11,19 @@ using Wyd.System.Extensions;
 
 namespace Wyd.Controllers.State
 {
+    public delegate void EntityWatchForCallback(IEntity entity);
+
     public class EntityController : SingletonController<EntityController>
     {
         private Dictionary<Type, List<IEntity>> _EntityRegister;
-        private Dictionary<string, List<Action<IEntity>>> _EntityTagWatchers;
+        private Dictionary<string, List<EntityWatchForCallback>> _EntityTagWatchers;
 
         private void Awake()
         {
             AssignSingletonInstance(this);
 
             _EntityRegister = new Dictionary<Type, List<IEntity>>();
-            _EntityTagWatchers = new Dictionary<string, List<Action<IEntity>>>();
+            _EntityTagWatchers = new Dictionary<string, List<EntityWatchForCallback>>();
         }
 
         public void RegisterEntity(Type identifyingType, IEntity entity)
@@ -38,7 +40,7 @@ namespace Wyd.Controllers.State
             // check for and execute for watched tags
             foreach (string watchedEntityTag in GetMatchedWatchedTags(entity.Tags))
             {
-                foreach (Action<IEntity> watchedEntityTagAction in _EntityTagWatchers[watchedEntityTag])
+                foreach (EntityWatchForCallback watchedEntityTagAction in _EntityTagWatchers[watchedEntityTag])
                 {
                     watchedEntityTagAction.Invoke(entity);
 
@@ -52,22 +54,14 @@ namespace Wyd.Controllers.State
             return entityTags.Where(entityTag => _EntityTagWatchers.ContainsKey(entityTag));
         }
 
-        public void RegisterWatchForTag(Action<IEntity> entityRegisteredWithTag, string entityTag)
+        public void RegisterWatchForTag(EntityWatchForCallback entityWatchForCallback, string entityTag)
         {
             if (!_EntityTagWatchers.ContainsKey(entityTag))
             {
-                _EntityTagWatchers.Add(entityTag, new List<Action<IEntity>>());
+                _EntityTagWatchers.Add(entityTag, new List<EntityWatchForCallback>());
             }
 
-            _EntityTagWatchers[entityTag].Add(entityRegisteredWithTag);
-        }
-
-        public void RegisterWatchForTags(Action<IEntity> entityRegisteredWithTagMethod, params string[] entityTags)
-        {
-            foreach (string entityTag in entityTags)
-            {
-                RegisterWatchForTag(entityRegisteredWithTagMethod, entityTag);
-            }
+            _EntityTagWatchers[entityTag].Add(entityWatchForCallback);
         }
 
         public bool TryGetEntityByType(Type entityType, out IEntity entity, params string[] tags)

@@ -1,5 +1,6 @@
 #region
 
+using System;
 using System.Threading;
 using System.Threading.Tasks;
 using Unity.Mathematics;
@@ -15,23 +16,23 @@ namespace Wyd.Game.World.Chunks
     public class ChunkBuildingJob : AsyncJob
     {
         private readonly CancellationToken _CancellationToken;
-        private readonly float3 _OriginPoint;
         private readonly ComputeBuffer _NoiseValuesBuffer;
+        private readonly float3 _OriginPoint;
+        private readonly float _Size;
         private readonly float _Frequency;
         private readonly float _Persistence;
         private readonly bool _GpuAcceleration;
 
-        private OctreeNode _Blocks;
         private ChunkBuilder _Builder;
 
-        public ChunkBuildingJob(CancellationToken cancellationToken, float3 originPoint, ref OctreeNode blocks,
-            float frequency, float persistence, bool gpuAcceleration = false, ComputeBuffer noiseValuesBuffer = null) :
+        public ChunkBuildingJob(CancellationToken cancellationToken, float3 originPoint, float size, float frequency,
+            float persistence, bool gpuAcceleration = false, ComputeBuffer noiseValuesBuffer = null) :
             base(cancellationToken)
         {
             _CancellationToken = CancellationTokenSource.CreateLinkedTokenSource(AsyncJobScheduler.AbortToken,
                 cancellationToken).Token;
             _OriginPoint = originPoint;
-            _Blocks = blocks;
+            _Size = size;
             _Frequency = frequency;
             _Persistence = persistence;
             _GpuAcceleration = gpuAcceleration;
@@ -40,9 +41,12 @@ namespace Wyd.Game.World.Chunks
 
         protected override Task Process()
         {
-            _Builder = new ChunkBuilder(_CancellationToken, _OriginPoint, ref _Blocks, _Frequency, _Persistence,
+            ChunkBuilder builder = new ChunkBuilder(_CancellationToken, _OriginPoint, _Size, _Frequency, _Persistence,
                 _GpuAcceleration, _NoiseValuesBuffer);
-            _Builder.Generate();
+            builder.Generate();
+
+            // builder has completed execution, so set field
+            _Builder = builder;
 
             return Task.CompletedTask;
         }
@@ -58,6 +62,17 @@ namespace Wyd.Game.World.Chunks
             }
 
             return Task.CompletedTask;
+        }
+
+        public void GetGeneratedBlockData(out OctreeNode blocks)
+        {
+            if (_Builder == null)
+            {
+                throw new NullReferenceException(
+                    $"'{nameof(ChunkBuilder)}' is null. This likely indicates the job has not completed execution.");
+            }
+
+            _Builder.GetGeneratedBlockData(out blocks);
         }
     }
 }

@@ -31,7 +31,6 @@ namespace Wyd.Game.World.Chunks
         private readonly float _Frequency;
         private readonly float _Persistence;
         private readonly CancellationToken _CancellationToken;
-        private readonly float3 _OriginPoint;
         private readonly OctreeNode _Blocks;
 
         private bool _GpuAcceleration;
@@ -40,8 +39,7 @@ namespace Wyd.Game.World.Chunks
         public TimeSpan NoiseRetrievalTimeSpan { get; private set; }
         public TimeSpan TerrainGenerationTimeSpan { get; private set; }
 
-        public ChunkBuilder(CancellationToken cancellationToken, float3 originPoint, ref OctreeNode blocks,
-            float frequency, float persistence, bool gpuAcceleration = false, ComputeBuffer noiseValuesBuffer = null)
+        public ChunkBuilder(CancellationToken cancellationToken, float3 originPoint, float size, float frequency, float persistence, bool gpuAcceleration = false, ComputeBuffer noiseValuesBuffer = null)
         {
             _BlockIDCache = new Dictionary<string, ushort>();
             _SeededRandom = new Random(WorldController.Current.Seed);
@@ -51,9 +49,16 @@ namespace Wyd.Game.World.Chunks
             _GpuAcceleration = gpuAcceleration;
             _NoiseValuesBuffer = noiseValuesBuffer;
             _CancellationToken = cancellationToken;
-            _OriginPoint = originPoint;
-            _Blocks = blocks;
+            _Blocks = new OctreeNode(originPoint, size, 0);
         }
+
+        public void GetGeneratedBlockData(out OctreeNode blocks)
+        {
+            blocks = _Blocks;
+        }
+
+
+        #region Generation Execution
 
         private ushort GetCachedBlockID(string blockName)
         {
@@ -108,7 +113,7 @@ namespace Wyd.Game.World.Chunks
                     continue;
                 }
 
-                float3 globalPosition = _OriginPoint + WydMath.IndexTo3D(index, ChunkController.Size);
+                float3 globalPosition = _Blocks.Volume.MinPoint + WydMath.IndexTo3D(index, ChunkController.Size);
                 _Blocks.UncheckedSetPoint(globalPosition, GetBlockIDAtPosition(globalPosition, index));
             }
 
@@ -149,7 +154,7 @@ namespace Wyd.Game.World.Chunks
                     }
 
                     _NoiseMap[index] =
-                        GetNoiseValueByGlobalPosition(_OriginPoint + WydMath.IndexTo3D(index, ChunkController.Size));
+                        GetNoiseValueByGlobalPosition(_Blocks.Volume.MinPoint + WydMath.IndexTo3D(index, ChunkController.Size));
                 }
 
                 _Stopwatch.Stop();
@@ -192,5 +197,7 @@ namespace Wyd.Game.World.Chunks
 
             return noiseValue;
         }
+
+        #endregion
     }
 }
