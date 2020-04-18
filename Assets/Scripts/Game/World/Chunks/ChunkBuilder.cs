@@ -39,7 +39,8 @@ namespace Wyd.Game.World.Chunks
         public TimeSpan NoiseRetrievalTimeSpan { get; private set; }
         public TimeSpan TerrainGenerationTimeSpan { get; private set; }
 
-        public ChunkBuilder(CancellationToken cancellationToken, float3 originPoint, float size, float frequency, float persistence, bool gpuAcceleration = false, ComputeBuffer noiseValuesBuffer = null)
+        public ChunkBuilder(CancellationToken cancellationToken, float3 originPoint, float size, float frequency,
+            float persistence, bool gpuAcceleration = false, ComputeBuffer noiseValuesBuffer = null)
         {
             _BlockIDCache = new Dictionary<string, ushort>();
             _SeededRandom = new Random(WorldController.Current.Seed);
@@ -154,7 +155,8 @@ namespace Wyd.Game.World.Chunks
                     }
 
                     _NoiseMap[index] =
-                        GetNoiseValueByGlobalPosition(_Blocks.Volume.MinPoint + WydMath.IndexTo3D(index, ChunkController.Size));
+                        GetNoiseValueByGlobalPosition(_Blocks.Volume.MinPoint
+                                                      + WydMath.IndexTo3D(index, ChunkController.Size));
                 }
 
                 _Stopwatch.Stop();

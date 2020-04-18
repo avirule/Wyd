@@ -245,19 +245,14 @@ namespace Wyd.Controllers.World
         public bool CheckNeighborsTerrainComplete(float3 position) =>
             (!TryGetChunk(position + (Directions.North * ChunkController.Size.z), out ChunkController northChunk)
              || northChunk.ChunkState.HasState(ChunkState.TerrainComplete))
-
             && (!TryGetChunk(position + (Directions.East * ChunkController.Size.x), out ChunkController eastChunk)
                 || eastChunk.ChunkState.HasState(ChunkState.TerrainComplete))
-
             && (!TryGetChunk(position + (Directions.South * ChunkController.Size.z), out ChunkController southChunk)
                 || southChunk.ChunkState.HasState(ChunkState.TerrainComplete))
-
             && (!TryGetChunk(position + (Directions.West * ChunkController.Size.x), out ChunkController westChunk)
                 || westChunk.ChunkState.HasState(ChunkState.TerrainComplete))
-
             && (!TryGetChunk(position + (Directions.Up * ChunkController.Size.x), out ChunkController upChunk)
                 || upChunk.ChunkState.HasState(ChunkState.TerrainComplete))
-
             && (!TryGetChunk(position + (Directions.Down * ChunkController.Size.x), out ChunkController downChunk)
                 || downChunk.ChunkState.HasState(ChunkState.TerrainComplete));
 

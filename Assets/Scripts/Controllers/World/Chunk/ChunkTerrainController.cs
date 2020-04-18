@@ -8,7 +8,6 @@ using Wyd.Controllers.State;
 using Wyd.Controllers.System;
 using Wyd.Game.World.Chunks;
 using Wyd.System;
-using Wyd.System.Collections;
 using Wyd.System.Jobs;
 
 #endregion
@@ -52,7 +51,8 @@ namespace Wyd.Controllers.World.Chunk
                 // 1024 is the value set in the shader's [numthreads(--> 1024 <--, 1, 1)]
                 _NoiseShader.Dispatch(kernel, WydMath.Product(ChunkController.Size) / 1024, 1, 1);
 
-                asyncJob = new ChunkBuildingJob(token, OriginPoint, ChunkController.Size.x, _FREQUENCY, _PERSISTENCE, OptionsController.Current.GPUAcceleration, noiseBuffer);
+                asyncJob = new ChunkBuildingJob(token, OriginPoint, ChunkController.Size.x, _FREQUENCY, _PERSISTENCE,
+                    OptionsController.Current.GPUAcceleration, noiseBuffer);
             }
             else
             {
