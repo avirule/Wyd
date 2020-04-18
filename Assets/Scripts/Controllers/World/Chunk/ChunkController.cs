@@ -7,7 +7,6 @@ using System.Linq;
 using System.Threading;
 using Unity.Mathematics;
 using UnityEngine;
-using UnityEngine.Rendering;
 using Wyd.Controllers.State;
 using Wyd.Controllers.System;
 using Wyd.Game;
@@ -27,8 +26,9 @@ namespace Wyd.Controllers.World.Chunk
     public enum ChunkState
     {
         Terrain = 0b0000_0001,
-        AwaitingTerrain = 0b0000_0011,
-        TerrainComplete = 0b0000_1111,
+        AwaitingTerrain = 0b0000_0010,
+        TerrainComplete = 0b0000_1000,
+        TerrainMask = 0b0000_1111,
         UpdateMesh = 0b0001_0000,
         Meshing = 0b0010_0000,
         MeshDataPending = 0b0100_0000,
@@ -162,19 +162,19 @@ namespace Wyd.Controllers.World.Chunk
 
         public void FrameUpdate()
         {
-            if (ChunkState.HasState(ChunkState.TerrainComplete)
-                && ChunkState.HasState(ChunkState.Meshed)
-                && !ChunkState.HasState(ChunkState.UpdateMesh))
+            if (!WorldController.Current.ReadyForGeneration
+                || ChunkState.HasState(ChunkState.AwaitingTerrain)
+                || (ChunkState.HasState(ChunkState.TerrainComplete)
+                    && ChunkState.HasState(ChunkState.Meshed)
+                    && !ChunkState.HasState(ChunkState.UpdateMesh)))
             {
                 return;
             }
 
 
-            if (ChunkState.HasState(ChunkState.Terrain)
-                && !ChunkState.HasState(ChunkState.AwaitingTerrain)
-                && WorldController.Current.ReadyForGeneration)
+            if (ChunkState.HasState(ChunkState.Terrain))
             {
-                ChunkState |= (ChunkState & ~ChunkState.TerrainComplete) | ChunkState.AwaitingTerrain;
+                ChunkState |= (ChunkState & ~ChunkState.TerrainMask) | ChunkState.AwaitingTerrain;
                 TerrainController.BeginTerrainGeneration(_CancellationTokenSource.Token, OnTerrainFinished);
             }
 
@@ -194,7 +194,7 @@ namespace Wyd.Controllers.World.Chunk
             if (!ChunkState.HasState(ChunkState.Meshing)
                 && !ChunkState.HasState(ChunkState.MeshDataPending)
                 && (!ChunkState.HasState(ChunkState.Meshed) || ChunkState.HasState(ChunkState.UpdateMesh))
-                && WorldController.Current.NeighborsTerrainComplete(OriginPoint))
+                && WorldController.Current.CheckNeighborsTerrainComplete(OriginPoint))
             {
                 ChunkState = (ChunkState & ~(ChunkState.Meshed | ChunkState.UpdateMesh)) | ChunkState.Meshing;
                 MeshController.BeginGeneratingMesh(Blocks, _CancellationTokenSource.Token, OnMeshingFinished);
@@ -289,7 +289,7 @@ namespace Wyd.Controllers.World.Chunk
         {
             blockId = 0;
 
-            if (!Blocks.ContainsMinBiased(globalPosition))
+            if ((Blocks == null) || !Blocks.ContainsMinBiased(globalPosition))
             {
                 return false;
             }
@@ -300,7 +300,8 @@ namespace Wyd.Controllers.World.Chunk
         }
 
         public bool TryPlaceBlockAt(float3 globalPosition, ushort newBlockId) =>
-            Blocks.ContainsMinBiased(globalPosition)
+            (Blocks != null)
+            && Blocks.ContainsMinBiased(globalPosition)
             && TryGetBlockAt(globalPosition, out ushort blockId)
             && (blockId != newBlockId)
             && AllocateBlockAction(globalPosition, newBlockId);
@@ -314,7 +315,6 @@ namespace Wyd.Controllers.World.Chunk
         }
 
         #endregion
-
 
 
         #region Events
@@ -337,7 +337,7 @@ namespace Wyd.Controllers.World.Chunk
         private void OnTerrainFinished(object sender, AsyncJobEventArgs args)
         {
             ((ChunkBuildingJob)args.AsyncJob).GetGeneratedBlockData(out _Blocks);
-            ChunkState |= ChunkState.TerrainComplete;
+            ChunkState = (ChunkState & ~ChunkState.TerrainMask) | ChunkState.TerrainComplete;
             args.AsyncJob.WorkFinished -= OnTerrainFinished;
             OnLocalTerrainChanged(sender, new ChunkChangedEventArgs(OriginPoint, Directions.AllDirectionAxes));
         }

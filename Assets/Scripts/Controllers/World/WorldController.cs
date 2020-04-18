@@ -14,7 +14,6 @@ using Wyd.Controllers.World.Chunk;
 using Wyd.Game;
 using Wyd.Game.Entities;
 using Wyd.Game.World;
-using Wyd.Game.World.Chunks;
 using Wyd.Game.World.Chunks.Events;
 using Wyd.System;
 using Wyd.System.Collections;
@@ -161,8 +160,8 @@ namespace Wyd.Controllers.World
             if (WorldState.HasState(WorldState.RequiresStateVerification)
                 && !WorldState.HasState(WorldState.VerifyingState))
             {
-                VerifyAllChunkStatesAroundLoaders();
                 WorldState &= ~WorldState.RequiresStateVerification;
+                VerifyAllChunkStatesAroundLoaders();
             }
 
             while (_ChunksPendingActivation.Count > 0)
@@ -243,46 +242,24 @@ namespace Wyd.Controllers.World
             }
         }
 
-        public bool NeighborsTerrainComplete(float3 position)
-        {
-            if (TryGetChunk(position + (Directions.North * ChunkController.Size.z), out ChunkController northChunk)
-                && ((northChunk.ChunkState & ChunkState.TerrainComplete) != ChunkState.TerrainComplete))
-            {
-                return false;
-            }
+        public bool CheckNeighborsTerrainComplete(float3 position) =>
+            (!TryGetChunk(position + (Directions.North * ChunkController.Size.z), out ChunkController northChunk)
+             || northChunk.ChunkState.HasState(ChunkState.TerrainComplete))
 
-            if (TryGetChunk(position + (Directions.East * ChunkController.Size.x), out ChunkController eastChunk)
-                && ((eastChunk.ChunkState & ChunkState.TerrainComplete) != ChunkState.TerrainComplete))
-            {
-                return false;
-            }
+            && (!TryGetChunk(position + (Directions.East * ChunkController.Size.x), out ChunkController eastChunk)
+                || eastChunk.ChunkState.HasState(ChunkState.TerrainComplete))
 
-            if (TryGetChunk(position + (Directions.South * ChunkController.Size.z), out ChunkController southChunk)
-                && ((southChunk.ChunkState & ChunkState.TerrainComplete) != ChunkState.TerrainComplete))
-            {
-                return false;
-            }
+            && (!TryGetChunk(position + (Directions.South * ChunkController.Size.z), out ChunkController southChunk)
+                || southChunk.ChunkState.HasState(ChunkState.TerrainComplete))
 
-            if (TryGetChunk(position + (Directions.West * ChunkController.Size.x), out ChunkController westChunk)
-                && ((westChunk.ChunkState & ChunkState.TerrainComplete) != ChunkState.TerrainComplete))
-            {
-                return false;
-            }
+            && (!TryGetChunk(position + (Directions.West * ChunkController.Size.x), out ChunkController westChunk)
+                || westChunk.ChunkState.HasState(ChunkState.TerrainComplete))
 
-            if (TryGetChunk(position + (Directions.Up * ChunkController.Size.x), out ChunkController upChunk)
-                && ((upChunk.ChunkState & ChunkState.TerrainComplete) != ChunkState.TerrainComplete))
-            {
-                return false;
-            }
+            && (!TryGetChunk(position + (Directions.Up * ChunkController.Size.x), out ChunkController upChunk)
+                || upChunk.ChunkState.HasState(ChunkState.TerrainComplete))
 
-            if (TryGetChunk(position + (Directions.Down * ChunkController.Size.x), out ChunkController downChunk)
-                && ((downChunk.ChunkState & ChunkState.TerrainComplete) != ChunkState.TerrainComplete))
-            {
-                return false;
-            }
-
-            return true;
-        }
+            && (!TryGetChunk(position + (Directions.Down * ChunkController.Size.x), out ChunkController downChunk)
+                || downChunk.ChunkState.HasState(ChunkState.TerrainComplete));
 
 
         #region State Management
@@ -319,7 +296,8 @@ namespace Wyd.Controllers.World
                     if (!IsWithinLoaderRange(difference))
                     {
                         chunksRequiringDeactivation.Add(origin);
-                    } else if (chunksRequiringDeactivation.Contains(origin))
+                    }
+                    else if (chunksRequiringDeactivation.Contains(origin))
                     {
                         chunksRequiringDeactivation.Remove(origin);
                     }
@@ -345,7 +323,8 @@ namespace Wyd.Controllers.World
                 }
             }
 
-            Log.Debug($"{nameof(WorldController)} state check resulted in '{chunksRequiringActivation.Count}' activations and '{chunksRequiringDeactivation.Count}' deactivations.");
+            Log.Debug(
+                $"{nameof(WorldController)} state check resulted in '{chunksRequiringActivation.Count}' activations and '{chunksRequiringDeactivation.Count}' deactivations.");
 
             foreach (float3 origin in chunksRequiringActivation)
             {

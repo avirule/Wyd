@@ -9,7 +9,7 @@ namespace Wyd.Game.World
     [Flags]
     public enum WorldState : byte
     {
-        RequiresStateVerification = 1,
-        VerifyingState = 2
+        RequiresStateVerification = 0b0001,
+        VerifyingState = 0b0010
     }
 }
