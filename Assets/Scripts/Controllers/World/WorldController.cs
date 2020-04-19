@@ -385,13 +385,28 @@ namespace Wyd.Controllers.World
 
         #region Chunk Block Operations
 
-        public bool TryGetChunk(float3 position, out ChunkController chunkController) =>
-            _Chunks.TryGetValue(position, out chunkController);
+        public bool TryGetChunk(float3 origin, out ChunkController chunkController)
+        {
+            if (!_Chunks.TryGetValue(origin, out chunkController))
+            {
+#if UNITY_EDITOR
+
+                Log.Debug($"({nameof(TryGetBlock)} Failed to retrieve chunk at origin coordinates {origin}.");
+
+#endif
+
+                return false;
+            }
+            else
+            {
+                return true;
+            }
+        }
 
         public bool TryGetBlock(float3 globalPosition, out ushort blockId)
         {
             blockId = default;
-            float3 chunkPosition = WydMath.RoundBy(globalPosition, WydMath.ToFloat(ChunkController.Size));
+            float3 chunkPosition = WydMath.RoundBy(globalPosition, ChunkController.Size);
 
             return TryGetChunk(chunkPosition, out ChunkController chunkController)
                    && chunkController.TryGetBlockAt(globalPosition, out blockId);
@@ -399,7 +414,7 @@ namespace Wyd.Controllers.World
 
         public bool TryPlaceBlock(float3 globalPosition, ushort id)
         {
-            float3 chunkPosition = WydMath.RoundBy(globalPosition, WydMath.ToFloat(ChunkController.Size));
+            float3 chunkPosition = WydMath.RoundBy(globalPosition, ChunkController.Size);
 
             return TryGetChunk(chunkPosition, out ChunkController chunkController)
                    && (chunkController != default)

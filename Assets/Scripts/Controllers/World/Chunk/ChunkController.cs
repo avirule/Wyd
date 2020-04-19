@@ -5,6 +5,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
+using Serilog;
 using Unity.Mathematics;
 using UnityEngine;
 using Wyd.Controllers.State;
@@ -289,14 +290,21 @@ namespace Wyd.Controllers.World.Chunk
         {
             blockId = 0;
 
-            if ((Blocks == null) || !Blocks.ContainsMinBiased(globalPosition))
+            if ((Blocks == null) || !Blocks.TryGetPoint(globalPosition, out blockId))
             {
+#if UNITY_EDITOR
+
+                Log.Debug(
+                    $"({nameof(TryGetBlockAt)}) Failed to retrieve block at global coordinates {globalPosition}.");
+
+#endif
+
                 return false;
             }
-
-            blockId = Blocks.GetPoint(globalPosition);
-
-            return true;
+            else
+            {
+                return true;
+            }
         }
 
         public bool TryPlaceBlockAt(float3 globalPosition, ushort newBlockId) =>

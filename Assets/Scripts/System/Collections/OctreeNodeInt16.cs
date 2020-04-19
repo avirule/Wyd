@@ -108,6 +108,26 @@ namespace Wyd.System.Collections
             }
         }
 
+        public bool TryGetPoint(float3 point, out ushort value)
+        {
+            value = 0;
+
+            if (!ContainsMinBiased(point))
+            {
+                return false;
+            }
+            else if (!IsUniform)
+            {
+                int octant = DetermineOctant(point);
+                return _Nodes[octant].TryGetPoint(point, out value);
+            }
+            else
+            {
+                value = Value;
+                return true;
+            }
+        }
+
         public ushort UncheckedGetPoint(float3 point)
         {
             point = math.floor(point);

@@ -30,6 +30,7 @@ namespace Wyd.Controllers.State
 
             InitializeBlockPropertiesBuckets();
 
+            RegisterBlockDefinition("Null", Block.Types.None, null);
             RegisterBlockDefinition("Air", Block.Types.None, null, BlockDefinition.Property.Transparent);
         }
 
