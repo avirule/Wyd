@@ -290,12 +290,22 @@ namespace Wyd.Controllers.World.Chunk
         {
             blockId = 0;
 
-            if ((Blocks == null) || !Blocks.TryGetPoint(globalPosition, out blockId))
+            if (Blocks == null)
             {
 #if UNITY_EDITOR
 
                 Log.Debug(
-                    $"({nameof(TryGetBlockAt)}) Failed to retrieve block at global coordinates {globalPosition}.");
+                    $"'{nameof(Blocks)}' is null (origin: {OriginPoint}, state: {Convert.ToString((int)ChunkState, 2)}).");
+
+#endif
+
+                return false;
+            }
+            else if (!Blocks.TryGetPoint(globalPosition, out blockId))
+            {
+#if UNITY_EDITOR
+
+                Log.Debug($"Failed to get block data from point {globalPosition} in chunk at origin {OriginPoint}.");
 
 #endif
 
