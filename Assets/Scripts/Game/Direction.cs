@@ -144,12 +144,12 @@ namespace Wyd.Game
 
             _directionsAsIndexStep = new Dictionary<Direction, int>
             {
-                { Direction.North, ChunkController.Size.x },
+                { Direction.North, ChunkController.SizeCubed.x },
                 { Direction.East, 1 },
-                { Direction.South, -ChunkController.Size.x },
+                { Direction.South, -ChunkController.SizeCubed.x },
                 { Direction.West, -1 },
-                { Direction.Up, ChunkController.Size.x * ChunkController.Size.z },
-                { Direction.Down, -(ChunkController.Size.x * ChunkController.Size.z) }
+                { Direction.Up, ChunkController.SizeCubed.x * ChunkController.SizeCubed.z },
+                { Direction.Down, -(ChunkController.SizeCubed.x * ChunkController.SizeCubed.z) }
             };
         }
 

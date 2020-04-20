@@ -38,9 +38,12 @@ namespace Wyd.Controllers.World.Chunk
 
     public class ChunkController : ActivationStateChunkController, IPerFrameIncrementalUpdate
     {
+        public const int SIZE = 32;
+
         private static readonly ObjectCache<BlockAction> _blockActionsCache = new ObjectCache<BlockAction>(true, 1024);
 
-        public static readonly int3 Size = new int3(32);
+        public static readonly int3 SizeCubed = new int3(SIZE);
+        public static readonly int3 SizeExtents = new int3(SIZE / 2);
 
 
         #region INSTANCE MEMBERS
@@ -50,8 +53,15 @@ namespace Wyd.Controllers.World.Chunk
         private OctreeNode _Blocks;
         private Mesh _Mesh;
 
+        private long _Active;
         private long _State;
         private ChunkMeshData _PendingMeshData;
+
+        public bool Active
+        {
+            get => Convert.ToBoolean(Interlocked.Read(ref _Active));
+            set => Interlocked.Exchange(ref _Active, Convert.ToInt64(value));
+        }
 
         public ref OctreeNode Blocks => ref _Blocks;
 
@@ -134,11 +144,13 @@ namespace Wyd.Controllers.World.Chunk
 
             ChunkState = ChunkState.Terrain;
 
+            Active = gameObject.activeSelf;
+
 #if UNITY_EDITOR
 
             MinimumPoint = OriginPoint;
-            MaximumPoint = OriginPoint + Size;
-            Extents = WydMath.ToFloat(Size) / 2f;
+            MaximumPoint = OriginPoint + SizeCubed;
+            Extents = WydMath.ToFloat(SizeCubed) / 2f;
 
 #endif
         }
@@ -159,6 +171,8 @@ namespace Wyd.Controllers.World.Chunk
             _Blocks = null;
 
             ChunkState = ChunkState.Terrain;
+
+            Active = gameObject.activeSelf;
         }
 
         public void FrameUpdate()
@@ -234,7 +248,7 @@ namespace Wyd.Controllers.World.Chunk
 
         public void Activate(float3 position)
         {
-            _SelfTransform.position = position;
+            _SelfTransform.SetPositionAndRotation(position, quaternion.identity);
 
             gameObject.SetActive(true);
         }
@@ -263,7 +277,7 @@ namespace Wyd.Controllers.World.Chunk
         {
             normals = Enumerable.Empty<int3>();
 
-            float3 localPosition = globalPosition - (OriginPoint + (WydMath.ToFloat(Size) / 2f));
+            float3 localPosition = globalPosition - (OriginPoint + (WydMath.ToFloat(SizeCubed) / 2f));
             float3 localPositionSign = math.sign(localPosition);
             float3 localPositionAbs = math.abs(math.ceil(localPosition + (new float3(0.5f) * localPositionSign)));
 
@@ -294,7 +308,7 @@ namespace Wyd.Controllers.World.Chunk
             {
 #if UNITY_EDITOR
 
-                Log.Debug(
+                Log.Verbose(
                     $"'{nameof(Blocks)}' is null (origin: {OriginPoint}, state: {Convert.ToString((int)ChunkState, 2)}).");
 
 #endif
@@ -305,7 +319,7 @@ namespace Wyd.Controllers.World.Chunk
             {
 #if UNITY_EDITOR
 
-                Log.Debug($"Failed to get block data from point {globalPosition} in chunk at origin {OriginPoint}.");
+                Log.Verbose($"Failed to get block data from point {globalPosition} in chunk at origin {OriginPoint}.");
 
 #endif
 
@@ -354,9 +368,15 @@ namespace Wyd.Controllers.World.Chunk
 
         private void OnTerrainFinished(object sender, AsyncJobEventArgs args)
         {
+            args.AsyncJob.WorkFinished -= OnTerrainFinished;
+
+            if (!Active)
+            {
+                return;
+            }
+
             ((ChunkBuildingJob)args.AsyncJob).GetGeneratedBlockData(out _Blocks);
             ChunkState = (ChunkState & ~ChunkState.TerrainMask) | ChunkState.TerrainComplete;
-            args.AsyncJob.WorkFinished -= OnTerrainFinished;
             OnLocalTerrainChanged(sender, new ChunkChangedEventArgs(OriginPoint, Directions.AllDirectionAxes));
         }
 
@@ -367,14 +387,15 @@ namespace Wyd.Controllers.World.Chunk
 
         private void OnMeshingFinished(object sender, AsyncJobEventArgs args)
         {
-            if (!(args.AsyncJob is ChunkMeshingJob chunkMeshingJob))
+            args.AsyncJob.WorkFinished -= OnMeshingFinished;
+
+            if (!(args.AsyncJob is ChunkMeshingJob chunkMeshingJob) || !Active)
             {
                 return;
             }
 
             _PendingMeshData = chunkMeshingJob.GetMeshData();
             ChunkState = (ChunkState & ~ChunkState.Meshing) | ChunkState.MeshDataPending;
-            args.AsyncJob.WorkFinished -= OnMeshingFinished;
         }
 
         #endregion

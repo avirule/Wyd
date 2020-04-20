@@ -2,6 +2,7 @@
 
 using System.Threading;
 using System.Threading.Tasks;
+using Serilog;
 using Unity.Mathematics;
 using UnityEngine;
 using Wyd.Controllers.State;
@@ -30,8 +31,8 @@ namespace Wyd.Controllers.World.Chunk
             {
                 _NoiseShader = SystemController.LoadResource<ComputeShader>(@"Graphics\Shaders\NoiseComputationShader");
                 _NoiseShader.SetInt("_NoiseSeed", WorldController.Current.Seed);
-                _NoiseShader.SetVector("_MaximumSize", new Vector4(ChunkController.Size.x, ChunkController.Size.y,
-                    ChunkController.Size.z, 0f));
+                _NoiseShader.SetVector("_MaximumSize", new Vector4(ChunkController.SizeCubed.x, ChunkController.SizeCubed.y,
+                    ChunkController.SizeCubed.z, 0f));
                 _NoiseShader.SetFloat("_WorldHeight", WorldController.WORLD_HEIGHT);
             }
         }
@@ -42,21 +43,21 @@ namespace Wyd.Controllers.World.Chunk
 
             if (OptionsController.Current.GPUAcceleration)
             {
-                ComputeBuffer noiseBuffer = new ComputeBuffer(WydMath.Product(ChunkController.Size), 4);
+                ComputeBuffer noiseBuffer = new ComputeBuffer(WydMath.Product(ChunkController.SizeCubed), 4);
                 int kernel = _NoiseShader.FindKernel("CSMain");
                 _NoiseShader.SetVector("_Offset", new float4(OriginPoint.xyzz));
                 _NoiseShader.SetFloat("_Frequency", _FREQUENCY);
                 _NoiseShader.SetFloat("_Persistence", _PERSISTENCE);
                 _NoiseShader.SetBuffer(kernel, "Result", noiseBuffer);
                 // 1024 is the value set in the shader's [numthreads(--> 1024 <--, 1, 1)]
-                _NoiseShader.Dispatch(kernel, WydMath.Product(ChunkController.Size) / 1024, 1, 1);
+                _NoiseShader.Dispatch(kernel, WydMath.Product(ChunkController.SizeCubed) / 1024, 1, 1);
 
-                asyncJob = new ChunkBuildingJob(token, OriginPoint, ChunkController.Size.x, _FREQUENCY, _PERSISTENCE,
+                asyncJob = new ChunkBuildingJob(token, OriginPoint, ChunkController.SizeCubed.x, _FREQUENCY, _PERSISTENCE,
                     OptionsController.Current.GPUAcceleration, noiseBuffer);
             }
             else
             {
-                asyncJob = new ChunkBuildingJob(token, OriginPoint, ChunkController.Size.x, _FREQUENCY, _PERSISTENCE);
+                asyncJob = new ChunkBuildingJob(token, OriginPoint, ChunkController.SizeCubed.x, _FREQUENCY, _PERSISTENCE);
             }
 
             if (callback != null)
@@ -64,7 +65,15 @@ namespace Wyd.Controllers.World.Chunk
                 asyncJob.WorkFinished += callback;
             }
 
+
             Task.Run(async () => await AsyncJobScheduler.QueueAsyncJob(asyncJob), token);
+
+#if UNITY_EDITOR
+
+            Log.Verbose(
+                $"Queued '{nameof(ChunkBuildingJob)}' ({nameof(OriginPoint)}: {OriginPoint}, Transform: {_SelfTransform.position}).");
+
+#endif
         }
     }
 }

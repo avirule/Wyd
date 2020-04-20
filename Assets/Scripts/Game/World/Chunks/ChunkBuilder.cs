@@ -50,7 +50,7 @@ namespace Wyd.Game.World.Chunks
             _GpuAcceleration = gpuAcceleration;
             _NoiseValuesBuffer = noiseValuesBuffer;
             _CancellationToken = cancellationToken;
-            _Blocks = new OctreeNode(originPoint, size, 0);
+            _Blocks = new OctreeNode(originPoint + ChunkController.SizeExtents, size, BlockController.AirID);
         }
 
         public void GetGeneratedBlockData(out OctreeNode blocks)
@@ -90,7 +90,7 @@ namespace Wyd.Game.World.Chunks
         {
             if (_Blocks == null)
             {
-                Log.Warning($"`{nameof(_Blocks)}` has not been set (chunk may have been cached). Aborting generation.");
+                Log.Warning($"'{nameof(_Blocks)}' has not been set (chunk may have been cached/destroyed). Aborting generation.");
 
                 MainThreadActionsController.Current.PushAction(new MainThreadAction(null,
                     () => _NoiseValuesBuffer?.Release()));
@@ -102,7 +102,7 @@ namespace Wyd.Game.World.Chunks
 
             _Stopwatch.Restart();
 
-            for (int index = WydMath.Product(ChunkController.Size) - 1; index >= 0; index--)
+            for (int index = WydMath.Product(ChunkController.SizeCubed) - 1; index >= 0; index--)
             {
                 if (_CancellationToken.IsCancellationRequested)
                 {
@@ -114,7 +114,7 @@ namespace Wyd.Game.World.Chunks
                     continue;
                 }
 
-                float3 globalPosition = _Blocks.Volume.MinPoint + WydMath.IndexTo3D(index, ChunkController.Size);
+                float3 globalPosition = _Blocks.Volume.MinPoint + WydMath.IndexTo3D(index, ChunkController.SizeCubed);
                 _Blocks.UncheckedSetPoint(globalPosition, GetBlockIDAtPosition(globalPosition, index));
             }
 
@@ -126,7 +126,7 @@ namespace Wyd.Game.World.Chunks
 
         private void GenerateNoise()
         {
-            _NoiseMap = _noiseValuesCache.Retrieve() ?? new float[WydMath.Product(ChunkController.Size)];
+            _NoiseMap = _noiseValuesCache.Retrieve() ?? new float[WydMath.Product(ChunkController.SizeCubed)];
 
             if (_GpuAcceleration && (_NoiseValuesBuffer != null))
             {
@@ -156,7 +156,7 @@ namespace Wyd.Game.World.Chunks
 
                     _NoiseMap[index] =
                         GetNoiseValueByGlobalPosition(_Blocks.Volume.MinPoint
-                                                      + WydMath.IndexTo3D(index, ChunkController.Size));
+                                                      + WydMath.IndexTo3D(index, ChunkController.SizeCubed));
                 }
 
                 _Stopwatch.Stop();

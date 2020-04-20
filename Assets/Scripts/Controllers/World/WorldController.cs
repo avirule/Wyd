@@ -29,7 +29,7 @@ namespace Wyd.Controllers.World
     {
         public const float WORLD_HEIGHT = 256f;
 
-        public static readonly float WorldHeightInChunks = math.floor(WORLD_HEIGHT / ChunkController.Size.y);
+        public static readonly float WorldHeightInChunks = math.floor(WORLD_HEIGHT / ChunkController.SizeCubed.y);
 
 
         #region Serialized Members
@@ -166,8 +166,7 @@ namespace Wyd.Controllers.World
 
             while (_ChunksPendingActivation.Count > 0)
             {
-                if (!_ChunksPendingActivation.TryPop(out float3 origin)
-                    || TryGetChunk(origin, out ChunkController _))
+                if (!_ChunksPendingActivation.TryPop(out float3 origin) || CheckChunkExists(origin))
                 {
                     continue;
                 }
@@ -193,8 +192,7 @@ namespace Wyd.Controllers.World
 
             while (_ChunksPendingDeactivation.Count > 0)
             {
-                if (!_ChunksPendingDeactivation.TryPop(out float3 origin)
-                    || !TryGetChunk(origin, out ChunkController _))
+                if (!_ChunksPendingDeactivation.TryPop(out float3 origin) || !CheckChunkExists(origin))
                 {
                     continue;
                 }
@@ -229,13 +227,13 @@ namespace Wyd.Controllers.World
 
             foreach (float3 normal in directions)
             {
-                FlagChunkForUpdateMesh(origin + (normal * ChunkController.Size));
+                FlagChunkForUpdateMesh(origin + (normal * ChunkController.SizeCubed));
             }
         }
 
         private void FlagChunkForUpdateMesh(float3 origin)
         {
-            if (TryGetChunk(WydMath.RoundBy(origin, WydMath.ToFloat(ChunkController.Size)),
+            if (TryGetChunk(WydMath.RoundBy(origin, WydMath.ToFloat(ChunkController.SizeCubed)),
                 out ChunkController chunkController))
             {
                 chunkController.FlagMeshForUpdate();
@@ -243,17 +241,17 @@ namespace Wyd.Controllers.World
         }
 
         public bool CheckNeighborsTerrainComplete(float3 position) =>
-            (!TryGetChunk(position + (Directions.North * ChunkController.Size.z), out ChunkController northChunk)
+            (!TryGetChunk(position + (Directions.North * ChunkController.SizeCubed.z), out ChunkController northChunk)
              || northChunk.ChunkState.HasState(ChunkState.TerrainComplete))
-            && (!TryGetChunk(position + (Directions.East * ChunkController.Size.x), out ChunkController eastChunk)
+            && (!TryGetChunk(position + (Directions.East * ChunkController.SizeCubed.x), out ChunkController eastChunk)
                 || eastChunk.ChunkState.HasState(ChunkState.TerrainComplete))
-            && (!TryGetChunk(position + (Directions.South * ChunkController.Size.z), out ChunkController southChunk)
+            && (!TryGetChunk(position + (Directions.South * ChunkController.SizeCubed.z), out ChunkController southChunk)
                 || southChunk.ChunkState.HasState(ChunkState.TerrainComplete))
-            && (!TryGetChunk(position + (Directions.West * ChunkController.Size.x), out ChunkController westChunk)
+            && (!TryGetChunk(position + (Directions.West * ChunkController.SizeCubed.x), out ChunkController westChunk)
                 || westChunk.ChunkState.HasState(ChunkState.TerrainComplete))
-            && (!TryGetChunk(position + (Directions.Up * ChunkController.Size.x), out ChunkController upChunk)
+            && (!TryGetChunk(position + (Directions.Up * ChunkController.SizeCubed.x), out ChunkController upChunk)
                 || upChunk.ChunkState.HasState(ChunkState.TerrainComplete))
-            && (!TryGetChunk(position + (Directions.Down * ChunkController.Size.x), out ChunkController downChunk)
+            && (!TryGetChunk(position + (Directions.Down * ChunkController.SizeCubed.x), out ChunkController downChunk)
                 || downChunk.ChunkState.HasState(ChunkState.TerrainComplete));
 
 
@@ -306,15 +304,13 @@ namespace Wyd.Controllers.World
                 for (int z = -renderRadius; z < (renderRadius + 1); z++)
                 for (int y = 0; y < WorldHeightInChunks; y++)
                 {
-                    float3 localOrigin = new float3(x, y, z) * ChunkController.Size;
+                    float3 localOrigin = new float3(x, y, z) * ChunkController.SizeCubed;
                     float3 origin = localOrigin + new float3(loader.ChunkPosition.x, 0, loader.ChunkPosition.z);
 
-                    if (chunksRequiringActivation.Contains(origin))
+                    if (!chunksRequiringActivation.Contains(origin))
                     {
-                        continue;
+                        chunksRequiringActivation.Add(origin);
                     }
-
-                    chunksRequiringActivation.Add(origin);
                 }
             }
 
@@ -337,7 +333,10 @@ namespace Wyd.Controllers.World
         }
 
         private static bool IsWithinLoaderRange(float3 difference) =>
-            math.all(difference <= (ChunkController.Size * OptionsController.Current.RenderDistance));
+            math.all(difference
+                     <= (ChunkController.SizeCubed
+                         * (OptionsController.Current.RenderDistance
+                            + OptionsController.Current.PreLoadChunkDistance)));
 
         #endregion
 
@@ -385,28 +384,15 @@ namespace Wyd.Controllers.World
 
         #region Chunk Block Operations
 
-        public bool TryGetChunk(float3 origin, out ChunkController chunkController)
-        {
-            if (!_Chunks.TryGetValue(origin, out chunkController))
-            {
-#if UNITY_EDITOR
+        public bool CheckChunkExists(float3 origin) => _Chunks.ContainsKey(origin);
 
-                Log.Debug($"({nameof(TryGetBlock)} Failed to retrieve chunk at origin coordinates {origin}.");
-
-#endif
-
-                return false;
-            }
-            else
-            {
-                return true;
-            }
-        }
+        public bool TryGetChunk(float3 origin, out ChunkController chunkController) =>
+            _Chunks.TryGetValue(origin, out chunkController);
 
         public bool TryGetBlock(float3 globalPosition, out ushort blockId)
         {
             blockId = BlockController.NullID;
-            float3 chunkPosition = WydMath.RoundBy(globalPosition, ChunkController.Size);
+            float3 chunkPosition = WydMath.RoundBy(globalPosition, ChunkController.SizeCubed);
 
             return TryGetChunk(chunkPosition, out ChunkController chunkController)
                    && chunkController.TryGetBlockAt(globalPosition, out blockId);
@@ -414,7 +400,7 @@ namespace Wyd.Controllers.World
 
         public bool TryPlaceBlock(float3 globalPosition, ushort id)
         {
-            float3 chunkPosition = WydMath.RoundBy(globalPosition, ChunkController.Size);
+            float3 chunkPosition = WydMath.RoundBy(globalPosition, ChunkController.SizeCubed);
 
             return TryGetChunk(chunkPosition, out ChunkController chunkController)
                    && (chunkController != default)
