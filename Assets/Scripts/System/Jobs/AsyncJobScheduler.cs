@@ -75,14 +75,13 @@ namespace Wyd.System.Jobs
                 throw new ArgumentException("Parameter must be a positive value.", nameof(newWorkerCount));
             }
 
-            OnLogged(1,
-                $"Modifying {nameof(MaximumProcessingJobs)}: from '{_MaximumProcessingJobs}' to '{newWorkerCount}'.");
-
             Interlocked.Exchange(ref _MaximumProcessingJobs, newWorkerCount);
 
             _AbortTokenSource.Cancel();
             _AbortTokenSource = new CancellationTokenSource();
             _WorkerSemaphore = new Semaphore((int)MaximumProcessingJobs, (int)MaximumProcessingJobs);
+
+            OnMaximumProcessingJobsChanged(MaximumProcessingJobs);
         }
 
         public static async Task QueueAsyncJob(AsyncJob asyncJob)
@@ -91,14 +90,6 @@ namespace Wyd.System.Jobs
             {
                 return;
             }
-
-            if (MaximumProcessingJobs == 0)
-            {
-                OnLogged(3,
-                    $"{nameof(MaximumProcessingJobs)} is 0. Any jobs queued will not be completed until `{nameof(ModifyMaximumProcessingJobCount)}()` is called with a non-zero value.");
-            }
-
-            OnLogged(1, $"Queued new {nameof(AsyncJob)} for completion (type: {asyncJob.GetType().Name})");
 
             OnJobQueued(new AsyncJobEventArgs(asyncJob));
 
@@ -133,6 +124,8 @@ namespace Wyd.System.Jobs
 
         #region Events
 
+        public static event EventHandler<long> MaximumProcessingJobsChanged;
+
         /// <summary>
         ///     Called when a job is queued.
         /// </summary>
@@ -151,8 +144,11 @@ namespace Wyd.System.Jobs
         /// <remarks>This event will not necessarily happen synchronously with the main thread.</remarks>
         public static event AsyncJobEventHandler JobFinished;
 
-        public static event AsyncJobSchedulerLogEventHandler Logged;
 
+        private static void OnMaximumProcessingJobsChanged(long newMaximumProcessingJobs)
+        {
+            MaximumProcessingJobsChanged?.Invoke(MaximumProcessingJobsChanged, newMaximumProcessingJobs);
+        }
 
         private static void OnJobQueued(AsyncJobEventArgs args)
         {
@@ -167,11 +163,6 @@ namespace Wyd.System.Jobs
         private static void OnJobFinished(AsyncJobEventArgs args)
         {
             JobFinished?.Invoke(JobFinished, args);
-        }
-
-        private static void OnLogged(byte logLevel, string logText)
-        {
-            Logged?.Invoke(Logged, new AsyncJobSchedulerLogEventArgs(logLevel, logText));
         }
 
         #endregion

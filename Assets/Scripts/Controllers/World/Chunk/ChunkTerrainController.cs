@@ -6,7 +6,6 @@ using Serilog;
 using Unity.Mathematics;
 using UnityEngine;
 using Wyd.Controllers.State;
-using Wyd.Controllers.System;
 using Wyd.Game.World.Chunks;
 using Wyd.System;
 using Wyd.System.Jobs;
@@ -28,7 +27,7 @@ namespace Wyd.Controllers.World.Chunk
 
             if (_NoiseShader == null)
             {
-                _NoiseShader = SystemController.LoadResource<ComputeShader>(@"Graphics\Shaders\NoiseComputationShader");
+                _NoiseShader = Resources.Load<ComputeShader>(@"Graphics\Shaders\NoiseComputationShader");
                 _NoiseShader.SetInt("_NoiseSeed", WorldController.Current.Seed);
                 _NoiseShader.SetVector("_MaximumSize", new Vector4(ChunkController.SizeCubed.x,
                     ChunkController.SizeCubed.y,
