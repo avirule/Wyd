@@ -185,7 +185,7 @@ namespace Wyd.Controllers.World.Chunk
             if (ChunkState.HasState(ChunkState.Terrain))
             {
                 ChunkState |= (ChunkState & ~ChunkState.TerrainMask) | ChunkState.AwaitingTerrain;
-                TerrainController.BeginTerrainGeneration(_CancellationTokenSource.Token, OnTerrainFinished);
+                TerrainController.BeginTerrainGeneration(_CancellationTokenSource.Token, OnTerrainGenerationFinished);
             }
 
             if (!ChunkState.HasState(ChunkState.TerrainComplete))
@@ -195,21 +195,24 @@ namespace Wyd.Controllers.World.Chunk
 
             if (ChunkState.HasState(ChunkState.MeshDataPending) && (_PendingMeshData != null))
             {
-                // todo deactivate meshrenderer if no mesh data
                 MeshController.ApplyMesh(_PendingMeshData);
                 _PendingMeshData = null;
                 ChunkState = (ChunkState & ~ChunkState.MeshDataPending) | ChunkState.Meshed;
-                OnMeshChanged(this, new ChunkChangedEventArgs(OriginPoint, Enumerable.Empty<int3>()));
+                OnMeshChanged(this, new ChunkChangedEventArgs(OriginPoint, Enumerable.Empty<float3>()));
             }
 
             if (!ChunkState.HasState(ChunkState.Meshing)
                 && !ChunkState.HasState(ChunkState.MeshDataPending)
                 && (!ChunkState.HasState(ChunkState.Meshed) || ChunkState.HasState(ChunkState.UpdateMesh))
-                && WorldController.Current.CheckNeighborsTerrainComplete(OriginPoint))
+                && WorldController.Current.GetNeighbors(OriginPoint).All(chunkController =>
+                    chunkController.ChunkState.HasState(ChunkState.TerrainComplete)))
             {
-                if (Blocks.IsUniform && (Blocks.Value == BlockController.AirID))
+                if (Blocks.IsUniform
+                    && ((Blocks.Value == BlockController.AirID)
+                        || WorldController.Current.GetNeighbors(OriginPoint)
+                            .All(chunkController => chunkController.Blocks.IsUniform)))
                 {
-                    ChunkState = (ChunkState & ~ChunkState.Meshing) | ChunkState.MeshDataPending;
+                    ChunkState = (ChunkState & ~ChunkState.MeshDataPending) | ChunkState.Meshed;
                 }
                 else
                 {
@@ -271,14 +274,14 @@ namespace Wyd.Controllers.World.Chunk
             ModifyBlockPosition(blockAction.GlobalPosition, blockAction.Id);
 
             OnBlocksChanged(this,
-                TryGetNeighborsRequiringUpdateNormals(blockAction.GlobalPosition, out IEnumerable<int3> normals)
+                TryGetNeighborsRequiringUpdateNormals(blockAction.GlobalPosition, out IEnumerable<float3> normals)
                     ? new ChunkChangedEventArgs(OriginPoint, normals)
-                    : new ChunkChangedEventArgs(OriginPoint, Enumerable.Empty<int3>()));
+                    : new ChunkChangedEventArgs(OriginPoint, Enumerable.Empty<float3>()));
         }
 
-        private bool TryGetNeighborsRequiringUpdateNormals(float3 globalPosition, out IEnumerable<int3> normals)
+        private bool TryGetNeighborsRequiringUpdateNormals(float3 globalPosition, out IEnumerable<float3> normals)
         {
-            normals = Enumerable.Empty<int3>();
+            normals = Enumerable.Empty<float3>();
 
             float3 localPosition = globalPosition - (OriginPoint + (WydMath.ToFloat(SizeCubed) / 2f));
             float3 localPositionSign = math.sign(localPosition);
@@ -289,7 +292,7 @@ namespace Wyd.Controllers.World.Chunk
                 return false;
             }
 
-            normals = WydMath.ToComponents(WydMath.ToInt(math.floor(localPositionAbs / 16f) * localPositionSign));
+            normals = WydMath.ToComponents(math.floor(localPositionAbs / 16f) * localPositionSign);
             return true;
         }
 
@@ -369,9 +372,9 @@ namespace Wyd.Controllers.World.Chunk
             TerrainChanged?.Invoke(sender, args);
         }
 
-        private void OnTerrainFinished(object sender, AsyncJobEventArgs args)
+        private void OnTerrainGenerationFinished(object sender, AsyncJobEventArgs args)
         {
-            args.AsyncJob.WorkFinished -= OnTerrainFinished;
+            args.AsyncJob.WorkFinished -= OnTerrainGenerationFinished;
 
             if (!Active)
             {
@@ -380,7 +383,7 @@ namespace Wyd.Controllers.World.Chunk
 
             ((ChunkBuildingJob)args.AsyncJob).GetGeneratedBlockData(out _Blocks);
             ChunkState = (ChunkState & ~ChunkState.TerrainMask) | ChunkState.TerrainComplete;
-            OnLocalTerrainChanged(sender, new ChunkChangedEventArgs(OriginPoint, Directions.AllDirectionAxes));
+            OnLocalTerrainChanged(sender, new ChunkChangedEventArgs(OriginPoint, Directions.AllDirectionAxes.Select(WydMath.ToFloat)));
         }
 
         private void OnMeshChanged(object sender, ChunkChangedEventArgs args)

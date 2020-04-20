@@ -6,6 +6,7 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
+using System.Threading;
 using Serilog;
 using Unity.Mathematics;
 using Wyd.Controllers.State;
@@ -40,29 +41,12 @@ namespace Wyd.Controllers.World
         private ConcurrentStack<float3> _ChunksPendingActivation;
         private ConcurrentStack<float3> _ChunksPendingDeactivation;
         private List<IEntity> _EntityLoaders;
-        private object _WorldStateHandle;
-        private WorldState _WorldState;
+        private long _WorldState;
 
         public WorldState WorldState
         {
-            get
-            {
-                WorldState tmp;
-
-                lock (_WorldStateHandle)
-                {
-                    tmp = _WorldState;
-                }
-
-                return tmp;
-            }
-            set
-            {
-                lock (_WorldStateHandle)
-                {
-                    _WorldState = value;
-                }
-            }
+            get => (WorldState)Interlocked.Read(ref _WorldState);
+            set => Interlocked.Exchange(ref _WorldState, (long)value);
         }
 
         public bool ReadyForGeneration =>
@@ -104,10 +88,13 @@ namespace Wyd.Controllers.World
             _ChunkCache = new ObjectCache<ChunkController>(false, -1,
                 (ref ChunkController chunkController) =>
                 {
-                    if (chunkController != default)
+                    if (chunkController == default)
                     {
-                        chunkController.Deactivate();
+                        return ref chunkController;
                     }
+
+                    chunkController.Deactivate();
+                    FlagNeighborsForMeshUpdate(chunkController.OriginPoint);
 
                     return ref chunkController;
                 },
@@ -118,7 +105,6 @@ namespace Wyd.Controllers.World
             _ChunksPendingActivation = new ConcurrentStack<float3>();
             _ChunksPendingDeactivation = new ConcurrentStack<float3>();
             _EntityLoaders = new List<IEntity>();
-            _WorldStateHandle = new object();
 
             Seed = new WorldSeed(SeedString);
         }
@@ -162,6 +148,9 @@ namespace Wyd.Controllers.World
             {
                 WorldState &= ~WorldState.RequiresStateVerification;
                 VerifyAllChunkStatesAroundLoaders();
+            } else if (WorldState.HasState(WorldState.VerifyingState))
+            {
+                yield break;
             }
 
             while (_ChunksPendingActivation.Count > 0)
@@ -216,28 +205,8 @@ namespace Wyd.Controllers.World
             _Chunks.Remove(chunkOrigin);
 
             // Chunk is automatically deactivated by ObjectCache
+            // additionally, neighbors are flagged for update by ObjectCache
             _ChunkCache.CacheItem(ref chunkController);
-
-            FlagOriginAndNeighborsForMeshUpdate(chunkOrigin, Directions.AllDirectionAxes);
-        }
-
-        private void FlagOriginAndNeighborsForMeshUpdate(float3 origin, IEnumerable<int3> directions)
-        {
-            FlagChunkForUpdateMesh(origin);
-
-            foreach (float3 normal in directions)
-            {
-                FlagChunkForUpdateMesh(origin + (normal * ChunkController.SizeCubed));
-            }
-        }
-
-        private void FlagChunkForUpdateMesh(float3 origin)
-        {
-            if (TryGetChunk(WydMath.RoundBy(origin, WydMath.ToFloat(ChunkController.SizeCubed)),
-                out ChunkController chunkController))
-            {
-                chunkController.FlagMeshForUpdate();
-            }
         }
 
         public IEnumerable<ChunkController> GetNeighbors(float3 origin)
@@ -251,9 +220,24 @@ namespace Wyd.Controllers.World
             }
         }
 
-        public bool CheckNeighborsTerrainComplete(float3 origin) =>
-            GetNeighbors(origin)
-                .All(chunkController => chunkController.ChunkState.HasState(ChunkState.TerrainComplete));
+        public IEnumerable<ChunkController> GetNeighbors(float3 origin, IEnumerable<float3> normals)
+        {
+            foreach (float3 normal in normals)
+            {
+                if (TryGetChunk(origin + (normal * ChunkController.SIZE), out ChunkController chunkController))
+                {
+                    yield return chunkController;
+                }
+            }
+        }
+
+        private void FlagNeighborsForMeshUpdate(float3 chunkOrigin)
+        {
+            foreach (ChunkController neighborChunk in GetNeighbors(chunkOrigin))
+            {
+                neighborChunk.FlagMeshForUpdate();
+            }
+        }
 
 
         #region State Management
@@ -405,7 +389,10 @@ namespace Wyd.Controllers.World
 
         private void OnChunkTerrainChanged(object sender, ChunkChangedEventArgs args)
         {
-            FlagOriginAndNeighborsForMeshUpdate(args.OriginPoint, args.NeighborDirectionsToUpdate);
+            foreach (ChunkController chunkController in GetNeighbors(args.OriginPoint, args.NeighborDirectionsToUpdate))
+            {
+                chunkController.FlagMeshForUpdate();
+            }
         }
 
         #endregion

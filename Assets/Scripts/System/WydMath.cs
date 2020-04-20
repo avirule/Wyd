@@ -3,6 +3,7 @@
 using System;
 using System.Collections.Generic;
 using Unity.Mathematics;
+using UnityEngine.UIElements;
 using Wyd.System.Extensions;
 
 #endregion
@@ -18,6 +19,7 @@ namespace Wyd.System
             int y = zQuotient % bounds.y;
             return new int3(x, y, z);
         }
+
 
         #region ToComponents()
 
@@ -39,7 +41,26 @@ namespace Wyd.System
             }
         }
 
+        public static IEnumerable<float3> ToComponents(float3 a)
+        {
+            if (a.x != 0f)
+            {
+                yield return new float3(a.x, 0, 0);
+            }
+
+            if (a.y != 0f)
+            {
+                yield return new float3(0, a.y, 0);
+            }
+
+            if (a.z != 0f)
+            {
+                yield return new float3(0, 0, a.z);
+            }
+        }
+
         #endregion
+
 
         #region ToFloat()
 
@@ -47,17 +68,21 @@ namespace Wyd.System
 
         #endregion
 
+
         #region ToInt()
 
         public static int3 ToInt(float3 a) => new int3((int)a.x, (int)a.y, (int)a.z);
 
         #endregion
 
+
         #region RoundBy()
 
+        public static float3 RoundBy(float3 a, float b) => math.floor(a / b) * b;
         public static float3 RoundBy(float3 a, float3 b) => math.floor(a / b) * b;
 
         #endregion
+
 
         #region Product()
 
@@ -66,6 +91,7 @@ namespace Wyd.System
         public static int Product(int3 a) => a.x * a.y * a.z;
 
         #endregion
+
 
         #region Bitwise / Bytes
 
