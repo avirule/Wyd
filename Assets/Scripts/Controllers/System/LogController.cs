@@ -37,7 +37,18 @@ namespace Wyd.Controllers.System
 
             SetupStaticLogger();
 
-            AsyncJobScheduler.Logged += OnAsyncJobSchedulerLogged;
+            AsyncJobScheduler.MaximumProcessingJobsChanged += (sender, newMaximumProcessingJobs) =>
+            {
+                Log.Information(
+                    $"'{nameof(AsyncJobScheduler.MaximumProcessingJobs)}' modified ({newMaximumProcessingJobs}).");
+            };
+
+            AsyncJobScheduler.JobQueued += (sender, args) =>
+            {
+                Log.Information(
+                    $"Queued new {nameof(AsyncJob)} for completion (type: {args.AsyncJob.GetType().Name})");
+            };
+
             Application.logMessageReceived += LogHandler;
         }
 
@@ -107,11 +118,6 @@ namespace Wyd.Controllers.System
             {
                 _KillApplication = true;
             }
-        }
-
-        private static void OnAsyncJobSchedulerLogged(object sender, AsyncJobSchedulerLogEventArgs args)
-        {
-            Log.Write((LogEventLevel)args.LogLevel, args.Text);
         }
     }
 }

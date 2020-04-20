@@ -20,9 +20,9 @@ namespace Wyd.System.Jobs
         protected readonly Func<Task> Invocation;
 
         /// <summary>
-        ///     Identity of <see cref="Job" />.
+        ///     Identity of <see cref="AsyncJob" />.
         /// </summary>
-        public object Identity { get; }
+        public Guid Identity { get; }
 
         /// <summary>
         ///     Token that can be passed into constructor to allow jobs to observe cancellation.
@@ -47,7 +47,7 @@ namespace Wyd.System.Jobs
         public event AsyncJobEventHandler WorkFinished;
 
         /// <summary>
-        ///     Instantiates a new instance of the <see cref="Job" /> class.
+        ///     Instantiates a new instance of the <see cref="AsyncJob" /> class.
         /// </summary>
         public AsyncJob(CancellationToken cancellationToken, Func<Task> invocation = null)
         {
@@ -63,6 +63,11 @@ namespace Wyd.System.Jobs
         /// </summary>
         public async Task Execute()
         {
+            if (CancellationToken.IsCancellationRequested)
+            {
+                return;
+            }
+
             _Stopwatch.Restart();
 
             await Process();
@@ -71,9 +76,9 @@ namespace Wyd.System.Jobs
 
             await ProcessFinished();
 
-            ExecutionTime = _Stopwatch.Elapsed;
             _Stopwatch.Stop();
-            _Stopwatch.Reset();
+
+            ExecutionTime = _Stopwatch.Elapsed;
 
             IsWorkFinished = true;
             WorkFinished?.Invoke(this, new AsyncJobEventArgs(this));
