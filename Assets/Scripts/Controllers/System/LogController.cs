@@ -24,7 +24,11 @@ namespace Wyd.Controllers.System
 
         public static IReadOnlyList<LogEvent> LoggedEvents => _LogEvents;
 
+#if UNITY_EDITOR
+
         public LogEventLevel MinimumLevel;
+
+#endif
 
         private void Awake()
         {
@@ -54,13 +58,13 @@ namespace Wyd.Controllers.System
         {
             Log.Logger = new LoggerConfiguration()
                 // verbose log output
-                .WriteTo.Async(configuration =>
-                    configuration.File(
-                        $@"{_LogPath}\verbose\runtime-verbose_.log",
-                        rollingInterval: RollingInterval.Day,
-                        outputTemplate: _DEFAULT_TEMPLATE,
-                        retainedFileCountLimit: 31,
-                        rollOnFileSizeLimit: true))
+                // .WriteTo.Async(configuration =>
+                //     configuration.File(
+                //         $@"{_LogPath}\verbose\runtime-verbose_.log",
+                //         rollingInterval: RollingInterval.Day,
+                //         outputTemplate: _DEFAULT_TEMPLATE,
+                //         retainedFileCountLimit: 31,
+                //         rollOnFileSizeLimit: true))
                 // default log output
                 .WriteTo.Async(configuration =>
                     configuration.File(

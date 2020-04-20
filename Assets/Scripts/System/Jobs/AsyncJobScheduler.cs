@@ -91,7 +91,10 @@ namespace Wyd.System.Jobs
                 CancellationTokenSource tokenSource = new CancellationTokenSource();
                 _workerCancellationTokens.Push(tokenSource);
 
-                Task.Run(async () => await ProcessItemQueue(tokenSource.Token), AbortToken);
+                Task.Factory.StartNew(async () => await ProcessItemQueue(tokenSource.Token),
+                    TaskCreationOptions.LongRunning);
+
+                //Task.Run(async () => await ProcessItemQueue(tokenSource.Token), AbortToken);
             }
         }
 

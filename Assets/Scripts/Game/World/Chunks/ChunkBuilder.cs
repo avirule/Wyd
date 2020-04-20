@@ -27,30 +27,31 @@ namespace Wyd.Game.World.Chunks
         private readonly Random _SeededRandom;
         private readonly Stopwatch _Stopwatch;
         private readonly Dictionary<string, ushort> _BlockIDCache;
+        private readonly float3 _OriginPoint;
         private readonly ComputeBuffer _NoiseValuesBuffer;
         private readonly float _Frequency;
         private readonly float _Persistence;
         private readonly CancellationToken _CancellationToken;
-        private readonly OctreeNode _Blocks;
 
+        private OctreeNode _Blocks;
         private bool _GpuAcceleration;
         private float[] _NoiseMap;
 
         public TimeSpan NoiseRetrievalTimeSpan { get; private set; }
         public TimeSpan TerrainGenerationTimeSpan { get; private set; }
 
-        public ChunkBuilder(CancellationToken cancellationToken, float3 originPoint, float size, float frequency,
+        public ChunkBuilder(CancellationToken cancellationToken, float3 originPoint, float frequency,
             float persistence, bool gpuAcceleration = false, ComputeBuffer noiseValuesBuffer = null)
         {
             _BlockIDCache = new Dictionary<string, ushort>();
             _SeededRandom = new Random(WorldController.Current.Seed);
             _Stopwatch = new Stopwatch();
+            _OriginPoint = originPoint;
             _Frequency = frequency;
             _Persistence = persistence;
             _GpuAcceleration = gpuAcceleration;
             _NoiseValuesBuffer = noiseValuesBuffer;
             _CancellationToken = cancellationToken;
-            _Blocks = new OctreeNode(originPoint + ChunkController.SizeExtents, size, BlockController.AirID);
         }
 
         public void GetGeneratedBlockData(out OctreeNode blocks)
@@ -86,41 +87,24 @@ namespace Wyd.Game.World.Chunks
             _Stopwatch.Stop();
         }
 
-        public void Generate()
+        public void TimeMeasuredGenerate()
         {
-            if (_Blocks == null)
-            {
-                Log.Warning($"'{nameof(_Blocks)}' has not been set (chunk may have been cached/destroyed). Aborting generation.");
-
-                MainThreadActionsController.Current.PushAction(new MainThreadAction(null,
-                    () => _NoiseValuesBuffer?.Release()));
-
-                return;
-            }
+            _Stopwatch.Restart();
 
             GenerateNoise();
 
+            _Stopwatch.Stop();
+
+            NoiseRetrievalTimeSpan = _Stopwatch.Elapsed;
+
             _Stopwatch.Restart();
 
-            for (int index = WydMath.Product(ChunkController.SizeCubed) - 1; index >= 0; index--)
-            {
-                if (_CancellationToken.IsCancellationRequested)
-                {
-                    return;
-                }
-
-                if (_NoiseMap[index] < 0.01f)
-                {
-                    continue;
-                }
-
-                float3 globalPosition = _Blocks.Volume.MinPoint + WydMath.IndexTo3D(index, ChunkController.SizeCubed);
-                _Blocks.UncheckedSetPoint(globalPosition, GetBlockIDAtPosition(globalPosition, index));
-            }
+            Generate();
 
             _noiseValuesCache.CacheItem(ref _NoiseMap);
 
             _Stopwatch.Stop();
+
             TerrainGenerationTimeSpan = _Stopwatch.Elapsed;
         }
 
@@ -145,8 +129,6 @@ namespace Wyd.Game.World.Chunks
             }
             else
             {
-                _Stopwatch.Restart();
-
                 for (int index = 0; index < WydMath.Product(_Blocks.Volume.Size); index++)
                 {
                     if (_CancellationToken.IsCancellationRequested)
@@ -163,6 +145,68 @@ namespace Wyd.Game.World.Chunks
             }
 
             NoiseRetrievalTimeSpan = _Stopwatch.Elapsed;
+        }
+
+        private void Generate()
+        {
+            int sizeProduct = WydMath.Product(ChunkController.SizeCubed);
+            bool allAir = true;
+            bool allStone = true;
+
+            for (int index = 0; index < sizeProduct; index++)
+            {
+                if (_CancellationToken.IsCancellationRequested)
+                {
+                    return;
+                }
+                else if (!allAir && !allStone)
+                {
+                    break;
+                }
+
+                if (_NoiseMap[index] >= 0.01f)
+                {
+                    allAir = false;
+                }
+
+                if (_NoiseMap[index] < 0.011f)
+                {
+                    allStone = false;
+                }
+            }
+
+            float3 volumeCenterPoint = _OriginPoint + ChunkController.SizeExtents;
+
+            if (allStone)
+            {
+                _Blocks = new OctreeNode(volumeCenterPoint, ChunkController.SIZE, GetCachedBlockID("stone"));
+                return;
+            }
+            else
+            {
+                _Blocks = new OctreeNode(volumeCenterPoint, ChunkController.SIZE, BlockController.AirID);
+
+                if (allAir)
+                {
+                    return;
+                }
+            }
+
+            for (int index = WydMath.Product(ChunkController.SizeCubed) - 1; index >= 0; index--)
+            {
+                if (_CancellationToken.IsCancellationRequested)
+                {
+                    return;
+                }
+
+                if (_NoiseMap[index] < 0.01f)
+                {
+                    continue; // air
+                }
+
+                float3 globalPosition = _Blocks.Volume.MinPoint + WydMath.IndexTo3D(index, ChunkController.SizeCubed);
+                _Blocks.UncheckedSetPoint(globalPosition, GetBlockIDAtPosition(globalPosition, index));
+            }
         }
 
         private ushort GetBlockIDAtPosition(float3 globalPosition, int index)

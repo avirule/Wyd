@@ -41,9 +41,8 @@ namespace Wyd.Game.World.Chunks
 
         protected override Task Process()
         {
-            ChunkBuilder builder = new ChunkBuilder(_CancellationToken, _OriginPoint, _Size, _Frequency, _Persistence,
-                _GpuAcceleration, _NoiseValuesBuffer);
-            builder.Generate();
+            ChunkBuilder builder = new ChunkBuilder(_CancellationToken, _OriginPoint, _Frequency, _Persistence, _GpuAcceleration, _NoiseValuesBuffer);
+            builder.TimeMeasuredGenerate();
 
             // builder has completed execution, so set field
             _Builder = builder;
