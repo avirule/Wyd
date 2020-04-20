@@ -63,12 +63,18 @@ namespace Wyd.Controllers.State
         }
 
         /// <summary>
-        ///     Registers a new <see cref="BlockDefinition"/> with the given parameters.
+        ///     Registers a new <see cref="BlockDefinition" /> with the given parameters.
         /// </summary>
-        /// <param name="blockName">Friendly name for <see cref="BlockDefinition"/>. NOTE: This value is automatically lowercased upon registration.</param>
-        /// <param name="type">Given type for <see cref="BlockDefinition"/></param>
-        /// <param name="uvsRule">Optional function to return custom textures for <see cref="BlockDefinition"/>.</param>
-        /// <param name="properties">Optional <see cref="BlockDefinition.Property"/>s to full qualify the <see cref="BlockDefinition"/>.</param>
+        /// <param name="blockName">
+        ///     Friendly name for <see cref="BlockDefinition" />. NOTE: This value is automatically lowercased
+        ///     upon registration.
+        /// </param>
+        /// <param name="type">Given type for <see cref="BlockDefinition" /></param>
+        /// <param name="uvsRule">Optional function to return custom textures for <see cref="BlockDefinition" />.</param>
+        /// <param name="properties">
+        ///     Optional <see cref="BlockDefinition.Property" />s to full qualify the
+        ///     <see cref="BlockDefinition" />.
+        /// </param>
         public void RegisterBlockDefinition(string blockName, Block.Types type,
             Func<int3, Direction, string> uvsRule, params BlockDefinition.Property[] properties)
         {
@@ -181,6 +187,6 @@ namespace Wyd.Controllers.State
         }
 
         public bool CheckBlockHasProperties(ushort blockId, BlockDefinition.Property property) =>
-            _PropertiesBuckets[property].Contains(blockId);
+            BlockIdExists(blockId) && BlockDefinitions[blockId].Properties.HasProperty(property);
     }
 }

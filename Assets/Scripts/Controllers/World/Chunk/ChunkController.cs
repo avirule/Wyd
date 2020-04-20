@@ -46,7 +46,7 @@ namespace Wyd.Controllers.World.Chunk
         public static readonly int3 SizeExtents = new int3(SIZE / 2);
 
 
-        #region INSTANCE MEMBERS
+        #region Instance Members
 
         private CancellationTokenSource _CancellationTokenSource;
         private Queue<BlockAction> _BlockActions;
@@ -83,7 +83,7 @@ namespace Wyd.Controllers.World.Chunk
         #endregion
 
 
-        #region SERIALIZED MEMBERS
+        #region Serialized Members
 
         [SerializeField]
         private ChunkTerrainController TerrainController;

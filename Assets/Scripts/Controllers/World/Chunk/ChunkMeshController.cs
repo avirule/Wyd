@@ -16,13 +16,14 @@ namespace Wyd.Controllers.World.Chunk
 {
     public class ChunkMeshController : ActivationStateChunkController
     {
-        #region INSTANCE MEMBERS
+        #region Instance Members
 
         private Mesh _Mesh;
 
         #endregion
 
-        #region SERIALIZED MEMBERS
+
+        #region Serialized Members
 
         [SerializeField]
         private MeshFilter MeshFilter;
@@ -63,6 +64,7 @@ namespace Wyd.Controllers.World.Chunk
         private long TimesMeshed;
 
         #endregion
+
 
         protected override void Awake()
         {

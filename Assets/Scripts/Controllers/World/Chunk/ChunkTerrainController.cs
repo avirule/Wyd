@@ -22,7 +22,6 @@ namespace Wyd.Controllers.World.Chunk
 
         private static ComputeShader _NoiseShader;
 
-
         protected override void Awake()
         {
             base.Awake();
