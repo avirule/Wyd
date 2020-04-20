@@ -240,19 +240,20 @@ namespace Wyd.Controllers.World
             }
         }
 
-        public bool CheckNeighborsTerrainComplete(float3 position) =>
-            (!TryGetChunk(position + (Directions.North * ChunkController.SizeCubed.z), out ChunkController northChunk)
-             || northChunk.ChunkState.HasState(ChunkState.TerrainComplete))
-            && (!TryGetChunk(position + (Directions.East * ChunkController.SizeCubed.x), out ChunkController eastChunk)
-                || eastChunk.ChunkState.HasState(ChunkState.TerrainComplete))
-            && (!TryGetChunk(position + (Directions.South * ChunkController.SizeCubed.z), out ChunkController southChunk)
-                || southChunk.ChunkState.HasState(ChunkState.TerrainComplete))
-            && (!TryGetChunk(position + (Directions.West * ChunkController.SizeCubed.x), out ChunkController westChunk)
-                || westChunk.ChunkState.HasState(ChunkState.TerrainComplete))
-            && (!TryGetChunk(position + (Directions.Up * ChunkController.SizeCubed.x), out ChunkController upChunk)
-                || upChunk.ChunkState.HasState(ChunkState.TerrainComplete))
-            && (!TryGetChunk(position + (Directions.Down * ChunkController.SizeCubed.x), out ChunkController downChunk)
-                || downChunk.ChunkState.HasState(ChunkState.TerrainComplete));
+        public IEnumerable<ChunkController> GetNeighbors(float3 origin)
+        {
+            foreach (float3 normal in Directions.AllDirectionAxes)
+            {
+                if (TryGetChunk(origin + (normal * ChunkController.SIZE), out ChunkController chunkController))
+                {
+                    yield return chunkController;
+                }
+            }
+        }
+
+        public bool CheckNeighborsTerrainComplete(float3 origin) =>
+            GetNeighbors(origin)
+                .All(chunkController => chunkController.ChunkState.HasState(ChunkState.TerrainComplete));
 
 
         #region State Management

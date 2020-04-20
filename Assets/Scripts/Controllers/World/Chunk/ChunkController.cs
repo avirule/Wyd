@@ -127,7 +127,6 @@ namespace Wyd.Controllers.World.Chunk
 
             BlocksChanged += FlagUpdateMesh;
             TerrainChanged += FlagUpdateMesh;
-
         }
 
         protected override void OnEnable()
@@ -208,8 +207,15 @@ namespace Wyd.Controllers.World.Chunk
                 && (!ChunkState.HasState(ChunkState.Meshed) || ChunkState.HasState(ChunkState.UpdateMesh))
                 && WorldController.Current.CheckNeighborsTerrainComplete(OriginPoint))
             {
-                ChunkState = (ChunkState & ~(ChunkState.Meshed | ChunkState.UpdateMesh)) | ChunkState.Meshing;
-                MeshController.BeginGeneratingMesh(Blocks, _CancellationTokenSource.Token, OnMeshingFinished);
+                if (Blocks.IsUniform && (Blocks.Value == BlockController.AirID))
+                {
+                    ChunkState = (ChunkState & ~ChunkState.Meshing) | ChunkState.MeshDataPending;
+                }
+                else
+                {
+                    ChunkState = (ChunkState & ~(ChunkState.Meshed | ChunkState.UpdateMesh)) | ChunkState.Meshing;
+                    MeshController.BeginGeneratingMesh(Blocks, _CancellationTokenSource.Token, OnMeshingFinished);
+                }
             }
         }
 

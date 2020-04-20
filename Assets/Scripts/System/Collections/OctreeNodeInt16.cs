@@ -28,15 +28,14 @@ namespace Wyd.System.Collections
         private readonly List<OctreeNode> _Nodes;
         private readonly Volume _Volume;
 
-        public Volume Volume => _Volume;
-        public bool IsUniform => _Nodes.Count == 0;
-
         public ushort Value { get; private set; }
+
+        public bool IsUniform => _Nodes.Count == 0;
+        public Volume Volume => _Volume;
 
         public OctreeNode(float3 centerPoint, float size, ushort value)
         {
             _Nodes = new List<OctreeNode>();
-
             _Volume = new Volume(centerPoint, new float3(size));
             Value = value;
         }
@@ -56,16 +55,17 @@ namespace Wyd.System.Collections
         {
             float3 offset = new float3(_Volume.Extents / 2f);
 
-            _Nodes.Clear();
-
-            _Nodes.Add(new OctreeNode(_Volume.CenterPoint + (_coordinates[0] * offset), _Volume.Extents.x, Value));
-            _Nodes.Add(new OctreeNode(_Volume.CenterPoint + (_coordinates[1] * offset), _Volume.Extents.x, Value));
-            _Nodes.Add(new OctreeNode(_Volume.CenterPoint + (_coordinates[2] * offset), _Volume.Extents.x, Value));
-            _Nodes.Add(new OctreeNode(_Volume.CenterPoint + (_coordinates[3] * offset), _Volume.Extents.x, Value));
-            _Nodes.Add(new OctreeNode(_Volume.CenterPoint + (_coordinates[4] * offset), _Volume.Extents.x, Value));
-            _Nodes.Add(new OctreeNode(_Volume.CenterPoint + (_coordinates[5] * offset), _Volume.Extents.x, Value));
-            _Nodes.Add(new OctreeNode(_Volume.CenterPoint + (_coordinates[6] * offset), _Volume.Extents.x, Value));
-            _Nodes.Add(new OctreeNode(_Volume.CenterPoint + (_coordinates[7] * offset), _Volume.Extents.x, Value));
+            _Nodes.InsertRange(0, new[]
+            {
+                new OctreeNode(_Volume.CenterPoint + (_coordinates[0] * offset), _Volume.Extents.x, Value),
+                new OctreeNode(_Volume.CenterPoint + (_coordinates[1] * offset), _Volume.Extents.x, Value),
+                new OctreeNode(_Volume.CenterPoint + (_coordinates[2] * offset), _Volume.Extents.x, Value),
+                new OctreeNode(_Volume.CenterPoint + (_coordinates[3] * offset), _Volume.Extents.x, Value),
+                new OctreeNode(_Volume.CenterPoint + (_coordinates[4] * offset), _Volume.Extents.x, Value),
+                new OctreeNode(_Volume.CenterPoint + (_coordinates[5] * offset), _Volume.Extents.x, Value),
+                new OctreeNode(_Volume.CenterPoint + (_coordinates[6] * offset), _Volume.Extents.x, Value),
+                new OctreeNode(_Volume.CenterPoint + (_coordinates[7] * offset), _Volume.Extents.x, Value)
+            });
         }
 
         public ushort GetPoint(float3 point)
