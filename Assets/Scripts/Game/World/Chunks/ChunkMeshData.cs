@@ -13,6 +13,7 @@ namespace Wyd.Game.World.Chunks
         public List<int> Triangles { get; }
         public List<int> TransparentTriangles { get; }
         public List<Vector3> UVs { get; }
+        public bool Empty { get; }
 
         public ChunkMeshData(List<Vector3> vertices, List<int> triangles, List<int> transparentTriangles,
             List<Vector3> uVs)
@@ -21,6 +22,7 @@ namespace Wyd.Game.World.Chunks
             Triangles = triangles;
             TransparentTriangles = transparentTriangles;
             UVs = uVs;
+            Empty = Vertices.Count == 0 && Triangles.Count == 0 && TransparentTriangles.Count == 0 & UVs.Count == 0;
         }
     }
 }

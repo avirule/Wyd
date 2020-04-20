@@ -265,7 +265,7 @@ namespace Wyd.Controllers.World
             }
 
             int totalRenderDistance =
-                OptionsController.Current.RenderDistance + OptionsController.Current.PreLoadChunkDistance + 1;
+                OptionsController.Current.RenderDistance + /*OptionsController.Current.PreLoadChunkDistance*/ + 1;
             _ChunkCache.MaximumSize = ((totalRenderDistance * 2) - 1) * (int)WorldHeightInChunks;
         }
 
@@ -298,7 +298,7 @@ namespace Wyd.Controllers.World
 
                 // todo this should be some setting inside loader
                 int renderRadius = OptionsController.Current.RenderDistance
-                                   + OptionsController.Current.PreLoadChunkDistance;
+                                   /*+ OptionsController.Current.PreLoadChunkDistance*/;
 
                 for (int x = -renderRadius; x < (renderRadius + 1); x++)
                 for (int z = -renderRadius; z < (renderRadius + 1); z++)
@@ -336,7 +336,7 @@ namespace Wyd.Controllers.World
             math.all(difference
                      <= (ChunkController.SizeCubed
                          * (OptionsController.Current.RenderDistance
-                            + OptionsController.Current.PreLoadChunkDistance)));
+                            /*+ OptionsController.Current.PreLoadChunkDistance*/)));
 
         #endregion
 

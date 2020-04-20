@@ -208,17 +208,17 @@ namespace Wyd.Controllers.State
 
         #region CHUNKING OPTIONS MEMBERS
 
-        public int PreLoadChunkDistance
-        {
-            get => _PreLoadChunkDistance;
-            set
-            {
-                _PreLoadChunkDistance = value;
-                _Configuration["Chunking"][nameof(PreLoadChunkDistance)].IntValue = _PreLoadChunkDistance;
-                SaveSettings();
-                OnPropertyChanged();
-            }
-        }
+        // public int PreLoadChunkDistance
+        // {
+        //     get => _PreLoadChunkDistance;
+        //     set
+        //     {
+        //         _PreLoadChunkDistance = value;
+        //         _Configuration["Chunking"][nameof(PreLoadChunkDistance)].IntValue = _PreLoadChunkDistance;
+        //         SaveSettings();
+        //         OnPropertyChanged();
+        //     }
+        // }
 
         #endregion
 
@@ -328,14 +328,14 @@ namespace Wyd.Controllers.State
 
             // Chunking
 
-            if (!GetSetting("Chunking", nameof(PreLoadChunkDistance), out _PreLoadChunkDistance)
-                || (PreLoadChunkDistance < 0)
-                || (PreLoadChunkDistance > 4))
-            {
-                LogSettingLoadError(nameof(PreLoadChunkDistance), Defaults.PRE_LOAD_CHUNK_DISTANCE);
-                PreLoadChunkDistance = Defaults.PRE_LOAD_CHUNK_DISTANCE;
-                SaveSettings();
-            }
+            // if (!GetSetting("Chunking", nameof(PreLoadChunkDistance), out _PreLoadChunkDistance)
+            //     || (PreLoadChunkDistance < 0)
+            //     || (PreLoadChunkDistance > 4))
+            // {
+            //     LogSettingLoadError(nameof(PreLoadChunkDistance), Defaults.PRE_LOAD_CHUNK_DISTANCE);
+            //     PreLoadChunkDistance = Defaults.PRE_LOAD_CHUNK_DISTANCE;
+            //     SaveSettings();
+            // }
 
             Log.Information("Configuration loaded.");
         }
@@ -399,12 +399,12 @@ namespace Wyd.Controllers.State
 
             // Chunking
 
-            _Configuration["Chunking"][nameof(PreLoadChunkDistance)].PreComment =
-                "Defines radius of chunks to pre-load (generate terrain data in-memory, but avoid meshing and rendering).\r\n"
-                + "Note: This distance begins at the edge of the render distance.";
-            _Configuration["Chunking"][nameof(PreLoadChunkDistance)].Comment = "(min 0, max 4)";
-            _Configuration["Chunking"][nameof(PreLoadChunkDistance)].IntValue =
-                Defaults.PRE_LOAD_CHUNK_DISTANCE;
+            // _Configuration["Chunking"][nameof(PreLoadChunkDistance)].PreComment =
+            //     "Defines radius of chunks to pre-load (generate terrain data in-memory, but avoid meshing and rendering).\r\n"
+            //     + "Note: This distance begins at the edge of the render distance.";
+            // _Configuration["Chunking"][nameof(PreLoadChunkDistance)].Comment = "(min 0, max 4)";
+            // _Configuration["Chunking"][nameof(PreLoadChunkDistance)].IntValue =
+            //     Defaults.PRE_LOAD_CHUNK_DISTANCE;
 
 
             Log.Information("Default configuration initialized. Saving...");

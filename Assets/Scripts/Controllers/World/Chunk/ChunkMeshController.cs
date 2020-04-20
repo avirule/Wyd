@@ -4,6 +4,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using UnityEngine;
 using UnityEngine.Rendering;
+using Wyd.Controllers.State;
 using Wyd.Game.World.Chunks;
 using Wyd.System;
 using Wyd.System.Collections;
@@ -25,6 +26,9 @@ namespace Wyd.Controllers.World.Chunk
 
         [SerializeField]
         private MeshFilter MeshFilter;
+
+        [SerializeField]
+        private MeshRenderer MeshRenderer;
 
 #if UNITY_EDITOR
 
@@ -66,6 +70,7 @@ namespace Wyd.Controllers.World.Chunk
 
             _Mesh = new Mesh();
             MeshFilter.sharedMesh = _Mesh;
+            MeshRenderer.materials = TextureController.Current.TerrainMaterials;
         }
 
         protected override void OnEnable()
@@ -110,11 +115,14 @@ namespace Wyd.Controllers.World.Chunk
 
         public void ApplyMesh(ChunkMeshData chunkMeshData)
         {
-            if ((chunkMeshData.Vertices.Count == 0)
-                || ((chunkMeshData.Triangles.Count == 0)
-                    && (chunkMeshData.TransparentTriangles.Count == 0)))
+            if (chunkMeshData.Empty)
             {
+                MeshRenderer.enabled = false;
                 return;
+            }
+            else
+            {
+                MeshRenderer.enabled = true;
             }
 
             _Mesh.Clear();

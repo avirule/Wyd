@@ -86,9 +86,6 @@ namespace Wyd.Controllers.World.Chunk
         #region SERIALIZED MEMBERS
 
         [SerializeField]
-        private MeshRenderer MeshRenderer;
-
-        [SerializeField]
         private ChunkTerrainController TerrainController;
 
         [SerializeField]
@@ -131,7 +128,6 @@ namespace Wyd.Controllers.World.Chunk
             BlocksChanged += FlagUpdateMesh;
             TerrainChanged += FlagUpdateMesh;
 
-            MeshRenderer.materials = TextureController.Current.TerrainMaterials;
         }
 
         protected override void OnEnable()
@@ -200,6 +196,7 @@ namespace Wyd.Controllers.World.Chunk
 
             if (ChunkState.HasState(ChunkState.MeshDataPending) && (_PendingMeshData != null))
             {
+                // todo deactivate meshrenderer if no mesh data
                 MeshController.ApplyMesh(_PendingMeshData);
                 _PendingMeshData = null;
                 ChunkState = (ChunkState & ~ChunkState.MeshDataPending) | ChunkState.Meshed;
