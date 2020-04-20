@@ -405,7 +405,7 @@ namespace Wyd.Controllers.World
 
         public bool TryGetBlock(float3 globalPosition, out ushort blockId)
         {
-            blockId = default;
+            blockId = BlockController.NullID;
             float3 chunkPosition = WydMath.RoundBy(globalPosition, ChunkController.Size);
 
             return TryGetChunk(chunkPosition, out ChunkController chunkController)

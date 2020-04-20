@@ -127,7 +127,7 @@ namespace Wyd.Game
                         float3 trueCenterGlobalPosition = globalPosition + new float3(0.5f);
 
                         if (!WorldController.Current.TryGetBlock(globalPosition, out ushort blockId)
-                            || (blockId == BlockController.AIR_ID)
+                            || (blockId == BlockController.AirID)
                             || !BlockController.Current.CheckBlockHasProperties(blockId,
                                 BlockDefinition.Property.Collideable))
                         {

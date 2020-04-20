@@ -15,7 +15,9 @@ namespace Wyd.Controllers.State
 {
     public class BlockController : SingletonController<BlockController>
     {
-        public const ushort AIR_ID = 0;
+        public static ushort NullID;
+        public static ushort AirID;
+
         public Dictionary<string, ushort> BlockNames;
         public List<IBlockDefinition> BlockDefinitions;
 
@@ -32,6 +34,9 @@ namespace Wyd.Controllers.State
 
             RegisterBlockDefinition("Null", Block.Types.None, null);
             RegisterBlockDefinition("Air", Block.Types.None, null, BlockDefinition.Property.Transparent);
+
+            TryGetBlockId("Null", out NullID);
+            TryGetBlockId("Air", out AirID);
         }
 
         private void InitializeBlockPropertiesBuckets()
@@ -57,9 +62,18 @@ namespace Wyd.Controllers.State
             }
         }
 
+        /// <summary>
+        ///     Registers a new <see cref="BlockDefinition"/> with the given parameters.
+        /// </summary>
+        /// <param name="blockName">Friendly name for <see cref="BlockDefinition"/>. NOTE: This value is automatically lowercased upon registration.</param>
+        /// <param name="type">Given type for <see cref="BlockDefinition"/></param>
+        /// <param name="uvsRule">Optional function to return custom textures for <see cref="BlockDefinition"/>.</param>
+        /// <param name="properties">Optional <see cref="BlockDefinition.Property"/>s to full qualify the <see cref="BlockDefinition"/>.</param>
         public void RegisterBlockDefinition(string blockName, Block.Types type,
             Func<int3, Direction, string> uvsRule, params BlockDefinition.Property[] properties)
         {
+            blockName = blockName.ToLowerInvariant();
+
             ushort assignedBlockId;
 
             try
@@ -119,7 +133,7 @@ namespace Wyd.Controllers.State
 
         public bool TryGetBlockId(string blockName, out ushort blockId)
         {
-            if (!BlockNames.TryGetValue(blockName, out blockId))
+            if (!BlockNames.TryGetValue(blockName.ToLowerInvariant(), out blockId))
             {
                 blockId = 0;
                 return false;

@@ -184,6 +184,7 @@ namespace Wyd.Controllers.Entity
             OnEntityDestroyed();
         }
 
+
         #region UPDATE
 
         private void UpdateMovement()
@@ -256,9 +257,9 @@ namespace Wyd.Controllers.Entity
                 if (((math.csum(_LastReachRayHit.normal) > 0f)
                      && WorldController.Current.TryPlaceBlock(
                          position = WydMath.ToInt(math.floor(_LastReachRayHit.point) - (float3)_LastReachRayHit.normal),
-                         BlockController.AIR_ID))
+                         BlockController.AirID))
                     || WorldController.Current.TryPlaceBlock(
-                        position = WydMath.ToInt(math.floor(_LastReachRayHit.point)), BlockController.AIR_ID))
+                        position = WydMath.ToInt(math.floor(_LastReachRayHit.point)), BlockController.AirID))
                 {
                     WorldController.Current.TryGetBlock(position, out ushort blockId);
 
@@ -294,6 +295,7 @@ namespace Wyd.Controllers.Entity
 
         #endregion
 
+
         #region FIXED UPDATE
 
         private void CheckChangedPosition()
@@ -320,6 +322,7 @@ namespace Wyd.Controllers.Entity
         }
 
         #endregion
+
 
         #region MOVEMENT
 

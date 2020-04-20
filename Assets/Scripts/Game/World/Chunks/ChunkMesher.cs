@@ -76,7 +76,7 @@ namespace Wyd.Game.World.Chunks
 
         public void GenerateMesh()
         {
-            if ((_Blocks == null) || (_Blocks.IsUniform && (_Blocks.Value == BlockController.AIR_ID)))
+            if ((_Blocks == null) || (_Blocks.IsUniform && (_Blocks.Value == BlockController.AirID)))
             {
                 return;
             }
@@ -97,7 +97,7 @@ namespace Wyd.Game.World.Chunks
 
                 index += 1;
 
-                if (block.Id == BlockController.AIR_ID)
+                if (block.Id == BlockController.AirID)
                 {
                     continue;
                 }
@@ -853,40 +853,38 @@ namespace Wyd.Game.World.Chunks
         private int GetTraversals(int index, int3 globalPosition, int slice, Direction faceDirection,
             Direction traversalDirection, int traversalFactor, int limitingSliceValue, int id = -1)
         {
-            // 1 being the current block at `index`
-            int traversals = 1;
-
             if (!_AggressiveFaceMerging)
             {
-                return traversals;
+                return 1;
             }
 
-            // incrementing on x, so the traversal factor is 1
-            // if we were incrementing on z, the factor would be _Size.x
-            // and on y it would be (_Size.x * _Size.z)
-            int traversalIndex = index + (traversals * traversalFactor);
+            int traversals = 0;
+            int traversalIndex = 0;
 
-            while ( // Set traversalIndex and ensure it is within the chunk's bounds
+            int3 traversalNormal = traversalDirection.ToInt3();
+            int3 faceNormal = faceDirection.ToInt3();
+
+            do
+            {
+                // increment and set traversal values
+                traversals += 1;
+
+                // incrementing on x, so the traversal factor is 1
+                // if we were incrementing on z, the factor would be _Size.x
+                // and on y it would be (_Size.x * _Size.z)
+                traversalIndex = index + (traversals * traversalFactor);
+
+                // set face to traversed and continue traversal
+                _Mask[traversalIndex].Faces.SetFace(faceDirection, true);
+            } while (
+                // Set traversalIndex and ensure it is within the chunk's bounds
                 ((slice + traversals) < limitingSliceValue)
-                // This check removes the need to check if the adjacent block is transparent,
-                // as our current block will never be transparent
                 && (_Mask[index].Id == _Mask[traversalIndex].Id)
                 && !_Mask[traversalIndex].Faces.HasFace(faceDirection)
-                // ensure the block to the north of our current block is transparent
-                && WorldController.Current.TryGetBlock(
-                    globalPosition + (traversals * traversalDirection.ToInt3()) + faceDirection.ToInt3(),
-                    out ushort blockId)
-                && (((id == -1)
-                     && BlockController.Current.CheckBlockHasProperties(blockId,
-                         BlockDefinition.Property.Transparent))
-                    || ((id > -1) && (id != blockId))))
-            {
-                _Mask[traversalIndex].Faces.SetFace(faceDirection, true);
-
-                // increment and set traversal values
-                traversals++;
-                traversalIndex = index + (traversals * traversalFactor);
-            }
+                // ensure the block adjacent to our current block is transparent
+                // todo optimize this to use local mask
+                && WorldController.Current.TryGetBlock(globalPosition + (traversals * traversalNormal) + faceNormal, out ushort blockId)
+                && BlockController.Current.CheckBlockHasProperties(blockId, BlockDefinition.Property.Transparent));
 
             return traversals;
         }

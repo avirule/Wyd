@@ -73,7 +73,7 @@ namespace Wyd.Game.World.Chunks
                 return id;
             }
 
-            return BlockController.AIR_ID;
+            return BlockController.AirID;
         }
 
         private void GetComputeBufferData()
