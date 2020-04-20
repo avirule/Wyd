@@ -64,7 +64,7 @@ namespace Wyd.Game.World.Chunks
             return Task.CompletedTask;
         }
 
-        public void GetGeneratedBlockData(out OctreeNode blocks)
+        public void GetGeneratedBlockData(out OctreeNode<ushort> blocks)
         {
             if (_Builder == null)
             {

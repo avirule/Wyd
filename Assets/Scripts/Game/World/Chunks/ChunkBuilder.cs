@@ -33,7 +33,7 @@ namespace Wyd.Game.World.Chunks
         private readonly float _Persistence;
         private readonly CancellationToken _CancellationToken;
 
-        private OctreeNode _Blocks;
+        private OctreeNode<ushort> _Blocks;
         private bool _GpuAcceleration;
         private float[] _NoiseMap;
 
@@ -54,7 +54,7 @@ namespace Wyd.Game.World.Chunks
             _CancellationToken = cancellationToken;
         }
 
-        public void GetGeneratedBlockData(out OctreeNode blocks)
+        public void GetGeneratedBlockData(out OctreeNode<ushort> blocks)
         {
             blocks = _Blocks;
         }
@@ -171,12 +171,12 @@ namespace Wyd.Game.World.Chunks
 
             if (allStone)
             {
-                _Blocks = new OctreeNode(volumeCenterPoint, ChunkController.SIZE, GetCachedBlockID("stone"));
+                _Blocks = new OctreeNode<ushort>(volumeCenterPoint, ChunkController.SIZE, GetCachedBlockID("stone"));
                 return;
             }
             else
             {
-                _Blocks = new OctreeNode(volumeCenterPoint, ChunkController.SIZE, BlockController.AirID);
+                _Blocks = new OctreeNode<ushort>(volumeCenterPoint, ChunkController.SIZE, BlockController.AirID);
 
                 if (allAir)
                 {
@@ -196,30 +196,25 @@ namespace Wyd.Game.World.Chunks
                     continue; // air
                 }
 
-                float3 globalPosition = _Blocks.Volume.MinPoint + WydMath.IndexTo3D(index, ChunkController.SizeCubed);
-                _Blocks.UncheckedSetPoint(globalPosition, GetBlockIDAtPosition(globalPosition, index));
+                float3 localPosition = WydMath.IndexTo3D(index, ChunkController.SizeCubed);
+                float3 globalPosition = _Blocks.Volume.MinPoint + localPosition;
+
+                if (_Blocks.UncheckedGetPoint(globalPosition) != BlockController.AirID)
+                {
+                    continue;
+                }
+
+                ushort blockId = GetBlockIDAtPosition(globalPosition);
+
+                _Blocks.UncheckedSetPoint(globalPosition, blockId);
             }
         }
 
-        private ushort GetBlockIDAtPosition(float3 globalPosition, int index)
+        private ushort GetBlockIDAtPosition(float3 globalPosition)
         {
             if ((globalPosition.y < 4) && (globalPosition.y <= _SeededRandom.Next(0, 4)))
             {
                 return GetCachedBlockID("bedrock");
-            }
-
-            // TERRAIN GEN NOTES ON NOISE RANGES
-            // Between: 0.0110f to 0.01f = surface crust
-            // Between: 0.0105f to 0.01f = grass layer
-            // Follows: 0.0105f to 0.0110f = dirt layer
-
-            if (_NoiseMap[index] < 0.0105f)
-            {
-                return GetCachedBlockID("grass");
-            }
-            else if (_NoiseMap[index] < 0.011f)
-            {
-                return GetCachedBlockID("dirt");
             }
             else
             {

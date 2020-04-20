@@ -11,6 +11,14 @@ namespace Wyd.System
 {
     public static class WydMath
     {
+        public static int3 IndexTo3D(int index, int bounds)
+        {
+            int xQuotient = Math.DivRem(index, bounds, out int x);
+            int zQuotient = Math.DivRem(xQuotient, bounds, out int z);
+            int y = zQuotient % bounds;
+            return new int3(x, y, z);
+        }
+
         public static int3 IndexTo3D(int index, int3 bounds)
         {
             int xQuotient = Math.DivRem(index, bounds.x, out int x);

@@ -50,7 +50,7 @@ namespace Wyd.Controllers.World.Chunk
 
         private CancellationTokenSource _CancellationTokenSource;
         private Queue<BlockAction> _BlockActions;
-        private OctreeNode _Blocks;
+        private OctreeNode<ushort> _Blocks;
         private Mesh _Mesh;
 
         private long _Active;
@@ -63,7 +63,7 @@ namespace Wyd.Controllers.World.Chunk
             set => Interlocked.Exchange(ref _Active, Convert.ToInt64(value));
         }
 
-        public ref OctreeNode Blocks => ref _Blocks;
+        public ref OctreeNode<ushort> Blocks => ref _Blocks;
 
         public ChunkState ChunkState
         {

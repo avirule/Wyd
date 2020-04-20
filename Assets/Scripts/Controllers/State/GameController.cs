@@ -5,7 +5,6 @@ using Unity.Mathematics;
 using UnityEditor;
 using UnityEngine;
 using UnityEngine.SceneManagement;
-using Wyd.Controllers.World;
 using Wyd.Game;
 using Wyd.Game.World.Blocks;
 
@@ -27,37 +26,13 @@ namespace Wyd.Controllers.State
             RegisterDefaultBlocks();
         }
 
-        private void RegisterDefaultBlocks()
+        private static void RegisterDefaultBlocks()
         {
             BlockController.Current.RegisterBlockDefinition("bedrock", Block.Types.None, null,
                 BlockDefinition.Property.Collideable);
 
-            BlockController.Current.RegisterBlockDefinition("grass", Block.Types.Raw,
-                (position, direction) =>
-                {
-                    int3 positionAbove = position + Directions.Up;
-                    WorldController.Current.TryGetBlock(positionAbove, out ushort blockId);
-
-                    if (!BlockController.Current.CheckBlockHasProperties(blockId, BlockDefinition.Property.Transparent))
-                    {
-                        return "dirt";
-                    }
-
-                    switch (direction)
-                    {
-                        case Direction.North:
-                        case Direction.East:
-                        case Direction.South:
-                        case Direction.West:
-                        //return "grass_side";
-                        case Direction.Up:
-                            return "grass";
-                        case Direction.Down:
-                            return "dirt";
-                        default:
-                            throw new ArgumentOutOfRangeException(nameof(direction), direction, null);
-                    }
-                }, BlockDefinition.Property.Collectible, BlockDefinition.Property.Collideable,
+            BlockController.Current.RegisterBlockDefinition("grass", Block.Types.Raw, GrassUVsRule,
+                BlockDefinition.Property.Collectible, BlockDefinition.Property.Collideable,
                 BlockDefinition.Property.Destroyable);
 
             BlockController.Current.RegisterBlockDefinition("dirt", Block.Types.Raw, null,
@@ -118,6 +93,24 @@ namespace Wyd.Controllers.State
 
             BlockController.Current.RegisterBlockDefinition("water", Block.Types.Raw, null,
                 BlockDefinition.Property.Transparent);
+        }
+
+        private static string GrassUVsRule(int3 position, Direction direction)
+        {
+            switch (direction)
+            {
+                case Direction.North:
+                case Direction.East:
+                case Direction.South:
+                case Direction.West:
+                    return "grass_side";
+                case Direction.Up:
+                    return "grass";
+                case Direction.Down:
+                    return "dirt";
+                default:
+                    throw new ArgumentOutOfRangeException(nameof(direction), direction, null);
+            }
         }
 
         public static void QuitToMainMenu()
