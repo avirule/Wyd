@@ -79,12 +79,8 @@ namespace Wyd.Game.World.Chunks
 
         private void GetComputeBufferData()
         {
-            _Stopwatch.Restart();
-
             _NoiseValuesBuffer?.GetData(_NoiseMap);
             _NoiseValuesBuffer?.Release();
-
-            _Stopwatch.Stop();
         }
 
         public void TimeMeasuredGenerate()
@@ -140,11 +136,7 @@ namespace Wyd.Game.World.Chunks
                         GetNoiseValueByGlobalPosition(_Blocks.Volume.MinPoint
                                                       + WydMath.IndexTo3D(index, ChunkController.SizeCubed));
                 }
-
-                _Stopwatch.Stop();
             }
-
-            NoiseRetrievalTimeSpan = _Stopwatch.Elapsed;
         }
 
         private void Generate()

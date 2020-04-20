@@ -22,7 +22,9 @@ namespace Wyd.Game.World.Chunks
             Triangles = triangles;
             TransparentTriangles = transparentTriangles;
             UVs = uVs;
-            Empty = Vertices.Count == 0 && Triangles.Count == 0 && TransparentTriangles.Count == 0 & UVs.Count == 0;
+            Empty = (Vertices.Count == 0)
+                    && (Triangles.Count == 0)
+                    && ((TransparentTriangles.Count == 0) & (UVs.Count == 0));
         }
     }
 }

@@ -383,7 +383,8 @@ namespace Wyd.Controllers.World.Chunk
 
             ((ChunkBuildingJob)args.AsyncJob).GetGeneratedBlockData(out _Blocks);
             ChunkState = (ChunkState & ~ChunkState.TerrainMask) | ChunkState.TerrainComplete;
-            OnLocalTerrainChanged(sender, new ChunkChangedEventArgs(OriginPoint, Directions.AllDirectionAxes.Select(WydMath.ToFloat)));
+            OnLocalTerrainChanged(sender,
+                new ChunkChangedEventArgs(OriginPoint, Directions.AllDirectionAxes.Select(WydMath.ToFloat)));
         }
 
         private void OnMeshChanged(object sender, ChunkChangedEventArgs args)

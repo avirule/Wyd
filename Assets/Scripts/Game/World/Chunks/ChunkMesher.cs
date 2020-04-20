@@ -496,7 +496,8 @@ namespace Wyd.Game.World.Chunks
 
                 if (_AggressiveFaceMerging)
                 {
-                    traversals = GetTraversals(index, globalPosition, localPosition.x, _Size.x, Direction.North, Direction.East, 1);
+                    traversals = GetTraversals(index, globalPosition, localPosition.x, _Size.x, Direction.North,
+                        Direction.East, 1);
 
                     if (traversals > 1)
                     {
@@ -513,7 +514,8 @@ namespace Wyd.Game.World.Chunks
                     else
                     {
                         // if traversal failed (no blocks found in probed direction) then look on next axis
-                        traversals = GetTraversals(index, globalPosition, localPosition.y, _Size.y, Direction.North, Direction.Up, _VerticalIndexStep);
+                        traversals = GetTraversals(index, globalPosition, localPosition.y, _Size.y, Direction.North,
+                            Direction.Up, _VerticalIndexStep);
 
                         _Vertices.Add(localPosition + new float3(0f, 0f, 1f));
                         _Vertices.Add(localPosition + new float3(0f, traversals, 1f));
@@ -555,7 +557,8 @@ namespace Wyd.Game.World.Chunks
 
                 if (_AggressiveFaceMerging)
                 {
-                    traversals = GetTraversals(index, globalPosition, localPosition.z, _Size.z, Direction.East, Direction.North, _Size.x);
+                    traversals = GetTraversals(index, globalPosition, localPosition.z, _Size.z, Direction.East,
+                        Direction.North, _Size.x);
 
                     if (traversals > 1)
                     {
@@ -567,7 +570,8 @@ namespace Wyd.Game.World.Chunks
                     }
                     else
                     {
-                        traversals = GetTraversals(index, globalPosition, localPosition.y, _Size.y, Direction.East, Direction.Up, _VerticalIndexStep);
+                        traversals = GetTraversals(index, globalPosition, localPosition.y, _Size.y, Direction.East,
+                            Direction.Up, _VerticalIndexStep);
 
                         _Vertices.Add(localPosition + new float3(1f, 0f, 0f));
                         _Vertices.Add(localPosition + new float3(1f, 0f, 1f));
@@ -607,7 +611,8 @@ namespace Wyd.Game.World.Chunks
 
                 if (_AggressiveFaceMerging)
                 {
-                    traversals = GetTraversals(index, globalPosition, localPosition.x, _Size.x, Direction.South, Direction.East, 1);
+                    traversals = GetTraversals(index, globalPosition, localPosition.x, _Size.x, Direction.South,
+                        Direction.East, 1);
 
                     if (traversals > 1)
                     {
@@ -619,7 +624,8 @@ namespace Wyd.Game.World.Chunks
                     }
                     else
                     {
-                        traversals = GetTraversals(index, globalPosition, localPosition.y, _Size.y, Direction.South, Direction.Up, _VerticalIndexStep);
+                        traversals = GetTraversals(index, globalPosition, localPosition.y, _Size.y, Direction.South,
+                            Direction.Up, _VerticalIndexStep);
 
                         _Vertices.Add(localPosition + new float3(0f, 0f, 0f));
                         _Vertices.Add(localPosition + new float3(1f, 0f, 0f));
@@ -659,7 +665,8 @@ namespace Wyd.Game.World.Chunks
 
                 if (_AggressiveFaceMerging)
                 {
-                    traversals = GetTraversals(index, globalPosition, localPosition.z, _Size.z, Direction.West, Direction.North, _Size.x);
+                    traversals = GetTraversals(index, globalPosition, localPosition.z, _Size.z, Direction.West,
+                        Direction.North, _Size.x);
 
                     if (traversals > 1)
                     {
@@ -671,7 +678,8 @@ namespace Wyd.Game.World.Chunks
                     }
                     else
                     {
-                        traversals = GetTraversals(index, globalPosition, localPosition.y, _Size.y, Direction.West, Direction.Up, _VerticalIndexStep);
+                        traversals = GetTraversals(index, globalPosition, localPosition.y, _Size.y, Direction.West,
+                            Direction.Up, _VerticalIndexStep);
 
                         _Vertices.Add(localPosition + new float3(0f, 0f, 0f));
                         _Vertices.Add(localPosition + new float3(0f, traversals, 0f));
@@ -711,7 +719,8 @@ namespace Wyd.Game.World.Chunks
 
                 if (_AggressiveFaceMerging)
                 {
-                    traversals = GetTraversals(index, globalPosition, localPosition.z, _Size.z, Direction.Up, Direction.North, _Size.x);
+                    traversals = GetTraversals(index, globalPosition, localPosition.z, _Size.z, Direction.Up,
+                        Direction.North, _Size.x);
 
                     if (traversals > 1)
                     {
@@ -723,7 +732,8 @@ namespace Wyd.Game.World.Chunks
                     }
                     else
                     {
-                        traversals = GetTraversals(index, globalPosition, localPosition.x, _Size.x, Direction.Up, Direction.East, 1);
+                        traversals = GetTraversals(index, globalPosition, localPosition.x, _Size.x, Direction.Up,
+                            Direction.East, 1);
 
                         _Vertices.Add(localPosition + new float3(0f, 1f, 0f));
                         _Vertices.Add(localPosition + new float3(traversals, 1f, 0f));
@@ -764,7 +774,8 @@ namespace Wyd.Game.World.Chunks
 
                 if (_AggressiveFaceMerging)
                 {
-                    traversals = GetTraversals(index, globalPosition, localPosition.z, _Size.z, Direction.Down, Direction.North, _Size.x);
+                    traversals = GetTraversals(index, globalPosition, localPosition.z, _Size.z, Direction.Down,
+                        Direction.North, _Size.x);
 
                     if (traversals > 1)
                     {
@@ -776,7 +787,8 @@ namespace Wyd.Game.World.Chunks
                     }
                     else
                     {
-                        traversals = GetTraversals(index, globalPosition, localPosition.x,  _Size.x, Direction.Down, Direction.East, 1);
+                        traversals = GetTraversals(index, globalPosition, localPosition.x, _Size.x, Direction.Down,
+                            Direction.East, 1);
 
                         _Vertices.Add(localPosition + new float3(0f, 0f, 0f));
                         _Vertices.Add(localPosition + new float3(0f, 0f, 1f));
@@ -837,7 +849,8 @@ namespace Wyd.Game.World.Chunks
         /// <param name="faceDirection">Direction to check faces while traversing.</param>
         /// <param name="traversalFactor">Amount of indexes to move forwards for each successful traversal in given direction.</param>
         /// <returns><see cref="int" /> representing how many successful traversals were made in the given traversal direction.</returns>
-        private int GetTraversals(int index, int3 globalPosition, int slice, int limitingSliceValue, Direction faceDirection,
+        private int GetTraversals(int index, int3 globalPosition, int slice, int limitingSliceValue,
+            Direction faceDirection,
             Direction traversalDirection, int traversalFactor)
         {
             if (!_AggressiveFaceMerging)
