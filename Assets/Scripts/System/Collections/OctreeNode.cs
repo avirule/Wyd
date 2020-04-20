@@ -228,7 +228,7 @@ namespace Wyd.System.Collections
         {
             point = math.floor(point);
 
-            if (IsUniform && Value.GetHashCode() == newValue.GetHashCode())
+            if (IsUniform && (Value.GetHashCode() == newValue.GetHashCode()))
             {
                 // operation does nothing, so return
                 return;

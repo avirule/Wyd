@@ -103,7 +103,8 @@ namespace Wyd.Controllers.World.Chunk
 #endif
         }
 
-        public void BeginGeneratingMesh(OctreeNode<ushort> blocks, CancellationToken token, AsyncJobEventHandler callback)
+        public void BeginGeneratingMesh(OctreeNode<ushort> blocks, CancellationToken token,
+            AsyncJobEventHandler callback)
         {
             ChunkMeshingJob asyncJob = new ChunkMeshingJob(token, OriginPoint, blocks, true);
 
