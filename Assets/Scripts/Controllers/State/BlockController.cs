@@ -43,7 +43,7 @@ namespace Wyd.Controllers.State
         {
             _PropertiesBuckets = new Dictionary<BlockDefinition.Property, HashSet<ushort>>();
 
-            Log.Debug($"Initializing property buckets for all {nameof(BlockDefinition.Property)}s.");
+            Log.Debug($"Initializing property buckets for all '{nameof(BlockDefinition)}.{nameof(BlockDefinition.Property)}'s.");
 
             foreach (BlockDefinition.Property property in EnumExtensions.GetEnumsList<BlockDefinition.Property>())
             {
