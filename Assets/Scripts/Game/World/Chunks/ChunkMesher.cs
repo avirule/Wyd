@@ -859,7 +859,7 @@ namespace Wyd.Game.World.Chunks
                 traversalIndex = index + (traversals * traversalFactor);
 
                 if ((_Mask[index].Id != _Mask[traversalIndex].Id)
-                    || !_Mask[traversalIndex].Faces.HasFace(faceDirection)
+                    || _Mask[traversalIndex].Faces.HasFace(faceDirection)
                     // ensure the block adjacent to our current block is transparent
                     // todo optimize this to use local mask
                     || !WorldController.Current.TryGetBlock(

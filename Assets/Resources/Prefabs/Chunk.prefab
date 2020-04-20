@@ -106,7 +106,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   MeshFilter: {fileID: -925064434372530524}
-  TerrainController: {fileID: 3105495873480507178}
+  MeshRenderer: {fileID: 5378599154586136568}
   VertexCount: 0
   TrianglesCount: 0
   UVsCount: 0
@@ -124,9 +124,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: da7f38601b0f4d2f91db1e916ea65fc0, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  MeshRenderer: {fileID: 5378599154586136568}
   TerrainController: {fileID: 3105495873480507178}
   MeshController: {fileID: 7041328555870071864}
   MinimumPoint: {x: 0, y: 0, z: 0}
   MaximumPoint: {x: 0, y: 0, z: 0}
   Extents: {x: 0, y: 0, z: 0}
+  BinaryState: 
