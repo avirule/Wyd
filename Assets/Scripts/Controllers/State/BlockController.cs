@@ -6,8 +6,8 @@ using Serilog;
 using Unity.Mathematics;
 using Wyd.Game;
 using Wyd.Game.World.Blocks;
-using Wyd.Graphics;
 using Wyd.System.Extensions;
+using Wyd.System.Graphics;
 
 #endregion
 
@@ -32,11 +32,11 @@ namespace Wyd.Controllers.State
 
             InitializeBlockPropertiesBuckets();
 
-            RegisterBlockDefinition("Null", Block.Types.None, null);
-            RegisterBlockDefinition("Air", Block.Types.None, null, BlockDefinition.Property.Transparent);
+            RegisterBlockDefinition("null", Block.Types.None, null);
+            RegisterBlockDefinition("air", Block.Types.None, null, BlockDefinition.Property.Transparent);
 
-            TryGetBlockId("Null", out NullID);
-            TryGetBlockId("Air", out AirID);
+            TryGetBlockId("null", out NullID);
+            TryGetBlockId("air", out AirID);
         }
 
         private void InitializeBlockPropertiesBuckets()
@@ -108,9 +108,12 @@ namespace Wyd.Controllers.State
             Log.Information($"Successfully added block `{blockName}` with ID: {assignedBlockId}");
         }
 
-        public bool GetBlockSpriteUVs(ushort blockId, int3 position, Direction direction, float3 size2d,
+        public bool GetUVs(ushort blockId, int3 position, Direction direction, float3 size2d,
             out BlockUVs blockUVs)
         {
+            // todo return UV index instead
+
+
             if (!BlockIdExists(blockId))
             {
                 Log.Error(
@@ -131,8 +134,6 @@ namespace Wyd.Controllers.State
             blockUVs = new BlockUVs(new float3(0, 0, textureId), new float3(size2d.x, 0, textureId),
                 new float3(0, size2d.z, textureId), new float3(size2d.x, size2d.z, textureId));
 
-            Log.Verbose($"Block `{textureName}:{blockId}` returned block UVs `{blockUVs}`.");
-
             return true;
         }
 
@@ -140,9 +141,13 @@ namespace Wyd.Controllers.State
 
         public bool TryGetBlockId(string blockName, out ushort blockId)
         {
-            if (!BlockNames.TryGetValue(blockName.ToLowerInvariant(), out blockId))
+            blockId = 0;
+
+            if (!BlockNames.TryGetValue(blockName, out blockId))
             {
-                blockId = 0;
+                Log.Warning(
+                    $"({nameof(BlockController)}) Failed to return block id for '{blockName}': block does not exist.");
+
                 return false;
             }
 
@@ -187,7 +192,7 @@ namespace Wyd.Controllers.State
             return false;
         }
 
-        public bool CheckBlockHasProperties(ushort blockId, BlockDefinition.Property property) =>
+        public bool CheckBlockHasProperty(ushort blockId, BlockDefinition.Property property) =>
             BlockIdExists(blockId) && BlockDefinitions[blockId].Properties.HasProperty(property);
     }
 }

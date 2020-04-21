@@ -2,12 +2,11 @@
 
 using System.Threading;
 using System.Threading.Tasks;
-using Serilog;
 using Unity.Mathematics;
 using UnityEngine;
 using Wyd.Controllers.State;
 using Wyd.Game.World.Chunks;
-using Wyd.System;
+using Wyd.System.Collections;
 using Wyd.System.Jobs;
 
 #endregion
@@ -29,20 +28,19 @@ namespace Wyd.Controllers.World.Chunk
             {
                 _NoiseShader = Resources.Load<ComputeShader>(@"Graphics\Shaders\NoiseComputationShader");
                 _NoiseShader.SetInt("_NoiseSeed", WorldController.Current.Seed);
-                _NoiseShader.SetVector("_MaximumSize", new Vector4(ChunkController.SizeCubed.x,
-                    ChunkController.SizeCubed.y,
-                    ChunkController.SizeCubed.z, 0f));
+                _NoiseShader.SetVector("_MaximumSize", new Vector4(ChunkController.Size3D.x, ChunkController.Size3D.y,
+                    ChunkController.Size3D.z, 0f));
                 _NoiseShader.SetFloat("_WorldHeight", WorldController.WORLD_HEIGHT);
             }
         }
 
-        public void BeginTerrainGeneration(CancellationToken token, AsyncJobEventHandler callback)
+        public void BeginTerrainGeneration(CancellationToken cancellationToken, AsyncJobEventHandler callback)
         {
-            ChunkBuildingJob asyncJob;
+            ChunkTerrainJob asyncJob;
 
             if (OptionsController.Current.GPUAcceleration)
             {
-                ComputeBuffer noiseBuffer = new ComputeBuffer(WydMath.Product(ChunkController.SizeCubed), 4);
+                ComputeBuffer noiseBuffer = new ComputeBuffer(ChunkController.SIZE_CUBED, 4);
                 int kernel = _NoiseShader.FindKernel("CSMain");
                 _NoiseShader.SetVector("_Offset", new float4(OriginPoint.xyzz));
                 _NoiseShader.SetFloat("_Frequency", _FREQUENCY);
@@ -51,13 +49,12 @@ namespace Wyd.Controllers.World.Chunk
                 // 1024 is the value set in the shader's [numthreads(--> 1024 <--, 1, 1)]
                 _NoiseShader.Dispatch(kernel, 1024, 1, 1);
 
-                asyncJob = new ChunkBuildingJob(token, OriginPoint, ChunkController.SizeCubed.x, _FREQUENCY,
-                    _PERSISTENCE, OptionsController.Current.GPUAcceleration, noiseBuffer);
+                asyncJob = new ChunkTerrainTerrainJob(cancellationToken, OriginPoint, _FREQUENCY, _PERSISTENCE,
+                    OptionsController.Current.GPUAcceleration, noiseBuffer);
             }
             else
             {
-                asyncJob = new ChunkBuildingJob(token, OriginPoint, ChunkController.SizeCubed.x, _FREQUENCY,
-                    _PERSISTENCE);
+                asyncJob = new ChunkTerrainTerrainJob(cancellationToken, OriginPoint, _FREQUENCY, _PERSISTENCE);
             }
 
             if (callback != null)
@@ -66,14 +63,20 @@ namespace Wyd.Controllers.World.Chunk
             }
 
 
-            Task.Run(async () => await AsyncJobScheduler.QueueAsyncJob(asyncJob), token);
+            Task.Run(async () => await AsyncJobScheduler.QueueAsyncJob(asyncJob), cancellationToken);
+        }
 
-#if UNITY_EDITOR
+        public void BeginTerrainDetailing(CancellationToken cancellationToken, AsyncJobEventHandler callback,
+            OctreeNode<ushort> blocks)
+        {
+            ChunkTerrainDetailerJob asyncJob = new ChunkTerrainDetailerJob(cancellationToken, OriginPoint, blocks);
 
-            Log.Verbose(
-                $"Queued '{nameof(ChunkBuildingJob)}' ({nameof(OriginPoint)}: {OriginPoint}, Transform: {_SelfTransform.position}).");
+            if (callback != null)
+            {
+                asyncJob.WorkFinished += callback;
+            }
 
-#endif
+            Task.Run(async () => await AsyncJobScheduler.QueueAsyncJob(asyncJob), cancellationToken);
         }
     }
 }

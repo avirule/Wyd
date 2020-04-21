@@ -2,7 +2,6 @@
 
 using System;
 using System.Collections.Generic;
-using Wyd.Controllers.World.Chunk;
 using Wyd.Game.World;
 using Wyd.Game.World.Blocks;
 
@@ -27,15 +26,7 @@ namespace Wyd.System.Extensions
             int intState = (int)worldState;
             int intFlag = (int)flag;
 
-            return (intState & intFlag) == intFlag;
-        }
-
-        public static bool HasState(this ChunkState chunkState, ChunkState flag)
-        {
-            int intState = (int)chunkState;
-            int intFlag = (int)flag;
-
-            return (intState & intFlag) == intFlag;
+            return (intState & intFlag) > 0;
         }
 
         public static bool HasProperty(this BlockDefinition.Property property, BlockDefinition.Property flag)
@@ -43,7 +34,7 @@ namespace Wyd.System.Extensions
             int intProperty = (int)property;
             int intFlag = (int)flag;
 
-            return (intProperty & intFlag) == intFlag;
+            return (intProperty & intFlag) > 0;
         }
     }
 }

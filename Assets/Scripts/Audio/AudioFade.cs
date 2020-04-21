@@ -7,16 +7,9 @@ using UnityEngine;
 
 namespace Wyd.Audio
 {
-    public enum FadeType
-    {
-        FadeIn,
-        FadeOut
-    }
-
     public static class AudioFade
     {
-        public static IEnumerator FadeIn(
-            AudioSource audioSource, float fadeTime, float initialVolume = 0f,
+        public static IEnumerator FadeIn(AudioSource audioSource, float fadeTime, float initialVolume = 0f,
             float maxVolume = 1f)
         {
             audioSource.volume = initialVolume;
@@ -29,8 +22,7 @@ namespace Wyd.Audio
             }
         }
 
-        public static IEnumerator FadeOut(
-            AudioSource audioSource, float fadeTime, float initialVolume = 1f,
+        public static IEnumerator FadeOut(AudioSource audioSource, float fadeTime, float initialVolume = 1f,
             float minimumVolume = 0f)
         {
             audioSource.volume = initialVolume;

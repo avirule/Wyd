@@ -8,7 +8,7 @@ using Wyd.Controllers.State;
 using Wyd.Game;
 using Wyd.Game.Entities.Inventory;
 using Wyd.Game.World.Blocks;
-using Wyd.Graphics;
+using Wyd.System.Graphics;
 
 #endregion
 
@@ -42,7 +42,7 @@ namespace Wyd.Controllers.UI
 
         private void Start()
         {
-            MeshRenderer.material = TextureController.Current.TerrainMaterials[0];
+            MeshRenderer.material = TextureController.Current.AllBlocksMaterials[0];
         }
 
         public void InitializeAs(ItemStack itemStack)
@@ -55,7 +55,7 @@ namespace Wyd.Controllers.UI
 
             AddTriangles(Direction.Up);
             AddVertices(Direction.Up, Vector3.zero);
-            if (BlockController.Current.GetBlockSpriteUVs(BlockId, int3.zero, Direction.Up, new float3(1f),
+            if (BlockController.Current.GetUVs(BlockId, int3.zero, Direction.Up, new float3(1f),
                 out BlockUVs blockUVs))
             {
                 _UVs.Add(blockUVs[0]);
@@ -66,7 +66,7 @@ namespace Wyd.Controllers.UI
 
             AddTriangles(Direction.North);
             AddVertices(Direction.North, Vector3.zero);
-            if (BlockController.Current.GetBlockSpriteUVs(BlockId, int3.zero, Direction.North, new float3(1f),
+            if (BlockController.Current.GetUVs(BlockId, int3.zero, Direction.North, new float3(1f),
                 out blockUVs))
             {
                 _UVs.Add(blockUVs[1]);
@@ -77,7 +77,7 @@ namespace Wyd.Controllers.UI
 
             AddTriangles(Direction.East);
             AddVertices(Direction.East, Vector3.zero);
-            if (BlockController.Current.GetBlockSpriteUVs(BlockId, int3.zero, Direction.East, new float3(1f),
+            if (BlockController.Current.GetUVs(BlockId, int3.zero, Direction.East, new float3(1f),
                 out blockUVs))
             {
                 _UVs.Add(blockUVs[0]);

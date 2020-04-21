@@ -72,7 +72,6 @@ namespace Wyd.Controllers.World.Chunk
 
             _Mesh = new Mesh();
             MeshFilter.sharedMesh = _Mesh;
-            MeshRenderer.materials = TextureController.Current.TerrainMaterials;
         }
 
         protected override void OnEnable()
@@ -135,10 +134,18 @@ namespace Wyd.Controllers.World.Chunk
                 ? IndexFormat.UInt32
                 : IndexFormat.UInt16;
 
-            _Mesh.MarkDynamic();
             _Mesh.SetVertices(chunkMeshData.Vertices);
             _Mesh.SetTriangles(chunkMeshData.Triangles, 0);
-            _Mesh.SetTriangles(chunkMeshData.TransparentTriangles, 1);
+
+            if (chunkMeshData.TransparentTriangles.Count > 0)
+            {
+                _Mesh.SetTriangles(chunkMeshData.TransparentTriangles, 1);
+                MeshRenderer.materials = TextureController.Current.AllBlocksMaterials;
+            }
+            else
+            {
+                MeshRenderer.material = TextureController.Current.BlocksMaterial;
+            }
 
             // check uvs count in case of no UVs to apply to mesh
             if (chunkMeshData.UVs.Count > 0)
@@ -146,9 +153,10 @@ namespace Wyd.Controllers.World.Chunk
                 _Mesh.SetUVs(0, chunkMeshData.UVs);
             }
 
+            _Mesh.RecalculateNormals();
+
 #if UNITY_EDITOR
 
-            // update debug data when mesh changed
             VertexCount = _Mesh.vertices.Length;
             TrianglesCount = _Mesh.triangles.Length;
             UVsCount = _Mesh.uv.Length;

@@ -4,7 +4,7 @@ using Unity.Mathematics;
 
 #endregion
 
-namespace Wyd.Graphics
+namespace Wyd.System.Graphics
 {
     public class BlockUVs
     {

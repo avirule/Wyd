@@ -10,35 +10,20 @@ using JetBrains.Annotations;
 using Serilog;
 using SharpConfig;
 using UnityEngine;
-using Wyd.Graphics;
+using Wyd.System.Graphics;
 
 #endregion
 
 namespace Wyd.Controllers.State
 {
-    public enum CacheCullingAggression
-    {
-        /// <summary>
-        ///     Passive culling will only cull chunks when
-        ///     given enough processing time to do so.
-        /// </summary>
-        Passive = 0,
-
-        /// <summary>
-        ///     Active cache culling will force the game to keep
-        ///     the total amount of cached chunks at or below
-        ///     the maximum
-        /// </summary>
-        Active = 1
-    }
-
     public class OptionsController : SingletonController<OptionsController>, INotifyPropertyChanged
     {
         public static class Defaults
         {
             // General
             // ReSharper disable once InconsistentNaming
-            public static int ASYNC_WORKER_COUNT = Environment.ProcessorCount - 1;
+            public static readonly int ASYNC_WORKER_COUNT = Environment.ProcessorCount - 2;
+            public const bool VERBOSE_LOGGING = false;
             public const bool GPU_ACCELERATION = true;
             public const int MAXIMUM_DIAGNOSTIC_BUFFERS_LENGTH = 600;
             public const int RENDER_DISTANCE = 4;
@@ -48,9 +33,6 @@ namespace Wyd.Controllers.State
             public const int TARGET_FRAME_RATE = 60;
             public const int VSYNC_LEVEL = 1;
             public const int WINDOW_MODE = (int)WindowMode.Fullscreen;
-
-            // Chunking
-            public const int PRE_LOAD_CHUNK_DISTANCE = 1;
         }
 
         public const int MAXIMUM_RENDER_DISTANCE = 16;
@@ -69,10 +51,10 @@ namespace Wyd.Controllers.State
         private bool _GPUAcceleration;
         private int _TargetFrameRate;
         private int _MaximumDiagnosticBuffersSize;
-        private int _PreLoadChunkDistance;
         private int _ShadowDistance;
         private int _RenderDistance;
         private WindowMode _WindowMode;
+        private bool _VerboseLogging;
 
         #endregion
 
@@ -98,6 +80,18 @@ namespace Wyd.Controllers.State
             {
                 _GPUAcceleration = value;
                 _Configuration["General"][nameof(GPUAcceleration)].BoolValue = _GPUAcceleration;
+                SaveSettings();
+                OnPropertyChanged();
+            }
+        }
+
+        public bool VerboseLogging
+        {
+            get => _VerboseLogging;
+            set
+            {
+                _VerboseLogging = value;
+                _Configuration["General"][nameof(VerboseLogging)].BoolValue = _VerboseLogging;
                 SaveSettings();
                 OnPropertyChanged();
             }
@@ -206,23 +200,6 @@ namespace Wyd.Controllers.State
         #endregion
 
 
-        #region CHUNKING OPTIONS MEMBERS
-
-        // public int PreLoadChunkDistance
-        // {
-        //     get => _PreLoadChunkDistance;
-        //     set
-        //     {
-        //         _PreLoadChunkDistance = value;
-        //         _Configuration["Chunking"][nameof(PreLoadChunkDistance)].IntValue = _PreLoadChunkDistance;
-        //         SaveSettings();
-        //         OnPropertyChanged();
-        //     }
-        // }
-
-        #endregion
-
-
         public event PropertyChangedEventHandler PropertyChanged;
 
         private void Awake()
@@ -325,18 +302,6 @@ namespace Wyd.Controllers.State
                 WindowMode = (WindowMode)windowMode;
             }
 
-
-            // Chunking
-
-            // if (!GetSetting("Chunking", nameof(PreLoadChunkDistance), out _PreLoadChunkDistance)
-            //     || (PreLoadChunkDistance < 0)
-            //     || (PreLoadChunkDistance > 4))
-            // {
-            //     LogSettingLoadError(nameof(PreLoadChunkDistance), Defaults.PRE_LOAD_CHUNK_DISTANCE);
-            //     PreLoadChunkDistance = Defaults.PRE_LOAD_CHUNK_DISTANCE;
-            //     SaveSettings();
-            // }
-
             Log.Information("Configuration loaded.");
         }
 
@@ -358,6 +323,8 @@ namespace Wyd.Controllers.State
                 "Determines whether the GPU will be used for operations other than rendering.\r\n"
                 + "Note: disabling this will create more work for the CPU.";
             _Configuration["General"][nameof(GPUAcceleration)].BoolValue = Defaults.GPU_ACCELERATION;
+
+            _Configuration["General"][nameof(VerboseLogging)].BoolValue = Defaults.VERBOSE_LOGGING;
 
             _Configuration["General"][nameof(ShadowDistance)].PreComment =
                 "Defines radius in chunks around player to draw shadows.";
@@ -397,16 +364,6 @@ namespace Wyd.Controllers.State
             _Configuration["Graphics"][nameof(WindowMode)].IntValue = Defaults.WINDOW_MODE;
 
 
-            // Chunking
-
-            // _Configuration["Chunking"][nameof(PreLoadChunkDistance)].PreComment =
-            //     "Defines radius of chunks to pre-load (generate terrain data in-memory, but avoid meshing and rendering).\r\n"
-            //     + "Note: This distance begins at the edge of the render distance.";
-            // _Configuration["Chunking"][nameof(PreLoadChunkDistance)].Comment = "(min 0, max 4)";
-            // _Configuration["Chunking"][nameof(PreLoadChunkDistance)].IntValue =
-            //     Defaults.PRE_LOAD_CHUNK_DISTANCE;
-
-
             Log.Information("Default configuration initialized. Saving...");
 
             _Configuration.SaveToFile(ConfigPath);
@@ -438,7 +395,7 @@ namespace Wyd.Controllers.State
 
 
         [NotifyPropertyChangedInvocator]
-        protected virtual void OnPropertyChanged([CallerMemberName] string propertyName = null)
+        private void OnPropertyChanged([CallerMemberName] string propertyName = null)
         {
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
         }

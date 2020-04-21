@@ -39,6 +39,10 @@ namespace Wyd.Controllers.State
                 BlockDefinition.Property.Collectible, BlockDefinition.Property.Collideable,
                 BlockDefinition.Property.Destroyable);
 
+            BlockController.Current.RegisterBlockDefinition("dirt_coarse", Block.Types.Raw, null,
+                BlockDefinition.Property.Collectible, BlockDefinition.Property.Collideable,
+                BlockDefinition.Property.Destroyable);
+
             BlockController.Current.RegisterBlockDefinition("stone", Block.Types.None, null,
                 BlockDefinition.Property.Collectible, BlockDefinition.Property.Collideable,
                 BlockDefinition.Property.Destroyable);
@@ -95,7 +99,7 @@ namespace Wyd.Controllers.State
                 BlockDefinition.Property.Transparent);
         }
 
-        private static string GrassUVsRule(int3 position, Direction direction)
+        private static string GrassUVsRule(int3 globalPosition, Direction direction)
         {
             switch (direction)
             {
@@ -103,7 +107,6 @@ namespace Wyd.Controllers.State
                 case Direction.East:
                 case Direction.South:
                 case Direction.West:
-                    return "grass_side";
                 case Direction.Up:
                     return "grass";
                 case Direction.Down:
