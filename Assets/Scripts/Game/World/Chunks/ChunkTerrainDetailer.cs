@@ -31,50 +31,61 @@ namespace Wyd.Game.World.Chunks
                 float3 localPosition = WydMath.IndexTo3D(index, ChunkController.SIZE);
                 float3 globalPosition = OriginPoint + localPosition;
 
-                if (_Blocks.UncheckedGetPoint(globalPosition) == BlockController.AirID)
+                if ((_Blocks.UncheckedGetPoint(globalPosition) == BlockController.AirID)
+                    || (globalPosition.y < (WorldController.WORLD_HEIGHT / 2f))
+                    || (OpenSimplexSlim.GetSimplex(WorldController.Current.Seed, 0.01f, globalPosition.xz) > 0.5f))
                 {
                     continue;
                 }
 
-                float noise2d = OpenSimplexSlim.GetSimplex(WorldController.Current.Seed, 0.01f, globalPosition.xz);
+                AttemptLaySurfaceBlocks(globalPosition);
 
-                if (noise2d <= 0.5f)
-                {
-                    bool airAbove = true;
-
-                    for (float3 ySteps = new float3(0f, 1f, 0f); ySteps.y <= 10; ySteps += Directions.Up)
-                    {
-                        if (TryGetPointBoundsAware(globalPosition + ySteps, out ushort blockId)
-                            && (blockId != BlockController.AirID))
-                        {
-                            airAbove = false;
-                            break;
-                        }
-                    }
-
-                    if (airAbove)
-                    {
-                        _Blocks.UncheckedSetPoint(globalPosition, GetCachedBlockID("grass"));
-
-                        for (float3 ySteps = new float3(0f, -1f, 0f);
-                            ySteps.y >= -SeededRandom.Next(3, 5);
-                            ySteps += Directions.Down)
-                        {
-                            SetPointBoundsAware(globalPosition + ySteps, GetCachedBlockID("dirt"));
-                        }
-                    }
-                }
-
-                if ((_Blocks.UncheckedGetPoint(globalPosition) == GetCachedBlockID("stone"))
-                    && (OpenSimplexSlim.GetSimplex(WorldController.Current.Seed, 0.01f, globalPosition) > 0.5f))
-                {
-                    SetPointBoundsAware(globalPosition, GetCachedBlockID("coal_ore"));
-                }
+                // if (_Blocks.UncheckedGetPoint(globalPosition) == GetCachedBlockID("stone"))
+                // {
+                //     float noise = OpenSimplexSlim.GetSimplex(WorldController.Current.Seed, 0.001f, globalPosition);
+                //     float powerNoise = math.pow(noise, 4f);
+                //
+                //     if ((powerNoise > 0.3f))
+                //     {
+                //         SetPointBoundsAware(globalPosition, GetCachedBlockID("coal_ore"));
+                //     }
+                // }
             }
 
             Stopwatch.Stop();
 
             TerrainDetailTimeSpan = Stopwatch.Elapsed;
+        }
+
+        private void AttemptLaySurfaceBlocks(float3 globalPosition)
+        {
+            bool airAbove = true;
+
+            for (float3 ySteps = new float3(0f, 1f, 0f); ySteps.y <= 10; ySteps += Directions.Up)
+            {
+                if (!TryGetPointBoundsAware(globalPosition + ySteps, out ushort blockId)
+                    || (blockId == BlockController.AirID))
+                {
+                    continue;
+                }
+
+                airAbove = false;
+                break;
+            }
+
+            if (!airAbove)
+            {
+                return;
+            }
+
+            _Blocks.UncheckedSetPoint(globalPosition, GetCachedBlockID("grass"));
+
+            for (float3 ySteps = new float3(0f, -1f, 0f);
+                ySteps.y >= -SeededRandom.Next(3, 5);
+                ySteps += Directions.Down)
+            {
+                SetPointBoundsAware(globalPosition + ySteps, GetCachedBlockID("dirt"));
+            }
         }
 
         private bool TryGetPointBoundsAware(float3 globalPosition, out ushort blockId)

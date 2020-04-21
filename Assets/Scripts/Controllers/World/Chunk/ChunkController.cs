@@ -203,14 +203,14 @@ namespace Wyd.Controllers.World.Chunk
 
             if (State.HasState(ChunkState.Terrain))
             {
-                State |= (State & ~ChunkState.TerrainMask) | ChunkState.AwaitingTerrain;
+                State = (State & ~ChunkState.TerrainMask) | ChunkState.AwaitingTerrain;
                 TerrainController.BeginTerrainGeneration(_CancellationTokenSource.Token, OnTerrainGenerationFinished);
             }
             else if (State.HasState(ChunkState.Detail)
                      && WorldController.Current.GetNeighboringChunks(OriginPoint).All(chunkController =>
                          chunkController.State.HasState(ChunkState.Detail | ChunkState.TerrainComplete)))
             {
-                State |= (State & ~ChunkState.TerrainMask) | ChunkState.AwaitingTerrain;
+                State = (State & ~ChunkState.TerrainMask) | ChunkState.AwaitingTerrain;
                 TerrainController.BeginTerrainDetailing(_CancellationTokenSource.Token, OnTerrainDetailingFinished,
                     ref _Blocks);
             }

@@ -174,7 +174,9 @@ namespace Wyd.System
 
         private static float Simplex3D(int seed, float frequency, float x, float y, float z)
         {
-            x *= y *= z *= frequency;
+            x *= frequency;
+            y *= frequency;
+            z *= frequency;
 
             float t = (x + y + z) * _F3;
             int i = FastFloor(x + t);
