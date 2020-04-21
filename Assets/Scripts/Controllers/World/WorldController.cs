@@ -9,6 +9,7 @@ using System.Linq;
 using System.Threading;
 using Serilog;
 using Unity.Mathematics;
+using UnityEngine.UI;
 using Wyd.Controllers.State;
 using Wyd.Controllers.System;
 using Wyd.Controllers.World.Chunk;
@@ -232,6 +233,24 @@ namespace Wyd.Controllers.World
             }
         }
 
+        public IEnumerable<ChunkController> GetVerticalSlice(float2 origin)
+        {
+            if (origin.x % ChunkController.SIZE > 0f || origin.y % ChunkController.SIZE > 0f)
+            {
+                throw new ArgumentException("Given coordinates must be chunk-aligned.", nameof(origin));
+            }
+
+            for (int y = 0; y < WorldHeightInChunks; y++)
+            {
+                float3 chunkOrigin = new float3(origin.x, y * ChunkController.SIZE, origin.y);
+
+                if (TryGetChunk(chunkOrigin, out ChunkController chunkController))
+                {
+                    yield return chunkController;
+                }
+            }
+        }
+
         private void FlagNeighborsForMeshUpdate(float3 chunkOrigin)
         {
             foreach (ChunkController neighborChunk in GetNeighbors(chunkOrigin))
@@ -339,7 +358,7 @@ namespace Wyd.Controllers.World
             float3 chunkPosition = WydMath.RoundBy(globalPosition, ChunkController.SizeCubed);
 
             return TryGetChunk(chunkPosition, out ChunkController chunkController)
-                   && chunkController.TryGetBlockAt(globalPosition, out blockId);
+                   && chunkController.TryGetBlock(globalPosition, out blockId);
         }
 
         public bool TryPlaceBlock(float3 globalPosition, ushort id)
@@ -348,7 +367,7 @@ namespace Wyd.Controllers.World
 
             return TryGetChunk(chunkPosition, out ChunkController chunkController)
                    && (chunkController != default)
-                   && chunkController.TryPlaceBlockAt(globalPosition, id);
+                   && chunkController.TryPlaceBlock(globalPosition, id);
         }
 
         #endregion

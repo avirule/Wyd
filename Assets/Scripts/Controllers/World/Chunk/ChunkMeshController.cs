@@ -134,7 +134,6 @@ namespace Wyd.Controllers.World.Chunk
             _Mesh.indexFormat = chunkMeshData.Vertices.Count > 65000
                 ? IndexFormat.UInt32
                 : IndexFormat.UInt16;
-
             _Mesh.MarkDynamic();
             _Mesh.SetVertices(chunkMeshData.Vertices);
             _Mesh.SetTriangles(chunkMeshData.Triangles, 0);

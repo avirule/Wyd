@@ -306,7 +306,7 @@ namespace Wyd.Controllers.World.Chunk
             Blocks.SetPoint(globalPosition, newId);
         }
 
-        public bool TryGetBlockAt(float3 globalPosition, out ushort blockId)
+        public bool TryGetBlock(float3 globalPosition, out ushort blockId)
         {
             blockId = 0;
 
@@ -337,10 +337,10 @@ namespace Wyd.Controllers.World.Chunk
             }
         }
 
-        public bool TryPlaceBlockAt(float3 globalPosition, ushort newBlockId) =>
+        public bool TryPlaceBlock(float3 globalPosition, ushort newBlockId) =>
             (Blocks != null)
             && Blocks.ContainsMinBiased(globalPosition)
-            && TryGetBlockAt(globalPosition, out ushort blockId)
+            && TryGetBlock(globalPosition, out ushort blockId)
             && (blockId != newBlockId)
             && AllocateBlockAction(globalPosition, newBlockId);
 

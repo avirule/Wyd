@@ -5,6 +5,7 @@ using System.Threading;
 using Serilog;
 using Serilog.Events;
 using UnityEngine;
+using Wyd.Controllers.State;
 using Wyd.System.Jobs;
 using Wyd.System.Logging;
 
@@ -68,15 +69,6 @@ namespace Wyd.Controllers.System
         private void SetupStaticLogger()
         {
             Log.Logger = new LoggerConfiguration()
-                // verbose log output
-                // .WriteTo.Async(configuration =>
-                //     configuration.File(
-                //         $@"{_LogPath}\verbose\runtime-verbose_.log",
-                //         rollingInterval: RollingInterval.Day,
-                //         outputTemplate: _DEFAULT_TEMPLATE,
-                //         retainedFileCountLimit: 31,
-                //         rollOnFileSizeLimit: true))
-                // default log output
                 .WriteTo.Async(configuration =>
                     configuration.File(
                         $@"{_LogPath}\info\runtime_.log",
