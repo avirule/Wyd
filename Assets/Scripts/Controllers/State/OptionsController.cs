@@ -10,28 +10,12 @@ using JetBrains.Annotations;
 using Serilog;
 using SharpConfig;
 using UnityEngine;
-using Wyd.Graphics;
+using Wyd.System.Graphics;
 
 #endregion
 
 namespace Wyd.Controllers.State
 {
-    public enum CacheCullingAggression
-    {
-        /// <summary>
-        ///     Passive culling will only cull chunks when
-        ///     given enough processing time to do so.
-        /// </summary>
-        Passive = 0,
-
-        /// <summary>
-        ///     Active cache culling will force the game to keep
-        ///     the total amount of cached chunks at or below
-        ///     the maximum
-        /// </summary>
-        Active = 1
-    }
-
     public class OptionsController : SingletonController<OptionsController>, INotifyPropertyChanged
     {
         public static class Defaults
@@ -411,7 +395,7 @@ namespace Wyd.Controllers.State
 
 
         [NotifyPropertyChangedInvocator]
-        protected virtual void OnPropertyChanged([CallerMemberName] string propertyName = null)
+        private void OnPropertyChanged([CallerMemberName] string propertyName = null)
         {
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
         }

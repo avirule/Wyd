@@ -6,7 +6,7 @@ using Wyd.Controllers.System;
 
 #endregion
 
-namespace Wyd.Graphics
+namespace Wyd.System.Graphics
 {
     public class WireframeCube
     {

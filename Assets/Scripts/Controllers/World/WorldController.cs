@@ -9,14 +9,13 @@ using System.Linq;
 using System.Threading;
 using Serilog;
 using Unity.Mathematics;
-using UnityEngine.UI;
 using Wyd.Controllers.State;
 using Wyd.Controllers.System;
 using Wyd.Controllers.World.Chunk;
 using Wyd.Game;
 using Wyd.Game.Entities;
 using Wyd.Game.World;
-using Wyd.Game.World.Chunks.Events;
+using Wyd.Game.World.Chunks;
 using Wyd.System;
 using Wyd.System.Collections;
 using Wyd.System.Extensions;
@@ -246,7 +245,7 @@ namespace Wyd.Controllers.World
 
         public IEnumerable<ChunkController> GetVerticalSlice(float2 origin)
         {
-            if (origin.x % ChunkController.SIZE > 0f || origin.y % ChunkController.SIZE > 0f)
+            if (((origin.x % ChunkController.SIZE) > 0f) || ((origin.y % ChunkController.SIZE) > 0f))
             {
                 throw new ArgumentException("Given coordinates must be chunk-aligned.", nameof(origin));
             }
@@ -419,7 +418,8 @@ namespace Wyd.Controllers.World
 
         private void OnChunkTerrainChanged(object sender, ChunkChangedEventArgs args)
         {
-            foreach (ChunkController chunkController in GetNeighboringChunks(args.OriginPoint, args.NeighborDirectionsToUpdate))
+            foreach (ChunkController chunkController in GetNeighboringChunks(args.OriginPoint,
+                args.NeighborDirectionsToUpdate))
             {
                 chunkController.FlagMeshForUpdate();
             }

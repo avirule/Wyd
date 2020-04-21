@@ -9,9 +9,9 @@ using UnityEngine;
 using Wyd.Controllers.State;
 using Wyd.Controllers.World;
 using Wyd.Game.World.Blocks;
-using Wyd.Graphics;
 using Wyd.System;
 using Wyd.System.Collections;
+using Wyd.System.Graphics;
 
 // ReSharper disable TooWideLocalVariableScope
 
@@ -896,7 +896,7 @@ namespace Wyd.Game.World.Chunks
                         globalPosition + (traversals * traversalNormal) + faceNormal, out ushort blockId)
                     // if transparent, traverse as long as block is the same
                     // if opaque, traverse as long as normal-adjacent block is transparent
-                    || transparentTraversal && (_Mask[index].Id != blockId)
+                    || (transparentTraversal && (_Mask[index].Id != blockId))
                     || !CheckBlockTransparency(blockId))
                 {
                     break;

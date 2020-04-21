@@ -5,7 +5,6 @@ using System.Threading;
 using Serilog;
 using Serilog.Events;
 using UnityEngine;
-using Wyd.Controllers.State;
 using Wyd.System.Jobs;
 using Wyd.System.Logging;
 

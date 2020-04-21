@@ -11,11 +11,11 @@ namespace Wyd.System.Jobs
 {
     public static class AsyncJobScheduler
     {
-        #if DEBUG
+#if DEBUG
 
         private static readonly ConcurrentDictionary<Guid, AsyncJob> _processingJobsDiag;
 
-        #endif
+#endif
 
         private static CancellationTokenSource _AbortTokenSource;
         private static Semaphore _WorkerSemaphore;
@@ -38,11 +38,11 @@ namespace Wyd.System.Jobs
         /// </summary>
         static AsyncJobScheduler()
         {
-            #if DEBUG
+#if DEBUG
 
             _processingJobsDiag = new ConcurrentDictionary<Guid, AsyncJob>();
 
-                #endif
+#endif
 
             _AbortTokenSource = new CancellationTokenSource();
 
@@ -123,11 +123,11 @@ namespace Wyd.System.Jobs
 
             _WorkerSemaphore.WaitOne();
 
-            #if DEBUG
+#if DEBUG
 
             _processingJobsDiag.TryAdd(asyncJob.Identity, asyncJob);
 
-            #endif
+#endif
 
             OnJobStarted(new AsyncJobEventArgs(asyncJob));
 
@@ -135,11 +135,11 @@ namespace Wyd.System.Jobs
 
             OnJobFinished(new AsyncJobEventArgs(asyncJob));
 
-            #if DEBUG
+#if DEBUG
 
             _processingJobsDiag.TryRemove(asyncJob.Identity, out asyncJob);
 
-            #endif
+#endif
 
             _WorkerSemaphore.Release();
         }

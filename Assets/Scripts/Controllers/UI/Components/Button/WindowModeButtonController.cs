@@ -4,7 +4,7 @@ using System;
 using UnityEngine;
 using UnityEngine.EventSystems;
 using Wyd.Controllers.State;
-using Wyd.Graphics;
+using Wyd.System.Graphics;
 
 #endregion
 

@@ -5,7 +5,7 @@ using Unity.Mathematics;
 
 #endregion
 
-namespace Wyd.Game.World.Chunks.Events
+namespace Wyd.Game.World.Chunks
 {
     public class ChunkChangedEventArgs
     {

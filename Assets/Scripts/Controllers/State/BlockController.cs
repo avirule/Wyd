@@ -6,8 +6,8 @@ using Serilog;
 using Unity.Mathematics;
 using Wyd.Game;
 using Wyd.Game.World.Blocks;
-using Wyd.Graphics;
 using Wyd.System.Extensions;
+using Wyd.System.Graphics;
 
 #endregion
 
@@ -111,10 +111,9 @@ namespace Wyd.Controllers.State
         public bool GetUVs(ushort blockId, int3 position, Direction direction, float3 size2d,
             out BlockUVs blockUVs)
         {
-
             // todo return UV index instead
 
-            
+
             if (!BlockIdExists(blockId))
             {
                 Log.Error(

@@ -4,7 +4,6 @@ using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using Unity.Mathematics;
-using Wyd.Controllers.World;
 using Wyd.Controllers.World.Chunk;
 
 #endregion

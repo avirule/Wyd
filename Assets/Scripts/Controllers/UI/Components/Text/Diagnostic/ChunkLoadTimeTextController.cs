@@ -44,7 +44,8 @@ namespace Wyd.Controllers.UI.Components.Text.Diagnostic
             UpdateChunkLoadTimeText();
         }
 
-        private void SetRecentAverages(double averageNoiseRetrievalTime, double averageTerrainBuildingTime, double averageTerrainDetailingTime, double averageMeshingSetBlockTime, double averageMeshingTime)
+        private void SetRecentAverages(double averageNoiseRetrievalTime, double averageTerrainBuildingTime,
+            double averageTerrainDetailingTime, double averageMeshingSetBlockTime, double averageMeshingTime)
         {
             _RecentNoiseRetrievalTime = averageNoiseRetrievalTime;
             _RecentTerrainBuildingTime = averageTerrainBuildingTime;

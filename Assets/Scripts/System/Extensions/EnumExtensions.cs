@@ -2,7 +2,6 @@
 
 using System;
 using System.Collections.Generic;
-using Wyd.Controllers.World.Chunk;
 using Wyd.Game.World;
 using Wyd.Game.World.Blocks;
 

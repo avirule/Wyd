@@ -51,7 +51,6 @@ namespace Wyd.Controllers.System
                 new FixedConcurrentQueue<TimeSpan>(OptionsController.Current.MaximumDiagnosticBuffersSize);
             RollingMeshingTimes =
                 new FixedConcurrentQueue<TimeSpan>(OptionsController.Current.MaximumDiagnosticBuffersSize);
-
         }
     }
 }

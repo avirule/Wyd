@@ -1,8 +1,12 @@
+#region
+
 using System.Threading;
 using System.Threading.Tasks;
 using Unity.Mathematics;
 using UnityEngine;
 using Wyd.Controllers.System;
+
+#endregion
 
 namespace Wyd.Game.World.Chunks
 {
@@ -37,7 +41,7 @@ namespace Wyd.Game.World.Chunks
 
         protected override Task ProcessFinished()
         {
-            if (!CancellationToken.IsCancellationRequested )
+            if (!CancellationToken.IsCancellationRequested)
             {
                 ChunkTerrainBuilder builder = (ChunkTerrainBuilder)_TerrainOperator;
 

@@ -2,10 +2,7 @@
 
 using System;
 using System.Threading;
-using System.Threading.Tasks;
 using Unity.Mathematics;
-using UnityEngine;
-using Wyd.Controllers.System;
 using Wyd.System.Collections;
 using Wyd.System.Jobs;
 
@@ -21,10 +18,8 @@ namespace Wyd.Game.World.Chunks
 
         protected ChunkBuilderJob(CancellationToken cancellationToken, float3 originPoint)
             : base(CancellationTokenSource.CreateLinkedTokenSource(AsyncJobScheduler.AbortToken,
-                cancellationToken).Token)
-        {
+                cancellationToken).Token) =>
             OriginPoint = originPoint;
-        }
 
         public void GetGeneratedBlockData(out OctreeNode<ushort> blocks)
         {

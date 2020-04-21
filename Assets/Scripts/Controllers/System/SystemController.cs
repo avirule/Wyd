@@ -1,7 +1,6 @@
 #region
 
 using System.Threading;
-using Serilog;
 using UnityEngine;
 using Wyd.Controllers.State;
 using Wyd.System.Jobs;
