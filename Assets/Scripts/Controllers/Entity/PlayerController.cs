@@ -213,7 +213,7 @@ namespace Wyd.Controllers.Entity
                 ? math.floor(_LastReachRayHit.point) - (float3)_LastReachRayHit.normal
                 : math.floor(_LastReachRayHit.point), out ushort blockId);
 
-            if (!BlockController.Current.CheckBlockHasProperties(blockId, BlockDefinition.Property.Destroyable))
+            if (!BlockController.Current.CheckBlockHasProperty(blockId, BlockDefinition.Property.Destroyable))
             {
                 ReachHitSurfaceObject.SetActive(false);
                 _IsInReachOfValidSurface = false;
@@ -263,7 +263,7 @@ namespace Wyd.Controllers.Entity
                 {
                     WorldController.Current.TryGetBlock(position, out ushort blockId);
 
-                    if (BlockController.Current.CheckBlockHasProperties(blockId, BlockDefinition.Property.Collectible))
+                    if (BlockController.Current.CheckBlockHasProperty(blockId, BlockDefinition.Property.Collectible))
                     {
                         Inventory.AddItem(blockId, 1);
                     }
