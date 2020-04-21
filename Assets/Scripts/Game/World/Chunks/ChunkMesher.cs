@@ -86,7 +86,7 @@ namespace Wyd.Game.World.Chunks
             }
 
             _Stopwatch.Restart();
-            SetBlockData(_Blocks.UncheckedGetAllData());
+            SetBlockData(_Blocks.GetAllData());
             _Stopwatch.Stop();
             SetBlockTimeSpan = _Stopwatch.Elapsed;
 

@@ -13,8 +13,10 @@ namespace Wyd.Controllers.State
         public MeshRenderer MeshRenderer;
 
         public static int MainTexPropertyID => Shader.PropertyToID("_MainTex");
-        public Texture2DArray TerrainTexture { get; private set; }
-        public Material[] TerrainMaterials { get; private set; }
+        public Texture2DArray BlocksTexture { get; private set; }
+        public Material BlocksMaterial { get; private set; }
+        public Material TransparentBlocksMaterial { get; private set; }
+        public Material[] AllBlocksMaterials { get; private set; }
         private Dictionary<string, int> _TextureIDs;
 
         private void Awake()
@@ -30,33 +32,35 @@ namespace Wyd.Controllers.State
 
             foreach (Material material in MeshRenderer.materials)
             {
-                material.SetTexture(MainTexPropertyID, TerrainTexture);
+                material.SetTexture(MainTexPropertyID, BlocksTexture);
             }
 
-            TerrainMaterials = MeshRenderer.materials;
+            AllBlocksMaterials = MeshRenderer.materials;
+            BlocksMaterial = AllBlocksMaterials[0];
+            TransparentBlocksMaterial = AllBlocksMaterials[1];
         }
 
         private void ProcessSprites()
         {
             Sprite[] sprites = Resources.LoadAll<Sprite>(@"Graphics/Textures/Blocks/");
 
-            TerrainTexture = new Texture2DArray((int)sprites[0].rect.width, (int)sprites[0].rect.height,
+            BlocksTexture = new Texture2DArray((int)sprites[0].rect.width, (int)sprites[0].rect.height,
                 sprites.Length, TextureFormat.RGBA32, true, false)
             {
                 filterMode = FilterMode.Point,
                 wrapMode = TextureWrapMode.Repeat
             };
 
-            for (int i = 0; i < TerrainTexture.depth; i++)
+            for (int i = 0; i < BlocksTexture.depth; i++)
             {
                 Color[] spritePixels = GetPixels(sprites[i]);
-                TerrainTexture.SetPixels(spritePixels, i, 0);
+                BlocksTexture.SetPixels(spritePixels, i, 0);
                 _TextureIDs.Add(sprites[i].name.ToLower(), i);
 
                 Log.Information($"Texture processed (depth {i}): {sprites[i].name}");
             }
 
-            TerrainTexture.Apply();
+            BlocksTexture.Apply();
         }
 
         private static Color[] GetPixels(Sprite sprite)

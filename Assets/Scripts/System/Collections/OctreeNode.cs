@@ -73,11 +73,11 @@ namespace Wyd.System.Collections
 
         #region Checked Data Operations
 
-        public T GetPoint(float3 point)
+        public T GetPoint(float3 point, bool hasChecked = false)
         {
             point = math.floor(point);
 
-            if (!ContainsMinBiased(point))
+            if (!hasChecked && !ContainsMinBiased(point))
             {
                 throw new ArgumentOutOfRangeException(
                     $"Attempted to get point {point} in {nameof(OctreeNode<T>)}, but {nameof(_Volume)} does not contain it.\r\n"
@@ -92,19 +92,26 @@ namespace Wyd.System.Collections
             {
                 int octant = DetermineOctant(point);
 
-                if (octant >= _Nodes.Count)
+                if (!hasChecked)
                 {
-                    throw new ArgumentOutOfRangeException(
-                        $"Attempted to step into octant of {nameof(OctreeNode<T>)} and failed ({nameof(GetPoint)}).\r\n"
-                        + $"State Information: [Volume {_Volume}], [{nameof(IsUniform)} {IsUniform}], [Branches {_Nodes.Count}], "
-                        + (_Nodes.Count > 0
-                            ? $"[Branch Values {string.Join(", ", _Nodes.Select(node => node.Value))}]"
-                            : string.Empty)
-                        + $"[Octant {octant}]");
+                    if (octant >= _Nodes.Count)
+                    {
+                        throw new ArgumentOutOfRangeException(
+                            $"Attempted to step into octant of {nameof(OctreeNode<T>)} and failed ({nameof(GetPoint)}).\r\n"
+                            + $"State Information: [Volume {_Volume}], [{nameof(IsUniform)} {IsUniform}], [Branches {_Nodes.Count}], "
+                            + (_Nodes.Count > 0
+                                ? $"[Branch Values {string.Join(", ", _Nodes.Select(node => node.Value))}]"
+                                : string.Empty)
+                            + $"[Octant {octant}]");
+                    }
+                    else
+                    {
+                        return _Nodes[octant].GetPoint(point);
+                    }
                 }
                 else
                 {
-                    return _Nodes[octant].GetPoint(point);
+                    return _Nodes[octant].UncheckedGetPoint(point);
                 }
             }
             else
@@ -113,11 +120,11 @@ namespace Wyd.System.Collections
             }
         }
 
-        public void SetPoint(float3 point, T newValue)
+        public void SetPoint(float3 point, T newValue, bool hasChecked = false)
         {
             point = math.floor(point);
 
-            if (!ContainsMinBiased(point))
+            if (!hasChecked && !ContainsMinBiased(point))
             {
                 throw new ArgumentOutOfRangeException(
                     $"Attempted to set point {point} in {nameof(OctreeNode<T>)}, but {nameof(_Volume)} does not contain it.\r\n"
@@ -127,7 +134,7 @@ namespace Wyd.System.Collections
                         : string.Empty));
             }
 
-            if (IsUniform && Value.Equals(newValue))
+            if (IsUniform && Value.GetHashCode() == newValue.GetHashCode())
             {
                 // operation does nothing, so return
                 return;
@@ -149,19 +156,26 @@ namespace Wyd.System.Collections
 
             int octant = DetermineOctant(point);
 
-            if (octant >= _Nodes.Count)
+            if (!hasChecked)
             {
-                throw new ArgumentOutOfRangeException(
-                    $"Attempted to step into octant of {nameof(OctreeNode<T>)} and failed ({nameof(SetPoint)}).\r\n"
-                    + $"State Information: [Volume {_Volume}], [{nameof(IsUniform)} {IsUniform}], [Branches {_Nodes.Count}], "
-                    + (_Nodes.Count > 0
-                        ? $"[Branch Values {string.Join(", ", _Nodes.Select(node => node.Value))}]"
-                        : string.Empty)
-                    + $"[Octant {octant}]");
-            }
+                if (octant >= _Nodes.Count)
+                {
+                    throw new ArgumentOutOfRangeException(
+                        $"Attempted to step into octant of {nameof(OctreeNode<T>)} and failed ({nameof(SetPoint)}).\r\n"
+                        + $"State Information: [Volume {_Volume}], [{nameof(IsUniform)} {IsUniform}], [Branches {_Nodes.Count}], "
+                        + (_Nodes.Count > 0
+                            ? $"[Branch Values {string.Join(", ", _Nodes.Select(node => node.Value))}]"
+                            : string.Empty)
+                        + $"[Octant {octant}]");
+                }
 
-            // recursively dig into octree and set
-            _Nodes[octant].SetPoint(point, newValue);
+                // recursively dig into octree and set
+                _Nodes[octant].SetPoint(point, newValue);
+            }
+            else
+            {
+                _Nodes[octant].UncheckedSetPoint(point, newValue);
+            }
 
             // on each recursion back-step, ensure integrity of node
             // and collapse if all child node values are equal
@@ -212,7 +226,7 @@ namespace Wyd.System.Collections
 
         #region Unchecked Data Operations
 
-        public T UncheckedGetPoint(float3 point)
+        private T UncheckedGetPoint(float3 point)
         {
             point = math.floor(point);
 
@@ -227,7 +241,7 @@ namespace Wyd.System.Collections
             }
         }
 
-        public void UncheckedSetPoint(float3 point, T newValue)
+        private void UncheckedSetPoint(float3 point, T newValue)
         {
             point = math.floor(point);
 
@@ -261,16 +275,6 @@ namespace Wyd.System.Collections
             if (!IsUniform && CheckShouldCollapse())
             {
                 Collapse();
-            }
-        }
-
-        public IEnumerable<T> UncheckedGetAllData()
-        {
-            int3 sizeInt = WydMath.ToInt(_Volume.Size);
-
-            for (int index = 0; index < WydMath.Product(_Volume.Size); index++)
-            {
-                yield return UncheckedGetPoint(_Volume.MinPoint + WydMath.IndexTo3D(index, sizeInt));
             }
         }
 

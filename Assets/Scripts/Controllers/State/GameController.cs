@@ -41,6 +41,10 @@ namespace Wyd.Controllers.State
                 BlockDefinition.Property.Collectible, BlockDefinition.Property.Collideable,
                 BlockDefinition.Property.Destroyable);
 
+            BlockController.Current.RegisterBlockDefinition("dirt_coarse", Block.Types.Raw, null,
+                BlockDefinition.Property.Collectible, BlockDefinition.Property.Collideable,
+                BlockDefinition.Property.Destroyable);
+
             BlockController.Current.RegisterBlockDefinition("stone", Block.Types.None, null,
                 BlockDefinition.Property.Collectible, BlockDefinition.Property.Collideable,
                 BlockDefinition.Property.Destroyable);

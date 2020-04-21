@@ -10,27 +10,28 @@ using Wyd.Controllers.System;
 
 namespace Wyd.Game.World.Chunks
 {
-    public class ChunkTerrainBuilderJob : ChunkBuilderJob
+    public class ChunkTerrainTerrainJob : ChunkTerrainJob
     {
         private readonly float _Frequency;
         private readonly float _Persistence;
         private readonly bool _GpuAcceleration;
-        private readonly ComputeBuffer _NoiseValuesBuffer;
 
-        public ChunkTerrainBuilderJob(CancellationToken cancellationToken, float3 originPoint, float frequency,
+        public ComputeBuffer NoiseValuesBuffer { get; }
+
+        public ChunkTerrainTerrainJob(CancellationToken cancellationToken, float3 originPoint, float frequency,
             float persistence, bool gpuAcceleration = false, ComputeBuffer noiseValuesBuffer = null)
             : base(cancellationToken, originPoint)
         {
             _Frequency = frequency;
             _Persistence = persistence;
             _GpuAcceleration = gpuAcceleration;
-            _NoiseValuesBuffer = noiseValuesBuffer;
+            NoiseValuesBuffer = noiseValuesBuffer;
         }
 
         protected override Task Process()
         {
             ChunkTerrainBuilder builder = new ChunkTerrainBuilder(CancellationToken, OriginPoint, _Frequency,
-                _Persistence, _GpuAcceleration, _NoiseValuesBuffer);
+                _Persistence, _GpuAcceleration, NoiseValuesBuffer);
             builder.TimeMeasuredGenerate();
 
             // builder has completed execution, so set field

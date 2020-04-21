@@ -30,9 +30,7 @@ namespace Wyd.Game.World.Chunks
                 float3 localPosition = WydMath.IndexTo3D(index, ChunkController.SIZE);
                 float3 globalPosition = OriginPoint + localPosition;
 
-                if ((_Blocks.UncheckedGetPoint(globalPosition) == BlockController.AirID)
-                    || (globalPosition.y < (WorldController.WORLD_HEIGHT / 2f))
-                    || (OpenSimplexSlim.GetSimplex(WorldController.Current.Seed, 0.01f, globalPosition.xz) > 0.5f))
+                if (_Blocks.GetPoint(globalPosition) == BlockController.AirID)
                 {
                     continue;
                 }
@@ -58,12 +56,18 @@ namespace Wyd.Game.World.Chunks
 
         private void AttemptLaySurfaceBlocks(float3 globalPosition)
         {
+            if (globalPosition.y < (WorldController.WORLD_HEIGHT / 2f)
+                || (OpenSimplexSlim.GetSimplex(WorldController.Current.Seed, 0.01f, globalPosition.xz) > 0.5f))
+            {
+                return;
+            }
+
             bool airAbove = true;
 
             for (float3 ySteps = new float3(0f, 1f, 0f); ySteps.y <= 10; ySteps += Directions.Up)
             {
-                if (!TryGetPointBoundsAware(globalPosition + ySteps, out ushort blockId)
-                    || (blockId == BlockController.AirID))
+                if (TryGetPointBoundsAware(globalPosition + ySteps, out ushort blockId)
+                    && (blockId == BlockController.AirID))
                 {
                     continue;
                 }
@@ -77,13 +81,16 @@ namespace Wyd.Game.World.Chunks
                 return;
             }
 
-            _Blocks.UncheckedSetPoint(globalPosition, GetCachedBlockID("grass"));
+            _Blocks.SetPoint(globalPosition, GetCachedBlockID("grass"));
 
             for (float3 ySteps = new float3(0f, -1f, 0f);
                 ySteps.y >= -SeededRandom.Next(3, 5);
                 ySteps += Directions.Down)
             {
-                SetPointBoundsAware(globalPosition + ySteps, GetCachedBlockID("dirt"));
+                SetPointBoundsAware(globalPosition + ySteps,
+                    SeededRandom.Next(0, 8) == 0
+                        ? GetCachedBlockID("dirt_coarse")
+                        : GetCachedBlockID("dirt"));
             }
         }
 
@@ -97,7 +104,7 @@ namespace Wyd.Game.World.Chunks
             }
             else
             {
-                blockId = _Blocks.UncheckedGetPoint(globalPosition);
+                blockId = _Blocks.GetPoint(globalPosition);
                 return true;
             }
         }
@@ -112,7 +119,7 @@ namespace Wyd.Game.World.Chunks
             }
             else
             {
-                _Blocks.UncheckedSetPoint(globalPosition, blockId);
+                _Blocks.SetPoint(globalPosition, blockId);
             }
         }
     }

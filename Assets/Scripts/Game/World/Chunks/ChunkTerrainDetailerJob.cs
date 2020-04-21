@@ -10,7 +10,7 @@ using Wyd.System.Collections;
 
 namespace Wyd.Game.World.Chunks
 {
-    public class ChunkTerrainDetailerJob : ChunkBuilderJob
+    public class ChunkTerrainDetailerJob : ChunkTerrainJob
     {
         private readonly OctreeNode<ushort> _Blocks;
 

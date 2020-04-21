@@ -32,11 +32,11 @@ namespace Wyd.Controllers.State
 
             InitializeBlockPropertiesBuckets();
 
-            RegisterBlockDefinition("Null", Block.Types.None, null);
-            RegisterBlockDefinition("Air", Block.Types.None, null, BlockDefinition.Property.Transparent);
+            RegisterBlockDefinition("null", Block.Types.None, null);
+            RegisterBlockDefinition("air", Block.Types.None, null, BlockDefinition.Property.Transparent);
 
-            TryGetBlockId("Null", out NullID);
-            TryGetBlockId("Air", out AirID);
+            TryGetBlockId("null", out NullID);
+            TryGetBlockId("air", out AirID);
         }
 
         private void InitializeBlockPropertiesBuckets()
@@ -141,9 +141,12 @@ namespace Wyd.Controllers.State
 
         public bool TryGetBlockId(string blockName, out ushort blockId)
         {
-            if (!BlockNames.TryGetValue(blockName.ToLowerInvariant(), out blockId))
+            blockId = 0;
+
+            if (!BlockNames.TryGetValue(blockName, out blockId))
             {
-                blockId = 0;
+                Log.Warning($"({nameof(BlockController)}) Failed to return block id for '{blockName}': block does not exist.");
+
                 return false;
             }
 
