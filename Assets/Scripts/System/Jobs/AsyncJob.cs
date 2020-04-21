@@ -22,7 +22,7 @@ namespace Wyd.System.Jobs
         /// <summary>
         ///     Identity of <see cref="AsyncJob" />.
         /// </summary>
-        public Guid Identity { get; }
+        public object Identity { get; }
 
         /// <summary>
         ///     Token that can be passed into constructor to allow jobs to observe cancellation.

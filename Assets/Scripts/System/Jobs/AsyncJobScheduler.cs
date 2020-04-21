@@ -13,7 +13,7 @@ namespace Wyd.System.Jobs
     {
 #if DEBUG
 
-        private static readonly ConcurrentDictionary<Guid, AsyncJob> _processingJobsDiag;
+        private static readonly ConcurrentDictionary<object, AsyncJob> _processingJobsDiag;
 
 #endif
 
@@ -40,7 +40,7 @@ namespace Wyd.System.Jobs
         {
 #if DEBUG
 
-            _processingJobsDiag = new ConcurrentDictionary<Guid, AsyncJob>();
+            _processingJobsDiag = new ConcurrentDictionary<object, AsyncJob>();
 
 #endif
 

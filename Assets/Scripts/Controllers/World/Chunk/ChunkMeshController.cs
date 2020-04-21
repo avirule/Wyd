@@ -102,8 +102,8 @@ namespace Wyd.Controllers.World.Chunk
 #endif
         }
 
-        public void BeginGeneratingMesh(OctreeNode<ushort> blocks, CancellationToken token,
-            AsyncJobEventHandler callback)
+        public void BeginGeneratingMesh(CancellationToken token, AsyncJobEventHandler callback,
+            OctreeNode<ushort> blocks, out object jobIdentity)
         {
             ChunkMeshingJob asyncJob = new ChunkMeshingJob(token, OriginPoint, blocks, true);
 
@@ -111,6 +111,8 @@ namespace Wyd.Controllers.World.Chunk
             {
                 asyncJob.WorkFinished += callback;
             }
+
+            jobIdentity = asyncJob.Identity;
 
             Task.Run(async () => await AsyncJobScheduler.QueueAsyncJob(asyncJob), token);
         }

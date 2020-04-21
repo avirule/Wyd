@@ -57,6 +57,9 @@ namespace Wyd.Controllers.World.Chunk
         private object _ActiveLock;
         private bool _UpdateMesh;
         private object _UpdateMeshLock;
+
+        private object _TerrainJobIdentity;
+        private object _MeshJobIdentity;
         private ChunkTerrainJob _FinishedTerrainJob;
         private ChunkMeshingJob _FinishedMeshingJob;
 
@@ -201,6 +204,7 @@ namespace Wyd.Controllers.World.Chunk
             _BlockActions = new ConcurrentQueue<BlockAction>();
             _Blocks = null;
 
+            _TerrainJobIdentity = _MeshJobIdentity = null;
             _FinishedTerrainJob = null;
             _FinishedMeshingJob = null;
 
@@ -241,7 +245,7 @@ namespace Wyd.Controllers.World.Chunk
             {
                 case ChunkState.Unbuilt:
                     TerrainController.BeginTerrainGeneration(_CancellationTokenSource.Token,
-                        OnTerrainGenerationFinished);
+                        OnTerrainGenerationFinished, out _TerrainJobIdentity);
                     State = State.Next();
                     break;
                 case ChunkState.AwaitingBuilding:
@@ -254,8 +258,8 @@ namespace Wyd.Controllers.World.Chunk
 
                     break;
                 case ChunkState.Undetailed:
-                    TerrainController.BeginTerrainDetailing(_CancellationTokenSource.Token,
-                        OnTerrainDetailingFinished, _Blocks);
+                    TerrainController.BeginTerrainDetailing(_CancellationTokenSource.Token, OnTerrainDetailingFinished,
+                        _Blocks, out _TerrainJobIdentity);
 
                     State = State.Next();
                     break;
@@ -280,7 +284,8 @@ namespace Wyd.Controllers.World.Chunk
                     }
                     else
                     {
-                        MeshController.BeginGeneratingMesh(Blocks, _CancellationTokenSource.Token, OnMeshingFinished);
+                        MeshController.BeginGeneratingMesh(_CancellationTokenSource.Token, OnMeshingFinished, Blocks,
+                            out _MeshJobIdentity);
                         State = State.Next();
                     }
 
@@ -477,7 +482,7 @@ namespace Wyd.Controllers.World.Chunk
         {
             args.AsyncJob.WorkFinished -= OnTerrainDetailingFinished;
 
-            if (!Active)
+            if (!args.AsyncJob.Identity.Equals(_TerrainJobIdentity))
             {
                 return;
             }
@@ -489,7 +494,7 @@ namespace Wyd.Controllers.World.Chunk
         {
             args.AsyncJob.WorkFinished -= OnMeshingFinished;
 
-            if (!Active)
+            if (!args.AsyncJob.Identity.Equals(_MeshJobIdentity))
             {
                 return;
             }

@@ -34,7 +34,8 @@ namespace Wyd.Controllers.World.Chunk
             }
         }
 
-        public void BeginTerrainGeneration(CancellationToken cancellationToken, AsyncJobEventHandler callback)
+        public void BeginTerrainGeneration(CancellationToken cancellationToken, AsyncJobEventHandler callback,
+            out object jobIdentity)
         {
             ChunkTerrainJob asyncJob;
 
@@ -62,12 +63,13 @@ namespace Wyd.Controllers.World.Chunk
                 asyncJob.WorkFinished += callback;
             }
 
+            jobIdentity = asyncJob.Identity;
 
             Task.Run(async () => await AsyncJobScheduler.QueueAsyncJob(asyncJob), cancellationToken);
         }
 
         public void BeginTerrainDetailing(CancellationToken cancellationToken, AsyncJobEventHandler callback,
-            OctreeNode<ushort> blocks)
+            OctreeNode<ushort> blocks, out object jobIdentity)
         {
             ChunkTerrainDetailerJob asyncJob = new ChunkTerrainDetailerJob(cancellationToken, OriginPoint, blocks);
 
@@ -75,6 +77,8 @@ namespace Wyd.Controllers.World.Chunk
             {
                 asyncJob.WorkFinished += callback;
             }
+
+            jobIdentity = asyncJob.Identity;
 
             Task.Run(async () => await AsyncJobScheduler.QueueAsyncJob(asyncJob), cancellationToken);
         }
