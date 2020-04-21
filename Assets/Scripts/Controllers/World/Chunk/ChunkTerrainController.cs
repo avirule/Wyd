@@ -29,9 +29,9 @@ namespace Wyd.Controllers.World.Chunk
             {
                 _NoiseShader = Resources.Load<ComputeShader>(@"Graphics\Shaders\NoiseComputationShader");
                 _NoiseShader.SetInt("_NoiseSeed", WorldController.Current.Seed);
-                _NoiseShader.SetVector("_MaximumSize", new Vector4(ChunkController.SizeCubed.x,
-                    ChunkController.SizeCubed.y,
-                    ChunkController.SizeCubed.z, 0f));
+                _NoiseShader.SetVector("_MaximumSize", new Vector4(ChunkController.Size3D.x,
+                    ChunkController.Size3D.y,
+                    ChunkController.Size3D.z, 0f));
                 _NoiseShader.SetFloat("_WorldHeight", WorldController.WORLD_HEIGHT);
             }
         }
@@ -42,7 +42,7 @@ namespace Wyd.Controllers.World.Chunk
 
             if (OptionsController.Current.GPUAcceleration)
             {
-                ComputeBuffer noiseBuffer = new ComputeBuffer(WydMath.Product(ChunkController.SizeCubed), 4);
+                ComputeBuffer noiseBuffer = new ComputeBuffer(ChunkController.SIZE_CUBED, 4);
                 int kernel = _NoiseShader.FindKernel("CSMain");
                 _NoiseShader.SetVector("_Offset", new float4(OriginPoint.xyzz));
                 _NoiseShader.SetFloat("_Frequency", _FREQUENCY);
@@ -51,12 +51,12 @@ namespace Wyd.Controllers.World.Chunk
                 // 1024 is the value set in the shader's [numthreads(--> 1024 <--, 1, 1)]
                 _NoiseShader.Dispatch(kernel, 1024, 1, 1);
 
-                asyncJob = new ChunkBuildingJob(token, OriginPoint, ChunkController.SizeCubed.x, _FREQUENCY,
+                asyncJob = new ChunkBuildingJob(token, OriginPoint, _FREQUENCY,
                     _PERSISTENCE, OptionsController.Current.GPUAcceleration, noiseBuffer);
             }
             else
             {
-                asyncJob = new ChunkBuildingJob(token, OriginPoint, ChunkController.SizeCubed.x, _FREQUENCY,
+                asyncJob = new ChunkBuildingJob(token, OriginPoint, _FREQUENCY,
                     _PERSISTENCE);
             }
 

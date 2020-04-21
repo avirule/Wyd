@@ -16,7 +16,7 @@ namespace Wyd.System.Collections
             set => _NoiseMap[index] = value;
         }
 
-        public NoiseMap() => _NoiseMap = new float[WydMath.Product(ChunkController.SizeCubed)];
+        public NoiseMap() => _NoiseMap = new float[ChunkController.SIZE_CUBED];
 
         public static implicit operator float[](NoiseMap noiseMap) =>
             noiseMap._NoiseMap;

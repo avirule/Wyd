@@ -27,7 +27,8 @@ namespace Wyd.Controllers.World.Chunk
     public enum ChunkState
     {
         Terrain = 0b0000_0001,
-        AwaitingTerrain = 0b0000_0010,
+        TerrainDetail = 0b0000_0010,
+        AwaitingTerrain = 0b0000_0100,
         TerrainComplete = 0b0000_1000,
         TerrainMask = 0b0000_1111,
         UpdateMesh = 0b0001_0000,
@@ -39,11 +40,12 @@ namespace Wyd.Controllers.World.Chunk
     public class ChunkController : ActivationStateChunkController, IPerFrameIncrementalUpdate
     {
         public const int SIZE = 32;
+        public const int SIZE_CUBED = 32 ^ 3;
 
         private static readonly ObjectCache<BlockAction> _blockActionsCache = new ObjectCache<BlockAction>(true, 1024);
 
-        public static readonly int3 SizeCubed = new int3(SIZE);
-        public static readonly int3 SizeExtents = new int3(SIZE / 2);
+        public static readonly int3 Size3D = new int3(SIZE);
+        public static readonly int3 Size3DExtents = new int3(SIZE / 2);
 
 
         #region Instance Members
@@ -144,8 +146,8 @@ namespace Wyd.Controllers.World.Chunk
 #if UNITY_EDITOR
 
             MinimumPoint = OriginPoint;
-            MaximumPoint = OriginPoint + SizeCubed;
-            Extents = WydMath.ToFloat(SizeCubed) / 2f;
+            MaximumPoint = OriginPoint + Size3D;
+            Extents = WydMath.ToFloat(Size3D) / 2f;
 
 #endif
         }
@@ -204,12 +206,12 @@ namespace Wyd.Controllers.World.Chunk
             if (!ChunkState.HasState(ChunkState.Meshing)
                 && !ChunkState.HasState(ChunkState.MeshDataPending)
                 && (!ChunkState.HasState(ChunkState.Meshed) || ChunkState.HasState(ChunkState.UpdateMesh))
-                && WorldController.Current.GetNeighbors(OriginPoint).All(chunkController =>
+                && WorldController.Current.GetNeighboringChunks(OriginPoint).All(chunkController =>
                     chunkController.ChunkState.HasState(ChunkState.TerrainComplete)))
             {
                 if (Blocks.IsUniform
                     && ((Blocks.Value == BlockController.AirID)
-                        || WorldController.Current.GetNeighbors(OriginPoint)
+                        || WorldController.Current.GetNeighboringChunks(OriginPoint)
                             .All(chunkController => chunkController.Blocks.IsUniform)))
                 {
                     ChunkState = (ChunkState & ~ChunkState.MeshDataPending) | ChunkState.Meshed;
@@ -283,7 +285,7 @@ namespace Wyd.Controllers.World.Chunk
         {
             normals = Enumerable.Empty<float3>();
 
-            float3 localPosition = globalPosition - (OriginPoint + (WydMath.ToFloat(SizeCubed) / 2f));
+            float3 localPosition = globalPosition - (OriginPoint + (WydMath.ToFloat(Size3D) / 2f));
             float3 localPositionSign = math.sign(localPosition);
             float3 localPositionAbs = math.abs(math.ceil(localPosition + (new float3(0.5f) * localPositionSign)));
 
@@ -384,7 +386,7 @@ namespace Wyd.Controllers.World.Chunk
             ((ChunkBuildingJob)args.AsyncJob).GetGeneratedBlockData(out _Blocks);
             ChunkState = (ChunkState & ~ChunkState.TerrainMask) | ChunkState.TerrainComplete;
             OnLocalTerrainChanged(sender,
-                new ChunkChangedEventArgs(OriginPoint, Directions.AllDirectionAxes.Select(WydMath.ToFloat)));
+                new ChunkChangedEventArgs(OriginPoint, Directions.AllDirectionNormals.Select(WydMath.ToFloat)));
         }
 
         private void OnMeshChanged(object sender, ChunkChangedEventArgs args)

@@ -111,6 +111,10 @@ namespace Wyd.Controllers.State
         public bool GetUVs(ushort blockId, int3 position, Direction direction, float3 size2d,
             out BlockUVs blockUVs)
         {
+
+            // todo return UV index instead
+
+            
             if (!BlockIdExists(blockId))
             {
                 Log.Error(

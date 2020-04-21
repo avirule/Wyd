@@ -31,7 +31,7 @@ namespace Wyd.Controllers.World
     {
         public const float WORLD_HEIGHT = 256f;
 
-        public static readonly float WorldHeightInChunks = math.floor(WORLD_HEIGHT / ChunkController.SizeCubed.y);
+        public static readonly float WorldHeightInChunks = math.floor(WORLD_HEIGHT / ChunkController.Size3D.y);
 
 
         #region Instance Members
@@ -211,9 +211,20 @@ namespace Wyd.Controllers.World
             _ChunkCache.CacheItem(ref chunkController);
         }
 
-        public IEnumerable<ChunkController> GetNeighbors(float3 origin)
+        public IEnumerable<ushort> GetNeighboringBlocks(float3 globalPosition)
         {
-            foreach (float3 normal in Directions.AllDirectionAxes)
+            foreach (float3 normal in Directions.AllDirectionNormals)
+            {
+                if (TryGetBlock(globalPosition + normal, out ushort blockId))
+                {
+                    yield return blockId;
+                }
+            }
+        }
+
+        public IEnumerable<ChunkController> GetNeighboringChunks(float3 origin)
+        {
+            foreach (float3 normal in Directions.AllDirectionNormals)
             {
                 if (TryGetChunk(origin + (normal * ChunkController.SIZE), out ChunkController chunkController))
                 {
@@ -222,7 +233,7 @@ namespace Wyd.Controllers.World
             }
         }
 
-        public IEnumerable<ChunkController> GetNeighbors(float3 origin, IEnumerable<float3> normals)
+        public IEnumerable<ChunkController> GetNeighboringChunks(float3 origin, IEnumerable<float3> normals)
         {
             foreach (float3 normal in normals)
             {
@@ -253,7 +264,7 @@ namespace Wyd.Controllers.World
 
         private void FlagNeighborsForMeshUpdate(float3 chunkOrigin)
         {
-            foreach (ChunkController neighborChunk in GetNeighbors(chunkOrigin))
+            foreach (ChunkController neighborChunk in GetNeighboringChunks(chunkOrigin))
             {
                 neighborChunk.FlagMeshForUpdate();
             }
@@ -309,7 +320,7 @@ namespace Wyd.Controllers.World
                 for (int z = -renderRadius; z < (renderRadius + 1); z++)
                 for (int y = 0; y < WorldHeightInChunks; y++)
                 {
-                    float3 localOrigin = new float3(x, y, z) * ChunkController.SizeCubed;
+                    float3 localOrigin = new float3(x, y, z) * ChunkController.Size3D;
                     float3 origin = localOrigin + new float3(loader.ChunkPosition.x, 0, loader.ChunkPosition.z);
 
                     if (!chunksRequiringActivation.Contains(origin))
@@ -339,7 +350,7 @@ namespace Wyd.Controllers.World
 
         private static bool IsWithinLoaderRange(float3 difference) =>
             math.all(difference
-                     <= (ChunkController.SizeCubed
+                     <= (ChunkController.Size3D
                          * OptionsController.Current.RenderDistance));
 
         #endregion
@@ -355,7 +366,7 @@ namespace Wyd.Controllers.World
         public bool TryGetBlock(float3 globalPosition, out ushort blockId)
         {
             blockId = BlockController.NullID;
-            float3 chunkPosition = WydMath.RoundBy(globalPosition, ChunkController.SizeCubed);
+            float3 chunkPosition = WydMath.RoundBy(globalPosition, ChunkController.Size3D);
 
             return TryGetChunk(chunkPosition, out ChunkController chunkController)
                    && chunkController.TryGetBlock(globalPosition, out blockId);
@@ -363,7 +374,7 @@ namespace Wyd.Controllers.World
 
         public bool TryPlaceBlock(float3 globalPosition, ushort id)
         {
-            float3 chunkPosition = WydMath.RoundBy(globalPosition, ChunkController.SizeCubed);
+            float3 chunkPosition = WydMath.RoundBy(globalPosition, ChunkController.Size3D);
 
             return TryGetChunk(chunkPosition, out ChunkController chunkController)
                    && (chunkController != default)
@@ -408,7 +419,7 @@ namespace Wyd.Controllers.World
 
         private void OnChunkTerrainChanged(object sender, ChunkChangedEventArgs args)
         {
-            foreach (ChunkController chunkController in GetNeighbors(args.OriginPoint, args.NeighborDirectionsToUpdate))
+            foreach (ChunkController chunkController in GetNeighboringChunks(args.OriginPoint, args.NeighborDirectionsToUpdate))
             {
                 chunkController.FlagMeshForUpdate();
             }

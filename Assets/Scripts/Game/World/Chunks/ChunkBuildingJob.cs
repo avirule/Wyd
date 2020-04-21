@@ -18,21 +18,19 @@ namespace Wyd.Game.World.Chunks
         private readonly CancellationToken _CancellationToken;
         private readonly ComputeBuffer _NoiseValuesBuffer;
         private readonly float3 _OriginPoint;
-        private readonly float _Size;
         private readonly float _Frequency;
         private readonly float _Persistence;
         private readonly bool _GpuAcceleration;
 
-        private ChunkBuilder _Builder;
+        private ChunkTerrainBuilder _Builder;
 
-        public ChunkBuildingJob(CancellationToken cancellationToken, float3 originPoint, float size, float frequency,
-            float persistence, bool gpuAcceleration = false, ComputeBuffer noiseValuesBuffer = null) :
-            base(cancellationToken)
+        public ChunkBuildingJob(CancellationToken cancellationToken, float3 originPoint, float frequency,
+            float persistence, bool gpuAcceleration = false, ComputeBuffer noiseValuesBuffer = null)
+            : base(cancellationToken)
         {
             _CancellationToken = CancellationTokenSource.CreateLinkedTokenSource(AsyncJobScheduler.AbortToken,
                 cancellationToken).Token;
             _OriginPoint = originPoint;
-            _Size = size;
             _Frequency = frequency;
             _Persistence = persistence;
             _GpuAcceleration = gpuAcceleration;
@@ -41,8 +39,8 @@ namespace Wyd.Game.World.Chunks
 
         protected override Task Process()
         {
-            ChunkBuilder builder = new ChunkBuilder(_CancellationToken, _OriginPoint, _Frequency, _Persistence,
-                _GpuAcceleration, _NoiseValuesBuffer);
+            ChunkTerrainBuilder builder = new ChunkTerrainBuilder(_CancellationToken, _OriginPoint, _Frequency,
+                _Persistence, _GpuAcceleration, _NoiseValuesBuffer);
             builder.TimeMeasuredGenerate();
 
             // builder has completed execution, so set field
@@ -55,10 +53,8 @@ namespace Wyd.Game.World.Chunks
         {
             if (!_CancellationToken.IsCancellationRequested)
             {
-                DiagnosticsController.Current.RollingNoiseRetrievalTimes.Enqueue(_Builder
-                    .NoiseRetrievalTimeSpan);
-                DiagnosticsController.Current.RollingTerrainGenerationTimes.Enqueue(_Builder
-                    .TerrainGenerationTimeSpan);
+                DiagnosticsController.Current.RollingNoiseRetrievalTimes.Enqueue(_Builder.NoiseRetrievalTimeSpan);
+                DiagnosticsController.Current.RollingTerrainGenerationTimes.Enqueue(_Builder.TerrainGenerationTimeSpan);
             }
 
             return Task.CompletedTask;

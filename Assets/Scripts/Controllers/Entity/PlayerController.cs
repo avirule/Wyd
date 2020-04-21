@@ -310,7 +310,7 @@ namespace Wyd.Controllers.Entity
 
         private void CheckChangedChunkPosition()
         {
-            float3 rounded = WydMath.RoundBy(Transform.position, WydMath.ToFloat(ChunkController.SizeCubed));
+            float3 rounded = WydMath.RoundBy(Transform.position, WydMath.ToFloat(ChunkController.Size3D));
             int3 chunkPosition = WydMath.ToInt(rounded);
 
             if (math.all(chunkPosition == ChunkPosition))

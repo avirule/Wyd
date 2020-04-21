@@ -1,10 +1,13 @@
 #region
 
 using System;
+using System.Collections.Generic;
+using System.Linq;
 using Unity.Mathematics;
 using UnityEditor;
 using UnityEngine;
 using UnityEngine.SceneManagement;
+using Wyd.Controllers.World;
 using Wyd.Game;
 using Wyd.Game.World.Blocks;
 
@@ -95,15 +98,32 @@ namespace Wyd.Controllers.State
                 BlockDefinition.Property.Transparent);
         }
 
-        private static string GrassUVsRule(int3 position, Direction direction)
+        private static string GrassUVsRule(int3 globalPosition, Direction direction)
         {
+            List<ushort> neighboringBlocks = WorldController.Current.GetNeighboringBlocks(globalPosition).ToList();
+
             switch (direction)
             {
                 case Direction.North:
+                    return BlockController.Current.CheckBlockHasProperty(neighboringBlocks[0],
+                        BlockDefinition.Property.Transparent)
+                        ? "grass"
+                        : "dirt";
                 case Direction.East:
+                    return BlockController.Current.CheckBlockHasProperty(neighboringBlocks[1],
+                        BlockDefinition.Property.Transparent)
+                        ? "grass"
+                        : "dirt";
                 case Direction.South:
+                    return BlockController.Current.CheckBlockHasProperty(neighboringBlocks[2],
+                        BlockDefinition.Property.Transparent)
+                        ? "grass"
+                        : "dirt";
                 case Direction.West:
-                    return "grass_side";
+                    return BlockController.Current.CheckBlockHasProperty(neighboringBlocks[3],
+                        BlockDefinition.Property.Transparent)
+                        ? "grass"
+                        : "dirt";
                 case Direction.Up:
                     return "grass";
                 case Direction.Down:

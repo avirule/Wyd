@@ -4,6 +4,7 @@ using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using Unity.Mathematics;
+using Wyd.Controllers.World;
 using Wyd.Controllers.World.Chunk;
 
 #endregion
@@ -56,23 +57,9 @@ namespace Wyd.Game
         public static int3 Up { get; }
         public static int3 Down { get; }
 
-        public static readonly int3[] CardinalDirectionAxes =
-        {
-            North,
-            East,
-            South,
-            West
-        };
+        public static int3[] CardinalDirectionNormals { get; }
 
-        public static readonly int3[] AllDirectionAxes =
-        {
-            North,
-            East,
-            South,
-            West,
-            Up,
-            Down
-        };
+        public static int3[] AllDirectionNormals { get; }
 
         static Directions()
         {
@@ -82,6 +69,24 @@ namespace Wyd.Game
             West = new int3(-1, 0, 0);
             Up = new int3(0, 1, 0);
             Down = new int3(0, -1, 0);
+
+            CardinalDirectionNormals = new[]
+            {
+                North,
+                East,
+                South,
+                West
+            };
+
+            AllDirectionNormals = new[]
+            {
+                North,
+                East,
+                South,
+                West,
+                Up,
+                Down
+            };
         }
 
         public static IEnumerable<Direction> NormalToDirections(float3 normal)
@@ -144,12 +149,12 @@ namespace Wyd.Game
 
             _directionsAsIndexStep = new Dictionary<Direction, int>
             {
-                { Direction.North, ChunkController.SizeCubed.x },
+                { Direction.North, ChunkController.Size3D.x },
                 { Direction.East, 1 },
-                { Direction.South, -ChunkController.SizeCubed.x },
+                { Direction.South, -ChunkController.Size3D.x },
                 { Direction.West, -1 },
-                { Direction.Up, ChunkController.SizeCubed.x * ChunkController.SizeCubed.z },
-                { Direction.Down, -(ChunkController.SizeCubed.x * ChunkController.SizeCubed.z) }
+                { Direction.Up, ChunkController.Size3D.x * ChunkController.Size3D.z },
+                { Direction.Down, -(ChunkController.Size3D.x * ChunkController.Size3D.z) }
             };
         }
 
