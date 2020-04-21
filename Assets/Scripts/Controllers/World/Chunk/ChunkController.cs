@@ -9,6 +9,7 @@ using System.Threading;
 using Serilog;
 using Unity.Mathematics;
 using UnityEngine;
+using UnityEngine.XR.WSA;
 using Wyd.Controllers.State;
 using Wyd.Controllers.System;
 using Wyd.Game;
@@ -143,10 +144,6 @@ namespace Wyd.Controllers.World.Chunk
 
         [SerializeField]
         [ReadOnlyInspectorField]
-        private Vector3 Extents;
-
-        [SerializeField]
-        [ReadOnlyInspectorField]
         private string BinaryState;
 
         [SerializeField]
@@ -165,14 +162,6 @@ namespace Wyd.Controllers.World.Chunk
 
             _BlockActions = new ConcurrentQueue<BlockAction>();
             _Mesh = new Mesh();
-
-            void FlagUpdateMesh(object sender, ChunkChangedEventArgs args)
-            {
-                FlagMeshForUpdate();
-            }
-
-            BlocksChanged += FlagUpdateMesh;
-            TerrainChanged += FlagUpdateMesh;
         }
 
         protected override void OnEnable()
@@ -184,14 +173,15 @@ namespace Wyd.Controllers.World.Chunk
             _CancellationTokenSource = new CancellationTokenSource();
 
             State = ChunkState.Terrain;
-
             Active = gameObject.activeSelf;
+
+            BlocksChanged += FlagUpdateMeshCallback;
+            TerrainChanged += FlagUpdateMeshCallback;
 
 #if UNITY_EDITOR
 
             MinimumPoint = OriginPoint;
             MaximumPoint = OriginPoint + Size3D;
-            Extents = WydMath.ToFloat(Size3D) / 2f;
 
 #endif
         }
@@ -210,10 +200,20 @@ namespace Wyd.Controllers.World.Chunk
             _CancellationTokenSource.Cancel();
             _BlockActions = new ConcurrentQueue<BlockAction>();
             _Blocks = null;
+            _PendingMeshData = null;
 
             State = ChunkState.Terrain;
-
+            UpdateMesh = false;
             Active = gameObject.activeSelf;
+
+            BlocksChanged = TerrainChanged = MeshChanged = null;
+        }
+
+        private void OnDestroy()
+        {
+            Destroy(_Mesh);
+            Destroy(TerrainController);
+            Destroy(MeshController);
         }
 
         public void FrameUpdate()
@@ -337,7 +337,7 @@ namespace Wyd.Controllers.World.Chunk
 
         public void Activate(float3 position)
         {
-            _SelfTransform.SetPositionAndRotation(position, quaternion.identity);
+            _SelfTransform.position = position;
 
             gameObject.SetActive(true);
         }
@@ -372,7 +372,7 @@ namespace Wyd.Controllers.World.Chunk
             normals = Enumerable.Empty<float3>();
 
             // set local position to center point of chunk
-            float3 localPosition = globalPosition - (OriginPoint + Size3DExtents);
+            float3 localPosition = globalPosition - OriginPoint - Size3DExtents;
 
             // save signs of axes
             float3 localPositionSign = math.sign(localPosition);
@@ -457,6 +457,12 @@ namespace Wyd.Controllers.World.Chunk
             TerrainChanged?.Invoke(sender, args);
         }
 
+        private void OnMeshChanged(object sender, ChunkChangedEventArgs args)
+        {
+            MeshChanged?.Invoke(sender, args);
+        }
+
+
         private void OnTerrainGenerationFinished(object sender, AsyncJobEventArgs args)
         {
             args.AsyncJob.WorkFinished -= OnTerrainGenerationFinished;
@@ -481,22 +487,21 @@ namespace Wyd.Controllers.World.Chunk
             ((ChunkBuilderJob)args.AsyncJob).GetGeneratedBlockData(out _Blocks);
         }
 
-
-        private void OnMeshChanged(object sender, ChunkChangedEventArgs args)
-        {
-            MeshChanged?.Invoke(sender, args);
-        }
-
         private void OnMeshingFinished(object sender, AsyncJobEventArgs args)
         {
             args.AsyncJob.WorkFinished -= OnMeshingFinished;
 
-            if (!(args.AsyncJob is ChunkMeshingJob chunkMeshingJob) || !Active)
+            if (!Active)
             {
                 return;
             }
 
-            _PendingMeshData = chunkMeshingJob.GetMeshData();
+            _PendingMeshData = ((ChunkMeshingJob)args.AsyncJob).GetMeshData();
+        }
+
+        private void FlagUpdateMeshCallback(object sender, ChunkChangedEventArgs args)
+        {
+            FlagMeshForUpdate();
         }
 
         #endregion

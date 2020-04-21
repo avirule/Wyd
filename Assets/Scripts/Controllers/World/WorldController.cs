@@ -171,7 +171,8 @@ namespace Wyd.Controllers.World
                         quaternion.identity, transform);
                 }
 
-                chunkController.TerrainChanged += OnChunkTerrainChanged;
+                chunkController.TerrainChanged += OnChunkShapeChanged;
+                chunkController.BlocksChanged += OnChunkShapeChanged;
                 chunkController.MeshChanged += OnChunkMeshChanged;
                 _Chunks.Add(origin, chunkController);
 
@@ -200,7 +201,8 @@ namespace Wyd.Controllers.World
                 return;
             }
 
-            chunkController.TerrainChanged -= OnChunkTerrainChanged;
+            chunkController.TerrainChanged -= OnChunkShapeChanged;
+            chunkController.BlocksChanged += OnChunkShapeChanged;
             chunkController.MeshChanged -= OnChunkMeshChanged;
 
             _Chunks.Remove(chunkOrigin);
@@ -416,7 +418,7 @@ namespace Wyd.Controllers.World
         }
 
 
-        private void OnChunkTerrainChanged(object sender, ChunkChangedEventArgs args)
+        private void OnChunkShapeChanged(object sender, ChunkChangedEventArgs args)
         {
             foreach (ChunkController chunkController in GetNeighboringChunks(args.OriginPoint,
                 args.NeighborDirectionsToUpdate))

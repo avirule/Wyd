@@ -99,30 +99,12 @@ namespace Wyd.Controllers.State
 
         private static string GrassUVsRule(int3 globalPosition, Direction direction)
         {
-            ushort[] neighboringBlocks = WorldController.Current.GetNeighboringBlocks(globalPosition).ToArray();
-
             switch (direction)
             {
                 case Direction.North:
-                    return BlockController.Current.CheckBlockHasProperty(neighboringBlocks[0],
-                        BlockDefinition.Property.Transparent)
-                        ? "grass"
-                        : "dirt";
                 case Direction.East:
-                    return BlockController.Current.CheckBlockHasProperty(neighboringBlocks[1],
-                        BlockDefinition.Property.Transparent)
-                        ? "grass"
-                        : "dirt";
                 case Direction.South:
-                    return BlockController.Current.CheckBlockHasProperty(neighboringBlocks[2],
-                        BlockDefinition.Property.Transparent)
-                        ? "grass"
-                        : "dirt";
                 case Direction.West:
-                    return BlockController.Current.CheckBlockHasProperty(neighboringBlocks[3],
-                        BlockDefinition.Property.Transparent)
-                        ? "grass"
-                        : "dirt";
                 case Direction.Up:
                     return "grass";
                 case Direction.Down:

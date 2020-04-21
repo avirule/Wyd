@@ -163,9 +163,12 @@ namespace Wyd.Game
             while (_LocalCacheQueue.Count > 0)
             {
                 float3 position = _LocalCacheQueue.Dequeue();
-                GameObject obj = _ColliderCubes[position];
-                _ColliderCubes.Remove(position);
-                _colliderCubeCache.CacheItem(ref obj);
+
+                if (_ColliderCubes.TryGetValue(position, out GameObject gameObject))
+                {
+                    _ColliderCubes.Remove(position);
+                    _colliderCubeCache.CacheItem(ref gameObject);
+                }
             }
         }
 

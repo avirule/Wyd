@@ -134,7 +134,7 @@ namespace Wyd.Controllers.World.Chunk
             _Mesh.indexFormat = chunkMeshData.Vertices.Count > 65000
                 ? IndexFormat.UInt32
                 : IndexFormat.UInt16;
-            _Mesh.MarkDynamic();
+            
             _Mesh.SetVertices(chunkMeshData.Vertices);
             _Mesh.SetTriangles(chunkMeshData.Triangles, 0);
             _Mesh.SetTriangles(chunkMeshData.TransparentTriangles, 1);
@@ -145,9 +145,11 @@ namespace Wyd.Controllers.World.Chunk
                 _Mesh.SetUVs(0, chunkMeshData.UVs);
             }
 
+            _Mesh.RecalculateTangents();
+            _Mesh.RecalculateNormals();
+
 #if UNITY_EDITOR
 
-            // update debug data when mesh changed
             VertexCount = _Mesh.vertices.Length;
             TrianglesCount = _Mesh.triangles.Length;
             UVsCount = _Mesh.uv.Length;

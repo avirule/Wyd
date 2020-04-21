@@ -1,6 +1,7 @@
 #region
 
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
 using Serilog;
@@ -71,11 +72,12 @@ namespace Wyd.Controllers.System
                             return;
                         }
 
-                        perFrameUpdate.FrameUpdate();
-
                         if (perFrameUpdate is IPerFrameIncrementalUpdate perFrameIncrementalUpdate)
                         {
-                            foreach (object _ in perFrameIncrementalUpdate.IncrementalFrameUpdate())
+                            IEnumerator perFrameEnumerator =
+                                perFrameIncrementalUpdate.IncrementalFrameUpdate().GetEnumerator();
+
+                            while (perFrameEnumerator.MoveNext())
                             {
                                 if (!IsSafeFrameTime())
                                 {
@@ -83,6 +85,8 @@ namespace Wyd.Controllers.System
                                 }
                             }
                         }
+
+                        perFrameUpdate.FrameUpdate();
                     }
                 }
             }
