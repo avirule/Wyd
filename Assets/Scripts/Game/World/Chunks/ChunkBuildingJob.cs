@@ -54,7 +54,7 @@ namespace Wyd.Game.World.Chunks
             if (!_CancellationToken.IsCancellationRequested)
             {
                 DiagnosticsController.Current.RollingNoiseRetrievalTimes.Enqueue(_Builder.NoiseRetrievalTimeSpan);
-                DiagnosticsController.Current.RollingTerrainGenerationTimes.Enqueue(_Builder.TerrainGenerationTimeSpan);
+                DiagnosticsController.Current.RollingTerrainBuildingTimes.Enqueue(_Builder.TerrainGenerationTimeSpan);
             }
 
             return Task.CompletedTask;

@@ -112,11 +112,10 @@ namespace Wyd.Game.World.Chunks
 
         private void Generate()
         {
-            int sizeProduct = ChunkController.SIZE_CUBED;
             bool allAir = true;
             bool allStone = true;
 
-            for (int index = 0; index < sizeProduct; index++)
+            for (int index = 0; index < ChunkController.SIZE_CUBED; index++)
             {
                 if (CancellationToken.IsCancellationRequested)
                 {
@@ -175,23 +174,15 @@ namespace Wyd.Game.World.Chunks
                     continue;
                 }
 
-                _Blocks.UncheckedSetPoint(globalPosition, GetBlockIDAtPosition(globalPosition, index));
+                _Blocks.UncheckedSetPoint(globalPosition, GetBlockIDAtPosition(globalPosition));
             }
         }
 
-        private ushort GetBlockIDAtPosition(float3 globalPosition, int index)
+        private ushort GetBlockIDAtPosition(float3 globalPosition)
         {
             if ((globalPosition.y < 4) && (globalPosition.y <= SeededRandom.Next(0, 4)))
             {
                 return GetCachedBlockID("bedrock");
-            }
-            else if (_NoiseMap[index] < 0.0105)
-            {
-                float noise2d = OpenSimplexSlim.GetSimplex(WorldController.Current.Seed, _Frequency, globalPosition.xz);
-
-                //Log.Information(noise2d.ToString(CultureInfo.InvariantCulture));
-
-                return GetCachedBlockID("grass");
             }
             else
             {

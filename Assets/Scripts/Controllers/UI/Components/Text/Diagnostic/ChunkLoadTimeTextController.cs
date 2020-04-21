@@ -12,39 +12,43 @@ namespace Wyd.Controllers.UI.Components.Text.Diagnostic
         private const double _TOLERANCE = 0.01d;
 
         private double _RecentNoiseRetrievalTime;
-        private double _RecentTerrainGenerationTime;
+        private double _RecentTerrainBuildingTime;
+        private double _RecentTerrainDetailingTime;
         private double _RecentMeshingSetBlockTime;
         private double _RecentMeshingTime;
 
         protected override void TimedUpdate()
         {
             double averageNoiseRetrievalTime = DiagnosticsController.Current.AverageNoiseRetrievalTime;
-            double averageTerrainGenerationTime = DiagnosticsController.Current.AverageTerrainGenerationTime;
+            double averageTerrainBuildingTime = DiagnosticsController.Current.AverageTerrainBuildingTime;
+            double averageTerrainDetailingTime = DiagnosticsController.Current.AverageTerrainDetailingTime;
             double averageMeshingSetBlockTime = DiagnosticsController.Current.AverageMeshingSetBlockTime;
             double averageMeshingTime = DiagnosticsController.Current.AverageMeshingTime;
 
-            if (!(Math.Abs(_RecentNoiseRetrievalTime - averageNoiseRetrievalTime) > _TOLERANCE)
-                && !(Math.Abs(_RecentTerrainGenerationTime - averageTerrainGenerationTime) > _TOLERANCE)
-                && !(Math.Abs(_RecentMeshingSetBlockTime - averageMeshingSetBlockTime) > _TOLERANCE)
-                && !(Math.Abs(_RecentMeshingTime - averageMeshingTime) > _TOLERANCE))
+            if ((Math.Abs(_RecentNoiseRetrievalTime - averageNoiseRetrievalTime) < _TOLERANCE)
+                && (Math.Abs(_RecentTerrainBuildingTime - averageTerrainBuildingTime) < _TOLERANCE)
+                && (Math.Abs(_RecentTerrainDetailingTime - averageTerrainDetailingTime) < _TOLERANCE)
+                && (Math.Abs(_RecentMeshingSetBlockTime - averageMeshingSetBlockTime) < _TOLERANCE)
+                && (Math.Abs(_RecentMeshingTime - averageMeshingTime) < _TOLERANCE))
             {
                 return;
             }
 
             SetRecentAverages(
                 averageNoiseRetrievalTime,
-                averageTerrainGenerationTime,
+                averageTerrainBuildingTime,
+                averageTerrainDetailingTime,
                 averageMeshingSetBlockTime,
                 averageMeshingTime);
 
             UpdateChunkLoadTimeText();
         }
 
-        private void SetRecentAverages(double averageNoiseRetrievalTime, double averageTerrainGenerationTime,
-            double averageMeshingSetBlockTime, double averageMeshingTime)
+        private void SetRecentAverages(double averageNoiseRetrievalTime, double averageTerrainBuildingTime, double averageTerrainDetailingTime, double averageMeshingSetBlockTime, double averageMeshingTime)
         {
             _RecentNoiseRetrievalTime = averageNoiseRetrievalTime;
-            _RecentTerrainGenerationTime = averageTerrainGenerationTime;
+            _RecentTerrainBuildingTime = averageTerrainBuildingTime;
+            _RecentTerrainDetailingTime = averageTerrainDetailingTime;
             _RecentMeshingSetBlockTime = averageMeshingSetBlockTime;
             _RecentMeshingTime = averageMeshingTime;
         }
@@ -53,7 +57,8 @@ namespace Wyd.Controllers.UI.Components.Text.Diagnostic
         {
             _TextObject.text = string.Format(_Format,
                 _RecentNoiseRetrievalTime,
-                _RecentTerrainGenerationTime,
+                _RecentTerrainBuildingTime,
+                _RecentTerrainDetailingTime,
                 _RecentMeshingSetBlockTime,
                 _RecentMeshingTime);
         }

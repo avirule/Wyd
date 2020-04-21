@@ -2,6 +2,7 @@
 
 using System;
 using System.Collections;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
@@ -27,7 +28,7 @@ namespace Wyd.Controllers.World.Chunk
     public enum ChunkState
     {
         Terrain = 0b0000_0001,
-        TerrainDetail = 0b0000_0010,
+        Detail = 0b0000_0010,
         AwaitingTerrain = 0b0000_0100,
         TerrainComplete = 0b0000_1000,
         TerrainMask = 0b0000_1111,
@@ -40,7 +41,7 @@ namespace Wyd.Controllers.World.Chunk
     public class ChunkController : ActivationStateChunkController, IPerFrameIncrementalUpdate
     {
         public const int SIZE = 32;
-        public const int SIZE_CUBED = 32 ^ 3;
+        public const int SIZE_CUBED = SIZE * SIZE * SIZE;
 
         private static readonly ObjectCache<BlockAction> _blockActionsCache = new ObjectCache<BlockAction>(true, 1024);
 
@@ -51,7 +52,7 @@ namespace Wyd.Controllers.World.Chunk
         #region Instance Members
 
         private CancellationTokenSource _CancellationTokenSource;
-        private Queue<BlockAction> _BlockActions;
+        private ConcurrentQueue<BlockAction> _BlockActions;
         private OctreeNode<ushort> _Blocks;
         private Mesh _Mesh;
 
@@ -65,7 +66,7 @@ namespace Wyd.Controllers.World.Chunk
             set => Interlocked.Exchange(ref _Active, Convert.ToInt64(value));
         }
 
-        public ref OctreeNode<ushort> Blocks => ref _Blocks;
+        public OctreeNode<ushort> Blocks => _Blocks;
 
         public ChunkState ChunkState
         {
@@ -119,7 +120,7 @@ namespace Wyd.Controllers.World.Chunk
         {
             base.Awake();
 
-            _BlockActions = new Queue<BlockAction>();
+            _BlockActions = new ConcurrentQueue<BlockAction>();
             _Mesh = new Mesh();
 
             void FlagUpdateMesh(object sender, ChunkChangedEventArgs args)
@@ -164,7 +165,7 @@ namespace Wyd.Controllers.World.Chunk
             }
 
             _CancellationTokenSource.Cancel();
-            _BlockActions.Clear();
+            _BlockActions = new ConcurrentQueue<BlockAction>();
             _Blocks = null;
 
             ChunkState = ChunkState.Terrain;
@@ -188,6 +189,14 @@ namespace Wyd.Controllers.World.Chunk
             {
                 ChunkState |= (ChunkState & ~ChunkState.TerrainMask) | ChunkState.AwaitingTerrain;
                 TerrainController.BeginTerrainGeneration(_CancellationTokenSource.Token, OnTerrainGenerationFinished);
+            }
+            else if (ChunkState.HasState(ChunkState.Detail)
+                     && WorldController.Current.GetNeighboringChunks(OriginPoint).All(chunkController =>
+                         chunkController.ChunkState.HasState(ChunkState.Detail)))
+            {
+                ChunkState |= (ChunkState & ~ChunkState.TerrainMask) | ChunkState.AwaitingTerrain;
+                TerrainController.BeginTerrainDetailing(_CancellationTokenSource.Token, OnTerrainDetailingFinished,
+                    ref _Blocks);
             }
 
             if (!ChunkState.HasState(ChunkState.TerrainComplete))
@@ -214,7 +223,7 @@ namespace Wyd.Controllers.World.Chunk
                         || WorldController.Current.GetNeighboringChunks(OriginPoint)
                             .All(chunkController => chunkController.Blocks.IsUniform)))
                 {
-                    ChunkState = (ChunkState & ~ChunkState.MeshDataPending) | ChunkState.Meshed;
+                    ChunkState = (ChunkState & ~ChunkState.MeshDataPending) | ChunkState.UpdateMesh | ChunkState.Meshed;
                 }
                 else
                 {
@@ -231,10 +240,8 @@ namespace Wyd.Controllers.World.Chunk
                 yield break;
             }
 
-            while (_BlockActions.Count > 0)
+            while ((_BlockActions.Count > 0) && _BlockActions.TryDequeue(out BlockAction blockAction))
             {
-                BlockAction blockAction = _BlockActions.Dequeue();
-
                 ProcessBlockAction(blockAction);
 
                 _blockActionsCache.CacheItem(ref blockAction);
@@ -384,10 +391,23 @@ namespace Wyd.Controllers.World.Chunk
             }
 
             ((ChunkBuildingJob)args.AsyncJob).GetGeneratedBlockData(out _Blocks);
-            ChunkState = (ChunkState & ~ChunkState.TerrainMask) | ChunkState.TerrainComplete;
-            OnLocalTerrainChanged(sender,
-                new ChunkChangedEventArgs(OriginPoint, Directions.AllDirectionNormals.Select(WydMath.ToFloat)));
+            ChunkState = (ChunkState & ~ChunkState.TerrainMask) | ChunkState.Detail;
         }
+
+        private void OnTerrainDetailingFinished(object sender, AsyncJobEventArgs args)
+        {
+            args.AsyncJob.WorkFinished -= OnTerrainDetailingFinished;
+
+            if (!Active)
+            {
+                return;
+            }
+
+            ChunkState = (ChunkState & ~ChunkState.TerrainMask) | ChunkState.TerrainComplete;
+            OnLocalTerrainChanged(sender, new ChunkChangedEventArgs(OriginPoint,
+                Directions.AllDirectionNormals.Select(WydMath.ToFloat)));
+        }
+
 
         private void OnMeshChanged(object sender, ChunkChangedEventArgs args)
         {

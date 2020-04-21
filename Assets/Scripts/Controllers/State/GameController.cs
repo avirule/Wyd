@@ -100,7 +100,7 @@ namespace Wyd.Controllers.State
 
         private static string GrassUVsRule(int3 globalPosition, Direction direction)
         {
-            List<ushort> neighboringBlocks = WorldController.Current.GetNeighboringBlocks(globalPosition).ToList();
+            ushort[] neighboringBlocks = WorldController.Current.GetNeighboringBlocks(globalPosition).ToArray();
 
             switch (direction)
             {
