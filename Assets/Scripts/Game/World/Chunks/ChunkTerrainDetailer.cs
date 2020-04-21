@@ -56,7 +56,7 @@ namespace Wyd.Game.World.Chunks
 
         private void AttemptLaySurfaceBlocks(float3 globalPosition)
         {
-            if (globalPosition.y < (WorldController.WORLD_HEIGHT / 2f)
+            if ((globalPosition.y < (WorldController.WORLD_HEIGHT / 2f))
                 || (OpenSimplexSlim.GetSimplex(WorldController.Current.Seed, 0.01f, globalPosition.xz) > 0.5f))
             {
                 return;

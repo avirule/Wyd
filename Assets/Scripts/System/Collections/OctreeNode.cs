@@ -134,7 +134,7 @@ namespace Wyd.System.Collections
                         : string.Empty));
             }
 
-            if (IsUniform && Value.GetHashCode() == newValue.GetHashCode())
+            if (IsUniform && (Value.GetHashCode() == newValue.GetHashCode()))
             {
                 // operation does nothing, so return
                 return;

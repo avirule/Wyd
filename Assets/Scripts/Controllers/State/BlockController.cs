@@ -145,7 +145,8 @@ namespace Wyd.Controllers.State
 
             if (!BlockNames.TryGetValue(blockName, out blockId))
             {
-                Log.Warning($"({nameof(BlockController)}) Failed to return block id for '{blockName}': block does not exist.");
+                Log.Warning(
+                    $"({nameof(BlockController)}) Failed to return block id for '{blockName}': block does not exist.");
 
                 return false;
             }

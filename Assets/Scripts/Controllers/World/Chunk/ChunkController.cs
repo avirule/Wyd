@@ -268,6 +268,7 @@ namespace Wyd.Controllers.World.Chunk
                         OnLocalTerrainChanged(this, new ChunkChangedEventArgs(OriginPoint,
                             Directions.AllDirectionNormals.Select(WydMath.ToFloat)));
                     }
+
                     break;
                 case ChunkState.Mesh:
                     if (Blocks.IsUniform
