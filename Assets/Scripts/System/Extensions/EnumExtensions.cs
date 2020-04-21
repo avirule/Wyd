@@ -30,14 +30,6 @@ namespace Wyd.System.Extensions
             return (intState & intFlag) > 0;
         }
 
-        public static bool HasState(this ChunkState chunkState, ChunkState flag)
-        {
-            int intState = (int)chunkState;
-            int intFlag = (int)flag;
-
-            return (intState & intFlag) > 0;
-        }
-
         public static bool HasProperty(this BlockDefinition.Property property, BlockDefinition.Property flag)
         {
             int intProperty = (int)property;

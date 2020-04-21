@@ -41,11 +41,6 @@ namespace Wyd.Game.World.Chunks
             _NoiseValuesBuffer = noiseValuesBuffer;
         }
 
-        public void GetGeneratedBlockData(out OctreeNode<ushort> blocks)
-        {
-            blocks = _Blocks;
-        }
-
         #region Terrain Generation
 
         private void GetComputeBufferData()

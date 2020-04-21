@@ -47,5 +47,10 @@ namespace Wyd.Game.World.Chunks
 
             return BlockController.AirID;
         }
+
+        public void GetGeneratedBlockData(out OctreeNode<ushort> blocks)
+        {
+            blocks = _Blocks;
+        }
     }
 }

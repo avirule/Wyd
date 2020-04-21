@@ -36,7 +36,7 @@ namespace Wyd.Controllers.World.Chunk
 
         public void BeginTerrainGeneration(CancellationToken cancellationToken, AsyncJobEventHandler callback)
         {
-            ChunkBuildingJob asyncJob;
+            ChunkBuilderJob asyncJob;
 
             if (OptionsController.Current.GPUAcceleration)
             {
@@ -49,12 +49,12 @@ namespace Wyd.Controllers.World.Chunk
                 // 1024 is the value set in the shader's [numthreads(--> 1024 <--, 1, 1)]
                 _NoiseShader.Dispatch(kernel, 1024, 1, 1);
 
-                asyncJob = new ChunkBuildingJob(cancellationToken, OriginPoint, _FREQUENCY, _PERSISTENCE,
+                asyncJob = new ChunkTerrainBuilderJob(cancellationToken, OriginPoint, _FREQUENCY, _PERSISTENCE,
                     OptionsController.Current.GPUAcceleration, noiseBuffer);
             }
             else
             {
-                asyncJob = new ChunkBuildingJob(cancellationToken, OriginPoint, _FREQUENCY, _PERSISTENCE);
+                asyncJob = new ChunkTerrainBuilderJob(cancellationToken, OriginPoint, _FREQUENCY, _PERSISTENCE);
             }
 
             if (callback != null)
@@ -67,9 +67,9 @@ namespace Wyd.Controllers.World.Chunk
         }
 
         public void BeginTerrainDetailing(CancellationToken cancellationToken, AsyncJobEventHandler callback,
-            ref OctreeNode<ushort> blocks)
+            OctreeNode<ushort> blocks)
         {
-            ChunkDetailingJob asyncJob = new ChunkDetailingJob(cancellationToken, OriginPoint, ref blocks);
+            ChunkTerrainDetailerJob asyncJob = new ChunkTerrainDetailerJob(cancellationToken, OriginPoint, blocks);
 
             if (callback != null)
             {
