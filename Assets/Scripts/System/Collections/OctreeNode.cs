@@ -51,22 +51,25 @@ namespace Wyd.System.Collections
             _Nodes.Clear();
         }
 
-        public void Populate()
+        private void Populate()
+        {
+            _Nodes.InsertRange(0, GetNodePopulation());
+        }
+
+        private IEnumerable<OctreeNode<T>> GetNodePopulation()
         {
             float3 offset = new float3(_Volume.Extents / 2f);
 
-            _Nodes.InsertRange(0, new[]
-            {
-                new OctreeNode<T>(_Volume.CenterPoint + (_coordinates[0] * offset), _Volume.Extents.x, Value),
-                new OctreeNode<T>(_Volume.CenterPoint + (_coordinates[1] * offset), _Volume.Extents.x, Value),
-                new OctreeNode<T>(_Volume.CenterPoint + (_coordinates[2] * offset), _Volume.Extents.x, Value),
-                new OctreeNode<T>(_Volume.CenterPoint + (_coordinates[3] * offset), _Volume.Extents.x, Value),
-                new OctreeNode<T>(_Volume.CenterPoint + (_coordinates[4] * offset), _Volume.Extents.x, Value),
-                new OctreeNode<T>(_Volume.CenterPoint + (_coordinates[5] * offset), _Volume.Extents.x, Value),
-                new OctreeNode<T>(_Volume.CenterPoint + (_coordinates[6] * offset), _Volume.Extents.x, Value),
-                new OctreeNode<T>(_Volume.CenterPoint + (_coordinates[7] * offset), _Volume.Extents.x, Value)
-            });
+            yield return new OctreeNode<T>(_Volume.CenterPoint + (_coordinates[0] * offset), _Volume.Extents.x, Value);
+            yield return new OctreeNode<T>(_Volume.CenterPoint + (_coordinates[1] * offset), _Volume.Extents.x, Value);
+            yield return new OctreeNode<T>(_Volume.CenterPoint + (_coordinates[2] * offset), _Volume.Extents.x, Value);
+            yield return new OctreeNode<T>(_Volume.CenterPoint + (_coordinates[3] * offset), _Volume.Extents.x, Value);
+            yield return new OctreeNode<T>(_Volume.CenterPoint + (_coordinates[4] * offset), _Volume.Extents.x, Value);
+            yield return new OctreeNode<T>(_Volume.CenterPoint + (_coordinates[5] * offset), _Volume.Extents.x, Value);
+            yield return new OctreeNode<T>(_Volume.CenterPoint + (_coordinates[6] * offset), _Volume.Extents.x, Value);
+            yield return new OctreeNode<T>(_Volume.CenterPoint + (_coordinates[7] * offset), _Volume.Extents.x, Value);
         }
+
 
         #region Checked Data Operations
 

@@ -46,7 +46,7 @@ namespace Wyd.Controllers.System
             AsyncJobScheduler.JobQueued += (sender, args) =>
             {
                 Log.Information(
-                    $"Queued new {nameof(AsyncJob)} for completion (type: {args.AsyncJob.GetType().Name})");
+                    $"Queued new {nameof(AsyncJob)} for completion ({args.AsyncJob.GetType().Name}).");
             };
 
             Application.logMessageReceived += LogHandler;
