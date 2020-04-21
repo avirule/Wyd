@@ -27,7 +27,7 @@ namespace Wyd.System.Extensions
             int intState = (int)worldState;
             int intFlag = (int)flag;
 
-            return (intState & intFlag) == intFlag;
+            return (intState & intFlag) > 0;
         }
 
         public static bool HasState(this ChunkState chunkState, ChunkState flag)
@@ -35,7 +35,7 @@ namespace Wyd.System.Extensions
             int intState = (int)chunkState;
             int intFlag = (int)flag;
 
-            return (intState & intFlag) == intFlag;
+            return (intState & intFlag) > 0;
         }
 
         public static bool HasProperty(this BlockDefinition.Property property, BlockDefinition.Property flag)
@@ -43,7 +43,7 @@ namespace Wyd.System.Extensions
             int intProperty = (int)property;
             int intFlag = (int)flag;
 
-            return (intProperty & intFlag) == intFlag;
+            return (intProperty & intFlag) > 0;
         }
     }
 }

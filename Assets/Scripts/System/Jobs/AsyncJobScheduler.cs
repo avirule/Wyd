@@ -1,6 +1,7 @@
 #region
 
 using System;
+using System.Collections.Concurrent;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -10,6 +11,12 @@ namespace Wyd.System.Jobs
 {
     public static class AsyncJobScheduler
     {
+        #if DEBUG
+
+        private static readonly ConcurrentDictionary<Guid, AsyncJob> _processingJobsDiag;
+
+        #endif
+
         private static CancellationTokenSource _AbortTokenSource;
         private static Semaphore _WorkerSemaphore;
         private static long _MaximumProcessingJobs;
@@ -31,6 +38,12 @@ namespace Wyd.System.Jobs
         /// </summary>
         static AsyncJobScheduler()
         {
+            #if DEBUG
+
+            _processingJobsDiag = new ConcurrentDictionary<Guid, AsyncJob>();
+
+                #endif
+
             _AbortTokenSource = new CancellationTokenSource();
 
             JobQueued += (sender, args) => Interlocked.Increment(ref _QueuedJobs);
@@ -110,11 +123,23 @@ namespace Wyd.System.Jobs
 
             _WorkerSemaphore.WaitOne();
 
+            #if DEBUG
+
+            _processingJobsDiag.TryAdd(asyncJob.Identity, asyncJob);
+
+            #endif
+
             OnJobStarted(new AsyncJobEventArgs(asyncJob));
 
             await asyncJob.Execute();
 
             OnJobFinished(new AsyncJobEventArgs(asyncJob));
+
+            #if DEBUG
+
+            _processingJobsDiag.TryRemove(asyncJob.Identity, out asyncJob);
+
+            #endif
 
             _WorkerSemaphore.Release();
         }

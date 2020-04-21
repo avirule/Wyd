@@ -38,56 +38,72 @@ namespace Wyd.Game.World.Chunks
 
                 float noise2d = OpenSimplexSlim.GetSimplex(WorldController.Current.Seed, 0.01f, globalPosition.xz);
 
-                if (noise2d > 0.5f)
+                if (noise2d <= 0.5f)
                 {
-                    continue;
-                }
+                    bool airAbove = true;
 
-                bool airAbove = true;
-
-                for (float3 ySteps = new float3(0f, 1f, 0f); ySteps.y <= 10; ySteps += Directions.Up)
-                {
-                    float3 localStepped = localPosition + ySteps;
-                    float3 globalStepped = globalPosition + ySteps;
-
-                    if (
-                        // check if local step is outside local blocks bounds
-                        ((localStepped.y >= ChunkController.SIZE)
-                         && WorldController.Current.TryGetBlock(globalStepped, out ushort queriedBlockId)
-                         && (queriedBlockId != BlockController.AirID))
-                        // check if local step is within local block bounds
-                        || ((localStepped.y < ChunkController.SIZE)
-                            && (_Blocks.UncheckedGetPoint(globalStepped) != BlockController.AirID)))
+                    for (float3 ySteps = new float3(0f, 1f, 0f); ySteps.y <= 10; ySteps += Directions.Up)
                     {
-                        airAbove = false;
-                        break;
-                    }
-                }
-
-                if (airAbove)
-                {
-                    _Blocks.UncheckedSetPoint(globalPosition, GetCachedBlockID("grass"));
-
-                    for (float3 ySteps = new float3(0f, -1f, 0f); ySteps.y >= -SeededRandom.Next(3, 5); ySteps += Directions.Down)
-                    {
-                        float3 localStepped = localPosition + ySteps;
-                        float3 globalStepped = globalPosition + ySteps;
-
-                        if (localStepped.y < 0f)
+                        if (TryGetPointBoundsAware(globalPosition + ySteps, out ushort blockId)
+                            && (blockId != BlockController.AirID))
                         {
-                            WorldController.Current.TryPlaceBlock(globalStepped, GetCachedBlockID("dirt"));
-                        }
-                        else
-                        {
-                            _Blocks.UncheckedSetPoint(globalStepped, GetCachedBlockID("dirt"));
+                            airAbove = false;
+                            break;
                         }
                     }
+
+                    if (airAbove)
+                    {
+                        _Blocks.UncheckedSetPoint(globalPosition, GetCachedBlockID("grass"));
+
+                        for (float3 ySteps = new float3(0f, -1f, 0f);
+                            ySteps.y >= -SeededRandom.Next(3, 5);
+                            ySteps += Directions.Down)
+                        {
+                            SetPointBoundsAware(globalPosition + ySteps, GetCachedBlockID("dirt"));
+                        }
+                    }
+                }
+
+                if ((_Blocks.UncheckedGetPoint(globalPosition) == GetCachedBlockID("stone"))
+                    && (OpenSimplexSlim.GetSimplex(WorldController.Current.Seed, 0.01f, globalPosition) > 0.5f))
+                {
+                    SetPointBoundsAware(globalPosition, GetCachedBlockID("coal_ore"));
                 }
             }
 
             Stopwatch.Stop();
 
             TerrainDetailTimeSpan = Stopwatch.Elapsed;
+        }
+
+        private bool TryGetPointBoundsAware(float3 globalPosition, out ushort blockId)
+        {
+            float3 localPosition = globalPosition - OriginPoint;
+
+            if (math.any(localPosition < 0f) || math.any(localPosition >= ChunkController.SIZE))
+            {
+                return WorldController.Current.TryGetBlock(globalPosition, out blockId);
+            }
+            else
+            {
+                blockId = _Blocks.UncheckedGetPoint(globalPosition);
+                return true;
+            }
+        }
+
+        private void SetPointBoundsAware(float3 globalPosition, ushort blockId)
+        {
+            float3 localPosition = globalPosition - OriginPoint;
+
+            if (math.any(localPosition < 0f) || math.any(localPosition >= ChunkController.SIZE))
+            {
+                WorldController.Current.TryPlaceBlock(globalPosition, blockId);
+            }
+            else
+            {
+                _Blocks.UncheckedSetPoint(globalPosition, blockId);
+            }
         }
     }
 }
