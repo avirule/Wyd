@@ -48,6 +48,7 @@ namespace Wyd.Controllers.World.Chunk
         #region Instance Members
 
         private CancellationTokenSource _CancellationTokenSource;
+        private List<ChunkController> _Neighbors;
         private ConcurrentQueue<BlockAction> _BlockActions;
         private OctreeNode<ushort> _Blocks;
         private Mesh _Mesh;
@@ -160,6 +161,8 @@ namespace Wyd.Controllers.World.Chunk
         {
             base.Awake();
 
+            _Neighbors = new List<ChunkController>();
+
             _ActiveLock = new object();
             _UpdateMeshLock = new object();
 
@@ -174,6 +177,7 @@ namespace Wyd.Controllers.World.Chunk
             PerFrameUpdateController.Current.RegisterPerFrameUpdater(20, this);
 
             _CancellationTokenSource = new CancellationTokenSource();
+            _Neighbors.InsertRange(0, WorldController.Current.GetNeighboringChunks(OriginPoint));
 
             State = ChunkState.Unbuilt;
             Active = gameObject.activeSelf;
@@ -201,6 +205,7 @@ namespace Wyd.Controllers.World.Chunk
             }
 
             _CancellationTokenSource.Cancel();
+            _Neighbors.Clear();
             _BlockActions = new ConcurrentQueue<BlockAction>();
             _Blocks = null;
 
@@ -234,11 +239,19 @@ namespace Wyd.Controllers.World.Chunk
 
 #endif
 
-            if (!WorldController.Current.ReadyForGeneration
-                || WorldController.Current.GetNeighboringChunks(OriginPoint)
-                    .Any(chunkController => chunkController.State < State))
+            if (((State == ChunkState.Meshed) && !UpdateMesh) || !WorldController.Current.ReadyForGeneration)
             {
                 return;
+            }
+            else if (State < ChunkState.Mesh)
+            {
+                foreach (ChunkController chunkController in _Neighbors)
+                {
+                    if (chunkController.State < State)
+                    {
+                        return;
+                    }
+                }
             }
 
             switch (State)
@@ -277,8 +290,7 @@ namespace Wyd.Controllers.World.Chunk
                 case ChunkState.Mesh:
                     if (Blocks.IsUniform
                         && ((Blocks.Value == BlockController.AirID)
-                            || WorldController.Current.GetNeighboringChunks(OriginPoint)
-                                .All(chunkController => chunkController.Blocks.IsUniform)))
+                            || _Neighbors.All(chunkController => chunkController.Blocks.IsUniform)))
                     {
                         State = ChunkState.Meshed;
                     }
