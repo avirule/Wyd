@@ -13,6 +13,7 @@ using Wyd.Controllers.World.Chunk;
 using Wyd.Game.World.Blocks;
 using Wyd.System;
 using Wyd.System.Collections;
+using Wyd.System.Graphics;
 
 #endregion
 
@@ -25,7 +26,6 @@ namespace Wyd.Game.World.Chunks
 
         private readonly HashSet<ushort> _OpaqueIDCache;
 
-        // todo mask should just be BlockFaces, instead of unrolling the octree
         private readonly BlockFaces[] _Mask;
         private readonly MeshData _MeshData;
 
@@ -127,7 +127,7 @@ namespace Wyd.Game.World.Chunks
                 int3 localPosition = WydMath.IndexTo3D(index, ChunkController.SIZE);
                 int3 globalPosition = WydMath.ToInt(_OriginPoint + localPosition);
 
-                ushort currentBlockId = _Blocks.GetPoint(globalPosition);
+                ushort currentBlockId = _Blocks.GetPoint(globalPosition, true);
 
                 if (currentBlockId == BlockController.AirID)
                 {
@@ -203,7 +203,7 @@ namespace Wyd.Game.World.Chunks
                         continue;
                     }
 
-                    if (// check if local position is at edge of chunk, and if so check face direction from neighbor
+                    if ( // check if local position is at edge of chunk, and if so check face direction from neighbor
                         ((((sign > 0) && (localPosition[i] == (ChunkController.SIZE - 1))) || ((sign < 0) && (localPosition[i] == 0)))
                          && CheckBlockTransparency(GetNeighboringBlock(faceNormal, globalPosition + faceNormal)))
                         // local position is inside chunk, so retrieve from blocks
@@ -212,12 +212,14 @@ namespace Wyd.Game.World.Chunks
                         _Mask[index].SetFace(direction, true);
                         AddTriangles(direction);
 
-                        //float3 uvSize = new float3(1f);
+                        float2 uvSize = new float2(1f);
 
                         if (_AggressiveFaceMerging)
                         {
                             int traversals = 0;
                             float3 finalTraversalNormal = float3.zero;
+
+                            int uvIndex = 1;
 
                             foreach ((int traversalNormalIndex, int3 traversalNormal) in GetTraversalNormals(faceNormal))
                             {
@@ -249,8 +251,12 @@ namespace Wyd.Game.World.Chunks
 
                                 if (traversals > 1)
                                 {
+                                    // todo make this extend in the right direction
+                                    uvSize[uvIndex] = traversals;
                                     break;
                                 }
+
+                                uvIndex -= 1;
                             }
 
                             for (int vert = 0; vert < 4; vert++)
@@ -259,19 +265,19 @@ namespace Wyd.Game.World.Chunks
                                                          * math.clamp(traversals * finalTraversalNormal, 1, int.MaxValue);
                                 _MeshData.AddVertex(localPosition + traversalVertex);
                             }
-
-                            if (BlockController.Current.GetUVs(currentBlockId, globalPosition, Direction.North, uvSize,
-                                out BlockUVs blockUVs))
-                            {
-                                _MeshData.AddUV(blockUVs.TopLeft);
-                                _MeshData.AddUV(blockUVs.TopRight);
-                                _MeshData.AddUV(blockUVs.BottomLeft);
-                                _MeshData.AddUV(blockUVs.BottomRight);
-                            }
                         }
                         else
                         {
                             AddVertices(direction, localPosition);
+                        }
+
+                        if (BlockController.Current.GetUVs(currentBlockId, globalPosition, Direction.North, uvSize,
+                            out BlockUVs blockUVs))
+                        {
+                            _MeshData.AddUV(blockUVs.TopLeft);
+                            _MeshData.AddUV(blockUVs.TopRight);
+                            _MeshData.AddUV(blockUVs.BottomLeft);
+                            _MeshData.AddUV(blockUVs.BottomRight);
                         }
                     }
                 }
@@ -297,7 +303,7 @@ namespace Wyd.Game.World.Chunks
                 return 1;
             }
 
-            ushort currentId = _Blocks.GetPoint(globalPosition);
+            ushort currentId = _Blocks.GetPoint(globalPosition, true);
 
             int traversals;
 
@@ -309,7 +315,7 @@ namespace Wyd.Game.World.Chunks
                 int traversalIndex = index + (traversals * traversalFactor);
                 float3 currentTraversalPosition = globalPosition + (traversals * traversalNormal);
 
-                if ((_Blocks.GetPoint(currentTraversalPosition) != currentId)
+                if ((_Blocks.GetPoint(currentTraversalPosition, true) != currentId)
                     || _Mask[traversalIndex].HasFace(Directions.NormalToDirection(faceNormal)))
                 {
                     break;
@@ -322,7 +328,7 @@ namespace Wyd.Game.World.Chunks
                 if (math.all(traversalLengthFromOrigin >= 0) && math.all(traversalLengthFromOrigin <= (ChunkController.SIZE - 1)))
                 {
                     // coordinates are inside, so retrieve from own blocks octree
-                    facingBlockId = _Blocks.GetPoint(traversalFacingBlockPosition);
+                    facingBlockId = _Blocks.GetPoint(traversalFacingBlockPosition, true);
                 }
                 else
                 {

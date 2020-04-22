@@ -31,12 +31,14 @@ namespace Wyd.System
         {
             for (int i = 0; i < 3; i++)
             {
-                if (a[i] > 0) return a[i];
+                if (a[i] > 0)
+                {
+                    return a[i];
+                }
             }
 
             throw new ArgumentException("No non-zero components.", nameof(a));
         }
-
 
 
         #region ToComponents()

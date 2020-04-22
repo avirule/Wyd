@@ -75,8 +75,6 @@ namespace Wyd.System.Collections
 
         public T GetPoint(float3 point, bool hasChecked = false)
         {
-            point = math.floor(point);
-
             if (!hasChecked && !ContainsMinBiased(point))
             {
                 throw new ArgumentOutOfRangeException(
@@ -113,8 +111,6 @@ namespace Wyd.System.Collections
 
         public void SetPoint(float3 point, T newValue, bool hasChecked = false)
         {
-            point = math.floor(point);
-
             if (!hasChecked && !ContainsMinBiased(point))
             {
                 throw new ArgumentOutOfRangeException(

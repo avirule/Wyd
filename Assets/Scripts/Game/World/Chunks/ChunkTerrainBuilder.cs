@@ -98,9 +98,7 @@ namespace Wyd.Game.World.Chunks
                         return;
                     }
 
-                    _NoiseMap[index] =
-                        GetNoiseValueByGlobalPosition(_Blocks.Volume.MinPoint
-                                                      + WydMath.IndexTo3D(index, ChunkController.Size3D));
+                    _NoiseMap[index] = GetNoiseValueByGlobalPosition(_Blocks.Volume.MinPoint + WydMath.IndexTo3D(index, ChunkController.Size3D));
                 }
             }
         }

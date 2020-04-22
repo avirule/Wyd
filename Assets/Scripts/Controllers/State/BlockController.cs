@@ -108,7 +108,7 @@ namespace Wyd.Controllers.State
             Log.Information($"Successfully added block `{blockName}` with ID: {assignedBlockId}");
         }
 
-        public bool GetUVs(ushort blockId, int3 position, Direction direction, float3 size2d,
+        public bool GetUVs(ushort blockId, int3 position, Direction direction, float2 size2d,
             out BlockUVs blockUVs)
         {
             // todo return UV index instead
@@ -132,7 +132,7 @@ namespace Wyd.Controllers.State
             }
 
             blockUVs = new BlockUVs(new float3(0, 0, textureId), new float3(size2d.x, 0, textureId),
-                new float3(0, size2d.z, textureId), new float3(size2d.x, size2d.z, textureId));
+                new float3(0, size2d.y, textureId), new float3(size2d.x, size2d.y, textureId));
 
             return true;
         }
