@@ -6,6 +6,7 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
+using System.Threading.Tasks;
 using Serilog;
 using Unity.Mathematics;
 using UnityEngine;
@@ -488,41 +489,44 @@ namespace Wyd.Controllers.World.Chunk
         }
 
 
-        private void OnTerrainGenerationFinished(object sender, AsyncJobEventArgs args)
+        private Task OnTerrainGenerationFinished(object sender, AsyncJobEventArgs args)
         {
             args.AsyncJob.WorkFinished -= OnTerrainGenerationFinished;
 
             if (!Active)
             {
-                return;
+                return Task.CompletedTask;
             }
 
             _FinishedTerrainJob = (ChunkTerrainJob)args.AsyncJob;
+            return Task.CompletedTask;
         }
 
-        private void OnTerrainDetailingFinished(object sender, AsyncJobEventArgs args)
+        private Task OnTerrainDetailingFinished(object sender, AsyncJobEventArgs args)
         {
             args.AsyncJob.WorkFinished -= OnTerrainDetailingFinished;
 
             if (!args.AsyncJob.Identity.Equals(_TerrainJobIdentity))
             {
-                return;
+                return Task.CompletedTask;
             }
 
             _FinishedTerrainJob = (ChunkTerrainJob)args.AsyncJob;
+            return Task.CompletedTask;
         }
 
-        private void OnMeshingFinished(object sender, AsyncJobEventArgs args)
+        private Task OnMeshingFinished(object sender, AsyncJobEventArgs args)
         {
             args.AsyncJob.WorkFinished -= OnMeshingFinished;
 
             if (!args.AsyncJob.Identity.Equals(_MeshJobIdentity))
             {
                 ((ChunkMeshingJob)args.AsyncJob).CacheMesher();
-                return;
+                return Task.CompletedTask;
             }
 
             _FinishedMeshingJob = (ChunkMeshingJob)args.AsyncJob;
+            return Task.CompletedTask;
         }
 
         private void FlagUpdateMeshCallback(object sender, ChunkChangedEventArgs args)

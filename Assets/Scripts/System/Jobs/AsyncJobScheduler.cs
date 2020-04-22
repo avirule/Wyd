@@ -46,12 +46,24 @@ namespace Wyd.System.Jobs
 
             _AbortTokenSource = new CancellationTokenSource();
 
-            JobQueued += (sender, args) => Interlocked.Increment(ref _QueuedJobs);
-            JobStarted += (sender, args) => Interlocked.Increment(ref _ProcessingJobs);
+            JobQueued += (sender, args) =>
+            {
+                Interlocked.Increment(ref _QueuedJobs);
+
+                return Task.CompletedTask;
+            };
+            JobStarted += (sender, args) =>
+            {
+                Interlocked.Increment(ref _ProcessingJobs);
+
+                return Task.CompletedTask;
+            };
             JobFinished += (sender, args) =>
             {
                 Interlocked.Decrement(ref _QueuedJobs);
                 Interlocked.Decrement(ref _ProcessingJobs);
+
+                return Task.CompletedTask;
             };
 
             ModifyMaximumProcessingJobCount(1);
@@ -92,6 +104,8 @@ namespace Wyd.System.Jobs
 
             _AbortTokenSource.Cancel();
             _AbortTokenSource = new CancellationTokenSource();
+
+            // todo this shouldn't create a new semaphore every time
             _WorkerSemaphore = new Semaphore((int)MaximumProcessingJobs, (int)MaximumProcessingJobs);
 
             OnMaximumProcessingJobsChanged(MaximumProcessingJobs);

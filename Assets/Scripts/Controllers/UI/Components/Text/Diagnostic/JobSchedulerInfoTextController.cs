@@ -1,5 +1,6 @@
 #region
 
+using System.Threading.Tasks;
 using Wyd.System.Jobs;
 
 #endregion
@@ -14,10 +15,9 @@ namespace Wyd.Controllers.UI.Components.Text.Diagnostic
         {
             base.Awake();
 
-            AsyncJobScheduler.JobQueued += (sender, args) => _UpdateDiagInfo = true;
-            AsyncJobScheduler.JobStarted += (sender, args) => _UpdateDiagInfo = true;
-            AsyncJobScheduler.JobFinished += (sender, args) => _UpdateDiagInfo = true;
-            _UpdateDiagInfo = true;
+            AsyncJobScheduler.JobQueued += OnJobSchedulerStateChange;
+            AsyncJobScheduler.JobStarted += OnJobSchedulerStateChange;
+            AsyncJobScheduler.JobFinished += OnJobSchedulerStateChange;
         }
 
         protected override void TimedUpdate()
@@ -31,6 +31,13 @@ namespace Wyd.Controllers.UI.Components.Text.Diagnostic
 
                 _UpdateDiagInfo = false;
             }
+        }
+
+        private Task OnJobSchedulerStateChange(object sender, AsyncJobEventArgs args)
+        {
+            _UpdateDiagInfo = true;
+
+            return Task.CompletedTask;
         }
     }
 }

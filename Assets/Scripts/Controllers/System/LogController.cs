@@ -2,6 +2,7 @@
 
 using System.Collections.Generic;
 using System.Threading;
+using System.Threading.Tasks;
 using Serilog;
 using Serilog.Events;
 using UnityEngine;
@@ -47,6 +48,8 @@ namespace Wyd.Controllers.System
             {
                 Log.Information(
                     $"Queued new {nameof(AsyncJob)} for completion ({args.AsyncJob.GetType().Name}).");
+
+                return Task.CompletedTask;
             };
 
             Application.logMessageReceived += LogHandler;

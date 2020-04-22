@@ -160,22 +160,23 @@ namespace Wyd.Game.World.Chunks
             }
         }
 
-        private bool TryGetNeighboringBlock(Direction direction, float3 globalPosition, out ushort blockId)
+        private bool TryGetNeighboringBlock(Direction direction, float3 globalPosition,
+            out ushort blockId)
         {
             blockId = BlockController.NullID;
 
             return _NeighborNodes.ContainsKey(direction)
-                   && _NeighborNodes[direction].TryGetPoint(globalPosition + direction.ToInt3(), out blockId);
+                   && _NeighborNodes[direction].TryGetPoint(globalPosition, out blockId);
         }
 
         private bool IsNeighborTransparent(Direction direction, float3 globalPosition) =>
             TryGetNeighboringBlock(direction, globalPosition, out ushort blockId)
             && CheckBlockTransparency(blockId);
 
-        private bool CheckShouldAllocateFace(Direction direction, int index, float3 localPosition,
-            float3 globalPosition)
+        private bool CheckShouldAllocateFace(Direction direction, int index, float3 globalPosition,
+            float3 localPosition)
         {
-            float3 directionNormal = direction.ToInt3();
+            float3 directionNormal = direction.AsInt3();
             // get coordinates for only direction's normal axis
             float3 pureLocalPosition = localPosition * math.abs(directionNormal);
 
@@ -598,8 +599,7 @@ namespace Wyd.Game.World.Chunks
             if (!_Mask[index].Faces.HasFace(Direction.North)
                 // check if we're on the far edge of the chunk, and if so, query WorldController for blocks in adjacent chunk
                 && (((localPosition.z == (ChunkController.Size3D.z - 1))
-                     && TryGetNeighboringBlock(Direction.North, globalPosition + Directions.North, out ushort blockId)
-                     && CheckBlockTransparency(blockId))
+                     && IsNeighborTransparent(Direction.North, globalPosition + Directions.North))
                     // however if we're inside the chunk, use the _Mask[] array index for check
                     || ((localPosition.z < (ChunkController.Size3D.z - 1))
                         && CheckBlockTransparency(_Mask[index + ChunkController.Size3D.x].Id))))
@@ -661,8 +661,7 @@ namespace Wyd.Game.World.Chunks
 
             if (!_Mask[index].Faces.HasFace(Direction.East)
                 && (((localPosition.x == (ChunkController.Size3D.x - 1))
-                     && TryGetNeighboringBlock(Direction.East, globalPosition + Directions.East, out blockId)
-                     && CheckBlockTransparency(blockId))
+                     && IsNeighborTransparent(Direction.East, globalPosition + Directions.East))
                     || ((localPosition.x < (ChunkController.Size3D.x - 1))
                         && CheckBlockTransparency(_Mask[index + 1].Id))))
             {
@@ -714,8 +713,7 @@ namespace Wyd.Game.World.Chunks
 
             if (!_Mask[index].Faces.HasFace(Direction.South)
                 && (((localPosition.z == 0)
-                     && TryGetNeighboringBlock(Direction.South, globalPosition + Directions.South, out blockId)
-                     && CheckBlockTransparency(blockId))
+                     && IsNeighborTransparent(Direction.South, globalPosition + Directions.South))
                     || ((localPosition.z > 0)
                         && CheckBlockTransparency(_Mask[index - ChunkController.Size3D.x].Id))))
             {
@@ -767,8 +765,7 @@ namespace Wyd.Game.World.Chunks
 
             if (!_Mask[index].Faces.HasFace(Direction.West)
                 && (((localPosition.x == 0)
-                     && TryGetNeighboringBlock(Direction.West, globalPosition + Directions.West, out blockId)
-                     && CheckBlockTransparency(blockId))
+                     && IsNeighborTransparent(Direction.West, globalPosition + Directions.West))
                     || ((localPosition.x > 0)
                         && CheckBlockTransparency(_Mask[index - 1].Id))))
             {
@@ -820,8 +817,7 @@ namespace Wyd.Game.World.Chunks
 
             if (!_Mask[index].Faces.HasFace(Direction.Up)
                 && (((localPosition.y == (ChunkController.Size3D.y - 1))
-                     && TryGetNeighboringBlock(Direction.Up, globalPosition + Directions.Up, out blockId)
-                     && CheckBlockTransparency(blockId))
+                     && IsNeighborTransparent(Direction.Up, globalPosition + Directions.Up))
                     || ((localPosition.y < (ChunkController.Size3D.y - 1))
                         && CheckBlockTransparency(_Mask[index + ChunkController.SIZE_VERTICAL_STEP].Id))))
             {
@@ -874,8 +870,7 @@ namespace Wyd.Game.World.Chunks
             // ignore the very bottom face of the world to reduce verts/tris
             if (!_Mask[index].Faces.HasFace(Direction.Down)
                 && (((localPosition.y == 0)
-                     && TryGetNeighboringBlock(Direction.Down, globalPosition + Directions.Down, out blockId)
-                     && CheckBlockTransparency(blockId))
+                     && IsNeighborTransparent(Direction.Down, globalPosition + Directions.Down))
                     || ((localPosition.y > 0)
                         && CheckBlockTransparency(_Mask[index - ChunkController.SIZE_VERTICAL_STEP].Id))))
             {
@@ -949,8 +944,8 @@ namespace Wyd.Game.World.Chunks
             int traversals = 1;
             int traversalIndex;
 
-            int3 traversalNormal = traversalDirection.ToInt3();
-            int3 faceNormal = faceDirection.ToInt3();
+            int3 traversalNormal = traversalDirection.AsInt3();
+            int3 faceNormal = faceDirection.AsInt3();
 
             while ((slice + traversals) < limitingSliceValue)
             {
@@ -960,14 +955,26 @@ namespace Wyd.Game.World.Chunks
                 traversalIndex = index + (traversals * traversalFactor);
 
                 if ((_Mask[index].Id != _Mask[traversalIndex].Id)
-                    || _Mask[traversalIndex].Faces.HasFace(faceDirection)
-                    // ensure the block adjacent to our current block is transparent
-                    || !WorldController.Current.TryGetBlock(
-                        globalPosition + (traversals * traversalNormal) + faceNormal, out ushort blockId)
-                    // if transparent, traverse as long as block is the same
-                    // if opaque, traverse as long as normal-adjacent block is transparent
-                    || (transparentTraversal && (_Mask[index].Id != blockId))
-                    || !CheckBlockTransparency(blockId))
+                    || _Mask[traversalIndex].Faces.HasFace(faceDirection))
+                {
+                    break;
+                }
+
+                float3 traversalFacingBlockPosition = globalPosition + (traversals * traversalNormal) + faceNormal;
+                float3 traversalLengthFromOrigin = traversalFacingBlockPosition - _OriginPoint;
+
+                // determine block id of traversal facing block
+                if ((!math.any(traversalLengthFromOrigin < 0)
+                     && !math.any(traversalLengthFromOrigin > (ChunkController.SIZE - 1)))
+                    || !TryGetNeighboringBlock(faceDirection, traversalFacingBlockPosition, out ushort facingBlockId))
+                {
+                    facingBlockId = _Mask[index + faceDirection.AsIndexStep()].Id;
+                }
+
+                // if transparent, traverse as long as block is the same
+                // if opaque, traverse as long as normal-adjacent block is transparent
+                if ((transparentTraversal && (_Mask[index].Id != facingBlockId))
+                    || !CheckBlockTransparency(facingBlockId))
                 {
                     break;
                 }

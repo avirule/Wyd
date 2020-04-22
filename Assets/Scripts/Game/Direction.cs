@@ -184,8 +184,8 @@ namespace Wyd.Game
                 { Direction.East, 1 },
                 { Direction.South, -ChunkController.SIZE },
                 { Direction.West, -1 },
-                { Direction.Up, ChunkController.SIZE_VERTICAL_STEP},
-                { Direction.Down, -(ChunkController.SIZE_VERTICAL_STEP) }
+                { Direction.Up, ChunkController.SIZE_VERTICAL_STEP },
+                { Direction.Down, -ChunkController.SIZE_VERTICAL_STEP }
             };
         }
 
@@ -195,9 +195,51 @@ namespace Wyd.Game
 
         public static int OrderPlacement(this Direction direction) => _directionAsOrderPlacement[direction];
 
-        public static int3 ToInt3(this Direction direction) => _directionsAsAxes[direction];
+        public static int3 AsInt3(this Direction direction)
+        {
+            switch (direction)
+            {
+                case Direction.North:
+                    return Directions.North;
+                case Direction.East:
+                    return Directions.East;
+                case Direction.South:
+                    return Directions.South;
+                case Direction.West:
+                    return Directions.West;
+                case Direction.Up:
+                    return Directions.Up;
+                case Direction.Down:
+                    return Directions.Down;
+                case Direction.All:
+                    return int3.zero;
+                default:
+                    throw new ArgumentOutOfRangeException(nameof(direction), direction, null);
+            }
+        }
 
-        public static int AsIndexStep(this Direction direction) => _directionsAsIndexStep[direction];
+        public static int AsIndexStep(this Direction direction)
+        {
+            switch (direction)
+            {
+                case Direction.North:
+                    return ChunkController.SIZE;
+                case Direction.East:
+                    return 1;
+                case Direction.South:
+                    return -ChunkController.SIZE;
+                case Direction.West:
+                    return -1;
+                case Direction.Up:
+                    return ChunkController.SIZE_VERTICAL_STEP;
+                case Direction.Down:
+                    return -ChunkController.SIZE_VERTICAL_STEP;
+                case Direction.All:
+                    return default;
+                default:
+                    return default;
+            }
+        }
 
         public static bool IsPositiveNormal(this Direction direction) =>
             (direction == Direction.North) || (direction == Direction.East) || (direction == Direction.Up);

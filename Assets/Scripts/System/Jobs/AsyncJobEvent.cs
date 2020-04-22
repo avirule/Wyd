@@ -1,12 +1,13 @@
 #region
 
 using System;
+using System.Threading.Tasks;
 
 #endregion
 
 namespace Wyd.System.Jobs
 {
-    public delegate void AsyncJobEventHandler(object sender, AsyncJobEventArgs args);
+    public delegate Task AsyncJobEventHandler(object sender, AsyncJobEventArgs args);
 
     public class AsyncJobEventArgs : EventArgs
     {
