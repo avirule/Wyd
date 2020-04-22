@@ -27,6 +27,7 @@ namespace Wyd.Game.World.Chunks
         private readonly Stopwatch _Stopwatch;
         private readonly HashSet<ushort> _TransparentIDCache;
         private readonly HashSet<ushort> _OpaqueIDCache;
+        // todo mask should just be BlockFaces, instead of unrolling the octree
         private readonly MeshBlock[] _Mask;
         private readonly MeshData _MeshData;
 
@@ -947,20 +948,23 @@ namespace Wyd.Game.World.Chunks
             int3 traversalNormal = traversalDirection.AsInt3();
             int3 faceNormal = faceDirection.AsInt3();
 
+            ushort currentId = _Blocks.GetPoint(globalPosition);
+
             while ((slice + traversals) < limitingSliceValue)
             {
                 // incrementing on x, so the traversal factor is 1
                 // if we were incrementing on z, the factor would be ChunkController.Size3D.x
                 // and on y it would be (ChunkController.Size3D.x * ChunkController.Size3D.z)
                 traversalIndex = index + (traversals * traversalFactor);
+                float3 currentTraversalPosition = globalPosition + (traversals * traversalNormal);
 
-                if ((_Mask[index].Id != _Mask[traversalIndex].Id)
+                if ((currentId != _Blocks.GetPoint(currentTraversalPosition))
                     || _Mask[traversalIndex].Faces.HasFace(faceDirection))
                 {
                     break;
                 }
 
-                float3 traversalFacingBlockPosition = globalPosition + (traversals * traversalNormal) + faceNormal;
+                float3 traversalFacingBlockPosition = currentTraversalPosition + faceNormal;
                 float3 traversalLengthFromOrigin = traversalFacingBlockPosition - _OriginPoint;
 
                 // determine block id of traversal facing block
@@ -968,12 +972,12 @@ namespace Wyd.Game.World.Chunks
                      && !math.any(traversalLengthFromOrigin > (ChunkController.SIZE - 1)))
                     || !TryGetNeighboringBlock(faceDirection, traversalFacingBlockPosition, out ushort facingBlockId))
                 {
-                    facingBlockId = _Mask[index + faceDirection.AsIndexStep()].Id;
+                    facingBlockId = _Blocks.GetPoint(traversalFacingBlockPosition);
                 }
 
                 // if transparent, traverse as long as block is the same
                 // if opaque, traverse as long as normal-adjacent block is transparent
-                if ((transparentTraversal && (_Mask[index].Id != facingBlockId))
+                if ((transparentTraversal && (currentId != facingBlockId))
                     || !CheckBlockTransparency(facingBlockId))
                 {
                     break;

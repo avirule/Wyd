@@ -52,7 +52,7 @@ namespace Wyd.Game.World.Chunks
 
         protected override Task ProcessFinished()
         {
-            if (!_CancellationToken.IsCancellationRequested && _Mesher != null)
+            if (!_CancellationToken.IsCancellationRequested && (_Mesher != null))
             {
                 DiagnosticsController.Current.RollingMeshingSetBlockTimes.Enqueue(_Mesher.SetBlockTimeSpan);
                 DiagnosticsController.Current.RollingMeshingTimes.Enqueue(_Mesher.MeshingTimeSpan);
