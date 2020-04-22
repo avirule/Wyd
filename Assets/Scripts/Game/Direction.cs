@@ -88,6 +88,38 @@ namespace Wyd.Game
             };
         }
 
+        public static Direction NormalToDirection(float3 normal)
+        {
+            if (normal.x > 0)
+            {
+                return Direction.East;
+            }
+            else if (normal.x < 0)
+            {
+                return Direction.West;
+            }
+
+            if (normal.y > 0)
+            {
+                return Direction.Up;
+            }
+            else if (normal.y < 0)
+            {
+                return Direction.Down;
+            }
+
+            if (normal.z > 0)
+            {
+                return Direction.North;
+            }
+            else if (normal.z < 0)
+            {
+                return Direction.South;
+            }
+
+            return Direction.All;
+        }
+
         public static IEnumerable<Direction> NormalToDirections(float3 normal)
         {
             if (normal.x > 0)
@@ -148,12 +180,12 @@ namespace Wyd.Game
 
             _directionsAsIndexStep = new Dictionary<Direction, int>
             {
-                { Direction.North, ChunkController.Size3D.x },
+                { Direction.North, ChunkController.SIZE },
                 { Direction.East, 1 },
-                { Direction.South, -ChunkController.Size3D.x },
+                { Direction.South, -ChunkController.SIZE },
                 { Direction.West, -1 },
-                { Direction.Up, ChunkController.Size3D.x * ChunkController.Size3D.z },
-                { Direction.Down, -(ChunkController.Size3D.x * ChunkController.Size3D.z) }
+                { Direction.Up, ChunkController.SIZE_VERTICAL_STEP},
+                { Direction.Down, -(ChunkController.SIZE_VERTICAL_STEP) }
             };
         }
 

@@ -245,6 +245,21 @@ namespace Wyd.Controllers.World
             }
         }
 
+        public Dictionary<Direction, ChunkController> GetNeighboringChunksDirectionBucketed(float3 origin)
+        {
+            Dictionary<Direction, ChunkController> neighbors = new Dictionary<Direction, ChunkController>(6);
+
+            foreach (float3 normal in Directions.AllDirectionNormals)
+            {
+                if (TryGetChunk(origin + (normal * ChunkController.SIZE), out ChunkController chunkController))
+                {
+                    neighbors.Add(Directions.NormalToDirection(normal), chunkController);
+                }
+            }
+
+            return neighbors;
+        }
+
         public IEnumerable<ChunkController> GetVerticalSlice(float2 origin)
         {
             if (((origin.x % ChunkController.SIZE) > 0f) || ((origin.y % ChunkController.SIZE) > 0f))

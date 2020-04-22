@@ -92,27 +92,18 @@ namespace Wyd.System.Collections
             {
                 int octant = DetermineOctant(point);
 
-                if (!hasChecked)
+                if (!hasChecked && (octant >= _Nodes.Count))
                 {
-                    if (octant >= _Nodes.Count)
-                    {
-                        throw new ArgumentOutOfRangeException(
-                            $"Attempted to step into octant of {nameof(OctreeNode<T>)} and failed ({nameof(GetPoint)}).\r\n"
-                            + $"State Information: [Volume {_Volume}], [{nameof(IsUniform)} {IsUniform}], [Branches {_Nodes.Count}], "
-                            + (_Nodes.Count > 0
-                                ? $"[Branch Values {string.Join(", ", _Nodes.Select(node => node.Value))}]"
-                                : string.Empty)
-                            + $"[Octant {octant}]");
-                    }
-                    else
-                    {
-                        return _Nodes[octant].GetPoint(point);
-                    }
+                    throw new ArgumentOutOfRangeException(
+                        $"Attempted to step into octant of {nameof(OctreeNode<T>)} and failed ({nameof(GetPoint)}).\r\n"
+                        + $"State Information: [Volume {_Volume}], [{nameof(IsUniform)} {IsUniform}], [Branches {_Nodes.Count}], "
+                        + (_Nodes.Count > 0
+                            ? $"[Branch Values {string.Join(", ", _Nodes.Select(node => node.Value))}]"
+                            : string.Empty)
+                        + $"[Octant {octant}]");
                 }
-                else
-                {
-                    return _Nodes[octant].UncheckedGetPoint(point);
-                }
+
+                return _Nodes[octant].GetPoint(point, true);
             }
             else
             {
@@ -156,26 +147,19 @@ namespace Wyd.System.Collections
 
             int octant = DetermineOctant(point);
 
-            if (!hasChecked)
+            if (!hasChecked && (octant >= _Nodes.Count))
             {
-                if (octant >= _Nodes.Count)
-                {
-                    throw new ArgumentOutOfRangeException(
-                        $"Attempted to step into octant of {nameof(OctreeNode<T>)} and failed ({nameof(SetPoint)}).\r\n"
-                        + $"State Information: [Volume {_Volume}], [{nameof(IsUniform)} {IsUniform}], [Branches {_Nodes.Count}], "
-                        + (_Nodes.Count > 0
-                            ? $"[Branch Values {string.Join(", ", _Nodes.Select(node => node.Value))}]"
-                            : string.Empty)
-                        + $"[Octant {octant}]");
-                }
+                throw new ArgumentOutOfRangeException(
+                    $"Attempted to step into octant of {nameof(OctreeNode<T>)} and failed ({nameof(SetPoint)}).\r\n"
+                    + $"State Information: [Volume {_Volume}], [{nameof(IsUniform)} {IsUniform}], [Branches {_Nodes.Count}], "
+                    + (_Nodes.Count > 0
+                        ? $"[Branch Values {string.Join(", ", _Nodes.Select(node => node.Value))}]"
+                        : string.Empty)
+                    + $"[Octant {octant}]");
+            }
 
-                // recursively dig into octree and set
-                _Nodes[octant].SetPoint(point, newValue);
-            }
-            else
-            {
-                _Nodes[octant].UncheckedSetPoint(point, newValue);
-            }
+            // recursively dig into octree and set
+            _Nodes[octant].SetPoint(point, newValue, true);
 
             // on each recursion back-step, ensure integrity of node
             // and collapse if all child node values are equal
@@ -217,64 +201,7 @@ namespace Wyd.System.Collections
         {
             for (int index = 0; index < WydMath.Product(_Volume.Size); index++)
             {
-                yield return GetPoint(_Volume.MinPoint + WydMath.IndexTo3D(index, WydMath.ToInt(_Volume.Size)));
-            }
-        }
-
-        #endregion
-
-
-        #region Unchecked Data Operations
-
-        private T UncheckedGetPoint(float3 point)
-        {
-            point = math.floor(point);
-
-            if (!IsUniform)
-            {
-                int octant = DetermineOctant(point);
-                return _Nodes[octant].UncheckedGetPoint(point);
-            }
-            else
-            {
-                return Value;
-            }
-        }
-
-        private void UncheckedSetPoint(float3 point, T newValue)
-        {
-            point = math.floor(point);
-
-            if (IsUniform && (Value.GetHashCode() == newValue.GetHashCode()))
-            {
-                // operation does nothing, so return
-                return;
-            }
-
-            if (_Volume.Size.x <= 1f)
-            {
-                // reached smallest possible depth (usually 1x1x1) so
-                // set value and return
-                Value = newValue;
-                return;
-            }
-
-            if (IsUniform)
-            {
-                // node has no child nodes to traverse, so populate
-                Populate();
-            }
-
-            int octant = DetermineOctant(point);
-
-            // recursively dig into octree and set
-            _Nodes[octant].UncheckedSetPoint(point, newValue);
-
-            // on each recursion back-step, ensure integrity of node
-            // and collapse if all child node values are equal
-            if (!IsUniform && CheckShouldCollapse())
-            {
-                Collapse();
+                yield return GetPoint(_Volume.MinPoint + WydMath.IndexTo3D(index, WydMath.ToInt(_Volume.Size)), true);
             }
         }
 

@@ -158,9 +158,9 @@ namespace Wyd.Game.World.Blocks
 
         public bool HasAnyFaces() => RawValue > 0;
 
-        public bool HasAllFaces() => (RawValue & _FACES_MASK) >= _FACES_MASK;
+        public bool HasAllFaces() => (RawValue & _FACES_MASK) == _FACES_MASK;
 
-        public bool HasFace(Direction direction) => (RawValue & (byte)direction) > 0;
+        public bool HasFace(Direction direction) => (RawValue & (byte)direction) == (byte)direction;
 
         public void SetFace(Direction direction, bool boolean)
         {

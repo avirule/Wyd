@@ -13,6 +13,7 @@ using Wyd.Controllers.World.Chunk;
 using Wyd.Game.World.Blocks;
 using Wyd.System;
 using Wyd.System.Collections;
+using Wyd.System.Extensions;
 using Wyd.System.Graphics;
 
 // ReSharper disable TooWideLocalVariableScope
@@ -33,6 +34,7 @@ namespace Wyd.Game.World.Chunks
         private float3 _OriginPoint;
         private OctreeNode<ushort> _Blocks;
         private bool _AggressiveFaceMerging;
+        private Dictionary<Direction, OctreeNode<ushort>> _NeighborNodes;
 
         public TimeSpan SetBlockTimeSpan { get; private set; }
         public TimeSpan MeshingTimeSpan { get; private set; }
@@ -85,8 +87,27 @@ namespace Wyd.Game.World.Chunks
             }
 
             _Stopwatch.Restart();
+
+            if (_NeighborNodes == null)
+            {
+                _NeighborNodes = new Dictionary<Direction, OctreeNode<ushort>>();
+            }
+            else
+            {
+                _NeighborNodes.Clear();
+            }
+
+            // todo provide this data from ChunkMeshController
+            foreach ((Direction direction, ChunkController chunkController) in WorldController.Current
+                .GetNeighboringChunksDirectionBucketed(_OriginPoint))
+            {
+                _NeighborNodes.Add(direction, chunkController.Blocks);
+            }
+
             SetBlockData(_Blocks.GetAllData());
+
             _Stopwatch.Stop();
+
             SetBlockTimeSpan = _Stopwatch.Elapsed;
 
             _Stopwatch.Restart();
@@ -139,6 +160,48 @@ namespace Wyd.Game.World.Chunks
             }
         }
 
+        private bool TryGetNeighboringBlock(Direction direction, float3 globalPosition, out ushort blockId)
+        {
+            blockId = BlockController.NullID;
+
+            return _NeighborNodes.ContainsKey(direction)
+                   && _NeighborNodes[direction].TryGetPoint(globalPosition + direction.ToInt3(), out blockId);
+        }
+
+        private bool IsNeighborTransparent(Direction direction, float3 globalPosition) =>
+            TryGetNeighboringBlock(direction, globalPosition, out ushort blockId)
+            && CheckBlockTransparency(blockId);
+
+        private bool CheckShouldAllocateFace(Direction direction, int index, float3 localPosition,
+            float3 globalPosition)
+        {
+            float3 directionNormal = direction.ToInt3();
+            // get coordinates for only direction's normal axis
+            float3 pureLocalPosition = localPosition * math.abs(directionNormal);
+
+            switch (direction)
+            {
+                case Direction.North:
+                case Direction.East:
+                case Direction.Up:
+                    return (math.any(pureLocalPosition == (ChunkController.SIZE - 1))
+                            && IsNeighborTransparent(direction, globalPosition))
+                           || (math.all(pureLocalPosition < (ChunkController.SIZE - 1))
+                               && CheckBlockTransparency(_Mask[index + direction.AsIndexStep()].Id));
+                case Direction.South:
+                case Direction.West:
+                case Direction.Down:
+                    return (math.any(pureLocalPosition == 0)
+                            && IsNeighborTransparent(direction, globalPosition))
+                           || (math.all(pureLocalPosition < 0)
+                               && CheckBlockTransparency(_Mask[index + direction.AsIndexStep()].Id));
+                case Direction.All:
+                    return false;
+                default:
+                    throw new ArgumentOutOfRangeException(nameof(direction), direction, null);
+            }
+        }
+
         private bool CheckBlockTransparency(ushort blockId)
         {
             if (_TransparentIDCache.Contains(blockId))
@@ -160,6 +223,29 @@ namespace Wyd.Game.World.Chunks
                 return false;
             }
         }
+
+        private void AddTriangles(Direction direction, bool transparent = false)
+        {
+            if (transparent)
+            {
+                _MeshData.AddTriangles(1, BlockFaces.Triangles.FaceTriangles[direction]
+                    .Select(triangle => triangle + _MeshData.Vertices.Count));
+            }
+            else
+            {
+                _MeshData.AddTriangles(0, BlockFaces.Triangles.FaceTriangles[direction]
+                    .Select(triangle => triangle + _MeshData.Vertices.Count));
+            }
+        }
+
+        private void AddVertices(Direction direction, int3 localPosition)
+        {
+            foreach (float3 vertex in BlockFaces.Vertices.FaceVertices[direction])
+            {
+                _MeshData.AddVertex(vertex + localPosition);
+            }
+        }
+
 
         #region TRAVERSAL MESHING
 
@@ -512,7 +598,7 @@ namespace Wyd.Game.World.Chunks
             if (!_Mask[index].Faces.HasFace(Direction.North)
                 // check if we're on the far edge of the chunk, and if so, query WorldController for blocks in adjacent chunk
                 && (((localPosition.z == (ChunkController.Size3D.z - 1))
-                     && WorldController.Current.TryGetBlock(globalPosition + Directions.North, out ushort blockId)
+                     && TryGetNeighboringBlock(Direction.North, globalPosition + Directions.North, out ushort blockId)
                      && CheckBlockTransparency(blockId))
                     // however if we're inside the chunk, use the _Mask[] array index for check
                     || ((localPosition.z < (ChunkController.Size3D.z - 1))
@@ -529,8 +615,7 @@ namespace Wyd.Game.World.Chunks
                 if (_AggressiveFaceMerging)
                 {
                     traversals = GetTraversals(index, globalPosition, localPosition.x, ChunkController.Size3D.x,
-                        Direction.North,
-                        Direction.East, 1, false);
+                        Direction.North, Direction.East, 1, false);
 
                     if (traversals > 1)
                     {
@@ -548,8 +633,7 @@ namespace Wyd.Game.World.Chunks
                     {
                         // if traversal failed (no blocks found in probed direction) then look on next axis
                         traversals = GetTraversals(index, globalPosition, localPosition.y, ChunkController.Size3D.y,
-                            Direction.North,
-                            Direction.Up, ChunkController.SIZE_VERTICAL_STEP, false);
+                            Direction.North, Direction.Up, ChunkController.SIZE_VERTICAL_STEP, false);
 
                         _MeshData.AddVertex(localPosition + new float3(0f, 0f, 1f));
                         _MeshData.AddVertex(localPosition + new float3(0f, traversals, 1f));
@@ -577,7 +661,7 @@ namespace Wyd.Game.World.Chunks
 
             if (!_Mask[index].Faces.HasFace(Direction.East)
                 && (((localPosition.x == (ChunkController.Size3D.x - 1))
-                     && WorldController.Current.TryGetBlock(globalPosition + Directions.East, out blockId)
+                     && TryGetNeighboringBlock(Direction.East, globalPosition + Directions.East, out blockId)
                      && CheckBlockTransparency(blockId))
                     || ((localPosition.x < (ChunkController.Size3D.x - 1))
                         && CheckBlockTransparency(_Mask[index + 1].Id))))
@@ -591,8 +675,7 @@ namespace Wyd.Game.World.Chunks
                 if (_AggressiveFaceMerging)
                 {
                     traversals = GetTraversals(index, globalPosition, localPosition.z, ChunkController.Size3D.z,
-                        Direction.East,
-                        Direction.North, ChunkController.Size3D.x, false);
+                        Direction.East, Direction.North, ChunkController.Size3D.x, false);
 
                     if (traversals > 1)
                     {
@@ -605,8 +688,7 @@ namespace Wyd.Game.World.Chunks
                     else
                     {
                         traversals = GetTraversals(index, globalPosition, localPosition.y, ChunkController.Size3D.y,
-                            Direction.East,
-                            Direction.Up, ChunkController.SIZE_VERTICAL_STEP, false);
+                            Direction.East, Direction.Up, ChunkController.SIZE_VERTICAL_STEP, false);
 
                         _MeshData.AddVertex(localPosition + new float3(1f, 0f, 0f));
                         _MeshData.AddVertex(localPosition + new float3(1f, 0f, 1f));
@@ -632,7 +714,7 @@ namespace Wyd.Game.World.Chunks
 
             if (!_Mask[index].Faces.HasFace(Direction.South)
                 && (((localPosition.z == 0)
-                     && WorldController.Current.TryGetBlock(globalPosition + Directions.South, out blockId)
+                     && TryGetNeighboringBlock(Direction.South, globalPosition + Directions.South, out blockId)
                      && CheckBlockTransparency(blockId))
                     || ((localPosition.z > 0)
                         && CheckBlockTransparency(_Mask[index - ChunkController.Size3D.x].Id))))
@@ -646,8 +728,7 @@ namespace Wyd.Game.World.Chunks
                 if (_AggressiveFaceMerging)
                 {
                     traversals = GetTraversals(index, globalPosition, localPosition.x, ChunkController.Size3D.x,
-                        Direction.South,
-                        Direction.East, 1, false);
+                        Direction.South, Direction.East, 1, false);
 
                     if (traversals > 1)
                     {
@@ -660,8 +741,7 @@ namespace Wyd.Game.World.Chunks
                     else
                     {
                         traversals = GetTraversals(index, globalPosition, localPosition.y, ChunkController.Size3D.y,
-                            Direction.South,
-                            Direction.Up, ChunkController.SIZE_VERTICAL_STEP, false);
+                            Direction.South, Direction.Up, ChunkController.SIZE_VERTICAL_STEP, false);
 
                         _MeshData.AddVertex(localPosition + new float3(0f, 0f, 0f));
                         _MeshData.AddVertex(localPosition + new float3(1f, 0f, 0f));
@@ -687,7 +767,7 @@ namespace Wyd.Game.World.Chunks
 
             if (!_Mask[index].Faces.HasFace(Direction.West)
                 && (((localPosition.x == 0)
-                     && WorldController.Current.TryGetBlock(globalPosition + Directions.West, out blockId)
+                     && TryGetNeighboringBlock(Direction.West, globalPosition + Directions.West, out blockId)
                      && CheckBlockTransparency(blockId))
                     || ((localPosition.x > 0)
                         && CheckBlockTransparency(_Mask[index - 1].Id))))
@@ -701,8 +781,7 @@ namespace Wyd.Game.World.Chunks
                 if (_AggressiveFaceMerging)
                 {
                     traversals = GetTraversals(index, globalPosition, localPosition.z, ChunkController.Size3D.z,
-                        Direction.West,
-                        Direction.North, ChunkController.Size3D.x, false);
+                        Direction.West, Direction.North, ChunkController.Size3D.x, false);
 
                     if (traversals > 1)
                     {
@@ -715,8 +794,7 @@ namespace Wyd.Game.World.Chunks
                     else
                     {
                         traversals = GetTraversals(index, globalPosition, localPosition.y, ChunkController.Size3D.y,
-                            Direction.West,
-                            Direction.Up, ChunkController.SIZE_VERTICAL_STEP, false);
+                            Direction.West, Direction.Up, ChunkController.SIZE_VERTICAL_STEP, false);
 
                         _MeshData.AddVertex(localPosition + new float3(0f, 0f, 0f));
                         _MeshData.AddVertex(localPosition + new float3(0f, traversals, 0f));
@@ -742,7 +820,7 @@ namespace Wyd.Game.World.Chunks
 
             if (!_Mask[index].Faces.HasFace(Direction.Up)
                 && (((localPosition.y == (ChunkController.Size3D.y - 1))
-                     && WorldController.Current.TryGetBlock(globalPosition + Directions.Up, out blockId)
+                     && TryGetNeighboringBlock(Direction.Up, globalPosition + Directions.Up, out blockId)
                      && CheckBlockTransparency(blockId))
                     || ((localPosition.y < (ChunkController.Size3D.y - 1))
                         && CheckBlockTransparency(_Mask[index + ChunkController.SIZE_VERTICAL_STEP].Id))))
@@ -756,8 +834,7 @@ namespace Wyd.Game.World.Chunks
                 if (_AggressiveFaceMerging)
                 {
                     traversals = GetTraversals(index, globalPosition, localPosition.z, ChunkController.Size3D.z,
-                        Direction.Up,
-                        Direction.North, ChunkController.Size3D.x, false);
+                        Direction.Up, Direction.North, ChunkController.Size3D.x, false);
 
                     if (traversals > 1)
                     {
@@ -770,8 +847,7 @@ namespace Wyd.Game.World.Chunks
                     else
                     {
                         traversals = GetTraversals(index, globalPosition, localPosition.x, ChunkController.Size3D.x,
-                            Direction.Up,
-                            Direction.East, 1, false);
+                            Direction.Up, Direction.East, 1, false);
 
                         _MeshData.AddVertex(localPosition + new float3(0f, 1f, 0f));
                         _MeshData.AddVertex(localPosition + new float3(traversals, 1f, 0f));
@@ -798,7 +874,7 @@ namespace Wyd.Game.World.Chunks
             // ignore the very bottom face of the world to reduce verts/tris
             if (!_Mask[index].Faces.HasFace(Direction.Down)
                 && (((localPosition.y == 0)
-                     && WorldController.Current.TryGetBlock(globalPosition + Directions.Down, out blockId)
+                     && TryGetNeighboringBlock(Direction.Down, globalPosition + Directions.Down, out blockId)
                      && CheckBlockTransparency(blockId))
                     || ((localPosition.y > 0)
                         && CheckBlockTransparency(_Mask[index - ChunkController.SIZE_VERTICAL_STEP].Id))))
@@ -812,8 +888,7 @@ namespace Wyd.Game.World.Chunks
                 if (_AggressiveFaceMerging)
                 {
                     traversals = GetTraversals(index, globalPosition, localPosition.z, ChunkController.Size3D.z,
-                        Direction.Down,
-                        Direction.North, ChunkController.Size3D.x, false);
+                        Direction.Down, Direction.North, ChunkController.Size3D.x, false);
 
                     if (traversals > 1)
                     {
@@ -826,8 +901,7 @@ namespace Wyd.Game.World.Chunks
                     else
                     {
                         traversals = GetTraversals(index, globalPosition, localPosition.x, ChunkController.Size3D.x,
-                            Direction.Down,
-                            Direction.East, 1, false);
+                            Direction.Down, Direction.East, 1, false);
 
                         _MeshData.AddVertex(localPosition + new float3(0f, 0f, 0f));
                         _MeshData.AddVertex(localPosition + new float3(0f, 0f, 1f));
@@ -849,28 +923,6 @@ namespace Wyd.Game.World.Chunks
                     _MeshData.AddUV(blockUVs.BottomRight);
                     _MeshData.AddUV(blockUVs.TopRight);
                 }
-            }
-        }
-
-        private void AddTriangles(Direction direction, bool transparent = false)
-        {
-            if (transparent)
-            {
-                _MeshData.AddTriangles(1, BlockFaces.Triangles.FaceTriangles[direction]
-                    .Select(triangle => triangle + _MeshData.Vertices.Count));
-            }
-            else
-            {
-                _MeshData.AddTriangles(0, BlockFaces.Triangles.FaceTriangles[direction]
-                    .Select(triangle => triangle + _MeshData.Vertices.Count));
-            }
-        }
-
-        private void AddVertices(Direction direction, int3 localPosition)
-        {
-            foreach (float3 vertex in BlockFaces.Vertices.FaceVertices[direction])
-            {
-                _MeshData.AddVertex(vertex + localPosition);
             }
         }
 
