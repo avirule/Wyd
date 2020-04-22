@@ -4,6 +4,7 @@ using System;
 using System.Diagnostics;
 using System.Threading;
 using System.Threading.Tasks;
+using Serilog;
 
 #endregion
 
@@ -63,25 +64,33 @@ namespace Wyd.System.Jobs
         /// </summary>
         public async Task Execute()
         {
-            if (CancellationToken.IsCancellationRequested)
+            try
             {
-                return;
+                if (CancellationToken.IsCancellationRequested)
+                {
+                    return;
+                }
+
+                _Stopwatch.Restart();
+
+                await Process();
+
+                ProcessTime = _Stopwatch.Elapsed;
+
+                await ProcessFinished();
+
+                _Stopwatch.Stop();
+
+                ExecutionTime = _Stopwatch.Elapsed;
+
+                IsWorkFinished = true;
+                WorkFinished?.Invoke(this, new AsyncJobEventArgs(this));
             }
-
-            _Stopwatch.Restart();
-
-            await Process();
-
-            ProcessTime = _Stopwatch.Elapsed;
-
-            await ProcessFinished();
-
-            _Stopwatch.Stop();
-
-            ExecutionTime = _Stopwatch.Elapsed;
-
-            IsWorkFinished = true;
-            WorkFinished?.Invoke(this, new AsyncJobEventArgs(this));
+            catch (Exception ex)
+            {
+                Log.Error($"Error in {nameof(AsyncJob)} execution: {ex.Message}\r\n{ex.StackTrace}");
+                IsWorkFinished = true;
+            }
         }
 
         /// <summary>

@@ -184,8 +184,8 @@ namespace Wyd.Game
                 { Direction.East, 1 },
                 { Direction.South, -ChunkController.SIZE },
                 { Direction.West, -1 },
-                { Direction.Up, ChunkController.SIZE_VERTICAL_STEP },
-                { Direction.Down, -ChunkController.SIZE_VERTICAL_STEP }
+                { Direction.Up, ChunkController.VERTICAL_STEP },
+                { Direction.Down, -ChunkController.VERTICAL_STEP }
             };
         }
 
@@ -231,9 +231,9 @@ namespace Wyd.Game
                 case Direction.West:
                     return -1;
                 case Direction.Up:
-                    return ChunkController.SIZE_VERTICAL_STEP;
+                    return ChunkController.VERTICAL_STEP;
                 case Direction.Down:
-                    return -ChunkController.SIZE_VERTICAL_STEP;
+                    return -ChunkController.VERTICAL_STEP;
                 case Direction.All:
                     return default;
                 default:

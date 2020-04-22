@@ -38,7 +38,7 @@ namespace Wyd.Controllers.World.Chunk
     public class ChunkController : ActivationStateChunkController, IPerFrameIncrementalUpdate
     {
         public const int SIZE = 32;
-        public const int SIZE_VERTICAL_STEP = SIZE * SIZE;
+        public const int VERTICAL_STEP = SIZE * SIZE;
         public const int SIZE_CUBED = SIZE * SIZE * SIZE;
 
         private static readonly ObjectCache<BlockAction> _blockActionsCache = new ObjectCache<BlockAction>(true, 1024);

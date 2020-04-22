@@ -27,6 +27,17 @@ namespace Wyd.System
             return new int3(x, y, z);
         }
 
+        public static int FirstNonZeroComponent(int3 a)
+        {
+            for (int i = 0; i < 3; i++)
+            {
+                if (a[i] > 0) return a[i];
+            }
+
+            throw new ArgumentException("No non-zero components.", nameof(a));
+        }
+
+
 
         #region ToComponents()
 
