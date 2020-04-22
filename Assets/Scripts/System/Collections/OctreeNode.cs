@@ -40,7 +40,7 @@ namespace Wyd.System.Collections
             Value = value;
         }
 
-        public void Collapse()
+        private void Collapse()
         {
             if (IsUniform)
             {

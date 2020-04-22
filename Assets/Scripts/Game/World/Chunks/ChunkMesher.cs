@@ -203,9 +203,9 @@ namespace Wyd.Game.World.Chunks
                         continue;
                     }
 
-                    if ( // check if local position is at edge of chunk, and if so check face direction from neighbor
+                    if (// check if local position is at edge of chunk, and if so check face direction from neighbor
                         (((localPosition[i] == (ChunkController.SIZE - 1)) || (localPosition[i] == 0))
-                         && IsNeighborTransparent(faceNormal, globalPosition + faceNormal))
+                         && CheckBlockTransparency(GetNeighboringBlock(faceNormal, globalPosition + faceNormal)))
                         // local position is inside chunk, so retrieve from blocks
                         || CheckBlockTransparency(_Blocks.GetPoint(globalPosition + faceNormal, true)))
                     {
@@ -216,8 +216,6 @@ namespace Wyd.Game.World.Chunks
 
                         if (_AggressiveFaceMerging)
                         {
-                            // todo this seems dumb
-
                             int traversals = 0;
                             float3 finalTraversalNormal = float3.zero;
 
@@ -311,25 +309,24 @@ namespace Wyd.Game.World.Chunks
                 int traversalIndex = index + (traversals * traversalFactor);
                 float3 currentTraversalPosition = globalPosition + (traversals * traversalNormal);
 
-                Direction faceDirection = Directions.NormalToDirection(faceNormal);
-
-                if ((currentId != _Blocks.GetPoint(currentTraversalPosition))
-                    || _Mask[traversalIndex].HasFace(faceDirection))
+                if ((_Blocks.GetPoint(currentTraversalPosition) != currentId)
+                    || _Mask[traversalIndex].HasFace(Directions.NormalToDirection(faceNormal)))
                 {
                     break;
                 }
 
                 float3 traversalFacingBlockPosition = currentTraversalPosition + faceNormal;
                 float3 traversalLengthFromOrigin = traversalFacingBlockPosition - _OriginPoint;
+                ushort facingBlockId;
 
-                if ( // determine if coordinates are inside chunk
-                    (!math.any(traversalLengthFromOrigin < 0)
-                     && !math.any(traversalLengthFromOrigin > (ChunkController.SIZE - 1)))
-                    // if not inside, try to get block id from neighbor chunks
-                    || !TryGetNeighboringBlock(faceNormal, traversalFacingBlockPosition, out ushort facingBlockId))
+                if (math.all(traversalLengthFromOrigin >= 0) && math.all(traversalLengthFromOrigin <= (ChunkController.SIZE - 1)))
                 {
                     // coordinates are inside, so retrieve from own blocks octree
                     facingBlockId = _Blocks.GetPoint(traversalFacingBlockPosition);
+                }
+                else
+                {
+                    facingBlockId = GetNeighboringBlock(faceNormal, traversalFacingBlockPosition);
                 }
 
                 // if transparent, traverse as long as block is the same
@@ -338,6 +335,16 @@ namespace Wyd.Game.World.Chunks
                     || !CheckBlockTransparency(facingBlockId))
                 {
                     break;
+                }
+
+                if (_OriginPoint.x == 32f && _OriginPoint.y == 160f && _OriginPoint.z == 32f)
+                {
+                    float3 index3D = WydMath.IndexTo3D(index, ChunkController.SIZE);
+
+                    if (index3D.x == 31f && index3D.z == 31f)
+                    {
+
+                    }
                 }
 
                 // set face to traversed and continue traversal
@@ -391,25 +398,14 @@ namespace Wyd.Game.World.Chunks
             return index;
         }
 
-        private bool TryGetNeighboringBlock(int3 normal, float3 globalPosition, out ushort blockId)
+        private ushort GetNeighboringBlock(int3 normal, float3 globalPosition)
         {
-            blockId = BlockController.NullID;
-
             int index = GetNeighborIndexFromNormal(normal);
 
             // if neighbor chunk doesn't exist, then return true (to mean, return blockId == NullID
-            if (_NeighborNodes[index] == default)
-            {
-                return true;
-            }
-
             // otherwise, query octree for target neighbor and return block id
-            blockId = _NeighborNodes[index].GetPoint(globalPosition, true);
-            return true;
+            return _NeighborNodes[index] == default ? BlockController.NullID : _NeighborNodes[index].GetPoint(globalPosition, true);
         }
-
-        private bool IsNeighborTransparent(int3 normal, float3 globalPosition) =>
-            TryGetNeighboringBlock(normal, globalPosition, out ushort blockId) && CheckBlockTransparency(blockId);
 
         private bool CheckBlockTransparency(ushort blockId)
         {
