@@ -204,7 +204,7 @@ namespace Wyd.Game.World.Chunks
                     }
 
                     if (// check if local position is at edge of chunk, and if so check face direction from neighbor
-                        (((localPosition[i] == (ChunkController.SIZE - 1)) || (localPosition[i] == 0))
+                        ((((sign > 0) && (localPosition[i] == (ChunkController.SIZE - 1))) || ((sign < 0) && (localPosition[i] == 0)))
                          && CheckBlockTransparency(GetNeighboringBlock(faceNormal, globalPosition + faceNormal)))
                         // local position is inside chunk, so retrieve from blocks
                         || CheckBlockTransparency(_Blocks.GetPoint(globalPosition + faceNormal, true)))
@@ -260,14 +260,14 @@ namespace Wyd.Game.World.Chunks
                                 _MeshData.AddVertex(localPosition + traversalVertex);
                             }
 
-                            // if (BlockController.Current.GetUVs(currentBlockId, globalPosition, Direction.North, uvSize,
-                            //     out BlockUVs blockUVs))
-                            // {
-                            //     _MeshData.AddUV(blockUVs.TopLeft);
-                            //     _MeshData.AddUV(blockUVs.TopRight);
-                            //     _MeshData.AddUV(blockUVs.BottomLeft);
-                            //     _MeshData.AddUV(blockUVs.BottomRight);
-                            // }
+                            if (BlockController.Current.GetUVs(currentBlockId, globalPosition, Direction.North, uvSize,
+                                out BlockUVs blockUVs))
+                            {
+                                _MeshData.AddUV(blockUVs.TopLeft);
+                                _MeshData.AddUV(blockUVs.TopRight);
+                                _MeshData.AddUV(blockUVs.BottomLeft);
+                                _MeshData.AddUV(blockUVs.BottomRight);
+                            }
                         }
                         else
                         {
@@ -337,18 +337,8 @@ namespace Wyd.Game.World.Chunks
                     break;
                 }
 
-                if (_OriginPoint.x == 32f && _OriginPoint.y == 160f && _OriginPoint.z == 32f)
-                {
-                    float3 index3D = WydMath.IndexTo3D(index, ChunkController.SIZE);
-
-                    if (index3D.x == 31f && index3D.z == 31f)
-                    {
-
-                    }
-                }
-
                 // set face to traversed and continue traversal
-                _Mask[traversalIndex].SetFace(faceDirection, true);
+                _Mask[traversalIndex].SetFace(Directions.NormalToDirection(faceNormal), true);
             }
 
             return traversals;
@@ -384,15 +374,15 @@ namespace Wyd.Game.World.Chunks
 
             if (normal.x != 0)
             {
-                index = normal.x > 0 ? 1 : 3;
+                index = normal.x > 0 ? 0 : 1;
             }
             else if (normal.y != 0)
             {
-                index = normal.y > 0 ? 4 : 5;
+                index = normal.y > 0 ? 2 : 3;
             }
             else if (normal.z != 0)
             {
-                index = normal.z > 0 ? 0 : 2;
+                index = normal.z > 0 ? 4 : 5;
             }
 
             return index;
