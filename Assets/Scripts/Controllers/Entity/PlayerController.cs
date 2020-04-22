@@ -119,29 +119,27 @@ namespace Wyd.Controllers.Entity
             CheckChangedPosition();
             CheckChangedChunkPosition();
 
-//            PositionChanged += (sender, position) =>
-//            {
-//                const int destruct_radius = 2;
-//                for (int x = -destruct_radius; x < (destruct_radius + 1); x++)
-//                {
-//                    for (int y = -destruct_radius; y < (destruct_radius + 1); y++)
-//                    {
-//                        for (int z = -destruct_radius; z < (destruct_radius + 1); z++)
-//                        {
-//                            Vector3 relativePosition = position + new Vector3(x, y, z);
-//
-//                            if (WorldController.Current.TryGetBlockAt(relativePosition, out Block block)
-//                                && BlockController.Current.TryGetBlockRule(block.Id, out IReadOnlyBlockRule blockRule)
-//                                && blockRule.Destroyable
-//                                && WorldController.Current.TryRemoveBlockAt(relativePosition)
-//                                && blockRule.Collectible)
-//                            {
-//                                Inventory.AddItem(block.Id, 1);
-//                            }
-//                        }
-//                    }
-//                }
-//            };
+            // PositionChanged += (sender, position) =>
+            // {
+            //     const int destruct_radius = 2;
+            //     for (int x = -destruct_radius; x < (destruct_radius + 1); x++)
+            //     {
+            //         for (int y = -destruct_radius; y < (destruct_radius + 1); y++)
+            //         {
+            //             for (int z = -destruct_radius; z < (destruct_radius + 1); z++)
+            //             {
+            //                 float3 relativePosition = position + new float3(x, y, z);
+            //
+            //                 if (WorldController.Current.TryGetBlock(relativePosition, out ushort blockId)
+            //                     && blockId != BlockController.AirID
+            //                     && WorldController.Current.TryPlaceBlock(relativePosition, BlockController.AirID))
+            //                 {
+            //                     //Inventory.AddItem(block.Id, 1);
+            //                 }
+            //             }
+            //         }
+            //     }
+            // };
         }
 
         private void Start()
