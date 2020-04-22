@@ -1,6 +1,5 @@
 #region
 
-using System.Runtime.Serialization.Json;
 using System.Threading;
 using System.Threading.Tasks;
 using Unity.Mathematics;
@@ -63,6 +62,7 @@ namespace Wyd.Game.World.Chunks
         }
 
         public void ApplyMeshData(ref Mesh mesh) => _Mesher?.ApplyMeshData(ref mesh);
+
         public void CacheMesher()
         {
             _Mesher?.Reset();

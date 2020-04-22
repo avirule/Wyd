@@ -3,7 +3,6 @@
 using System.Threading;
 using System.Threading.Tasks;
 using UnityEngine;
-using UnityEngine.Rendering;
 using Wyd.Controllers.State;
 using Wyd.Game.World.Chunks;
 using Wyd.System;

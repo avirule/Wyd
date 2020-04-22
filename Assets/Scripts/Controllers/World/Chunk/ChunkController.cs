@@ -252,7 +252,7 @@ namespace Wyd.Controllers.World.Chunk
             {
                 return;
             }
-            else if (State > ChunkState.Unbuilt && State < ChunkState.Mesh)
+            else if ((State > ChunkState.Unbuilt) && (State < ChunkState.Mesh))
             {
                 foreach (ChunkController chunkController in _Neighbors)
                 {
@@ -299,7 +299,7 @@ namespace Wyd.Controllers.World.Chunk
                 case ChunkState.Mesh:
                     if (Blocks.IsUniform
                         && ((Blocks.Value == BlockController.AirID)
-                            || _Neighbors.All(chunkController => chunkController.Blocks != null
+                            || _Neighbors.All(chunkController => (chunkController.Blocks != null)
                                                                  && chunkController.Blocks.IsUniform)))
                     {
                         State = ChunkState.Meshed;
