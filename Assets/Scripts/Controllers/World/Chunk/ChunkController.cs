@@ -37,6 +37,7 @@ namespace Wyd.Controllers.World.Chunk
     public class ChunkController : ActivationStateChunkController, IPerFrameIncrementalUpdate
     {
         public const int SIZE = 32;
+        public const int SIZE_VERTICAL_STEP = SIZE * SIZE;
         public const int SIZE_CUBED = SIZE * SIZE * SIZE;
 
         private static readonly ObjectCache<BlockAction> _blockActionsCache = new ObjectCache<BlockAction>(true, 1024);
@@ -52,6 +53,7 @@ namespace Wyd.Controllers.World.Chunk
         private ConcurrentQueue<BlockAction> _BlockActions;
         private OctreeNode<ushort> _Blocks;
         private Mesh _Mesh;
+        private bool _EnabledRecently;
 
         private long _State;
         private bool _Active;
@@ -177,10 +179,8 @@ namespace Wyd.Controllers.World.Chunk
             PerFrameUpdateController.Current.RegisterPerFrameUpdater(20, this);
 
             _CancellationTokenSource = new CancellationTokenSource();
-            _Neighbors.InsertRange(0, WorldController.Current.GetNeighboringChunks(OriginPoint));
-
-            State = ChunkState.Unbuilt;
             Active = gameObject.activeSelf;
+            _EnabledRecently = true;
 
             BlocksChanged += FlagUpdateMeshCallback;
             TerrainChanged += FlagUpdateMeshCallback;
@@ -238,6 +238,15 @@ namespace Wyd.Controllers.World.Chunk
             }
 
 #endif
+
+            if (_EnabledRecently)
+            {
+                _Neighbors.InsertRange(0, WorldController.Current.GetNeighboringChunks(OriginPoint));
+
+                State = ChunkState.Unbuilt;
+
+                _EnabledRecently = false;
+            }
 
             if (((State == ChunkState.Meshed) && !UpdateMesh) || !WorldController.Current.ReadyForGeneration)
             {
@@ -308,7 +317,7 @@ namespace Wyd.Controllers.World.Chunk
                 case ChunkState.AwaitingMesh:
                     if (_FinishedMeshingJob != null)
                     {
-                        MeshController.ApplyMesh(_FinishedMeshingJob.GetMeshData());
+                        MeshController.ApplyMesh(_FinishedMeshingJob);
                         _FinishedMeshingJob = null;
                         State = State.Next();
                         OnMeshChanged(this, new ChunkChangedEventArgs(OriginPoint, Enumerable.Empty<float3>()));
@@ -509,6 +518,7 @@ namespace Wyd.Controllers.World.Chunk
 
             if (!args.AsyncJob.Identity.Equals(_MeshJobIdentity))
             {
+                ((ChunkMeshingJob)args.AsyncJob).CacheMesher();
                 return;
             }
 

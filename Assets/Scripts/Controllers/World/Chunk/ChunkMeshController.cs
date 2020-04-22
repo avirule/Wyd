@@ -72,6 +72,7 @@ namespace Wyd.Controllers.World.Chunk
 
             _Mesh = new Mesh();
             MeshFilter.sharedMesh = _Mesh;
+            MeshRenderer.materials = TextureController.Current.AllBlocksMaterials;
         }
 
         protected override void OnEnable()
@@ -117,45 +118,12 @@ namespace Wyd.Controllers.World.Chunk
             Task.Run(async () => await AsyncJobScheduler.QueueAsyncJob(asyncJob), token);
         }
 
-        public void ApplyMesh(ChunkMeshData chunkMeshData)
+        public void ApplyMesh(ChunkMeshingJob meshingJob)
         {
-            if (chunkMeshData.Empty)
-            {
-                MeshRenderer.enabled = false;
-                return;
-            }
-            else
-            {
-                MeshRenderer.enabled = true;
-            }
+            meshingJob.ApplyMeshData(ref _Mesh);
+            meshingJob.CacheMesher();
 
-            _Mesh.Clear();
-
-            _Mesh.subMeshCount = 2;
-            _Mesh.indexFormat = chunkMeshData.Vertices.Count > 65000
-                ? IndexFormat.UInt32
-                : IndexFormat.UInt16;
-
-            _Mesh.SetVertices(chunkMeshData.Vertices);
-            _Mesh.SetTriangles(chunkMeshData.Triangles, 0);
-
-            if (chunkMeshData.TransparentTriangles.Count > 0)
-            {
-                _Mesh.SetTriangles(chunkMeshData.TransparentTriangles, 1);
-                MeshRenderer.materials = TextureController.Current.AllBlocksMaterials;
-            }
-            else
-            {
-                MeshRenderer.material = TextureController.Current.BlocksMaterial;
-            }
-
-            // check uvs count in case of no UVs to apply to mesh
-            if (chunkMeshData.UVs.Count > 0)
-            {
-                _Mesh.SetUVs(0, chunkMeshData.UVs);
-            }
-
-            _Mesh.RecalculateNormals();
+            MeshRenderer.enabled = _Mesh.vertexCount > 0;
 
 #if UNITY_EDITOR
 
