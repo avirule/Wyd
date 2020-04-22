@@ -880,7 +880,6 @@ namespace Wyd.Game.World.Chunks
             }
 
             int traversals = 1;
-            int traversalIndex;
 
             int3 traversalNormal = traversalDirection.AsInt3();
             int3 faceNormal = faceDirection.AsInt3();
@@ -892,7 +891,7 @@ namespace Wyd.Game.World.Chunks
                 // incrementing on x, so the traversal factor is 1
                 // if we were incrementing on z, the factor would be ChunkController.Size3D.x
                 // and on y it would be (ChunkController.Size3D.x * ChunkController.Size3D.z)
-                traversalIndex = index + (traversals * traversalFactor);
+                int traversalIndex = index + (traversals * traversalFactor);
                 float3 currentTraversalPosition = globalPosition + (traversals * traversalNormal);
 
                 if ((currentId != _Blocks.GetPoint(currentTraversalPosition))
@@ -905,8 +904,10 @@ namespace Wyd.Game.World.Chunks
                 float3 traversalLengthFromOrigin = traversalFacingBlockPosition - _OriginPoint;
 
                 // determine block id of traversal facing block
-                if ((!math.any(traversalLengthFromOrigin < 0)
+                if ( // determine if coordinates are inside chunk
+                    (!math.any(traversalLengthFromOrigin < 0)
                      && !math.any(traversalLengthFromOrigin > (ChunkController.SIZE - 1)))
+                    // if not inside, try to get block id from neighbor chunks
                     || !TryGetNeighboringBlock(faceDirection, traversalFacingBlockPosition, out ushort facingBlockId))
                 {
                     facingBlockId = _Blocks.GetPoint(traversalFacingBlockPosition);
@@ -941,8 +942,8 @@ namespace Wyd.Game.World.Chunks
         {
             blockId = BlockController.NullID;
 
-            return _NeighborNodes.ContainsKey(direction)
-                   && _NeighborNodes[direction].TryGetPoint(globalPosition, out blockId);
+            return !_NeighborNodes.ContainsKey(direction)
+                   || _NeighborNodes[direction].TryGetPoint(globalPosition, out blockId);
         }
 
         private bool IsNeighborTransparent(Direction direction, float3 globalPosition) =>
