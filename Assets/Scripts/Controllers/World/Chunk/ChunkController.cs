@@ -394,7 +394,8 @@ namespace Wyd.Controllers.World.Chunk
 
         private void ModifyBlockPosition(float3 globalPosition, ushort newId)
         {
-            Blocks.SetPoint(globalPosition, newId);
+            // todo make this accept parameter for local position
+            Blocks.SetPoint(globalPosition - OriginPoint, newId);
         }
 
         private bool TryGetNeighborsRequiringUpdateNormals(float3 globalPosition, out IEnumerable<float3> normals)
@@ -436,7 +437,7 @@ namespace Wyd.Controllers.World.Chunk
 
                 return false;
             }
-            else if (!Blocks.TryGetPoint(globalPosition, out blockId))
+            else if (!Blocks.TryGetPoint(globalPosition - OriginPoint, out blockId))
             {
 #if UNITY_EDITOR
 

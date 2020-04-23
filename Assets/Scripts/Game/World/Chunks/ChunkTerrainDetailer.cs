@@ -30,12 +30,12 @@ namespace Wyd.Game.World.Chunks
                 float3 localPosition = WydMath.IndexTo3D(index, ChunkController.SIZE);
                 float3 globalPosition = OriginPoint + localPosition;
 
-                if (_Blocks.GetPoint(globalPosition, false) == BlockController.AirID)
+                if (_Blocks.GetPoint(localPosition) == BlockController.AirID)
                 {
                     continue;
                 }
 
-                AttemptLaySurfaceBlocks(globalPosition);
+                AttemptLaySurfaceBlocks(globalPosition, localPosition);
 
                 // if (_Blocks.UncheckedGetPoint(globalPosition) == GetCachedBlockID("stone"))
                 // {
@@ -54,7 +54,7 @@ namespace Wyd.Game.World.Chunks
             TerrainDetailTimeSpan = Stopwatch.Elapsed;
         }
 
-        private void AttemptLaySurfaceBlocks(float3 globalPosition)
+        private void AttemptLaySurfaceBlocks(float3 globalPosition, float3 localPosition)
         {
             if ((globalPosition.y < (WorldController.WORLD_HEIGHT / 2f))
                 || (OpenSimplexSlim.GetSimplex(WorldController.Current.Seed, 0.01f, globalPosition.xz) > 0.5f))
@@ -81,7 +81,7 @@ namespace Wyd.Game.World.Chunks
                 return;
             }
 
-            _Blocks.SetPoint(globalPosition, GetCachedBlockID("grass"));
+            _Blocks.SetPoint(localPosition, GetCachedBlockID("grass"));
 
             for (float3 ySteps = new float3(0f, -1f, 0f);
                 ySteps.y >= -SeededRandom.Next(3, 5);
@@ -104,7 +104,7 @@ namespace Wyd.Game.World.Chunks
             }
             else
             {
-                blockId = _Blocks.GetPoint(globalPosition, false);
+                blockId = _Blocks.GetPoint(localPosition);
                 return true;
             }
         }
@@ -119,7 +119,7 @@ namespace Wyd.Game.World.Chunks
             }
             else
             {
-                _Blocks.SetPoint(globalPosition, blockId);
+                _Blocks.SetPoint(localPosition, blockId);
             }
         }
     }

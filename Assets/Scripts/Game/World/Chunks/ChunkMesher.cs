@@ -122,7 +122,7 @@ namespace Wyd.Game.World.Chunks
                 int3 localPosition = WydMath.IndexTo3D(index, ChunkController.SIZE);
                 int3 globalPosition = WydMath.ToInt(_OriginPoint + localPosition);
 
-                ushort currentBlockId = _Blocks.GetPoint(globalPosition, false);
+                ushort currentBlockId = _Blocks.GetPoint(localPosition);
 
                 if (currentBlockId == BlockController.AirID)
                 {
@@ -131,7 +131,7 @@ namespace Wyd.Game.World.Chunks
 
                 if (BlockController.Current.CheckBlockHasProperty(currentBlockId, BlockDefinition.Property.Transparent, false))
                 {
-                    //TraverseIndexTransparent(WydMath.ToInt(_OriginPoint), index, globalPosition, localPosition);
+                    //TraverseIndexTransparent(WydMath.ToInt(_OriginPoint), index, localPosition, localPosition);
                 }
                 else
                 {
@@ -202,10 +202,10 @@ namespace Wyd.Game.World.Chunks
 
                     if ( // check if local position is at edge of chunk, and if so check face direction from neighbor
                         ((((sign > 0) && (localPosition[i] == (ChunkController.SIZE - 1))) || ((sign < 0) && (localPosition[i] == 0)))
-                         && BlockController.Current.CheckBlockHasProperty(GetNeighboringBlock(faceNormal, globalPosition + faceNormal),
+                         && BlockController.Current.CheckBlockHasProperty(GetNeighboringBlock(faceNormal, localPosition + faceNormal),
                              BlockDefinition.Property.Transparent, false))
                         // local position is inside chunk, so retrieve from blocks
-                        || BlockController.Current.CheckBlockHasProperty(_Blocks.GetPoint(globalPosition + faceNormal, false),
+                        || BlockController.Current.CheckBlockHasProperty(_Blocks.GetPoint(localPosition + faceNormal),
                             BlockDefinition.Property.Transparent, false))
                     {
                         _Mask[index].SetFace(faceDirection, true);
@@ -242,7 +242,7 @@ namespace Wyd.Game.World.Chunks
                                 float indexStep = indexStepUnclamped == 0f ? 1f : indexStepUnclamped;
                                 int indexStepSigned = (int)indexStep;
 
-                                traversals = GetTraversals(index, globalPosition, localPosition[traversalNormalIndex], traversalNormal, faceNormal,
+                                traversals = GetTraversals(index, localPosition, localPosition[traversalNormalIndex], traversalNormal, faceNormal,
                                     faceDirection, indexStepSigned, false);
 
                                 finalTraversalNormal = traversalNormal;
@@ -286,14 +286,14 @@ namespace Wyd.Game.World.Chunks
         ///     Gets the total amount of possible traversals for face merging in a direction
         /// </summary>
         /// <param name="index">1D index of current block.</param>
-        /// <param name="globalPosition">Global position of starting block.</param>
+        /// <param name="localPosition"></param>
         /// <param name="slice">Current slice (x, y, or z) of a 3D index relative to your traversal direction.</param>
         /// <param name="traversalNormal">Direction to traverse in.</param>
         /// <param name="faceNormal">Direction to check faces while traversing.</param>
         /// <param name="traversalFactor">Amount of indexes to move forwards for each successful traversal in given direction.</param>
         /// <param name="transparentTraversal">Determines whether or not transparent traversal will be used.</param>
         /// <returns><see cref="int" /> representing how many successful traversals were made in the given traversal direction.</returns>
-        private int GetTraversals(int index, int3 globalPosition, int slice, int3 traversalNormal, int3 faceNormal, Direction faceDirection,
+        private int GetTraversals(int index, float3 localPosition, int slice, int3 traversalNormal, int3 faceNormal, Direction faceDirection,
             int traversalFactor, bool transparentTraversal)
         {
             if (!_AggressiveFaceMerging)
@@ -301,7 +301,7 @@ namespace Wyd.Game.World.Chunks
                 return 1;
             }
 
-            ushort currentId = _Blocks.GetPoint(globalPosition, false);
+            ushort currentId = _Blocks.GetPoint(localPosition);
 
             int traversals;
 
@@ -311,22 +311,20 @@ namespace Wyd.Game.World.Chunks
                 // if we were incrementing on z, the factor would be ChunkController.Size3D.x
                 // and on y it would be (ChunkController.Size3D.x * ChunkController.Size3D.z)
                 int traversalIndex = index + (traversals * traversalFactor);
-                float3 currentTraversalPosition = globalPosition + (traversals * traversalNormal);
+                float3 currentTraversalPosition = localPosition + (traversals * traversalNormal);
 
-                if ((_Blocks.GetPoint(currentTraversalPosition, false) != currentId)
-                    || _Mask[traversalIndex].HasFace(Directions.NormalToDirection(faceNormal)))
+                if ((_Blocks.GetPoint(currentTraversalPosition) != currentId) || _Mask[traversalIndex].HasFace(faceDirection))
                 {
                     break;
                 }
 
                 float3 traversalFacingBlockPosition = currentTraversalPosition + faceNormal;
-                float3 traversalLengthFromOrigin = traversalFacingBlockPosition - _OriginPoint;
                 ushort facingBlockId;
 
-                if (math.all(traversalLengthFromOrigin >= 0) && math.all(traversalLengthFromOrigin <= (ChunkController.SIZE - 1)))
+                if (math.all(traversalFacingBlockPosition >= 0) && math.all(traversalFacingBlockPosition <= (ChunkController.SIZE - 1)))
                 {
                     // coordinates are inside, so retrieve from own blocks octree
-                    facingBlockId = _Blocks.GetPoint(traversalFacingBlockPosition, false);
+                    facingBlockId = _Blocks.GetPoint(traversalFacingBlockPosition);
                 }
                 else
                 {
@@ -394,13 +392,15 @@ namespace Wyd.Game.World.Chunks
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private ushort GetNeighboringBlock(int3 normal, float3 globalPosition)
+        private ushort GetNeighboringBlock(int3 normal, float3 localPosition)
         {
             int index = GetNeighborIndexFromNormal(normal);
 
             // if neighbor chunk doesn't exist, then return true (to mean, return blockId == NullID
             // otherwise, query octree for target neighbor and return block id
-            return _NeighborNodes[index] == default ? BlockController.NullID : _NeighborNodes[index].GetPoint(globalPosition, false);
+            return _NeighborNodes[index] != null
+                ? _NeighborNodes[index].GetPoint(localPosition + (-normal * ChunkController.SIZE))
+                : BlockController.NullID;
         }
 
         #endregion

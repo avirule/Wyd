@@ -1,8 +1,6 @@
 #region
 
-using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Runtime.CompilerServices;
 using Unity.Mathematics;
 
@@ -26,18 +24,18 @@ namespace Wyd.System.Collections
         };
 
 
-        private readonly List<OctreeNode<T>> _Nodes;
-        private readonly CubicVolume _Volume;
+        private readonly float _Size;
+
+        private OctreeNode<T>[] _Nodes;
 
         public T Value { get; private set; }
 
-        public bool IsUniform => _Nodes.Count == 0;
-        public CubicVolume Volume => _Volume;
+        public bool IsUniform => _Nodes == null;
 
-        public OctreeNode(float3 centerPoint, float size, T value)
+        public OctreeNode(float size, T value)
         {
-            _Nodes = new List<OctreeNode<T>>();
-            _Volume = new CubicVolume(centerPoint, size);
+            _Nodes = null;
+            _Size = size;
             Value = value;
         }
 
@@ -49,86 +47,40 @@ namespace Wyd.System.Collections
             }
 
             Value = _Nodes[0].Value;
-            _Nodes.Clear();
+            _Nodes = null;
         }
 
         private void Populate()
         {
-            _Nodes.InsertRange(0, GetNodePopulation());
-        }
+            float extent = _Size / 2f;
 
-        private IEnumerable<OctreeNode<T>> GetNodePopulation()
-        {
-            float3 offset = new float3(_Volume.Extent / 2f);
-
-            yield return new OctreeNode<T>(_Volume.CenterPoint + (_coordinates[0] * offset), _Volume.Extent, Value);
-            yield return new OctreeNode<T>(_Volume.CenterPoint + (_coordinates[1] * offset), _Volume.Extent, Value);
-            yield return new OctreeNode<T>(_Volume.CenterPoint + (_coordinates[2] * offset), _Volume.Extent, Value);
-            yield return new OctreeNode<T>(_Volume.CenterPoint + (_coordinates[3] * offset), _Volume.Extent, Value);
-            yield return new OctreeNode<T>(_Volume.CenterPoint + (_coordinates[4] * offset), _Volume.Extent, Value);
-            yield return new OctreeNode<T>(_Volume.CenterPoint + (_coordinates[5] * offset), _Volume.Extent, Value);
-            yield return new OctreeNode<T>(_Volume.CenterPoint + (_coordinates[6] * offset), _Volume.Extent, Value);
-            yield return new OctreeNode<T>(_Volume.CenterPoint + (_coordinates[7] * offset), _Volume.Extent, Value);
+            _Nodes = new[]
+            {
+                new OctreeNode<T>(extent, Value),
+                new OctreeNode<T>(extent, Value),
+                new OctreeNode<T>(extent, Value),
+                new OctreeNode<T>(extent, Value),
+                new OctreeNode<T>(extent, Value),
+                new OctreeNode<T>(extent, Value),
+                new OctreeNode<T>(extent, Value),
+                new OctreeNode<T>(extent, Value)
+            };
         }
 
 
         #region Checked Data Operations
 
-        public T GetPoint(float3 point, bool checkContains = true)
+        public T GetPoint(float3 point) => !IsUniform ? _Nodes[DetermineOctant(point)].GetPoint(point) : Value;
+
+        public void SetPoint(float3 point, T newValue)
         {
-            if (checkContains && !Volume.ContainsMinBiased(point))
-            {
-                throw new ArgumentOutOfRangeException(
-                    $"Attempted to get point {point} in {nameof(OctreeNode<T>)}, but {nameof(_Volume)} does not contain it.\r\n"
-                    + $"State Information: [Volume {_Volume}], [{nameof(IsUniform)} {IsUniform}], [Branches {_Nodes.Count}], "
-                    + (_Nodes.Count > 0
-                        ? $"[Branch Values {string.Join(", ", _Nodes.Select(node => node.Value))}"
-                        : string.Empty));
-            }
-
-
-            if (!IsUniform)
-            {
-                int octant = DetermineOctant(point);
-
-                if (checkContains && (octant >= _Nodes.Count))
-                {
-                    throw new ArgumentOutOfRangeException(
-                        $"Attempted to step into octant of {nameof(OctreeNode<T>)} and failed ({nameof(GetPoint)}).\r\n"
-                        + $"State Information: [Volume {_Volume}], [{nameof(IsUniform)} {IsUniform}], [Branches {_Nodes.Count}], "
-                        + (_Nodes.Count > 0
-                            ? $"[Branch Values {string.Join(", ", _Nodes.Select(node => node.Value))}]"
-                            : string.Empty)
-                        + $"[Octant {octant}]");
-                }
-
-                return _Nodes[octant].GetPoint(point, false);
-            }
-            else
-            {
-                return Value;
-            }
-        }
-
-        public void SetPoint(float3 point, T newValue, bool checkContains = true)
-        {
-            if (checkContains && !Volume.ContainsMinBiased(point))
-            {
-                throw new ArgumentOutOfRangeException(
-                    $"Attempted to set point {point} in {nameof(OctreeNode<T>)}, but {nameof(_Volume)} does not contain it.\r\n"
-                    + $"State Information: [Volume {_Volume}], [{nameof(IsUniform)} {IsUniform}], [Branches {_Nodes.Count}], "
-                    + (_Nodes.Count > 0
-                        ? $"[Branch Values {string.Join(", ", _Nodes.Select(node => node.Value))}"
-                        : string.Empty));
-            }
-
-            if (IsUniform && (Value.GetHashCode() == newValue.GetHashCode()))
+            if (Value.GetHashCode() == newValue.GetHashCode())
             {
                 // operation does nothing, so return
                 return;
             }
 
-            if (_Volume.Size <= 1f)
+            if (_Size <= 1f)
             {
                 // reached smallest possible depth (usually 1x1x1) so
                 // set value and return
@@ -142,21 +94,8 @@ namespace Wyd.System.Collections
                 Populate();
             }
 
-            int octant = DetermineOctant(point);
-
-            if (checkContains && (octant >= _Nodes.Count))
-            {
-                throw new ArgumentOutOfRangeException(
-                    $"Attempted to step into octant of {nameof(OctreeNode<T>)} and failed ({nameof(SetPoint)}).\r\n"
-                    + $"State Information: [Volume {_Volume}], [{nameof(IsUniform)} {IsUniform}], [Branches {_Nodes.Count}], "
-                    + (_Nodes.Count > 0
-                        ? $"[Branch Values {string.Join(", ", _Nodes.Select(node => node.Value))}]"
-                        : string.Empty)
-                    + $"[Octant {octant}]");
-            }
-
             // recursively dig into octree and set
-            _Nodes[octant].SetPoint(point, newValue, false);
+            _Nodes[DetermineOctant(point)].SetPoint(point, newValue);
 
             // on each recursion back-step, ensure integrity of node
             // and collapse if all child node values are equal
@@ -170,12 +109,7 @@ namespace Wyd.System.Collections
         {
             if (IsUniform)
             {
-                throw new ArgumentOutOfRangeException(
-                    $"Attempted to check for required collapsing of {nameof(OctreeNode<T>)} and failed..\r\n"
-                    + $"State Information: [Volume {_Volume}], [{nameof(IsUniform)} {IsUniform}], [Branches {_Nodes.Count}], "
-                    + (_Nodes.Count > 0
-                        ? $"[Branch Values {string.Join(", ", _Nodes.Select(node => node.Value))}]"
-                        : string.Empty));
+                return false;
             }
 
             T firstValue = _Nodes[0].Value;
@@ -196,9 +130,9 @@ namespace Wyd.System.Collections
 
         public IEnumerable<T> GetAllData()
         {
-            for (int index = 0; index < WydMath.Product(_Volume.Size); index++)
+            for (int index = 0; index < math.pow(_Size, 3); index++)
             {
-                yield return GetPoint(_Volume.MinPoint + WydMath.IndexTo3D(index, (int)_Volume.Size), true);
+                yield return GetPoint(WydMath.IndexTo3D(index, (int)_Size));
             }
         }
 
@@ -211,11 +145,7 @@ namespace Wyd.System.Collections
         {
             value = default;
 
-            if (!Volume.ContainsMinBiased(point))
-            {
-                return false;
-            }
-            else if (!IsUniform)
+            if (!IsUniform)
             {
                 int octant = DetermineOctant(point);
                 return _Nodes[octant].TryGetPoint(point, out value);
@@ -242,7 +172,7 @@ namespace Wyd.System.Collections
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private int DetermineOctant(float3 point)
         {
-            bool3 result = point < _Volume.CenterPoint;
+            bool3 result = point < (_Size / 2f);
             return (result[0] ? 0 : 1) + (result[1] ? 0 : 4) + (result[2] ? 0 : 2);
         }
 

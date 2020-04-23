@@ -2,10 +2,8 @@
 
 using System;
 using System.Threading;
-using Serilog;
 using Unity.Mathematics;
 using UnityEngine;
-using UnityEngine.Rendering;
 using Wyd.Controllers.State;
 using Wyd.Controllers.System;
 using Wyd.Controllers.World;
@@ -75,11 +73,11 @@ namespace Wyd.Game.World.Chunks
         {
             _NoiseMap = _noiseValuesCache.Retrieve() ?? new float[ChunkController.SIZE_CUBED];
 
-                using (ManualResetEvent manualResetEvent = new ManualResetEvent(false))
-                {
-                    MainThreadActionsController.Current.QueueAction(new MainThreadAction(manualResetEvent, GetComputeBufferData));
-                    manualResetEvent.WaitOne();
-                }
+            using (ManualResetEvent manualResetEvent = new ManualResetEvent(false))
+            {
+                MainThreadActionsController.Current.QueueAction(new MainThreadAction(manualResetEvent, GetComputeBufferData));
+                manualResetEvent.WaitOne();
+            }
         }
 
         private void Generate()
@@ -109,16 +107,14 @@ namespace Wyd.Game.World.Chunks
                 }
             }
 
-            float3 volumeCenterPoint = OriginPoint + ChunkController.Size3DExtents;
-
             if (allStone)
             {
-                _Blocks = new OctreeNode<ushort>(volumeCenterPoint, ChunkController.SIZE, GetCachedBlockID("stone"));
+                _Blocks = new OctreeNode<ushort>(ChunkController.SIZE, GetCachedBlockID("stone"));
                 return;
             }
             else
             {
-                _Blocks = new OctreeNode<ushort>(volumeCenterPoint, ChunkController.SIZE, BlockController.AirID);
+                _Blocks = new OctreeNode<ushort>(ChunkController.SIZE, BlockController.AirID);
 
                 if (allAir)
                 {
@@ -126,7 +122,7 @@ namespace Wyd.Game.World.Chunks
                 }
             }
 
-            for (int index = ChunkController.SIZE_CUBED - 1; index >= 0; index--)
+            for (int index = 0; index < ChunkController.SIZE_CUBED; index++)
             {
                 if (CancellationToken.IsCancellationRequested)
                 {
@@ -141,7 +137,7 @@ namespace Wyd.Game.World.Chunks
                 float3 localPosition = WydMath.IndexTo3D(index, ChunkController.SIZE);
                 float3 globalPosition = OriginPoint + localPosition;
 
-                _Blocks.SetPoint(globalPosition, GetBlockIDAtPosition(globalPosition));
+                _Blocks.SetPoint(localPosition, GetBlockIDAtPosition(globalPosition));
             }
         }
 
