@@ -63,6 +63,7 @@ namespace Wyd.Game.World.Blocks
             };
 
             static Vertices() =>
+                // todo make this a list and index into it
                 FaceVertices = new Dictionary<Direction, float3[]>
                 {
                     { Direction.North, North },

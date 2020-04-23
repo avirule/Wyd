@@ -194,7 +194,7 @@ namespace Wyd.Game.World.Chunks
                 {
                     int3 faceNormal = new int3
                     {
-                        [i] = 1 * sign
+                        [i] = sign
                     };
                     Direction direction = Directions.NormalToDirection(faceNormal);
 
@@ -221,6 +221,8 @@ namespace Wyd.Game.World.Chunks
 
                             int uvIndex = 1;
 
+
+
                             foreach ((int traversalNormalIndex, int3 traversalNormal) in GetTraversalNormals(faceNormal))
                             {
                                 int traversalNormalIndexAdjusted = 0;
@@ -241,7 +243,7 @@ namespace Wyd.Game.World.Chunks
                                 }
 
                                 float indexStepUnclamped = math.pow(ChunkController.SIZE, traversalNormalIndexAdjusted);
-                                float indexStep = indexStepUnclamped == 0f ? 1 : indexStepUnclamped;
+                                float indexStep = indexStepUnclamped == 0f ? 1f : indexStepUnclamped;
                                 int indexStepSigned = (int)indexStep;
 
                                 traversals = GetTraversals(index, globalPosition, localPosition[traversalNormalIndex],
@@ -251,7 +253,7 @@ namespace Wyd.Game.World.Chunks
 
                                 if (traversals > 1)
                                 {
-                                    // todo make this extend in the right direction
+                                    //uvSize += (traversals + (math.cross(traversalNormal, faceNormal)));
                                     uvSize[uvIndex] = traversals;
                                     break;
                                 }
@@ -271,7 +273,7 @@ namespace Wyd.Game.World.Chunks
                             AddVertices(direction, localPosition);
                         }
 
-                        if (BlockController.Current.GetUVs(currentBlockId, globalPosition, Direction.North, uvSize,
+                        if (BlockController.Current.GetUVs(currentBlockId, globalPosition, /* todo fix that -> */ Direction.North, uvSize,
                             out BlockUVs blockUVs))
                         {
                             _MeshData.AddUV(blockUVs.TopLeft);
