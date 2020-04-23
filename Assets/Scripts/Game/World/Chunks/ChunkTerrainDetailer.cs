@@ -30,7 +30,7 @@ namespace Wyd.Game.World.Chunks
                 float3 localPosition = WydMath.IndexTo3D(index, ChunkController.SIZE);
                 float3 globalPosition = OriginPoint + localPosition;
 
-                if (_Blocks.GetPoint(globalPosition) == BlockController.AirID)
+                if (_Blocks.GetPoint(globalPosition, false) == BlockController.AirID)
                 {
                     continue;
                 }
@@ -104,7 +104,7 @@ namespace Wyd.Game.World.Chunks
             }
             else
             {
-                blockId = _Blocks.GetPoint(globalPosition);
+                blockId = _Blocks.GetPoint(globalPosition, false);
                 return true;
             }
         }

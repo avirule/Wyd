@@ -12,8 +12,7 @@ namespace Wyd.Controllers.System
     /// <summary>
     ///     Controller allowing qu
     /// </summary>
-    public class MainThreadActionsController : SingletonController<MainThreadActionsController>,
-        IPerFrameIncrementalUpdate
+    public class MainThreadActionsController : SingletonController<MainThreadActionsController>, IPerFrameIncrementalUpdate
     {
         private ConcurrentQueue<MainThreadAction> _Actions;
 

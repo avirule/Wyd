@@ -2,6 +2,7 @@
 
 using System.Threading;
 using System.Threading.Tasks;
+using Unity.Collections;
 using Unity.Mathematics;
 using UnityEngine;
 using UnityEngine.Rendering;
@@ -15,24 +16,20 @@ namespace Wyd.Game.World.Chunks
     {
         private readonly float _Frequency;
         private readonly float _Persistence;
-        private readonly bool _GpuAcceleration;
-
-        public AsyncGPUReadbackRequest NoiseValuesRequest { get; }
+        private readonly ComputeBuffer _NoiseValuesBuffer;
 
         public ChunkTerrainBuilderJob(CancellationToken cancellationToken, float3 originPoint, float frequency,
-            float persistence, bool gpuAcceleration = false, AsyncGPUReadbackRequest noiseValuesRequest = null)
+            float persistence, ComputeBuffer noiseValuesBuffer)
             : base(cancellationToken, originPoint)
         {
             _Frequency = frequency;
             _Persistence = persistence;
-            _GpuAcceleration = gpuAcceleration;
-            NoiseValuesRequest = noiseValuesRequest;
+            _NoiseValuesBuffer = noiseValuesBuffer;
         }
 
         protected override Task Process()
         {
-            ChunkTerrainBuilder builder = new ChunkTerrainBuilder(CancellationToken, OriginPoint, _Frequency,
-                _Persistence, _GpuAcceleration, NoiseValuesRequest);
+            ChunkTerrainBuilder builder = new ChunkTerrainBuilder(CancellationToken, OriginPoint, _Frequency, _Persistence, _NoiseValuesBuffer);
             builder.TimeMeasuredGenerate();
 
             // builder has completed execution, so set field

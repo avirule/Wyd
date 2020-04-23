@@ -18,23 +18,23 @@ namespace Wyd.Controllers.System
         public FixedConcurrentQueue<TimeSpan> RollingMeshingTimes { get; private set; }
 
         public double AverageNoiseRetrievalTime => RollingNoiseRetrievalTimes.Count > 0
-            ? RollingNoiseRetrievalTimes.Average(timeSpan => timeSpan.TotalMilliseconds)
+            ? RollingNoiseRetrievalTimes.Average(timeSpan => timeSpan.TotalMilliseconds > 0d ? timeSpan.TotalMilliseconds : 1d)
             : 0d;
 
         public double AverageTerrainBuildingTime => RollingTerrainBuildingTimes.Count > 0
-            ? RollingTerrainBuildingTimes.Average(timeSpan => timeSpan.TotalMilliseconds)
+            ? RollingTerrainBuildingTimes.Average(timeSpan => timeSpan.TotalMilliseconds > 0d ? timeSpan.TotalMilliseconds : 1d)
             : 0d;
 
         public double AverageTerrainDetailingTime => RollingTerrainDetailingTimes.Count > 0
-            ? RollingTerrainDetailingTimes.Average(timeSpan => timeSpan.TotalMilliseconds)
+            ? RollingTerrainDetailingTimes.Average(timeSpan => timeSpan.TotalMilliseconds > 0d ? timeSpan.TotalMilliseconds : 1d)
             : 0d;
 
         public double AverageMeshingSetBlockTime => RollingMeshingSetBlockTimes.Count > 0
-            ? RollingMeshingSetBlockTimes.Average(timeSpan => timeSpan.TotalMilliseconds)
+            ? RollingMeshingSetBlockTimes.Average(timeSpan => timeSpan.TotalMilliseconds > 0d ? timeSpan.TotalMilliseconds : 1d)
             : 0d;
 
         public double AverageMeshingTime => RollingMeshingTimes.Count > 0
-            ? RollingMeshingTimes.Average(timeSpan => timeSpan.TotalMilliseconds)
+            ? RollingMeshingTimes.Average(timeSpan => timeSpan.TotalMilliseconds > 0d ? timeSpan.TotalMilliseconds : 1d)
             : 0d;
 
         private void Start()

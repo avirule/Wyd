@@ -92,10 +92,9 @@ namespace Wyd.Controllers.System
                     }
                 }
             }
-            catch (InvalidOperationException)
+            catch (InvalidOperationException ex)
             {
-                Log.Warning(
-                    $"{nameof(_PerFrameUpdates)} was modified during enumeration and failed to complete a full cycle. This could be due to threaded access.");
+                Log.Warning($"Error in {nameof(PerFrameUpdateController)}: {ex.Message}\r\n{ex.StackTrace}");
             }
         }
 

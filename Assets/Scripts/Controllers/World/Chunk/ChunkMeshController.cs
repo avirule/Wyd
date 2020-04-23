@@ -114,7 +114,7 @@ namespace Wyd.Controllers.World.Chunk
 
             jobIdentity = asyncJob.Identity;
 
-            Task.Run(async () => await AsyncJobScheduler.QueueAsyncJob(asyncJob), token);
+            Task.Run(() => AsyncJobScheduler.QueueAsyncJob(asyncJob), token);
         }
 
         public void ApplyMesh(ChunkMeshingJob meshingJob)

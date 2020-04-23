@@ -4,8 +4,6 @@ using System.Threading;
 using System.Threading.Tasks;
 using Unity.Mathematics;
 using UnityEngine;
-using UnityEngine.Rendering;
-using Wyd.Controllers.State;
 using Wyd.Game.World.Chunks;
 using Wyd.System.Collections;
 using Wyd.System.Jobs;
@@ -21,6 +19,8 @@ namespace Wyd.Controllers.World.Chunk
 
         private static ComputeShader _NoiseShader;
 
+        private ComputeBuffer _NoiseValuesBuffer;
+
         protected override void Awake()
         {
             base.Awake();
@@ -35,31 +35,26 @@ namespace Wyd.Controllers.World.Chunk
             }
         }
 
+        protected override void OnDisable()
+        {
+            base.OnDisable();
+
+            _NoiseValuesBuffer?.Release();
+        }
+
         public void BeginTerrainGeneration(CancellationToken cancellationToken, AsyncJobEventHandler callback,
             out object jobIdentity)
         {
-            ChunkTerrainJob asyncJob;
+            _NoiseValuesBuffer = new ComputeBuffer(ChunkController.SIZE_CUBED, 4);
+            int kernel = _NoiseShader.FindKernel("CSMain");
+            _NoiseShader.SetVector("_Offset", new float4(OriginPoint.xyzz));
+            _NoiseShader.SetFloat("_Frequency", _FREQUENCY);
+            _NoiseShader.SetFloat("_Persistence", _PERSISTENCE);
+            _NoiseShader.SetBuffer(kernel, "Result", _NoiseValuesBuffer);
+            // 1024 is the value set in the shader's [numthreads(--> 1024 <--, 1, 1)]
+            _NoiseShader.Dispatch(kernel, 1024, 1, 1);
 
-            if (OptionsController.Current.GPUAcceleration)
-            {
-                ComputeBuffer noiseBuffer = new ComputeBuffer(ChunkController.SIZE_CUBED, 4);
-                int kernel = _NoiseShader.FindKernel("CSMain");
-                _NoiseShader.SetVector("_Offset", new float4(OriginPoint.xyzz));
-                _NoiseShader.SetFloat("_Frequency", _FREQUENCY);
-                _NoiseShader.SetFloat("_Persistence", _PERSISTENCE);
-                _NoiseShader.SetBuffer(kernel, "Result", noiseBuffer);
-                // 1024 is the value set in the shader's [numthreads(--> 1024 <--, 1, 1)]
-                _NoiseShader.Dispatch(kernel, 1024, 1, 1);
-
-               AsyncGPUReadbackRequest asyncGPUReadbackRequest = AsyncGPUReadback.Request(noiseBuffer);
-
-                asyncJob = new ChunkTerrainBuilderJob(cancellationToken, OriginPoint, _FREQUENCY, _PERSISTENCE,
-                    OptionsController.Current.GPUAcceleration, noiseBuffer);
-            }
-            else
-            {
-                asyncJob = new ChunkTerrainBuilderJob(cancellationToken, OriginPoint, _FREQUENCY, _PERSISTENCE);
-            }
+            ChunkTerrainJob asyncJob = new ChunkTerrainBuilderJob(cancellationToken, OriginPoint, _FREQUENCY, _PERSISTENCE, _NoiseValuesBuffer);
 
             if (callback != null)
             {

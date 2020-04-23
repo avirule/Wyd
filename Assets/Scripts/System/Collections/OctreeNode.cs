@@ -74,9 +74,9 @@ namespace Wyd.System.Collections
 
         #region Checked Data Operations
 
-        public T GetPoint(float3 point, bool hasChecked = false)
+        public T GetPoint(float3 point, bool checkContains = true)
         {
-            if (!hasChecked && !Volume.ContainsMinBiased(point))
+            if (checkContains && !Volume.ContainsMinBiased(point))
             {
                 throw new ArgumentOutOfRangeException(
                     $"Attempted to get point {point} in {nameof(OctreeNode<T>)}, but {nameof(_Volume)} does not contain it.\r\n"
@@ -91,7 +91,7 @@ namespace Wyd.System.Collections
             {
                 int octant = DetermineOctant(point);
 
-                if (!hasChecked && (octant >= _Nodes.Count))
+                if (checkContains && (octant >= _Nodes.Count))
                 {
                     throw new ArgumentOutOfRangeException(
                         $"Attempted to step into octant of {nameof(OctreeNode<T>)} and failed ({nameof(GetPoint)}).\r\n"
@@ -102,7 +102,7 @@ namespace Wyd.System.Collections
                         + $"[Octant {octant}]");
                 }
 
-                return _Nodes[octant].GetPoint(point, true);
+                return _Nodes[octant].GetPoint(point, false);
             }
             else
             {
@@ -110,9 +110,9 @@ namespace Wyd.System.Collections
             }
         }
 
-        public void SetPoint(float3 point, T newValue, bool hasChecked = false)
+        public void SetPoint(float3 point, T newValue, bool checkContains = true)
         {
-            if (!hasChecked && !Volume.ContainsMinBiased(point))
+            if (checkContains && !Volume.ContainsMinBiased(point))
             {
                 throw new ArgumentOutOfRangeException(
                     $"Attempted to set point {point} in {nameof(OctreeNode<T>)}, but {nameof(_Volume)} does not contain it.\r\n"
@@ -144,7 +144,7 @@ namespace Wyd.System.Collections
 
             int octant = DetermineOctant(point);
 
-            if (!hasChecked && (octant >= _Nodes.Count))
+            if (checkContains && (octant >= _Nodes.Count))
             {
                 throw new ArgumentOutOfRangeException(
                     $"Attempted to step into octant of {nameof(OctreeNode<T>)} and failed ({nameof(SetPoint)}).\r\n"
@@ -156,7 +156,7 @@ namespace Wyd.System.Collections
             }
 
             // recursively dig into octree and set
-            _Nodes[octant].SetPoint(point, newValue, true);
+            _Nodes[octant].SetPoint(point, newValue, false);
 
             // on each recursion back-step, ensure integrity of node
             // and collapse if all child node values are equal

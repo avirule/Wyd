@@ -128,5 +128,5 @@ MonoBehaviour:
   MeshController: {fileID: 7041328555870071864}
   MinimumPoint: {x: 0, y: 0, z: 0}
   MaximumPoint: {x: 0, y: 0, z: 0}
-  Extents: {x: 0, y: 0, z: 0}
-  BinaryState: 
+  InternalState: 0
+  Regenerate: 0

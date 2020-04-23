@@ -22,7 +22,7 @@ namespace Wyd.Game.World.Chunks
     {
         private static readonly ObjectCache<float[]> _noiseValuesCache = new ObjectCache<float[]>();
 
-        private readonly AsyncGPUReadbackRequest _NoiseValuesRequest;
+        private readonly ComputeBuffer _NoiseValuesBuffer;
         private readonly float _Frequency;
         private readonly float _Persistence;
 
@@ -32,19 +32,20 @@ namespace Wyd.Game.World.Chunks
         public TimeSpan TerrainGenerationTimeSpan { get; private set; }
 
         public ChunkTerrainBuilder(CancellationToken cancellationToken, float3 originPoint, float frequency,
-            float persistence, AsyncGPUReadbackRequest noiseValuesRequest)
+            float persistence, ComputeBuffer noiseValuesBuffer)
             : base(cancellationToken, originPoint)
         {
             _Frequency = frequency;
             _Persistence = persistence;
-            _NoiseValuesRequest = noiseValuesRequest;
+            _NoiseValuesBuffer = noiseValuesBuffer;
         }
 
         #region Terrain Generation
 
         private bool GetComputeBufferData()
         {
-            _NoiseValuesRequest?.GetData(_NoiseMap);
+            _NoiseValuesBuffer?.GetData(_NoiseMap);
+            _NoiseValuesBuffer?.Release();
 
             return true;
         }
@@ -137,13 +138,8 @@ namespace Wyd.Game.World.Chunks
                     continue; // air
                 }
 
-                float3 localPosition = WydMath.IndexTo3D(index, ChunkController.Size3D);
+                float3 localPosition = WydMath.IndexTo3D(index, ChunkController.SIZE);
                 float3 globalPosition = OriginPoint + localPosition;
-
-                if (_Blocks.GetPoint(globalPosition) != BlockController.AirID)
-                {
-                    continue;
-                }
 
                 _Blocks.SetPoint(globalPosition, GetBlockIDAtPosition(globalPosition));
             }
