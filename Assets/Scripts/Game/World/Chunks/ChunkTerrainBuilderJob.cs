@@ -4,34 +4,35 @@ using System.Threading;
 using System.Threading.Tasks;
 using Unity.Mathematics;
 using UnityEngine;
+using UnityEngine.Rendering;
 using Wyd.Controllers.System;
 
 #endregion
 
 namespace Wyd.Game.World.Chunks
 {
-    public class ChunkTerrainTerrainJob : ChunkTerrainJob
+    public class ChunkTerrainBuilderJob : ChunkTerrainJob
     {
         private readonly float _Frequency;
         private readonly float _Persistence;
         private readonly bool _GpuAcceleration;
 
-        public ComputeBuffer NoiseValuesBuffer { get; }
+        public AsyncGPUReadbackRequest NoiseValuesRequest { get; }
 
-        public ChunkTerrainTerrainJob(CancellationToken cancellationToken, float3 originPoint, float frequency,
-            float persistence, bool gpuAcceleration = false, ComputeBuffer noiseValuesBuffer = null)
+        public ChunkTerrainBuilderJob(CancellationToken cancellationToken, float3 originPoint, float frequency,
+            float persistence, bool gpuAcceleration = false, AsyncGPUReadbackRequest noiseValuesRequest = null)
             : base(cancellationToken, originPoint)
         {
             _Frequency = frequency;
             _Persistence = persistence;
             _GpuAcceleration = gpuAcceleration;
-            NoiseValuesBuffer = noiseValuesBuffer;
+            NoiseValuesRequest = noiseValuesRequest;
         }
 
         protected override Task Process()
         {
             ChunkTerrainBuilder builder = new ChunkTerrainBuilder(CancellationToken, OriginPoint, _Frequency,
-                _Persistence, _GpuAcceleration, NoiseValuesBuffer);
+                _Persistence, _GpuAcceleration, NoiseValuesRequest);
             builder.TimeMeasuredGenerate();
 
             // builder has completed execution, so set field

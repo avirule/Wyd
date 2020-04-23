@@ -4,6 +4,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Unity.Mathematics;
 using UnityEngine;
+using UnityEngine.Rendering;
 using Wyd.Controllers.State;
 using Wyd.Game.World.Chunks;
 using Wyd.System.Collections;
@@ -50,12 +51,14 @@ namespace Wyd.Controllers.World.Chunk
                 // 1024 is the value set in the shader's [numthreads(--> 1024 <--, 1, 1)]
                 _NoiseShader.Dispatch(kernel, 1024, 1, 1);
 
-                asyncJob = new ChunkTerrainTerrainJob(cancellationToken, OriginPoint, _FREQUENCY, _PERSISTENCE,
+               AsyncGPUReadbackRequest asyncGPUReadbackRequest = AsyncGPUReadback.Request(noiseBuffer);
+
+                asyncJob = new ChunkTerrainBuilderJob(cancellationToken, OriginPoint, _FREQUENCY, _PERSISTENCE,
                     OptionsController.Current.GPUAcceleration, noiseBuffer);
             }
             else
             {
-                asyncJob = new ChunkTerrainTerrainJob(cancellationToken, OriginPoint, _FREQUENCY, _PERSISTENCE);
+                asyncJob = new ChunkTerrainBuilderJob(cancellationToken, OriginPoint, _FREQUENCY, _PERSISTENCE);
             }
 
             if (callback != null)

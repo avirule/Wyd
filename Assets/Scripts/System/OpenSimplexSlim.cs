@@ -17,6 +17,7 @@ namespace Wyd.System
         public static float GetSimplex(int seed, float frequency, float2 coords) =>
             Simplex2D(seed, frequency, coords.x, coords.y);
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static float GetSimplex(int seed, float frequency, float3 coords) =>
             Simplex3D(seed, frequency, coords.x, coords.y, coords.z);
 
@@ -153,10 +154,10 @@ namespace Wyd.System
             new float3(0, -1, -1)
         };
 
-        [MethodImpl(_FN_INLINE)]
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private static int FastFloor(float f) => f >= 0 ? (int)f : (int)f - 1;
 
-        [MethodImpl(_FN_INLINE)]
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private static float GradCoord3D(int seed, int x, int y, int z, float xd, float yd, float zd)
         {
             int hash = seed;

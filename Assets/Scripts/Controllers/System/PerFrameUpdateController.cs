@@ -4,6 +4,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Runtime.CompilerServices;
 using Serilog;
 using Wyd.Controllers.State;
 using Wyd.System;
@@ -29,6 +30,7 @@ namespace Wyd.Controllers.System
         private SortedList<int, List<IPerFrameUpdate>> _PerFrameUpdates;
         private Stack<PerFrameUpdateCollectionModification> _PerFrameUpdateCollectionModifications;
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public bool IsSafeFrameTime() => _FrameTimer.Elapsed <= OptionsController.Current.TargetFrameRateTimeSpan;
 
         private void Awake()

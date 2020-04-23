@@ -23,10 +23,6 @@ namespace Wyd.Game.World.Chunks
     public class ChunkMesher
     {
         private readonly Stopwatch _Stopwatch;
-        private readonly HashSet<ushort> _TransparentIDCache;
-
-        private readonly HashSet<ushort> _OpaqueIDCache;
-
         private readonly BlockFaces[] _Mask;
         private readonly MeshData _MeshData;
 
@@ -48,8 +44,6 @@ namespace Wyd.Game.World.Chunks
             }
 
             _Stopwatch = new Stopwatch();
-            _TransparentIDCache = new HashSet<ushort>();
-            _OpaqueIDCache = new HashSet<ushort>();
             _MeshData = new MeshData(
                 new List<Vector3>(ChunkController.SIZE_CUBED),
                 new List<Vector3>(ChunkController.SIZE_CUBED),

@@ -55,6 +55,7 @@ namespace Wyd.Controllers.World.Chunk
         private OctreeNode<ushort> _Blocks;
         private Mesh _Mesh;
         private bool _EnabledRecently;
+        private long _BlockActionsCount;
 
         private long _State;
         private bool _Active;
@@ -255,12 +256,9 @@ namespace Wyd.Controllers.World.Chunk
             }
             else if ((State > ChunkState.Unbuilt) && (State < ChunkState.Mesh))
             {
-                foreach (ChunkController chunkController in _Neighbors)
+                if (_Neighbors.Any(chunkController => chunkController.State < State))
                 {
-                    if (chunkController.State < State)
-                    {
-                        return;
-                    }
+                    return;
                 }
             }
 
@@ -339,7 +337,7 @@ namespace Wyd.Controllers.World.Chunk
 
         public IEnumerable IncrementalFrameUpdate()
         {
-            if (State < ChunkState.Mesh)
+            if ((State < ChunkState.Mesh) || (Interlocked.Read(ref _BlockActionsCount) == 0))
             {
                 yield break;
             }
@@ -349,6 +347,8 @@ namespace Wyd.Controllers.World.Chunk
                 ProcessBlockAction(blockAction);
 
                 _blockActionsCache.CacheItem(ref blockAction);
+
+                Interlocked.Decrement(ref _BlockActionsCount);
 
                 yield return null;
             }
@@ -460,6 +460,9 @@ namespace Wyd.Controllers.World.Chunk
             BlockAction blockAction = _blockActionsCache.Retrieve();
             blockAction.SetData(globalPosition, id);
             _BlockActions.Enqueue(blockAction);
+
+            Interlocked.Increment(ref _BlockActionsCount);
+
             return true;
         }
 

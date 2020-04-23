@@ -5,6 +5,7 @@ using System.Threading;
 using Serilog;
 using Unity.Mathematics;
 using UnityEngine;
+using UnityEngine.Rendering;
 using Wyd.Controllers.State;
 using Wyd.Controllers.System;
 using Wyd.Controllers.World;
@@ -21,32 +22,31 @@ namespace Wyd.Game.World.Chunks
     {
         private static readonly ObjectCache<float[]> _noiseValuesCache = new ObjectCache<float[]>();
 
-        private readonly ComputeBuffer _NoiseValuesBuffer;
+        private readonly AsyncGPUReadbackRequest _NoiseValuesRequest;
         private readonly float _Frequency;
         private readonly float _Persistence;
 
-        private bool _GpuAcceleration;
         private float[] _NoiseMap;
 
         public TimeSpan NoiseRetrievalTimeSpan { get; private set; }
         public TimeSpan TerrainGenerationTimeSpan { get; private set; }
 
         public ChunkTerrainBuilder(CancellationToken cancellationToken, float3 originPoint, float frequency,
-            float persistence, bool gpuAcceleration = false, ComputeBuffer noiseValuesBuffer = null)
+            float persistence, AsyncGPUReadbackRequest noiseValuesRequest)
             : base(cancellationToken, originPoint)
         {
             _Frequency = frequency;
             _Persistence = persistence;
-            _GpuAcceleration = gpuAcceleration;
-            _NoiseValuesBuffer = noiseValuesBuffer;
+            _NoiseValuesRequest = noiseValuesRequest;
         }
 
         #region Terrain Generation
 
-        private void GetComputeBufferData()
+        private bool GetComputeBufferData()
         {
-            _NoiseValuesBuffer?.GetData(_NoiseMap);
-            _NoiseValuesBuffer?.Release();
+            _NoiseValuesRequest?.GetData(_NoiseMap);
+
+            return true;
         }
 
         public void TimeMeasuredGenerate()
@@ -74,33 +74,11 @@ namespace Wyd.Game.World.Chunks
         {
             _NoiseMap = _noiseValuesCache.Retrieve() ?? new float[ChunkController.SIZE_CUBED];
 
-            if (_GpuAcceleration && (_NoiseValuesBuffer != null))
-            {
                 using (ManualResetEvent manualResetEvent = new ManualResetEvent(false))
                 {
-                    MainThreadActionsController.Current.PushAction(new MainThreadAction(manualResetEvent,
-                        GetComputeBufferData));
+                    MainThreadActionsController.Current.QueueAction(new MainThreadAction(manualResetEvent, GetComputeBufferData));
                     manualResetEvent.WaitOne();
                 }
-            }
-            else if (_GpuAcceleration && (_NoiseValuesBuffer == null))
-            {
-                Log.Warning(
-                    $"`{nameof(_GpuAcceleration)}` is set to true, but no noise values were provided. Defaulting to CPU-bound generation.");
-                _GpuAcceleration = false;
-            }
-            else
-            {
-                for (int index = 0; index < WydMath.Product(_Blocks.Volume.Size); index++)
-                {
-                    if (CancellationToken.IsCancellationRequested)
-                    {
-                        return;
-                    }
-
-                    _NoiseMap[index] = GetNoiseValueByGlobalPosition(_Blocks.Volume.MinPoint + WydMath.IndexTo3D(index, ChunkController.Size3D));
-                }
-            }
         }
 
         private void Generate()

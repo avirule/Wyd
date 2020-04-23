@@ -7,15 +7,20 @@ using System.Threading;
 
 namespace Wyd.System.Jobs
 {
+    public delegate bool MainThreadActionInvocation();
+
     public class MainThreadAction
     {
         private readonly ManualResetEvent _ManualResetEvent;
-        private readonly Action _Action;
+        private readonly MainThreadActionInvocation _Invocation;
 
-        public MainThreadAction(ManualResetEvent manualResetEvent, Action action) =>
-            (_ManualResetEvent, _Action) = (manualResetEvent, action);
+        public MainThreadAction(ManualResetEvent manualResetEvent, MainThreadActionInvocation invocation)
+        {
+            _ManualResetEvent = manualResetEvent;
+            _Invocation = invocation ?? throw new NullReferenceException(nameof(invocation));
+            }
 
-        public void Execute() => _Action?.Invoke();
+        public bool Invoke() => _Invocation();
         public void Set() => _ManualResetEvent?.Set();
     }
 }

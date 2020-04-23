@@ -2,7 +2,6 @@
 
 using System;
 using System.Collections;
-using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
@@ -38,8 +37,8 @@ namespace Wyd.Controllers.World
         private Stopwatch _Stopwatch;
         private ObjectCache<ChunkController> _ChunkCache;
         private Dictionary<float3, ChunkController> _Chunks;
-        private ConcurrentStack<float3> _ChunksPendingActivation;
-        private ConcurrentStack<float3> _ChunksPendingDeactivation;
+        private Stack<float3> _ChunksPendingActivation;
+        private Stack<float3> _ChunksPendingDeactivation;
         private List<IEntity> _EntityLoaders;
         private long _WorldState;
 
@@ -102,8 +101,8 @@ namespace Wyd.Controllers.World
                     Destroy(chunkController.gameObject));
 
             _Chunks = new Dictionary<float3, ChunkController>();
-            _ChunksPendingActivation = new ConcurrentStack<float3>();
-            _ChunksPendingDeactivation = new ConcurrentStack<float3>();
+            _ChunksPendingActivation = new Stack<float3>();
+            _ChunksPendingDeactivation = new Stack<float3>();
             _EntityLoaders = new List<IEntity>();
 
             Seed = new WorldSeed(SeedString);
@@ -156,7 +155,9 @@ namespace Wyd.Controllers.World
 
             while (_ChunksPendingActivation.Count > 0)
             {
-                if (!_ChunksPendingActivation.TryPop(out float3 origin) || CheckChunkExists(origin))
+                float3 origin = _ChunksPendingActivation.Pop();
+
+                if (CheckChunkExists(origin))
                 {
                     continue;
                 }
@@ -183,7 +184,9 @@ namespace Wyd.Controllers.World
 
             while (_ChunksPendingDeactivation.Count > 0)
             {
-                if (!_ChunksPendingDeactivation.TryPop(out float3 origin) || !CheckChunkExists(origin))
+                float3 origin = _ChunksPendingDeactivation.Pop();
+
+                if (!CheckChunkExists(origin))
                 {
                     continue;
                 }

@@ -27,17 +27,17 @@ namespace Wyd.System.Collections
 
 
         private readonly List<OctreeNode<T>> _Nodes;
-        private readonly Volume _Volume;
+        private readonly CubicVolume _Volume;
 
         public T Value { get; private set; }
 
         public bool IsUniform => _Nodes.Count == 0;
-        public Volume Volume => _Volume;
+        public CubicVolume Volume => _Volume;
 
         public OctreeNode(float3 centerPoint, float size, T value)
         {
             _Nodes = new List<OctreeNode<T>>();
-            _Volume = new Volume(centerPoint, new float3(size));
+            _Volume = new CubicVolume(centerPoint, size);
             Value = value;
         }
 
@@ -59,16 +59,16 @@ namespace Wyd.System.Collections
 
         private IEnumerable<OctreeNode<T>> GetNodePopulation()
         {
-            float3 offset = new float3(_Volume.Extents / 2f);
+            float3 offset = new float3(_Volume.Extent / 2f);
 
-            yield return new OctreeNode<T>(_Volume.CenterPoint + (_coordinates[0] * offset), _Volume.Extents.x, Value);
-            yield return new OctreeNode<T>(_Volume.CenterPoint + (_coordinates[1] * offset), _Volume.Extents.x, Value);
-            yield return new OctreeNode<T>(_Volume.CenterPoint + (_coordinates[2] * offset), _Volume.Extents.x, Value);
-            yield return new OctreeNode<T>(_Volume.CenterPoint + (_coordinates[3] * offset), _Volume.Extents.x, Value);
-            yield return new OctreeNode<T>(_Volume.CenterPoint + (_coordinates[4] * offset), _Volume.Extents.x, Value);
-            yield return new OctreeNode<T>(_Volume.CenterPoint + (_coordinates[5] * offset), _Volume.Extents.x, Value);
-            yield return new OctreeNode<T>(_Volume.CenterPoint + (_coordinates[6] * offset), _Volume.Extents.x, Value);
-            yield return new OctreeNode<T>(_Volume.CenterPoint + (_coordinates[7] * offset), _Volume.Extents.x, Value);
+            yield return new OctreeNode<T>(_Volume.CenterPoint + (_coordinates[0] * offset), _Volume.Extent, Value);
+            yield return new OctreeNode<T>(_Volume.CenterPoint + (_coordinates[1] * offset), _Volume.Extent, Value);
+            yield return new OctreeNode<T>(_Volume.CenterPoint + (_coordinates[2] * offset), _Volume.Extent, Value);
+            yield return new OctreeNode<T>(_Volume.CenterPoint + (_coordinates[3] * offset), _Volume.Extent, Value);
+            yield return new OctreeNode<T>(_Volume.CenterPoint + (_coordinates[4] * offset), _Volume.Extent, Value);
+            yield return new OctreeNode<T>(_Volume.CenterPoint + (_coordinates[5] * offset), _Volume.Extent, Value);
+            yield return new OctreeNode<T>(_Volume.CenterPoint + (_coordinates[6] * offset), _Volume.Extent, Value);
+            yield return new OctreeNode<T>(_Volume.CenterPoint + (_coordinates[7] * offset), _Volume.Extent, Value);
         }
 
 
@@ -76,7 +76,7 @@ namespace Wyd.System.Collections
 
         public T GetPoint(float3 point, bool hasChecked = false)
         {
-            if (!hasChecked && !ContainsMinBiased(point))
+            if (!hasChecked && !Volume.ContainsMinBiased(point))
             {
                 throw new ArgumentOutOfRangeException(
                     $"Attempted to get point {point} in {nameof(OctreeNode<T>)}, but {nameof(_Volume)} does not contain it.\r\n"
@@ -112,7 +112,7 @@ namespace Wyd.System.Collections
 
         public void SetPoint(float3 point, T newValue, bool hasChecked = false)
         {
-            if (!hasChecked && !ContainsMinBiased(point))
+            if (!hasChecked && !Volume.ContainsMinBiased(point))
             {
                 throw new ArgumentOutOfRangeException(
                     $"Attempted to set point {point} in {nameof(OctreeNode<T>)}, but {nameof(_Volume)} does not contain it.\r\n"
@@ -128,7 +128,7 @@ namespace Wyd.System.Collections
                 return;
             }
 
-            if (_Volume.Size.x <= 1f)
+            if (_Volume.Size <= 1f)
             {
                 // reached smallest possible depth (usually 1x1x1) so
                 // set value and return
@@ -198,7 +198,7 @@ namespace Wyd.System.Collections
         {
             for (int index = 0; index < WydMath.Product(_Volume.Size); index++)
             {
-                yield return GetPoint(_Volume.MinPoint + WydMath.IndexTo3D(index, WydMath.ToInt(_Volume.Size)), true);
+                yield return GetPoint(_Volume.MinPoint + WydMath.IndexTo3D(index, (int)_Volume.Size), true);
             }
         }
 
@@ -211,7 +211,7 @@ namespace Wyd.System.Collections
         {
             value = default;
 
-            if (!ContainsMinBiased(point))
+            if (!Volume.ContainsMinBiased(point))
             {
                 return false;
             }
@@ -231,9 +231,6 @@ namespace Wyd.System.Collections
 
 
         #region Helper Methods
-
-        private bool ContainsMinBiased(float3 point) =>
-            math.all(point < _Volume.MaxPoint) && math.all(point >= _Volume.MinPoint);
 
         // indexes:
         // bottom half quadrant:
