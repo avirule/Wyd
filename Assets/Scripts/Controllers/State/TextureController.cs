@@ -51,13 +51,13 @@ namespace Wyd.Controllers.State
                 wrapMode = TextureWrapMode.Repeat
             };
 
-            for (int i = 0; i < BlocksTexture.depth; i++)
+            for (int depth = 0; depth < BlocksTexture.depth; depth++)
             {
-                Color[] spritePixels = GetPixels(sprites[i]);
-                BlocksTexture.SetPixels(spritePixels, i, 0);
-                _TextureIDs.Add(sprites[i].name.ToLower(), i);
+                Color[] spritePixels = GetPixels(sprites[depth]);
+                BlocksTexture.SetPixels(spritePixels, depth, 0);
+                _TextureIDs.Add(sprites[depth].name.ToLower(), depth);
 
-                Log.Information($"Texture processed (depth {i}): {sprites[i].name}");
+                Log.Information($"Texture processed (depth {depth}): {sprites[depth].name}");
             }
 
             BlocksTexture.Apply();

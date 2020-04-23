@@ -2,6 +2,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Runtime.CompilerServices;
 using Unity.Mathematics;
 using Wyd.System.Extensions;
 
@@ -11,6 +12,7 @@ namespace Wyd.System
 {
     public static class WydMath
     {
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static int3 IndexTo3D(int index, int bounds)
         {
             int xQuotient = Math.DivRem(index, bounds, out int x);
@@ -19,6 +21,7 @@ namespace Wyd.System
             return new int3(x, y, z);
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static int3 IndexTo3D(int index, int3 bounds)
         {
             int xQuotient = Math.DivRem(index, bounds.x, out int x);

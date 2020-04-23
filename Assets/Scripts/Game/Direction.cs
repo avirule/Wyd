@@ -3,6 +3,7 @@
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Runtime.CompilerServices;
 using Unity.Mathematics;
 using Wyd.Controllers.World.Chunk;
 
@@ -88,6 +89,7 @@ namespace Wyd.Game
             };
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static Direction NormalToDirection(float3 normal)
         {
             if (normal.x > 0)

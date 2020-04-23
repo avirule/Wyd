@@ -2,6 +2,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Runtime.CompilerServices;
 using Wyd.Game.World;
 using Wyd.Game.World.Blocks;
 
@@ -18,23 +19,26 @@ namespace Wyd.System.Extensions
             return arr.Length == j ? arr[0] : arr[j];
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static IEnumerable<TEnum> GetEnumsList<TEnum>() where TEnum : Enum =>
             (TEnum[])Enum.GetValues(typeof(TEnum));
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static bool HasState(this WorldState worldState, WorldState flag)
         {
             int intState = (int)worldState;
             int intFlag = (int)flag;
 
-            return (intState & intFlag) > 0;
+            return (intState & intFlag) == intFlag;
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static bool HasProperty(this BlockDefinition.Property property, BlockDefinition.Property flag)
         {
             int intProperty = (int)property;
             int intFlag = (int)flag;
 
-            return (intProperty & intFlag) > 0;
+            return (intProperty & intFlag) == intFlag;
         }
     }
 }

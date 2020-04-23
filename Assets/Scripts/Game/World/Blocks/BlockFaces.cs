@@ -24,18 +24,18 @@ namespace Wyd.Game.World.Blocks
 
             public static readonly float3[] East =
             {
-                new float3(1f, 0f, 0f),
                 new float3(1f, 0f, 1f),
-                new float3(1f, 1f, 0f),
-                new float3(1f, 1f, 1f)
+                new float3(1f, 1f, 1f),
+                new float3(1f, 0f, 0f),
+                new float3(1f, 1f, 0f)
             };
 
             public static readonly float3[] South =
             {
-                new float3(0f, 0f, 0f),
                 new float3(1f, 0f, 0f),
-                new float3(0f, 1f, 0f),
-                new float3(1f, 1f, 0f)
+                new float3(1f, 1f, 0f),
+                new float3(0f, 0f, 0f),
+                new float3(0f, 1f, 0f)
             };
 
             public static readonly float3[] West =
@@ -48,10 +48,10 @@ namespace Wyd.Game.World.Blocks
 
             public static readonly float3[] Up =
             {
-                new float3(0f, 1f, 0f),
-                new float3(1f, 1f, 0f),
                 new float3(0f, 1f, 1f),
-                new float3(1f, 1f, 1f)
+                new float3(0f, 1f, 0f),
+                new float3(1f, 1f, 1f),
+                new float3(1f, 1f, 0f)
             };
 
             public static readonly float3[] Down =

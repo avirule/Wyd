@@ -3,6 +3,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using Unity.Mathematics;
 
 #endregion
@@ -231,13 +232,8 @@ namespace Wyd.System.Collections
 
         #region Helper Methods
 
-        public bool ContainsMinBiased(float3 point) =>
-            (point.x < _Volume.MaxPoint.x)
-            && (point.y < _Volume.MaxPoint.y)
-            && (point.z < _Volume.MaxPoint.z)
-            && (point.x >= _Volume.MinPoint.x)
-            && (point.y >= _Volume.MinPoint.y)
-            && (point.z >= _Volume.MinPoint.z);
+        private bool ContainsMinBiased(float3 point) =>
+            math.all(point < _Volume.MaxPoint) && math.all(point >= _Volume.MinPoint);
 
         // indexes:
         // bottom half quadrant:
@@ -246,10 +242,12 @@ namespace Wyd.System.Collections
         // top half quadrant:
         // 5 7
         // 4 6
-        private int DetermineOctant(float3 point) =>
-            (point.x < _Volume.CenterPoint.x ? 0 : 1)
-            + (point.y < _Volume.CenterPoint.y ? 0 : 4)
-            + (point.z < _Volume.CenterPoint.z ? 0 : 2);
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private int DetermineOctant(float3 point)
+        {
+            bool3 result = point < _Volume.CenterPoint;
+            return (result[0] ? 0 : 1) + (result[1] ? 0 : 4) + (result[2] ? 0 : 2);
+        }
 
         #endregion
     }

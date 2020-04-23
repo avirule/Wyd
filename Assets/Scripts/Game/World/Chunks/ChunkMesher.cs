@@ -4,6 +4,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using System.Threading;
 using Unity.Mathematics;
 using UnityEngine;
@@ -134,7 +135,7 @@ namespace Wyd.Game.World.Chunks
                     continue;
                 }
 
-                if (CheckBlockTransparency(currentBlockId))
+                if (BlockController.Current.CheckBlockHasProperty(currentBlockId, BlockDefinition.Property.Transparent, false))
                 {
                     //TraverseIndexTransparent(WydMath.ToInt(_OriginPoint), index, globalPosition, localPosition);
                 }
@@ -182,6 +183,7 @@ namespace Wyd.Game.World.Chunks
 
         private void TraverseIndex(int index, int3 globalPosition, int3 localPosition, ushort currentBlockId)
         {
+            // iterates positive axis (1) and then negative axis (-1)
             for (int sign = 1; sign > -2; sign--)
             {
                 if (sign == 0)
@@ -190,38 +192,38 @@ namespace Wyd.Game.World.Chunks
                     continue;
                 }
 
+                // iterates each axis
                 for (int i = 0; i < 3; i++)
                 {
                     int3 faceNormal = new int3
                     {
                         [i] = sign
                     };
-                    Direction direction = Directions.NormalToDirection(faceNormal);
+                    Direction faceDirection = Directions.NormalToDirection(faceNormal);
 
-                    if (_Mask[index].HasFace(direction))
+                    if (_Mask[index].HasFace(faceDirection))
                     {
                         continue;
                     }
 
                     if ( // check if local position is at edge of chunk, and if so check face direction from neighbor
                         ((((sign > 0) && (localPosition[i] == (ChunkController.SIZE - 1))) || ((sign < 0) && (localPosition[i] == 0)))
-                         && CheckBlockTransparency(GetNeighboringBlock(faceNormal, globalPosition + faceNormal)))
+                         && BlockController.Current.CheckBlockHasProperty(GetNeighboringBlock(faceNormal, globalPosition + faceNormal),
+                             BlockDefinition.Property.Transparent, false))
                         // local position is inside chunk, so retrieve from blocks
-                        || CheckBlockTransparency(_Blocks.GetPoint(globalPosition + faceNormal, true)))
+                        || BlockController.Current.CheckBlockHasProperty(_Blocks.GetPoint(globalPosition + faceNormal, true),
+                            BlockDefinition.Property.Transparent, false))
                     {
-                        _Mask[index].SetFace(direction, true);
-                        AddTriangles(direction);
+                        _Mask[index].SetFace(faceDirection, true);
+                        AddTriangles(faceDirection);
 
                         float2 uvSize = new float2(1f);
 
                         if (_AggressiveFaceMerging)
                         {
                             int traversals = 0;
+                            int uvIndex = 0;
                             float3 finalTraversalNormal = float3.zero;
-
-                            int uvIndex = 1;
-
-
 
                             foreach ((int traversalNormalIndex, int3 traversalNormal) in GetTraversalNormals(faceNormal))
                             {
@@ -246,8 +248,8 @@ namespace Wyd.Game.World.Chunks
                                 float indexStep = indexStepUnclamped == 0f ? 1f : indexStepUnclamped;
                                 int indexStepSigned = (int)indexStep;
 
-                                traversals = GetTraversals(index, globalPosition, localPosition[traversalNormalIndex],
-                                    traversalNormal, faceNormal, indexStepSigned, false);
+                                traversals = GetTraversals(index, globalPosition, localPosition[traversalNormalIndex], traversalNormal, faceNormal,
+                                    faceDirection, indexStepSigned, false);
 
                                 finalTraversalNormal = traversalNormal;
 
@@ -258,19 +260,19 @@ namespace Wyd.Game.World.Chunks
                                     break;
                                 }
 
-                                uvIndex -= 1;
+                                uvIndex += 1;
                             }
 
                             for (int vert = 0; vert < 4; vert++)
                             {
-                                float3 traversalVertex = BlockFaces.Vertices.FaceVertices[direction][vert]
+                                float3 traversalVertex = BlockFaces.Vertices.FaceVertices[faceDirection][vert]
                                                          * math.clamp(traversals * finalTraversalNormal, 1, int.MaxValue);
                                 _MeshData.AddVertex(localPosition + traversalVertex);
                             }
                         }
                         else
                         {
-                            AddVertices(direction, localPosition);
+                            AddVertices(faceDirection, localPosition);
                         }
 
                         if (BlockController.Current.GetUVs(currentBlockId, globalPosition, /* todo fix that -> */ Direction.North, uvSize,
@@ -297,7 +299,7 @@ namespace Wyd.Game.World.Chunks
         /// <param name="traversalFactor">Amount of indexes to move forwards for each successful traversal in given direction.</param>
         /// <param name="transparentTraversal">Determines whether or not transparent traversal will be used.</param>
         /// <returns><see cref="int" /> representing how many successful traversals were made in the given traversal direction.</returns>
-        private int GetTraversals(int index, int3 globalPosition, int slice, int3 traversalNormal, int3 faceNormal,
+        private int GetTraversals(int index, int3 globalPosition, int slice, int3 traversalNormal, int3 faceNormal, Direction faceDirection,
             int traversalFactor, bool transparentTraversal)
         {
             if (!_AggressiveFaceMerging)
@@ -340,13 +342,13 @@ namespace Wyd.Game.World.Chunks
                 // if transparent, traverse as long as block is the same
                 // if opaque, traverse as long as faceNormal-adjacent block is transparent
                 if ((transparentTraversal && (currentId != facingBlockId))
-                    || !CheckBlockTransparency(facingBlockId))
+                    || !BlockController.Current.CheckBlockHasProperty(facingBlockId, BlockDefinition.Property.Transparent, false))
                 {
                     break;
                 }
 
                 // set face to traversed and continue traversal
-                _Mask[traversalIndex].SetFace(Directions.NormalToDirection(faceNormal), true);
+                _Mask[traversalIndex].SetFace(faceDirection, true);
             }
 
             return traversals;
@@ -372,6 +374,7 @@ namespace Wyd.Game.World.Chunks
             }
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private static int GetNeighborIndexFromNormal(int3 normal)
         {
             int index = -1;
@@ -396,6 +399,7 @@ namespace Wyd.Game.World.Chunks
             return index;
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private ushort GetNeighboringBlock(int3 normal, float3 globalPosition)
         {
             int index = GetNeighborIndexFromNormal(normal);
@@ -403,28 +407,6 @@ namespace Wyd.Game.World.Chunks
             // if neighbor chunk doesn't exist, then return true (to mean, return blockId == NullID
             // otherwise, query octree for target neighbor and return block id
             return _NeighborNodes[index] == default ? BlockController.NullID : _NeighborNodes[index].GetPoint(globalPosition, true);
-        }
-
-        private bool CheckBlockTransparency(ushort blockId)
-        {
-            if (_TransparentIDCache.Contains(blockId))
-            {
-                return true;
-            }
-            else if (_OpaqueIDCache.Contains(blockId))
-            {
-                return false;
-            }
-            else if (BlockController.Current.CheckBlockHasProperty(blockId, BlockDefinition.Property.Transparent))
-            {
-                _TransparentIDCache.Add(blockId);
-                return true;
-            }
-            else
-            {
-                _OpaqueIDCache.Add(blockId);
-                return false;
-            }
         }
 
         #endregion

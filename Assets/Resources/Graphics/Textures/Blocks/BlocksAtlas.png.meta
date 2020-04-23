@@ -92,6 +92,9 @@ TextureImporter:
   - first:
       213: 4192049387755466348
     second: Cobblestone_Bricks
+  - first:
+      213: -3712163454674003561
+    second: 0_Null
   externalObjects: {}
   serializedVersion: 11
   mipmaps:
@@ -781,6 +784,27 @@ TextureImporter:
       bones: []
       spriteID: 63491fad79bda154c89003a77efb2b64
       internalID: 4192049387755466348
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: 0_Null
+      rect:
+        serializedVersion: 2
+        x: 48
+        y: 0
+        width: 8
+        height: 8
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 79918ff710fbb7cc0800000000000000
+      internalID: -3712163454674003561
       vertices: []
       indices: 
       edges: []

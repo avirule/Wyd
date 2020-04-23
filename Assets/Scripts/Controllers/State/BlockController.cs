@@ -192,7 +192,7 @@ namespace Wyd.Controllers.State
             return false;
         }
 
-        public bool CheckBlockHasProperty(ushort blockId, BlockDefinition.Property property) =>
-            BlockIdExists(blockId) && BlockDefinitions[blockId].Properties.HasProperty(property);
+        public bool CheckBlockHasProperty(ushort blockId, BlockDefinition.Property property, bool checkBlockIdExists = true) =>
+            (!checkBlockIdExists || BlockIdExists(blockId)) && BlockDefinitions[blockId].Properties.HasProperty(property);
     }
 }
