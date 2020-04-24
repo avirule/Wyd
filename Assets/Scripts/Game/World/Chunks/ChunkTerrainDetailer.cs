@@ -66,8 +66,7 @@ namespace Wyd.Game.World.Chunks
 
             for (float3 ySteps = new float3(0f, 1f, 0f); ySteps.y <= 10; ySteps += Directions.Up)
             {
-                if (TryGetPointBoundsAware(globalPosition + ySteps, out ushort blockId)
-                    && (blockId == BlockController.AirID))
+                if (GetPointBoundsAware(globalPosition + ySteps) == BlockController.AirID)
                 {
                     continue;
                 }
@@ -94,18 +93,17 @@ namespace Wyd.Game.World.Chunks
             }
         }
 
-        private bool TryGetPointBoundsAware(float3 globalPosition, out ushort blockId)
+        private ushort GetPointBoundsAware(float3 globalPosition)
         {
             float3 localPosition = globalPosition - OriginPoint;
 
             if (math.any(localPosition < 0f) || math.any(localPosition >= ChunkController.SIZE))
             {
-                return WorldController.Current.TryGetBlock(globalPosition, out blockId);
+                return WorldController.Current.GetBlock(globalPosition);
             }
             else
             {
-                blockId = _Blocks.GetPoint(localPosition);
-                return true;
+                return _Blocks.GetPoint(localPosition);
             }
         }
 
@@ -115,7 +113,7 @@ namespace Wyd.Game.World.Chunks
 
             if (math.any(localPosition < 0f) || math.any(localPosition >= ChunkController.SIZE))
             {
-                WorldController.Current.TryPlaceBlock(globalPosition, blockId);
+                WorldController.Current.PlaceBlock(globalPosition, blockId);
             }
             else
             {

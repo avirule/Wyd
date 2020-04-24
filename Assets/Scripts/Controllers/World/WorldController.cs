@@ -219,10 +219,7 @@ namespace Wyd.Controllers.World
         {
             foreach (float3 normal in Directions.AllDirectionNormals)
             {
-                if (TryGetBlock(globalPosition + normal, out ushort blockId))
-                {
-                    yield return blockId;
-                }
+                yield return GetBlock(globalPosition + normal);
             }
         }
 
@@ -389,22 +386,24 @@ namespace Wyd.Controllers.World
         public bool TryGetChunk(float3 origin, out ChunkController chunkController) =>
             _Chunks.TryGetValue(origin, out chunkController);
 
-        public bool TryGetBlock(float3 globalPosition, out ushort blockId)
+        public ushort GetBlock(float3 globalPosition)
         {
-            blockId = BlockController.NullID;
-            float3 chunkPosition = WydMath.RoundBy(globalPosition, ChunkController.Size3D);
+            if (!TryGetChunk(WydMath.RoundBy(globalPosition, ChunkController.SIZE), out ChunkController chunkController))
+            {
+                throw new ArgumentException("Chunk does not exist at coordinates.", nameof(globalPosition));
+            }
 
-            return TryGetChunk(chunkPosition, out ChunkController chunkController)
-                   && chunkController.TryGetBlock(globalPosition, out blockId);
+            return chunkController.GetBlock(globalPosition);
         }
 
-        public bool TryPlaceBlock(float3 globalPosition, ushort id)
+        public void PlaceBlock(float3 globalPosition, ushort id)
         {
-            float3 chunkPosition = WydMath.RoundBy(globalPosition, ChunkController.Size3D);
+            if (!TryGetChunk(WydMath.RoundBy(globalPosition, ChunkController.SIZE), out ChunkController chunkController))
+            {
+                throw new ArgumentException("Chunk does not exist at coordinates.", nameof(globalPosition));
+            }
 
-            return TryGetChunk(chunkPosition, out ChunkController chunkController)
-                   && (chunkController != default)
-                   && chunkController.TryPlaceBlock(globalPosition, id);
+            chunkController.PlaceBlock(globalPosition, id);
         }
 
         #endregion

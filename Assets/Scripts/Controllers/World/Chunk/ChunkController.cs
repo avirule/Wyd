@@ -7,7 +7,6 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using Serilog;
 using Unity.Mathematics;
 using UnityEngine;
 using Wyd.Controllers.State;
@@ -38,10 +37,10 @@ namespace Wyd.Controllers.World.Chunk
     public class ChunkController : ActivationStateChunkController, IPerFrameIncrementalUpdate
     {
         public const int SIZE = 32;
-        public const int VERTICAL_STEP = SIZE * SIZE;
+        public const int SIZE_SQUARED = SIZE * SIZE;
         public const int SIZE_CUBED = SIZE * SIZE * SIZE;
 
-        private static readonly ObjectCache<BlockAction> _blockActionsCache = new ObjectCache<BlockAction>(true, 1024);
+        private static readonly ObjectCache<BlockAction> _blockActionsCache = new ObjectCache<BlockAction>(false, 1024);
 
         public static readonly int3 Size3D = new int3(SIZE);
         public static readonly int3 Size3DExtents = new int3(SIZE / 2);
@@ -68,6 +67,28 @@ namespace Wyd.Controllers.World.Chunk
         private ChunkTerrainJob _FinishedTerrainJob;
         private ChunkMeshingJob _FinishedMeshingJob;
 
+        private bool UpdateMesh
+        {
+            get
+            {
+                bool tmp;
+
+                lock (_UpdateMeshLock)
+                {
+                    tmp = _UpdateMesh;
+                }
+
+                return tmp;
+            }
+            set
+            {
+                lock (_UpdateMeshLock)
+                {
+                    _UpdateMesh = value;
+                }
+            }
+        }
+
         public bool Active
         {
             get
@@ -90,30 +111,6 @@ namespace Wyd.Controllers.World.Chunk
             }
         }
 
-        public bool UpdateMesh
-        {
-            get
-            {
-                bool tmp;
-
-                lock (_UpdateMeshLock)
-                {
-                    tmp = _UpdateMesh;
-                }
-
-                return tmp;
-            }
-            set
-            {
-                lock (_UpdateMeshLock)
-                {
-                    _UpdateMesh = value;
-                }
-            }
-        }
-
-        public OctreeNode<ushort> Blocks => _Blocks;
-
         public ChunkState State
         {
             get => (ChunkState)Interlocked.Read(ref _State);
@@ -128,6 +125,8 @@ namespace Wyd.Controllers.World.Chunk
 #endif
             }
         }
+
+        public OctreeNode<ushort> Blocks => _Blocks;
 
         #endregion
 
@@ -265,8 +264,8 @@ namespace Wyd.Controllers.World.Chunk
             switch (State)
             {
                 case ChunkState.Unbuilt:
-                    TerrainController.BeginTerrainGeneration(_CancellationTokenSource.Token,
-                        OnTerrainGenerationFinished, out _TerrainJobIdentity);
+                    TerrainController.BeginTerrainGeneration(_CancellationTokenSource.Token, OnTerrainGenerationFinished, out _TerrainJobIdentity);
+
                     State = State.Next();
                     break;
                 case ChunkState.AwaitingBuilding:
@@ -279,8 +278,8 @@ namespace Wyd.Controllers.World.Chunk
 
                     break;
                 case ChunkState.Undetailed:
-                    TerrainController.BeginTerrainDetailing(_CancellationTokenSource.Token, OnTerrainDetailingFinished,
-                        _Blocks, out _TerrainJobIdentity);
+                    TerrainController.BeginTerrainDetailing(_CancellationTokenSource.Token, OnTerrainDetailingFinished, _Blocks,
+                        out _TerrainJobIdentity);
 
                     State = State.Next();
                     break;
@@ -290,8 +289,7 @@ namespace Wyd.Controllers.World.Chunk
                         _FinishedTerrainJob.GetGeneratedBlockData(out _Blocks);
                         _FinishedTerrainJob = null;
                         State = State.Next();
-                        OnLocalTerrainChanged(this, new ChunkChangedEventArgs(OriginPoint,
-                            Directions.AllDirectionNormals.Select(WydMath.ToFloat)));
+                        OnLocalTerrainChanged(this, new ChunkChangedEventArgs(OriginPoint, Directions.AllDirectionNormals.Select(WydMath.ToFloat)));
                     }
 
                     break;
@@ -382,20 +380,37 @@ namespace Wyd.Controllers.World.Chunk
 
         #region Block Actions
 
-        private void ProcessBlockAction(BlockAction blockAction)
-        {
-            ModifyBlockPosition(blockAction.GlobalPosition, blockAction.Id);
+        public ushort GetBlock(float3 globalPosition) =>
+            Blocks?.GetPoint(math.abs(globalPosition - OriginPoint)) ?? BlockController.NullID;
 
-            OnBlocksChanged(this,
-                TryGetNeighborsRequiringUpdateNormals(blockAction.GlobalPosition, out IEnumerable<float3> normals)
-                    ? new ChunkChangedEventArgs(OriginPoint, normals)
-                    : new ChunkChangedEventArgs(OriginPoint, Enumerable.Empty<float3>()));
+        public void PlaceBlock(float3 globalPosition, ushort newBlockId) =>
+            AllocateBlockAction(math.abs(globalPosition - OriginPoint), newBlockId);
+
+        private void AllocateBlockAction(float3 localPosition, ushort id)
+        {
+            if (_blockActionsCache.TryRetrieve(out BlockAction blockAction))
+            {
+                blockAction.SetData(localPosition, id);
+            }
+            else
+            {
+                blockAction = new BlockAction(localPosition, id);
+            }
+
+            _BlockActions.Enqueue(blockAction);
+
+            Interlocked.Increment(ref _BlockActionsCount);
         }
 
-        private void ModifyBlockPosition(float3 globalPosition, ushort newId)
+        private void ProcessBlockAction(BlockAction blockAction)
         {
-            // todo make this accept parameter for local position
-            Blocks.SetPoint(globalPosition - OriginPoint, newId);
+            Blocks.SetPoint(blockAction.LocalPosition, blockAction.Id);
+
+
+            OnBlocksChanged(this,
+                TryGetNeighborsRequiringUpdateNormals(blockAction.LocalPosition, out IEnumerable<float3> normals)
+                    ? new ChunkChangedEventArgs(OriginPoint, normals)
+                    : new ChunkChangedEventArgs(OriginPoint, Enumerable.Empty<float3>()));
         }
 
         private bool TryGetNeighborsRequiringUpdateNormals(float3 globalPosition, out IEnumerable<float3> normals)
@@ -419,51 +434,6 @@ namespace Wyd.Controllers.World.Chunk
 
             // divide by 16f & floor for 0 or 1 values, apply signs, and set component normals
             normals = WydMath.ToComponents(math.floor(localPositionAbs / 16f) * localPositionSign);
-            return true;
-        }
-
-        public bool TryGetBlock(float3 globalPosition, out ushort blockId)
-        {
-            blockId = 0;
-
-            if (Blocks == null)
-            {
-#if UNITY_EDITOR
-
-                Log.Verbose(
-                    $"'{nameof(Blocks)}' is null (origin: {OriginPoint}, state: {Convert.ToString((int)State, 2)}).");
-
-#endif
-
-                return false;
-            }
-            else if (!Blocks.TryGetPoint(globalPosition - OriginPoint, out blockId))
-            {
-#if UNITY_EDITOR
-
-                Log.Verbose($"Failed to get block data from point {globalPosition} in chunk at origin {OriginPoint}.");
-
-#endif
-
-                return false;
-            }
-            else
-            {
-                return true;
-            }
-        }
-
-        public bool TryPlaceBlock(float3 globalPosition, ushort newBlockId) =>
-            AllocateBlockAction(globalPosition, newBlockId);
-
-        private bool AllocateBlockAction(float3 globalPosition, ushort id)
-        {
-            BlockAction blockAction = _blockActionsCache.Retrieve();
-            blockAction.SetData(globalPosition, id);
-            _BlockActions.Enqueue(blockAction);
-
-            Interlocked.Increment(ref _BlockActionsCount);
-
             return true;
         }
 

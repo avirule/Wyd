@@ -130,9 +130,9 @@ namespace Wyd.Controllers.Entity
             //             {
             //                 float3 relativePosition = position + new float3(x, y, z);
             //
-            //                 if (WorldController.Current.TryGetBlock(relativePosition, out ushort blockId)
+            //                 if (WorldController.Current.GetBlock(relativePosition, out ushort blockId)
             //                     && blockId != BlockController.AirID
-            //                     && WorldController.Current.TryPlaceBlock(relativePosition, BlockController.AirID))
+            //                     && WorldController.Current.PlaceBlock(relativePosition, BlockController.AirID))
             //                 {
             //                     //Inventory.AddItem(block.Id, 1);
             //                 }
@@ -207,9 +207,9 @@ namespace Wyd.Controllers.Entity
                 return;
             }
 
-            WorldController.Current.TryGetBlock(math.all(math.csum(_LastReachRayHit.normal) > float3.zero)
+            ushort blockId = WorldController.Current.GetBlock(math.all(math.csum(_LastReachRayHit.normal) > float3.zero)
                 ? math.floor(_LastReachRayHit.point) - (float3)_LastReachRayHit.normal
-                : math.floor(_LastReachRayHit.point), out ushort blockId);
+                : math.floor(_LastReachRayHit.point));
 
             if (!BlockController.Current.CheckBlockHasProperty(blockId, BlockDefinition.Property.Destroyable))
             {
@@ -252,19 +252,21 @@ namespace Wyd.Controllers.Entity
             {
                 int3 position;
 
-                if (((math.csum(_LastReachRayHit.normal) > 0f)
-                     && WorldController.Current.TryPlaceBlock(
-                         position = WydMath.ToInt(math.floor(_LastReachRayHit.point) - (float3)_LastReachRayHit.normal),
-                         BlockController.AirID))
-                    || WorldController.Current.TryPlaceBlock(
-                        position = WydMath.ToInt(math.floor(_LastReachRayHit.point)), BlockController.AirID))
+                if (math.csum(_LastReachRayHit.normal) > 0f)
                 {
-                    WorldController.Current.TryGetBlock(position, out ushort blockId);
+                    WorldController.Current.PlaceBlock(position = WydMath.ToInt(math.floor(_LastReachRayHit.point) - (float3)_LastReachRayHit.normal),
+                        BlockController.AirID);
+                }
+                else
+                {
+                    WorldController.Current.PlaceBlock(position = WydMath.ToInt(math.floor(_LastReachRayHit.point)), BlockController.AirID);
+                }
 
-                    if (BlockController.Current.CheckBlockHasProperty(blockId, BlockDefinition.Property.Collectible))
-                    {
-                        Inventory.AddItem(blockId, 1);
-                    }
+                ushort blockId = WorldController.Current.GetBlock(position);
+
+                if (BlockController.Current.CheckBlockHasProperty(blockId, BlockDefinition.Property.Collectible))
+                {
+                    Inventory.AddItem(blockId, 1);
                 }
 
                 _ActionCooldown.Restart();
@@ -277,12 +279,12 @@ namespace Wyd.Controllers.Entity
             {
                 if (math.csum(_LastReachRayHit.normal) > 0f)
                 {
-                    WorldController.Current.TryPlaceBlock(WydMath.ToInt(math.floor(_LastReachRayHit.point)),
+                    WorldController.Current.PlaceBlock(WydMath.ToInt(math.floor(_LastReachRayHit.point)),
                         HotbarController.Current.SelectedId);
                 }
                 else
                 {
-                    WorldController.Current.TryPlaceBlock(
+                    WorldController.Current.PlaceBlock(
                         WydMath.ToInt(math.floor(_LastReachRayHit.point) + (float3)_LastReachRayHit.normal),
                         HotbarController.Current.SelectedId);
                 }

@@ -1,5 +1,6 @@
 #region
 
+using System;
 using System.Threading;
 using System.Threading.Tasks;
 using Unity.Mathematics;
@@ -42,8 +43,12 @@ namespace Wyd.Controllers.World.Chunk
             _NoiseValuesBuffer?.Release();
         }
 
-        public void BeginTerrainGeneration(CancellationToken cancellationToken, AsyncJobEventHandler callback,
-            out object jobIdentity)
+        private void OnDestroy()
+        {
+            _NoiseValuesBuffer?.Dispose();
+        }
+
+        public void BeginTerrainGeneration(CancellationToken cancellationToken, AsyncJobEventHandler callback, out object jobIdentity)
         {
             _NoiseValuesBuffer = new ComputeBuffer(ChunkController.SIZE_CUBED, 4);
             int kernel = _NoiseShader.FindKernel("CSMain");
@@ -63,7 +68,7 @@ namespace Wyd.Controllers.World.Chunk
 
             jobIdentity = asyncJob.Identity;
 
-            Task.Run(async () => await AsyncJobScheduler.QueueAsyncJob(asyncJob), cancellationToken);
+            Task.Run(() => AsyncJobScheduler.QueueAsyncJob(asyncJob), cancellationToken);
         }
 
         public void BeginTerrainDetailing(CancellationToken cancellationToken, AsyncJobEventHandler callback,
@@ -78,7 +83,7 @@ namespace Wyd.Controllers.World.Chunk
 
             jobIdentity = asyncJob.Identity;
 
-            Task.Run(async () => await AsyncJobScheduler.QueueAsyncJob(asyncJob), cancellationToken);
+            Task.Run(() => AsyncJobScheduler.QueueAsyncJob(asyncJob), cancellationToken);
         }
     }
 }

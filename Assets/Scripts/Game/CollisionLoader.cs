@@ -126,10 +126,10 @@ namespace Wyd.Game
                         int3 globalPosition = _LastCalculatedPosition + localPosition;
                         float3 trueCenterGlobalPosition = globalPosition + new float3(0.5f);
 
-                        if (!WorldController.Current.TryGetBlock(globalPosition, out ushort blockId)
-                            || (blockId == BlockController.AirID)
-                            || !BlockController.Current.CheckBlockHasProperty(blockId,
-                                BlockDefinition.Property.Collideable))
+                        ushort blockId = WorldController.Current.GetBlock(globalPosition);
+
+                        if (blockId == BlockController.AirID
+                            || !BlockController.Current.CheckBlockHasProperty(blockId, BlockDefinition.Property.Collideable))
                         {
                             if (_ColliderCubes.ContainsKey(trueCenterGlobalPosition))
                             {

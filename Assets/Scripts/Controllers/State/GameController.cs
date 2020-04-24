@@ -101,8 +101,6 @@ namespace Wyd.Controllers.State
 
         private static string GrassUVsRule(int3 globalPosition, Direction direction)
         {
-            return "0_null";
-
             switch (direction)
             {
                 case Direction.North:

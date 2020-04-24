@@ -1,7 +1,8 @@
 #region
 
+using System;
 using System.Collections.Generic;
-using System.Runtime.CompilerServices;
+using Serilog;
 using Unity.Mathematics;
 
 #endregion
@@ -10,21 +11,7 @@ namespace Wyd.System.Collections
 {
     public class OctreeNode<T> where T : unmanaged
     {
-        private static readonly float3[] _coordinates =
-        {
-            new float3(-1, -1, -1),
-            new float3(1, -1, -1),
-            new float3(-1, -1, 1),
-            new float3(1, -1, 1),
-
-            new float3(-1, 1, -1),
-            new float3(1, 1, -1),
-            new float3(-1, 1, 1),
-            new float3(1, 1, 1)
-        };
-
-
-        private readonly float _Size;
+        private readonly int _Size;
 
         private OctreeNode<T>[] _Nodes;
 
@@ -32,8 +19,14 @@ namespace Wyd.System.Collections
 
         public bool IsUniform => _Nodes == null;
 
-        public OctreeNode(float size, T value)
+        public OctreeNode(int size, T value)
         {
+            // check if size is power of two
+            if ((size <= 0) || ((size & (size - 1)) != 0))
+            {
+                throw new ArgumentException("Size must be a power of two.", nameof(size));
+            }
+
             _Nodes = null;
             _Size = size;
             Value = value;
@@ -50,10 +43,8 @@ namespace Wyd.System.Collections
             _Nodes = null;
         }
 
-        private void Populate()
+        private void Populate(int extent)
         {
-            float extent = _Size / 2f;
-
             _Nodes = new[]
             {
                 new OctreeNode<T>(extent, Value),
@@ -68,19 +59,30 @@ namespace Wyd.System.Collections
         }
 
 
-        #region Checked Data Operations
+        #region Data Operations
 
-        public T GetPoint(float3 point) => !IsUniform ? _Nodes[DetermineOctant(point)].GetPoint(point) : Value;
+        public T GetPoint(float3 point)
+        {
+            if (IsUniform)
+            {
+                return Value;
+            }
+
+            int extent = _Size / 2;
+            int4 result = DetermineOctant(point, extent);
+
+            return _Nodes[result.w].GetPoint(point - (result.xyz * extent));
+        }
 
         public void SetPoint(float3 point, T newValue)
         {
-            if (Value.GetHashCode() == newValue.GetHashCode())
+            if (IsUniform && (Value.GetHashCode() == newValue.GetHashCode()))
             {
                 // operation does nothing, so return
                 return;
             }
 
-            if (_Size <= 1f)
+            if (_Size == 1)
             {
                 // reached smallest possible depth (usually 1x1x1) so
                 // set value and return
@@ -88,18 +90,22 @@ namespace Wyd.System.Collections
                 return;
             }
 
+            int extent = _Size / 2;
+
             if (IsUniform)
             {
-                // node has no child nodes to traverse, so populate
-                Populate();
+                // node has no child nodes, so populate
+                Populate(extent);
             }
 
+            int4 result = DetermineOctant(point, extent);
+
             // recursively dig into octree and set
-            _Nodes[DetermineOctant(point)].SetPoint(point, newValue);
+            _Nodes[result.w].SetPoint(point - (result.xyz * extent), newValue);
 
             // on each recursion back-step, ensure integrity of node
             // and collapse if all child node values are equal
-            if (!IsUniform && CheckShouldCollapse())
+            if (CheckShouldCollapse())
             {
                 Collapse();
             }
@@ -107,7 +113,7 @@ namespace Wyd.System.Collections
 
         private bool CheckShouldCollapse()
         {
-            if (IsUniform)
+            if (!IsUniform)
             {
                 return false;
             }
@@ -132,28 +138,7 @@ namespace Wyd.System.Collections
         {
             for (int index = 0; index < math.pow(_Size, 3); index++)
             {
-                yield return GetPoint(WydMath.IndexTo3D(index, (int)_Size));
-            }
-        }
-
-        #endregion
-
-
-        #region Try .. Data Operations
-
-        public bool TryGetPoint(float3 point, out T value)
-        {
-            value = default;
-
-            if (!IsUniform)
-            {
-                int octant = DetermineOctant(point);
-                return _Nodes[octant].TryGetPoint(point, out value);
-            }
-            else
-            {
-                value = Value;
-                return true;
+                yield return GetPoint(WydMath.IndexTo3D(index, _Size));
             }
         }
 
@@ -169,11 +154,26 @@ namespace Wyd.System.Collections
         // top half quadrant:
         // 5 7
         // 4 6
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private int DetermineOctant(float3 point)
+        private static int4 DetermineOctant(float3 point, int extent)
         {
-            bool3 result = point < (_Size / 2f);
-            return (result[0] ? 0 : 1) + (result[1] ? 0 : 4) + (result[2] ? 0 : 2);
+            int4 result = int4.zero;
+
+            if (point.x >= extent)
+            {
+                result += new int4(1, 0, 0, 1);
+            }
+
+            if (point.y >= extent)
+            {
+                result += new int4(0, 1, 0, 4);
+            }
+
+            if (point.z >= extent)
+            {
+                result += new int4(0, 0, 1, 2);
+            }
+
+            return result;
         }
 
         #endregion

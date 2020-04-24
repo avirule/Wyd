@@ -101,7 +101,7 @@ namespace Wyd.Game.World.Chunks
                     allAir = false;
                 }
 
-                if (_NoiseMap[index] < 0.011f)
+                if (_NoiseMap[index] < 0.01f)
                 {
                     allStone = false;
                 }
@@ -143,9 +143,15 @@ namespace Wyd.Game.World.Chunks
 
         private ushort GetBlockIDAtPosition(float3 globalPosition)
         {
+            //return (globalPosition.y % ChunkController.SIZE) == 1f ? GetCachedBlockID("stone") : BlockController.AirID;
+
             if ((globalPosition.y < 4) && (globalPosition.y <= SeededRandom.Next(0, 4)))
             {
                 return GetCachedBlockID("bedrock");
+            }
+            else if (SeededRandom.Next(0, 10) == 0)
+            {
+                return GetCachedBlockID("coal_ore");
             }
             else
             {
