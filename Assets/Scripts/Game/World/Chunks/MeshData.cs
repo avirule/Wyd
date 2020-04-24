@@ -37,14 +37,25 @@ namespace Wyd.Game.World.Chunks
             _Triangles.InsertRange(0, triangles);
         }
 
-        public void Clear()
+        public void Clear(bool trimExcess = false)
         {
             _Vertices.Clear();
             _UVs.Clear();
 
+            if (trimExcess)
+            {
+                _Vertices.TrimExcess();
+                _UVs.TrimExcess();
+            }
+
             foreach (List<int> triangles in _Triangles)
             {
                 triangles.Clear();
+
+                if (trimExcess)
+                {
+                    triangles.TrimExcess();
+                }
             }
         }
 

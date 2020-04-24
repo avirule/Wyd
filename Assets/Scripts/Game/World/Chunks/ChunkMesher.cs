@@ -44,10 +44,10 @@ namespace Wyd.Game.World.Chunks
 
             _Stopwatch = new Stopwatch();
             _MeshData = new MeshData(
-                new List<Vector3>(ChunkController.SIZE_CUBED),
-                new List<Vector3>(ChunkController.SIZE_CUBED),
-                new List<int>(ChunkController.SIZE_CUBED), // triangles
-                new List<int>(ChunkController.SIZE_CUBED)); // transparent triangles
+                new List<Vector3>(),
+                new List<Vector3>(),
+                new List<int>(), // triangles
+                new List<int>()); // transparent triangles
             _Mask = new BlockFaces[ChunkController.SIZE_CUBED];
 
             PrepareMeshing(cancellationToken, originPoint, blocks, aggressiveFaceMerging);
@@ -63,12 +63,12 @@ namespace Wyd.Game.World.Chunks
             _Blocks = blocks;
             _AggressiveFaceMerging = aggressiveFaceMerging;
 
-            _MeshData.Clear();
+            _MeshData.Clear(true);
         }
 
         public void Reset()
         {
-            _MeshData.Clear();
+            _MeshData.Clear(true);
             _Blocks = null;
         }
 
@@ -144,7 +144,7 @@ namespace Wyd.Game.World.Chunks
         #endregion
 
 
-        #region TRAVERSAL MESHING
+        #region Traversal Meshing
 
         private void TraverseIndex(int index, int3 globalPosition, int3 localPosition, ushort currentBlockId)
         {
@@ -197,7 +197,6 @@ namespace Wyd.Game.World.Chunks
                             continue;
                         }
 
-                        //uvSize += (traversals + (math.cross(traversalNormal, faceNormal)));
                         uvSize[GenerationConstants.UVIndexAdjustments[iModulo3][traversalNormalIndex]] = traversals;
                         break;
                     }

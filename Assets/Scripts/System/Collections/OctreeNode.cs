@@ -69,9 +69,9 @@ namespace Wyd.System.Collections
 
             int extent = _Size / 2;
 
-            int4 result = DetermineOctant(point, extent);
+            (int x, int y, int z, int octant) = DetermineOctant(point, extent);
 
-            return _Nodes[result.w].GetPoint(point - (result.xyz * extent));
+            return _Nodes[octant].GetPoint(point - (new float3(x, y, z) * extent));
         }
 
         public void SetPoint(float3 point, T newValue)
@@ -98,10 +98,10 @@ namespace Wyd.System.Collections
                 Populate(extent);
             }
 
-            int4 result = DetermineOctant(point, extent);
+            (int x, int y, int z, int octant) = DetermineOctant(point, extent);
 
             // recursively dig into octree and set
-            _Nodes[result.w].SetPoint(point - (result.xyz * extent), newValue);
+            _Nodes[octant].SetPoint(point - (new float3(x, y, z) * extent), newValue);
 
             // on each recursion back-step, ensure integrity of node
             // and collapse if all child node values are equal
@@ -157,7 +157,7 @@ namespace Wyd.System.Collections
         // top half quadrant:
         // 5 7
         // 4 6
-        private static int4 DetermineOctant(float3 point, int extent)
+        private static (int, int, int, int) DetermineOctant(float3 point, int extent)
         {
             // bool3 componentOffset = point >= extent;
             //
@@ -166,24 +166,27 @@ namespace Wyd.System.Collections
             //
             // return (octant, octantAxes);
 
-            int4 result = int4.zero;
+            int x = 0, y = 0, z = 0, octant = 0;
 
             if (point.x >= extent)
             {
-                result += new int4(1, 0, 0, 1);
+                x = 1;
+                octant += 1;
             }
 
             if (point.y >= extent)
             {
-                result += new int4(0, 1, 0, 4);
+                y = 1;
+                octant += 4;
             }
 
             if (point.z >= extent)
             {
-                result += new int4(0, 0, 1, 2);
+                z = 1;
+                octant += 2;
             }
 
-            return result;
+            return (x, y, z, octant);
         }
 
         #endregion
