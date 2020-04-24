@@ -8,7 +8,7 @@ using Unity.Mathematics;
 
 namespace Wyd.System.Collections
 {
-    public class OctreeNode<T> where T : unmanaged
+    public class OctreeNode<T> : INodeCollection<T> where T : unmanaged
     {
         private readonly int _Size;
 
@@ -113,7 +113,7 @@ namespace Wyd.System.Collections
 
         private bool CheckShouldCollapse()
         {
-            if (!IsUniform)
+            if (IsUniform)
             {
                 return false;
             }

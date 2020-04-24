@@ -137,25 +137,18 @@ namespace Wyd.Game.World.Chunks
                 float3 localPosition = WydMath.IndexTo3D(index, ChunkController.SIZE);
                 float3 globalPosition = OriginPoint + localPosition;
 
-                _Blocks.SetPoint(localPosition, GetBlockIDAtPosition(globalPosition));
-            }
-        }
-
-        private ushort GetBlockIDAtPosition(float3 globalPosition)
-        {
-            //return (globalPosition.y % ChunkController.SIZE) == 1f ? GetCachedBlockID("stone") : BlockController.AirID;
-
-            if ((globalPosition.y < 4) && (globalPosition.y <= SeededRandom.Next(0, 4)))
-            {
-                return GetCachedBlockID("bedrock");
-            }
-            else if (SeededRandom.Next(0, 10) == 0)
-            {
-                return GetCachedBlockID("coal_ore");
-            }
-            else
-            {
-                return GetCachedBlockID("stone");
+                if ((globalPosition.y < 4) && (globalPosition.y <= SeededRandom.Next(0, 4)))
+                {
+                    _Blocks.SetPoint(localPosition, GetCachedBlockID("bedrock"));
+                }
+                else if (SeededRandom.Next(0, 15) == 0)
+                {
+                    _Blocks.SetPoint(localPosition, GetCachedBlockID("coal_ore"));
+                }
+                else
+                {
+                    _Blocks.SetPoint(localPosition, GetCachedBlockID("stone"));
+                }
             }
         }
 

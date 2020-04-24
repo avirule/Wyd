@@ -17,7 +17,7 @@ namespace Wyd.Game.World.Chunks
     {
         public TimeSpan TerrainDetailTimeSpan { get; private set; }
 
-        public ChunkTerrainDetailer(CancellationToken cancellationToken, float3 originPoint, OctreeNode<ushort> blocks)
+        public ChunkTerrainDetailer(CancellationToken cancellationToken, float3 originPoint, INodeCollection<ushort> blocks)
             : base(cancellationToken, originPoint) =>
             _Blocks = blocks;
 
@@ -30,12 +30,32 @@ namespace Wyd.Game.World.Chunks
                 float3 localPosition = WydMath.IndexTo3D(index, ChunkController.SIZE);
                 float3 globalPosition = OriginPoint + localPosition;
 
-                if (_Blocks.GetPoint(localPosition) == BlockController.AirID)
+                ushort blockId = _Blocks.GetPoint(localPosition);
+
+                if (blockId == BlockController.AirID
+                || AttemptLaySurfaceBlocks(globalPosition, localPosition))
                 {
                     continue;
                 }
 
-                AttemptLaySurfaceBlocks(globalPosition, localPosition);
+                // if (blockId == GetCachedBlockID("coal_ore"))
+                // {
+                //     for (int veinLength = 0; veinLength < 7; veinLength++)
+                //     {
+                //         for (int sign = 0; sign < 2; sign++)
+                //         {
+                //             if (sign == 0)
+                //             {
+                //                 continue;
+                //             }
+                //
+                //             for (int i = 0; i < 3; i++)
+                //             {
+                //                 //float3 normal =
+                //             }
+                //         }
+                //     }
+                // }
 
                 // if (_Blocks.UncheckedGetPoint(globalPosition) == GetCachedBlockID("stone"))
                 // {
@@ -54,12 +74,12 @@ namespace Wyd.Game.World.Chunks
             TerrainDetailTimeSpan = Stopwatch.Elapsed;
         }
 
-        private void AttemptLaySurfaceBlocks(float3 globalPosition, float3 localPosition)
+        private bool AttemptLaySurfaceBlocks(float3 globalPosition, float3 localPosition)
         {
             if ((globalPosition.y < (WorldController.WORLD_HEIGHT / 2f))
                 || (OpenSimplexSlim.GetSimplex(WorldController.Current.Seed, 0.01f, globalPosition.xz) > 0.5f))
             {
-                return;
+                return false;
             }
 
             bool airAbove = true;
@@ -77,7 +97,7 @@ namespace Wyd.Game.World.Chunks
 
             if (!airAbove)
             {
-                return;
+                return false;
             }
 
             _Blocks.SetPoint(localPosition, GetCachedBlockID("grass"));
@@ -91,6 +111,8 @@ namespace Wyd.Game.World.Chunks
                         ? GetCachedBlockID("dirt_coarse")
                         : GetCachedBlockID("dirt"));
             }
+
+            return true;
         }
 
         private ushort GetPointBoundsAware(float3 globalPosition)

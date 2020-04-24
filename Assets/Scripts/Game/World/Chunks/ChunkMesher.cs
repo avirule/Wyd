@@ -28,15 +28,14 @@ namespace Wyd.Game.World.Chunks
 
         private CancellationToken _CancellationToken;
         private float3 _OriginPoint;
-        private OctreeNode<ushort> _Blocks;
+        private INodeCollection<ushort> _Blocks;
         private bool _AggressiveFaceMerging;
-        private List<OctreeNode<ushort>> _NeighborNodes;
+        private List<INodeCollection<ushort>> _NeighborNodes;
 
         public TimeSpan SetBlockTimeSpan { get; private set; }
         public TimeSpan MeshingTimeSpan { get; private set; }
 
-        public ChunkMesher(CancellationToken cancellationToken, float3 originPoint, OctreeNode<ushort> blocks,
-            bool aggressiveFaceMerging)
+        public ChunkMesher(CancellationToken cancellationToken, float3 originPoint, INodeCollection<ushort> blocks, bool aggressiveFaceMerging)
         {
             if (blocks == null)
             {
@@ -57,7 +56,7 @@ namespace Wyd.Game.World.Chunks
 
         #region Runtime
 
-        public void PrepareMeshing(CancellationToken cancellationToken, float3 originPoint, OctreeNode<ushort> blocks,
+        public void PrepareMeshing(CancellationToken cancellationToken, float3 originPoint, INodeCollection<ushort> blocks,
             bool aggressiveFaceMerging)
         {
             _CancellationToken = cancellationToken;
@@ -87,7 +86,7 @@ namespace Wyd.Game.World.Chunks
 
             if (_NeighborNodes == null)
             {
-                _NeighborNodes = new List<OctreeNode<ushort>>(6);
+                _NeighborNodes = new List<INodeCollection<ushort>>(6);
             }
 
             _NeighborNodes.Clear();
@@ -177,107 +176,77 @@ namespace Wyd.Game.World.Chunks
 
         private void TraverseIndex(int index, int3 globalPosition, int3 localPosition, ushort currentBlockId)
         {
-            // iterates positive axis (1) and then negative axis (-1)
-            for (int sign = 1; sign > -2; sign--)
+            for (int i = 0; i < 6; i++)
             {
-                if (sign == 0)
+                int3 faceNormal = GenerationConstants.FaceNormalByIteration[i];
+                Direction faceDirection = GenerationConstants.FaceDirectionByIteration[i];
+
+                if (_Mask[index].HasFace(faceDirection))
                 {
-                    // skip zeroed out sign
                     continue;
                 }
 
-                // iterates each axis
-                for (int i = 0; i < 3; i++)
+                if (((i <= 2) && (localPosition[i % 3] >= (ChunkController.SIZE - 1))) || ((i > 2) && (localPosition[i % 3] <= 0)))
                 {
-                    int3 faceNormal = new int3
-                    {
-                        [i] = sign
-                    };
-                    Direction faceDirection = Directions.NormalToDirection(faceNormal);
-
-                    if (_Mask[index].HasFace(faceDirection))
+                    if (!BlockController.Current.CheckBlockHasProperty(GetNeighboringBlock(faceNormal, localPosition),
+                        BlockDefinition.Property.Transparent, false))
                     {
                         continue;
                     }
+                }
+                else if (!BlockController.Current.CheckBlockHasProperty(_Blocks.GetPoint(localPosition + faceNormal),
+                    BlockDefinition.Property.Transparent, false))
+                {
+                    continue;
+                }
 
-                    if ( // check if local position is at edge of chunk, and if so check face direction from neighbor
-                        ((((sign > 0) && (localPosition[i] == (ChunkController.SIZE - 1))) || ((sign < 0) && (localPosition[i] == 0)))
-                         && BlockController.Current.CheckBlockHasProperty(GetNeighboringBlock(faceNormal, localPosition + faceNormal),
-                             BlockDefinition.Property.Transparent, false))
-                        // local position is inside chunk, so retrieve from blocks
-                        || BlockController.Current.CheckBlockHasProperty(_Blocks.GetPoint(localPosition + faceNormal),
-                            BlockDefinition.Property.Transparent, false))
+                _Mask[index].SetFace(faceDirection, true);
+                AddTriangles(faceDirection);
+
+                float2 uvSize = new float2(1f);
+
+                if (_AggressiveFaceMerging)
+                {
+                    int traversals = 0;
+                    int uvIndex = 0;
+                    float3 finalTraversalNormal = float3.zero;
+
+                    foreach ((int traversalNormalIndex, int3 traversalNormal) in GetTraversalNormals(faceNormal))
                     {
-                        _Mask[index].SetFace(faceDirection, true);
-                        AddTriangles(faceDirection);
+                        traversals = GetTraversals(index, localPosition, localPosition[traversalNormalIndex], traversalNormal, faceNormal,
+                            faceDirection, GenerationConstants.IndexStepByTraversalNormalIndex[traversalNormalIndex], false);
 
-                        float2 uvSize = new float2(1f);
+                        finalTraversalNormal = traversalNormal;
 
-                        if (_AggressiveFaceMerging)
+                        if (traversals > 1)
                         {
-                            int traversals = 0;
-                            int uvIndex = 0;
-                            float3 finalTraversalNormal = float3.zero;
-
-                            foreach ((int traversalNormalIndex, int3 traversalNormal) in GetTraversalNormals(faceNormal))
-                            {
-                                int traversalNormalIndexAdjusted = 0;
-
-                                // so when traversalNormalIndex == 1, we're iterating the Up direction, which is
-                                // SIZE ^ 2. Thus, there's an alignment issue with the index step and
-                                // the value that traversalNormalIndex returns from the indexStep equation below.
-                                //
-                                // This logic is for adjusting traversalNormalIndex to match the normal direction.
-                                switch (traversalNormalIndex)
-                                {
-                                    case 1:
-                                        traversalNormalIndexAdjusted = 2;
-                                        break;
-                                    case 2:
-                                        traversalNormalIndexAdjusted = 1;
-                                        break;
-                                }
-
-                                float indexStepUnclamped = math.pow(ChunkController.SIZE, traversalNormalIndexAdjusted);
-                                float indexStep = indexStepUnclamped == 0f ? 1f : indexStepUnclamped;
-                                int indexStepSigned = (int)indexStep;
-
-                                traversals = GetTraversals(index, localPosition, localPosition[traversalNormalIndex], traversalNormal, faceNormal,
-                                    faceDirection, indexStepSigned, false);
-
-                                finalTraversalNormal = traversalNormal;
-
-                                if (traversals > 1)
-                                {
-                                    //uvSize += (traversals + (math.cross(traversalNormal, faceNormal)));
-                                    uvSize[uvIndex] = traversals;
-                                    break;
-                                }
-
-                                uvIndex += 1;
-                            }
-
-                            for (int vert = 0; vert < 4; vert++)
-                            {
-                                float3 traversalVertex = BlockFaces.Vertices.FaceVertices[faceDirection][vert]
-                                                         * math.clamp(traversals * finalTraversalNormal, 1, int.MaxValue);
-                                _MeshData.AddVertex(localPosition + traversalVertex);
-                            }
-                        }
-                        else
-                        {
-                            AddVertices(faceDirection, localPosition);
+                            //uvSize += (traversals + (math.cross(traversalNormal, faceNormal)));
+                            uvSize[uvIndex] = traversals;
+                            break;
                         }
 
-                        if (BlockController.Current.GetUVs(currentBlockId, globalPosition, /* todo fix that -> */ Direction.North, uvSize,
-                            out BlockUVs blockUVs))
-                        {
-                            _MeshData.AddUV(blockUVs.TopLeft);
-                            _MeshData.AddUV(blockUVs.TopRight);
-                            _MeshData.AddUV(blockUVs.BottomLeft);
-                            _MeshData.AddUV(blockUVs.BottomRight);
-                        }
+                        uvIndex += 1;
                     }
+
+                    for (int vert = 0; vert < 4; vert++)
+                    {
+                        float3 traversalVertex = BlockFaces.Vertices.FaceVertices[faceDirection][vert]
+                                                 * math.clamp(traversals * finalTraversalNormal, 1, int.MaxValue);
+                        _MeshData.AddVertex(localPosition + traversalVertex);
+                    }
+                }
+                else
+                {
+                    AddVertices(faceDirection, localPosition);
+                }
+
+                if (BlockController.Current.GetUVs(currentBlockId, globalPosition, /* todo fix that -> */ Direction.North, uvSize,
+                    out BlockUVs blockUVs))
+                {
+                    _MeshData.AddUV(blockUVs.TopLeft);
+                    _MeshData.AddUV(blockUVs.TopRight);
+                    _MeshData.AddUV(blockUVs.BottomLeft);
+                    _MeshData.AddUV(blockUVs.BottomRight);
                 }
             }
         }
@@ -399,7 +368,7 @@ namespace Wyd.Game.World.Chunks
             // if neighbor chunk doesn't exist, then return true (to mean, return blockId == NullID
             // otherwise, query octree for target neighbor and return block id
             return _NeighborNodes[index] != null
-                ? _NeighborNodes[index].GetPoint(localPosition + (-normal * ChunkController.SIZE))
+                ? _NeighborNodes[index].GetPoint(math.abs(localPosition + (-normal * (ChunkController.SIZE - 1))))
                 : BlockController.NullID;
         }
 

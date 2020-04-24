@@ -21,7 +21,7 @@ namespace Wyd.Game.World.Chunks
                 cancellationToken).Token) =>
             OriginPoint = originPoint;
 
-        public void GetGeneratedBlockData(out OctreeNode<ushort> blocks)
+        public void GetGeneratedBlockData(out INodeCollection<ushort> blocks)
         {
             if (_TerrainOperator == null)
             {

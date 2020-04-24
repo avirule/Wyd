@@ -21,7 +21,7 @@ namespace Wyd.Game.World.Chunks
         protected readonly CancellationToken CancellationToken;
         protected readonly float3 OriginPoint;
 
-        protected OctreeNode<ushort> _Blocks;
+        protected INodeCollection<ushort> _Blocks;
 
         public ChunkBuilder(CancellationToken cancellationToken, float3 originPoint)
         {
@@ -48,7 +48,7 @@ namespace Wyd.Game.World.Chunks
             return BlockController.AirID;
         }
 
-        public void GetGeneratedBlockData(out OctreeNode<ushort> blocks)
+        public void GetGeneratedBlockData(out INodeCollection<ushort> blocks)
         {
             blocks = _Blocks;
         }

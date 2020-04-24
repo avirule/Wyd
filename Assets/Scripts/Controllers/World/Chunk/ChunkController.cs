@@ -51,7 +51,7 @@ namespace Wyd.Controllers.World.Chunk
         private CancellationTokenSource _CancellationTokenSource;
         private List<ChunkController> _Neighbors;
         private ConcurrentQueue<BlockAction> _BlockActions;
-        private OctreeNode<ushort> _Blocks;
+        private INodeCollection<ushort> _Blocks;
         private Mesh _Mesh;
         private bool _EnabledRecently;
         private long _BlockActionsCount;
@@ -126,7 +126,7 @@ namespace Wyd.Controllers.World.Chunk
             }
         }
 
-        public OctreeNode<ushort> Blocks => _Blocks;
+        public INodeCollection<ushort> Blocks => _Blocks;
 
         #endregion
 

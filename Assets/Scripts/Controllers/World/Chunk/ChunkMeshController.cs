@@ -102,8 +102,8 @@ namespace Wyd.Controllers.World.Chunk
 #endif
         }
 
-        public void BeginGeneratingMesh(CancellationToken token, AsyncJobEventHandler callback,
-            OctreeNode<ushort> blocks, out object jobIdentity)
+        public void BeginGeneratingMesh(CancellationToken token, AsyncJobEventHandler callback, INodeCollection<ushort> blocks,
+            out object jobIdentity)
         {
             // todo make setting for improved meshing
             ChunkMeshingJob asyncJob = new ChunkMeshingJob(token, OriginPoint, blocks, OptionsController.Current.GPUAcceleration);

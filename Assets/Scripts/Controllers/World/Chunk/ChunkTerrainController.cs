@@ -72,7 +72,7 @@ namespace Wyd.Controllers.World.Chunk
         }
 
         public void BeginTerrainDetailing(CancellationToken cancellationToken, AsyncJobEventHandler callback,
-            OctreeNode<ushort> blocks, out object jobIdentity)
+            INodeCollection<ushort> blocks, out object jobIdentity)
         {
             ChunkTerrainDetailerJob asyncJob = new ChunkTerrainDetailerJob(cancellationToken, OriginPoint, blocks);
 

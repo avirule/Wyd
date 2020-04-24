@@ -5,7 +5,7 @@ using System.Collections.Generic;
 
 #endregion
 
-namespace Wyd.System.Compression
+namespace Wyd.System.Collections
 {
     public static class RunLengthCompression
     {

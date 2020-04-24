@@ -12,6 +12,9 @@ namespace Wyd.System
 {
     public static class WydMath
     {
+        public static int ToIndex(int3 a, int size) => a.x + size * (a.z + size * a.y);
+        public static int ToIndex(float3 a, int size) => (int)(a.z + size * (a.z + size * a.y));
+
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static int3 IndexTo3D(int index, int bounds)
         {

@@ -12,10 +12,10 @@ namespace Wyd.Game.World.Chunks
 {
     public class ChunkTerrainDetailerJob : ChunkTerrainJob
     {
-        private readonly OctreeNode<ushort> _Blocks;
+        private readonly INodeCollection<ushort> _Blocks;
 
         public ChunkTerrainDetailerJob(CancellationToken cancellationToken, float3 originPoint,
-            OctreeNode<ushort> blocks)
+            INodeCollection<ushort> blocks)
             : base(cancellationToken, originPoint) =>
             _Blocks = blocks;
 
