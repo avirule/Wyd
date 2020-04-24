@@ -54,13 +54,13 @@ namespace Wyd.System.Jobs
             };
             JobStarted += (sender, args) =>
             {
+                Interlocked.Decrement(ref _QueuedJobs);
                 Interlocked.Increment(ref _ProcessingJobs);
 
                 return Task.CompletedTask;
             };
             JobFinished += (sender, args) =>
             {
-                Interlocked.Decrement(ref _QueuedJobs);
                 Interlocked.Decrement(ref _ProcessingJobs);
 
                 return Task.CompletedTask;
@@ -145,7 +145,7 @@ namespace Wyd.System.Jobs
 
             OnJobStarted(new AsyncJobEventArgs(asyncJob));
 
-            await asyncJob.Execute();
+            await asyncJob.Execute().ConfigureAwait(false);
 
             OnJobFinished(new AsyncJobEventArgs(asyncJob));
 

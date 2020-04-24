@@ -49,18 +49,16 @@ namespace Wyd.Controllers.World.Chunk
         #region Instance Members
 
         private CancellationTokenSource _CancellationTokenSource;
-        private List<ChunkController> _Neighbors;
         private ConcurrentQueue<BlockAction> _BlockActions;
         private INodeCollection<ushort> _Blocks;
+        private List<ChunkController> _Neighbors;
+
         private Mesh _Mesh;
         private bool _EnabledRecently;
         private long _BlockActionsCount;
-
         private long _State;
-        private bool _Active;
-        private object _ActiveLock;
-        private bool _UpdateMesh;
-        private object _UpdateMeshLock;
+        private long _Active;
+        private long _UpdateMesh;
 
         private object _TerrainJobIdentity;
         private object _MeshJobIdentity;
@@ -69,46 +67,14 @@ namespace Wyd.Controllers.World.Chunk
 
         private bool UpdateMesh
         {
-            get
-            {
-                bool tmp;
-
-                lock (_UpdateMeshLock)
-                {
-                    tmp = _UpdateMesh;
-                }
-
-                return tmp;
-            }
-            set
-            {
-                lock (_UpdateMeshLock)
-                {
-                    _UpdateMesh = value;
-                }
-            }
+            get => Convert.ToBoolean(Interlocked.Read(ref _UpdateMesh));
+            set => Interlocked.Exchange(ref _UpdateMesh, Convert.ToInt64(value));
         }
 
         public bool Active
         {
-            get
-            {
-                bool tmp;
-
-                lock (_ActiveLock)
-                {
-                    tmp = _Active;
-                }
-
-                return tmp;
-            }
-            set
-            {
-                lock (_ActiveLock)
-                {
-                    _Active = value;
-                }
-            }
+            get => Convert.ToBoolean(Interlocked.Read(ref _Active));
+            set => Interlocked.Exchange(ref _Active, Convert.ToInt64(value));
         }
 
         public ChunkState State
@@ -165,10 +131,6 @@ namespace Wyd.Controllers.World.Chunk
             base.Awake();
 
             _Neighbors = new List<ChunkController>();
-
-            _ActiveLock = new object();
-            _UpdateMeshLock = new object();
-
             _BlockActions = new ConcurrentQueue<BlockAction>();
             _Mesh = new Mesh();
         }

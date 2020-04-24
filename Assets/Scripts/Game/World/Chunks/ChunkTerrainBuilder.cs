@@ -109,12 +109,12 @@ namespace Wyd.Game.World.Chunks
 
             if (allStone)
             {
-                _Blocks = new OctreeNode<ushort>(ChunkController.SIZE, GetCachedBlockID("stone"));
+                _Blocks = new RLECollection<ushort>(ChunkController.SIZE, GetCachedBlockID("stone"));
                 return;
             }
             else
             {
-                _Blocks = new OctreeNode<ushort>(ChunkController.SIZE, BlockController.AirID);
+                _Blocks = new RLECollection<ushort>(ChunkController.SIZE, BlockController.AirID);
 
                 if (allAir)
                 {

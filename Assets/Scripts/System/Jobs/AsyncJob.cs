@@ -73,11 +73,11 @@ namespace Wyd.System.Jobs
 
                 _Stopwatch.Restart();
 
-                await Process();
+                await Process().ConfigureAwait(false);
 
                 ProcessTime = _Stopwatch.Elapsed;
 
-                await ProcessFinished();
+                await ProcessFinished().ConfigureAwait(false);
 
                 _Stopwatch.Stop();
 

@@ -17,7 +17,7 @@ namespace Wyd.System.Collections
 
             foreach (T value in initialArray)
             {
-                if (currentValue.Equals(value) && (currentRun < uint.MaxValue))
+                if (currentValue.GetHashCode() == value.GetHashCode())
                 {
                     currentRun += 1;
                     continue;
@@ -55,9 +55,21 @@ namespace Wyd.System.Collections
                 currentNode = currentNode.Next;
             }
         }
+
+        public static uint GetTotalRunLength<T>(LinkedList<RLENode<T>> nodes)
+        {
+            LinkedListNode<RLENode<T>> currentNode = nodes.First;
+            uint totalRunLength = 0;
+            do
+            {
+                totalRunLength += currentNode.Value.RunLength;
+            } while ((currentNode = currentNode.Next) != null);
+
+            return totalRunLength;
+        }
     }
 
-    public class RLENode<T> : IEquatable<RLENode<T>> where T : IEquatable<T>
+    public class RLENode<T>
     {
         public uint RunLength { get; set; }
         public T Value { get; }
@@ -69,7 +81,7 @@ namespace Wyd.System.Collections
         }
 
         public bool Equals(RLENode<T> other) =>
-            (RunLength == other?.RunLength) && Value.Equals(other.Value);
+            (RunLength == other?.RunLength) && Value.GetHashCode() == other?.Value.GetHashCode();
 
         public override bool Equals(object obj)
         {
