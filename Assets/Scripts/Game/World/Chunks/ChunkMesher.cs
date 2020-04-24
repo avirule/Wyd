@@ -43,9 +43,7 @@ namespace Wyd.Game.World.Chunks
             }
 
             _Stopwatch = new Stopwatch();
-            _MeshData = new MeshData(
-                new List<Vector3>(),
-                new List<Vector3>(),
+            _MeshData = new MeshData(new List<Vector3>(), new List<Vector3>(),
                 new List<int>(), // triangles
                 new List<int>()); // transparent triangles
             _Mask = new BlockFaces[ChunkController.SIZE_CUBED];

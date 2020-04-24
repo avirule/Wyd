@@ -18,7 +18,7 @@ namespace Wyd.System.Jobs
 #endif
 
         private static CancellationTokenSource _AbortTokenSource;
-        private static Semaphore _WorkerSemaphore;
+        private static SemaphoreSlim _WorkerSemaphore;
         private static long _MaximumProcessingJobs;
         private static long _QueuedJobs;
         private static long _ProcessingJobs;
@@ -104,10 +104,8 @@ namespace Wyd.System.Jobs
 
             _AbortTokenSource.Cancel();
             _AbortTokenSource = new CancellationTokenSource();
-
-            // todo this shouldn't create a new semaphore every time
-            _WorkerSemaphore = new Semaphore((int)MaximumProcessingJobs, (int)MaximumProcessingJobs);
-
+            
+            _WorkerSemaphore = new SemaphoreSlim((int)MaximumProcessingJobs, (int)MaximumProcessingJobs);
             OnMaximumProcessingJobsChanged(MaximumProcessingJobs);
         }
 
@@ -120,7 +118,7 @@ namespace Wyd.System.Jobs
 
             OnJobQueued(new AsyncJobEventArgs(asyncJob));
 
-            await ExecuteJob(asyncJob);
+            await ExecuteJob(asyncJob).ConfigureAwait(false);
         }
 
         #endregion
@@ -135,7 +133,7 @@ namespace Wyd.System.Jobs
                 return;
             }
 
-            _WorkerSemaphore.WaitOne();
+            await _WorkerSemaphore.WaitAsync().ConfigureAwait(false);
 
 #if DEBUG
 
