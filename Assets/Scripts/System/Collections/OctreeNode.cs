@@ -2,7 +2,6 @@
 
 using System;
 using System.Collections.Generic;
-using Serilog;
 using Unity.Mathematics;
 
 #endregion
@@ -69,6 +68,7 @@ namespace Wyd.System.Collections
             }
 
             int extent = _Size / 2;
+
             int4 result = DetermineOctant(point, extent);
 
             return _Nodes[result.w].GetPoint(point - (result.xyz * extent));
@@ -147,6 +147,9 @@ namespace Wyd.System.Collections
 
         #region Helper Methods
 
+        // private static readonly int3 One = new int3(1, 1, 1);
+        // private static readonly int3 OctantComponents = new int3(1, 4, 2);
+
         // indexes:
         // bottom half quadrant:
         // 1 3
@@ -156,6 +159,13 @@ namespace Wyd.System.Collections
         // 4 6
         private static int4 DetermineOctant(float3 point, int extent)
         {
+            // bool3 componentOffset = point >= extent;
+            //
+            // int3 octantAxes = math.select(int3.zero, One, componentOffset);
+            // int octant = math.csum(math.select(int3.zero, OctantComponents, componentOffset));
+            //
+            // return (octant, octantAxes);
+
             int4 result = int4.zero;
 
             if (point.x >= extent)
