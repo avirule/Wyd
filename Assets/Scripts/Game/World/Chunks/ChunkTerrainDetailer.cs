@@ -32,11 +32,8 @@ namespace Wyd.Game.World.Chunks
 
                 ushort blockId = _Blocks.GetPoint(localPosition);
 
-                if (blockId == BlockController.AirID
-                || AttemptLaySurfaceBlocks(globalPosition, localPosition))
-                {
-                    continue;
-                }
+                if ((blockId == BlockController.AirID)
+                    || AttemptLaySurfaceBlocks(globalPosition, localPosition)) { }
 
                 // if (blockId == GetCachedBlockID("coal_ore"))
                 // {

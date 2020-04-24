@@ -12,8 +12,8 @@ namespace Wyd.System
 {
     public static class WydMath
     {
-        public static int ToIndex(int3 a, int size) => a.x + size * (a.z + size * a.y);
-        public static int ToIndex(float3 a, int size) => (int)(a.z + size * (a.z + size * a.y));
+        public static int ToIndex(int3 a, int size) => a.x + (size * (a.z + (size * a.y)));
+        public static int ToIndex(float3 a, int size) => (int)(a.z + (size * (a.z + (size * a.y))));
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static int3 IndexTo3D(int index, int bounds)
@@ -38,10 +38,12 @@ namespace Wyd.System
             if (a.x != 0)
             {
                 return 0;
-            } else if (a.y != 0)
+            }
+            else if (a.y != 0)
             {
                 return 1;
-            } else if (a.z != 0)
+            }
+            else if (a.z != 0)
             {
                 return 2;
             }

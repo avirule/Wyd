@@ -18,7 +18,7 @@ namespace Wyd.System.Jobs
         {
             _ManualResetEvent = manualResetEvent;
             _Invocation = invocation ?? throw new NullReferenceException(nameof(invocation));
-            }
+        }
 
         public bool Invoke() => _Invocation();
         public void Set() => _ManualResetEvent?.Set();

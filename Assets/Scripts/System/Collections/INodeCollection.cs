@@ -1,4 +1,8 @@
+#region
+
 using Unity.Mathematics;
+
+#endregion
 
 namespace Wyd.System.Collections
 {
