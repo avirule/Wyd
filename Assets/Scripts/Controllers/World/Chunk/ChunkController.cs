@@ -368,35 +368,18 @@ namespace Wyd.Controllers.World.Chunk
         {
             Blocks.SetPoint(blockAction.LocalPosition, blockAction.Id);
 
-
-            OnBlocksChanged(this,
-                TryGetNeighborsRequiringUpdateNormals(blockAction.LocalPosition, out IEnumerable<float3> normals)
-                    ? new ChunkChangedEventArgs(OriginPoint, normals)
-                    : new ChunkChangedEventArgs(OriginPoint, Enumerable.Empty<float3>()));
+            OnBlocksChanged(this, new ChunkChangedEventArgs(OriginPoint, GetActionAdjacentNeighbors(blockAction.LocalPosition)));
         }
 
-        private bool TryGetNeighborsRequiringUpdateNormals(float3 globalPosition, out IEnumerable<float3> normals)
+        private IEnumerable<float3> GetActionAdjacentNeighbors(float3 globalPosition)
         {
-            normals = Enumerable.Empty<float3>();
+            float3 localPosition = math.abs(globalPosition - OriginPoint);
 
-            // set local position to center point of chunk
-            float3 localPosition = globalPosition - OriginPoint - Size3DExtents;
+            List<float3> normals = new List<float3>();
+            normals.AddRange(WydMath.ToComponents(math.select(float3.zero, new float3(1f), localPosition == (SIZE - 1f))));
+            normals.AddRange(WydMath.ToComponents(math.select(float3.zero, new float3(1f), localPosition == 0f)));
 
-            // save signs of axes
-            float3 localPositionSign = math.sign(localPosition);
-
-            // add 0.5f to every axis (for case of pos 15f) and ceil every axis, then abs
-            float3 localPositionAbs = math.abs(math.ceil(localPosition + (new float3(0.5f) * localPositionSign)));
-
-            // if any axes are 16f, it means they were on the edge
-            if (!math.any(localPositionAbs == 16f))
-            {
-                return false;
-            }
-
-            // divide by 16f & floor for 0 or 1 values, apply signs, and set component normals
-            normals = WydMath.ToComponents(math.floor(localPositionAbs / 16f) * localPositionSign);
-            return true;
+            return normals;
         }
 
         #endregion

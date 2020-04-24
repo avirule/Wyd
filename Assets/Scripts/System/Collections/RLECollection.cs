@@ -1,8 +1,6 @@
 #region
 
 using System.Collections.Generic;
-using System.Diagnostics;
-using Serilog;
 using Unity.Mathematics;
 using Wyd.Controllers.World.Chunk;
 
@@ -32,7 +30,7 @@ namespace Wyd.System.Collections
             int index = WydMath.PointToIndex(point, ChunkController.SIZE);
             LinkedListNode<RLENode<T>> currentNode = _RLENodes.First;
 
-            for (uint i = 0; i < index && (currentNode = currentNode.Next) != null;)
+            for (uint i = 0; (i < index) && ((currentNode = currentNode.Next) != null);)
             {
                 uint totalRunLength = i + currentNode.Value.RunLength;
 
@@ -80,7 +78,7 @@ namespace Wyd.System.Collections
                         LinkedListNode<RLENode<T>> interimNode = currentNode.Previous;
                         _RLENodes.Remove(currentNode);
                         currentNode = interimNode;
-                        
+
                         if (currentNode.Value.GetHashCode() == value.GetHashCode())
                         {
                             currentNode.Value.RunLength += 1;

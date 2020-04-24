@@ -109,12 +109,12 @@ namespace Wyd.Game.World.Chunks
 
             if (allStone)
             {
-                _Blocks = new RLECollection<ushort>(ChunkController.SIZE, GetCachedBlockID("stone"));
+                _Blocks = new OctreeNode<ushort>(ChunkController.SIZE, GetCachedBlockID("stone"));
                 return;
             }
             else
             {
-                _Blocks = new RLECollection<ushort>(ChunkController.SIZE, BlockController.AirID);
+                _Blocks = new OctreeNode<ushort>(ChunkController.SIZE, BlockController.AirID);
 
                 if (allAir)
                 {
@@ -141,7 +141,7 @@ namespace Wyd.Game.World.Chunks
                 {
                     _Blocks.SetPoint(localPosition, GetCachedBlockID("bedrock"));
                 }
-                else if (SeededRandom.Next(0, 15) == 0)
+                else if (SeededRandom.Next(0, 100) == 0)
                 {
                     _Blocks.SetPoint(localPosition, GetCachedBlockID("coal_ore"));
                 }

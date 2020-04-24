@@ -81,7 +81,7 @@ namespace Wyd.System.Collections
         }
 
         public bool Equals(RLENode<T> other) =>
-            (RunLength == other?.RunLength) && Value.GetHashCode() == other?.Value.GetHashCode();
+            (RunLength == other?.RunLength) && (Value.GetHashCode() == other?.Value.GetHashCode());
 
         public override bool Equals(object obj)
         {
