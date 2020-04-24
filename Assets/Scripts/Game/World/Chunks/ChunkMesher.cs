@@ -186,7 +186,9 @@ namespace Wyd.Game.World.Chunks
                     continue;
                 }
 
-                if (((i <= 2) && (localPosition[i % 3] >= (ChunkController.SIZE - 1))) || ((i > 2) && (localPosition[i % 3] <= 0)))
+                int iModulo3 = i % 3;
+
+                if (((i <= 2) && (localPosition[iModulo3] >= (ChunkController.SIZE - 1))) || ((i > 2) && (localPosition[iModulo3] <= 0)))
                 {
                     if (!BlockController.Current.CheckBlockHasProperty(GetNeighboringBlock(faceNormal, localPosition),
                         BlockDefinition.Property.Transparent, false))
@@ -208,30 +210,29 @@ namespace Wyd.Game.World.Chunks
                 if (_AggressiveFaceMerging)
                 {
                     int traversals = 0;
-                    int uvIndex = 0;
-                    float3 finalTraversalNormal = float3.zero;
+                    float3 traversalNormal = float3.zero;
 
-                    foreach ((int traversalNormalIndex, int3 traversalNormal) in GetTraversalNormals(faceNormal))
+                    foreach ((int traversalNormalIndex, int3 currentTraversalNormal) in
+                        GenerationConstants.PerpendicularNormalsByNonZeroIndex[WydMath.FirstNonZeroIndex(faceNormal)])
                     {
-                        traversals = GetTraversals(index, localPosition, localPosition[traversalNormalIndex], traversalNormal, faceNormal,
+                        traversals = GetTraversals(index, localPosition, localPosition[traversalNormalIndex], currentTraversalNormal, faceNormal,
                             faceDirection, GenerationConstants.IndexStepByTraversalNormalIndex[traversalNormalIndex], false);
 
-                        finalTraversalNormal = traversalNormal;
+                        traversalNormal = currentTraversalNormal;
 
-                        if (traversals > 1)
+                        if (traversals <= 1)
                         {
-                            //uvSize += (traversals + (math.cross(traversalNormal, faceNormal)));
-                            uvSize[uvIndex] = traversals;
-                            break;
+                            continue;
                         }
 
-                        uvIndex += 1;
+                        //uvSize += (traversals + (math.cross(traversalNormal, faceNormal)));
+                        uvSize[GenerationConstants.UVIndexAdjustments[iModulo3][traversalNormalIndex]] = traversals;
+                        break;
                     }
 
                     for (int vert = 0; vert < 4; vert++)
                     {
-                        float3 traversalVertex = BlockFaces.Vertices.FaceVertices[faceDirection][vert]
-                                                 * math.clamp(traversals * finalTraversalNormal, 1, int.MaxValue);
+                        float3 traversalVertex = BlockFaces.Vertices.FaceVertices[faceDirection][vert] * math.max(traversals * traversalNormal, 1);
                         _MeshData.AddVertex(localPosition + traversalVertex);
                     }
                 }
@@ -240,14 +241,15 @@ namespace Wyd.Game.World.Chunks
                     AddVertices(faceDirection, localPosition);
                 }
 
-                if (BlockController.Current.GetUVs(currentBlockId, globalPosition, /* todo fix that -> */ Direction.North, uvSize,
-                    out BlockUVs blockUVs))
+                if (!BlockController.Current.GetUVs(currentBlockId, globalPosition, faceDirection, uvSize, out BlockUVs blockUVs))
                 {
-                    _MeshData.AddUV(blockUVs.TopLeft);
-                    _MeshData.AddUV(blockUVs.TopRight);
-                    _MeshData.AddUV(blockUVs.BottomLeft);
-                    _MeshData.AddUV(blockUVs.BottomRight);
+                    continue;
                 }
+
+                _MeshData.AddUV(blockUVs.TopLeft);
+                _MeshData.AddUV(blockUVs.TopRight);
+                _MeshData.AddUV(blockUVs.BottomLeft);
+                _MeshData.AddUV(blockUVs.BottomRight);
             }
         }
 
@@ -259,6 +261,7 @@ namespace Wyd.Game.World.Chunks
         /// <param name="slice">Current slice (x, y, or z) of a 3D index relative to your traversal direction.</param>
         /// <param name="traversalNormal">Direction to traverse in.</param>
         /// <param name="faceNormal">Direction to check faces while traversing.</param>
+        /// <param name="faceDirection"></param>
         /// <param name="traversalFactor">Amount of indexes to move forwards for each successful traversal in given direction.</param>
         /// <param name="transparentTraversal">Determines whether or not transparent traversal will be used.</param>
         /// <returns><see cref="int" /> representing how many successful traversals were made in the given traversal direction.</returns>

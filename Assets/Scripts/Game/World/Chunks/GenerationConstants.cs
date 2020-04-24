@@ -1,6 +1,9 @@
+#region
+
 using Unity.Mathematics;
-using UnityEngine.Experimental.AI;
 using Wyd.Controllers.World.Chunk;
+
+#endregion
 
 namespace Wyd.Game.World.Chunks
 {
@@ -34,6 +37,51 @@ namespace Wyd.Game.World.Chunks
             Direction.West,
             Direction.Down,
             Direction.South
+        };
+
+        public static readonly (int, int3)[][] PerpendicularNormalsByNonZeroIndex =
+        {
+            // for normal (1, 0, 0)
+            new[]
+            {
+                (1, new int3(0, 1, 0)),
+                (2, new int3(0, 0, 1)),
+            },
+            // for normal (0, 1, 0)
+            new[]
+            {
+                (0, new int3(1, 0, 0)),
+                (2, new int3(0, 0, 1)),
+            },
+
+            // for normal (0, 0, 1)
+            new[]
+            {
+                (0, new int3(1, 0, 0)),
+                (1, new int3(0, 1, 0)),
+            }
+        };
+
+        public static readonly int[][] UVIndexAdjustments =
+        {
+            new[]
+            {
+                -1, // iterating x axis
+                1,
+                0,
+            },
+            new[]
+            {
+                0,
+                -1, // iterating y axis
+                1,
+            },
+            new[]
+            {
+                0,
+                1,
+                -1, // iterating z axis
+            }
         };
     }
 }

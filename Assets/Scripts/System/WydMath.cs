@@ -33,6 +33,22 @@ namespace Wyd.System
             return new int3(x, y, z);
         }
 
+        public static int FirstNonZeroIndex(int3 a)
+        {
+            if (a.x != 0)
+            {
+                return 0;
+            } else if (a.y != 0)
+            {
+                return 1;
+            } else if (a.z != 0)
+            {
+                return 2;
+            }
+
+            return -1;
+        }
+
         public static int FirstNonZeroComponent(int3 a)
         {
             for (int i = 0; i < 3; i++)
