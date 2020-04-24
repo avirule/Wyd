@@ -56,11 +56,19 @@ namespace Wyd.Game.World.Chunks
                 if (blockId == GetCachedBlockID("coal_ore"))
                 {
                     int3 veinTipPosition = localPosition;
+                    int lastSuccessfulIndexModulo = -1;
+
 
                     for (int veinLength = 0; veinLength < SeededRandom.Next(7, 12); veinLength++)
                     {
                         bool3 attempts = new bool3(false);
                         bool attemptSucceeded = false;
+
+                        // ensure we can't end up going the same axial direction
+                        if (lastSuccessfulIndexModulo > -1)
+                        {
+                            attempts[lastSuccessfulIndexModulo] = true;
+                        }
 
                         while (!math.all(attempts))
                         {
@@ -83,6 +91,7 @@ namespace Wyd.Game.World.Chunks
                             {
                                 _Blocks.SetPoint(faceNormalVeinTipPosition, GetCachedBlockID("coal_ore"));
                                 veinTipPosition = faceNormalVeinTipPosition;
+                                lastSuccessfulIndexModulo = attemptedIndexModulo;
                                 attemptSucceeded = true;
                                 break;
                             }

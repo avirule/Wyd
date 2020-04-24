@@ -56,8 +56,7 @@ namespace Wyd.Game.World.Chunks
 
         #region Runtime
 
-        public void PrepareMeshing(CancellationToken cancellationToken, float3 originPoint, INodeCollection<ushort> blocks,
-            bool aggressiveFaceMerging)
+        public void PrepareMeshing(CancellationToken cancellationToken, float3 originPoint, INodeCollection<ushort> blocks, bool aggressiveFaceMerging)
         {
             _CancellationToken = cancellationToken;
             _OriginPoint = originPoint;
@@ -128,7 +127,7 @@ namespace Wyd.Game.World.Chunks
                     continue;
                 }
 
-                if (BlockController.Current.CheckBlockHasProperty(currentBlockId, BlockDefinition.Property.Transparent, false))
+                if (BlockController.Current.PrecheckedBlockHasProperty(currentBlockId, BlockDefinition.Property.Transparent))
                 {
                     //TraverseIndexTransparent(WydMath.ToInt(_OriginPoint), index, localPosition, localPosition);
                 }
@@ -140,33 +139,6 @@ namespace Wyd.Game.World.Chunks
 
             _Stopwatch.Stop();
             MeshingTimeSpan = _Stopwatch.Elapsed;
-        }
-
-        #endregion
-
-
-        #region Add Verts/Tris
-
-        private void AddVertices(Direction direction, int3 localPosition)
-        {
-            foreach (float3 vertex in BlockFaces.Vertices.FaceVertices[direction])
-            {
-                _MeshData.AddVertex(vertex + localPosition);
-            }
-        }
-
-        private void AddTriangles(Direction direction, bool transparent = false)
-        {
-            if (transparent)
-            {
-                _MeshData.AddTriangles(1, BlockFaces.Triangles.FaceTriangles[direction]
-                    .Select(triangle => triangle + _MeshData.Vertices.Count));
-            }
-            else
-            {
-                _MeshData.AddTriangles(0, BlockFaces.Triangles.FaceTriangles[direction]
-                    .Select(triangle => triangle + _MeshData.Vertices.Count));
-            }
         }
 
         #endregion
@@ -190,14 +162,14 @@ namespace Wyd.Game.World.Chunks
 
                 if (((i <= 2) && (localPosition[iModulo3] >= (ChunkController.SIZE - 1))) || ((i > 2) && (localPosition[iModulo3] <= 0)))
                 {
-                    if (!BlockController.Current.CheckBlockHasProperty(GetNeighboringBlock(faceNormal, localPosition),
-                        BlockDefinition.Property.Transparent, false))
+                    if (!BlockController.Current.PrecheckedBlockHasProperty(GetNeighboringBlock(faceNormal, localPosition),
+                        BlockDefinition.Property.Transparent))
                     {
                         continue;
                     }
                 }
-                else if (!BlockController.Current.CheckBlockHasProperty(_Blocks.GetPoint(localPosition + faceNormal),
-                    BlockDefinition.Property.Transparent, false))
+                else if (!BlockController.Current.PrecheckedBlockHasProperty(_Blocks.GetPoint(localPosition + faceNormal),
+                    BlockDefinition.Property.Transparent))
                 {
                     continue;
                 }
@@ -306,7 +278,7 @@ namespace Wyd.Game.World.Chunks
                 // if transparent, traverse as long as block is the same
                 // if opaque, traverse as long as faceNormal-adjacent block is transparent
                 if ((transparentTraversal && (initialBlockId != facingBlockId))
-                    || !BlockController.Current.CheckBlockHasProperty(facingBlockId, BlockDefinition.Property.Transparent, false))
+                    || !BlockController.Current.PrecheckedBlockHasProperty(facingBlockId, BlockDefinition.Property.Transparent))
                 {
                     break;
                 }
@@ -316,6 +288,33 @@ namespace Wyd.Game.World.Chunks
             }
 
             return traversals;
+        }
+
+        #endregion
+
+
+        #region Add Verts/Tris
+
+        private void AddVertices(Direction direction, int3 localPosition)
+        {
+            foreach (float3 vertex in BlockFaces.Vertices.FaceVertices[direction])
+            {
+                _MeshData.AddVertex(vertex + localPosition);
+            }
+        }
+
+        private void AddTriangles(Direction direction, bool transparent = false)
+        {
+            if (transparent)
+            {
+                _MeshData.AddTriangles(1, BlockFaces.Triangles.FaceTriangles[direction]
+                    .Select(triangle => triangle + _MeshData.Vertices.Count));
+            }
+            else
+            {
+                _MeshData.AddTriangles(0, BlockFaces.Triangles.FaceTriangles[direction]
+                    .Select(triangle => triangle + _MeshData.Vertices.Count));
+            }
         }
 
         #endregion
