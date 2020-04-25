@@ -54,7 +54,8 @@ namespace Wyd.Game.World.Chunks
 
         #region Runtime
 
-        public void PrepareMeshing(CancellationToken cancellationToken, float3 originPoint, INodeCollection<ushort> blocks, bool aggressiveFaceMerging)
+        public void PrepareMeshing(CancellationToken cancellationToken, float3 originPoint, INodeCollection<ushort> blocks,
+            bool aggressiveFaceMerging)
         {
             _CancellationToken = cancellationToken;
             _OriginPoint = originPoint;

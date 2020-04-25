@@ -396,6 +396,13 @@ namespace Wyd.Controllers.World
             return chunkController.GetBlock(globalPosition);
         }
 
+        public bool TryGetBlock(float globalPosition, out ushort blockId)
+        {
+            blockId = BlockController.NullID;
+            return TryGetChunk(WydMath.RoundBy(globalPosition, ChunkController.SIZE), out ChunkController chunkController)
+                   && chunkController.TryGetBlock(math.abs(chunkController.OriginPoint - globalPosition), out blockId);
+        }
+
         public void PlaceBlock(float3 globalPosition, ushort id)
         {
             if (!TryGetChunk(WydMath.RoundBy(globalPosition, ChunkController.SIZE), out ChunkController chunkController))

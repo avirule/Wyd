@@ -345,6 +345,19 @@ namespace Wyd.Controllers.World.Chunk
         public ushort GetBlock(float3 globalPosition) =>
             Blocks?.GetPoint(math.abs(globalPosition - OriginPoint)) ?? BlockController.NullID;
 
+        public bool TryGetBlock(float3 localPosition, out ushort blockId)
+        {
+            blockId = BlockController.NullID;
+
+            if (math.any(localPosition < 0f) || math.any(localPosition >= SIZE) || (_Blocks == null))
+            {
+                return false;
+            }
+
+            blockId = Blocks.GetPoint(localPosition);
+            return true;
+        }
+
         public void PlaceBlock(float3 globalPosition, ushort newBlockId) =>
             AllocateBlockAction(math.abs(globalPosition - OriginPoint), newBlockId);
 

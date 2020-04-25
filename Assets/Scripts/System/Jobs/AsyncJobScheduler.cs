@@ -104,7 +104,7 @@ namespace Wyd.System.Jobs
 
             _AbortTokenSource.Cancel();
             _AbortTokenSource = new CancellationTokenSource();
-            
+
             _WorkerSemaphore = new SemaphoreSlim((int)MaximumProcessingJobs, (int)MaximumProcessingJobs);
             OnMaximumProcessingJobsChanged(MaximumProcessingJobs);
         }
