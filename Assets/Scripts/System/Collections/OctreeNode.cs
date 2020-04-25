@@ -3,6 +3,7 @@
 using System;
 using System.Collections.Generic;
 using Unity.Mathematics;
+// ReSharper disable ConvertToAutoPropertyWithPrivateSetter
 
 #endregion
 
@@ -13,10 +14,11 @@ namespace Wyd.System.Collections
         private readonly int _Size;
 
         private OctreeNode<T>[] _Nodes;
+        private bool _IsUniform;
+        private T _Value;
 
-        public T Value { get; private set; }
-
-        public bool IsUniform => _Nodes == null;
+        public T Value => _Value;
+        public bool IsUniform => _IsUniform;
 
         public OctreeNode(int size, T value)
         {
@@ -28,32 +30,36 @@ namespace Wyd.System.Collections
 
             _Nodes = null;
             _Size = size;
-            Value = value;
+            _IsUniform = true;
+            _Value = value;
         }
 
         private void Collapse()
         {
-            if (IsUniform)
+            if (_IsUniform)
             {
                 return;
             }
 
-            Value = _Nodes[0].Value;
+            _Value = _Nodes[0]._Value;
             _Nodes = null;
+            _IsUniform = true;
         }
 
         private void Populate(int extent)
         {
+            _IsUniform = false;
+
             _Nodes = new[]
             {
-                new OctreeNode<T>(extent, Value),
-                new OctreeNode<T>(extent, Value),
-                new OctreeNode<T>(extent, Value),
-                new OctreeNode<T>(extent, Value),
-                new OctreeNode<T>(extent, Value),
-                new OctreeNode<T>(extent, Value),
-                new OctreeNode<T>(extent, Value),
-                new OctreeNode<T>(extent, Value)
+                new OctreeNode<T>(extent, _Value),
+                new OctreeNode<T>(extent, _Value),
+                new OctreeNode<T>(extent, _Value),
+                new OctreeNode<T>(extent, _Value),
+                new OctreeNode<T>(extent, _Value),
+                new OctreeNode<T>(extent, _Value),
+                new OctreeNode<T>(extent, _Value),
+                new OctreeNode<T>(extent, _Value)
             };
         }
 
@@ -62,21 +68,21 @@ namespace Wyd.System.Collections
 
         public T GetPoint(float3 point)
         {
-            if (IsUniform)
+            if (_IsUniform)
             {
-                return Value;
+                return _Value;
             }
 
             int extent = _Size / 2;
 
-            (int x, int y, int z, int octant) = DetermineOctant(point, extent);
+            DetermineOctant(point, extent, out int x, out int y, out int z, out int octant);
 
             return _Nodes[octant].GetPoint(point - (new float3(x, y, z) * extent));
         }
 
         public void SetPoint(float3 point, T newValue)
         {
-            if (IsUniform && (Value.GetHashCode() == newValue.GetHashCode()))
+            if (_IsUniform && (_Value.GetHashCode() == newValue.GetHashCode()))
             {
                 // operation does nothing, so return
                 return;
@@ -86,19 +92,19 @@ namespace Wyd.System.Collections
             {
                 // reached smallest possible depth (usually 1x1x1) so
                 // set value and return
-                Value = newValue;
+                _Value = newValue;
                 return;
             }
 
             int extent = _Size / 2;
 
-            if (IsUniform)
+            if (_IsUniform)
             {
                 // node has no child nodes, so populate
                 Populate(extent);
             }
 
-            (int x, int y, int z, int octant) = DetermineOctant(point, extent);
+            DetermineOctant(point, extent, out int x, out int y, out int z, out int octant);
 
             // recursively dig into octree and set
             _Nodes[octant].SetPoint(point - (new float3(x, y, z) * extent), newValue);
@@ -113,19 +119,19 @@ namespace Wyd.System.Collections
 
         private bool CheckShouldCollapse()
         {
-            if (IsUniform)
+            if (_IsUniform)
             {
                 return false;
             }
 
-            T firstValue = _Nodes[0].Value;
+            T firstValue = _Nodes[0]._Value;
 
             // avoiding using linq here for performance sensitivity
             for (int index = 0; index < 8 /* octants! */; index++)
             {
                 OctreeNode<T> node = _Nodes[index];
 
-                if (!node.IsUniform || (node.Value.GetHashCode() != firstValue.GetHashCode()))
+                if (!node._IsUniform || (node._Value.GetHashCode() != firstValue.GetHashCode()))
                 {
                     return false;
                 }
@@ -157,16 +163,9 @@ namespace Wyd.System.Collections
         // top half quadrant:
         // 5 7
         // 4 6
-        private static (int, int, int, int) DetermineOctant(float3 point, int extent)
+        private static void DetermineOctant(float3 point, int extent, out int x, out int y, out int z, out int octant)
         {
-            // bool3 componentOffset = point >= extent;
-            //
-            // int3 octantAxes = math.select(int3.zero, One, componentOffset);
-            // int octant = math.csum(math.select(int3.zero, OctantComponents, componentOffset));
-            //
-            // return (octant, octantAxes);
-
-            int x = 0, y = 0, z = 0, octant = 0;
+            x = y = z = octant = 0;
 
             if (point.x >= extent)
             {
@@ -185,8 +184,6 @@ namespace Wyd.System.Collections
                 z = 1;
                 octant += 2;
             }
-
-            return (x, y, z, octant);
         }
 
         #endregion
