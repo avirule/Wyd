@@ -3,7 +3,6 @@
 using System;
 using System.Collections.Generic;
 using Unity.Mathematics;
-// ReSharper disable ConvertToAutoPropertyWithPrivateSetter
 
 #endregion
 
@@ -14,11 +13,10 @@ namespace Wyd.System.Collections
         private readonly int _Size;
 
         private OctreeNode<T>[] _Nodes;
-        private bool _IsUniform;
         private T _Value;
 
         public T Value => _Value;
-        public bool IsUniform => _IsUniform;
+        public bool IsUniform => _Nodes == null;
 
         public OctreeNode(int size, T value)
         {
@@ -30,26 +28,22 @@ namespace Wyd.System.Collections
 
             _Nodes = null;
             _Size = size;
-            _IsUniform = true;
             _Value = value;
         }
 
         private void Collapse()
         {
-            if (_IsUniform)
+            if (IsUniform)
             {
                 return;
             }
 
             _Value = _Nodes[0]._Value;
             _Nodes = null;
-            _IsUniform = true;
         }
 
         private void Populate(int extent)
         {
-            _IsUniform = false;
-
             _Nodes = new[]
             {
                 new OctreeNode<T>(extent, _Value),
@@ -68,7 +62,7 @@ namespace Wyd.System.Collections
 
         public T GetPoint(float3 point)
         {
-            if (_IsUniform)
+            if (IsUniform)
             {
                 return _Value;
             }
@@ -82,7 +76,7 @@ namespace Wyd.System.Collections
 
         public void SetPoint(float3 point, T newValue)
         {
-            if (_IsUniform && (_Value.GetHashCode() == newValue.GetHashCode()))
+            if (IsUniform && (_Value.GetHashCode() == newValue.GetHashCode()))
             {
                 // operation does nothing, so return
                 return;
@@ -98,7 +92,7 @@ namespace Wyd.System.Collections
 
             int extent = _Size / 2;
 
-            if (_IsUniform)
+            if (IsUniform)
             {
                 // node has no child nodes, so populate
                 Populate(extent);
@@ -119,7 +113,7 @@ namespace Wyd.System.Collections
 
         private bool CheckShouldCollapse()
         {
-            if (_IsUniform)
+            if (IsUniform)
             {
                 return false;
             }
@@ -131,7 +125,7 @@ namespace Wyd.System.Collections
             {
                 OctreeNode<T> node = _Nodes[index];
 
-                if (!node._IsUniform || (node._Value.GetHashCode() != firstValue.GetHashCode()))
+                if (!node.IsUniform || (node._Value.GetHashCode() != firstValue.GetHashCode()))
                 {
                     return false;
                 }
@@ -152,9 +146,6 @@ namespace Wyd.System.Collections
 
 
         #region Helper Methods
-
-        // private static readonly int3 One = new int3(1, 1, 1);
-        // private static readonly int3 OctantComponents = new int3(1, 4, 2);
 
         // indexes:
         // bottom half quadrant:

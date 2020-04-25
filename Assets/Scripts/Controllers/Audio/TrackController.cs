@@ -27,7 +27,7 @@ namespace Wyd.Controllers.Audio
         {
             if (Domain == TrackControllerDomain.MainMenu)
             {
-                StartCoroutine(AudioFade.FadeIn(AudioSource, 0.2f));
+                StartCoroutine(AudioFade.FadeIn(AudioSource, 0.2f, 0f, AudioSource.volume));
             }
         }
 
