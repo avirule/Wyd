@@ -194,7 +194,6 @@ namespace Wyd.Controllers.State
             return false;
         }
 
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public bool CheckBlockHasProperty(ushort blockId, BlockDefinition.Property property) =>
             BlockIdExists(blockId) && BlockDefinitions[blockId].Properties.HasProperty(property);
     }

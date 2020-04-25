@@ -39,7 +39,7 @@ namespace Wyd.Game.World.Chunks
             Direction.South
         };
 
-        public static readonly (int, int3)[][] PerpendicularNormalsByNonZeroIndex =
+        public static readonly (int, int3)[][] PerpendicularNormals =
         {
             // for normal (1, 0, 0)
             new[]

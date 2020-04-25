@@ -152,8 +152,9 @@ namespace Wyd.Game.World.Chunks
                 }
 
                 int iModulo3 = i % 3;
+                int moduloAxis = localPosition[iModulo3];
 
-                if (((i <= 2) && (localPosition[iModulo3] >= (ChunkController.SIZE - 1))) || ((i > 2) && (localPosition[iModulo3] <= 0)))
+                if (((i <= 2) && (moduloAxis >= (ChunkController.SIZE - 1))) || ((i > 2) && (moduloAxis <= 0)))
                 {
                     ushort facingBlockId = GetNeighboringBlock(faceNormal, localPosition);
 
@@ -184,8 +185,7 @@ namespace Wyd.Game.World.Chunks
                     int traversals = 0;
                     float3 traversalNormal = float3.zero;
 
-                    foreach ((int traversalNormalIndex, int3 currentTraversalNormal) in
-                        GenerationConstants.PerpendicularNormalsByNonZeroIndex[WydMath.FirstNonZeroIndex(faceNormal)])
+                    foreach ((int traversalNormalIndex, int3 currentTraversalNormal) in GenerationConstants.PerpendicularNormals[iModulo3])
                     {
                         traversals = GetTraversals(index, localPosition, traversalNormalIndex, currentTraversalNormal, faceNormal,
                             faceDirection, GenerationConstants.IndexStepByTraversalNormalIndex[traversalNormalIndex], transparentTraversal);
