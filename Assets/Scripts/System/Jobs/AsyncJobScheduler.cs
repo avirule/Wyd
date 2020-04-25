@@ -109,7 +109,7 @@ namespace Wyd.System.Jobs
             OnMaximumProcessingJobsChanged(MaximumProcessingJobs);
         }
 
-        public static async Task QueueAsyncJob(AsyncJob asyncJob)
+        public static void QueueAsyncJob(AsyncJob asyncJob)
         {
             if (AbortToken.IsCancellationRequested)
             {
@@ -118,7 +118,7 @@ namespace Wyd.System.Jobs
 
             OnJobQueued(new AsyncJobEventArgs(asyncJob));
 
-            await ExecuteJob(asyncJob).ConfigureAwait(false);
+            Task.Run(() => ExecuteJob(asyncJob));
         }
 
         #endregion

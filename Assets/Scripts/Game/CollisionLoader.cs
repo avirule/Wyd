@@ -116,6 +116,11 @@ namespace Wyd.Game
 
         private void CalculateColliders()
         {
+            if ((_LastCalculatedPosition.y + Radius) > WorldController.WorldHeightInChunks)
+            {
+                return;
+            }
+
             for (int x = -Radius; x < (Radius + 1); x++)
             {
                 for (int y = -Radius; y < (Radius + 1); y++)
@@ -126,9 +131,8 @@ namespace Wyd.Game
                         int3 globalPosition = _LastCalculatedPosition + localPosition;
                         float3 trueCenterGlobalPosition = globalPosition + new float3(0.5f);
 
-                        ushort blockId = WorldController.Current.GetBlock(globalPosition);
-
-                        if ((blockId == BlockController.AirID)
+                        if (!WorldController.Current.TryGetBlock(globalPosition, out ushort blockId)
+                            || (blockId == BlockController.AirID)
                             || !BlockController.Current.CheckBlockHasProperty(blockId, BlockDefinition.Property.Collideable))
                         {
                             if (_ColliderCubes.ContainsKey(trueCenterGlobalPosition))

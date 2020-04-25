@@ -17,26 +17,12 @@ namespace Wyd.Game.World.Chunks
 {
     public class ChunkTerrainDetailer : ChunkBuilder
     {
-        private List<INodeCollection<ushort>> _NeighborNodes;
-
         public TimeSpan TerrainDetailTimeSpan { get; private set; }
 
         public ChunkTerrainDetailer(CancellationToken cancellationToken, float3 originPoint, INodeCollection<ushort> blocks)
             : base(cancellationToken, originPoint)
         {
             _Blocks = blocks;
-
-            _NeighborNodes = new List<INodeCollection<ushort>>(6);
-
-            for (int i = 0; i < 6; i++)
-            {
-                _NeighborNodes.Add(null);
-            }
-
-            foreach ((int3 normal, ChunkController chunkController) in WorldController.Current.GetNeighboringChunksWithNormal(OriginPoint))
-            {
-                _NeighborNodes[GetNeighborIndexFromNormal(normal)] = chunkController.Blocks;
-            }
         }
 
         public void Detail()
@@ -51,7 +37,10 @@ namespace Wyd.Game.World.Chunks
                 ushort blockId = _Blocks.GetPoint(localPosition);
 
                 if ((blockId == BlockController.AirID)
-                    || AttemptLaySurfaceBlocks(globalPosition, localPosition)) { }
+                    || AttemptLaySurfaceBlocks(globalPosition, localPosition))
+                {
+                    continue;
+                }
 
                 if (blockId == GetCachedBlockID("coal_ore"))
                 {
@@ -103,17 +92,6 @@ namespace Wyd.Game.World.Chunks
                         }
                     }
                 }
-
-                // if (_Blocks.UncheckedGetPoint(globalPosition) == GetCachedBlockID("stone"))
-                // {
-                //     float noise = OpenSimplexSlim.GetSimplex(WorldController.Current.Seed, 0.001f, globalPosition);
-                //     float powerNoise = math.pow(noise, 4f);
-                //
-                //     if ((powerNoise > 0.3f))
-                //     {
-                //         SetPointBoundsAware(globalPosition, GetCachedBlockID("coal_ore"));
-                //     }
-                // }
             }
 
             Stopwatch.Stop();

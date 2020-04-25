@@ -1,9 +1,9 @@
 #region
 
 using System.Threading;
-using System.Threading.Tasks;
 using Unity.Mathematics;
 using UnityEngine;
+using Wyd.Controllers.State;
 using Wyd.Game.World.Chunks;
 using Wyd.System.Collections;
 using Wyd.System.Jobs;
@@ -58,7 +58,8 @@ namespace Wyd.Controllers.World.Chunk
             // 1024 is the value set in the shader's [numthreads(--> 1024 <--, 1, 1)]
             _NoiseShader.Dispatch(kernel, 1024, 1, 1);
 
-            ChunkTerrainJob asyncJob = new ChunkTerrainBuilderJob(cancellationToken, OriginPoint, _FREQUENCY, _PERSISTENCE, _NoiseValuesBuffer);
+            ChunkTerrainJob asyncJob = new ChunkTerrainBuilderJob(cancellationToken, OriginPoint, _FREQUENCY, _PERSISTENCE,
+                OptionsController.Current.GPUAcceleration ? _NoiseValuesBuffer : null);
 
             if (callback != null)
             {
@@ -67,7 +68,7 @@ namespace Wyd.Controllers.World.Chunk
 
             jobIdentity = asyncJob.Identity;
 
-            Task.Run(() => AsyncJobScheduler.QueueAsyncJob(asyncJob), cancellationToken);
+            AsyncJobScheduler.QueueAsyncJob(asyncJob);
         }
 
         public void BeginTerrainDetailing(CancellationToken cancellationToken, AsyncJobEventHandler callback,
@@ -82,7 +83,7 @@ namespace Wyd.Controllers.World.Chunk
 
             jobIdentity = asyncJob.Identity;
 
-            Task.Run(() => AsyncJobScheduler.QueueAsyncJob(asyncJob), cancellationToken);
+            AsyncJobScheduler.QueueAsyncJob(asyncJob);
         }
     }
 }

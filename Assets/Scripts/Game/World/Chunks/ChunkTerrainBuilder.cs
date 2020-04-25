@@ -73,10 +73,22 @@ namespace Wyd.Game.World.Chunks
         {
             _NoiseMap = _noiseValuesCache.Retrieve() ?? new float[ChunkController.SIZE_CUBED];
 
-            using (ManualResetEvent manualResetEvent = new ManualResetEvent(false))
+            if (_NoiseValuesBuffer == null)
             {
-                MainThreadActionsController.Current.QueueAction(new MainThreadAction(manualResetEvent, GetComputeBufferData));
-                manualResetEvent.WaitOne();
+                for (int index = 0; index < _NoiseMap.Length; index++)
+                {
+                    float3 globalPosition = OriginPoint + WydMath.IndexTo3D(index, ChunkController.SIZE);
+
+                    _NoiseMap[index] = GetNoiseValueByGlobalPosition(globalPosition);
+                }
+            }
+            else
+            {
+                using (ManualResetEvent manualResetEvent = new ManualResetEvent(false))
+                {
+                    MainThreadActionsController.Current.QueueAction(new MainThreadAction(manualResetEvent, GetComputeBufferData));
+                    manualResetEvent.WaitOne();
+                }
             }
         }
 
@@ -112,14 +124,12 @@ namespace Wyd.Game.World.Chunks
                 _Blocks = new OctreeNode<ushort>(ChunkController.SIZE, GetCachedBlockID("stone"));
                 return;
             }
-            else
-            {
-                _Blocks = new OctreeNode<ushort>(ChunkController.SIZE, BlockController.AirID);
 
-                if (allAir)
-                {
-                    return;
-                }
+            _Blocks = new OctreeNode<ushort>(ChunkController.SIZE, BlockController.AirID);
+
+            if (allAir)
+            {
+                return;
             }
 
             for (int index = 0; index < ChunkController.SIZE_CUBED; index++)
