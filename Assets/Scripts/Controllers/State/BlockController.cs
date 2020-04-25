@@ -2,6 +2,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Runtime.CompilerServices;
 using Serilog;
 using Unity.Mathematics;
 using Wyd.Game;
@@ -137,6 +138,7 @@ namespace Wyd.Controllers.State
             return true;
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public bool BlockIdExists(ushort blockId) => blockId < BlockDefinitions.Count;
 
         public bool TryGetBlockId(string blockName, out ushort blockId)
@@ -192,10 +194,8 @@ namespace Wyd.Controllers.State
             return false;
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public bool CheckBlockHasProperty(ushort blockId, BlockDefinition.Property property) =>
-            BlockIdExists(blockId) && PrecheckedBlockHasProperty(blockId, property);
-
-        public bool PrecheckedBlockHasProperty(ushort blockId, BlockDefinition.Property property) =>
-            BlockDefinitions[blockId].Properties.HasProperty(property);
+            BlockIdExists(blockId) && BlockDefinitions[blockId].Properties.HasProperty(property);
     }
 }

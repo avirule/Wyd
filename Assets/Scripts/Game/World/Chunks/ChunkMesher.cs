@@ -127,7 +127,7 @@ namespace Wyd.Game.World.Chunks
                 }
 
                 TraverseIndex(index, globalPosition, localPosition, currentBlockId,
-                    BlockController.Current.PrecheckedBlockHasProperty(currentBlockId, BlockDefinition.Property.Transparent));
+                    BlockController.Current.CheckBlockHasProperty(currentBlockId, BlockDefinition.Property.Transparent));
             }
 
             _Stopwatch.Stop();
@@ -153,15 +153,12 @@ namespace Wyd.Game.World.Chunks
 
                 int iModulo3 = i % 3;
 
-                bool CheckSkipBlockFaceMeshing(ushort facingBlockId) =>
-                    (transparentTraversal && (currentBlockId == facingBlockId))
-                    || !BlockController.Current.PrecheckedBlockHasProperty(facingBlockId, BlockDefinition.Property.Transparent);
-
                 if (((i <= 2) && (localPosition[iModulo3] >= (ChunkController.SIZE - 1))) || ((i > 2) && (localPosition[iModulo3] <= 0)))
                 {
                     ushort facingBlockId = GetNeighboringBlock(faceNormal, localPosition);
 
-                    if (CheckSkipBlockFaceMeshing(facingBlockId))
+                    if ((transparentTraversal && (currentBlockId == facingBlockId))
+                        || !BlockController.Current.CheckBlockHasProperty(facingBlockId, BlockDefinition.Property.Transparent))
                     {
                         continue;
                     }
@@ -170,13 +167,14 @@ namespace Wyd.Game.World.Chunks
                 {
                     ushort facingBlockId = _Blocks.GetPoint(localPosition + faceNormal);
 
-                    if (CheckSkipBlockFaceMeshing(facingBlockId))
+                    if ((transparentTraversal && (currentBlockId == facingBlockId))
+                        || !BlockController.Current.CheckBlockHasProperty(facingBlockId, BlockDefinition.Property.Transparent))
                     {
                         continue;
                     }
                 }
 
-                _Mask[index].SetFace(faceDirection, true);
+                _Mask[index].SetFace(faceDirection);
                 AddTriangles(faceDirection, transparentTraversal);
 
                 float2 uvSize = new float2(1f);
@@ -279,13 +277,13 @@ namespace Wyd.Game.World.Chunks
                 // if transparent, traverse as long as block is the same
                 // if opaque, traverse as long as faceNormal-adjacent block is transparent
                 if ((transparentTraversal && (initialBlockId != facingBlockId))
-                    || !BlockController.Current.PrecheckedBlockHasProperty(facingBlockId, BlockDefinition.Property.Transparent))
+                    || !BlockController.Current.CheckBlockHasProperty(facingBlockId, BlockDefinition.Property.Transparent))
                 {
                     break;
                 }
 
                 // set face to traversed and continue traversal
-                _Mask[traversalIndex].SetFace(faceDirection, true);
+                _Mask[traversalIndex].SetFace(faceDirection);
             }
 
             return traversals;

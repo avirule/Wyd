@@ -14,6 +14,7 @@ namespace Wyd.Game
     /// <summary>
     ///     6-way cardinal directions in byte values.
     /// </summary>
+    [Flags]
     public enum Direction : byte
     {
         /// <summary>
@@ -45,7 +46,7 @@ namespace Wyd.Game
         ///     Negative on Y axis
         /// </summary>
         Down = 0b0010_0000,
-        All = 0b0011_1111
+        Mask = 0b0011_1111
     }
 
     public static class Directions
@@ -119,7 +120,7 @@ namespace Wyd.Game
                 return Direction.South;
             }
 
-            return Direction.All;
+            return Direction.Mask;
         }
 
         public static IEnumerable<Direction> NormalToDirections(float3 normal)
@@ -177,7 +178,7 @@ namespace Wyd.Game
                 { Direction.West, Directions.West },
                 { Direction.Up, Directions.Up },
                 { Direction.Down, Directions.Down },
-                { Direction.All, int3.zero }
+                { Direction.Mask, int3.zero }
             };
 
             _directionsAsIndexStep = new Dictionary<Direction, int>
@@ -213,7 +214,7 @@ namespace Wyd.Game
                     return Directions.Up;
                 case Direction.Down:
                     return Directions.Down;
-                case Direction.All:
+                case Direction.Mask:
                     return int3.zero;
                 default:
                     throw new ArgumentOutOfRangeException(nameof(direction), direction, null);
@@ -236,7 +237,7 @@ namespace Wyd.Game
                     return ChunkController.SIZE_SQUARED;
                 case Direction.Down:
                     return -ChunkController.SIZE_SQUARED;
-                case Direction.All:
+                case Direction.Mask:
                     return default;
                 default:
                     return default;

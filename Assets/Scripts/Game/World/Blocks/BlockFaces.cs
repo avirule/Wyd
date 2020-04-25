@@ -151,26 +151,29 @@ namespace Wyd.Game.World.Blocks
                 };
         }
 
-        private const byte _FACES_MASK = 0b0011_1111;
+        private Direction _RawValue;
 
-        public byte RawValue;
+        public BlockFaces(Direction direction = 0) => _RawValue = direction;
 
-        public BlockFaces(byte rawValue = 0) => RawValue = rawValue;
+        public bool HasAnyFaces() => _RawValue > 0;
 
-        public bool HasAnyFaces() => RawValue > 0;
+        public bool HasAllFaces() => (_RawValue & Direction.Mask) == Direction.Mask;
 
-        public bool HasAllFaces() => (RawValue & _FACES_MASK) == _FACES_MASK;
+        public bool HasFace(Direction direction) => (_RawValue & direction) == direction;
 
-        public bool HasFace(Direction direction) => (RawValue & (byte)direction) == (byte)direction;
-
-        public void SetFace(Direction direction, bool boolean)
+        public void SetFace(Direction direction)
         {
-            RawValue = RawValue.SetBitByBoolWithMask((byte)direction, boolean);
+            _RawValue |= direction;
+        }
+
+        public void UnsetFace(Direction direction)
+        {
+            _RawValue &= ~direction;
         }
 
         public void ClearFaces()
         {
-            RawValue = 0;
+            _RawValue = 0;
         }
     }
 }
