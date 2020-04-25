@@ -28,8 +28,8 @@ namespace Wyd.Game.World.Chunks
 
         private CancellationToken _CancellationToken;
         private float3 _OriginPoint;
-        private INodeCollection<ushort> _Blocks;
         private bool _AggressiveFaceMerging;
+        private INodeCollection<ushort> _Blocks;
         private List<INodeCollection<ushort>> _NeighborNodes;
 
         public TimeSpan SetBlockTimeSpan { get; private set; }
@@ -126,14 +126,8 @@ namespace Wyd.Game.World.Chunks
                     continue;
                 }
 
-                if (BlockController.Current.PrecheckedBlockHasProperty(currentBlockId, BlockDefinition.Property.Transparent))
-                {
-                    //TraverseIndexTransparent(WydMath.ToInt(_OriginPoint), index, localPosition, localPosition);
-                }
-                else
-                {
-                    TraverseIndex(index, globalPosition, localPosition, currentBlockId);
-                }
+                TraverseIndex(index, globalPosition, localPosition, currentBlockId,
+                    BlockController.Current.PrecheckedBlockHasProperty(currentBlockId, BlockDefinition.Property.Transparent));
             }
 
             _Stopwatch.Stop();
@@ -145,7 +139,7 @@ namespace Wyd.Game.World.Chunks
 
         #region Traversal Meshing
 
-        private void TraverseIndex(int index, int3 globalPosition, int3 localPosition, ushort currentBlockId)
+        private void TraverseIndex(int index, int3 globalPosition, int3 localPosition, ushort currentBlockId, bool transparentTraversal)
         {
             for (int i = 0; i < 6; i++)
             {
@@ -159,22 +153,31 @@ namespace Wyd.Game.World.Chunks
 
                 int iModulo3 = i % 3;
 
+                bool CheckSkipBlockFaceMeshing(ushort facingBlockId) =>
+                    (transparentTraversal && (currentBlockId == facingBlockId))
+                    || !BlockController.Current.PrecheckedBlockHasProperty(facingBlockId, BlockDefinition.Property.Transparent);
+
                 if (((i <= 2) && (localPosition[iModulo3] >= (ChunkController.SIZE - 1))) || ((i > 2) && (localPosition[iModulo3] <= 0)))
                 {
-                    if (!BlockController.Current.PrecheckedBlockHasProperty(GetNeighboringBlock(faceNormal, localPosition),
-                        BlockDefinition.Property.Transparent))
+                    ushort facingBlockId = GetNeighboringBlock(faceNormal, localPosition);
+
+                    if (CheckSkipBlockFaceMeshing(facingBlockId))
                     {
                         continue;
                     }
                 }
-                else if (!BlockController.Current.PrecheckedBlockHasProperty(_Blocks.GetPoint(localPosition + faceNormal),
-                    BlockDefinition.Property.Transparent))
+                else
                 {
-                    continue;
+                    ushort facingBlockId = _Blocks.GetPoint(localPosition + faceNormal);
+
+                    if (CheckSkipBlockFaceMeshing(facingBlockId))
+                    {
+                        continue;
+                    }
                 }
 
                 _Mask[index].SetFace(faceDirection, true);
-                AddTriangles(faceDirection);
+                AddTriangles(faceDirection, transparentTraversal);
 
                 float2 uvSize = new float2(1f);
 
@@ -187,7 +190,7 @@ namespace Wyd.Game.World.Chunks
                         GenerationConstants.PerpendicularNormalsByNonZeroIndex[WydMath.FirstNonZeroIndex(faceNormal)])
                     {
                         traversals = GetTraversals(index, localPosition, localPosition[traversalNormalIndex], currentTraversalNormal, faceNormal,
-                            faceDirection, GenerationConstants.IndexStepByTraversalNormalIndex[traversalNormalIndex], false);
+                            faceDirection, GenerationConstants.IndexStepByTraversalNormalIndex[traversalNormalIndex], transparentTraversal);
 
                         traversalNormal = currentTraversalNormal;
 
@@ -319,21 +322,6 @@ namespace Wyd.Game.World.Chunks
 
 
         #region Helper Methods
-
-        // todo this seems dumb
-        private static IEnumerable<(int, int3)> GetTraversalNormals(float3 normal)
-        {
-            for (int normalIndex = 0; normalIndex < 3; normalIndex++)
-            {
-                if (normal[normalIndex] == 0f)
-                {
-                    yield return (normalIndex, new int3
-                    {
-                        [normalIndex] = 1
-                    });
-                }
-            }
-        }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private static int GetNeighborIndexFromNormal(int3 normal)
