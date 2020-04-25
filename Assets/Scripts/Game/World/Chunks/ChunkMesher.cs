@@ -187,7 +187,7 @@ namespace Wyd.Game.World.Chunks
                     foreach ((int traversalNormalIndex, int3 currentTraversalNormal) in
                         GenerationConstants.PerpendicularNormalsByNonZeroIndex[WydMath.FirstNonZeroIndex(faceNormal)])
                     {
-                        traversals = GetTraversals(index, localPosition, localPosition[traversalNormalIndex], currentTraversalNormal, faceNormal,
+                        traversals = GetTraversals(index, localPosition, traversalNormalIndex, currentTraversalNormal, faceNormal,
                             faceDirection, GenerationConstants.IndexStepByTraversalNormalIndex[traversalNormalIndex], transparentTraversal);
 
                         traversalNormal = currentTraversalNormal;
@@ -201,9 +201,11 @@ namespace Wyd.Game.World.Chunks
                         break;
                     }
 
+                    float3 traversalVertexOffset = math.max(traversals * traversalNormal, 1);
+
                     for (int vert = 0; vert < 4; vert++)
                     {
-                        float3 traversalVertex = BlockFaces.Vertices.FaceVertices[faceDirection][vert] * math.max(traversals * traversalNormal, 1);
+                        float3 traversalVertex = BlockFaces.Vertices.FaceVertices[faceDirection][vert] * traversalVertexOffset;
                         _MeshData.AddVertex(localPosition + traversalVertex);
                     }
                 }
@@ -229,14 +231,14 @@ namespace Wyd.Game.World.Chunks
         /// </summary>
         /// <param name="index">1D index of current block.</param>
         /// <param name="localPosition"></param>
-        /// <param name="slice">Current slice (x, y, or z) of a 3D index relative to your traversal direction.</param>
+        /// <param name="sliceIndex">Current sliceIndex (x, y, or z) of a 3D index relative to your traversal direction.</param>
         /// <param name="traversalNormal">Direction to traverse in.</param>
         /// <param name="faceNormal">Direction to check faces while traversing.</param>
         /// <param name="faceDirection"></param>
         /// <param name="traversalFactor">Amount of indexes to move forwards for each successful traversal in given direction.</param>
         /// <param name="transparentTraversal">Determines whether or not transparent traversal will be used.</param>
         /// <returns><see cref="int" /> representing how many successful traversals were made in the given traversal direction.</returns>
-        private int GetTraversals(int index, float3 localPosition, int slice, int3 traversalNormal, int3 faceNormal, Direction faceDirection,
+        private int GetTraversals(int index, float3 localPosition, int sliceIndex, int3 traversalNormal, int3 faceNormal, Direction faceDirection,
             int traversalFactor, bool transparentTraversal)
         {
             if (!_AggressiveFaceMerging)
@@ -247,14 +249,15 @@ namespace Wyd.Game.World.Chunks
             ushort initialBlockId = _Blocks.GetPoint(localPosition);
 
             int traversals;
+            float sliceIndexValue = localPosition[sliceIndex];
 
-            for (traversals = 1; (slice + traversals) < ChunkController.SIZE; traversals++)
+            for (traversals = 1; (sliceIndexValue + traversals) < ChunkController.SIZE; traversals++)
             {
                 // incrementing on x, so the traversal factor is 1
                 // if we were incrementing on z, the factor would be ChunkController.Size3D.x
                 // and on y it would be (ChunkController.Size3D.x * ChunkController.Size3D.z)
                 int traversalIndex = index + (traversals * traversalFactor);
-                float3 currentTraversalPosition = localPosition + (traversals * traversalNormal);
+                float3 currentTraversalPosition = localPosition + (traversalNormal * traversals);
 
                 if ((_Blocks.GetPoint(currentTraversalPosition) != initialBlockId) || _Mask[traversalIndex].HasFace(faceDirection))
                 {
@@ -264,7 +267,7 @@ namespace Wyd.Game.World.Chunks
                 float3 traversalFacingBlockPosition = currentTraversalPosition + faceNormal;
                 ushort facingBlockId;
 
-                if (math.all(traversalFacingBlockPosition >= 0) && math.all(traversalFacingBlockPosition <= (ChunkController.SIZE - 1)))
+                if (traversalFacingBlockPosition[sliceIndex] >= 0 && traversalFacingBlockPosition[sliceIndex] <= (ChunkController.SIZE - 1))
                 {
                     // coordinates are inside, so retrieve from own blocks octree
                     facingBlockId = _Blocks.GetPoint(traversalFacingBlockPosition);

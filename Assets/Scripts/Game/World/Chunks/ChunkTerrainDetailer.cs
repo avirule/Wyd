@@ -36,9 +36,14 @@ namespace Wyd.Game.World.Chunks
 
                 ushort blockId = _Blocks.GetPoint(localPosition);
 
-                if ((blockId == BlockController.AirID)
-                    || AttemptLaySurfaceBlocks(globalPosition, localPosition))
+                if (blockId == BlockController.AirID)
                 {
+                    continue;
+                }
+
+                if (blockId == GetCachedBlockID("stone"))
+                {
+                    AttemptLaySurfaceBlocks(globalPosition, localPosition);
                     continue;
                 }
 

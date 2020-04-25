@@ -1,6 +1,7 @@
 #region
 
 using System.Collections.Generic;
+using System.Runtime.CompilerServices;
 using Unity.Mathematics;
 using Wyd.System;
 
@@ -155,22 +156,28 @@ namespace Wyd.Game.World.Blocks
 
         public BlockFaces(Direction direction = 0) => _RawValue = direction;
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public bool HasAnyFaces() => _RawValue > 0;
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public bool HasAllFaces() => (_RawValue & Direction.Mask) == Direction.Mask;
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public bool HasFace(Direction direction) => (_RawValue & direction) == direction;
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void SetFace(Direction direction)
         {
             _RawValue |= direction;
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void UnsetFace(Direction direction)
         {
             _RawValue &= ~direction;
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void ClearFaces()
         {
             _RawValue = 0;
