@@ -12,11 +12,11 @@ namespace Wyd.Game.World.Chunks
 {
     public abstract class ChunkTerrainJob : AsyncJob
     {
-        protected readonly float3 OriginPoint;
+        protected readonly int3 OriginPoint;
 
         protected ChunkBuilder _TerrainOperator;
 
-        protected ChunkTerrainJob(CancellationToken cancellationToken, float3 originPoint)
+        protected ChunkTerrainJob(CancellationToken cancellationToken, int3 originPoint)
             : base(CancellationTokenSource.CreateLinkedTokenSource(AsyncJobScheduler.AbortToken,
                 cancellationToken).Token) =>
             OriginPoint = originPoint;

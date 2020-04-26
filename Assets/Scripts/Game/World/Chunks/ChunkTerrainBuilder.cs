@@ -29,9 +29,8 @@ namespace Wyd.Game.World.Chunks
         public TimeSpan NoiseRetrievalTimeSpan { get; private set; }
         public TimeSpan TerrainGenerationTimeSpan { get; private set; }
 
-        public ChunkTerrainBuilder(CancellationToken cancellationToken, float3 originPoint, float frequency,
-            float persistence, ComputeBuffer noiseValuesBuffer)
-            : base(cancellationToken, originPoint)
+        public ChunkTerrainBuilder(CancellationToken cancellationToken, int3 originPoint, float frequency, float persistence,
+            ComputeBuffer noiseValuesBuffer) : base(cancellationToken, originPoint)
         {
             _Frequency = frequency;
             _Persistence = persistence;

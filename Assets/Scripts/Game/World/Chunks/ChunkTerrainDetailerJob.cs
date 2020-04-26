@@ -14,10 +14,8 @@ namespace Wyd.Game.World.Chunks
     {
         private readonly INodeCollection<ushort> _Blocks;
 
-        public ChunkTerrainDetailerJob(CancellationToken cancellationToken, float3 originPoint,
-            INodeCollection<ushort> blocks)
-            : base(cancellationToken, originPoint) =>
-            _Blocks = blocks;
+        public ChunkTerrainDetailerJob(CancellationToken cancellationToken, int3 originPoint, INodeCollection<ushort> blocks)
+            : base(cancellationToken, originPoint) => _Blocks = blocks;
 
         protected override Task Process()
         {

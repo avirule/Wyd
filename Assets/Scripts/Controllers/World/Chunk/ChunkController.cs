@@ -154,8 +154,8 @@ namespace Wyd.Controllers.World.Chunk
 
 #if UNITY_EDITOR
 
-            MinimumPoint = OriginPoint;
-            MaximumPoint = OriginPoint + Size3D;
+            MinimumPoint = WydMath.ToFloat(OriginPoint);
+            MaximumPoint = WydMath.ToFloat(OriginPoint + Size3D);
 
 #endif
         }
@@ -244,8 +244,7 @@ namespace Wyd.Controllers.World.Chunk
 
                     break;
                 case ChunkState.Undetailed:
-                    TerrainController.BeginTerrainDetailing(_CancellationTokenSource.Token, OnTerrainDetailingFinished, _Blocks,
-                        out _TerrainJobIdentity);
+                    //TerrainController.BeginTerrainDetailing(_CancellationTokenSource.Token, OnTerrainDetailingFinished, _Blocks, out _TerrainJobIdentity);
 
                     State = State.Next();
                     break;
@@ -258,10 +257,10 @@ namespace Wyd.Controllers.World.Chunk
                         OnLocalTerrainChanged(this, new ChunkChangedEventArgs(OriginPoint, Directions.AllDirectionNormals.Select(WydMath.ToFloat)));
                     }
 
+                    State = State.Next();
+
                     break;
                 case ChunkState.Mesh:
-                    Compress();
-
                     if (Blocks.IsUniform
                         && ((Blocks.Value == BlockController.AirID)
                             || _Neighbors.All(chunkController => (chunkController.Blocks != null)

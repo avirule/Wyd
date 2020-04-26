@@ -19,7 +19,7 @@ namespace Wyd.Game.World.Chunks
     {
         public TimeSpan TerrainDetailTimeSpan { get; private set; }
 
-        public ChunkTerrainDetailer(CancellationToken cancellationToken, float3 originPoint, INodeCollection<ushort> blocks)
+        public ChunkTerrainDetailer(CancellationToken cancellationToken, int3 originPoint, INodeCollection<ushort> blocks)
             : base(cancellationToken, originPoint)
         {
             _Blocks = blocks;

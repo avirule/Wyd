@@ -25,14 +25,19 @@ namespace Wyd.Controllers.World.Chunk
         {
             base.Awake();
 
-            if (_NoiseShader == null)
-            {
-                _NoiseShader = Resources.Load<ComputeShader>(@"Graphics\Shaders\NoiseComputationShader");
-                _NoiseShader.SetInt("_NoiseSeed", WorldController.Current.Seed);
-                _NoiseShader.SetVector("_MaximumSize", new Vector4(ChunkController.Size3D.x, ChunkController.Size3D.y,
-                    ChunkController.Size3D.z, 0f));
-                _NoiseShader.SetFloat("_WorldHeight", WorldController.WORLD_HEIGHT);
-            }
+            _NoiseShader = Resources.Load<ComputeShader>(@"Graphics\Shaders\OpenSimplex3D");
+            _NoiseShader.SetInt("_NoiseSeed", WorldController.Current.Seed);
+            _NoiseShader.SetInt("_WorldHeight", WorldController.WORLD_HEIGHT);
+            _NoiseShader.SetFloat("_Frequency", _FREQUENCY);
+            _NoiseShader.SetFloat("_Persistence", _PERSISTENCE);
+            _NoiseShader.SetVector("_MaximumSize", new float4(ChunkController.Size3D.xyzz));
+        }
+
+        protected override void OnEnable()
+        {
+            base.OnEnable();
+
+            _NoiseShader.SetVector("_Offset", new float4(OriginPoint.xyzz));
         }
 
         protected override void OnDisable()
@@ -51,9 +56,6 @@ namespace Wyd.Controllers.World.Chunk
         {
             _NoiseValuesBuffer = new ComputeBuffer(ChunkController.SIZE_CUBED, 4);
             int kernel = _NoiseShader.FindKernel("CSMain");
-            _NoiseShader.SetVector("_Offset", new float4(OriginPoint.xyzz));
-            _NoiseShader.SetFloat("_Frequency", _FREQUENCY);
-            _NoiseShader.SetFloat("_Persistence", _PERSISTENCE);
             _NoiseShader.SetBuffer(kernel, "Result", _NoiseValuesBuffer);
             // 1024 is the value set in the shader's [numthreads(--> 1024 <--, 1, 1)]
             _NoiseShader.Dispatch(kernel, 1024, 1, 1);

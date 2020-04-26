@@ -16,7 +16,7 @@ namespace Wyd.Game.World.Chunks
         private readonly float _Persistence;
         private readonly ComputeBuffer _NoiseValuesBuffer;
 
-        public ChunkTerrainBuilderJob(CancellationToken cancellationToken, float3 originPoint, float frequency,
+        public ChunkTerrainBuilderJob(CancellationToken cancellationToken, int3 originPoint, float frequency,
             float persistence, ComputeBuffer noiseValuesBuffer)
             : base(cancellationToken, originPoint)
         {

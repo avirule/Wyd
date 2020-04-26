@@ -116,7 +116,7 @@ namespace Wyd.Game
 
         private void CalculateColliders()
         {
-            if ((_LastCalculatedPosition.y + Radius) > WorldController.WorldHeightInChunks)
+            if ((_LastCalculatedPosition.y + Radius) > WorldController.WORLD_HEIGHT_IN_CHUNKS)
             {
                 return;
             }

@@ -2,6 +2,7 @@
 
 using Unity.Mathematics;
 using UnityEngine;
+using Wyd.System;
 
 #endregion
 
@@ -13,7 +14,7 @@ namespace Wyd.Controllers.World.Chunk
 
         protected Transform _SelfTransform;
 
-        public float3 OriginPoint { get; private set; }
+        public int3 OriginPoint { get; private set; }
 
         #endregion
 
@@ -24,7 +25,7 @@ namespace Wyd.Controllers.World.Chunk
 
         protected virtual void OnEnable()
         {
-            OriginPoint = _SelfTransform.position;
+            OriginPoint = WydMath.ToInt(_SelfTransform.position);
         }
 
         protected virtual void OnDisable()

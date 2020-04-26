@@ -6,7 +6,27 @@ static const int yprime = 31337;
 static const int zprime = 6971;
 static const int wprime = 1013;
 
-static const float3 grad_3d[16] =
+static const float F2 = 1.0 / 2.0;
+static const float G2 = 1.0 / 4.0;
+
+static const float F3 = 1.0 / 3.0;
+static const float G3 = 1.0 / 6.0;
+static const float G33 = ((1 / 6.0) * 3.0) - 1.0;
+
+static const float2 _grad_2D[8] =
+{
+    float2(-1, -1),
+    float2(1, -1),
+    float2(-1, 1),
+    float2(1, 1),
+    float2(0, -1),
+    float2(-1, 0),
+    float2(0, 1),
+    float2(1, 0)
+};
+
+
+static const float3 _grad_3D[16] =
 {
     float3(1, 1, 0),
     float3(-1, 1, 0),
@@ -26,21 +46,6 @@ static const float3 grad_3d[16] =
     float3(0, -1, -1)
 };
 
-float gradCoord3d(int seed, int3 xyz, float3 xyz0)
-{
-    int hash = seed;
-    hash ^= (xprime * xyz.x);
-    hash ^= (yprime * xyz.y);
-    hash ^= (zprime * xyz.z);
-
-    hash = hash * hash * hash * 60493;
-    hash = (hash >> 13) ^ hash;
-
-    float3 xyzg = grad_3d[hash & 15];
-
-    return (xyz0.x * xyzg.x) + (xyz0.y * xyzg.y) + (xyz0.z * xyzg.z);
-}
-
 int fastFloor(float f)
 {
     if (f >= 0)
@@ -56,11 +61,96 @@ float inverseLerp(float a, float b, float value)
     return clamp((value - a) / (b - a), 0.0, 1.0);
 }
 
-static const float F3 = 1.0 / 3.0;
-static const float G3 = 1.0 / 6.0;
-static const float G33 = ((1 / 6.0) * 3.0) - 1.0;
+float gradCoord2D(int seed, int2 xy, float2 xy0)
+{
+    int hash = seed;
+    hash ^= (xprime * xy.x);
+    hash ^= (yprime * xy.y);
 
-float singleSimplex(uint seed, float frequency, float3 xyz)
+    hash = hash * hash * hash * 60493;
+    hash = (hash >> 13) ^ hash;
+
+    float2 xyg = _grad_2D[hash & 7];
+
+    return (xy0.x * xyg.x) + (xy0.y * xyg.y);
+}
+
+float gradCoord3D(int seed, int3 xyz, float3 xyz0)
+{
+    int hash = seed;
+    hash ^= (xprime * xyz.x);
+    hash ^= (yprime * xyz.y);
+    hash ^= (zprime * xyz.z);
+
+    hash = hash * hash * hash * 60493;
+    hash = (hash >> 13) ^ hash;
+
+    float3 xyzg = _grad_3D[hash & 15];
+
+    return (xyz0.x * xyzg.x) + (xyz0.y * xyzg.y) + (xyz0.z * xyzg.z);
+}
+
+float simplex2D(int seed, float frequency, float2 xy)
+{
+    xy *= frequency;
+
+    float t = (xy.x + xy.y) * F2;
+    float2 ij = float2(fastFloor(xy.x + t), fastFloor(xy.y + t));
+
+    t = (ij.x + ij.y) * G2;
+    float2 xy0 = float2(xy.x - (ij.x - t), xy.y - (ij.y - t));
+    float2 ij0;
+
+    if (xy0.x > xy0.y)
+    {
+        ij0 = float2(1.0, 0.0);
+    }
+    else
+    {
+        ij0 = float2(0.0, 1.0);
+    }
+
+    float2 xy1 = float2((xy0.x - ij0.x) + G2, (xy0.y - ij0.y) + G2);
+    float2 xy2 = float2((xy0.x - 1.0) + F2, (xy0.y - 1.0) + F2);
+    float3 n;
+
+    t = 0.5 - (xy0.x * xy0.x) - (xy0.y * xy0.y);
+    if (t < 0.0)
+    {
+        n.x = 0.0;
+    }
+    else
+    {
+        t *= t;
+        n.x = t * t * gradCoord2D(seed, ij, xy0);
+    }
+
+    t = 0.5 - (xy1.x * xy1.x) - (xy1.y * xy1.y);
+    if (t < 0.0)
+    {
+        n.y = 0.0;
+    }
+    else
+    {
+        t *= t;
+        n.y = t * t * gradCoord2D(seed, ij + ij0, xy1);
+    }
+
+    t = 0.5 - (xy2.x * xy2.x) - (xy2.y * xy2.y);
+    if (t < 0.0)
+    {
+        n.z = 0.0;
+    }
+    else
+    {
+        t *= t;
+        n.z = t * t * gradCoord2D(seed, ij + 1, xy2);
+    }
+
+    return 50.0 * (n.x + n.y + n.z);
+}
+
+float simplex3D(uint seed, float frequency, float3 xyz)
 {
     xyz *= frequency;
     float t = (xyz.x + xyz.y + xyz.z) * F3;
@@ -122,7 +212,7 @@ float singleSimplex(uint seed, float frequency, float3 xyz)
     else
     {
         t *= t;
-        n.x = pow(t, 2) * gradCoord3d(seed, ijk, xyz0);
+        n.x = pow(t, 2) * gradCoord3D(seed, ijk, xyz0);
     }
 
     t = 0.6 - pow(xyz1.x, 2) - pow(xyz1.y, 2) - pow(xyz1.z, 2);
@@ -133,7 +223,7 @@ float singleSimplex(uint seed, float frequency, float3 xyz)
     else
     {
         t *= t;
-        n.y = pow(t, 2) * gradCoord3d(seed, ijk + ijk1, xyz1);
+        n.y = pow(t, 2) * gradCoord3D(seed, ijk + ijk1, xyz1);
     }
 
     t = 0.6 - pow(xyz2.x, 2) - pow(xyz2.y, 2) - pow(xyz2.z, 2);
@@ -144,7 +234,7 @@ float singleSimplex(uint seed, float frequency, float3 xyz)
     else
     {
         t *= t;
-        n.z = pow(t, 2) * gradCoord3d(seed, ijk + ijk2, xyz2);
+        n.z = pow(t, 2) * gradCoord3D(seed, ijk + ijk2, xyz2);
     }
 
     t = 0.6 - pow(xyz3.x, 2) - pow(xyz3.y, 2) - pow(xyz3.z, 2);
@@ -155,7 +245,7 @@ float singleSimplex(uint seed, float frequency, float3 xyz)
     else
     {
         t *= t;
-        n.w = pow(t, 2) * gradCoord3d(seed, ijk + 1.0, xyz3);
+        n.w = pow(t, 2) * gradCoord3D(seed, ijk + 1.0, xyz3);
     }
 
     return 32.0 * (n.x + n.y + n.z + n.w);
@@ -163,25 +253,25 @@ float singleSimplex(uint seed, float frequency, float3 xyz)
 
 
 uniform uint _NoiseSeed;
-uniform float3 _MaximumSize;
-uniform float _WorldHeight;
+uniform int _WorldHeight;
 uniform float _Threshold;
+uniform int3 _MaximumSize;
 
 float _Frequency;
 float _Peristence;
-float3 _Offset;
+int3 _Offset;
 
 RWStructuredBuffer<float> Result;
 
 float customSimplexNoise(float3 xyz)
 {
-    float noise = singleSimplex(_NoiseSeed, _Frequency, xyz);
+    float noise = simplex3D(_NoiseSeed, _Frequency, xyz);
     noise += 5.0 * (1.0 - inverseLerp(0.0, _WorldHeight, xyz.y));
     noise /= (xyz.y + (-1.0 * _Peristence));
     return noise;
 }
 
-int coordTo1D(float3 coord)
+int coordTo1D(int3 coord)
 {
     return (coord.x + (coord.z * _MaximumSize.x) + (coord.y * (_MaximumSize.x * _MaximumSize.z)));
 }
@@ -193,13 +283,13 @@ float3 coordTo3D(uint index)
     uint z = index / _MaximumSize.x;
     uint x = index % _MaximumSize.x;
 
-    return float3(x, y, z);
+    return int3(x, y, z);
 }
 
 [numthreads(1024, 1, 1)]
 void CSMain (uint3 id : SV_DispatchThreadID)
 {
-    float3 coord = coordTo3D(id.x) + _Offset;
+    int3 coord = _Offset + coordTo3D(id.x);
     float noise = customSimplexNoise(coord);
 
     Result[id.x] = noise;

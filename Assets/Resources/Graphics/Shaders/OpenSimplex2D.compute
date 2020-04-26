@@ -1,0 +1,151 @@
+﻿// Each #kernel tells which function to compile; you can have many kernels
+#pragma kernel CSMain
+
+static const int xprime = 1619;
+static const int yprime = 31337;
+
+static const float F2 = 1.0 / 2.0;
+static const float G2 = 1.0 / 4.0;
+
+static const float2 _grad_2D[8] =
+{
+    float2(-1, -1),
+    float2(1, -1),
+    float2(-1, 1),
+    float2(1, 1),
+    float2(0, -1),
+    float2(-1, 0),
+    float2(0, 1),
+    float2(1, 0)
+};
+
+int fastFloor(float f)
+{
+    if (f >= 0)
+    {
+        return (int)f;
+    } else {
+        return (int)f - 1;
+    }
+}
+
+float inverseLerp(float a, float b, float value)
+{
+    return clamp((value - a) / (b - a), 0.0, 1.0);
+}
+
+float gradCoord2D(int seed, int2 xy, float2 xy0)
+{
+    int hash = seed;
+    hash ^= (xprime * xy.x);
+    hash ^= (yprime * xy.y);
+
+    hash = hash * hash * hash * 60493;
+    hash = (hash >> 13) ^ hash;
+
+    float2 xyg = _grad_2D[hash & 7];
+
+    return (xy0.x * xyg.x) + (xy0.y * xyg.y);
+}
+
+float simplex2D(int seed, float frequency, float2 xy)
+{
+    xy *= frequency;
+
+    float t = (xy.x + xy.y) * F2;
+    float2 ij = float2(fastFloor(xy.x + t), fastFloor(xy.y + t));
+
+    t = (ij.x + ij.y) * G2;
+    float2 xy0 = float2(xy.x - (ij.x - t), xy.y - (ij.y - t));
+    float2 ij0;
+
+    if (xy0.x > xy0.y)
+    {
+        ij0 = float2(1.0, 0.0);
+    }
+    else
+    {
+        ij0 = float2(0.0, 1.0);
+    }
+
+    float2 xy1 = float2((xy0.x - ij0.x) + G2, (xy0.y - ij0.y) + G2);
+    float2 xy2 = float2((xy0.x - 1.0) + F2, (xy0.y - 1.0) + F2);
+    float3 n;
+
+    t = 0.5 - (xy0.x * xy0.x) - (xy0.y * xy0.y);
+    if (t < 0.0)
+    {
+        n.x = 0.0;
+    }
+    else
+    {
+        t *= t;
+        n.x = t * t * gradCoord2D(seed, ij, xy0);
+    }
+
+    t = 0.5 - (xy1.x * xy1.x) - (xy1.y * xy1.y);
+    if (t < 0.0)
+    {
+        n.y = 0.0;
+    }
+    else
+    {
+        t *= t;
+        n.y = t * t * gradCoord2D(seed, ij + ij0, xy1);
+    }
+
+    t = 0.5 - (xy2.x * xy2.x) - (xy2.y * xy2.y);
+    if (t < 0.0)
+    {
+        n.z = 0.0;
+    }
+    else
+    {
+        t *= t;
+        n.z = t * t * gradCoord2D(seed, ij + 1, xy2);
+    }
+
+    return 50.0 * (n.x + n.y + n.z);
+}
+
+
+uniform uint _NoiseSeed;
+uniform int2 _MaximumSize;
+uniform int _WorldHeight;
+uniform float _Threshold;
+
+float _Frequency;
+float _Peristence;
+int2 _Offset;
+
+RWStructuredBuffer<float> Result;
+
+// float customSimplexNoise(int2 xy)
+// {
+//     float noise = simplex2D(_NoiseSeed, _Frequency, xy);
+//     noise += 5.0 * (1.0 - inverseLerp(0.0, _WorldHeight, xy.y));
+//     noise /= (xy.y + (-1.0 * _Peristence));
+//     return noise;
+// }
+
+int coordTo1D(int2 coord)
+{
+    return coord.x + (coord.y * _MaximumSize.y);
+}
+
+int2 coordTo2D(uint index)
+{
+    int x = index / _MaximumSize.x;
+    int y = index % _MaximumSize.x;
+
+    return int2(x, y);
+}
+
+[numthreads(1024, 1, 1)]
+void CSMain (uint3 id : SV_DispatchThreadID)
+{
+    int2 coord = coordTo2D(id.x) + _Offset;
+    float noise = _WorldHeight * inverseLerp(-1.0, 1.0, simplex2D(_NoiseSeed, _Frequency, coord));
+
+    Result[id.x] = noise;
+}

@@ -27,9 +27,8 @@ namespace Wyd.Controllers.World
 {
     public class WorldController : SingletonController<WorldController>, IPerFrameIncrementalUpdate
     {
-        public const float WORLD_HEIGHT = 256f;
-
-        public static readonly float WorldHeightInChunks = math.floor(WORLD_HEIGHT / ChunkController.Size3D.y);
+        public const int WORLD_HEIGHT = 256;
+        public const int WORLD_HEIGHT_IN_CHUNKS = WORLD_HEIGHT / ChunkController.SIZE;
 
 
         #region Instance Members
@@ -274,7 +273,7 @@ namespace Wyd.Controllers.World
                 throw new ArgumentException("Given coordinates must be chunk-aligned.", nameof(origin));
             }
 
-            for (int y = 0; y < WorldHeightInChunks; y++)
+            for (int y = 0; y < WORLD_HEIGHT_IN_CHUNKS; y++)
             {
                 float3 chunkOrigin = new float3(origin.x, y * ChunkController.SIZE, origin.y);
 
@@ -305,7 +304,7 @@ namespace Wyd.Controllers.World
 
             int totalRenderDistance =
                 OptionsController.Current.RenderDistance + /*OptionsController.Current.PreLoadChunkDistance*/ +1;
-            _ChunkCache.MaximumSize = ((totalRenderDistance * 2) - 1) * (int)WorldHeightInChunks;
+            _ChunkCache.MaximumSize = ((totalRenderDistance * 2) - 1) * (int)WORLD_HEIGHT_IN_CHUNKS;
         }
 
         private void VerifyAllChunkStatesAroundLoaders()
@@ -341,7 +340,7 @@ namespace Wyd.Controllers.World
 
                 for (int x = -renderRadius; x < (renderRadius + 1); x++)
                 for (int z = -renderRadius; z < (renderRadius + 1); z++)
-                for (int y = 0; y < WorldHeightInChunks; y++)
+                for (int y = 0; y < WORLD_HEIGHT_IN_CHUNKS; y++)
                 {
                     float3 localOrigin = new float3(x, y, z) * ChunkController.Size3D;
                     float3 origin = localOrigin + new float3(loader.ChunkPosition.x, 0, loader.ChunkPosition.z);
