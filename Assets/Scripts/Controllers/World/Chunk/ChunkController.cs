@@ -4,9 +4,13 @@ using System;
 using System.Collections;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Tasks;
+using K4os.Compression.LZ4;
+using Serilog;
 using Unity.Mathematics;
 using UnityEngine;
 using Wyd.Controllers.State;
@@ -256,6 +260,8 @@ namespace Wyd.Controllers.World.Chunk
 
                     break;
                 case ChunkState.Mesh:
+                    Compress();
+
                     if (Blocks.IsUniform
                         && ((Blocks.Value == BlockController.AirID)
                             || _Neighbors.All(chunkController => (chunkController.Blocks != null)
@@ -320,6 +326,25 @@ namespace Wyd.Controllers.World.Chunk
             {
                 UpdateMesh = true;
             }
+        }
+
+        public void Compress()
+        {
+            Stopwatch stopwatch = Stopwatch.StartNew();
+
+            byte[] bytes = WydMath.ObjectToByteArray(_Blocks);
+            byte[] target = new byte[bytes.Length];
+
+            Log.Information($"Serialized in {stopwatch.ElapsedMilliseconds}ms for {bytes.Length / 1000}kb");
+
+            int bytesUsed = LZ4Codec.Encode(bytes, 0, bytes.Length, target, 0, target.Length);
+
+            byte[] final = new byte[bytesUsed];
+            Array.Copy(target, 0, final, 0, final.Length);
+
+            stopwatch.Stop();
+
+            Log.Information($"{stopwatch.ElapsedMilliseconds}ms from {bytes.Length / 1000}kb to {final.Length / 1000}kb");
         }
 
 

@@ -8,6 +8,7 @@ using Unity.Mathematics;
 
 namespace Wyd.System.Collections
 {
+    [Serializable]
     public class OctreeNode<T> : INodeCollection<T> where T : unmanaged
     {
         private readonly int _Size;
