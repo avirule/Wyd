@@ -2,7 +2,9 @@
 
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Runtime.CompilerServices;
+using System.Runtime.Serialization.Formatters.Binary;
 using Unity.Mathematics;
 using Wyd.System.Extensions;
 
@@ -138,6 +140,17 @@ namespace Wyd.System
 
 
         #region Bitwise / Bytes
+
+        public static byte[] ObjectToByteArray(object obj)
+        {
+            BinaryFormatter binaryFormatter = new BinaryFormatter();
+            using (MemoryStream memoryStream = new MemoryStream())
+            {
+                binaryFormatter.Serialize(memoryStream, obj);
+                return memoryStream.ToArray();
+
+            }
+        }
 
         private static readonly byte[] _multiplyDeBruijnBitPosition =
         {
