@@ -1863,23 +1863,22 @@ PrefabInstance:
     - target: {fileID: 5521364810674680098, guid: 522502ab0fcea204c846d784c30e0957,
         type: 3}
       propertyPath: m_text
-      value: 'Chunk Gen: (ns {0:0}ms, trn {1:0}ms, dtl {2:0}ms, st_dta {3:0}ms, msh
-        {4:0}ms)'
+      value: 'Chunk Gen: (ns {0:0}ms, trn {1:0}ms, dtl {2:0}ms, msh {3:0}ms)'
       objectReference: {fileID: 0}
     - target: {fileID: 5521364810674680098, guid: 522502ab0fcea204c846d784c30e0957,
         type: 3}
       propertyPath: m_textInfo.characterCount
-      value: 78
+      value: 62
       objectReference: {fileID: 0}
     - target: {fileID: 5521364810674680098, guid: 522502ab0fcea204c846d784c30e0957,
         type: 3}
       propertyPath: m_textInfo.spaceCount
-      value: 11
+      value: 9
       objectReference: {fileID: 0}
     - target: {fileID: 5521364810674680098, guid: 522502ab0fcea204c846d784c30e0957,
         type: 3}
       propertyPath: m_textInfo.wordCount
-      value: 23
+      value: 18
       objectReference: {fileID: 0}
     - target: {fileID: 5521364810674680098, guid: 522502ab0fcea204c846d784c30e0957,
         type: 3}

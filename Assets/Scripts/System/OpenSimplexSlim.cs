@@ -14,11 +14,11 @@ namespace Wyd.System
         private const int _Y_PRIME = 31337;
         private const int _Z_PRIME = 6971;
 
-        public static float GetSimplex(int seed, float frequency, float2 coords) =>
+        public static float GetSimplex(int seed, float frequency, int2 coords) =>
             Simplex2D(seed, frequency, coords.x, coords.y);
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static float GetSimplex(int seed, float frequency, float3 coords) =>
+        public static float GetSimplex(int seed, float frequency, int3 coords) =>
             Simplex3D(seed, frequency, coords.x, coords.y, coords.z);
 
 

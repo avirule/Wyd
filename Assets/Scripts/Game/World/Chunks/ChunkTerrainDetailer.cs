@@ -1,7 +1,6 @@
 #region
 
 using System;
-using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 using System.Threading;
 using Unity.Mathematics;
@@ -20,10 +19,8 @@ namespace Wyd.Game.World.Chunks
         public TimeSpan TerrainDetailTimeSpan { get; private set; }
 
         public ChunkTerrainDetailer(CancellationToken cancellationToken, int3 originPoint, INodeCollection<ushort> blocks)
-            : base(cancellationToken, originPoint)
-        {
+            : base(cancellationToken, originPoint) =>
             _Blocks = blocks;
-        }
 
         public void Detail()
         {
@@ -32,18 +29,12 @@ namespace Wyd.Game.World.Chunks
             for (int index = 0; index < ChunkController.SIZE_CUBED; index++)
             {
                 int3 localPosition = WydMath.IndexTo3D(index, ChunkController.SIZE);
-                float3 globalPosition = OriginPoint + localPosition;
+                int3 globalPosition = OriginPoint + localPosition;
 
                 ushort blockId = _Blocks.GetPoint(localPosition);
 
                 if (blockId == BlockController.AirID)
                 {
-                    continue;
-                }
-
-                if (blockId == GetCachedBlockID("stone"))
-                {
-                    AttemptLaySurfaceBlocks(globalPosition, localPosition);
                     continue;
                 }
 
@@ -104,47 +95,6 @@ namespace Wyd.Game.World.Chunks
             TerrainDetailTimeSpan = Stopwatch.Elapsed;
         }
 
-        private bool AttemptLaySurfaceBlocks(float3 globalPosition, float3 localPosition)
-        {
-            if ((globalPosition.y < (WorldController.WORLD_HEIGHT / 2f))
-                || (OpenSimplexSlim.GetSimplex(WorldController.Current.Seed, 0.01f, globalPosition.xz) > 0.5f))
-            {
-                return false;
-            }
-
-            bool airAbove = true;
-
-            for (float3 ySteps = new float3(0f, 1f, 0f); ySteps.y <= 10; ySteps += Directions.Up)
-            {
-                if (GetPointBoundsAware(globalPosition + ySteps) == BlockController.AirID)
-                {
-                    continue;
-                }
-
-                airAbove = false;
-                break;
-            }
-
-            if (!airAbove)
-            {
-                return false;
-            }
-
-            _Blocks.SetPoint(localPosition, GetCachedBlockID("grass"));
-
-            for (float3 ySteps = new float3(0f, -1f, 0f);
-                ySteps.y >= -SeededRandom.Next(3, 5);
-                ySteps += Directions.Down)
-            {
-                SetPointBoundsAware(globalPosition + ySteps,
-                    SeededRandom.Next(0, 8) == 0
-                        ? GetCachedBlockID("dirt_coarse")
-                        : GetCachedBlockID("dirt"));
-            }
-
-            return true;
-        }
-
         #region Helper Methods
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -172,11 +122,11 @@ namespace Wyd.Game.World.Chunks
             return index;
         }
 
-        private ushort GetPointBoundsAware(float3 globalPosition)
+        private ushort GetPointBoundsAware(int3 globalPosition)
         {
-            float3 localPosition = globalPosition - OriginPoint;
+            int3 localPosition = globalPosition - OriginPoint;
 
-            if (math.any(localPosition < 0f) || math.any(localPosition >= ChunkController.SIZE))
+            if (math.any(localPosition < 0) || math.any(localPosition >= ChunkController.SIZE))
             {
                 return WorldController.Current.GetBlock(globalPosition);
             }
@@ -186,11 +136,11 @@ namespace Wyd.Game.World.Chunks
             }
         }
 
-        private void SetPointBoundsAware(float3 globalPosition, ushort blockId)
+        private void SetPointBoundsAware(int3 globalPosition, ushort blockId)
         {
-            float3 localPosition = globalPosition - OriginPoint;
+            int3 localPosition = globalPosition - OriginPoint;
 
-            if (math.any(localPosition < 0f) || math.any(localPosition >= ChunkController.SIZE))
+            if (math.any(localPosition < 0) || math.any(localPosition >= ChunkController.SIZE))
             {
                 WorldController.Current.PlaceBlock(globalPosition, blockId);
             }

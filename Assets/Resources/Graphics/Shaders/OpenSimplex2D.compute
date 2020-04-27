@@ -34,11 +34,13 @@ float inverseLerp(float a, float b, float value)
     return clamp((value - a) / (b - a), 0.0, 1.0);
 }
 
-float gradCoord2D(int seed, int2 xy, float2 xy0)
+float gradCoord2D(int seed, float2 xy, float2 xy0)
 {
+    int2 xyi = (int2)xy;
+
     int hash = seed;
-    hash ^= (xprime * xy.x);
-    hash ^= (yprime * xy.y);
+    hash ^= (xprime * xyi.x);
+    hash ^= (yprime * xyi.y);
 
     hash = hash * hash * hash * 60493;
     hash = (hash >> 13) ^ hash;
@@ -57,22 +59,22 @@ float simplex2D(int seed, float frequency, float2 xy)
 
     t = (ij.x + ij.y) * G2;
     float2 xy0 = float2(xy.x - (ij.x - t), xy.y - (ij.y - t));
-    float2 ij0;
+    float2 ij1;
 
     if (xy0.x > xy0.y)
     {
-        ij0 = float2(1.0, 0.0);
+        ij1 = float2(1.0, 0.0);
     }
     else
     {
-        ij0 = float2(0.0, 1.0);
+        ij1 = float2(0.0, 1.0);
     }
 
-    float2 xy1 = float2((xy0.x - ij0.x) + G2, (xy0.y - ij0.y) + G2);
-    float2 xy2 = float2((xy0.x - 1.0) + F2, (xy0.y - 1.0) + F2);
+    float2 xy1 = (xy0 - ij1) + G2;
+    float2 xy2 = (xy0 - 1.0) + F2;
     float3 n;
 
-    t = 0.5 - (xy0.x * xy0.x) - (xy0.y * xy0.y);
+    t = 0.5 - pow(xy0.x, 2) - pow(xy0.y, 2);
     if (t < 0.0)
     {
         n.x = 0.0;
@@ -80,10 +82,10 @@ float simplex2D(int seed, float frequency, float2 xy)
     else
     {
         t *= t;
-        n.x = t * t * gradCoord2D(seed, ij, xy0);
+        n.x = pow(t, 2) * gradCoord2D(seed, ij, xy0);
     }
 
-    t = 0.5 - (xy1.x * xy1.x) - (xy1.y * xy1.y);
+    t = 0.5 - pow(xy1.x, 2) - pow(xy1.y, 2);
     if (t < 0.0)
     {
         n.y = 0.0;
@@ -91,10 +93,10 @@ float simplex2D(int seed, float frequency, float2 xy)
     else
     {
         t *= t;
-        n.y = t * t * gradCoord2D(seed, ij + ij0, xy1);
+        n.y = pow(t, 2) * gradCoord2D(seed, ij + ij1, xy1);
     }
 
-    t = 0.5 - (xy2.x * xy2.x) - (xy2.y * xy2.y);
+    t = 0.5 - pow(xy2.x, 2) - pow(xy2.y, 2);
     if (t < 0.0)
     {
         n.z = 0.0;
@@ -102,7 +104,7 @@ float simplex2D(int seed, float frequency, float2 xy)
     else
     {
         t *= t;
-        n.z = t * t * gradCoord2D(seed, ij + 1, xy2);
+        n.z = pow(t, 2) * gradCoord2D(seed, ij + 1, xy2);
     }
 
     return 50.0 * (n.x + n.y + n.z);
@@ -110,42 +112,42 @@ float simplex2D(int seed, float frequency, float2 xy)
 
 
 uniform uint _NoiseSeed;
-uniform int2 _MaximumSize;
-uniform int _WorldHeight;
-uniform float _Threshold;
+uniform float _WorldHeight;
+uniform float3 _MaximumSize;
 
+float3 _Offset;
 float _Frequency;
-float _Peristence;
-int2 _Offset;
+float _Persistence;
 
 RWStructuredBuffer<float> Result;
 
-// float customSimplexNoise(int2 xy)
-// {
-//     float noise = simplex2D(_NoiseSeed, _Frequency, xy);
-//     noise += 5.0 * (1.0 - inverseLerp(0.0, _WorldHeight, xy.y));
-//     noise /= (xy.y + (-1.0 * _Peristence));
-//     return noise;
-// }
-
 int coordTo1D(int2 coord)
 {
-    return coord.x + (coord.y * _MaximumSize.y);
+    return coord.x + (coord.y * _MaximumSize.x);
 }
 
-int2 coordTo2D(uint index)
+float2 coordTo2D(uint index)
 {
-    int x = index / _MaximumSize.x;
-    int y = index % _MaximumSize.x;
+    int y = index / _MaximumSize.x;
+    int x = index % _MaximumSize.x;
 
-    return int2(x, y);
+    return float2(x, y);
+}
+
+float customSimplexNoise(float2 coord) {
+    float noise = simplex2D(_NoiseSeed, _Frequency, coord);
+    float noiseAsWorldHeight = inverseLerp(-1.0, 1.0, noise) * _WorldHeight;
+    float noisePersistedWorldHeight = noiseAsWorldHeight + (((_WorldHeight / 2.0) - (noiseAsWorldHeight * 1.25)) * _Persistence);
+    float noiseAsWorldHeightClamped = clamp(fastFloor(noisePersistedWorldHeight - _Offset.y), -_MaximumSize.y, _MaximumSize.y - 1);
+
+    return noiseAsWorldHeightClamped;
 }
 
 [numthreads(1024, 1, 1)]
 void CSMain (uint3 id : SV_DispatchThreadID)
 {
-    int2 coord = coordTo2D(id.x) + _Offset;
-    float noise = _WorldHeight * inverseLerp(-1.0, 1.0, simplex2D(_NoiseSeed, _Frequency, coord));
+    float2 coord = _Offset.xz + coordTo2D(id.x);
+    float noise = customSimplexNoise(coord);
 
     Result[id.x] = noise;
 }
