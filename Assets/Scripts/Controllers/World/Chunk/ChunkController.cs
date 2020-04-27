@@ -6,7 +6,6 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
-using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Tasks;
 using K4os.Compression.LZ4;
@@ -326,6 +325,15 @@ namespace Wyd.Controllers.World.Chunk
                 UpdateMesh = true;
             }
         }
+
+#if UNITY_EDITOR
+
+        public void FlagRegenerate()
+        {
+            Regenerate = true;
+        }
+
+#endif
 
         public void Compress()
         {

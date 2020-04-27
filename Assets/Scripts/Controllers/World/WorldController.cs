@@ -8,6 +8,7 @@ using System.Linq;
 using System.Threading;
 using Serilog;
 using Unity.Mathematics;
+using UnityEngine;
 using Wyd.Controllers.State;
 using Wyd.Controllers.System;
 using Wyd.Controllers.World.Chunk;
@@ -71,9 +72,24 @@ namespace Wyd.Controllers.World
 
         #region Serialized Members
 
-        public CollisionLoaderController CollisionLoaderController;
-        public ChunkController ChunkControllerPrefab;
-        public string SeedString;
+        [SerializeField]
+        private CollisionLoaderController CollisionLoaderController;
+
+        [SerializeField]
+        private ChunkController ChunkControllerPrefab;
+
+        [SerializeField]
+        private string SeedString;
+
+#if UNITY_EDITOR
+
+        [SerializeField]
+        public float InterimGenerationValue;
+
+        [SerializeField]
+        private bool RegenerateWorld;
+
+#endif
 
         #endregion
 
@@ -137,7 +153,22 @@ namespace Wyd.Controllers.World
             PerFrameUpdateController.Current.DeregisterPerFrameUpdater(10, this);
         }
 
-        public void FrameUpdate() { }
+        public void FrameUpdate()
+        {
+#if UNITY_EDITOR
+
+            if (RegenerateWorld)
+            {
+                foreach ((float3 _, ChunkController chunkController) in _Chunks)
+                {
+                    chunkController.FlagRegenerate();
+                }
+
+                RegenerateWorld = false;
+            }
+
+#endif
+        }
 
         public IEnumerable IncrementalFrameUpdate()
         {
@@ -304,7 +335,7 @@ namespace Wyd.Controllers.World
 
             int totalRenderDistance =
                 OptionsController.Current.RenderDistance + /*OptionsController.Current.PreLoadChunkDistance*/ +1;
-            _ChunkCache.MaximumSize = ((totalRenderDistance * 2) - 1) * (int)WORLD_HEIGHT_IN_CHUNKS;
+            _ChunkCache.MaximumSize = ((totalRenderDistance * 2) - 1) * WORLD_HEIGHT_IN_CHUNKS;
         }
 
         private void VerifyAllChunkStatesAroundLoaders()

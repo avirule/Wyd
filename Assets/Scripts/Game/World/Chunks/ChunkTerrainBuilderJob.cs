@@ -14,20 +14,23 @@ namespace Wyd.Game.World.Chunks
     {
         private readonly float _Frequency;
         private readonly float _Persistence;
-        private readonly ComputeBuffer _NoiseValuesBuffer;
+        private readonly ComputeBuffer _HeightmapBuffer;
+        private readonly ComputeBuffer _CaveNoiseBuffer;
 
         public ChunkTerrainBuilderJob(CancellationToken cancellationToken, int3 originPoint, float frequency,
-            float persistence, ComputeBuffer noiseValuesBuffer)
+            float persistence, ComputeBuffer heightmapBuffer = null, ComputeBuffer caveNoiseBuffer = null)
             : base(cancellationToken, originPoint)
         {
             _Frequency = frequency;
             _Persistence = persistence;
-            _NoiseValuesBuffer = noiseValuesBuffer;
+            _HeightmapBuffer = heightmapBuffer;
+            _CaveNoiseBuffer = caveNoiseBuffer;
         }
 
         protected override Task Process()
         {
-            ChunkTerrainBuilder builder = new ChunkTerrainBuilder(CancellationToken, OriginPoint, _Frequency, _Persistence, _NoiseValuesBuffer);
+            ChunkTerrainBuilder builder = new ChunkTerrainBuilder(CancellationToken, OriginPoint, _Frequency, _Persistence, _HeightmapBuffer,
+                _CaveNoiseBuffer);
             builder.TimeMeasuredGenerate();
 
             // builder has completed execution, so set field

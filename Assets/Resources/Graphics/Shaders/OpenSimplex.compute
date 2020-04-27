@@ -1,15 +1,29 @@
 ﻿// Each #kernel tells which function to compile; you can have many kernels
-#pragma kernel CSMain
+#pragma kernel Heightmap2D
+#pragma kernel CaveNoise3D
 
 static const int xprime = 1619;
 static const int yprime = 31337;
 static const int zprime = 6971;
 static const int wprime = 1013;
 
+static const float F2 = 1.0 / 2.0;
+static const float G2 = 1.0 / 4.0;
 static const float F3 = 1.0 / 3.0;
 static const float G3 = 1.0 / 6.0;
 static const float G33 = ((1 / 6.0) * 3.0) - 1.0;
 
+static const float2 _grad_2D[8] =
+{
+    float2(-1, -1),
+    float2(1, -1),
+    float2(-1, 1),
+    float2(1, 1),
+    float2(0, -1),
+    float2(-1, 0),
+    float2(0, 1),
+    float2(1, 0)
+};
 
 static const float3 _grad_3D[16] =
 {
@@ -47,6 +61,21 @@ float inverseLerp(float a, float b, float value)
     return clamp((value - a) / (b - a), 0.0, 1.0);
 }
 
+float gradCoord2D(int seed, float2 xy, float2 xy0)
+{
+    int2 xyi = (int2)xy;
+
+    int hash = seed;
+    hash ^= (xprime * xyi.x);
+    hash ^= (yprime * xyi.y);
+
+    hash = pow(hash, 3) * 60493;
+    hash = (hash >> 13) ^ hash;
+
+    float2 xyg = _grad_2D[hash & 7];
+
+    return (xy0.x * xyg.x) + (xy0.y * xyg.y);
+}
 
 float gradCoord3D(int seed, float3 xyz, float3 xyz0)
 {
@@ -57,7 +86,7 @@ float gradCoord3D(int seed, float3 xyz, float3 xyz0)
     hash ^= (yprime * xyzi.y);
     hash ^= (zprime * xyzi.z);
 
-    hash = hash * hash * hash * 60493;
+    hash = pow(hash, 3) * 60493;
     hash = (hash >> 13) ^ hash;
 
     float3 xyzg = _grad_3D[hash & 15];
@@ -65,7 +94,68 @@ float gradCoord3D(int seed, float3 xyz, float3 xyz0)
     return (xyz0.x * xyzg.x) + (xyz0.y * xyzg.y) + (xyz0.z * xyzg.z);
 }
 
-float simplex3D(uint seed, float frequency, float3 xyz)
+
+float simplex2D(int seed, float frequency, float2 xy)
+{
+    xy *= frequency;
+
+    float t = (xy.x + xy.y) * F2;
+    float2 ij = float2(fastFloor(xy.x + t), fastFloor(xy.y + t));
+
+    t = (ij.x + ij.y) * G2;
+    float2 xy0 = float2(xy.x - (ij.x - t), xy.y - (ij.y - t));
+    float2 ij1;
+
+    if (xy0.x > xy0.y)
+    {
+        ij1 = float2(1.0, 0.0);
+    }
+    else
+    {
+        ij1 = float2(0.0, 1.0);
+    }
+
+    float2 xy1 = (xy0 - ij1) + G2;
+    float2 xy2 = (xy0 - 1.0) + F2;
+    float3 n;
+
+    t = 0.5 - pow(xy0.x, 2) - pow(xy0.y, 2);
+    if (t < 0.0)
+    {
+        n.x = 0.0;
+    }
+    else
+    {
+        t *= t;
+        n.x = pow(t, 2) * gradCoord2D(seed, ij, xy0);
+    }
+
+    t = 0.5 - pow(xy1.x, 2) - pow(xy1.y, 2);
+    if (t < 0.0)
+    {
+        n.y = 0.0;
+    }
+    else
+    {
+        t *= t;
+        n.y = pow(t, 2) * gradCoord2D(seed, ij + ij1, xy1);
+    }
+
+    t = 0.5 - pow(xy2.x, 2) - pow(xy2.y, 2);
+    if (t < 0.0)
+    {
+        n.z = 0.0;
+    }
+    else
+    {
+        t *= t;
+        n.z = pow(t, 2) * gradCoord2D(seed, ij + 1, xy2);
+    }
+
+    return 50.0 * (n.x + n.y + n.z);
+}
+
+float simplex3D(int seed, float frequency, float3 xyz)
 {
     xyz *= frequency;
 
@@ -168,23 +258,24 @@ float simplex3D(uint seed, float frequency, float3 xyz)
 }
 
 
-uniform uint _NoiseSeed;
+uniform int _HeightmapSeed;
+uniform int _CaveNoiseSeedA;
+uniform int _CaveNoiseSeedB;
 uniform float _WorldHeight;
 uniform float3 _MaximumSize;
 
 float3 _Offset;
-float _Threshold;
 float _Frequency;
 float _Persistence;
+float _SurfaceHeight;
 
-RWStructuredBuffer<float> Result;
+RWStructuredBuffer<float> HeightmapResult;
+RWStructuredBuffer<float> CaveNoiseResult;
 
-float customSimplexNoise(int3 xyz)
+
+int coordTo1D(int2 coord)
 {
-    float noise = simplex3D(_NoiseSeed, _Frequency, xyz);
-    noise += 5.0 * (1.0 - inverseLerp(0.0, _WorldHeight, xyz.y));
-    noise /= (xyz.y + (-1.0 * _Persistence));
-    return noise;
+    return coord.x + (coord.y * _MaximumSize.x);
 }
 
 uint coordTo1D(float3 coord)
@@ -192,21 +283,67 @@ uint coordTo1D(float3 coord)
     return (coord.x + (coord.z * _MaximumSize.x) + (coord.y * (_MaximumSize.x * _MaximumSize.z)));
 }
 
-int3 coordTo3D(uint index)
+float2 coordTo2D(uint index)
+{
+    int y = index / _MaximumSize.x;
+    int x = index % _MaximumSize.x;
+
+    return float2(x, y);
+}
+
+float3 coordTo3D(uint index)
 {
     uint y = index / (_MaximumSize.x * _MaximumSize.z);
     index -= (y * _MaximumSize.x * _MaximumSize.z);
     uint z = index / _MaximumSize.x;
     uint x = index % _MaximumSize.x;
 
-    return int3(x, y, z);
+    return float3(x, y, z);
+}
+
+
+float get2DHeightmap(float2 coord) {
+    float noise = simplex2D(_HeightmapSeed, _Frequency, coord);
+    float noiseAsWorldHeight = inverseLerp(-1.0, 1.0, noise) * _WorldHeight;
+    float noisePersistedWorldHeight = noiseAsWorldHeight + ((_SurfaceHeight - (noiseAsWorldHeight * 1.25)) * _Persistence);
+
+    return noisePersistedWorldHeight;
 }
 
 [numthreads(1024, 1, 1)]
-void CSMain (uint3 id : SV_DispatchThreadID)
+void Heightmap2D (uint3 id : SV_DispatchThreadID)
 {
-    int3 coord = _Offset + coordTo3D(id.x);
-    float noise = customSimplexNoise(coord);
+    float2 coord = _Offset.xz + coordTo2D(id.x);
+    float noise = get2DHeightmap(coord);
 
-    Result[id.x] = noise;
+    HeightmapResult[id.x] = noise;
+}
+
+
+float customSimplexNoise3DCaveNoise(float3 xyz) {
+    float currentHeight = (xyz.y + (((_WorldHeight / 2.0) - (xyz.y * 1.25)) * _Persistence)) * 0.85;
+    float heightDampener = inverseLerp(0.0, _WorldHeight, currentHeight);
+    float noiseA = simplex3D(_CaveNoiseSeedA, 0.01, xyz) * heightDampener;
+    float noiseB = simplex3D(_CaveNoiseSeedB, 0.01, xyz) * heightDampener;
+    float noiseAPow2 = pow(noiseA, 2.0);
+    float noiseBPow2 = pow(noiseB, 2.0);
+
+    return (noiseAPow2 + noiseBPow2) / 2.0;
+}
+
+[numthreads(1024, 1, 1)]
+void CaveNoise3D(uint3 id : SV_DispatchThreadID) {
+    float3 coord = _Offset + coordTo3D(id.x);
+    float noise = customSimplexNoise3DCaveNoise(coord);
+
+    CaveNoiseResult[id.x] = noise;
+}
+
+
+float customSimplexNoise3DTerrain(int3 xyz)
+{
+    float noise = simplex3D(_HeightmapSeed, _Frequency, xyz);
+    noise += 5.0 * (1.0 - inverseLerp(0.0, _WorldHeight, xyz.y));
+    noise /= (xyz.y + (-1.0 * _Persistence));
+    return noise;
 }

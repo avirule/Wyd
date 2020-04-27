@@ -16,17 +16,19 @@ namespace Wyd.Controllers.World.Chunk
     {
         private const float _FREQUENCY = 0.0075f;
         private const float _PERSISTENCE = 0.6f;
-
         private static ComputeShader _NoiseShader;
 
-        private ComputeBuffer _NoiseValuesBuffer;
+        private ComputeBuffer _HeightmapBuffer;
+        private ComputeBuffer _CaveNoiseBuffer;
 
         protected override void Awake()
         {
             base.Awake();
 
-            _NoiseShader = Resources.Load<ComputeShader>(@"Graphics\Shaders\OpenSimplex2D");
-            _NoiseShader.SetInt("_NoiseSeed", WorldController.Current.Seed);
+            _NoiseShader = Resources.Load<ComputeShader>(@"Graphics\Shaders\OpenSimplex");
+            _NoiseShader.SetInt("_HeightmapSeed", WorldController.Current.Seed);
+            _NoiseShader.SetInt("_CaveNoiseSeedA", WorldController.Current.Seed ^ 2);
+            _NoiseShader.SetInt("_CaveNoiseSeedB", WorldController.Current.Seed ^ 3);
             _NoiseShader.SetFloat("_WorldHeight", WorldController.WORLD_HEIGHT);
             _NoiseShader.SetVector("_MaximumSize", new float4(ChunkController.Size3D.xyzz));
         }
@@ -35,27 +37,36 @@ namespace Wyd.Controllers.World.Chunk
         {
             base.OnDisable();
 
-            _NoiseValuesBuffer?.Release();
+            _HeightmapBuffer?.Release();
         }
 
         private void OnDestroy()
         {
-            _NoiseValuesBuffer?.Dispose();
+            _HeightmapBuffer?.Dispose();
         }
 
         public void BeginTerrainGeneration(CancellationToken cancellationToken, AsyncJobEventHandler callback, out object jobIdentity)
         {
-            _NoiseValuesBuffer = new ComputeBuffer(ChunkController.SIZE_SQUARED, 4);
+            _HeightmapBuffer = new ComputeBuffer(ChunkController.SIZE_SQUARED, 4);
+            _CaveNoiseBuffer = new ComputeBuffer(ChunkController.SIZE_CUBED, 4);
+
             _NoiseShader.SetVector("_Offset", new float4(OriginPoint.xyzz));
             _NoiseShader.SetFloat("_Frequency", _FREQUENCY);
             _NoiseShader.SetFloat("_Persistence", _PERSISTENCE);
-            int kernel = _NoiseShader.FindKernel("CSMain");
-            _NoiseShader.SetBuffer(kernel, "Result", _NoiseValuesBuffer);
-            // 1024 is the value set in the shader's [numthreads(--> 1024 <--, 1, 1)]
-            _NoiseShader.Dispatch(kernel, 1024, 1, 1);
+            _NoiseShader.SetFloat("_SurfaceHeight", WorldController.WORLD_HEIGHT / 2f);
+
+            int heightmapKernel = _NoiseShader.FindKernel("Heightmap2D");
+            _NoiseShader.SetBuffer(heightmapKernel, "HeightmapResult", _HeightmapBuffer);
+
+            int caveNoiseKernel = _NoiseShader.FindKernel("CaveNoise3D");
+            _NoiseShader.SetBuffer(caveNoiseKernel, "CaveNoiseResult", _CaveNoiseBuffer);
+
+            _NoiseShader.Dispatch(heightmapKernel, 1024, 1, 1);
+            _NoiseShader.Dispatch(caveNoiseKernel, 1024, 1, 1);
 
             ChunkTerrainJob asyncJob = new ChunkTerrainBuilderJob(cancellationToken, OriginPoint, _FREQUENCY, _PERSISTENCE,
-                OptionsController.Current.GPUAcceleration ? _NoiseValuesBuffer : null);
+                OptionsController.Current.GPUAcceleration ? _HeightmapBuffer : null,
+            OptionsController.Current.GPUAcceleration ? _CaveNoiseBuffer : null);
 
             if (callback != null)
             {

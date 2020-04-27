@@ -18,31 +18,43 @@ namespace Wyd.Game.World.Chunks
 {
     public class ChunkTerrainBuilder : ChunkBuilder
     {
-        private static readonly ObjectCache<float[]> _noiseValuesCache = new ObjectCache<float[]>();
+        private static readonly ObjectCache<float[]> _heightmapCache = new ObjectCache<float[]>();
+        private static readonly ObjectCache<float[]> _caveNoiseCache = new ObjectCache<float[]>();
 
-        private readonly ComputeBuffer _NoiseValuesBuffer;
+        private readonly ComputeBuffer _HeightmapBuffer;
+        private readonly ComputeBuffer _CaveNoiseBuffer;
         private readonly float _Frequency;
         private readonly float _Persistence;
+        private readonly int _NoiseSeedA;
+        private readonly int _NoiseSeedB;
 
-        private float[] _NoiseMap;
+        private float[] _Heightmap;
+        private float[] _CaveNoise;
 
         public TimeSpan NoiseRetrievalTimeSpan { get; private set; }
         public TimeSpan TerrainGenerationTimeSpan { get; private set; }
 
         public ChunkTerrainBuilder(CancellationToken cancellationToken, int3 originPoint, float frequency, float persistence,
-            ComputeBuffer noiseValuesBuffer) : base(cancellationToken, originPoint)
+            ComputeBuffer heightmapBuffer = null, ComputeBuffer caveNoiseBuffer = null) : base(cancellationToken, originPoint)
         {
             _Frequency = frequency;
             _Persistence = persistence;
-            _NoiseValuesBuffer = noiseValuesBuffer;
+            _HeightmapBuffer = heightmapBuffer;
+            _CaveNoiseBuffer = caveNoiseBuffer;
+
+            // _NoiseSeedA = WorldController.Current.Seed ^ 2;
+            // _NoiseSeedB = WorldController.Current.Seed ^ 3;
         }
 
         #region Terrain Generation
 
         private bool GetComputeBufferData()
         {
-            _NoiseValuesBuffer?.GetData(_NoiseMap);
-            _NoiseValuesBuffer?.Release();
+            _HeightmapBuffer?.GetData(_Heightmap);
+            _HeightmapBuffer?.Release();
+
+            _CaveNoiseBuffer?.GetData(_CaveNoise);
+            _CaveNoiseBuffer?.Release();
 
             return true;
         }
@@ -61,7 +73,11 @@ namespace Wyd.Game.World.Chunks
 
             Generate();
 
-            _noiseValuesCache.CacheItem(ref _NoiseMap);
+            Array.Clear(_Heightmap, 0, _Heightmap.Length);
+            Array.Clear(_CaveNoise, 0, _CaveNoise.Length);
+
+            _heightmapCache.CacheItem(ref _Heightmap);
+            _caveNoiseCache.CacheItem(ref _CaveNoise);
 
             Stopwatch.Stop();
 
@@ -70,15 +86,15 @@ namespace Wyd.Game.World.Chunks
 
         private void GenerateNoise()
         {
-            _NoiseMap = _noiseValuesCache.Retrieve() ?? new float[ChunkController.SIZE_SQUARED];
+            _Heightmap = _heightmapCache.Retrieve() ?? new float[ChunkController.SIZE_SQUARED];
+            _CaveNoise = _caveNoiseCache.Retrieve() ?? new float[ChunkController.SIZE_CUBED];
 
-            if (_NoiseValuesBuffer == null)
+            if (_HeightmapBuffer == null)
             {
-                for (int index = 0; index < _NoiseMap.Length; index++)
+                for (int index = 0; index < _Heightmap.Length; index++)
                 {
                     int2 xzCoords = WydMath.IndexTo2D(index, ChunkController.SIZE);
-
-                    _NoiseMap[index] = GetNoiseValueByGlobalPosition(xzCoords);
+                    _Heightmap[index] = GetNoiseValueByGlobalPosition(xzCoords);
                 }
             }
             else
@@ -100,30 +116,39 @@ namespace Wyd.Game.World.Chunks
             {
                 int2 xzPosition = new int2(x, z);
                 int index = WydMath.PointToIndex(xzPosition, ChunkController.SIZE);
-                int noiseHeight = (int)_NoiseMap[index];
+                float noiseHeight = _Heightmap[index];
+                int noiseHeightClamped = math.clamp((int)math.floor(noiseHeight - OriginPoint.y), 0, ChunkController.SIZE - 1);
 
-                if (noiseHeight < 0)
+
+                if (noiseHeight < OriginPoint.y)
                 {
                     continue;
                 }
 
-                int absoluteNoiseHeight = noiseHeight + OriginPoint.y;
-                bool placeSurfaceBlocks = true; // OpenSimplexSlim.GetSimplex(OriginPoint.GetHashCode(), 0.01f, xzPosition) <= 0.5f;
-
-                for (int y = noiseHeight; y >= 0; y--)
+                for (int y = noiseHeightClamped; y >= 0; y--)
                 {
                     int3 localPosition = new int3(x, y, z);
                     int3 globalPosition = OriginPoint + localPosition;
+                    int index3d = WydMath.PointToIndex(localPosition, ChunkController.SIZE);
 
                     if ((globalPosition.y < 4) && (globalPosition.y <= SeededRandom.Next(0, 4)))
                     {
                         _Blocks.SetPoint(localPosition, GetCachedBlockID("bedrock"));
+                        continue;
                     }
-                    else if (globalPosition.y == absoluteNoiseHeight)
+
+                    if (GetCaveNoiseByGlobalPosition(globalPosition) < 0.0002f)
+                    {
+                        continue;
+                    }
+
+                    int noiseHeightInt = (int)noiseHeight;
+
+                    if (globalPosition.y == noiseHeightInt)
                     {
                         _Blocks.SetPoint(localPosition, GetCachedBlockID("grass"));
                     }
-                    else if ((globalPosition.y < absoluteNoiseHeight) && (globalPosition.y >= (absoluteNoiseHeight - 3)))
+                    else if ((globalPosition.y < noiseHeightInt) && (globalPosition.y >= (noiseHeightInt - 3)))
                     {
                         _Blocks.SetPoint(localPosition, SeededRandom.Next(0, 8) == 0
                             ? GetCachedBlockID("dirt_coarse")
@@ -139,74 +164,20 @@ namespace Wyd.Game.World.Chunks
                     }
                 }
             }
+        }
 
+        private float GetCaveNoiseByGlobalPosition(int3 globalPosition)
+        {
+            float currentHeight = (globalPosition.y + (((WorldController.WORLD_HEIGHT / 4f) - (globalPosition.y * 1.25f)) * _Persistence)) * 0.85f;
 
-            // bool allAir = true;
-            // bool allStone = true;
-            //
-            // for (int index = 0; index < ChunkController.SIZE_CUBED; index++)
-            // {
-            //     if (CancellationToken.IsCancellationRequested)
-            //     {
-            //         return;
-            //     }
-            //     else if (!allAir && !allStone)
-            //     {
-            //         break;
-            //     }
-            //
-            //     if (_NoiseMap[index] >= 0.01f)
-            //     {
-            //         allAir = false;
-            //     }
-            //
-            //     if (_NoiseMap[index] < 0.01f)
-            //     {
-            //         allStone = false;
-            //     }
-            // }
-            //
-            // if (allStone)
-            // {
-            //     _Blocks = new OctreeNode<ushort>(ChunkController.SIZE, GetCachedBlockID("stone"));
-            //     return;
-            // }
-            //
-            // _Blocks = new OctreeNode<ushort>(ChunkController.SIZE, BlockController.AirID);
-            //
-            // if (allAir)
-            // {
-            //     return;
-            // }
-            //
-            // for (int index = 0; index < ChunkController.SIZE_CUBED; index++)
-            // {
-            //     if (CancellationToken.IsCancellationRequested)
-            //     {
-            //         return;
-            //     }
-            //
-            //     if (_NoiseMap[index] < 0.01f)
-            //     {
-            //         continue; // air
-            //     }
-            //
-            //     int3 localPosition = WydMath.IndexTo3D(index, ChunkController.SIZE);
-            //     int3 globalPosition = OriginPoint + localPosition;
-            //
-            //     if ((globalPosition.y < 4) && (globalPosition.y <= SeededRandom.Next(0, 4)))
-            //     {
-            //         _Blocks.SetPoint(localPosition, GetCachedBlockID("bedrock"));
-            //     }
-            //     else if (SeededRandom.Next(0, 100) == 0)
-            //     {
-            //         _Blocks.SetPoint(localPosition, GetCachedBlockID("coal_ore"));
-            //     }
-            //     else
-            //     {
-            //         _Blocks.SetPoint(localPosition, GetCachedBlockID("stone"));
-            //     }
-            // }
+            float heightDampener = math.unlerp(0f, WorldController.WORLD_HEIGHT, currentHeight);
+
+            float noiseA = OpenSimplexSlim.GetSimplex(_NoiseSeedA, 0.01f, globalPosition) * heightDampener;
+            float noiseB = OpenSimplexSlim.GetSimplex(_NoiseSeedB, 0.01f, globalPosition) * heightDampener;
+            float noiseAPow2 = math.pow(noiseA, 2);
+            float noiseBPow2 = math.pow(noiseB, 2);
+
+            return (noiseAPow2 + noiseBPow2) / 2f;
         }
 
         private float GetNoiseValueByGlobalPosition(int2 globalPosition)
