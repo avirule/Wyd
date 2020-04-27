@@ -157,7 +157,6 @@ namespace Wyd.System
             {
                 binaryFormatter.Serialize(memoryStream, obj);
                 return memoryStream.ToArray();
-
             }
         }
 

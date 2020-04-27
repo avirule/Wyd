@@ -3,7 +3,6 @@
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 using Unity.Mathematics;
-using Wyd.System;
 
 #endregion
 

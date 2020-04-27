@@ -267,7 +267,7 @@ namespace Wyd.Game.World.Chunks
                 float3 traversalFacingBlockPosition = currentTraversalPosition + faceNormal;
                 ushort facingBlockId;
 
-                if (traversalFacingBlockPosition[sliceIndex] >= 0 && traversalFacingBlockPosition[sliceIndex] <= (ChunkController.SIZE - 1))
+                if ((traversalFacingBlockPosition[sliceIndex] >= 0) && (traversalFacingBlockPosition[sliceIndex] <= (ChunkController.SIZE - 1)))
                 {
                     // coordinates are inside, so retrieve from own blocks octree
                     facingBlockId = _Blocks.GetPoint(traversalFacingBlockPosition);
