@@ -89,7 +89,7 @@ namespace Wyd.Game.World.Chunks
             _Heightmap = _heightmapCache.Retrieve() ?? new float[ChunkController.SIZE_SQUARED];
             _CaveNoise = _caveNoiseCache.Retrieve() ?? new float[ChunkController.SIZE_CUBED];
 
-            if (_HeightmapBuffer == null || _CaveNoiseBuffer == null)
+            if ((_HeightmapBuffer == null) || (_CaveNoiseBuffer == null))
             {
                 for (int x = 0; x < ChunkController.SIZE; x++)
                 for (int z = 0; z < ChunkController.SIZE; z++)
@@ -138,7 +138,7 @@ namespace Wyd.Game.World.Chunks
                 {
                     int3 localPosition = new int3(x, y, z);
                     int3 globalPosition = OriginPoint + localPosition;
-                    int index3d = WydMath.PointToIndex(localPosition, ChunkController.SIZE);
+                    int positionAsIndex = WydMath.PointToIndex(localPosition, ChunkController.SIZE);
 
                     if ((globalPosition.y < 4) && (globalPosition.y <= SeededRandom.Next(0, 4)))
                     {
@@ -146,7 +146,7 @@ namespace Wyd.Game.World.Chunks
                         continue;
                     }
 
-                    if (_CaveNoise[index3d] < 0.0004f)
+                    if (_CaveNoise[positionAsIndex] < 0.000225f)
                     {
                         continue;
                     }
@@ -190,10 +190,11 @@ namespace Wyd.Game.World.Chunks
         private float GetNoiseValueByGlobalPosition(int2 globalPosition)
         {
             float noise = OpenSimplexSlim.GetSimplex(WorldController.Current.Seed, _Frequency, globalPosition);
-            float interpolatedNoise = math.unlerp(-1f, 1f, noise);
-            float noiseHeight = (interpolatedNoise * WorldController.WORLD_HEIGHT) - OriginPoint.y;
+            float noiseAsWorldHeight = math.unlerp(-1f, 1f, noise) * WorldController.WORLD_HEIGHT;
+            float noisePersistedWorldHeight =
+                noiseAsWorldHeight + (((WorldController.WORLD_HEIGHT / 2f) - (noiseAsWorldHeight * 1.25f)) * _Persistence);
 
-            return math.abs(noiseHeight);
+            return noisePersistedWorldHeight;
         }
 
         #endregion

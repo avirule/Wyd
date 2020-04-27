@@ -69,7 +69,7 @@ float gradCoord2D(int seed, float2 xy, float2 xy0)
     hash ^= (xprime * xyi.x);
     hash ^= (yprime * xyi.y);
 
-    hash = pow(hash, 3) * 60493;
+    hash = hash * hash * hash * 60493;
     hash = (hash >> 13) ^ hash;
 
     float2 xyg = _grad_2D[hash & 7];
@@ -86,7 +86,7 @@ float gradCoord3D(int seed, float3 xyz, float3 xyz0)
     hash ^= (yprime * xyzi.y);
     hash ^= (zprime * xyzi.z);
 
-    hash = pow(hash, 3) * 60493;
+    hash = hash * hash * hash * 60493;
     hash = (hash >> 13) ^ hash;
 
     float3 xyzg = _grad_3D[hash & 15];
@@ -160,7 +160,7 @@ float simplex3D(int seed, float frequency, float3 xyz)
     xyz *= frequency;
 
     float t = (xyz.x + xyz.y + xyz.z) * F3;
-    float3 ijk = int3(fastFloor(xyz.x + t), fastFloor(xyz.y + t), fastFloor(xyz.z + t));
+    float3 ijk = float3(fastFloor(xyz.x + t), fastFloor(xyz.y + t), fastFloor(xyz.z + t));
 
     t = (ijk.x + ijk.y + ijk.z) * G3;
     float3 xyz0 = float3(xyz.x - (ijk.x - t), xyz.y - (ijk.y - t), xyz.z - (ijk.z - t));
@@ -273,14 +273,14 @@ RWStructuredBuffer<float> HeightmapResult;
 RWStructuredBuffer<float> CaveNoiseResult;
 
 
-int coordTo1D(int2 coord)
+uint coordFrom2DTo1D(float2 coord)
 {
-    return coord.x + (coord.y * _MaximumSize.x);
+    return (uint)(coord.x + (coord.y * _MaximumSize.x));
 }
 
-uint coordTo1D(float3 coord)
+uint coordFrom3DTo1D(float3 coord)
 {
-    return (coord.x + (coord.z * _MaximumSize.x) + (coord.y * (_MaximumSize.x * _MaximumSize.z)));
+    return (uint)(coord.x + (coord.z * _MaximumSize.x) + (coord.y * (_MaximumSize.x * _MaximumSize.z)));
 }
 
 float2 coordTo2D(uint index)
@@ -321,7 +321,7 @@ void Heightmap2D (uint3 id : SV_DispatchThreadID)
 
 
 float customSimplexNoise3DCaveNoise(float3 xyz) {
-    float dampenedHeight = (xyz.y + (((_WorldHeight / 2.0) - (xyz.y * 1.25)) * _Persistence)) * 0.85;
+    float dampenedHeight = (xyz.y + (((_WorldHeight / 4.0) - (xyz.y * 1.25)) * _Persistence)) * 0.85;
     float heightDampener = inverseLerp(0.0, _WorldHeight, dampenedHeight);
     float noiseA = simplex3D(_CaveNoiseSeedA, 0.01, xyz) * heightDampener;
     float noiseB = simplex3D(_CaveNoiseSeedB, 0.01, xyz) * heightDampener;

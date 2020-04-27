@@ -30,6 +30,7 @@ namespace Wyd.Controllers.World.Chunk
             _NoiseShader.SetInt("_CaveNoiseSeedA", WorldController.Current.Seed ^ 2);
             _NoiseShader.SetInt("_CaveNoiseSeedB", WorldController.Current.Seed ^ 3);
             _NoiseShader.SetFloat("_WorldHeight", WorldController.WORLD_HEIGHT);
+            _NoiseShader.SetVector("_MaximumSize", new float4(ChunkController.SIZE));
         }
 
         protected override void OnDisable()
