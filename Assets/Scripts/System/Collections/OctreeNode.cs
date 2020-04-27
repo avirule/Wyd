@@ -1,9 +1,10 @@
 #region
 
-using System;
 using System.Collections.Generic;
-using System.Runtime.CompilerServices;
 using Unity.Mathematics;
+
+// ReSharper disable ForCanBeConvertedToForeach
+// ReSharper disable LoopCanBeConvertedToQuery
 
 // ReSharper disable ConvertToAutoPropertyWithPrivateSetter
 
@@ -26,14 +27,15 @@ namespace Wyd.System.Collections
 
         #endregion
 
+        /// <summary>
+        ///     Creates an in-memory compressed 3D representation of any unmanaged data type.
+        /// </summary>
+        /// <param name="size">
+        ///     Depth of the collection, or for instance the length of the cube. This need to be a power of 2.
+        /// </param>
+        /// <param name="value">Initial value of the collection.</param>
         public OctreeNode(byte size, T value)
         {
-            // check if size is power of two
-            if ((size <= 0) || ((size & (size - 1)) != 0))
-            {
-                throw new ArgumentException("Size must be a power of two.", nameof(size));
-            }
-
             _Size = size;
             _Value = value;
             _IsUniform = true;
@@ -43,7 +45,9 @@ namespace Wyd.System.Collections
 
         #region Data Operations
 
-        public T GetPoint(float3 point)
+        public T GetPoint(float3 point) => GetPoint(point.x, point.y, point.z);
+
+        private T GetPoint(float x, float y, float z)
         {
             if (_IsUniform)
             {
@@ -52,14 +56,16 @@ namespace Wyd.System.Collections
 
             int extent = _Size / 2;
 
-            DetermineOctant(point, extent, out int x, out int y, out int z, out int octant);
+            DetermineOctant(x, y, z, extent, out float x0, out float y0, out float z0, out int octant);
 
-            return _Nodes[octant].GetPoint(point - (new float3(x, y, z) * extent));
+            return _Nodes[octant].GetPoint(x - (x0 * extent), y - (y0 * extent), z - (z0 * extent));
         }
 
-        public void SetPoint(float3 point, T newValue)
+        public void SetPoint(float3 point, T newValue) => SetPoint(point.x, point.y, point.z, newValue);
+
+        private void SetPoint(float x, float y, float z, T newValue)
         {
-            int extent = _Size / 2;
+            int extent;
 
             if (_IsUniform)
             {
@@ -67,7 +73,7 @@ namespace Wyd.System.Collections
                 {
                     return;
                 }
-                else if (_Size == 1)
+                else if (_Size == 0b1)
                 {
                     // reached smallest possible depth (usually 1x1x1) so
                     // set value and return
@@ -76,25 +82,34 @@ namespace Wyd.System.Collections
                 }
                 else
                 {
+                    extent = _Size / 2;
+                    byte byteExtent = (byte)extent;
+
                     _IsUniform = false;
                     _Nodes = new[]
                     {
-                        new OctreeNode<T>((byte)extent, _Value),
-                        new OctreeNode<T>((byte)extent, _Value),
-                        new OctreeNode<T>((byte)extent, _Value),
-                        new OctreeNode<T>((byte)extent, _Value),
-                        new OctreeNode<T>((byte)extent, _Value),
-                        new OctreeNode<T>((byte)extent, _Value),
-                        new OctreeNode<T>((byte)extent, _Value),
-                        new OctreeNode<T>((byte)extent, _Value)
+                        new OctreeNode<T>(byteExtent, _Value),
+                        new OctreeNode<T>(byteExtent, _Value),
+                        new OctreeNode<T>(byteExtent, _Value),
+                        new OctreeNode<T>(byteExtent, _Value),
+                        new OctreeNode<T>(byteExtent, _Value),
+                        new OctreeNode<T>(byteExtent, _Value),
+                        new OctreeNode<T>(byteExtent, _Value),
+                        new OctreeNode<T>(byteExtent, _Value)
                     };
                 }
             }
+            else
+            {
+                extent = _Size / 2;
+            }
 
-            DetermineOctant(point, extent, out int x, out int y, out int z, out int octant);
+            DetermineOctant(x, y, z, extent, out float x0, out float y0, out float z0, out int octant);
+
+            float floatExtent = extent;
 
             // recursively dig into octree and set
-            _Nodes[octant].SetPoint(point - (new float3(x, y, z) * extent), newValue);
+            _Nodes[octant].SetPoint(x - (x0 * floatExtent), y - (y0 * floatExtent), z - (z0 * floatExtent), newValue);
 
             // on each recursion back-step, ensure integrity of node
             // and collapse if all child node values are equal
@@ -116,7 +131,7 @@ namespace Wyd.System.Collections
             T firstValue = _Nodes[0]._Value;
 
             // avoiding using linq here for performance sensitivity
-            for (int index = 0; index < 8 /* octants! */; index++)
+            for (int index = 0; index < _Nodes.Length /* octants! */; index++)
             {
                 OctreeNode<T> node = _Nodes[index];
 
@@ -133,7 +148,9 @@ namespace Wyd.System.Collections
         {
             for (int index = 0; index < math.pow(_Size, 3); index++)
             {
-                yield return GetPoint(WydMath.IndexTo3D(index, _Size));
+                int3 coords = WydMath.IndexTo3D(index, _Size);
+
+                yield return GetPoint(coords.x, coords.y, coords.z);
             }
         }
 
@@ -149,27 +166,27 @@ namespace Wyd.System.Collections
         // top half quadrant:
         // 5 7
         // 4 6
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private static void DetermineOctant(float3 point, int extent, out int x, out int y, out int z, out int octant)
+        private static void DetermineOctant(float x, float y, float z, int extent, out float x0, out float y0, out float z0, out int octant)
         {
-            x = y = z = octant = 0;
+            x0 = y0 = z0 = 1f;
+            octant = 7;
 
-            if (point.x >= extent)
+            if (x < extent)
             {
-                x = 1;
-                octant += 1;
+                x0 = 0f;
+                octant -= 1;
             }
 
-            if (point.y >= extent)
+            if (y < extent)
             {
-                y = 1;
-                octant += 4;
+                y0 = 0f;
+                octant -= 4;
             }
 
-            if (point.z >= extent)
+            if (z < extent)
             {
-                z = 1;
-                octant += 2;
+                z0 = 0f;
+                octant -= 2;
             }
         }
 
