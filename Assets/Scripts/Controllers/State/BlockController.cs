@@ -195,6 +195,6 @@ namespace Wyd.Controllers.State
         }
 
         public bool CheckBlockHasProperty(ushort blockId, BlockDefinition.Property property) =>
-            BlockIdExists(blockId) && BlockDefinitions[blockId].Properties.HasProperty(property);
+            BlockDefinitions[blockId].Properties.HasProperty(property);
     }
 }

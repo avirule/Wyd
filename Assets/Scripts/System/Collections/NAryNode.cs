@@ -4,6 +4,10 @@ using System;
 using System.Linq;
 using Unity.Mathematics;
 
+// ReSharper disable ConvertToAutoProperty
+// ReSharper disable ConvertToAutoPropertyWhenPossible
+// ReSharper disable ConvertToAutoPropertyWithPrivateSetter
+
 #endregion
 
 namespace Wyd.System.Collections
@@ -14,10 +18,11 @@ namespace Wyd.System.Collections
         private readonly int _Partitions;
 
         private NAryNode<T>[] _Nodes;
+        private bool _IsUniform;
+        private T _Value;
 
-        public T Value { get; private set; }
-
-        public bool IsUniform => _Nodes == null;
+        public T Value => _Value;
+        public bool IsUniform => _IsUniform;
 
         public NAryNode(int cellLength, int partitions, T value)
         {
@@ -30,17 +35,18 @@ namespace Wyd.System.Collections
             _Nodes = null;
             _CellLength = cellLength;
             _Partitions = partitions;
-            Value = value;
+            _Value = value;
         }
 
         private void Collapse()
         {
-            if (IsUniform)
+            if (_IsUniform)
             {
                 return;
             }
 
-            Value = _Nodes[0].Value;
+            _IsUniform = true;
+            _Value = _Nodes[0]._Value;
             _Nodes = null;
         }
 
@@ -57,7 +63,7 @@ namespace Wyd.System.Collections
 
                 for (int i = 0; i < _Nodes.Length; i++)
                 {
-                    _Nodes[i] = new NAryNode<T>(1, 1, Value);
+                    _Nodes[i] = new NAryNode<T>(1, 1, _Value);
                 }
             }
             else
@@ -69,7 +75,7 @@ namespace Wyd.System.Collections
 
                 for (int i = 0; i < cubicNodes; i++)
                 {
-                    _Nodes[i] = new NAryNode<T>(childCellLength, childCellLength < _Partitions ? childCellLength : _Partitions, Value);
+                    _Nodes[i] = new NAryNode<T>(childCellLength, childCellLength < _Partitions ? childCellLength : _Partitions, _Value);
                 }
             }
         }
@@ -77,7 +83,7 @@ namespace Wyd.System.Collections
 
         public T GetPoint(float3 point)
         {
-            if (IsUniform)
+            if (_IsUniform)
             {
                 return Value;
             }
@@ -91,20 +97,20 @@ namespace Wyd.System.Collections
 
         public void SetPoint(float3 point, T value)
         {
-            if (IsUniform && (value.GetHashCode() == Value.GetHashCode()))
+            if (_IsUniform && (value.GetHashCode() == _Value.GetHashCode()))
             {
                 return;
             }
 
             if (_CellLength == 1)
             {
-                Value = value;
+                _Value = value;
                 return;
             }
 
             int partitionedSize = _CellLength / _Partitions;
 
-            if (IsUniform)
+            if (_IsUniform)
             {
                 Populate();
             }
@@ -131,15 +137,15 @@ namespace Wyd.System.Collections
 
         private bool CheckShouldCollapse()
         {
-            if (IsUniform)
+            if (_IsUniform)
             {
                 return false;
             }
 
-            T firstValue = _Nodes[0].Value;
+            T firstValue = _Nodes[0]._Value;
 
             // avoiding using linq here for performance sensitivity
-            return _Nodes.All(node => node.IsUniform && (node.Value.GetHashCode() == firstValue.GetHashCode()));
+            return _Nodes.All(node => node._IsUniform && (node._Value.GetHashCode() == firstValue.GetHashCode()));
         }
     }
 }
