@@ -30,7 +30,6 @@ namespace Wyd.Controllers.World.Chunk
             _NoiseShader.SetInt("_CaveNoiseSeedA", WorldController.Current.Seed ^ 2);
             _NoiseShader.SetInt("_CaveNoiseSeedB", WorldController.Current.Seed ^ 3);
             _NoiseShader.SetFloat("_WorldHeight", WorldController.WORLD_HEIGHT);
-            _NoiseShader.SetVector("_MaximumSize", new float4(ChunkController.Size3D.xyzz));
         }
 
         protected override void OnDisable()
@@ -66,7 +65,7 @@ namespace Wyd.Controllers.World.Chunk
 
             ChunkTerrainJob asyncJob = new ChunkTerrainBuilderJob(cancellationToken, OriginPoint, _FREQUENCY, _PERSISTENCE,
                 OptionsController.Current.GPUAcceleration ? _HeightmapBuffer : null,
-            OptionsController.Current.GPUAcceleration ? _CaveNoiseBuffer : null);
+                OptionsController.Current.GPUAcceleration ? _CaveNoiseBuffer : null);
 
             if (callback != null)
             {

@@ -321,8 +321,8 @@ void Heightmap2D (uint3 id : SV_DispatchThreadID)
 
 
 float customSimplexNoise3DCaveNoise(float3 xyz) {
-    float currentHeight = (xyz.y + (((_WorldHeight / 2.0) - (xyz.y * 1.25)) * _Persistence)) * 0.85;
-    float heightDampener = inverseLerp(0.0, _WorldHeight, currentHeight);
+    float dampenedHeight = (xyz.y + (((_WorldHeight / 2.0) - (xyz.y * 1.25)) * _Persistence)) * 0.85;
+    float heightDampener = inverseLerp(0.0, _WorldHeight, dampenedHeight);
     float noiseA = simplex3D(_CaveNoiseSeedA, 0.01, xyz) * heightDampener;
     float noiseB = simplex3D(_CaveNoiseSeedB, 0.01, xyz) * heightDampener;
     float noiseAPow2 = pow(noiseA, 2.0);
