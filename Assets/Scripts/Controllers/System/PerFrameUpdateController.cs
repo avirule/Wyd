@@ -49,12 +49,17 @@ namespace Wyd.Controllers.System
             try
             {
                 ProcessPerFrameUpdateModifications();
+#if UNITY_EDITOR
 
                 bool firstRun = true;
                 int previousSortValue = int.MinValue;
 
+#endif
+
                 foreach ((int sortValue, List<IPerFrameUpdate> perFrameUpdaters) in _PerFrameUpdates)
                 {
+#if UNITY_EDITOR
+
                     if (firstRun)
                     {
                         firstRun = false;
@@ -66,6 +71,8 @@ namespace Wyd.Controllers.System
                     }
 
                     previousSortValue = sortValue;
+
+#endif
 
                     foreach (IPerFrameUpdate perFrameUpdate in perFrameUpdaters)
                     {
@@ -100,7 +107,7 @@ namespace Wyd.Controllers.System
 
         private void ProcessPerFrameUpdateModifications()
         {
-            while (_PerFrameUpdateCollectionModifications.Count > 0)
+            while (_PerFrameUpdateCollectionModifications.Count > 0 && IsSafeFrameTime())
             {
                 PerFrameUpdateCollectionModification perFrameUpdateCollectionModification =
                     _PerFrameUpdateCollectionModifications.Pop();

@@ -120,7 +120,7 @@ namespace Wyd.Game.World.Chunks
 
         private void Generate()
         {
-            _Blocks = new OctreeNode(ChunkController.SIZE, BlockController.AirID);
+            _Blocks = new Octree<ushort>(ChunkController.SIZE, BlockController.AirID);
 
             for (int x = 0; x < ChunkController.SIZE; x++)
             for (int z = 0; z < ChunkController.SIZE; z++)
