@@ -107,7 +107,7 @@ namespace Wyd.Controllers.System
 
         private void ProcessPerFrameUpdateModifications()
         {
-            while (_PerFrameUpdateCollectionModifications.Count > 0 && IsSafeFrameTime())
+            while ((_PerFrameUpdateCollectionModifications.Count > 0) && IsSafeFrameTime())
             {
                 PerFrameUpdateCollectionModification perFrameUpdateCollectionModification =
                     _PerFrameUpdateCollectionModifications.Pop();

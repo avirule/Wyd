@@ -1,24 +1,15 @@
-#region
-
-using System;
-
-// ReSharper disable ForCanBeConvertedToForeach
-// ReSharper disable LoopCanBeConvertedToQuery
-
 // ReSharper disable ConvertToAutoPropertyWithPrivateSetter
-
-#endregion
 
 namespace Wyd.System.Collections
 {
-    public class OctreeNode<T> where T : unmanaged, IEquatable<T>
+    public class OctreeNode
     {
         #region Instance Members
 
-        private OctreeNode<T>[] _Nodes;
-        private T _Value;
+        private OctreeNode[] _Nodes;
+        private ushort _Value;
 
-        public T Value => _Value;
+        public ushort Value => _Value;
         public bool IsUniform => _Nodes == null;
 
         #endregion
@@ -27,16 +18,12 @@ namespace Wyd.System.Collections
         ///     Creates an in-memory compressed 3D representation of any unmanaged data type.
         /// </summary>
         /// <param name="value">Initial value of the collection.</param>
-        public OctreeNode(T value)
-        {
-            _Value = value;
-            _Nodes = null;
-        }
+        public OctreeNode(ushort value) => _Value = value;
 
 
         #region Data Operations
 
-        public T GetPoint(float extent, float x, float y, float z)
+        public ushort GetPoint(float extent, float x, float y, float z)
         {
             if (IsUniform)
             {
@@ -48,11 +35,11 @@ namespace Wyd.System.Collections
             return _Nodes[octant].GetPoint(extent / 2f, x - (x0 * extent), y - (y0 * extent), z - (z0 * extent));
         }
 
-        public void SetPoint(float extent, float x, float y, float z, T newValue)
+        public void SetPoint(float extent, float x, float y, float z, ushort newValue)
         {
             if (IsUniform)
             {
-                if (_Value.Equals(newValue))
+                if (_Value == newValue)
                 {
                     return;
                 }
@@ -67,14 +54,14 @@ namespace Wyd.System.Collections
                 {
                     _Nodes = new[]
                     {
-                        new OctreeNode<T>(_Value),
-                        new OctreeNode<T>(_Value),
-                        new OctreeNode<T>(_Value),
-                        new OctreeNode<T>(_Value),
-                        new OctreeNode<T>(_Value),
-                        new OctreeNode<T>(_Value),
-                        new OctreeNode<T>(_Value),
-                        new OctreeNode<T>(_Value)
+                        new OctreeNode(_Value),
+                        new OctreeNode(_Value),
+                        new OctreeNode(_Value),
+                        new OctreeNode(_Value),
+                        new OctreeNode(_Value),
+                        new OctreeNode(_Value),
+                        new OctreeNode(_Value),
+                        new OctreeNode(_Value)
                     };
                 }
             }
@@ -100,14 +87,14 @@ namespace Wyd.System.Collections
                 return false;
             }
 
-            T firstValue = _Nodes[0]._Value;
+            ushort firstValue = _Nodes[0]._Value;
 
             // avoiding using linq here for performance sensitivity
-            for (int index = 0; index < _Nodes.Length /* octants! */; index++)
+            for (int index = 0; index < _Nodes.Length; index++)
             {
-                OctreeNode<T> node = _Nodes[index];
+                OctreeNode node = _Nodes[index];
 
-                if (!node.IsUniform || node._Value.Equals(firstValue))
+                if (!node.IsUniform || (node._Value != firstValue))
                 {
                     return false;
                 }
@@ -115,6 +102,16 @@ namespace Wyd.System.Collections
 
             return true;
         }
+
+        // public IEnumerable<ushort> GetAllData()
+        // {
+        //     for (int index = 0; index < math.pow(_Size, 3); index++)
+        //     {
+        //         int3 coords = WydMath.IndexTo3D(index, _Size);
+        //
+        //         yield return GetPoint(coords.x, coords.y, coords.z);
+        //     }
+        // }
 
         #endregion
 
