@@ -11,7 +11,7 @@ using System;
 
 namespace Wyd.System.Collections
 {
-    public class OctreeNode<T> where T : IEquatable<T>
+    public class OctreeNode<T> where T : unmanaged, IEquatable<T>
     {
         #region Instance Members
 
