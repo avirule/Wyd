@@ -1,8 +1,9 @@
 #region
 
-using System;
 using System.Collections.Generic;
 using Unity.Mathematics;
+
+// ReSharper disable ConvertToAutoPropertyWithPrivateSetter
 
 #endregion
 
@@ -10,122 +11,128 @@ namespace Wyd.System.Collections
 {
     public class OctreeNode : INodeCollection<ushort>
     {
-        private readonly int _Size;
+        #region Instance Members
+
+        private readonly byte _Size;
 
         private OctreeNode[] _Nodes;
+        private bool _IsUniform;
+        private ushort _Value;
 
-        public ushort Value { get; private set; }
+        public ushort Value => _Value;
+        public bool IsUniform => _IsUniform;
 
-        public bool IsUniform => _Nodes == null;
+        #endregion
 
-        public OctreeNode(int size, ushort value)
+        /// <summary>
+        ///     Creates an in-memory compressed 3D representation of any unmanaged data type.
+        /// </summary>
+        /// <param name="size">
+        ///     Depth of the collection, or for instance the length of the cube. This need to be a power of 2.
+        /// </param>
+        /// <param name="value">Initial value of the collection.</param>
+        public OctreeNode(byte size, ushort value)
         {
-            // check if size is power of two
-            if ((size <= 0) || ((size & (size - 1)) != 0))
-            {
-                throw new ArgumentException("Size must be a power of two.", nameof(size));
-            }
-
-            _Nodes = null;
             _Size = size;
-            Value = value;
-        }
-
-        private void Collapse()
-        {
-            if (IsUniform)
-            {
-                return;
-            }
-
-            Value = _Nodes[0].Value;
+            _Value = value;
+            _IsUniform = true;
             _Nodes = null;
-        }
-
-        private void Populate(int extent)
-        {
-            _Nodes = new[]
-            {
-                new OctreeNode(extent, Value),
-                new OctreeNode(extent, Value),
-                new OctreeNode(extent, Value),
-                new OctreeNode(extent, Value),
-                new OctreeNode(extent, Value),
-                new OctreeNode(extent, Value),
-                new OctreeNode(extent, Value),
-                new OctreeNode(extent, Value)
-            };
         }
 
 
         #region Data Operations
 
-        public ushort GetPoint(float3 point)
+        public ushort GetPoint(float3 point) => GetPoint(point.x, point.y, point.z);
+
+        private ushort GetPoint(float x, float y, float z)
         {
-            if (IsUniform)
+            if (_IsUniform)
             {
-                return Value;
+                return _Value;
             }
 
             int extent = _Size / 2;
 
-            (int x, int y, int z, int octant) = DetermineOctant(point, extent);
+            DetermineOctant(x, y, z, extent, out float x0, out float y0, out float z0, out int octant);
 
-            return _Nodes[octant].GetPoint(point - (new float3(x, y, z) * extent));
+            return _Nodes[octant].GetPoint(x - (x0 * extent), y - (y0 * extent), z - (z0 * extent));
         }
 
-        public void SetPoint(float3 point, ushort newValue)
+        public void SetPoint(float3 point, ushort newValue) => SetPoint(point.x, point.y, point.z, newValue);
+
+        private void SetPoint(float x, float y, float z, ushort newValue)
         {
-            if (IsUniform && (Value == newValue))
+            int extent;
+
+            if (_IsUniform)
             {
-                // operation does nothing, so return
-                return;
+                if (_Value.GetHashCode() == newValue.GetHashCode())
+                {
+                    return;
+                }
+                else if (_Size == 0b1)
+                {
+                    // reached smallest possible depth (usually 1x1x1) so
+                    // set value and return
+                    _Value = newValue;
+                    return;
+                }
+                else
+                {
+                    extent = _Size / 2;
+                    byte byteExtent = (byte)extent;
+
+                    _IsUniform = false;
+                    _Nodes = new[]
+                    {
+                        new OctreeNode(byteExtent, _Value),
+                        new OctreeNode(byteExtent, _Value),
+                        new OctreeNode(byteExtent, _Value),
+                        new OctreeNode(byteExtent, _Value),
+                        new OctreeNode(byteExtent, _Value),
+                        new OctreeNode(byteExtent, _Value),
+                        new OctreeNode(byteExtent, _Value),
+                        new OctreeNode(byteExtent, _Value)
+                    };
+                }
+            }
+            else
+            {
+                extent = _Size / 2;
             }
 
-            if (_Size == 1)
-            {
-                // reached smallest possible depth (usually 1x1x1) so
-                // set value and return
-                Value = newValue;
-                return;
-            }
+            DetermineOctant(x, y, z, extent, out float x0, out float y0, out float z0, out int octant);
 
-            int extent = _Size / 2;
-
-            if (IsUniform)
-            {
-                // node has no child nodes, so populate
-                Populate(extent);
-            }
-
-            (int x, int y, int z, int octant) = DetermineOctant(point, extent);
+            float floatExtent = extent;
 
             // recursively dig into octree and set
-            _Nodes[octant].SetPoint(point - (new float3(x, y, z) * extent), newValue);
+            _Nodes[octant].SetPoint(x - (x0 * floatExtent), y - (y0 * floatExtent), z - (z0 * floatExtent), newValue);
 
             // on each recursion back-step, ensure integrity of node
             // and collapse if all child node values are equal
             if (CheckShouldCollapse())
             {
-                Collapse();
+                _IsUniform = true;
+                _Value = _Nodes[0]._Value;
+                _Nodes = null;
             }
         }
 
         private bool CheckShouldCollapse()
         {
-            if (IsUniform)
+            if (_IsUniform)
             {
                 return false;
             }
 
-            ushort firstValue = _Nodes[0].Value;
+            ushort firstValue = _Nodes[0]._Value;
 
             // avoiding using linq here for performance sensitivity
-            for (int index = 0; index < 8 /* octants! */; index++)
+            for (int index = 0; index < _Nodes.Length /* octants! */; index++)
             {
                 OctreeNode node = _Nodes[index];
 
-                if (!node.IsUniform || (node.Value.GetHashCode() != firstValue.GetHashCode()))
+                if (!node._IsUniform || (node._Value.GetHashCode() != firstValue.GetHashCode()))
                 {
                     return false;
                 }
@@ -138,7 +145,9 @@ namespace Wyd.System.Collections
         {
             for (int index = 0; index < math.pow(_Size, 3); index++)
             {
-                yield return GetPoint(WydMath.IndexTo3D(index, _Size));
+                int3 coords = WydMath.IndexTo3D(index, _Size);
+
+                yield return GetPoint(coords.x, coords.y, coords.z);
             }
         }
 
@@ -147,9 +156,6 @@ namespace Wyd.System.Collections
 
         #region Helper Methods
 
-        // private static readonly int3 One = new int3(1, 1, 1);
-        // private static readonly int3 OctantComponents = new int3(1, 4, 2);
-
         // indexes:
         // bottom half quadrant:
         // 1 3
@@ -157,36 +163,28 @@ namespace Wyd.System.Collections
         // top half quadrant:
         // 5 7
         // 4 6
-        private static (int, int, int, int) DetermineOctant(float3 point, int extent)
+        private static void DetermineOctant(float x, float y, float z, int extent, out float x0, out float y0, out float z0, out int octant)
         {
-            // bool3 componentOffset = point >= extent;
-            //
-            // int3 octantAxes = math.select(int3.zero, One, componentOffset);
-            // int octant = math.csum(math.select(int3.zero, OctantComponents, componentOffset));
-            //
-            // return (octant, octantAxes);
+            x0 = y0 = z0 = 1f;
+            octant = 7;
 
-            int x = 0, y = 0, z = 0, octant = 0;
-
-            if (point.x >= extent)
+            if (x < extent)
             {
-                x = 1;
-                octant += 1;
+                x0 = 0f;
+                octant -= 1;
             }
 
-            if (point.y >= extent)
+            if (y < extent)
             {
-                y = 1;
-                octant += 4;
+                y0 = 0f;
+                octant -= 4;
             }
 
-            if (point.z >= extent)
+            if (z < extent)
             {
-                z = 1;
-                octant += 2;
+                z0 = 0f;
+                octant -= 2;
             }
-
-            return (x, y, z, octant);
         }
 
         #endregion

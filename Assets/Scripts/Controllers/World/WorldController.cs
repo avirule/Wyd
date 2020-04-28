@@ -185,6 +185,8 @@ namespace Wyd.Controllers.World
 
             while (_ChunksPendingActivation.Count > 0)
             {
+                yield return null; // yield at the start since these operations are very time consuming
+
                 float3 origin = _ChunksPendingActivation.Pop();
 
                 if (CheckChunkExists(origin))
@@ -208,12 +210,12 @@ namespace Wyd.Controllers.World
                 _Chunks.Add(origin, chunkController);
 
                 Log.Verbose($"Created chunk at {origin}.");
-
-                yield return null;
             }
 
             while (_ChunksPendingDeactivation.Count > 0)
             {
+                yield return null; // yield at the start since these operations are very time consuming
+
                 float3 origin = _ChunksPendingDeactivation.Pop();
 
                 if (!CheckChunkExists(origin))
@@ -222,8 +224,6 @@ namespace Wyd.Controllers.World
                 }
 
                 CacheChunk(origin);
-
-                yield return null;
             }
         }
 
@@ -373,12 +373,12 @@ namespace Wyd.Controllers.World
                 for (int z = -renderRadius; z < (renderRadius + 1); z++)
                 for (int y = 0; y < WORLD_HEIGHT_IN_CHUNKS; y++)
                 {
-                    float3 localOrigin = new float3(x, y, z) * ChunkController.Size3D;
-                    float3 origin = localOrigin + new float3(loader.ChunkPosition.x, 0, loader.ChunkPosition.z);
+                    float3 localOrigin = new float3(x, y, z) * ChunkController.SIZE;
+                    float3 globalOrigin = localOrigin + new float3(loader.ChunkPosition.x, 0, loader.ChunkPosition.z);
 
-                    if (!chunksRequiringActivation.Contains(origin))
+                    if (!chunksRequiringActivation.Contains(globalOrigin))
                     {
-                        chunksRequiringActivation.Add(origin);
+                        chunksRequiringActivation.Add(globalOrigin);
                     }
                 }
             }
@@ -402,9 +402,7 @@ namespace Wyd.Controllers.World
         }
 
         private static bool IsWithinLoaderRange(float3 difference) =>
-            math.all(difference
-                     <= (ChunkController.Size3D
-                         * OptionsController.Current.RenderDistance));
+            math.all(difference <= (ChunkController.SIZE * OptionsController.Current.RenderDistance));
 
         #endregion
 

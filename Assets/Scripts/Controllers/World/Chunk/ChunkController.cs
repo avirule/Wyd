@@ -45,9 +45,6 @@ namespace Wyd.Controllers.World.Chunk
 
         private static readonly ObjectCache<BlockAction> _blockActionsCache = new ObjectCache<BlockAction>(false, 1024);
 
-        public static readonly int3 Size3D = new int3(SIZE);
-        public static readonly int3 Size3DExtents = new int3(SIZE / 2);
-
 
         #region Instance Members
 
@@ -154,7 +151,7 @@ namespace Wyd.Controllers.World.Chunk
 #if UNITY_EDITOR
 
             MinimumPoint = WydMath.ToFloat(OriginPoint);
-            MaximumPoint = WydMath.ToFloat(OriginPoint + Size3D);
+            MaximumPoint = WydMath.ToFloat(OriginPoint + SIZE);
 
 #endif
         }
