@@ -125,14 +125,15 @@ namespace Wyd.Game.World.Chunks
             for (int x = 0; x < ChunkController.SIZE; x++)
             for (int z = 0; z < ChunkController.SIZE; z++)
             {
-                int index = WydMath.PointToIndex(new int2(x, z), ChunkController.SIZE);
-                float noiseHeight = _Heightmap[index];
-                int noiseHeightClamped = math.clamp((int)math.floor(noiseHeight - OriginPoint.y), 0, ChunkController.SIZE - 1);
+                int heightmapIndex = WydMath.PointToIndex(new int2(x, z), ChunkController.SIZE);
+                float noiseHeight = _Heightmap[heightmapIndex];
 
                 if (noiseHeight < OriginPoint.y)
                 {
                     continue;
                 }
+
+                int noiseHeightClamped = math.clamp((int)math.floor(noiseHeight - OriginPoint.y), 0, ChunkController.SIZE - 1);
 
                 for (int y = noiseHeightClamped; y >= 0; y--)
                 {

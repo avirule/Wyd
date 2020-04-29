@@ -1,5 +1,8 @@
 // ReSharper disable ConvertToAutoPropertyWithPrivateSetter
 
+using System.Collections.Generic;
+using Unity.Mathematics;
+
 namespace Wyd.System.Collections
 {
     public class OctreeNode
@@ -103,15 +106,15 @@ namespace Wyd.System.Collections
             return true;
         }
 
-        // public IEnumerable<ushort> GetAllData()
-        // {
-        //     for (int index = 0; index < math.pow(_Size, 3); index++)
-        //     {
-        //         int3 coords = WydMath.IndexTo3D(index, _Size);
-        //
-        //         yield return GetPoint(coords.x, coords.y, coords.z);
-        //     }
-        // }
+        public IEnumerable<ushort> GetAllData(int size)
+        {
+            for (int index = 0; index < math.pow(size, 3); index++)
+            {
+                int3 coords = WydMath.IndexTo3D(index, size);
+
+                yield return GetPoint(size / 2f, coords.x, coords.y, coords.z);
+            }
+        }
 
         #endregion
 
