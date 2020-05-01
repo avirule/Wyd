@@ -1,14 +1,16 @@
 #region
 
+using System;
 using System.Collections.Generic;
 using Unity.Mathematics;
 using Wyd.Controllers.World.Chunk;
+using NotImplementedException = System.NotImplementedException;
 
 #endregion
 
 namespace Wyd.System.Collections
 {
-    public class RLECollection<T> : INodeCollection<T> where T : unmanaged
+    public class RLECollection<T> : INodeCollection<T> where T : unmanaged, IEquatable<T>
     {
         private readonly LinkedList<RLENode<T>> _RLENodes;
         private uint _CubicDepth;
@@ -116,5 +118,7 @@ namespace Wyd.System.Collections
 
             //Log.Information(RunLengthCompression.GetTotalRunLength(_RLENodes).ToString());
         }
+
+        public IEnumerable<T> GetAllData() => RunLengthCompression.DecompressLinkedList(_RLENodes);
     }
 }

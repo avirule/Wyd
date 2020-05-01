@@ -146,8 +146,7 @@ namespace Wyd.Game.World.Chunks
                         _Blocks.SetPoint(localPosition, GetCachedBlockID("bedrock"));
                         continue;
                     }
-
-                    if (_CaveNoise[positionAsIndex] < 0.000225f)
+                    else if (_CaveNoise[positionAsIndex] < 0.000225f)
                     {
                         continue;
                     }

@@ -11,6 +11,7 @@ using System.Threading.Tasks;
 using K4os.Compression.LZ4;
 using Serilog;
 using Unity.Mathematics;
+using UnityEditor.U2D;
 using UnityEngine;
 using Wyd.Controllers.State;
 using Wyd.Controllers.System;
@@ -50,7 +51,6 @@ namespace Wyd.Controllers.World.Chunk
 
         private CancellationTokenSource _CancellationTokenSource;
         private ConcurrentQueue<BlockAction> _BlockActions;
-        private INodeCollection<ushort> _Blocks;
         private List<ChunkController> _Neighbors;
 
         private Mesh _Mesh;
@@ -92,12 +92,15 @@ namespace Wyd.Controllers.World.Chunk
             }
         }
 
-        public INodeCollection<ushort> Blocks => _Blocks;
+        public INodeCollection<ushort> Blocks => DataController.Blocks;
 
         #endregion
 
 
         #region Serialized Members
+
+        [SerializeField]
+        private ChunkDataController DataController;
 
         [SerializeField]
         private ChunkTerrainController TerrainController;
@@ -170,7 +173,6 @@ namespace Wyd.Controllers.World.Chunk
             _CancellationTokenSource.Cancel();
             _Neighbors.Clear();
             _BlockActions = new ConcurrentQueue<BlockAction>();
-            _Blocks = null;
 
             _TerrainJobIdentity = _MeshJobIdentity = null;
             _FinishedTerrainJob = null;

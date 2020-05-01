@@ -1,6 +1,7 @@
 #region
 
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using Unity.Mathematics;
 
@@ -12,7 +13,7 @@ using Unity.Mathematics;
 
 namespace Wyd.System.Collections
 {
-    public class NAryNode<T> : INodeCollection<T> where T : unmanaged
+    public class NAryNode<T> : INodeCollection<T> where T : unmanaged, IEquatable<T>
     {
         private readonly int _CellLength;
         private readonly int _Partitions;
@@ -126,6 +127,8 @@ namespace Wyd.System.Collections
                 Collapse();
             }
         }
+
+        public IEnumerable<T> GetAllData() => throw new NotImplementedException();
 
         private (int, float3) GetPartitionedIndex(float3 point, int partitionedSize)
         {

@@ -17,9 +17,7 @@ namespace Wyd.Game.World.Chunks
         protected ChunkBuilder _TerrainOperator;
 
         protected ChunkTerrainJob(CancellationToken cancellationToken, int3 originPoint)
-            : base(CancellationTokenSource.CreateLinkedTokenSource(AsyncJobScheduler.AbortToken,
-                cancellationToken).Token) =>
-            OriginPoint = originPoint;
+            : base(cancellationToken) => OriginPoint = originPoint;
 
         public void GetGeneratedBlockData(out INodeCollection<ushort> blocks)
         {
