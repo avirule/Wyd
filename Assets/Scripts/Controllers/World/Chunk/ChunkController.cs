@@ -11,11 +11,9 @@ using System.Threading.Tasks;
 using K4os.Compression.LZ4;
 using Serilog;
 using Unity.Mathematics;
-using UnityEditor.U2D;
 using UnityEngine;
 using Wyd.Controllers.State;
 using Wyd.Controllers.System;
-using Wyd.Game;
 using Wyd.Game.World.Blocks;
 using Wyd.Game.World.Chunks;
 using Wyd.System;
@@ -30,9 +28,9 @@ namespace Wyd.Controllers.World.Chunk
     public enum ChunkState
     {
         Unbuilt,
-        AwaitingBuilding,
+        BuildingDispatched,
         Undetailed,
-        AwaitingDetailing,
+        DetailingDispatched,
         Mesh,
         AwaitingMesh,
         Meshed
@@ -40,6 +38,9 @@ namespace Wyd.Controllers.World.Chunk
 
     public class ChunkController : ActivationStateChunkController, IPerFrameIncrementalUpdate
     {
+        private const float _FREQUENCY = 0.0075f;
+        private const float _PERSISTENCE = 0.6f;
+
         public const int SIZE = 32;
         public const int SIZE_SQUARED = SIZE * SIZE;
         public const int SIZE_CUBED = SIZE * SIZE * SIZE;
@@ -47,22 +48,38 @@ namespace Wyd.Controllers.World.Chunk
         private static readonly ObjectCache<BlockAction> _blockActionsCache = new ObjectCache<BlockAction>(false, 1024);
 
 
+        #region NoiseShader
+
+        private static ComputeShader _NoiseShader;
+
+        private static void InitializeNoiseShader()
+        {
+            _NoiseShader = Resources.Load<ComputeShader>(@"Graphics\Shaders\OpenSimplex");
+            _NoiseShader.SetInt("_HeightmapSeed", WorldController.Current.Seed);
+            _NoiseShader.SetInt("_CaveNoiseSeedA", WorldController.Current.Seed ^ 2);
+            _NoiseShader.SetInt("_CaveNoiseSeedB", WorldController.Current.Seed ^ 3);
+            _NoiseShader.SetFloat("_WorldHeight", WorldController.WORLD_HEIGHT);
+            _NoiseShader.SetVector("_MaximumSize", new float4(SIZE));
+        }
+
+        #endregion
+
+
         #region Instance Members
 
         private CancellationTokenSource _CancellationTokenSource;
+        private ChunkBlockData _BlockData;
         private ConcurrentQueue<BlockAction> _BlockActions;
         private List<ChunkController> _Neighbors;
 
         private Mesh _Mesh;
-        private bool _EnabledRecently;
+        private bool _CacheNeighbors;
         private long _BlockActionsCount;
         private long _State;
         private long _Active;
         private long _UpdateMesh;
 
-        private object _TerrainJobIdentity;
         private object _MeshJobIdentity;
-        private ChunkTerrainJob _FinishedTerrainJob;
         private ChunkMeshingJob _FinishedMeshingJob;
 
         private bool UpdateMesh
@@ -92,18 +109,12 @@ namespace Wyd.Controllers.World.Chunk
             }
         }
 
-        public INodeCollection<ushort> Blocks => DataController.Blocks;
+        public INodeCollection<ushort> Blocks => _BlockData.Blocks;
 
         #endregion
 
 
         #region Serialized Members
-
-        [SerializeField]
-        private ChunkDataController DataController;
-
-        [SerializeField]
-        private ChunkTerrainController TerrainController;
 
         [SerializeField]
         private ChunkMeshController MeshController;
@@ -129,13 +140,21 @@ namespace Wyd.Controllers.World.Chunk
         #endregion
 
 
+        #region Unity Built-ins
+
         protected override void Awake()
         {
             base.Awake();
 
+            if (_NoiseShader == null)
+            {
+                InitializeNoiseShader();
+            }
+
             _Neighbors = new List<ChunkController>();
             _BlockActions = new ConcurrentQueue<BlockAction>();
             _Mesh = new Mesh();
+            _BlockData = new ChunkBlockData();
         }
 
         protected override void OnEnable()
@@ -146,7 +165,7 @@ namespace Wyd.Controllers.World.Chunk
 
             _CancellationTokenSource = new CancellationTokenSource();
             Active = gameObject.activeSelf;
-            _EnabledRecently = true;
+            _CacheNeighbors = true;
 
             BlocksChanged += FlagUpdateMeshCallback;
             TerrainChanged += FlagUpdateMeshCallback;
@@ -172,10 +191,10 @@ namespace Wyd.Controllers.World.Chunk
 
             _CancellationTokenSource.Cancel();
             _Neighbors.Clear();
+            _BlockData.Deallocate();
             _BlockActions = new ConcurrentQueue<BlockAction>();
 
-            _TerrainJobIdentity = _MeshJobIdentity = null;
-            _FinishedTerrainJob = null;
+            _MeshJobIdentity = null;
             _FinishedMeshingJob = null;
 
             State = ChunkState.Unbuilt;
@@ -187,9 +206,20 @@ namespace Wyd.Controllers.World.Chunk
         private void OnDestroy()
         {
             Destroy(_Mesh);
-            Destroy(TerrainController);
-            Destroy(MeshController);
+
+            _CancellationTokenSource?.Cancel();
+            _Neighbors = null;
+            _BlockData = null;
+            _BlockActions = null;
+
+            State = 0;
+            UpdateMesh = false;
+            BlocksChanged = TerrainChanged = MeshChanged = null;
+            Active = false;
         }
+
+        #endregion
+
 
         public void FrameUpdate()
         {
@@ -204,13 +234,13 @@ namespace Wyd.Controllers.World.Chunk
 
 #endif
 
-            if (_EnabledRecently)
+            if (_CacheNeighbors)
             {
                 _Neighbors.InsertRange(0, WorldController.Current.GetNeighboringChunks(OriginPoint));
 
                 State = ChunkState.Unbuilt;
 
-                _EnabledRecently = false;
+                _CacheNeighbors = false;
             }
 
             if (((State == ChunkState.Meshed) && !UpdateMesh) || !WorldController.Current.ReadyForGeneration)
@@ -228,36 +258,27 @@ namespace Wyd.Controllers.World.Chunk
             switch (State)
             {
                 case ChunkState.Unbuilt:
-                    TerrainController.BeginTerrainGeneration(_CancellationTokenSource.Token, OnTerrainGenerationFinished, out _TerrainJobIdentity);
+                    BeginTerrainBuilding();
 
                     State = State.Next();
                     break;
-                case ChunkState.AwaitingBuilding:
-                    if (_FinishedTerrainJob != null)
-                    {
-                        _FinishedTerrainJob.GetGeneratedBlockData(out _Blocks);
-                        _FinishedTerrainJob = null;
-                        State = State.Next();
-                    }
-
-                    break;
-                case ChunkState.Undetailed:
-                    //TerrainController.BeginTerrainDetailing(_CancellationTokenSource.Token, OnTerrainDetailingFinished, _Blocks, out _TerrainJobIdentity);
-
-                    State = State.Next();
-                    break;
-                case ChunkState.AwaitingDetailing:
-                    if (_FinishedTerrainJob != null)
-                    {
-                        _FinishedTerrainJob.GetGeneratedBlockData(out _Blocks);
-                        _FinishedTerrainJob = null;
-                        State = State.Next();
-                        OnLocalTerrainChanged(this, new ChunkChangedEventArgs(OriginPoint, Directions.AllDirectionNormals.Select(WydMath.ToFloat)));
-                    }
-
-                    State = State.Next();
-
-                    break;
+                // case ChunkState.Undetailed:
+                //     TerrainController.BeginTerrainDetailing(_CancellationTokenSource.Token, OnTerrainDetailingFinished, _Blocks, out _TerrainJobIdentity);
+                //
+                //     State = State.Next();
+                //     break;
+                // case ChunkState.DetailingDispatched:
+                //     if (_FinishedTerrainJob != null)
+                //     {
+                //         _FinishedTerrainJob.GetGeneratedBlockData(out _Blocks);
+                //         _FinishedTerrainJob = null;
+                //         State = State.Next();
+                //         OnLocalTerrainChanged(this, new ChunkChangedEventArgs(OriginPoint, Directions.AllDirectionNormals.Select(WydMath.ToFloat)));
+                //     }
+                //
+                //     State = State.Next();
+                //
+                //     break;
                 case ChunkState.Mesh:
                     if (Blocks.IsUniform
                         && ((Blocks.Value == BlockController.AirID)
@@ -268,8 +289,7 @@ namespace Wyd.Controllers.World.Chunk
                     }
                     else
                     {
-                        MeshController.BeginGeneratingMesh(_CancellationTokenSource.Token, OnMeshingFinished, Blocks,
-                            out _MeshJobIdentity);
+                        MeshController.BeginGeneratingMesh(_CancellationTokenSource.Token, OnMeshingFinished, Blocks, out _MeshJobIdentity);
                         State = State.Next();
                     }
 
@@ -292,6 +312,12 @@ namespace Wyd.Controllers.World.Chunk
                         State = ChunkState.Mesh;
                     }
 
+                    break;
+                case ChunkState.Undetailed:
+                case ChunkState.DetailingDispatched:
+                    State = State.Next();
+                    break;
+                case ChunkState.BuildingDispatched:
                     break;
                 default:
                     throw new ArgumentOutOfRangeException();
@@ -338,7 +364,7 @@ namespace Wyd.Controllers.World.Chunk
         {
             Stopwatch stopwatch = Stopwatch.StartNew();
 
-            byte[] bytes = WydMath.ObjectToByteArray(_Blocks);
+            byte[] bytes = WydMath.ObjectToByteArray(_BlockData.Blocks);
             byte[] target = new byte[bytes.Length];
 
             Log.Information($"Serialized in {stopwatch.ElapsedMilliseconds}ms for {bytes.Length / 1000}kb");
@@ -371,6 +397,77 @@ namespace Wyd.Controllers.World.Chunk
         #endregion
 
 
+        #region Generation
+
+        private void BeginTerrainBuilding()
+        {
+            ComputeBuffer heightmapBuffer = new ComputeBuffer(SIZE_SQUARED, 4);
+            ComputeBuffer caveNoiseBuffer = new ComputeBuffer(SIZE_CUBED, 4);
+
+            _NoiseShader.SetVector("_Offset", new float4(OriginPoint.xyzz));
+            _NoiseShader.SetFloat("_Frequency", _FREQUENCY);
+            _NoiseShader.SetFloat("_Persistence", _PERSISTENCE);
+            _NoiseShader.SetFloat("_SurfaceHeight", WorldController.WORLD_HEIGHT / 2f);
+
+            int heightmapKernel = _NoiseShader.FindKernel("Heightmap2D");
+            _NoiseShader.SetBuffer(heightmapKernel, "HeightmapResult", heightmapBuffer);
+
+            int caveNoiseKernel = _NoiseShader.FindKernel("CaveNoise3D");
+            _NoiseShader.SetBuffer(caveNoiseKernel, "CaveNoiseResult", caveNoiseBuffer);
+
+            _NoiseShader.Dispatch(heightmapKernel, 1024, 1, 1);
+            _NoiseShader.Dispatch(caveNoiseKernel, 1024, 1, 1);
+
+            ChunkTerrainJob asyncJob = new ChunkTerrainBuilderJob(_CancellationTokenSource.Token, OriginPoint, _FREQUENCY, _PERSISTENCE,
+                OptionsController.Current.GPUAcceleration ? heightmapBuffer : null,
+                OptionsController.Current.GPUAcceleration ? caveNoiseBuffer : null);
+
+            Task OnTerrainBuildingFinished(object sender, AsyncJobEventArgs args)
+            {
+                asyncJob.WorkFinished -= OnTerrainBuildingFinished;
+
+                if (Active)
+                {
+                    MainThreadActionsController.Current.QueueAction(new MainThreadAction(null, () =>
+                    {
+                        heightmapBuffer?.Release();
+                        caveNoiseBuffer?.Release();
+
+                        return true;
+                    }));
+
+                    asyncJob.GetGeneratedBlockData(out INodeCollection<ushort> blocks);
+                    _BlockData.SetBlockData(ref blocks);
+
+                    State = ChunkState.Undetailed;
+                }
+
+                return Task.CompletedTask;
+            }
+
+            asyncJob.WorkFinished += OnTerrainBuildingFinished;
+
+            AsyncJobScheduler.QueueAsyncJob(asyncJob);
+        }
+
+        public void BeginTerrainDetailing(CancellationToken cancellationToken, AsyncJobEventHandler callback, INodeCollection<ushort> blocks,
+            out object jobIdentity)
+        {
+            ChunkTerrainDetailerJob asyncJob = new ChunkTerrainDetailerJob(cancellationToken, OriginPoint, blocks);
+
+            if (callback != null)
+            {
+                asyncJob.WorkFinished += callback;
+            }
+
+            jobIdentity = asyncJob.Identity;
+
+            AsyncJobScheduler.QueueAsyncJob(asyncJob);
+        }
+
+        #endregion
+
+
         #region Block Actions
 
         public ushort GetBlock(float3 globalPosition) =>
@@ -380,7 +477,7 @@ namespace Wyd.Controllers.World.Chunk
         {
             blockId = BlockController.NullID;
 
-            if (math.any(localPosition < 0f) || math.any(localPosition >= SIZE) || (_Blocks == null))
+            if (math.any(localPosition < 0f) || math.any(localPosition >= SIZE) || (_BlockData.Blocks == null))
             {
                 return false;
             }
@@ -452,29 +549,16 @@ namespace Wyd.Controllers.World.Chunk
         }
 
 
-        private Task OnTerrainGenerationFinished(object sender, AsyncJobEventArgs args)
+        private Task OnTerrainBuildingFinished(object sender, AsyncJobEventArgs args)
         {
-            args.AsyncJob.WorkFinished -= OnTerrainGenerationFinished;
+            args.AsyncJob.WorkFinished -= OnTerrainBuildingFinished;
 
             if (!Active)
             {
                 return Task.CompletedTask;
             }
 
-            _FinishedTerrainJob = (ChunkTerrainJob)args.AsyncJob;
-            return Task.CompletedTask;
-        }
 
-        private Task OnTerrainDetailingFinished(object sender, AsyncJobEventArgs args)
-        {
-            args.AsyncJob.WorkFinished -= OnTerrainDetailingFinished;
-
-            if (!args.AsyncJob.Identity.Equals(_TerrainJobIdentity))
-            {
-                return Task.CompletedTask;
-            }
-
-            _FinishedTerrainJob = (ChunkTerrainJob)args.AsyncJob;
             return Task.CompletedTask;
         }
 
