@@ -21,14 +21,14 @@ namespace Wyd.Game
         private static readonly ObjectCache<GameObject> _colliderCubeCache =
             new ObjectCache<GameObject>(false, -1, DeactivateGameObject);
 
-        private static GameObject DeactivateGameObject(GameObject obj)
+        private static ref GameObject DeactivateGameObject(ref GameObject obj)
         {
             if (obj != default)
             {
                 obj.SetActive(false);
             }
 
-            return obj;
+            return ref obj;
         }
 
         private Transform _SelfTransform;
@@ -168,10 +168,10 @@ namespace Wyd.Game
             {
                 float3 position = _LocalCacheQueue.Dequeue();
 
-                if (_ColliderCubes.TryGetValue(position, out GameObject obj))
+                if (_ColliderCubes.TryGetValue(position, out GameObject gameObject))
                 {
                     _ColliderCubes.Remove(position);
-                    _colliderCubeCache.CacheItem(obj);
+                    _colliderCubeCache.CacheItem(ref gameObject);
                 }
             }
         }

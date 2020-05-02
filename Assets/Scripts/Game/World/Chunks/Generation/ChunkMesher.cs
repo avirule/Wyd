@@ -38,7 +38,7 @@ namespace Wyd.Game.World.Chunks.Generation
         {
             if (blocks == null)
             {
-                throw new NullReferenceException(nameof(blocks));
+                return;
             }
 
             _Stopwatch = new Stopwatch();
@@ -61,12 +61,12 @@ namespace Wyd.Game.World.Chunks.Generation
             _Blocks = blocks;
             _AggressiveFaceMerging = aggressiveFaceMerging;
 
-            _MeshData.Clear();
+            _MeshData.Clear(true);
         }
 
         public void Reset()
         {
-            _MeshData.Clear();
+            _MeshData.Clear(true);
             _Blocks = null;
         }
 

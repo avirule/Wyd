@@ -19,6 +19,7 @@ using Wyd.Game.World.Chunks;
 using Wyd.Game.World.Chunks.Generation;
 using Wyd.System;
 using Wyd.System.Collections;
+using Wyd.System.Extensions;
 using Wyd.System.Jobs;
 
 #endregion
@@ -72,9 +73,6 @@ namespace Wyd.Controllers.World
         private ConcurrentQueue<BlockAction> _BlockActions;
         private List<ChunkController> _Neighbors;
         private Mesh _Mesh;
-
-        private ChunkBuildingJob _BuildingJob;
-        private ChunkMeshingJob _MeshingJob;
 
         private bool _CacheNeighbors;
         private long _BlockActionsCount;
@@ -191,9 +189,6 @@ namespace Wyd.Controllers.World
             _BlockData = new ChunkBlockData();
             _Mesh = new Mesh();
 
-            _BuildingJob = new ChunkBuildingJob();
-            _MeshingJob = new ChunkMeshingJob();
-
             MeshFilter.sharedMesh = _Mesh;
             MeshRenderer.materials = TextureController.Current.AllBlocksMaterials;
         }
@@ -205,7 +200,6 @@ namespace Wyd.Controllers.World
             PerFrameUpdateController.Current.RegisterPerFrameUpdater(20, this);
 
             _CancellationTokenSource = new CancellationTokenSource();
-
             Active = gameObject.activeSelf;
             _CacheNeighbors = true;
 
@@ -255,9 +249,6 @@ namespace Wyd.Controllers.World
             _BlockData = null;
             _BlockActions = null;
 
-            _BuildingJob = null;
-            _MeshingJob = null;
-
             State = 0;
             UpdateMesh = false;
             BlocksChanged = TerrainChanged = MeshChanged = null;
@@ -305,7 +296,7 @@ namespace Wyd.Controllers.World
                 case ChunkState.Unbuilt:
                     BeginBuilding();
 
-                    State = ChunkState.BuildingDispatched;
+                    State = State.Next();
                     break;
                 case ChunkState.BuildingDispatched:
                     break;
@@ -329,18 +320,19 @@ namespace Wyd.Controllers.World
                 case ChunkState.Mesh:
                     if (Blocks.IsUniform
                         && ((Blocks.Value == BlockController.AirID)
-                            || _Neighbors.All(chunkController => (chunkController.Blocks != null) && chunkController.Blocks.IsUniform)))
+                            || _Neighbors.All(chunkController => (chunkController.Blocks != null)
+                                                                 && chunkController.Blocks.IsUniform)))
                     {
                         State = ChunkState.Meshed;
                     }
                     else
                     {
                         BeginMeshing();
-
-                        State = ChunkState.MeshingDispatched;
+                        State = State.Next();
                     }
 
                     UpdateMesh = false;
+
                     break;
                 case ChunkState.MeshingDispatched:
                     break;
@@ -348,14 +340,12 @@ namespace Wyd.Controllers.World
                     if (UpdateMesh && _BlockActions.IsEmpty)
                     {
                         State = ChunkState.Mesh;
-
-                        goto case ChunkState.Mesh;
                     }
 
                     break;
                 case ChunkState.Undetailed:
                 case ChunkState.DetailingDispatched:
-                    State = ChunkState.Mesh;
+                    State = State.Next();
                     break;
                 default:
                     throw new ArgumentOutOfRangeException();
@@ -373,7 +363,7 @@ namespace Wyd.Controllers.World
             {
                 ProcessBlockAction(blockAction);
 
-                _blockActionsCache.CacheItem(blockAction);
+                _blockActionsCache.CacheItem(ref blockAction);
 
                 Interlocked.Decrement(ref _BlockActionsCount);
 
@@ -456,25 +446,25 @@ namespace Wyd.Controllers.World
             _NoiseShader.Dispatch(heightmapKernel, 1024, 1, 1);
             _NoiseShader.Dispatch(caveNoiseKernel, 1024, 1, 1);
 
-            _BuildingJob.SetData(_CancellationTokenSource.Token, OriginPoint, _FREQUENCY, _PERSISTENCE,
+            ChunkTerrainJob asyncJob = new ChunkTerrainBuilderJob(_CancellationTokenSource.Token, OriginPoint, _FREQUENCY, _PERSISTENCE,
                 OptionsController.Current.GPUAcceleration ? heightmapBuffer : null,
                 OptionsController.Current.GPUAcceleration ? caveNoiseBuffer : null);
 
             Task OnTerrainBuildingFinished(object sender, AsyncJobEventArgs args)
             {
-                _BuildingJob.WorkFinished -= OnTerrainBuildingFinished;
+                asyncJob.WorkFinished -= OnTerrainBuildingFinished;
 
                 if (Active)
                 {
-                    MainThreadActionsController.Current.QueueAction(() =>
+                    MainThreadActionsController.Current.QueueAction(new MainThreadAction(null, () =>
                     {
                         heightmapBuffer?.Release();
                         caveNoiseBuffer?.Release();
 
                         return true;
-                    });
+                    }));
 
-                    _BuildingJob.GetGeneratedBlockData(out INodeCollection<ushort> blocks);
+                    asyncJob.GetGeneratedBlockData(out INodeCollection<ushort> blocks);
                     _BlockData.SetBlockData(ref blocks);
 
                     State = ChunkState.Undetailed;
@@ -483,9 +473,9 @@ namespace Wyd.Controllers.World
                 return Task.CompletedTask;
             }
 
-            _BuildingJob.WorkFinished += OnTerrainBuildingFinished;
+            asyncJob.WorkFinished += OnTerrainBuildingFinished;
 
-            AsyncJobScheduler.QueueAsyncJob(_BuildingJob);
+            AsyncJobScheduler.QueueAsyncJob(asyncJob);
         }
 
         public void BeginDetailing(CancellationToken cancellationToken, AsyncJobEventHandler callback, INodeCollection<ushort> blocks,
@@ -505,31 +495,35 @@ namespace Wyd.Controllers.World
 
         private void BeginMeshing()
         {
-            // todo make option for using improved meshing
+            // todo make setting for improved meshing
+            ChunkMeshingJob asyncJob =
+                new ChunkMeshingJob(_CancellationTokenSource.Token, OriginPoint, Blocks, OptionsController.Current.GPUAcceleration);
+
             Task OnMeshingFinished(object sender, AsyncJobEventArgs args)
             {
-                _MeshingJob.WorkFinished -= OnMeshingFinished;
+                asyncJob.WorkFinished -= OnMeshingFinished;
 
-                if (Active)
+                if (!Active)
                 {
-                    MainThreadActionsController.Current.QueueAction(ApplyMesh);
-
-                    State = ChunkState.Meshed;
+                    asyncJob.CacheMesher();
                 }
 
-                _MeshingJob.CacheMesher();
+                MainThreadActionsController.Current.QueueAction(new MainThreadAction(null, () => ApplyMesh(asyncJob)));
+
+                State = ChunkState.Meshed;
+
                 return Task.CompletedTask;
             }
 
-            _MeshingJob.SetData(_CancellationTokenSource.Token, OriginPoint, _BlockData.Blocks, OptionsController.Current.GPUAcceleration);
-            _MeshingJob.WorkFinished += OnMeshingFinished;
+            asyncJob.WorkFinished += OnMeshingFinished;
 
-            AsyncJobScheduler.QueueAsyncJob(_MeshingJob);
+            AsyncJobScheduler.QueueAsyncJob(asyncJob);
         }
 
-        private bool ApplyMesh()
+        private bool ApplyMesh(ChunkMeshingJob meshingJob)
         {
-            _MeshingJob.ApplyMeshData(ref _Mesh);
+            meshingJob.ApplyMeshData(ref _Mesh);
+            meshingJob.CacheMesher();
 
             MeshRenderer.enabled = _Mesh.vertexCount > 0;
 
@@ -627,6 +621,20 @@ namespace Wyd.Controllers.World
         private void OnMeshChanged(object sender, ChunkChangedEventArgs args)
         {
             MeshChanged?.Invoke(sender, args);
+        }
+
+
+        private Task OnTerrainBuildingFinished(object sender, AsyncJobEventArgs args)
+        {
+            args.AsyncJob.WorkFinished -= OnTerrainBuildingFinished;
+
+            if (!Active)
+            {
+                return Task.CompletedTask;
+            }
+
+
+            return Task.CompletedTask;
         }
 
         private void FlagUpdateMeshCallback(object sender, ChunkChangedEventArgs args)

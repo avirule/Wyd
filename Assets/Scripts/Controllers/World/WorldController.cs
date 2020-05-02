@@ -99,17 +99,17 @@ namespace Wyd.Controllers.World
 
             _Stopwatch = new Stopwatch();
             _ChunkCache = new ObjectCache<ChunkController>(false, -1,
-                chunkController =>
+                (ref ChunkController chunkController) =>
                 {
                     if (chunkController == default)
                     {
-                        return chunkController;
+                        return ref chunkController;
                     }
 
                     chunkController.Deactivate();
                     FlagNeighborsForMeshUpdate(chunkController.OriginPoint);
 
-                    return chunkController;
+                    return ref chunkController;
                 },
                 (ref ChunkController chunkController) =>
                     Destroy(chunkController.gameObject));
@@ -241,7 +241,7 @@ namespace Wyd.Controllers.World
 
             // Chunk is automatically deactivated by ObjectCache
             // additionally, neighbors are flagged for update by ObjectCache
-            _ChunkCache.CacheItem(chunkController);
+            _ChunkCache.CacheItem(ref chunkController);
         }
 
         public IEnumerable<ushort> GetNeighboringBlocks(float3 globalPosition)

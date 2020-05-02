@@ -23,7 +23,7 @@ namespace Wyd.Game.World.Chunks.Generation
                              && (_UVs.Count == 0)
                              && ((_Triangles.Count == 0) || _Triangles.All(triangles => triangles.Count == 0));
 
-        private MeshData()
+        public MeshData()
         {
             _Vertices = new List<Vector3>();
             _UVs = new List<Vector3>();
@@ -66,11 +66,13 @@ namespace Wyd.Game.World.Chunks.Generation
 
         public void ApplyMeshData(ref Mesh mesh)
         {
-            mesh.Clear();
-
-            if (Empty)
+            if (mesh == null)
             {
-                return;
+                mesh = new Mesh();
+            }
+            else
+            {
+                mesh.Clear();
             }
 
             mesh.subMeshCount = 2;
