@@ -10,17 +10,17 @@ using Wyd.Controllers.System;
 
 namespace Wyd.Game.World.Chunks.Generation
 {
-    public class ChunkTerrainBuilderJob : ChunkTerrainJob
+    public class ChunkBuildingJob : ChunkTerrainJob
     {
-        private readonly float _Frequency;
-        private readonly float _Persistence;
-        private readonly ComputeBuffer _HeightmapBuffer;
-        private readonly ComputeBuffer _CaveNoiseBuffer;
+        private float _Frequency;
+        private float _Persistence;
+        private ComputeBuffer _HeightmapBuffer;
+        private ComputeBuffer _CaveNoiseBuffer;
 
-        public ChunkTerrainBuilderJob(CancellationToken cancellationToken, int3 originPoint, float frequency,
+        public void SetData(CancellationToken cancellationToken, int3 originPoint, float frequency,
             float persistence, ComputeBuffer heightmapBuffer = null, ComputeBuffer caveNoiseBuffer = null)
-            : base(cancellationToken, originPoint)
         {
+            SetData(cancellationToken, originPoint);
             _Frequency = frequency;
             _Persistence = persistence;
             _HeightmapBuffer = heightmapBuffer;
@@ -29,12 +29,12 @@ namespace Wyd.Game.World.Chunks.Generation
 
         protected override Task Process()
         {
-            ChunkTerrainBuilder builder = new ChunkTerrainBuilder(CancellationToken, OriginPoint, _Frequency, _Persistence, _HeightmapBuffer,
+            ChunkTerrainBuilder builder = new ChunkTerrainBuilder(CancellationToken, _OriginPoint, _Frequency, _Persistence, _HeightmapBuffer,
                 _CaveNoiseBuffer);
             builder.TimeMeasuredGenerate();
 
             // builder has completed execution, so set field
-            _TerrainOperator = builder;
+            _TerrainGenerator = builder;
 
             return Task.CompletedTask;
         }
@@ -43,7 +43,7 @@ namespace Wyd.Game.World.Chunks.Generation
         {
             if (!CancellationToken.IsCancellationRequested)
             {
-                ChunkTerrainBuilder builder = (ChunkTerrainBuilder)_TerrainOperator;
+                ChunkTerrainBuilder builder = (ChunkTerrainBuilder)_TerrainGenerator;
 
                 DiagnosticsController.Current.RollingNoiseRetrievalTimes.Enqueue(builder.NoiseRetrievalTimeSpan);
                 DiagnosticsController.Current.RollingTerrainBuildingTimes.Enqueue(builder.TerrainGenerationTimeSpan);

@@ -2,6 +2,7 @@
 
 using System.Collections;
 using System.Collections.Concurrent;
+using System.Threading;
 using Wyd.System;
 using Wyd.System.Jobs;
 
@@ -9,11 +10,28 @@ using Wyd.System.Jobs;
 
 namespace Wyd.Controllers.System
 {
+    public delegate bool MainThreadActionInvocation();
+
     /// <summary>
     ///     Controller allowing qu
     /// </summary>
     public class MainThreadActionsController : SingletonController<MainThreadActionsController>, IPerFrameIncrementalUpdate
     {
+        private class MainThreadAction
+        {
+            private ManualResetEvent ResetEvent { get; }
+            private MainThreadActionInvocation Invocation { get; }
+
+            public MainThreadAction(ManualResetEvent resetEvent, MainThreadActionInvocation invocation)
+            {
+                ResetEvent = resetEvent;
+                Invocation = invocation;
+            }
+
+            public void Set() => ResetEvent.Set();
+            public bool Invoke() => Invocation?.Invoke() ?? true;
+        }
+
         private ConcurrentQueue<MainThreadAction> _Actions;
 
         private void Awake()
@@ -33,9 +51,13 @@ namespace Wyd.Controllers.System
             PerFrameUpdateController.Current.DeregisterPerFrameUpdater(-900, this);
         }
 
-        public void QueueAction(MainThreadAction mainThreadAction)
+        public ManualResetEvent QueueAction(MainThreadActionInvocation action)
         {
-            _Actions.Enqueue(mainThreadAction);
+            ManualResetEvent resetEvent = new ManualResetEvent(false);
+
+            _Actions.Enqueue(new MainThreadAction(resetEvent, action));
+
+            return resetEvent;
         }
 
         public void FrameUpdate() { }
@@ -46,7 +68,7 @@ namespace Wyd.Controllers.System
             {
                 if (!mainThreadAction.Invoke())
                 {
-                    QueueAction(mainThreadAction);
+                    _Actions.Enqueue(mainThreadAction);
                 }
 
                 mainThreadAction.Set();

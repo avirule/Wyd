@@ -75,8 +75,8 @@ namespace Wyd.Game.World.Chunks.Generation
             Array.Clear(_Heightmap, 0, _Heightmap.Length);
             Array.Clear(_CaveNoise, 0, _CaveNoise.Length);
 
-            _heightmapCache.CacheItem(ref _Heightmap);
-            _caveNoiseCache.CacheItem(ref _CaveNoise);
+            _heightmapCache.CacheItem(_Heightmap);
+            _caveNoiseCache.CacheItem(_CaveNoise);
 
             Stopwatch.Stop();
 
@@ -109,10 +109,9 @@ namespace Wyd.Game.World.Chunks.Generation
             }
             else
             {
-                using (ManualResetEvent manualResetEvent = new ManualResetEvent(false))
+                using (ManualResetEvent resetEvent = MainThreadActionsController.Current.QueueAction(GetComputeBufferData))
                 {
-                    MainThreadActionsController.Current.QueueAction(new MainThreadAction(manualResetEvent, GetComputeBufferData));
-                    manualResetEvent.WaitOne();
+                    resetEvent.WaitOne();
                 }
             }
         }

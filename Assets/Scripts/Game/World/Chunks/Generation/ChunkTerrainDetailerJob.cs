@@ -14,25 +14,25 @@ namespace Wyd.Game.World.Chunks.Generation
     {
         private readonly INodeCollection<ushort> _Blocks;
 
-        public ChunkTerrainDetailerJob(CancellationToken cancellationToken, int3 originPoint, INodeCollection<ushort> blocks)
-            : base(cancellationToken, originPoint) => _Blocks = blocks;
+        public ChunkTerrainDetailerJob(CancellationToken cancellationToken, int3 originPoint, INodeCollection<ushort> blocks) {}
+            //: base(cancellationToken, originPoint) => _Blocks = blocks;
 
         protected override Task Process()
         {
-            ChunkTerrainDetailer detailer = new ChunkTerrainDetailer(CancellationToken, OriginPoint, _Blocks);
+            ChunkTerrainDetailer detailer = new ChunkTerrainDetailer(CancellationToken, _OriginPoint, _Blocks);
             detailer.Detail();
 
             // detailer has finished execution, so set
-            _TerrainOperator = detailer;
+            _TerrainGenerator = detailer;
 
             return Task.CompletedTask;
         }
 
         protected override Task ProcessFinished()
         {
-            if (_TerrainOperator != null)
+            if (_TerrainGenerator != null)
             {
-                ChunkTerrainDetailer detailer = (ChunkTerrainDetailer)_TerrainOperator;
+                ChunkTerrainDetailer detailer = (ChunkTerrainDetailer)_TerrainGenerator;
 
                 DiagnosticsController.Current.RollingTerrainDetailingTimes.Enqueue(detailer.TerrainDetailTimeSpan);
             }

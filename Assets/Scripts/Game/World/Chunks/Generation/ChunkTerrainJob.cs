@@ -12,22 +12,25 @@ namespace Wyd.Game.World.Chunks.Generation
 {
     public abstract class ChunkTerrainJob : AsyncJob
     {
-        protected readonly int3 OriginPoint;
+        protected int3 _OriginPoint;
 
-        protected ChunkBuilder _TerrainOperator;
+        protected ChunkBuilder _TerrainGenerator;
 
-        protected ChunkTerrainJob(CancellationToken cancellationToken, int3 originPoint)
-            : base(cancellationToken) => OriginPoint = originPoint;
+        public void SetData(CancellationToken cancellationToken, int3 originPoint)
+        {
+            CancellationToken = CancellationTokenSource.CreateLinkedTokenSource(AsyncJobScheduler.AbortToken, cancellationToken).Token;
+            _OriginPoint = originPoint;
+        }
 
         public void GetGeneratedBlockData(out INodeCollection<ushort> blocks)
         {
-            if (_TerrainOperator == null)
+            if (_TerrainGenerator == null)
             {
                 throw new NullReferenceException(
                     $"'{nameof(ChunkBuilder)}' is null. This likely indicates the job has not completed execution.");
             }
 
-            _TerrainOperator.GetGeneratedBlockData(out blocks);
+            _TerrainGenerator.GetGeneratedBlockData(out blocks);
         }
     }
 }

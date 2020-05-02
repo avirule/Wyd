@@ -7,7 +7,7 @@ using System.Collections.Concurrent;
 
 namespace Wyd.System.Collections
 {
-    public delegate ref T PreCachingOperation<T>(ref T item);
+    public delegate T PreCachingOperation<T>(T item);
 
     public delegate void ItemCulledOperation<T>(ref T item);
 
@@ -62,11 +62,11 @@ namespace Wyd.System.Collections
             _ItemCulledOperation = itemCulledOperation;
         }
 
-        public void CacheItem(ref T item)
+        public void CacheItem(T item)
         {
             if (_PreCachingOperation != null)
             {
-                item = ref _PreCachingOperation(ref item);
+                item = _PreCachingOperation(item);
             }
 
             if (!(item is object))

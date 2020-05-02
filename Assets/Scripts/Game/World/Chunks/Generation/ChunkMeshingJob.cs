@@ -16,18 +16,16 @@ namespace Wyd.Game.World.Chunks.Generation
     {
         private static readonly ObjectCache<ChunkMesher> _chunkMesherCache = new ObjectCache<ChunkMesher>();
 
-        private readonly CancellationToken _CancellationToken;
-        private readonly float3 _OriginPoint;
-        private readonly INodeCollection<ushort> _Blocks;
-        private readonly bool _AggressiveFaceMerging;
+        private float3 _OriginPoint;
+        private INodeCollection<ushort> _Blocks;
+        private bool _AggressiveFaceMerging;
 
         private ChunkMesher _Mesher;
 
-        public ChunkMeshingJob(CancellationToken cancellationToken, float3 originPoint, INodeCollection<ushort> blocks,
-            bool aggressiveFaceMerging) : base(cancellationToken)
+        public void SetData(CancellationToken cancellationToken, float3 originPoint, INodeCollection<ushort> blocks,
+            bool aggressiveFaceMerging)
         {
-            _CancellationToken = CancellationTokenSource.CreateLinkedTokenSource(AsyncJobScheduler.AbortToken,
-                cancellationToken).Token;
+            CancellationToken = CancellationTokenSource.CreateLinkedTokenSource(AsyncJobScheduler.AbortToken, cancellationToken).Token;
             _OriginPoint = originPoint;
             _Blocks = blocks;
             _AggressiveFaceMerging = aggressiveFaceMerging;
@@ -37,11 +35,11 @@ namespace Wyd.Game.World.Chunks.Generation
         {
             if (_chunkMesherCache.TryRetrieve(out ChunkMesher mesher))
             {
-                mesher.PrepareMeshing(_CancellationToken, _OriginPoint, _Blocks, _AggressiveFaceMerging);
+                mesher.PrepareMeshing(CancellationToken, _OriginPoint, _Blocks, _AggressiveFaceMerging);
             }
             else
             {
-                mesher = new ChunkMesher(_CancellationToken, _OriginPoint, _Blocks, _AggressiveFaceMerging);
+                mesher = new ChunkMesher(CancellationToken, _OriginPoint, _Blocks, _AggressiveFaceMerging);
             }
 
             mesher.GenerateMesh();
@@ -52,7 +50,7 @@ namespace Wyd.Game.World.Chunks.Generation
 
         protected override Task ProcessFinished()
         {
-            if (!_CancellationToken.IsCancellationRequested && (_Mesher != null))
+            if (!CancellationToken.IsCancellationRequested && (_Mesher != null))
             {
                 DiagnosticsController.Current.RollingMeshingSetBlockTimes.Enqueue(_Mesher.SetBlockTimeSpan);
                 DiagnosticsController.Current.RollingMeshingTimes.Enqueue(_Mesher.MeshingTimeSpan);
@@ -66,8 +64,10 @@ namespace Wyd.Game.World.Chunks.Generation
         public void CacheMesher()
         {
             _Mesher?.Reset();
-            _chunkMesherCache.CacheItem(ref _Mesher);
+            _chunkMesherCache.CacheItem(_Mesher);
             _Mesher = null;
+            _Blocks = null;
+            
         }
     }
 }
