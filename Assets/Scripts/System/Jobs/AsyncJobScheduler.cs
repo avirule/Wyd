@@ -1,7 +1,6 @@
 #region
 
 using System;
-using System.Collections.Concurrent;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -11,7 +10,6 @@ namespace Wyd.System.Jobs
 {
     public static class AsyncJobScheduler
     {
-
         private static CancellationTokenSource _AbortTokenSource;
         private static SemaphoreSlim _WorkerSemaphore;
         private static long _MaximumProcessingJobs;

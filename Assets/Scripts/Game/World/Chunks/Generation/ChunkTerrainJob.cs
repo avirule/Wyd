@@ -8,7 +8,7 @@ using Wyd.System.Jobs;
 
 #endregion
 
-namespace Wyd.Game.World.Chunks
+namespace Wyd.Game.World.Chunks.Generation
 {
     public abstract class ChunkTerrainJob : AsyncJob
     {

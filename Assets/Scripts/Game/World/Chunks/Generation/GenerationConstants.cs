@@ -1,11 +1,11 @@
 #region
 
 using Unity.Mathematics;
-using Wyd.Controllers.World.Chunk;
+using Wyd.Controllers.World;
 
 #endregion
 
-namespace Wyd.Game.World.Chunks
+namespace Wyd.Game.World.Chunks.Generation
 {
     public static class GenerationConstants
     {

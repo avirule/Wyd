@@ -1,5 +1,10 @@
-// Uncomment the line below to swap all the inputs/outputs/calculations of FastNoise to doubles instead of floats
 //#define FN_USE_DOUBLES
+
+
+#region
+
+using System;
+using System.Runtime.CompilerServices;
 
 #region
 
@@ -8,8 +13,8 @@ using FN_DECIMAL = System.Double;
 #else
 using FN_DECIMAL = System.Single;
 #endif
-using System;
-using System.Runtime.CompilerServices;
+
+#endregion
 
 #endregion
 

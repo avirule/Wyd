@@ -7,7 +7,7 @@ using UnityEngine.Rendering;
 
 #endregion
 
-namespace Wyd.Game.World.Chunks
+namespace Wyd.Game.World.Chunks.Generation
 {
     public class MeshData
     {

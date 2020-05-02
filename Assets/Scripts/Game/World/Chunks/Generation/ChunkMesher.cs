@@ -10,7 +10,6 @@ using Unity.Mathematics;
 using UnityEngine;
 using Wyd.Controllers.State;
 using Wyd.Controllers.World;
-using Wyd.Controllers.World.Chunk;
 using Wyd.Game.World.Blocks;
 using Wyd.System;
 using Wyd.System.Collections;
@@ -18,7 +17,7 @@ using Wyd.System.Graphics;
 
 #endregion
 
-namespace Wyd.Game.World.Chunks
+namespace Wyd.Game.World.Chunks.Generation
 {
     public class ChunkMesher
     {

@@ -1,7 +1,11 @@
 // ReSharper disable ConvertToAutoPropertyWithPrivateSetter
 
+#region
+
 using System.Collections.Generic;
 using Unity.Mathematics;
+
+#endregion
 
 namespace Wyd.System.Collections
 {

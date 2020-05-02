@@ -5,7 +5,7 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Runtime.CompilerServices;
 using Unity.Mathematics;
-using Wyd.Controllers.World.Chunk;
+using Wyd.Controllers.World;
 
 #endregion
 

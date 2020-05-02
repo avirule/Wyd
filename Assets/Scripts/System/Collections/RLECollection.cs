@@ -3,8 +3,7 @@
 using System;
 using System.Collections.Generic;
 using Unity.Mathematics;
-using Wyd.Controllers.World.Chunk;
-using NotImplementedException = System.NotImplementedException;
+using Wyd.Controllers.World;
 
 #endregion
 

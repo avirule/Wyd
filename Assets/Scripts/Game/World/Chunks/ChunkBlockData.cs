@@ -1,4 +1,8 @@
+#region
+
 using Wyd.System.Collections;
+
+#endregion
 
 namespace Wyd.Game.World.Chunks
 {
@@ -6,10 +10,7 @@ namespace Wyd.Game.World.Chunks
     {
         public INodeCollection<ushort> Blocks { get; private set; }
 
-        public ChunkBlockData()
-        {
-            Blocks = null;
-        }
+        public ChunkBlockData() => Blocks = null;
 
         public void SetBlockData(ref INodeCollection<ushort> blocks)
         {

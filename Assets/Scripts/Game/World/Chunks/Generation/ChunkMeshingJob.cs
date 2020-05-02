@@ -10,7 +10,7 @@ using Wyd.System.Jobs;
 
 #endregion
 
-namespace Wyd.Game.World.Chunks
+namespace Wyd.Game.World.Chunks.Generation
 {
     public class ChunkMeshingJob : AsyncJob
     {

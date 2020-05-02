@@ -7,14 +7,13 @@ using UnityEngine;
 using Wyd.Controllers.State;
 using Wyd.Controllers.System;
 using Wyd.Controllers.World;
-using Wyd.Controllers.World.Chunk;
 using Wyd.System;
 using Wyd.System.Collections;
 using Wyd.System.Jobs;
 
 #endregion
 
-namespace Wyd.Game.World.Chunks
+namespace Wyd.Game.World.Chunks.Generation
 {
     public class ChunkTerrainBuilder : ChunkBuilder
     {

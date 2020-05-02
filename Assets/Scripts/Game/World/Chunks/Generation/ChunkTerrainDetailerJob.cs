@@ -8,7 +8,7 @@ using Wyd.System.Collections;
 
 #endregion
 
-namespace Wyd.Game.World.Chunks
+namespace Wyd.Game.World.Chunks.Generation
 {
     public class ChunkTerrainDetailerJob : ChunkTerrainJob
     {
