@@ -4,8 +4,6 @@
 
 #endregion
 
-using System;
-
 namespace Wyd.System.Collections
 {
     public class OctreeNode
@@ -26,10 +24,7 @@ namespace Wyd.System.Collections
         ///     Creates an in-memory compressed 3D representation of any unmanaged data type.
         /// </summary>
         /// <param name="value">Initial value of the collection.</param>
-        public OctreeNode(ushort value)
-        {
-            _Value = value;
-        }
+        public OctreeNode(ushort value) => _Value = value;
 
 
         #region Data Operations
@@ -41,9 +36,9 @@ namespace Wyd.System.Collections
                 return _Value;
             }
 
-            Octree.DetermineOctant(extent, x, y, z, out float x0, out float y0, out float z0, out int octant);
+            Octree.DetermineOctant(extent, ref x, ref y, ref z, out int octant);
 
-            return _Nodes[octant].GetPoint(extent / 2f, x - (x0 * extent), y - (y0 * extent), z - (z0 * extent));
+            return _Nodes[octant].GetPoint(extent / 2f, x, y, z);
         }
 
         public void SetPoint(float extent, float x, float y, float z, ushort newValue)
@@ -77,10 +72,10 @@ namespace Wyd.System.Collections
                 }
             }
 
-            Octree.DetermineOctant(extent, x, y, z, out float x0, out float y0, out float z0, out int octant);
+            Octree.DetermineOctant(extent, ref x, ref y, ref z, out int octant);
 
             // recursively dig into octree and set
-            _Nodes[octant].SetPoint(extent / 2f, x - (x0 * extent), y - (y0 * extent), z - (z0 * extent), newValue);
+            _Nodes[octant].SetPoint(extent / 2f, x, y, z, newValue);
 
             // on each recursion back-step, ensure integrity of node
             // and collapse if all child node values are equal

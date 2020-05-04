@@ -45,11 +45,7 @@ namespace Wyd.System.Collections
 
             for (float extent = _Size / 2f; !currentNode.IsUniform; extent /= 2f)
             {
-                DetermineOctant(extent, x, y, z, out float x0, out float y0, out float z0, out int octant);
-
-                x -= x0 * extent;
-                y -= y0 * extent;
-                z -= z0 * extent;
+                DetermineOctant(extent, ref x, ref y, ref z, out int octant);
 
                 currentNode = currentNode[octant];
             }
@@ -89,27 +85,26 @@ namespace Wyd.System.Collections
         // 5 7
         // 4 6
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static void DetermineOctant(float extent, float x, float y, float z, out float x0, out float y0, out float z0, out int octant)
+        public static void DetermineOctant(float extent, ref float x, ref float y, ref float z, out int octant)
         {
-            x0 = y0 = z0 = 1f;
-            octant = 7;
+            octant = 0;
 
-            if (x < extent)
+            if (x >= extent)
             {
-                x0 = 0f;
-                octant -= 1;
+                x -= extent;
+                octant += 1;
             }
 
-            if (y < extent)
+            if (y >= extent)
             {
-                y0 = 0f;
-                octant -= 4;
+                y -= extent;
+                octant += 4;
             }
 
-            if (z < extent)
+            if (z >= extent)
             {
-                z0 = 0f;
-                octant -= 2;
+                z -= extent;
+                octant += 2;
             }
         }
 
