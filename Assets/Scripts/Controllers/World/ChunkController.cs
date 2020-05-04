@@ -593,7 +593,7 @@ namespace Wyd.Controllers.World
             float3 localPosition = math.abs(globalPosition - OriginPoint);
 
             List<float3> normals = new List<float3>();
-            normals.AddRange(WydMath.ToComponents(math.select(float3.zero, new float3(1f), localPosition == (SIZE_MINUS_ONE))));
+            normals.AddRange(WydMath.ToComponents(math.select(float3.zero, new float3(1f), localPosition == SIZE_MINUS_ONE)));
             normals.AddRange(WydMath.ToComponents(math.select(float3.zero, new float3(1f), localPosition == 0f)));
 
             return normals;

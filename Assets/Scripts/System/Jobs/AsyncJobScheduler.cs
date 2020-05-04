@@ -105,7 +105,19 @@ namespace Wyd.System.Jobs
 
             OnJobQueued(new AsyncJobEventArgs(asyncJob));
 
-            Task.Run(() => ExecuteJob(asyncJob));
+            Task.Run(() => ExecuteJob(asyncJob, false));
+        }
+
+        public static async Task QueueAsyncJob(AsyncJob asyncJob, bool configureAwait)
+        {
+            if (AbortToken.IsCancellationRequested)
+            {
+                return;
+            }
+
+            OnJobQueued(new AsyncJobEventArgs(asyncJob));
+
+            await ExecuteJob(asyncJob, configureAwait).ConfigureAwait(configureAwait);
         }
 
         #endregion
@@ -113,20 +125,20 @@ namespace Wyd.System.Jobs
 
         #region Runtime
 
-        private static async Task ExecuteJob(AsyncJob asyncJob)
+        private static async Task ExecuteJob(AsyncJob asyncJob, bool configureAwait)
         {
             if (_AbortTokenSource.IsCancellationRequested)
             {
                 return;
             }
 
-            await _WorkerSemaphore.WaitAsync().ConfigureAwait(false);
+            await _WorkerSemaphore.WaitAsync().ConfigureAwait(configureAwait);
 
             AsyncJobEventArgs args = new AsyncJobEventArgs(asyncJob);
 
             OnJobStarted(args);
 
-            await asyncJob.Execute().ConfigureAwait(false);
+            await asyncJob.Execute().ConfigureAwait(configureAwait);
 
             OnJobFinished(args);
 

@@ -12,6 +12,7 @@ using System.Runtime.CompilerServices;
 using FN_DECIMAL = System.Double;
 #else
 using FN_DECIMAL = System.Single;
+
 #endif
 
 #endregion

@@ -1,7 +1,4 @@
 namespace Wyd.Game.World.Chunks.Generation
 {
-    public class ChunkGenerator
-    {
-        
-    }
+    public class ChunkGenerator { }
 }
