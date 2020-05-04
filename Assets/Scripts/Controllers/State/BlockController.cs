@@ -194,7 +194,11 @@ namespace Wyd.Controllers.State
             return false;
         }
 
-        public bool CheckBlockHasProperty(ushort blockId, BlockDefinition.Property property) =>
-            BlockDefinitions[blockId].Properties.HasProperty(property);
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public bool CheckBlockHasProperty(ushort blockId, BlockDefinition.Property property)
+        {
+            BlockDefinition.Property properties = BlockDefinitions[blockId].Properties;
+            return (properties & property) == property;
+        }
     }
 }

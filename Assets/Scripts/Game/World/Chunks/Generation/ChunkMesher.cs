@@ -3,7 +3,6 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
-using System.Runtime.CompilerServices;
 using System.Threading;
 using Unity.Mathematics;
 using UnityEngine;
@@ -95,7 +94,22 @@ namespace Wyd.Game.World.Chunks.Generation
             // todo provide this data from ChunkMeshController maybe?
             foreach ((int3 normal, ChunkController chunkController) in WorldController.Current.GetNeighboringChunksWithNormal(_OriginPoint))
             {
-                _NeighborNodes[GetNeighborIndexFromNormal(normal)] = chunkController.Blocks;
+                int index = -1;
+
+                if (normal.x != 0)
+                {
+                    index = normal.x > 0 ? 0 : 3;
+                }
+                else if (normal.y != 0)
+                {
+                    index = normal.y > 0 ? 1 : 4;
+                }
+                else if (normal.z != 0)
+                {
+                    index = normal.z > 0 ? 2 : 5;
+                }
+
+                _NeighborNodes[index] = chunkController.Blocks;
             }
 
             // clear masks for new meshing
@@ -141,7 +155,7 @@ namespace Wyd.Game.World.Chunks.Generation
         {
             for (int normalIndex = 0; normalIndex < 6; normalIndex++)
             {
-                Direction faceDirection = GenerationConstants.FaceDirectionByIteration[normalIndex];
+                Direction faceDirection = (Direction)(1 << normalIndex);
 
                 if (_Mask[index].HasFace(faceDirection))
                 {
@@ -149,14 +163,16 @@ namespace Wyd.Game.World.Chunks.Generation
                 }
 
                 int iModulo3 = normalIndex % 3;
-                int traversalIterations = 0, traversals = 0;
+                int traversalIterations = 0;
+                int traversals = 0;
 
-                (int TraversalNormalAxisIndex, int3 TraversalNormal)[] perpendicularNormals = GenerationConstants.PerpendicularNormals[iModulo3];
-
-                for (int perpendicularNormalIndex = 0; perpendicularNormalIndex < perpendicularNormals.Length; perpendicularNormalIndex++)
+                for (int perpendicularNormalIndex = 0; perpendicularNormalIndex < 2; perpendicularNormalIndex++)
                 {
-                    int traversalNormalAxisIndex = perpendicularNormals[perpendicularNormalIndex].TraversalNormalAxisIndex;
-                    int3 traversalNormal = perpendicularNormals[perpendicularNormalIndex].TraversalNormal;
+                    int traversalNormalAxisIndex = (iModulo3 + 1) % 3;
+                    int3 traversalNormal = new int3(0)
+                    {
+                        [traversalNormalAxisIndex] = 1
+                    };
 
                     int sliceIndexValue = localPosition[traversalNormalAxisIndex];
                     int maximumTraversals = _AggressiveFaceMerging ? ChunkController.SIZE : sliceIndexValue + 1;
@@ -175,11 +191,19 @@ namespace Wyd.Game.World.Chunks.Generation
 
                         int3 faceNormal = GenerationConstants.FaceNormalByIteration[normalIndex];
                         int3 traversalFacingBlockPosition = currentTraversalPosition + faceNormal;
-                        float traversalSliceValue = traversalFacingBlockPosition[traversalNormalAxisIndex];
+                        int facingPositionAxisValue = traversalFacingBlockPosition[iModulo3];
 
-                        ushort facingBlockId = (traversalSliceValue < 0) || (traversalSliceValue > (ChunkController.SIZE - 1))
-                            ? GetNeighboringBlock(faceNormal, traversalFacingBlockPosition)
-                            : _Blocks.GetPoint(traversalFacingBlockPosition);
+                        ushort facingBlockId;
+                        if ((facingPositionAxisValue > 0) && (facingPositionAxisValue < ChunkController.SIZE_MINUS_ONE))
+                        {
+                            facingBlockId = _Blocks.GetPoint(traversalFacingBlockPosition);
+                        }
+                        else
+                        {
+                            int3 relativeLocalPosition = math.abs(traversalFacingBlockPosition + (faceNormal * -ChunkController.SIZE_MINUS_ONE));
+
+                            facingBlockId = _NeighborNodes[normalIndex]?.GetPoint(relativeLocalPosition) ?? BlockController.NullID;
+                        }
 
                         // if transparent, traverse as long as block is the same
                         // if opaque, traverse as long as faceNormal-adjacent block is transparent
@@ -200,7 +224,7 @@ namespace Wyd.Game.World.Chunks.Generation
                     }
 
                     // add triangles
-                    int verticesCount = _MeshData.Vertices.Count;
+                    int verticesCount = _MeshData.VerticesCount;
                     int transparentAsInt = Convert.ToInt32(transparentTraversal);
 
                     // ReSharper disable once ForCanBeConvertedToForeach
@@ -233,48 +257,6 @@ namespace Wyd.Game.World.Chunks.Generation
                     break;
                 }
             }
-        }
-
-        #endregion
-
-
-        #region Helper Methods
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private static int GetNeighborIndexFromNormal(int3 normal)
-        {
-            int index = -1;
-
-            // chunk index by normal value (from -1 to 1 on each axis):
-            // positive: 1    4    0
-            // negative: 3    5    2
-
-            if (normal.x != 0)
-            {
-                index = normal.x > 0 ? 0 : 1;
-            }
-            else if (normal.y != 0)
-            {
-                index = normal.y > 0 ? 2 : 3;
-            }
-            else if (normal.z != 0)
-            {
-                index = normal.z > 0 ? 4 : 5;
-            }
-
-            return index;
-        }
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private ushort GetNeighboringBlock(int3 normal, float3 localPosition)
-        {
-            int index = GetNeighborIndexFromNormal(normal);
-
-            // if neighbor chunk doesn't exist, then return true (to mean, return blockId == NullID
-            // otherwise, query octree for target neighbor and return block id
-            return _NeighborNodes[index] != null
-                ? _NeighborNodes[index].GetPoint(math.abs(localPosition + (-normal * (ChunkController.SIZE - 1))))
-                : BlockController.NullID;
         }
 
         #endregion

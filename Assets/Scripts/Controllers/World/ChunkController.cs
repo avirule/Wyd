@@ -45,6 +45,7 @@ namespace Wyd.Controllers.World
         public const int SIZE = 32;
         public const int SIZE_SQUARED = SIZE * SIZE;
         public const int SIZE_CUBED = SIZE * SIZE * SIZE;
+        public const int SIZE_MINUS_ONE = SIZE - 1;
 
         private static readonly ObjectCache<BlockAction> _blockActionsCache = new ObjectCache<BlockAction>(false, 1024);
 
@@ -592,7 +593,7 @@ namespace Wyd.Controllers.World
             float3 localPosition = math.abs(globalPosition - OriginPoint);
 
             List<float3> normals = new List<float3>();
-            normals.AddRange(WydMath.ToComponents(math.select(float3.zero, new float3(1f), localPosition == (SIZE - 1f))));
+            normals.AddRange(WydMath.ToComponents(math.select(float3.zero, new float3(1f), localPosition == (SIZE_MINUS_ONE))));
             normals.AddRange(WydMath.ToComponents(math.select(float3.zero, new float3(1f), localPosition == 0f)));
 
             return normals;

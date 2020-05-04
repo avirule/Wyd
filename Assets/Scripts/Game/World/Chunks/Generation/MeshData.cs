@@ -15,9 +15,7 @@ namespace Wyd.Game.World.Chunks.Generation
         private readonly List<List<int>> _Triangles;
         private readonly List<Vector3> _UVs;
 
-        public IReadOnlyList<Vector3> Vertices => _Vertices;
-        public IReadOnlyList<Vector3> UVs => _UVs;
-        public IReadOnlyList<IReadOnlyList<int>> Triangles => _Triangles;
+        public int VerticesCount => _Vertices.Count;
 
         public bool Empty => (_Vertices.Count == 0)
                              && (_UVs.Count == 0)

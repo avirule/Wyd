@@ -130,7 +130,7 @@ namespace Wyd.Game.World.Chunks.Generation
                     continue;
                 }
 
-                int noiseHeightClamped = math.clamp((int)math.floor(noiseHeight - OriginPoint.y), 0, ChunkController.SIZE - 1);
+                int noiseHeightClamped = math.clamp((int)math.floor(noiseHeight - OriginPoint.y), 0, ChunkController.SIZE_MINUS_ONE);
 
                 for (int y = noiseHeightClamped; y >= 0; y--)
                 {
