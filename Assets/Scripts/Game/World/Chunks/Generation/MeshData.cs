@@ -61,6 +61,7 @@ namespace Wyd.Game.World.Chunks.Generation
 
         public void AddVertex(Vector3 vertex) => _Vertices.Add(vertex);
         public void AddUV(Vector3 uv) => _UVs.Add(uv);
+        public void AddTriangle(int subMesh, int triangle) => _Triangles[subMesh].Add(triangle);
         public void AddTriangles(int subMesh, params int[] triangles) => _Triangles[subMesh].AddRange(triangles);
         public void AddTriangles(int subMesh, IEnumerable<int> triangles) => _Triangles[subMesh].AddRange(triangles);
 

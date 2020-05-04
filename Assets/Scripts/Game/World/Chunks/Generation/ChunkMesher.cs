@@ -3,7 +3,6 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
-using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Threading;
 using Unity.Mathematics;
@@ -140,20 +139,20 @@ namespace Wyd.Game.World.Chunks.Generation
 
         private void TraverseIndex(int index, int3 globalPosition, int3 localPosition, ushort currentBlockId, bool transparentTraversal)
         {
-            for (int i = 0; i < 6; i++)
+            for (int normalIndex = 0; normalIndex < 6; normalIndex++)
             {
-                int3 faceNormal = GenerationConstants.FaceNormalByIteration[i];
-                Direction faceDirection = GenerationConstants.FaceDirectionByIteration[i];
+                int3 faceNormal = GenerationConstants.FaceNormalByIteration[normalIndex];
+                Direction faceDirection = GenerationConstants.FaceDirectionByIteration[normalIndex];
 
                 if (_Mask[index].HasFace(faceDirection))
                 {
                     continue;
                 }
 
-                int iModulo3 = i % 3;
+                int iModulo3 = normalIndex % 3;
                 int moduloAxis = localPosition[iModulo3];
 
-                if (((i <= 2) && (moduloAxis >= (ChunkController.SIZE - 1))) || ((i > 2) && (moduloAxis <= 0)))
+                if (((normalIndex <= 2) && (moduloAxis >= (ChunkController.SIZE - 1))) || ((normalIndex > 2) && (moduloAxis <= 0)))
                 {
                     ushort facingBlockId = GetNeighboringBlock(faceNormal, localPosition);
 
@@ -175,7 +174,14 @@ namespace Wyd.Game.World.Chunks.Generation
                 }
 
                 _Mask[index].SetFace(faceDirection);
-                AddTriangles(faceDirection, transparentTraversal);
+
+                int verticesCount = _MeshData.Vertices.Count;
+                int transparentAsInt = Convert.ToInt32(transparentTraversal);
+
+                foreach (int triangle in BlockFaces.Triangles.FaceTrianglesByNormalIndex[normalIndex])
+                {
+                    _MeshData.AddTriangle(transparentAsInt, triangle + verticesCount);
+                }
 
                 float2 uvSize = new float2(1f);
 
@@ -186,7 +192,7 @@ namespace Wyd.Game.World.Chunks.Generation
 
                     foreach ((int traversalNormalIndex, int3 currentTraversalNormal) in GenerationConstants.PerpendicularNormals[iModulo3])
                     {
-                        traversals = GetTraversals(index, localPosition, traversalNormalIndex, currentTraversalNormal, faceNormal,
+                        traversals = GetTraversals(index, localPosition, currentBlockId, traversalNormalIndex, currentTraversalNormal, faceNormal,
                             faceDirection, GenerationConstants.IndexStepByTraversalNormalIndex[traversalNormalIndex], transparentTraversal);
 
                         traversalNormal = currentTraversalNormal;
@@ -204,24 +210,25 @@ namespace Wyd.Game.World.Chunks.Generation
 
                     for (int vert = 0; vert < 4; vert++)
                     {
-                        float3 traversalVertex = BlockFaces.Vertices.FaceVertices[faceDirection][vert] * traversalVertexOffset;
+                        float3 traversalVertex = BlockFaces.Vertices.FaceVerticesByDirection[faceDirection][vert] * traversalVertexOffset;
                         _MeshData.AddVertex(localPosition + traversalVertex);
                     }
                 }
                 else
                 {
-                    AddVertices(faceDirection, localPosition);
+                    foreach (float3 vertex in BlockFaces.Vertices.FaceVerticesByNormalIndex[normalIndex])
+                    {
+                        _MeshData.AddVertex(vertex + localPosition);
+                    }
                 }
 
-                if (!BlockController.Current.GetUVs(currentBlockId, globalPosition, faceDirection, uvSize, out BlockUVs blockUVs))
+                if (BlockController.Current.GetUVs(currentBlockId, globalPosition, faceDirection, uvSize, out BlockUVs blockUVs))
                 {
-                    continue;
+                    _MeshData.AddUV(blockUVs.TopLeft);
+                    _MeshData.AddUV(blockUVs.TopRight);
+                    _MeshData.AddUV(blockUVs.BottomLeft);
+                    _MeshData.AddUV(blockUVs.BottomRight);
                 }
-
-                _MeshData.AddUV(blockUVs.TopLeft);
-                _MeshData.AddUV(blockUVs.TopRight);
-                _MeshData.AddUV(blockUVs.BottomLeft);
-                _MeshData.AddUV(blockUVs.BottomRight);
             }
         }
 
@@ -230,6 +237,7 @@ namespace Wyd.Game.World.Chunks.Generation
         /// </summary>
         /// <param name="index">1D index of current block.</param>
         /// <param name="localPosition"></param>
+        /// <param name="initialBlockId"></param>
         /// <param name="sliceIndex">Current sliceIndex (x, y, or z) of a 3D index relative to your traversal direction.</param>
         /// <param name="traversalNormal">Direction to traverse in.</param>
         /// <param name="faceNormal">Direction to check faces while traversing.</param>
@@ -237,15 +245,13 @@ namespace Wyd.Game.World.Chunks.Generation
         /// <param name="traversalFactor">Amount of indexes to move forwards for each successful traversal in given direction.</param>
         /// <param name="transparentTraversal">Determines whether or not transparent traversal will be used.</param>
         /// <returns><see cref="int" /> representing how many successful traversals were made in the given traversal direction.</returns>
-        private int GetTraversals(int index, float3 localPosition, int sliceIndex, int3 traversalNormal, int3 faceNormal, Direction faceDirection,
-            int traversalFactor, bool transparentTraversal)
+        private int GetTraversals(int index, float3 localPosition, ushort initialBlockId, int sliceIndex, int3 traversalNormal, int3 faceNormal,
+            Direction faceDirection, int traversalFactor, bool transparentTraversal)
         {
             if (!_AggressiveFaceMerging)
             {
                 return 1;
             }
-
-            ushort initialBlockId = _Blocks.GetPoint(localPosition);
 
             int traversals;
             float sliceIndexValue = localPosition[sliceIndex];
@@ -289,33 +295,6 @@ namespace Wyd.Game.World.Chunks.Generation
             }
 
             return traversals;
-        }
-
-        #endregion
-
-
-        #region Add Verts/Tris
-
-        private void AddVertices(Direction direction, int3 localPosition)
-        {
-            foreach (float3 vertex in BlockFaces.Vertices.FaceVertices[direction])
-            {
-                _MeshData.AddVertex(vertex + localPosition);
-            }
-        }
-
-        private void AddTriangles(Direction direction, bool transparent = false)
-        {
-            if (transparent)
-            {
-                _MeshData.AddTriangles(1, BlockFaces.Triangles.FaceTriangles[direction]
-                    .Select(triangle => triangle + _MeshData.Vertices.Count));
-            }
-            else
-            {
-                _MeshData.AddTriangles(0, BlockFaces.Triangles.FaceTriangles[direction]
-                    .Select(triangle => triangle + _MeshData.Vertices.Count));
-            }
         }
 
         #endregion

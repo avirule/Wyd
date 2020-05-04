@@ -95,7 +95,7 @@ namespace Wyd.Controllers.UI
 
         private void AddTriangles(Direction direction)
         {
-            int[] triangles = BlockFaces.Triangles.FaceTriangles[direction];
+            int[] triangles = BlockFaces.Triangles.FaceTrianglesByDirection[direction];
 
             foreach (int triangleValue in triangles)
             {
@@ -105,7 +105,7 @@ namespace Wyd.Controllers.UI
 
         private void AddVertices(Direction direction, float3 localPosition)
         {
-            float3[] vertices = BlockFaces.Vertices.FaceVertices[direction];
+            float3[] vertices = BlockFaces.Vertices.FaceVerticesByDirection[direction];
 
             foreach (float3 vertex in vertices)
             {

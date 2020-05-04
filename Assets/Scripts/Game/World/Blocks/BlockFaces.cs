@@ -12,7 +12,8 @@ namespace Wyd.Game.World.Blocks
     {
         public static class Vertices
         {
-            public static readonly IReadOnlyDictionary<Direction, float3[]> FaceVertices;
+            public static readonly IReadOnlyDictionary<Direction, float3[]> FaceVerticesByDirection;
+            public static readonly float3[][] FaceVerticesByNormalIndex;
 
             public static readonly float3[] North =
             {
@@ -62,9 +63,9 @@ namespace Wyd.Game.World.Blocks
                 new float3(1f, 0f, 1f)
             };
 
-            static Vertices() =>
-                // todo make this a list and index into it
-                FaceVertices = new Dictionary<Direction, float3[]>
+            static Vertices()
+            {
+                FaceVerticesByDirection = new Dictionary<Direction, float3[]>
                 {
                     { Direction.North, North },
                     { Direction.East, East },
@@ -73,11 +74,23 @@ namespace Wyd.Game.World.Blocks
                     { Direction.Up, Up },
                     { Direction.Down, Down }
                 };
+
+                FaceVerticesByNormalIndex = new[]
+                {
+                    East,
+                    Up,
+                    North,
+                    West,
+                    Down,
+                    South
+                };
+            }
         }
 
         public static class Triangles
         {
-            public static readonly IReadOnlyDictionary<Direction, int[]> FaceTriangles;
+            public static readonly IReadOnlyDictionary<Direction, int[]> FaceTrianglesByDirection;
+            public static readonly int[][] FaceTrianglesByNormalIndex;
 
             public static readonly int[] North =
             {
@@ -139,8 +152,9 @@ namespace Wyd.Game.World.Blocks
                 1
             };
 
-            static Triangles() =>
-                FaceTriangles = new Dictionary<Direction, int[]>
+            static Triangles()
+            {
+                FaceTrianglesByDirection = new Dictionary<Direction, int[]>
                 {
                     { Direction.North, North },
                     { Direction.East, East },
@@ -149,6 +163,17 @@ namespace Wyd.Game.World.Blocks
                     { Direction.Up, Up },
                     { Direction.Down, Down }
                 };
+
+                FaceTrianglesByNormalIndex = new[]
+                {
+                    East,
+                    Up,
+                    North,
+                    West,
+                    Down,
+                    South
+                };
+            }
         }
 
         private Direction _RawValue;
