@@ -39,7 +39,7 @@ namespace Wyd.Game.World.Chunks.Generation
             Direction.South
         };
 
-        public static readonly (int, int3)[][] PerpendicularNormals =
+        public static readonly (int TraversalNormalAxisIndex, int3 TraversalNormal)[][] PerpendicularNormals =
         {
             // for normal (1, 0, 0)
             new[]

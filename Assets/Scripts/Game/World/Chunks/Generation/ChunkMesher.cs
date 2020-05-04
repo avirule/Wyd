@@ -141,7 +141,6 @@ namespace Wyd.Game.World.Chunks.Generation
         {
             for (int normalIndex = 0; normalIndex < 6; normalIndex++)
             {
-                int3 faceNormal = GenerationConstants.FaceNormalByIteration[normalIndex];
                 Direction faceDirection = GenerationConstants.FaceDirectionByIteration[normalIndex];
 
                 if (_Mask[index].HasFace(faceDirection))
@@ -150,145 +149,89 @@ namespace Wyd.Game.World.Chunks.Generation
                 }
 
                 int iModulo3 = normalIndex % 3;
-                int moduloAxisValue = localPosition[iModulo3];
+                int traversalIterations = 0, traversals = 0;
 
-                if (((normalIndex <= 2) && (moduloAxisValue >= (ChunkController.SIZE - 1))) // positive axes bounds check
-                    || ((normalIndex > 2) && (moduloAxisValue <= 0))) // negative axes bounds check
+                (int TraversalNormalAxisIndex, int3 TraversalNormal)[] perpendicularNormals = GenerationConstants.PerpendicularNormals[iModulo3];
+
+                for (int perpendicularNormalIndex = 0; perpendicularNormalIndex < perpendicularNormals.Length; perpendicularNormalIndex++)
                 {
-                    ushort facingBlockId = GetNeighboringBlock(faceNormal, localPosition);
+                    int traversalNormalAxisIndex = perpendicularNormals[perpendicularNormalIndex].TraversalNormalAxisIndex;
+                    int3 traversalNormal = perpendicularNormals[perpendicularNormalIndex].TraversalNormal;
 
-                    if ((transparentTraversal && (currentBlockId == facingBlockId))
-                        || !BlockController.Current.CheckBlockHasProperty(facingBlockId, BlockDefinition.Property.Transparent))
+                    int sliceIndexValue = localPosition[traversalNormalAxisIndex];
+                    int maximumTraversals = _AggressiveFaceMerging ? ChunkController.SIZE : sliceIndexValue + 1;
+                    int traversalFactor = GenerationConstants.IndexStepByTraversalNormalIndex[traversalNormalAxisIndex];
+
+                    for (; (sliceIndexValue + traversals) < maximumTraversals; traversals++)
                     {
-                        continue;
-                    }
-                }
-                else
-                {
-                    ushort facingBlockId = _Blocks.GetPoint(localPosition + faceNormal);
+                        int traversalIndex = index + (traversals * traversalFactor);
+                        int3 currentTraversalPosition = localPosition + (traversalNormal * traversals);
 
-                    if ((transparentTraversal && (currentBlockId == facingBlockId))
-                        || !BlockController.Current.CheckBlockHasProperty(facingBlockId, BlockDefinition.Property.Transparent))
-                    {
-                        continue;
-                    }
-                }
-
-                _Mask[index].SetFace(faceDirection);
-
-                int verticesCount = _MeshData.Vertices.Count;
-                int transparentAsInt = Convert.ToInt32(transparentTraversal);
-
-                // ReSharper disable once ForCanBeConvertedToForeach
-                for (int i = 0; i < BlockFaces.Triangles.FaceTriangles.Length; i++)
-                {
-                    _MeshData.AddTriangle(transparentAsInt, BlockFaces.Triangles.FaceTriangles[i] + verticesCount);
-
-                }
-
-                float2 uvSize = new float2(1f);
-
-                if (_AggressiveFaceMerging)
-                {
-                    int traversals = 0;
-                    float3 traversalNormal = float3.zero;
-
-                    foreach ((int traversalNormalIndex, int3 currentTraversalNormal) in GenerationConstants.PerpendicularNormals[iModulo3])
-                    {
-                        GetTraversals(index, localPosition, currentBlockId, traversalNormalIndex, currentTraversalNormal, faceNormal, faceDirection,
-                            GenerationConstants.IndexStepByTraversalNormalIndex[traversalNormalIndex], transparentTraversal, out traversals);
-
-                        traversalNormal = currentTraversalNormal;
-
-                        if (traversals <= 1)
+                        if (_Mask[traversalIndex].HasFace(faceDirection)
+                            || ((traversals > 0) && (_Blocks.GetPoint(currentTraversalPosition) != currentBlockId)))
                         {
-                            continue;
+                            break;
                         }
 
-                        uvSize[GenerationConstants.UVIndexAdjustments[iModulo3][traversalNormalIndex]] = traversals;
-                        break;
+                        int3 faceNormal = GenerationConstants.FaceNormalByIteration[normalIndex];
+                        int3 traversalFacingBlockPosition = currentTraversalPosition + faceNormal;
+                        float traversalSliceValue = traversalFacingBlockPosition[traversalNormalAxisIndex];
+
+                        ushort facingBlockId = (traversalSliceValue < 0) || (traversalSliceValue > (ChunkController.SIZE - 1))
+                            ? GetNeighboringBlock(faceNormal, traversalFacingBlockPosition)
+                            : _Blocks.GetPoint(traversalFacingBlockPosition);
+
+                        // if transparent, traverse as long as block is the same
+                        // if opaque, traverse as long as faceNormal-adjacent block is transparent
+                        if ((transparentTraversal && (currentBlockId != facingBlockId))
+                            || !BlockController.Current.CheckBlockHasProperty(facingBlockId, BlockDefinition.Property.Transparent))
+                        {
+                            break;
+                        }
+
+                        _Mask[traversalIndex].SetFace(faceDirection);
                     }
 
-                    float3 traversalVertexOffset = math.max(traversals * traversalNormal, 1);
-
-                    for (int vert = 0; vert < 4; vert++)
+                    // if we haven't traversed at all, continue to next axis
+                    if ((traversals == 0) || ((traversalIterations == 0) && (traversals == 1)))
                     {
-                        float3 traversalVertex = BlockFaces.Vertices.FaceVerticesByDirection[faceDirection][vert] * traversalVertexOffset;
-                        _MeshData.AddVertex(localPosition + traversalVertex);
+                        traversalIterations += 1;
+                        continue;
                     }
-                }
-                else
-                {
-                    foreach (float3 vertex in BlockFaces.Vertices.FaceVerticesByNormalIndex[normalIndex])
+
+                    // add triangles
+                    int verticesCount = _MeshData.Vertices.Count;
+                    int transparentAsInt = Convert.ToInt32(transparentTraversal);
+
+                    // ReSharper disable once ForCanBeConvertedToForeach
+                    for (int triangleIndex = 0; triangleIndex < BlockFaces.Triangles.FaceTriangles.Length; triangleIndex++)
                     {
-                        _MeshData.AddVertex(vertex + localPosition);
+                        _MeshData.AddTriangle(transparentAsInt, BlockFaces.Triangles.FaceTriangles[triangleIndex] + verticesCount);
                     }
-                }
 
-                if (BlockController.Current.GetUVs(currentBlockId, globalPosition, faceDirection, uvSize, out BlockUVs blockUVs))
-                {
-                    _MeshData.AddUV(blockUVs.TopLeft);
-                    _MeshData.AddUV(blockUVs.TopRight);
-                    _MeshData.AddUV(blockUVs.BottomLeft);
-                    _MeshData.AddUV(blockUVs.BottomRight);
-                }
-            }
-        }
+                    // add vertices
+                    int3 traversalVertexOffset = math.max(traversals * traversalNormal, 1);
+                    float3[] vertices = BlockFaces.Vertices.FaceVerticesByNormalIndex[normalIndex];
 
-        /// <summary>
-        ///     Gets the total amount of possible traversals for face merging in a direction
-        /// </summary>
-        /// <param name="index">1D index of current block.</param>
-        /// <param name="localPosition"></param>
-        /// <param name="initialBlockId"></param>
-        /// <param name="sliceIndex">Current sliceIndex (x, y, or z) of a 3D index relative to your traversal direction.</param>
-        /// <param name="traversalNormal">Direction to traverse in.</param>
-        /// <param name="faceNormal">Direction to check faces while traversing.</param>
-        /// <param name="faceDirection"></param>
-        /// <param name="traversalFactor">Amount of indexes to move forwards for each successful traversal in given direction.</param>
-        /// <param name="transparentTraversal">Determines whether or not transparent traversal will be used.</param>
-        /// <param name="traversals"><see cref="int" /> representing how many successful traversals were made in the given traversal direction.</param>
-        private void GetTraversals(int index, float3 localPosition, ushort initialBlockId, int sliceIndex, int3 traversalNormal, int3 faceNormal,
-            Direction faceDirection, int traversalFactor, bool transparentTraversal, out int traversals)
-        {
-            float sliceIndexValue = localPosition[sliceIndex];
+                    // ReSharper disable once ForCanBeConvertedToForeach
+                    for (int verticesIndex = 0; verticesIndex < vertices.Length; verticesIndex++)
+                    {
+                        _MeshData.AddVertex(localPosition + (vertices[verticesIndex] * traversalVertexOffset));
+                    }
 
-            for (traversals = 1; (sliceIndexValue + traversals) < ChunkController.SIZE; traversals++)
-            {
-                // incrementing on x, so the traversal factor is 1
-                // if we were incrementing on z, the factor would be ChunkController.Size3D.x
-                // and on y it would be (ChunkController.Size3D.x * ChunkController.Size3D.z)
-                int traversalIndex = index + (traversals * traversalFactor);
-                float3 currentTraversalPosition = localPosition + (traversalNormal * traversals);
+                    if (BlockController.Current.GetUVs(currentBlockId, globalPosition, faceDirection, new float2(1f)
+                    {
+                        [GenerationConstants.UVIndexAdjustments[iModulo3][traversalNormalAxisIndex]] = traversals
+                    }, out BlockUVs blockUVs))
+                    {
+                        _MeshData.AddUV(blockUVs.TopLeft);
+                        _MeshData.AddUV(blockUVs.TopRight);
+                        _MeshData.AddUV(blockUVs.BottomLeft);
+                        _MeshData.AddUV(blockUVs.BottomRight);
+                    }
 
-                if ((_Blocks.GetPoint(currentTraversalPosition) != initialBlockId) || _Mask[traversalIndex].HasFace(faceDirection))
-                {
                     break;
                 }
-
-                float3 traversalFacingBlockPosition = currentTraversalPosition + faceNormal;
-                ushort facingBlockId;
-
-                if ((traversalFacingBlockPosition[sliceIndex] >= 0) && (traversalFacingBlockPosition[sliceIndex] <= (ChunkController.SIZE - 1)))
-                {
-                    // coordinates are inside, so retrieve from own blocks octree
-                    facingBlockId = _Blocks.GetPoint(traversalFacingBlockPosition);
-                }
-                else
-                {
-                    facingBlockId = GetNeighboringBlock(faceNormal, traversalFacingBlockPosition);
-                }
-
-                // if transparent, traverse as long as block is the same
-                // if opaque, traverse as long as faceNormal-adjacent block is transparent
-                if ((transparentTraversal && (initialBlockId != facingBlockId))
-                    || !BlockController.Current.CheckBlockHasProperty(facingBlockId, BlockDefinition.Property.Transparent))
-                {
-                    break;
-                }
-
-                // set face to traversed and continue traversal
-                _Mask[traversalIndex].SetFace(faceDirection);
             }
         }
 
