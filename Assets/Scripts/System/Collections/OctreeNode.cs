@@ -2,9 +2,6 @@
 
 #region
 
-using System.Collections.Generic;
-using Unity.Mathematics;
-
 #endregion
 
 namespace Wyd.System.Collections
@@ -87,39 +84,6 @@ namespace Wyd.System.Collections
             }
         }
 
-        private bool CheckShouldCollapse()
-        {
-            if (IsUniform)
-            {
-                return false;
-            }
-
-            ushort firstValue = _Nodes[0]._Value;
-
-            // avoiding using linq here for performance sensitivity
-            for (int index = 0; index < _Nodes.Length; index++)
-            {
-                OctreeNode node = _Nodes[index];
-
-                if (!node.IsUniform || (node._Value != firstValue))
-                {
-                    return false;
-                }
-            }
-
-            return true;
-        }
-
-        public IEnumerable<ushort> GetAllData(int size)
-        {
-            for (int index = 0; index < math.pow(size, 3); index++)
-            {
-                int3 coords = WydMath.IndexTo3D(index, size);
-
-                yield return GetPoint(size / 2f, coords.x, coords.y, coords.z);
-            }
-        }
-
         #endregion
 
 
@@ -154,6 +118,31 @@ namespace Wyd.System.Collections
                 z0 = 0f;
                 octant -= 2;
             }
+        }
+
+        private bool CheckShouldCollapse()
+        {
+            if (IsUniform)
+            {
+                return false;
+            }
+
+            ushort firstValue = _Nodes[0]._Value;
+
+            // avoiding using linq here for performance sensitivity
+            // ReSharper disable once ForCanBeConvertedToForeach
+            // ReSharper disable once LoopCanBeConvertedToQuery
+            for (int index = 0; index < _Nodes.Length; index++)
+            {
+                OctreeNode node = _Nodes[index];
+
+                if (!node.IsUniform || (node._Value != firstValue))
+                {
+                    return false;
+                }
+            }
+
+            return true;
         }
 
         #endregion

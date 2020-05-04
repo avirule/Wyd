@@ -29,6 +29,16 @@ namespace Wyd.System.Collections
 
         public ushort GetPoint(float3 point) => _RootNode.GetPoint(_Size / 2f, point.x, point.y, point.z);
         public void SetPoint(float3 point, ushort value) => _RootNode.SetPoint(_Size / 2f, point.x, point.y, point.z, value);
-        public IEnumerable<ushort> GetAllData() => _RootNode.GetAllData(_Size / 2);
+
+        public IEnumerable<ushort> GetAllData()
+        {
+            float extent = _Size / 2f;
+            for (int index = 0; index < math.pow(_Size, 3); index++)
+            {
+                int3 coords = WydMath.IndexTo3D(index, _Size);
+
+                yield return _RootNode.GetPoint(extent, coords.x, coords.y, coords.z);
+            }
+        }
     }
 }
