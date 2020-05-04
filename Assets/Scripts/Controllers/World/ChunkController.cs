@@ -47,7 +47,7 @@ namespace Wyd.Controllers.World
         public const int SIZE_CUBED = SIZE * SIZE * SIZE;
         public const int SIZE_MINUS_ONE = SIZE - 1;
 
-        private static readonly ObjectCache<BlockAction> _blockActionsCache = new ObjectCache<BlockAction>(false, 1024);
+        private static readonly ObjectPool<BlockAction> _blockActionsPool = new ObjectPool<BlockAction>(null, 1024);
 
 
         #region NoiseShader
@@ -364,7 +364,7 @@ namespace Wyd.Controllers.World
             {
                 ProcessBlockAction(blockAction);
 
-                _blockActionsCache.CacheItem(ref blockAction);
+                _blockActionsPool.CacheItem(blockAction);
 
                 Interlocked.Decrement(ref _BlockActionsCount);
 
@@ -567,7 +567,7 @@ namespace Wyd.Controllers.World
 
         private void AllocateBlockAction(float3 localPosition, ushort id)
         {
-            if (_blockActionsCache.TryRetrieve(out BlockAction blockAction))
+            if (_blockActionsPool.TryRetrieve(out BlockAction blockAction))
             {
                 blockAction.SetData(localPosition, id);
             }

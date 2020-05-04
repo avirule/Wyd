@@ -16,8 +16,8 @@ namespace Wyd.Game.World.Chunks.Generation
 {
     public class ChunkTerrainBuilder : ChunkBuilder
     {
-        private static readonly ObjectCache<float[]> _heightmapCache = new ObjectCache<float[]>();
-        private static readonly ObjectCache<float[]> _caveNoiseCache = new ObjectCache<float[]>();
+        private static readonly ObjectPool<float[]> _heightmapPool = new ObjectPool<float[]>(null);
+        private static readonly ObjectPool<float[]> _caveNoisePool = new ObjectPool<float[]>(null);
 
         private readonly ComputeBuffer _HeightmapBuffer;
         private readonly ComputeBuffer _CaveNoiseBuffer;
@@ -74,8 +74,8 @@ namespace Wyd.Game.World.Chunks.Generation
             Array.Clear(_Heightmap, 0, _Heightmap.Length);
             Array.Clear(_CaveNoise, 0, _CaveNoise.Length);
 
-            _heightmapCache.CacheItem(ref _Heightmap);
-            _caveNoiseCache.CacheItem(ref _CaveNoise);
+            _heightmapPool.CacheItem(_Heightmap);
+            _caveNoisePool.CacheItem(_CaveNoise);
 
             Stopwatch.Stop();
 
@@ -84,8 +84,8 @@ namespace Wyd.Game.World.Chunks.Generation
 
         private void GenerateNoise()
         {
-            _Heightmap = _heightmapCache.Retrieve() ?? new float[ChunkController.SIZE_SQUARED];
-            _CaveNoise = _caveNoiseCache.Retrieve() ?? new float[ChunkController.SIZE_CUBED];
+            _Heightmap = _heightmapPool.Retrieve() ?? new float[ChunkController.SIZE_SQUARED];
+            _CaveNoise = _caveNoisePool.Retrieve() ?? new float[ChunkController.SIZE_CUBED];
 
             if ((_HeightmapBuffer == null) || (_CaveNoiseBuffer == null))
             {

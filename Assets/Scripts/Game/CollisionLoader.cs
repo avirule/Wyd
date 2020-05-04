@@ -18,8 +18,7 @@ namespace Wyd.Game
 {
     public class CollisionLoader : MonoBehaviour, IPerFrameUpdate
     {
-        private static readonly ObjectCache<GameObject> _colliderCubeCache =
-            new ObjectCache<GameObject>(false, -1, DeactivateGameObject);
+        private static readonly ObjectPool<GameObject> _colliderCubePool = new ObjectPool<GameObject>(null);
 
         private static ref GameObject DeactivateGameObject(ref GameObject obj)
         {
@@ -168,17 +167,20 @@ namespace Wyd.Game
             {
                 float3 position = _LocalCacheQueue.Dequeue();
 
-                if (_ColliderCubes.TryGetValue(position, out GameObject gameObject))
+                if (_ColliderCubes.TryGetValue(position, out GameObject obj))
                 {
                     _ColliderCubes.Remove(position);
-                    _colliderCubeCache.CacheItem(ref gameObject);
+
+                    obj.SetActive(false);
+
+                    _colliderCubePool.CacheItem(obj);
                 }
             }
         }
 
         private GameObject GetCollisionCube(float3 position)
         {
-            if (!_colliderCubeCache.TryRetrieve(out GameObject surfaceCollider))
+            if (!_colliderCubePool.TryRetrieve(out GameObject surfaceCollider))
             {
                 surfaceCollider = Instantiate(CollisionCubeObject);
             }

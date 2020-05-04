@@ -34,7 +34,7 @@ namespace Wyd.Controllers.World
         #region Instance Members
 
         private Stopwatch _Stopwatch;
-        private ObjectCache<ChunkController> _ChunkCache;
+        private ObjectPool<ChunkController> _ChunkPool;
         private Dictionary<float3, ChunkController> _Chunks;
         private Stack<float3> _ChunksPendingActivation;
         private Stack<float3> _ChunksPendingDeactivation;
@@ -54,7 +54,7 @@ namespace Wyd.Controllers.World
 
         public int ChunksQueuedCount => _ChunksPendingActivation.Count;
         public int ChunksActiveCount => _Chunks.Count;
-        public int ChunksCachedCount => _ChunkCache.Size;
+        public int ChunksCachedCount => _ChunkPool.Size;
 
         public double AverageChunkStateVerificationTime =>
             (ChunkStateVerificationTimes != null)
@@ -98,21 +98,7 @@ namespace Wyd.Controllers.World
             AssignSingletonInstance(this);
 
             _Stopwatch = new Stopwatch();
-            _ChunkCache = new ObjectCache<ChunkController>(false, -1,
-                (ref ChunkController chunkController) =>
-                {
-                    if (chunkController == default)
-                    {
-                        return ref chunkController;
-                    }
-
-                    chunkController.Deactivate();
-                    FlagNeighborsForMeshUpdate(chunkController.OriginPoint);
-
-                    return ref chunkController;
-                },
-                (ref ChunkController chunkController) =>
-                    Destroy(chunkController.gameObject));
+            _ChunkPool = new ObjectPool<ChunkController>((ref ChunkController chunkController) => Destroy(chunkController.gameObject));
 
             _Chunks = new Dictionary<float3, ChunkController>();
             _ChunksPendingActivation = new Stack<float3>();
@@ -193,7 +179,7 @@ namespace Wyd.Controllers.World
                     continue;
                 }
 
-                if (_ChunkCache.TryRetrieve(out ChunkController chunkController))
+                if (_ChunkPool.TryRetrieve(out ChunkController chunkController))
                 {
                     chunkController.Activate(origin);
                 }
@@ -237,11 +223,14 @@ namespace Wyd.Controllers.World
             chunkController.BlocksChanged += OnChunkShapeChanged;
             chunkController.MeshChanged -= OnChunkMeshChanged;
 
+            FlagNeighborsForMeshUpdate(chunkController.OriginPoint);
             _Chunks.Remove(chunkOrigin);
 
-            // Chunk is automatically deactivated by ObjectCache
-            // additionally, neighbors are flagged for update by ObjectCache
-            _ChunkCache.CacheItem(ref chunkController);
+            chunkController.Deactivate();
+
+            // Chunk is automatically deactivated by ObjectPool
+            // additionally, neighbors are flagged for update by ObjectPool
+            _ChunkPool.CacheItem(chunkController);
         }
 
         public IEnumerable<ushort> GetNeighboringBlocks(float3 globalPosition)
@@ -334,7 +323,7 @@ namespace Wyd.Controllers.World
 
             int totalRenderDistance =
                 OptionsController.Current.RenderDistance + /*OptionsController.Current.PreLoadChunkDistance*/ +1;
-            _ChunkCache.MaximumSize = ((totalRenderDistance * 2) - 1) * WORLD_HEIGHT_IN_CHUNKS;
+            _ChunkPool.MaximumSize = ((totalRenderDistance * 2) - 1) * WORLD_HEIGHT_IN_CHUNKS;
         }
 
         private void VerifyAllChunkStatesAroundLoaders()

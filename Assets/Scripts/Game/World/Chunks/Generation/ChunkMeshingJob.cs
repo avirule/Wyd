@@ -14,7 +14,7 @@ namespace Wyd.Game.World.Chunks.Generation
 {
     public class ChunkMeshingJob : AsyncJob
     {
-        private static readonly ObjectCache<ChunkMesher> _chunkMesherCache = new ObjectCache<ChunkMesher>();
+        private static readonly ObjectPool<ChunkMesher> _chunkMesherPool = new ObjectPool<ChunkMesher>(null);
 
         private readonly CancellationToken _CancellationToken;
         private readonly float3 _OriginPoint;
@@ -35,7 +35,7 @@ namespace Wyd.Game.World.Chunks.Generation
 
         protected override Task Process()
         {
-            if (_chunkMesherCache.TryRetrieve(out ChunkMesher mesher))
+            if (_chunkMesherPool.TryRetrieve(out ChunkMesher mesher))
             {
                 mesher.PrepareMeshing(_CancellationToken, _OriginPoint, _Blocks, _AggressiveFaceMerging);
             }
@@ -66,7 +66,7 @@ namespace Wyd.Game.World.Chunks.Generation
         public void CacheMesher()
         {
             _Mesher?.Reset();
-            _chunkMesherCache.CacheItem(ref _Mesher);
+            _chunkMesherPool.CacheItem(_Mesher);
             _Mesher = null;
         }
     }
