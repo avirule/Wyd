@@ -4,6 +4,8 @@
 
 #endregion
 
+using System;
+
 namespace Wyd.System.Collections
 {
     public class OctreeNode
@@ -16,13 +18,18 @@ namespace Wyd.System.Collections
         public ushort Value => _Value;
         public bool IsUniform => _Nodes == null;
 
+        public OctreeNode this[int index] => _Nodes[index];
+
         #endregion
 
         /// <summary>
         ///     Creates an in-memory compressed 3D representation of any unmanaged data type.
         /// </summary>
         /// <param name="value">Initial value of the collection.</param>
-        public OctreeNode(ushort value) => _Value = value;
+        public OctreeNode(ushort value)
+        {
+            _Value = value;
+        }
 
 
         #region Data Operations
@@ -34,7 +41,7 @@ namespace Wyd.System.Collections
                 return _Value;
             }
 
-            DetermineOctant(extent, x, y, z, out float x0, out float y0, out float z0, out int octant);
+            Octree.DetermineOctant(extent, x, y, z, out float x0, out float y0, out float z0, out int octant);
 
             return _Nodes[octant].GetPoint(extent / 2f, x - (x0 * extent), y - (y0 * extent), z - (z0 * extent));
         }
@@ -70,7 +77,7 @@ namespace Wyd.System.Collections
                 }
             }
 
-            DetermineOctant(extent, x, y, z, out float x0, out float y0, out float z0, out int octant);
+            Octree.DetermineOctant(extent, x, y, z, out float x0, out float y0, out float z0, out int octant);
 
             // recursively dig into octree and set
             _Nodes[octant].SetPoint(extent / 2f, x - (x0 * extent), y - (y0 * extent), z - (z0 * extent), newValue);
@@ -88,37 +95,6 @@ namespace Wyd.System.Collections
 
 
         #region Helper Methods
-
-        // indexes:
-        // bottom half quadrant indexes:
-        // 1 3
-        // 0 2
-        // top half quadrant indexes:
-        // 5 7
-        // 4 6
-        private static void DetermineOctant(float extent, float x, float y, float z, out float x0, out float y0, out float z0, out int octant)
-        {
-            x0 = y0 = z0 = 1f;
-            octant = 7;
-
-            if (x < extent)
-            {
-                x0 = 0f;
-                octant -= 1;
-            }
-
-            if (y < extent)
-            {
-                y0 = 0f;
-                octant -= 4;
-            }
-
-            if (z < extent)
-            {
-                z0 = 0f;
-                octant -= 2;
-            }
-        }
 
         private bool CheckShouldCollapse()
         {
