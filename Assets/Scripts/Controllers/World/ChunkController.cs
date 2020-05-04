@@ -456,13 +456,13 @@ namespace Wyd.Controllers.World
 
                 if (Active)
                 {
-                    MainThreadActionsController.Current.QueueAction(new MainThreadAction(null, () =>
+                    MainThreadActionsController.Current.QueueAction(() =>
                     {
                         heightmapBuffer?.Release();
                         caveNoiseBuffer?.Release();
 
                         return true;
-                    }));
+                    });
 
                     asyncJob.GetGeneratedBlockData(out INodeCollection<ushort> blocks);
                     _BlockData.SetBlockData(ref blocks);
@@ -508,7 +508,7 @@ namespace Wyd.Controllers.World
                     asyncJob.CacheMesher();
                 }
 
-                MainThreadActionsController.Current.QueueAction(new MainThreadAction(null, () => ApplyMesh(asyncJob)));
+                MainThreadActionsController.Current.QueueAction(() => ApplyMesh(asyncJob));
 
                 State = ChunkState.Meshed;
 

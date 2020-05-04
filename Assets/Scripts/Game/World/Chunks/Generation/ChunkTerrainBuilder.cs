@@ -9,7 +9,6 @@ using Wyd.Controllers.System;
 using Wyd.Controllers.World;
 using Wyd.System;
 using Wyd.System.Collections;
-using Wyd.System.Jobs;
 
 #endregion
 
@@ -109,9 +108,8 @@ namespace Wyd.Game.World.Chunks.Generation
             }
             else
             {
-                using (ManualResetEvent manualResetEvent = new ManualResetEvent(false))
+                using (ManualResetEvent manualResetEvent = MainThreadActionsController.Current.QueueAction(GetComputeBufferData))
                 {
-                    MainThreadActionsController.Current.QueueAction(new MainThreadAction(manualResetEvent, GetComputeBufferData));
                     manualResetEvent.WaitOne();
                 }
             }

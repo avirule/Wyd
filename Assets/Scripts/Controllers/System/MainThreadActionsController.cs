@@ -1,7 +1,10 @@
 #region
 
+using System;
 using System.Collections;
 using System.Collections.Concurrent;
+using System.Runtime.CompilerServices;
+using System.Threading;
 using Wyd.System;
 using Wyd.System.Jobs;
 
@@ -9,11 +12,28 @@ using Wyd.System.Jobs;
 
 namespace Wyd.Controllers.System
 {
+    public delegate bool MainThreadActionInvocation();
+
     /// <summary>
     ///     Controller allowing qu
     /// </summary>
     public class MainThreadActionsController : SingletonController<MainThreadActionsController>, IPerFrameIncrementalUpdate
     {
+        private class MainThreadAction
+        {
+            private readonly ManualResetEvent _ManualResetEvent;
+            private readonly MainThreadActionInvocation _Invocation;
+
+            public MainThreadAction(ManualResetEvent manualResetEvent, MainThreadActionInvocation invocation)
+            {
+                _ManualResetEvent = manualResetEvent;
+                _Invocation = invocation ?? throw new NullReferenceException(nameof(invocation));
+            }
+
+            public bool Invoke() => _Invocation();
+            public void Set() => _ManualResetEvent?.Set();
+        }
+
         private ConcurrentQueue<MainThreadAction> _Actions;
 
         private void Awake()
@@ -33,9 +53,13 @@ namespace Wyd.Controllers.System
             PerFrameUpdateController.Current.DeregisterPerFrameUpdater(-900, this);
         }
 
-        public void QueueAction(MainThreadAction mainThreadAction)
+        public ManualResetEvent QueueAction(MainThreadActionInvocation invocation)
         {
-            _Actions.Enqueue(mainThreadAction);
+            ManualResetEvent resetEvent = new ManualResetEvent(false);
+
+            _Actions.Enqueue(new MainThreadAction(resetEvent, invocation));
+
+            return resetEvent;
         }
 
         public void FrameUpdate() { }
@@ -46,7 +70,7 @@ namespace Wyd.Controllers.System
             {
                 if (!mainThreadAction.Invoke())
                 {
-                    QueueAction(mainThreadAction);
+                    _Actions.Enqueue(mainThreadAction);
                 }
 
                 mainThreadAction.Set();
