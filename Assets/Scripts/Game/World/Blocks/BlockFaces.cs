@@ -89,10 +89,7 @@ namespace Wyd.Game.World.Blocks
 
         public static class Triangles
         {
-            public static readonly IReadOnlyDictionary<Direction, int[]> FaceTrianglesByDirection;
-            public static readonly int[][] FaceTrianglesByNormalIndex;
-
-            public static readonly int[] North =
+            public static readonly int[] FaceTriangles =
             {
                 0,
                 2,
@@ -101,79 +98,6 @@ namespace Wyd.Game.World.Blocks
                 3,
                 1
             };
-
-            public static readonly int[] East =
-            {
-                0,
-                2,
-                1,
-                2,
-                3,
-                1
-            };
-
-            public static readonly int[] South =
-            {
-                0,
-                2,
-                1,
-                2,
-                3,
-                1
-            };
-
-            public static readonly int[] West =
-            {
-                0,
-                2,
-                1,
-                2,
-                3,
-                1
-            };
-
-            public static readonly int[] Up =
-            {
-                0,
-                2,
-                1,
-                2,
-                3,
-                1
-            };
-
-            public static readonly int[] Down =
-            {
-                0,
-                2,
-                1,
-                2,
-                3,
-                1
-            };
-
-            static Triangles()
-            {
-                FaceTrianglesByDirection = new Dictionary<Direction, int[]>
-                {
-                    { Direction.North, North },
-                    { Direction.East, East },
-                    { Direction.South, South },
-                    { Direction.West, West },
-                    { Direction.Up, Up },
-                    { Direction.Down, Down }
-                };
-
-                FaceTrianglesByNormalIndex = new[]
-                {
-                    East,
-                    Up,
-                    North,
-                    West,
-                    Down,
-                    South
-                };
-            }
         }
 
         private Direction _RawValue;

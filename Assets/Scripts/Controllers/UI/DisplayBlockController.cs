@@ -53,7 +53,7 @@ namespace Wyd.Controllers.UI
             _Triangles.Clear();
             _UVs.Clear();
 
-            AddTriangles(Direction.Up);
+            AddTriangles();
             AddVertices(Direction.Up, Vector3.zero);
             if (BlockController.Current.GetUVs(BlockId, int3.zero, Direction.Up, new float2(1f),
                 out BlockUVs blockUVs))
@@ -64,7 +64,7 @@ namespace Wyd.Controllers.UI
                 _UVs.Add(blockUVs[3]);
             }
 
-            AddTriangles(Direction.North);
+            AddTriangles();
             AddVertices(Direction.North, Vector3.zero);
             if (BlockController.Current.GetUVs(BlockId, int3.zero, Direction.North, new float2(1f),
                 out blockUVs))
@@ -75,7 +75,7 @@ namespace Wyd.Controllers.UI
                 _UVs.Add(blockUVs[2]);
             }
 
-            AddTriangles(Direction.East);
+            AddTriangles();
             AddVertices(Direction.East, Vector3.zero);
             if (BlockController.Current.GetUVs(BlockId, int3.zero, Direction.East, new float2(1f),
                 out blockUVs))
@@ -93,11 +93,9 @@ namespace Wyd.Controllers.UI
             AmountText.text = itemStack.Amount.ToString();
         }
 
-        private void AddTriangles(Direction direction)
+        private void AddTriangles()
         {
-            int[] triangles = BlockFaces.Triangles.FaceTrianglesByDirection[direction];
-
-            foreach (int triangleValue in triangles)
+            foreach (int triangleValue in BlockFaces.Triangles.FaceTriangles)
             {
                 _Triangles.Add(_Vertices.Count + triangleValue);
             }

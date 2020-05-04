@@ -150,9 +150,10 @@ namespace Wyd.Game.World.Chunks.Generation
                 }
 
                 int iModulo3 = normalIndex % 3;
-                int moduloAxis = localPosition[iModulo3];
+                int moduloAxisValue = localPosition[iModulo3];
 
-                if (((normalIndex <= 2) && (moduloAxis >= (ChunkController.SIZE - 1))) || ((normalIndex > 2) && (moduloAxis <= 0)))
+                if (((normalIndex <= 2) && (moduloAxisValue >= (ChunkController.SIZE - 1))) // positive axes bounds check
+                    || ((normalIndex > 2) && (moduloAxisValue <= 0))) // negative axes bounds check
                 {
                     ushort facingBlockId = GetNeighboringBlock(faceNormal, localPosition);
 
@@ -178,9 +179,11 @@ namespace Wyd.Game.World.Chunks.Generation
                 int verticesCount = _MeshData.Vertices.Count;
                 int transparentAsInt = Convert.ToInt32(transparentTraversal);
 
-                foreach (int triangle in BlockFaces.Triangles.FaceTrianglesByNormalIndex[normalIndex])
+                // ReSharper disable once ForCanBeConvertedToForeach
+                for (int i = 0; i < BlockFaces.Triangles.FaceTriangles.Length; i++)
                 {
-                    _MeshData.AddTriangle(transparentAsInt, triangle + verticesCount);
+                    _MeshData.AddTriangle(transparentAsInt, BlockFaces.Triangles.FaceTriangles[i] + verticesCount);
+
                 }
 
                 float2 uvSize = new float2(1f);
@@ -192,8 +195,8 @@ namespace Wyd.Game.World.Chunks.Generation
 
                     foreach ((int traversalNormalIndex, int3 currentTraversalNormal) in GenerationConstants.PerpendicularNormals[iModulo3])
                     {
-                        traversals = GetTraversals(index, localPosition, currentBlockId, traversalNormalIndex, currentTraversalNormal, faceNormal,
-                            faceDirection, GenerationConstants.IndexStepByTraversalNormalIndex[traversalNormalIndex], transparentTraversal);
+                        GetTraversals(index, localPosition, currentBlockId, traversalNormalIndex, currentTraversalNormal, faceNormal, faceDirection,
+                            GenerationConstants.IndexStepByTraversalNormalIndex[traversalNormalIndex], transparentTraversal, out traversals);
 
                         traversalNormal = currentTraversalNormal;
 
@@ -244,16 +247,10 @@ namespace Wyd.Game.World.Chunks.Generation
         /// <param name="faceDirection"></param>
         /// <param name="traversalFactor">Amount of indexes to move forwards for each successful traversal in given direction.</param>
         /// <param name="transparentTraversal">Determines whether or not transparent traversal will be used.</param>
-        /// <returns><see cref="int" /> representing how many successful traversals were made in the given traversal direction.</returns>
-        private int GetTraversals(int index, float3 localPosition, ushort initialBlockId, int sliceIndex, int3 traversalNormal, int3 faceNormal,
-            Direction faceDirection, int traversalFactor, bool transparentTraversal)
+        /// <param name="traversals"><see cref="int" /> representing how many successful traversals were made in the given traversal direction.</param>
+        private void GetTraversals(int index, float3 localPosition, ushort initialBlockId, int sliceIndex, int3 traversalNormal, int3 faceNormal,
+            Direction faceDirection, int traversalFactor, bool transparentTraversal, out int traversals)
         {
-            if (!_AggressiveFaceMerging)
-            {
-                return 1;
-            }
-
-            int traversals;
             float sliceIndexValue = localPosition[sliceIndex];
 
             for (traversals = 1; (sliceIndexValue + traversals) < ChunkController.SIZE; traversals++)
@@ -293,8 +290,6 @@ namespace Wyd.Game.World.Chunks.Generation
                 // set face to traversed and continue traversal
                 _Mask[traversalIndex].SetFace(faceDirection);
             }
-
-            return traversals;
         }
 
         #endregion
