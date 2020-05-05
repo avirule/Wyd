@@ -47,7 +47,7 @@ namespace Wyd.Controllers.World
         public const int SIZE_CUBED = SIZE * SIZE * SIZE;
         public const int SIZE_MINUS_ONE = SIZE - 1;
 
-        private static readonly ObjectPool<BlockAction> _blockActionsPool = new ObjectPool<BlockAction>(null, 1024);
+        private static readonly ObjectPool<BlockAction> _blockActionsPool = new ObjectPool<BlockAction>(1024);
 
 
         #region NoiseShader
@@ -364,7 +364,7 @@ namespace Wyd.Controllers.World
             {
                 ProcessBlockAction(blockAction);
 
-                _blockActionsPool.CacheItem(blockAction);
+                _blockActionsPool.TryAdd(blockAction);
 
                 Interlocked.Decrement(ref _BlockActionsCount);
 
@@ -465,8 +465,8 @@ namespace Wyd.Controllers.World
                         return true;
                     });
 
-                    asyncJob.GetGeneratedBlockData(out INodeCollection<ushort> blocks);
-                    _BlockData.SetBlockData(ref blocks);
+                    _BlockData.Blocks = asyncJob.GetGeneratedBlockData();
+                    asyncJob.DisposeOperator();
 
                     State = ChunkState.Undetailed;
                 }

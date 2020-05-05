@@ -18,7 +18,7 @@ namespace Wyd.Game
 {
     public class CollisionLoader : MonoBehaviour, IPerFrameUpdate
     {
-        private static readonly ObjectPool<GameObject> _colliderCubePool = new ObjectPool<GameObject>(null);
+        private static readonly ObjectPool<GameObject> _colliderCubePool = new ObjectPool<GameObject>();
 
         private static ref GameObject DeactivateGameObject(ref GameObject obj)
         {
@@ -173,7 +173,7 @@ namespace Wyd.Game
 
                     obj.SetActive(false);
 
-                    _colliderCubePool.CacheItem(obj);
+                    _colliderCubePool.TryAdd(obj);
                 }
             }
         }

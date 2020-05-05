@@ -19,7 +19,7 @@ namespace Wyd.Game.World.Chunks.Generation
         protected ChunkTerrainJob(CancellationToken cancellationToken, int3 originPoint)
             : base(cancellationToken) => OriginPoint = originPoint;
 
-        public void GetGeneratedBlockData(out INodeCollection<ushort> blocks)
+        public INodeCollection<ushort> GetGeneratedBlockData()
         {
             if (_TerrainOperator == null)
             {
@@ -27,7 +27,13 @@ namespace Wyd.Game.World.Chunks.Generation
                     $"'{nameof(ChunkBuilder)}' is null. This likely indicates the job has not completed execution.");
             }
 
-            _TerrainOperator.GetGeneratedBlockData(out blocks);
+            return _TerrainOperator.GetGeneratedBlockData();
+        }
+
+        public void DisposeOperator()
+        {
+            _TerrainOperator.Dispose();
+            _TerrainOperator = null;
         }
     }
 }

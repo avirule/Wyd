@@ -14,7 +14,7 @@ namespace Wyd.Game.World.Chunks.Generation
 {
     public class ChunkMeshingJob : AsyncJob
     {
-        private static readonly ObjectPool<ChunkMesher> _chunkMesherPool = new ObjectPool<ChunkMesher>(null);
+        private static readonly ObjectPool<ChunkMesher> _chunkMesherPool = new ObjectPool<ChunkMesher>();
 
         private readonly CancellationToken _CancellationToken;
         private readonly float3 _OriginPoint;
@@ -66,7 +66,7 @@ namespace Wyd.Game.World.Chunks.Generation
         public void CacheMesher()
         {
             _Mesher?.Reset();
-            _chunkMesherPool.CacheItem(_Mesher);
+            _chunkMesherPool.TryAdd(_Mesher);
             _Mesher = null;
         }
     }

@@ -133,7 +133,7 @@ namespace Wyd.Controllers.Entity
             //                     && blockId != BlockController.AirID
             //                     && WorldController.Current.PlaceBlock(relativePosition, BlockController.AirID))
             //                 {
-            //                     //Inventory.AddItem(block.Id, 1);
+            //                     //Inventory.TryAdd(block.Id, 1);
             //                 }
             //             }
             //         }

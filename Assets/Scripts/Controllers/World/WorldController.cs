@@ -98,7 +98,7 @@ namespace Wyd.Controllers.World
             AssignSingletonInstance(this);
 
             _Stopwatch = new Stopwatch();
-            _ChunkPool = new ObjectPool<ChunkController>((ref ChunkController chunkController) => Destroy(chunkController.gameObject));
+            _ChunkPool = new ObjectPool<ChunkController>();
 
             _Chunks = new Dictionary<float3, ChunkController>();
             _ChunksPendingActivation = new Stack<float3>();
@@ -230,7 +230,10 @@ namespace Wyd.Controllers.World
 
             // Chunk is automatically deactivated by ObjectPool
             // additionally, neighbors are flagged for update by ObjectPool
-            _ChunkPool.CacheItem(chunkController);
+            if (!_ChunkPool.TryAdd(chunkController))
+            {
+                Destroy(chunkController.gameObject);
+            }
         }
 
         public IEnumerable<ushort> GetNeighboringBlocks(float3 globalPosition)
@@ -323,7 +326,7 @@ namespace Wyd.Controllers.World
 
             int totalRenderDistance =
                 OptionsController.Current.RenderDistance + /*OptionsController.Current.PreLoadChunkDistance*/ +1;
-            _ChunkPool.MaximumSize = ((totalRenderDistance * 2) - 1) * WORLD_HEIGHT_IN_CHUNKS;
+            _ChunkPool.SetMaximumSize(((totalRenderDistance * 2) - 1) * WORLD_HEIGHT_IN_CHUNKS);
         }
 
         private void VerifyAllChunkStatesAroundLoaders()

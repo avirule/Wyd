@@ -16,8 +16,8 @@ namespace Wyd.Game.World.Chunks.Generation
 {
     public class ChunkTerrainBuilder : ChunkBuilder
     {
-        private static readonly ObjectPool<float[]> _heightmapPool = new ObjectPool<float[]>(null);
-        private static readonly ObjectPool<float[]> _caveNoisePool = new ObjectPool<float[]>(null);
+        private static readonly ObjectPool<float[]> _heightmapPool = new ObjectPool<float[]>();
+        private static readonly ObjectPool<float[]> _caveNoisePool = new ObjectPool<float[]>();
 
         private readonly ComputeBuffer _HeightmapBuffer;
         private readonly ComputeBuffer _CaveNoiseBuffer;
@@ -44,15 +44,30 @@ namespace Wyd.Game.World.Chunks.Generation
             _NoiseSeedB = WorldController.Current.Seed ^ 3;
         }
 
+        public override void Dispose()
+        {
+            base.Dispose();
+
+            Array.Clear(_Heightmap, 0, _Heightmap.Length);
+            Array.Clear(_CaveNoise, 0, _CaveNoise.Length);
+
+            _heightmapPool.TryAdd(_Heightmap);
+            _caveNoisePool.TryAdd(_CaveNoise);
+
+            _Heightmap = null;
+            _CaveNoise = null;
+        }
+
+
         #region Terrain Generation
 
         private bool GetComputeBufferData()
         {
             _HeightmapBuffer?.GetData(_Heightmap);
-            _HeightmapBuffer?.Release();
-
             _CaveNoiseBuffer?.GetData(_CaveNoise);
-            _CaveNoiseBuffer?.Release();
+
+            _HeightmapBuffer?.Dispose();
+            _CaveNoiseBuffer?.Dispose();
 
             return true;
         }
@@ -70,12 +85,6 @@ namespace Wyd.Game.World.Chunks.Generation
             Stopwatch.Restart();
 
             Generate();
-
-            Array.Clear(_Heightmap, 0, _Heightmap.Length);
-            Array.Clear(_CaveNoise, 0, _CaveNoise.Length);
-
-            _heightmapPool.CacheItem(_Heightmap);
-            _caveNoisePool.CacheItem(_CaveNoise);
 
             Stopwatch.Stop();
 
@@ -122,6 +131,11 @@ namespace Wyd.Game.World.Chunks.Generation
             for (int x = 0; x < ChunkController.SIZE; x++)
             for (int z = 0; z < ChunkController.SIZE; z++)
             {
+                if (CancellationToken.IsCancellationRequested)
+                {
+                    return;
+                }
+
                 int heightmapIndex = WydMath.PointToIndex(new int2(x, z), ChunkController.SIZE);
                 float noiseHeight = _Heightmap[heightmapIndex];
 

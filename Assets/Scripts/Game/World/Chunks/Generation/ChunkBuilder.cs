@@ -1,5 +1,6 @@
 #region
 
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Threading;
@@ -12,19 +13,19 @@ using Random = System.Random;
 
 namespace Wyd.Game.World.Chunks.Generation
 {
-    public abstract class ChunkBuilder
+    public abstract class ChunkBuilder : IDisposable
     {
-        protected readonly Dictionary<string, ushort> BlockIDCache;
+        private static readonly Dictionary<string, ushort> _blockIDCache = new Dictionary<string, ushort>();
+
+        protected readonly CancellationToken CancellationToken;
         protected readonly Random SeededRandom;
         protected readonly Stopwatch Stopwatch;
-        protected readonly CancellationToken CancellationToken;
         protected readonly int3 OriginPoint;
 
         protected INodeCollection<ushort> _Blocks;
 
-        public ChunkBuilder(CancellationToken cancellationToken, int3 originPoint)
+        protected ChunkBuilder(CancellationToken cancellationToken, int3 originPoint)
         {
-            BlockIDCache = new Dictionary<string, ushort>();
             SeededRandom = new Random(originPoint.GetHashCode());
             Stopwatch = new Stopwatch();
 
@@ -32,24 +33,26 @@ namespace Wyd.Game.World.Chunks.Generation
             OriginPoint = originPoint;
         }
 
-        protected ushort GetCachedBlockID(string blockName)
+        protected static ushort GetCachedBlockID(string blockName)
         {
-            if (BlockIDCache.TryGetValue(blockName, out ushort id))
+            if (_blockIDCache.TryGetValue(blockName, out ushort id))
             {
                 return id;
             }
             else if (BlockController.Current.TryGetBlockId(blockName, out id))
             {
-                BlockIDCache.Add(blockName, id);
+                _blockIDCache.Add(blockName, id);
                 return id;
             }
 
             return BlockController.AirID;
         }
 
-        public void GetGeneratedBlockData(out INodeCollection<ushort> blocks)
+        public INodeCollection<ushort> GetGeneratedBlockData() => _Blocks;
+
+        public virtual void Dispose()
         {
-            blocks = _Blocks;
+            _Blocks = null;
         }
     }
 }

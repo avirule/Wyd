@@ -62,7 +62,7 @@ namespace Wyd.Controllers.World
         //             transform = collisionToken.transform.localToWorldMatrix
         //         };
         //
-        //         combines.Add(combine);
+        //         combines.TryAdd(combine);
         //     }
         //
         //     _CombinedColliderMesh.CombineMeshes(combines.ToArray(), true, true);

@@ -1,6 +1,7 @@
 #region
 
 using System.Collections.Concurrent;
+using Unity.Mathematics;
 
 #endregion
 
@@ -11,48 +12,41 @@ namespace Wyd.System.Collections
     public class ObjectPool<T>
     {
         private readonly ConcurrentBag<T> _InternalCache;
-        private readonly OnItemCulled<T> _ItemCulled;
 
-        public int MaximumSize;
+        public int MaximumSize { get; private set; }
 
         public int Size => _InternalCache.Count;
 
-        public ObjectPool(OnItemCulled<T> onItemCulled, int maximumSize = -1)
+        public ObjectPool(int maximumSize = -1)
         {
             _InternalCache = new ConcurrentBag<T>();
-            _ItemCulled = onItemCulled;
 
             MaximumSize = maximumSize;
         }
 
-        public void CacheItem(T item)
+        public bool TryAdd(T item)
         {
             // null check without boxing
-            if (!(item is object))
+            if (!(item is object) || (MaximumSize > -1 && _InternalCache.Count > MaximumSize))
             {
-                return;
+                return false;
             }
 
             _InternalCache.Add(item);
-
-            AttemptCullCache();
+            return true;
         }
 
         public T Retrieve() => _InternalCache.TryTake(out T item) ? item : default;
 
         public bool TryRetrieve(out T item) => _InternalCache.TryTake(out item);
 
-        private void AttemptCullCache()
+        public void SetMaximumSize(int maximumSize)
         {
-            if (MaximumSize == -1)
-            {
-                return;
-            }
+            MaximumSize = maximumSize;
 
-            while (_InternalCache.Count > MaximumSize)
+            for (int iterations = _InternalCache.Count - MaximumSize; iterations > 0; iterations--)
             {
-                _InternalCache.TryTake(out T item); // null check without boxing
-                _ItemCulled?.Invoke(ref item);
+                _InternalCache.TryTake(out T _);
             }
         }
     }
