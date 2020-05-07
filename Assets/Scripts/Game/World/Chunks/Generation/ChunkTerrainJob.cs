@@ -1,10 +1,14 @@
 #region
 
 using System;
+using System.Collections.Generic;
+using System.Diagnostics;
 using System.Threading;
 using Unity.Mathematics;
+using Wyd.Controllers.State;
 using Wyd.System.Collections;
 using Wyd.System.Jobs;
+using Random = System.Random;
 
 #endregion
 
@@ -12,28 +16,42 @@ namespace Wyd.Game.World.Chunks.Generation
 {
     public abstract class ChunkTerrainJob : AsyncJob
     {
-        protected readonly int3 OriginPoint;
+        private static readonly Dictionary<string, ushort> _blockIDCache = new Dictionary<string, ushort>();
 
-        protected ChunkBuilder _TerrainOperator;
+        protected readonly Stopwatch Stopwatch;
 
-        protected ChunkTerrainJob(CancellationToken cancellationToken, int3 originPoint)
-            : base(cancellationToken) => OriginPoint = originPoint;
+        protected int3 _OriginPoint;
+        protected Random _SeededRandom;
+        protected INodeCollection<ushort> _Blocks;
 
-        public INodeCollection<ushort> GetGeneratedBlockData()
+        protected ChunkTerrainJob()
         {
-            if (_TerrainOperator == null)
+            Stopwatch = new Stopwatch();
+        }
+
+        public void SetData(CancellationToken cancellationToken, int3 originPoint)
+        {
+            CancellationToken = cancellationToken;
+            _OriginPoint = originPoint;
+
+            _SeededRandom = new Random(_OriginPoint.GetHashCode());
+        }
+
+        protected static ushort GetCachedBlockID(string blockName)
+        {
+            if (_blockIDCache.TryGetValue(blockName, out ushort id))
             {
-                throw new NullReferenceException(
-                    $"'{nameof(ChunkBuilder)}' is null. This likely indicates the job has not completed execution.");
+                return id;
+            }
+            else if (BlockController.Current.TryGetBlockId(blockName, out id))
+            {
+                _blockIDCache.Add(blockName, id);
+                return id;
             }
 
-            return _TerrainOperator.GetGeneratedBlockData();
+            return BlockController.AirID;
         }
 
-        public void DisposeOperator()
-        {
-            _TerrainOperator.Dispose();
-            _TerrainOperator = null;
-        }
+        public INodeCollection<ushort> GetGeneratedBlockData() => _Blocks;
     }
 }

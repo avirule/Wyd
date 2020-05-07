@@ -48,7 +48,7 @@ namespace Wyd.Controllers.World
         public const int SIZE_MINUS_ONE = SIZE - 1;
 
         private static readonly ObjectPool<BlockAction> _blockActionsPool = new ObjectPool<BlockAction>(1024);
-
+        private static readonly ObjectPool<ChunkTerrainBuilderJob> _terrainBuilderJobs = new ObjectPool<ChunkTerrainBuilderJob>();
 
         #region NoiseShader
 
@@ -447,13 +447,12 @@ namespace Wyd.Controllers.World
             _NoiseShader.Dispatch(heightmapKernel, 1024, 1, 1);
             _NoiseShader.Dispatch(caveNoiseKernel, 1024, 1, 1);
 
-            ChunkTerrainJob asyncJob = new ChunkTerrainBuilderJob(_CancellationTokenSource.Token, OriginPoint, _FREQUENCY, _PERSISTENCE,
-                OptionsController.Current.GPUAcceleration ? heightmapBuffer : null,
-                OptionsController.Current.GPUAcceleration ? caveNoiseBuffer : null);
+            ChunkTerrainBuilderJob terrainBuilderJob = _terrainBuilderJobs.Retrieve() ?? new ChunkTerrainBuilderJob();
+            terrainBuilderJob.SetData();
 
             Task OnTerrainBuildingFinished(object sender, AsyncJobEventArgs args)
             {
-                asyncJob.WorkFinished -= OnTerrainBuildingFinished;
+                terrainBuilderJob.WorkFinished -= OnTerrainBuildingFinished;
 
                 if (Active)
                 {
@@ -465,8 +464,8 @@ namespace Wyd.Controllers.World
                         return true;
                     });
 
-                    _BlockData.Blocks = asyncJob.GetGeneratedBlockData();
-                    asyncJob.DisposeOperator();
+                    _BlockData.Blocks = terrainBuilderJob.GetGeneratedBlockData();
+                    terrainBuilderJob.ClearData();
 
                     State = ChunkState.Undetailed;
                 }
@@ -474,24 +473,25 @@ namespace Wyd.Controllers.World
                 return Task.CompletedTask;
             }
 
-            asyncJob.WorkFinished += OnTerrainBuildingFinished;
+            terrainBuilderJob.WorkFinished += OnTerrainBuildingFinished;
 
-            AsyncJobScheduler.QueueAsyncJob(asyncJob);
+            AsyncJobScheduler.QueueAsyncJob(terrainBuilderJob);
         }
 
         public void BeginDetailing(CancellationToken cancellationToken, AsyncJobEventHandler callback, INodeCollection<ushort> blocks,
             out object jobIdentity)
         {
-            ChunkTerrainDetailerJob asyncJob = new ChunkTerrainDetailerJob(cancellationToken, OriginPoint, blocks);
-
-            if (callback != null)
-            {
-                asyncJob.WorkFinished += callback;
-            }
-
-            jobIdentity = asyncJob.Identity;
-
-            AsyncJobScheduler.QueueAsyncJob(asyncJob);
+            // ChunkTerrainDetailerJob asyncJob = new ChunkTerrainDetailerJob(cancellationToken, OriginPoint, blocks);
+            //
+            // if (callback != null)
+            // {
+            //     asyncJob.WorkFinished += callback;
+            // }
+            //
+            // jobIdentity = asyncJob.Identity;
+            //
+            // AsyncJobScheduler.QueueAsyncJob(asyncJob);
+            jobIdentity = null;
         }
 
         private void BeginMeshing()
