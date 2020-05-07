@@ -22,7 +22,7 @@ namespace Wyd.Game.World.Chunks.Generation
 {
     public class ChunkMeshingJob : AsyncJob
     {
-        private static readonly ObjectPool<BlockFaces[]> _blockFacesPool = new ObjectPool<BlockFaces[]>();
+        private static readonly ObjectPool<BlockFaces[]> _masksPool = new ObjectPool<BlockFaces[]>();
         private static readonly ObjectPool<MeshData> _meshDataPool = new ObjectPool<MeshData>();
 
         private readonly Stopwatch _Stopwatch;
@@ -40,11 +40,13 @@ namespace Wyd.Game.World.Chunks.Generation
 
         protected override Task Process()
         {
-            _Mask = _blockFacesPool.Retrieve() ?? new BlockFaces[ChunkController.SIZE_CUBED];
             _MeshData = _meshDataPool.Retrieve() ?? new MeshData();
-
+            _Mask = _masksPool.Retrieve() ?? new BlockFaces[ChunkController.SIZE_CUBED];
 
             GenerateMesh();
+
+            _masksPool.TryAdd(_Mask);
+            _Mask = null;
 
             return Task.CompletedTask;
         }
@@ -108,7 +110,6 @@ namespace Wyd.Game.World.Chunks.Generation
                 _NeighborNodes.Add(null);
             }
 
-            // todo provide this data from ChunkMeshController maybe?
             foreach ((int3 normal, ChunkController chunkController) in WorldController.Current.GetNeighboringChunksWithNormal(_OriginPoint))
             {
                 int index = -1;

@@ -49,6 +49,7 @@ namespace Wyd.Controllers.World
 
         private static readonly ObjectPool<BlockAction> _blockActionsPool = new ObjectPool<BlockAction>(1024);
         private static readonly ObjectPool<ChunkTerrainBuilderJob> _terrainBuilderJobs = new ObjectPool<ChunkTerrainBuilderJob>();
+        private static readonly ObjectPool<ChunkMeshingJob> _meshingJobs = new ObjectPool<ChunkMeshingJob>();
 
         #region NoiseShader
 
@@ -458,20 +459,21 @@ namespace Wyd.Controllers.World
 
                 if (Active)
                 {
-                    MainThreadActionsController.Current.QueueAction(() =>
-                    {
-                        heightmapBuffer?.Release();
-                        caveNoiseBuffer?.Release();
-
-                        return true;
-                    });
-
                     _BlockData.Blocks = terrainBuilderJob.GetGeneratedBlockData();
-                    terrainBuilderJob.ClearData();
                     _terrainBuilderJobs.TryAdd(terrainBuilderJob);
 
                     State = ChunkState.Undetailed;
                 }
+
+                terrainBuilderJob.ClearData();
+
+                MainThreadActionsController.Current.QueueAction(() =>
+                {
+                    heightmapBuffer?.Release();
+                    caveNoiseBuffer?.Release();
+
+                    return true;
+                });
 
                 return Task.CompletedTask;
             }
@@ -500,28 +502,28 @@ namespace Wyd.Controllers.World
         private void BeginMeshing()
         {
             // todo make setting for improved meshing
-            ChunkMeshingJob asyncJob =
-                new ChunkMeshingJob(_CancellationTokenSource.Token, OriginPoint, Blocks, OptionsController.Current.GPUAcceleration);
+            ChunkMeshingJob meshingJob = _meshingJobs.Retrieve() ?? new ChunkMeshingJob();
+            meshingJob.SetData(_CancellationTokenSource.Token, OriginPoint, Blocks, OptionsController.Current.GPUAcceleration);
 
             Task OnMeshingFinished(object sender, AsyncJobEventArgs args)
             {
-                asyncJob.WorkFinished -= OnMeshingFinished;
+                meshingJob.WorkFinished -= OnMeshingFinished;
 
-                if (!Active)
+                if (Active)
                 {
-                    asyncJob.ClearData();
+                    MainThreadActionsController.Current.QueueAction(() => ApplyMesh(meshingJob));
                 }
 
-                MainThreadActionsController.Current.QueueAction(() => ApplyMesh(asyncJob));
+                meshingJob.ClearData();
 
                 State = ChunkState.Meshed;
 
                 return Task.CompletedTask;
             }
 
-            asyncJob.WorkFinished += OnMeshingFinished;
+            meshingJob.WorkFinished += OnMeshingFinished;
 
-            AsyncJobScheduler.QueueAsyncJob(asyncJob);
+            AsyncJobScheduler.QueueAsyncJob(meshingJob);
         }
 
         private bool ApplyMesh(ChunkMeshingJob meshingJob)
