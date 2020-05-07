@@ -447,8 +447,10 @@ namespace Wyd.Controllers.World
             _NoiseShader.Dispatch(heightmapKernel, 1024, 1, 1);
             _NoiseShader.Dispatch(caveNoiseKernel, 1024, 1, 1);
 
-            ChunkTerrainBuilderJob terrainBuilderJob = _terrainBuilderJobs.Retrieve() ?? new ChunkTerrainBuilderJob();
-            terrainBuilderJob.SetData();
+            ChunkTerrainBuilderJob terrainBuilderJob = new ChunkTerrainBuilderJob();
+            terrainBuilderJob.SetData(_CancellationTokenSource.Token, OriginPoint, _FREQUENCY, _PERSISTENCE,
+                OptionsController.Current.GPUAcceleration ? heightmapBuffer : null,
+                OptionsController.Current.GPUAcceleration ? caveNoiseBuffer : null);
 
             Task OnTerrainBuildingFinished(object sender, AsyncJobEventArgs args)
             {
@@ -466,6 +468,7 @@ namespace Wyd.Controllers.World
 
                     _BlockData.Blocks = terrainBuilderJob.GetGeneratedBlockData();
                     terrainBuilderJob.ClearData();
+                    _terrainBuilderJobs.TryAdd(terrainBuilderJob);
 
                     State = ChunkState.Undetailed;
                 }
@@ -506,7 +509,7 @@ namespace Wyd.Controllers.World
 
                 if (!Active)
                 {
-                    asyncJob.CacheMesher();
+                    asyncJob.ClearData();
                 }
 
                 MainThreadActionsController.Current.QueueAction(() => ApplyMesh(asyncJob));
@@ -524,7 +527,7 @@ namespace Wyd.Controllers.World
         private bool ApplyMesh(ChunkMeshingJob meshingJob)
         {
             meshingJob.ApplyMeshData(ref _Mesh);
-            meshingJob.CacheMesher();
+            meshingJob.ClearData();
 
             MeshRenderer.enabled = _Mesh.vertexCount > 0;
 

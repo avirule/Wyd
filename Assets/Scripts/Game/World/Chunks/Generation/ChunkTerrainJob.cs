@@ -29,9 +29,9 @@ namespace Wyd.Game.World.Chunks.Generation
             Stopwatch = new Stopwatch();
         }
 
-        public void SetData(CancellationToken cancellationToken, int3 originPoint)
+        protected void SetData(CancellationToken cancellationToken, int3 originPoint)
         {
-            CancellationToken = cancellationToken;
+            CancellationToken = CancellationTokenSource.CreateLinkedTokenSource(AsyncJobScheduler.AbortToken, cancellationToken).Token;
             _OriginPoint = originPoint;
 
             _SeededRandom = new Random(_OriginPoint.GetHashCode());

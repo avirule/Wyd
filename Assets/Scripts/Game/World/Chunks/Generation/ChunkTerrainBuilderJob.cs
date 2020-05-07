@@ -74,8 +74,6 @@ namespace Wyd.Game.World.Chunks.Generation
             _OriginPoint = default;
             _Frequency = default;
             _Persistence = default;
-            _HeightmapBuffer?.Release();
-            _CaveNoiseBuffer?.Release();
             _Blocks = default;
         }
 
@@ -84,8 +82,8 @@ namespace Wyd.Game.World.Chunks.Generation
             _HeightmapBuffer?.GetData(_Heightmap);
             _CaveNoiseBuffer?.GetData(_CaveNoise);
 
-            _HeightmapBuffer?.Dispose();
-            _CaveNoiseBuffer?.Dispose();
+            _HeightmapBuffer?.Release();
+            _CaveNoiseBuffer?.Release();
 
             return true;
         }
