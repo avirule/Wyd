@@ -33,6 +33,8 @@ namespace Wyd.Game.World.Chunks.Generation
         private int[] _Heightmap;
         private float[] _CaveNoise;
 
+        private Octree BlocksOctree => (Octree)_Blocks;
+
         public ChunkTerrainBuilderJob()
         {
             _NoiseSeedA = WorldController.Current.Seed ^ 2;
@@ -51,19 +53,12 @@ namespace Wyd.Game.World.Chunks.Generation
 
             Stopwatch.Restart();
 
-            // await BatchTasksAndAwait().ConfigureAwait(false);
-            //
-            // _Blocks = new Octree(GenerationConstants.CHUNK_SIZE, BlockController.AirID);
-            //
-            // for (int index = 0; index < BlockData.Length; index++)
-            // {
-            //     int3 localPosition = WydMath.IndexTo3D(index, GenerationConstants.CHUNK_SIZE);
-            //     _Blocks.SetPoint(localPosition, BlockData[index]);
-            // }
-            //
-            // Array.Clear(BlockData, 0, BlockData.Length);
+            _Blocks = new Octree(GenerationConstants.CHUNK_SIZE, BlockController.AirID, true);
 
-            Generate();
+            await BatchTasksAndAwait().ConfigureAwait(false);
+            BlocksOctree.CollapseRecursive();
+
+            //Generate();
 
             Array.Clear(_Heightmap, 0, _Heightmap.Length);
             Array.Clear(_CaveNoise, 0, _CaveNoise.Length);
@@ -79,58 +74,54 @@ namespace Wyd.Game.World.Chunks.Generation
             _TerrainGenerationTimeSpan = Stopwatch.Elapsed;
         }
 
-        // protected override Task ProcessIndex(int index)
-        // {
-        //     int3 localPosition = WydMath.IndexTo3D(index, GenerationConstants.CHUNK_SIZE);
-        //     int heightmapIndex = WydMath.PointToIndex(localPosition.xz, GenerationConstants.CHUNK_SIZE);
-        //
-        //     int noiseHeight = _Heightmap[heightmapIndex];
-        //
-        //     if (noiseHeight < _OriginPoint.y)
-        //     {
-        //         return Task.CompletedTask;
-        //     }
-        //
-        //     int globalPositionY = _OriginPoint.y + localPosition.y;
-        //
-        //     if ((globalPositionY < 4) && (globalPositionY <= _SeededRandom.Next(0, 4)))
-        //     {
-        //         BlockData[index] = GetCachedBlockID("bedrock");
-        //         return Task.CompletedTask;
-        //     }
-        //     else if (_CaveNoise[index] < 0.000225f)
-        //     {
-        //         return Task.CompletedTask;
-        //     }
-        //
-        //     if (globalPositionY == noiseHeight)
-        //     {
-        //         BlockData[index] = GetCachedBlockID("grass");
-        //     }
-        //     else if ((globalPositionY < noiseHeight) && (globalPositionY >= (noiseHeight - 3))) // lay dirt up to 3 blocks below noise height
-        //     {
-        //         BlockData[index] = _SeededRandom.Next(0, 8) == 0
-        //             ? GetCachedBlockID("dirt_coarse")
-        //             : GetCachedBlockID("dirt");
-        //     }
-        //     else if (globalPositionY < (noiseHeight - 3))
-        //     {
-        //         if (_SeededRandom.Next(0, 100) == 0)
-        //         {
-        //             BlockData[index] = GetCachedBlockID("coal_ore");
-        //         }
-        //         else
-        //         {
-        //             BlockData[index] = GetCachedBlockID("stone");
-        //         }
-        //     }
-        //     else
-        //     {
-        //         BlockData[index] = BlockController.AirID;
-        //     }
-        //
-        //     return Task.CompletedTask;
-        // }
+        protected override Task ProcessIndex(int index)
+        {
+            int3 localPosition = WydMath.IndexTo3D(index, GenerationConstants.CHUNK_SIZE);
+            int heightmapIndex = WydMath.PointToIndex(localPosition.xz, GenerationConstants.CHUNK_SIZE);
+
+            int noiseHeight = _Heightmap[heightmapIndex];
+
+            if (noiseHeight < _OriginPoint.y)
+            {
+                return Task.CompletedTask;
+            }
+
+            int globalPositionY = _OriginPoint.y + localPosition.y;
+
+            if ((globalPositionY < 4) && (globalPositionY <= _SeededRandom.Next(0, 4)))
+            {
+                BlocksOctree.SetPointNoCollapse(localPosition, GetCachedBlockID("bedrock"));
+                return Task.CompletedTask;
+            }
+            else if (_CaveNoise[index] < 0.000225f)
+            {
+                return Task.CompletedTask;
+            }
+
+            if (globalPositionY == noiseHeight)
+            {
+                BlocksOctree.SetPointNoCollapse(localPosition,  GetCachedBlockID("grass"));
+            }
+            else if ((globalPositionY < noiseHeight) && (globalPositionY >= (noiseHeight - 3))) // lay dirt up to 3 blocks below noise height
+            {
+                BlocksOctree.SetPointNoCollapse(localPosition,  _SeededRandom.Next(0, 8) == 0
+                    ? GetCachedBlockID("dirt_coarse")
+                    : GetCachedBlockID("dirt"));
+            }
+            else if (globalPositionY < (noiseHeight - 3))
+            {
+                if (_SeededRandom.Next(0, 100) == 0)
+                {
+                    BlocksOctree.SetPointNoCollapse(localPosition, GetCachedBlockID("coal_ore"));
+                }
+                else
+                {
+                    BlocksOctree.SetPointNoCollapse(localPosition,  GetCachedBlockID("stone"));
+                }
+            }
+
+            return Task.CompletedTask;
+        }
 
         protected override Task ProcessFinished()
         {
@@ -213,7 +204,7 @@ namespace Wyd.Game.World.Chunks.Generation
 
         private void Generate()
         {
-            _Blocks = new Octree(GenerationConstants.CHUNK_SIZE, BlockController.AirID);
+            _Blocks = new Octree(GenerationConstants.CHUNK_SIZE, BlockController.AirID, false);
 
             for (int x = 0; x < GenerationConstants.CHUNK_SIZE; x++)
             for (int z = 0; z < GenerationConstants.CHUNK_SIZE; z++)

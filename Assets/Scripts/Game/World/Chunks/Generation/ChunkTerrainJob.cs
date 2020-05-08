@@ -1,7 +1,6 @@
 #region
 
 using System.Collections.Concurrent;
-using System.Collections.Generic;
 using System.Diagnostics;
 using System.Threading;
 using Unity.Mathematics;
@@ -14,7 +13,7 @@ using Random = System.Random;
 
 namespace Wyd.Game.World.Chunks.Generation
 {
-    public abstract class ChunkTerrainJob : AsyncJob
+    public abstract class ChunkTerrainJob : AsyncParallelJob
     {
         private static readonly ConcurrentDictionary<string, ushort> _blockIDCache = new ConcurrentDictionary<string, ushort>();
 
@@ -24,7 +23,7 @@ namespace Wyd.Game.World.Chunks.Generation
         protected Random _SeededRandom;
         protected INodeCollection<ushort> _Blocks;
 
-        protected ChunkTerrainJob() => Stopwatch = new Stopwatch();
+        protected ChunkTerrainJob() : base(GenerationConstants.CHUNK_SIZE_CUBED, 64) => Stopwatch = new Stopwatch();
 
         protected void SetData(CancellationToken cancellationToken, int3 originPoint)
         {

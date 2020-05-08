@@ -11,10 +11,10 @@ namespace Wyd.System.Collections
         #region Instance Members
 
         private OctreeNode[] _Nodes;
-        private ushort _Value;
 
-        public ushort Value => _Value;
         public bool IsUniform => _Nodes == null;
+
+        public ushort Value { get; set; }
 
         public OctreeNode this[int index] => _Nodes[index];
 
@@ -24,7 +24,7 @@ namespace Wyd.System.Collections
         ///     Creates an in-memory compressed 3D representation of any unmanaged data type.
         /// </summary>
         /// <param name="value">Initial value of the collection.</param>
-        public OctreeNode(ushort value) => _Value = value;
+        public OctreeNode(ushort value) => Value = value;
 
 
         #region Data Operations
@@ -33,7 +33,7 @@ namespace Wyd.System.Collections
         {
             if (IsUniform)
             {
-                return _Value;
+                return Value;
             }
 
             Octree.DetermineOctant(extent, ref x, ref y, ref z, out int octant);
@@ -45,7 +45,7 @@ namespace Wyd.System.Collections
         {
             if (IsUniform)
             {
-                if (_Value == newValue)
+                if (Value == newValue)
                 {
                     return;
                 }
@@ -53,22 +53,12 @@ namespace Wyd.System.Collections
                 {
                     // reached smallest possible depth (usually 1x1x1) so
                     // set value and return
-                    _Value = newValue;
+                    Value = newValue;
                     return;
                 }
                 else
                 {
-                    _Nodes = new[]
-                    {
-                        new OctreeNode(_Value),
-                        new OctreeNode(_Value),
-                        new OctreeNode(_Value),
-                        new OctreeNode(_Value),
-                        new OctreeNode(_Value),
-                        new OctreeNode(_Value),
-                        new OctreeNode(_Value),
-                        new OctreeNode(_Value)
-                    };
+                    Populate();
                 }
             }
 
@@ -81,8 +71,7 @@ namespace Wyd.System.Collections
             // and collapse if all child node values are equal
             if (CheckShouldCollapse())
             {
-                _Value = _Nodes[0]._Value;
-                _Nodes = null;
+                Collapse();
             }
         }
 
@@ -91,6 +80,62 @@ namespace Wyd.System.Collections
 
         #region Helper Methods
 
+        public void Populate()
+        {
+            _Nodes = new[]
+            {
+                new OctreeNode(Value),
+                new OctreeNode(Value),
+                new OctreeNode(Value),
+                new OctreeNode(Value),
+                new OctreeNode(Value),
+                new OctreeNode(Value),
+                new OctreeNode(Value),
+                new OctreeNode(Value)
+            };
+        }
+
+        public void PopulateRecursive(float extent)
+        {
+            if (extent <= 1f)
+            {
+                return;
+            }
+
+            extent /= 2f;
+
+            Populate();
+
+            foreach (OctreeNode octreeNode in _Nodes)
+            {
+                octreeNode.PopulateRecursive(extent);
+            }
+        }
+
+        public void Collapse()
+        {
+            Value = _Nodes[0].Value;
+            _Nodes = null;
+        }
+
+        public void CollapseRecursive()
+        {
+            if (IsUniform)
+            {
+                return;
+            }
+
+            foreach (OctreeNode octreeNode in _Nodes)
+            {
+                octreeNode.CollapseRecursive();
+            }
+
+            if (CheckShouldCollapse())
+            {
+                Collapse();
+            }
+        }
+
         private bool CheckShouldCollapse()
         {
             if (IsUniform)
@@ -98,16 +143,14 @@ namespace Wyd.System.Collections
                 return false;
             }
 
-            ushort firstValue = _Nodes[0]._Value;
+            ushort firstValue = _Nodes[0].Value;
 
             // avoiding using linq here for performance sensitivity
             // ReSharper disable once ForCanBeConvertedToForeach
             // ReSharper disable once LoopCanBeConvertedToQuery
-            for (int index = 0; index < _Nodes.Length; index++)
+            foreach (OctreeNode octreeNode in _Nodes)
             {
-                OctreeNode node = _Nodes[index];
-
-                if (!node.IsUniform || (node._Value != firstValue))
+                if (!octreeNode.IsUniform || (octreeNode.Value != firstValue))
                 {
                     return false;
                 }

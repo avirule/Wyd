@@ -17,7 +17,7 @@ namespace Wyd.System.Collections
         public ushort Value => _RootNode.Value;
         public bool IsUniform => _RootNode.IsUniform;
 
-        public Octree(byte size, ushort initialValue)
+        public Octree(byte size, ushort initialValue, bool fullyPopulate)
         {
             if ((size <= 0) || ((size & (size - 1)) != 0))
             {
@@ -26,6 +26,11 @@ namespace Wyd.System.Collections
 
             _Size = size;
             _RootNode = new OctreeNode(initialValue);
+
+            if (fullyPopulate)
+            {
+                _RootNode.PopulateRecursive(_Size / 2f);
+            }
         }
 
 
@@ -62,7 +67,43 @@ namespace Wyd.System.Collections
         public void SetPoint(float3 point, ushort value) => SetPointRecursive(point, value);
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public void SetPointNoCollapse(float3 point, ushort value) => SetPointIterative(point, value);
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private void SetPointRecursive(float3 point, ushort value) => _RootNode.SetPoint(_Size / 2f, point.x, point.y, point.z, value);
+
+        private void SetPointIterative(float3 point, ushort value)
+        {
+            OctreeNode currentNode = _RootNode;
+            float x = point.x, y = point.y, z = point.z;
+
+            for (float extent = _Size / 2f;; extent /= 2f)
+            {
+                if (currentNode.IsUniform)
+                {
+                    if (currentNode.Value == value)
+                    {
+                        return;
+                    }
+                    else if (extent < 1f)
+                    {
+                        // reached smallest possible depth (usually 1x1x1) so
+                        // set value and return
+                        currentNode.Value = value;
+                        return;
+                    }
+                    else
+                    {
+                        currentNode.Populate();
+                    }
+                }
+
+                DetermineOctant(extent, ref x, ref y, ref z, out int octant);
+
+                // recursively dig into octree and set
+                currentNode = currentNode[octant];
+            }
+        }
 
         #endregion
 
@@ -73,6 +114,11 @@ namespace Wyd.System.Collections
             {
                 yield return GetPoint(WydMath.IndexTo3D(index, _Size));
             }
+        }
+
+        public void CollapseRecursive()
+        {
+            _RootNode.CollapseRecursive();
         }
 
         #region Helper Methods

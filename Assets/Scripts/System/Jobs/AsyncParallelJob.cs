@@ -49,7 +49,7 @@ namespace Wyd.System.Jobs
 
         private async Task ProcessIndexes(int startIndex, int endIndex)
         {
-            for (int index = startIndex; index < endIndex; index++)
+            for (int index = startIndex; index <= endIndex; index++)
             {
                 await ProcessIndex(index);
             }
