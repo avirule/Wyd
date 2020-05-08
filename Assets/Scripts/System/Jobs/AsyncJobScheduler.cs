@@ -8,6 +8,8 @@ using System.Threading.Tasks;
 
 namespace Wyd.System.Jobs
 {
+    public delegate Task AsyncInvocation();
+
     public static class AsyncJobScheduler
     {
         private static CancellationTokenSource _AbortTokenSource;
@@ -96,19 +98,7 @@ namespace Wyd.System.Jobs
             OnMaximumProcessingJobsChanged(MaximumProcessingJobs);
         }
 
-        public static void QueueAsyncJob(AsyncJob asyncJob)
-        {
-            if (AbortToken.IsCancellationRequested)
-            {
-                return;
-            }
-
-            OnJobQueued(new AsyncJobEventArgs(asyncJob));
-
-            Task.Run(() => ExecuteJob(asyncJob, false));
-        }
-
-        public static async Task QueueAsyncJob(AsyncJob asyncJob, bool configureAwait)
+        public static async Task QueueAsyncJob(AsyncJob asyncJob, bool configureAwait = false)
         {
             if (AbortToken.IsCancellationRequested)
             {
@@ -120,10 +110,38 @@ namespace Wyd.System.Jobs
             await ExecuteJob(asyncJob, configureAwait).ConfigureAwait(configureAwait);
         }
 
+        public static async Task QueueAsync(AsyncInvocation invocation, bool configureAwait = false)
+        {
+            if (AbortToken.IsCancellationRequested)
+            {
+                return;
+            } else if (invocation == null)
+            {
+                throw new NullReferenceException(nameof(invocation));
+            }
+
+            await ExecuteInvocation(invocation, configureAwait).ConfigureAwait(configureAwait);
+        }
+
         #endregion
 
 
         #region Runtime
+
+        private static async Task ExecuteInvocation(AsyncInvocation invocation, bool configureAwait)
+        {
+            if (AbortToken.IsCancellationRequested)
+            {
+                return;
+            }
+
+            await _WorkerSemaphore.WaitAsync().ConfigureAwait(true);
+
+            await invocation.Invoke().ConfigureAwait(configureAwait);
+
+            _WorkerSemaphore.Release();
+
+        }
 
         private static async Task ExecuteJob(AsyncJob asyncJob, bool configureAwait)
         {
@@ -132,7 +150,7 @@ namespace Wyd.System.Jobs
                 return;
             }
 
-            await _WorkerSemaphore.WaitAsync().ConfigureAwait(configureAwait);
+            await _WorkerSemaphore.WaitAsync().ConfigureAwait(true);
 
             AsyncJobEventArgs args = new AsyncJobEventArgs(asyncJob);
 

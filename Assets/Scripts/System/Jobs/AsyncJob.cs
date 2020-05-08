@@ -15,12 +15,6 @@ namespace Wyd.System.Jobs
         private readonly Stopwatch _Stopwatch;
 
         /// <summary>
-        ///     Allows jobs to be created on-the-fly with delegates,
-        ///     not necessitating an entire derived class for usage.
-        /// </summary>
-        protected readonly Func<Task> Invocation;
-
-        /// <summary>
         ///     Identity of the <see cref="AsyncJob" />.
         /// </summary>
         public object Identity { get; }
@@ -52,19 +46,17 @@ namespace Wyd.System.Jobs
             _Stopwatch = new Stopwatch();
             Identity = Guid.NewGuid();
             CancellationToken = AsyncJobScheduler.AbortToken;
-            Invocation = null;
             IsWorkFinished = false;
         }
 
         /// <summary>
         ///     Instantiates a new instance of the <see cref="AsyncJob" /> class.
         /// </summary>
-        public AsyncJob(CancellationToken cancellationToken, Func<Task> invocation = null)
+        public AsyncJob(CancellationToken cancellationToken)
         {
             _Stopwatch = new Stopwatch();
             Identity = Guid.NewGuid();
             CancellationToken = CancellationTokenSource.CreateLinkedTokenSource(AsyncJobScheduler.AbortToken, cancellationToken).Token;
-            Invocation = invocation ?? (() => Task.CompletedTask);
             IsWorkFinished = false;
         }
 
@@ -105,13 +97,7 @@ namespace Wyd.System.Jobs
         /// <summary>
         ///     This is the main method that is executed.
         /// </summary>
-        protected virtual async Task Process()
-        {
-            if (Invocation != null)
-            {
-                await Invocation();
-            }
-        }
+        protected virtual Task Process() => Task.CompletedTask;
 
         /// <summary>
         ///     The final method, run after <see cref="Process" />.
