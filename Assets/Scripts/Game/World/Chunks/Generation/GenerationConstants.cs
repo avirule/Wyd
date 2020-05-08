@@ -9,7 +9,7 @@ namespace Wyd.Game.World.Chunks.Generation
 {
     public static class GenerationConstants
     {
-        public static readonly int[] IndexStepByTraversalNormalIndex =
+        public static readonly int[] IndexStepByNormalIndex =
         {
             1,
             ChunkController.SIZE_SQUARED,
