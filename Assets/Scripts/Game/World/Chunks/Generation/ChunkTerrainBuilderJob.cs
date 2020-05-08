@@ -58,8 +58,6 @@ namespace Wyd.Game.World.Chunks.Generation
             await BatchTasksAndAwait().ConfigureAwait(false);
             BlocksOctree.CollapseRecursive();
 
-            //Generate();
-
             Array.Clear(_Heightmap, 0, _Heightmap.Length);
             Array.Clear(_CaveNoise, 0, _CaveNoise.Length);
 
