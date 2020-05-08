@@ -239,10 +239,10 @@ namespace Wyd.Game.World.Chunks.Generation
                 // remark: this is outside the for loop below so that the function can determine if any traversals have happened
                 int traversals = 0;
 
-                for (int perpendicularNormalIndex = 0; perpendicularNormalIndex < 2; perpendicularNormalIndex++)
+                for (int perpendicularNormalIndex = 1; perpendicularNormalIndex < 3; perpendicularNormalIndex++)
                 {
                     // the index of the int3 traversalNormal to traverse on
-                    int traversalNormalAxisIndex = (iModulo3 + 1) % 3;
+                    int traversalNormalAxisIndex = (iModulo3 + perpendicularNormalIndex) % 3;
                     // traversal normal, which is a zeroed out int3 with only the traversal axis index set to one
                     int3 traversalNormal = new int3(0)
                     {
