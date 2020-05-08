@@ -11,8 +11,8 @@ namespace Wyd.Game.World.Chunks.Generation
 {
     public class MeshData
     {
-        private readonly List<Vector3> _Vertices;
-        private readonly List<List<int>> _Triangles;
+        private readonly List<int> _Vertices;
+        private readonly List<List<uint>> _Triangles;
         private readonly List<Vector3> _UVs;
 
         public int VerticesCount => _Vertices.Count;
@@ -23,12 +23,12 @@ namespace Wyd.Game.World.Chunks.Generation
 
         private MeshData()
         {
-            _Vertices = new List<Vector3>();
+            _Vertices = new List<int>();
             _UVs = new List<Vector3>();
-            _Triangles = new List<List<int>>();
+            _Triangles = new List<List<uint>>();
         }
 
-        public MeshData(List<Vector3> vertices, List<Vector3> uvs, params List<int>[] triangles) : this()
+        public MeshData(List<int> vertices, List<Vector3> uvs, params List<uint>[] triangles) : this()
         {
             _Vertices = vertices;
             _UVs = uvs;
@@ -46,7 +46,7 @@ namespace Wyd.Game.World.Chunks.Generation
                 _UVs.TrimExcess();
             }
 
-            foreach (List<int> triangles in _Triangles)
+            foreach (List<uint> triangles in _Triangles)
             {
                 triangles.Clear();
 
@@ -57,15 +57,16 @@ namespace Wyd.Game.World.Chunks.Generation
             }
         }
 
-        public void AddVertex(Vector3 vertex) => _Vertices.Add(vertex);
+        public void AddVertex(int compressedVertex) => _Vertices.Add(compressedVertex);
         public void AddUV(Vector3 uv) => _UVs.Add(uv);
-        public void AddTriangle(int subMesh, int triangle) => _Triangles[subMesh].Add(triangle);
-        public void AddTriangles(int subMesh, params int[] triangles) => _Triangles[subMesh].AddRange(triangles);
-        public void AddTriangles(int subMesh, IEnumerable<int> triangles) => _Triangles[subMesh].AddRange(triangles);
+        public void AddTriangle(int subMesh, uint triangle) => _Triangles[subMesh].Add(triangle);
+        public void AddTriangles(int subMesh, params uint[] triangles) => _Triangles[subMesh].AddRange(triangles);
+        public void AddTriangles(int subMesh, IEnumerable<uint> triangles) => _Triangles[subMesh].AddRange(triangles);
 
         public void ApplyMeshData(ref Mesh mesh)
         {
-            if (mesh == null)
+            // 'is object' to bypass unity lifetime check for null
+            if (mesh is object)
             {
                 mesh = new Mesh();
             }
@@ -79,25 +80,29 @@ namespace Wyd.Game.World.Chunks.Generation
                 ? IndexFormat.UInt32
                 : IndexFormat.UInt16;
 
-            mesh.SetVertices(_Vertices);
+            mesh.SetVertexBufferParams(_Vertices.Count, new VertexAttributeDescriptor(VertexAttribute.Position, VertexAttributeFormat.SInt32, 1));
+            mesh.SetVertexBufferData(_Vertices, 0, 0, _Vertices.Count, 0,
+                MeshUpdateFlags.DontRecalculateBounds | MeshUpdateFlags.DontValidateIndices | MeshUpdateFlags.DontResetBoneBounds);
 
-            for (int index = 0; index < _Triangles.Count; index++)
+            foreach (List<uint> triangles in _Triangles)
             {
-                if (_Triangles[index].Count == 0)
+                if (triangles.Count == 0)
                 {
                     continue;
                 }
 
-                mesh.SetTriangles(_Triangles[index], index);
+                mesh.SetIndexBufferParams(triangles.Count, IndexFormat.UInt32);
+                mesh.SetIndexBufferData(triangles, 0, 0, triangles.Count,
+                    MeshUpdateFlags.DontRecalculateBounds | MeshUpdateFlags.DontValidateIndices | MeshUpdateFlags.DontResetBoneBounds);
             }
 
             // check uvs count in case of no UVs to apply to mesh
-            if (_UVs.Count > 0)
-            {
-                mesh.SetUVs(0, _UVs);
-            }
+            // if (_UVs.Count > 0)
+            // {
+            //     mesh.SetUVs(0, _UVs);
+            // }
 
-            mesh.RecalculateNormals();
+            // mesh.RecalculateNormals();
         }
     }
 }

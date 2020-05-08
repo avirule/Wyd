@@ -12,60 +12,60 @@ namespace Wyd.Game.World.Blocks
     {
         public static class Vertices
         {
-            public static readonly IReadOnlyDictionary<Direction, float3[]> FaceVerticesByDirection;
-            public static readonly float3[][] FaceVerticesByNormalIndex;
+            public static readonly IReadOnlyDictionary<Direction, int3[]> FaceVerticesByDirection;
+            public static readonly int3[][] FaceVerticesByNormalIndex;
 
-            public static readonly float3[] North =
+            public static readonly int3[] North =
             {
-                new float3(0f, 0f, 1f),
-                new float3(0f, 1f, 1f),
-                new float3(1f, 0f, 1f),
-                new float3(1f, 1f, 1f)
+                new int3(0, 0, 1),
+                new int3(0, 1, 1),
+                new int3(1, 0, 1),
+                new int3(1, 1, 1)
             };
 
-            public static readonly float3[] East =
+            public static readonly int3[] East =
             {
-                new float3(1f, 0f, 1f),
-                new float3(1f, 1f, 1f),
-                new float3(1f, 0f, 0f),
-                new float3(1f, 1f, 0f)
+                new int3(1, 0, 1),
+                new int3(1, 1, 1),
+                new int3(1, 0, 0),
+                new int3(1, 1, 0)
             };
 
-            public static readonly float3[] South =
+            public static readonly int3[] South =
             {
-                new float3(1f, 0f, 0f),
-                new float3(1f, 1f, 0f),
-                new float3(0f, 0f, 0f),
-                new float3(0f, 1f, 0f)
+                new int3(1, 0, 0),
+                new int3(1, 1, 0),
+                new int3(0, 0, 0),
+                new int3(0, 1, 0)
             };
 
-            public static readonly float3[] West =
+            public static readonly int3[] West =
             {
-                new float3(0f, 0f, 0f),
-                new float3(0f, 1f, 0f),
-                new float3(0f, 0f, 1f),
-                new float3(0f, 1f, 1f)
+                new int3(0, 0, 0),
+                new int3(0, 1, 0),
+                new int3(0, 0, 1),
+                new int3(0, 1, 1)
             };
 
-            public static readonly float3[] Up =
+            public static readonly int3[] Up =
             {
-                new float3(0f, 1f, 1f),
-                new float3(0f, 1f, 0f),
-                new float3(1f, 1f, 1f),
-                new float3(1f, 1f, 0f)
+                new int3(0, 1, 1),
+                new int3(0, 1, 0),
+                new int3(1, 1, 1),
+                new int3(1, 1, 0)
             };
 
-            public static readonly float3[] Down =
+            public static readonly int3[] Down =
             {
-                new float3(0f, 0f, 0f),
-                new float3(0f, 0f, 1f),
-                new float3(1f, 0f, 0f),
-                new float3(1f, 0f, 1f)
+                new int3(0, 0, 0),
+                new int3(0, 0, 1),
+                new int3(1, 0, 0),
+                new int3(1, 0, 1)
             };
 
             static Vertices()
             {
-                FaceVerticesByDirection = new Dictionary<Direction, float3[]>
+                FaceVerticesByDirection = new Dictionary<Direction, int3[]>
                 {
                     { Direction.North, North },
                     { Direction.East, East },

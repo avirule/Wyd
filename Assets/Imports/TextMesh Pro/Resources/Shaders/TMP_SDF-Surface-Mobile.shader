@@ -41,7 +41,7 @@ Properties {
 
 	_VertexOffsetX		("Vertex OffsetX", float) = 0
 	_VertexOffsetY		("Vertex OffsetY", float) = 0
-	
+
 	//_MaskCoord		("Mask Coords", vector) = (0,0,0,0)
 	//_MaskSoftness		("Mask Softness", float) = 0
 }
@@ -75,7 +75,7 @@ SubShader {
 		float2	uv2_FaceTex;
 		float2  uv2_OutlineTex;
 		float2	param;					// Weight, Scale
-		float3	viewDirEnv;		
+		float3	viewDirEnv;
 	};
 
 	#include "TMPro_Surface.cginc"

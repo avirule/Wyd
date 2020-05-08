@@ -13,7 +13,6 @@ using Wyd.Controllers.World;
 using Wyd.Game.World.Blocks;
 using Wyd.System;
 using Wyd.System.Collections;
-using Wyd.System.Extensions;
 using Wyd.System.Graphics;
 using Wyd.System.Jobs;
 
@@ -30,7 +29,7 @@ namespace Wyd.Game.World.Chunks.Generation
         private readonly Stopwatch _Stopwatch;
         private readonly INodeCollection<ushort>[] _NeighborBlocksCollections;
 
-        private float3 _OriginPoint;
+        private int3 _OriginPoint;
         private INodeCollection<ushort> _BlocksCollection;
         private MeshData _MeshData;
         private BlockFaces[] _Mask;
@@ -73,7 +72,7 @@ namespace Wyd.Game.World.Chunks.Generation
         /// <param name="originPoint">Origin point of the chunk that's being meshed.</param>
         /// <param name="blocksCollection"><see cref="INodeCollection{T}" /> of blocksCollection contained within the chunk.</param>
         /// <param name="aggressiveFaceMerging">Indicates whether to merge similarly textured faces.</param>
-        public void SetData(CancellationToken cancellationToken, float3 originPoint, INodeCollection<ushort> blocksCollection,
+        public void SetData(CancellationToken cancellationToken, int3 originPoint, INodeCollection<ushort> blocksCollection,
             bool aggressiveFaceMerging)
         {
             CancellationToken = CancellationTokenSource.CreateLinkedTokenSource(AsyncJobScheduler.AbortToken, cancellationToken).Token;
@@ -142,7 +141,7 @@ namespace Wyd.Game.World.Chunks.Generation
             // retrieve existing objects from object pool
             _Mask = _masksPool.Retrieve() ?? new BlockFaces[GenerationConstants.CHUNK_SIZE_CUBED];
             _Blocks = _blocksPool.Retrieve() ?? new ushort[GenerationConstants.CHUNK_SIZE_CUBED];
-            _MeshData = _meshDataPool.Retrieve() ?? new MeshData(new List<Vector3>(), new List<Vector3>(), new List<int>(), new List<int>());
+            _MeshData = _meshDataPool.Retrieve() ?? new MeshData(new List<int>(), new List<Vector3>(), new List<uint>(), new List<uint>());
 
             // set _BlocksIDs from _BlocksCollection
             _BlocksCollection.CopyTo(_Blocks);
@@ -209,7 +208,7 @@ namespace Wyd.Game.World.Chunks.Generation
 
                 // set local and global position according to index
                 int3 localPosition = WydMath.IndexTo3D(index, GenerationConstants.CHUNK_SIZE);
-                int3 globalPosition = WydMath.ToInt(_OriginPoint + localPosition);
+                int3 globalPosition = _OriginPoint + localPosition;
 
                 ushort currentBlockId = _Blocks[index];
 
@@ -269,9 +268,9 @@ namespace Wyd.Game.World.Chunks.Generation
                     int3 traversalPosition = localPosition + (traversalNormal * traversals);
 
                     for (;
-                        (traversalNormalLocalPositionIndexValue + traversals) < maximumTraversals
+                        ((traversalNormalLocalPositionIndexValue + traversals) < maximumTraversals)
                         && !_Mask[traversalIndex].HasFace(faceDirection)
-                        && _Blocks[traversalIndex] == currentBlockId;
+                        && (_Blocks[traversalIndex] == currentBlockId);
                         traversals++, // increment traversals
                         traversalIndex += traversalIndexStep, // increment traversal index by index step to adjust local working position
                         traversalPosition += traversalNormal) // increment traversal position by traversal normal to adjust local working position
@@ -321,7 +320,7 @@ namespace Wyd.Game.World.Chunks.Generation
                     }
 
                     // add triangles
-                    int verticesCount = _MeshData.VerticesCount;
+                    uint verticesCount = (uint)_MeshData.VerticesCount;
                     int transparentAsInt = Convert.ToInt32(transparentTraversal);
 
                     _MeshData.AddTriangle(transparentAsInt, 0 + verticesCount);
@@ -333,13 +332,13 @@ namespace Wyd.Game.World.Chunks.Generation
 
                     // add vertices
                     int3 traversalVertexOffset = math.max(traversals * traversalNormal, 1);
-                    float3[] vertices = BlockFaces.Vertices.FaceVerticesByNormalIndex[normalIndex];
+                    int3[] vertices = BlockFaces.Vertices.FaceVerticesByNormalIndex[normalIndex];
 
                     // add highest-to-lowest to avoid persistent bounds check
-                    _MeshData.AddVertex(localPosition + (vertices[3] * traversalVertexOffset));
-                    _MeshData.AddVertex(localPosition + (vertices[2] * traversalVertexOffset));
-                    _MeshData.AddVertex(localPosition + (vertices[1] * traversalVertexOffset));
-                    _MeshData.AddVertex(localPosition + (vertices[0] * traversalVertexOffset));
+                    _MeshData.AddVertex(VertexToInt(localPosition + (vertices[3] * traversalVertexOffset)));
+                    _MeshData.AddVertex(VertexToInt(localPosition + (vertices[2] * traversalVertexOffset)));
+                    _MeshData.AddVertex(VertexToInt(localPosition + (vertices[1] * traversalVertexOffset)));
+                    _MeshData.AddVertex(VertexToInt(localPosition + (vertices[0] * traversalVertexOffset)));
 
                     if (BlockController.Current.GetUVs(currentBlockId, globalPosition, faceDirection, new float2(1f)
                     {
@@ -355,6 +354,16 @@ namespace Wyd.Game.World.Chunks.Generation
                     break;
                 }
             }
+        }
+
+        private static int VertexToInt(int3 vertex)
+        {
+            const int vertex_mask = 0b11111;
+            int x = vertex.x & vertex_mask;
+            int y = (vertex.y & vertex_mask) << 5;
+            int z = (vertex.z & vertex_mask) << 15;
+
+            return x | y | z;
         }
 
         #endregion

@@ -519,13 +519,11 @@ namespace Wyd.Controllers.World
             meshingJob.ClearData();
             _meshingJobs.TryAdd(meshingJob);
 
-            MeshRenderer.enabled = _Mesh.vertexCount > 0;
-
 #if UNITY_EDITOR
 
-            VertexCount = _Mesh.vertices.Length;
-            TrianglesCount = _Mesh.triangles.Length;
-            UVsCount = _Mesh.uv.Length;
+            //VertexCount = _Mesh.vertices.Length;
+            //TrianglesCount = _Mesh.triangles.Length;
+            //UVsCount = _Mesh.uv.Length;
             TotalTimesMeshed += 1;
             TimesMeshed += 1;
 

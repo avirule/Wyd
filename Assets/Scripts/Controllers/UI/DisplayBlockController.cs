@@ -103,7 +103,7 @@ namespace Wyd.Controllers.UI
 
         private void AddVertices(Direction direction, float3 localPosition)
         {
-            float3[] vertices = BlockFaces.Vertices.FaceVerticesByDirection[direction];
+            int3[] vertices = BlockFaces.Vertices.FaceVerticesByDirection[direction];
 
             foreach (float3 vertex in vertices)
             {
