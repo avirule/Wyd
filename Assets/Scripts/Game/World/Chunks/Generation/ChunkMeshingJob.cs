@@ -13,6 +13,7 @@ using Wyd.Controllers.World;
 using Wyd.Game.World.Blocks;
 using Wyd.System;
 using Wyd.System.Collections;
+using Wyd.System.Extensions;
 using Wyd.System.Graphics;
 using Wyd.System.Jobs;
 
@@ -20,7 +21,7 @@ using Wyd.System.Jobs;
 
 namespace Wyd.Game.World.Chunks.Generation
 {
-    public class ChunkMeshingJob : AsyncJob
+    public class ChunkMeshingJob : AsyncParallelJob
     {
         private static readonly ObjectPool<BlockFaces[]> _masksPool = new ObjectPool<BlockFaces[]>();
         private static readonly ObjectPool<ushort[]> _blocksPool = new ObjectPool<ushort[]>();
@@ -33,22 +34,38 @@ namespace Wyd.Game.World.Chunks.Generation
         private INodeCollection<ushort> _BlocksCollection;
         private MeshData _MeshData;
         private BlockFaces[] _Mask;
-        private ushort[] _BlockIDs;
+        private ushort[] _Blocks;
         private bool _AggressiveFaceMerging;
         private TimeSpan _PreMeshingTimeSpan;
         private TimeSpan _MeshingTimeSpan;
 
-        public ChunkMeshingJob()
+        public ChunkMeshingJob() : base(GenerationConstants.CHUNK_SIZE_CUBED, 128)
         {
             _Stopwatch = new Stopwatch();
             _NeighborBlocksCollections = new INodeCollection<ushort>[6];
         }
 
-        protected override Task Process()
+        protected override async Task Process()
         {
-            TimeMeasuredGenerate();
+            PrepareMeshing();
 
-            return Task.CompletedTask;
+            _Stopwatch.Restart();
+
+            await Task.WhenAll(BatchTasksAndAwait()).ConfigureAwait(false);
+
+            // clear mask, add to object pool, and unset reference
+            Array.Clear(_Mask, 0, _Mask.Length);
+            _masksPool.TryAdd(_Mask);
+            _Mask = default;
+
+            // clear block ids, add to object pool, and unset reference
+            Array.Clear(_Blocks, 0, _Blocks.Length);
+            _blocksPool.TryAdd(_Blocks);
+            _Blocks = default;
+
+            _Stopwatch.Stop();
+
+            _MeshingTimeSpan = _Stopwatch.Elapsed;
         }
 
         protected override Task ProcessFinished()
@@ -57,6 +74,93 @@ namespace Wyd.Game.World.Chunks.Generation
             {
                 DiagnosticsController.Current.RollingPreMeshingTimes.Enqueue(_PreMeshingTimeSpan);
                 DiagnosticsController.Current.RollingMeshingTimes.Enqueue(_MeshingTimeSpan);
+            }
+
+            return Task.CompletedTask;
+        }
+
+        protected override Task ProcessIndex(int index)
+        {
+            int3 localPosition = WydMath.IndexTo3D(index, GenerationConstants.CHUNK_SIZE);
+            ushort currentBlockId = _Blocks[index];
+
+            if (currentBlockId == BlockController.AirID)
+            {
+                return Task.CompletedTask;
+            }
+
+            for (int normalIndex = 0; normalIndex < 6; normalIndex++)
+            {
+                // face direction always exists on a single bit, so offset 1 by the current normalIndex (0-5)
+                Direction faceDirection = (Direction)(1 << normalIndex);
+
+                // check if current index has face already
+                if (_Mask[index].HasFace(faceDirection))
+                {
+                    continue;
+                }
+
+                int iModulo3 = normalIndex % 3;
+                int3 faceNormal = GenerationConstants.FaceNormalByIteration[normalIndex];
+                // local position of facing block
+                int3 facingBlockPosition = localPosition + faceNormal;
+                // axis value of facing block position
+                int facingPositionAxisValue = facingBlockPosition[iModulo3];
+
+                ushort facingBlockId;
+
+                if ((facingPositionAxisValue >= 0) && (facingPositionAxisValue <= GenerationConstants.CHUNK_SIZE_MINUS_ONE))
+                {
+                    // if so, index into block ids and set facingBlockId
+                    facingBlockId = _Blocks[index + GenerationConstants.IndexStepByNormalIndex[normalIndex]];
+                }
+                else
+                {
+                    // if not, get local position adjusted to relative position across the chunk boundary
+                    int3 boundaryAdjustedLocalPosition = facingBlockPosition + (faceNormal * -GenerationConstants.CHUNK_SIZE_MINUS_ONE);
+
+                    // index into neighbor blocks collections, call .GetPoint() with adjusted local position
+                    // remark: if there's no neighbor at the index given, then no chunk exists there (for instance,
+                    //     chunks at the edge of render distance). In this case, return NullID so no face is rendered on edges.
+                    facingBlockId = _NeighborBlocksCollections[normalIndex]?.GetPoint(boundaryAdjustedLocalPosition) ?? BlockController.NullID;
+                }
+
+                bool currentBlockTransparent = BlockController.Current.CheckBlockHasProperty(currentBlockId, BlockDefinition.Property.Transparent);
+
+                if ((!currentBlockTransparent || (currentBlockId == facingBlockId))
+                    && BlockController.Current.CheckBlockHasProperty(facingBlockId, BlockDefinition.Property.Transparent))
+                {
+                    _Mask[index].SetFace(faceDirection);
+
+                    int verticesCount = _MeshData.VerticesCount;
+                    int transparentAsInt = currentBlockTransparent.ToByte();
+
+                    // ReSharper disable once ForCanBeConvertedToForeach
+                    for (int triangleIndex = 0; triangleIndex < BlockFaces.Triangles.FaceTriangles.Length; triangleIndex++)
+                    {
+                        _MeshData.AddTriangle(transparentAsInt, BlockFaces.Triangles.FaceTriangles[triangleIndex] + verticesCount);
+                    }
+
+                    // add vertices
+                    float3[] vertices = BlockFaces.Vertices.FaceVerticesByNormalIndex[normalIndex];
+
+
+
+                    // ReSharper disable once ForCanBeConvertedToForeach
+                    for (int verticesIndex = 0; verticesIndex < vertices.Length; verticesIndex++)
+                    {
+                        _MeshData.AddVertex(localPosition + vertices[verticesIndex]);
+                    }
+
+                    if (BlockController.Current.GetUVs(currentBlockId, WydMath.ToInt(_OriginPoint + localPosition), faceDirection, new float2(1f),
+                        out BlockUVs blockUVs))
+                    {
+                        _MeshData.AddUV(blockUVs.TopLeft);
+                        _MeshData.AddUV(blockUVs.TopRight);
+                        _MeshData.AddUV(blockUVs.BottomLeft);
+                        _MeshData.AddUV(blockUVs.BottomRight);
+                    }
+                }
             }
 
             return Task.CompletedTask;
@@ -119,7 +223,7 @@ namespace Wyd.Game.World.Chunks.Generation
 
             PrepareMeshing();
 
-            GenerateMesh();
+            //GenerateMesh();
         }
 
         private void PrepareMeshing()
@@ -129,20 +233,8 @@ namespace Wyd.Game.World.Chunks.Generation
 
             // retrieve existing objects from object pool
             _Mask = _masksPool.Retrieve() ?? new BlockFaces[GenerationConstants.CHUNK_SIZE_CUBED];
-            _BlockIDs = _blocksPool.Retrieve() ?? new ushort[GenerationConstants.CHUNK_SIZE_CUBED];
+            _Blocks = _blocksPool.Retrieve() ?? new ushort[GenerationConstants.CHUNK_SIZE_CUBED];
             _MeshData = _meshDataPool.Retrieve() ?? new MeshData(new List<Vector3>(), new List<Vector3>(), new List<int>(), new List<int>());
-
-            // set _BlocksIDs from _BlocksCollection
-            int index = 0;
-            foreach (ushort blockId in _BlocksCollection.GetAllData())
-            {
-                _BlockIDs[index] = blockId;
-
-                index += 1;
-            }
-
-            // unset reference to block collection to avoid use during meshing generation
-            _BlocksCollection = null;
 
             // set block data for relevant neighbor indexes
             foreach ((int3 normal, ChunkController chunkController) in WorldController.Current.GetNeighboringChunksWithNormal(_OriginPoint))
@@ -165,6 +257,18 @@ namespace Wyd.Game.World.Chunks.Generation
                 _NeighborBlocksCollections[neighborIndex] = chunkController.Blocks;
             }
 
+            // set _BlocksIDs from _BlocksCollection
+            int index = 0;
+            foreach (ushort blockId in _BlocksCollection.GetAllData())
+            {
+                _Blocks[index] = blockId;
+
+                index += 1;
+            }
+
+            // unset reference to block collection to avoid use during meshing generation
+            _BlocksCollection = null;
+
             _Stopwatch.Stop();
 
             _PreMeshingTimeSpan = _Stopwatch.Elapsed;
@@ -176,186 +280,182 @@ namespace Wyd.Game.World.Chunks.Generation
         /// <remarks>
         ///     The generated data is stored in the <see cref="MeshData" /> object <see cref="_MeshData" />.
         /// </remarks>
-        private void GenerateMesh()
-        {
-            _Stopwatch.Restart();
+        // private void GenerateMesh()
+        // {
+        //     _Stopwatch.Restart();
+        //
+        //     for (int index = 0; index < _Mask.Length; index++)
+        //     {
+        //         // observe cancellation token
+        //         if (CancellationToken.IsCancellationRequested)
+        //         {
+        //             return;
+        //         }
+        //
+        //         // set local and global position according to index
+        //         int3 localPosition = WydMath.IndexTo3D(index, GenerationConstants.CHUNK_SIZE);
+        //         int3 globalPosition = WydMath.ToInt(_OriginPoint + localPosition);
+        //
+        //         ushort currentBlockId = _BlocksCollection.GetPoint(localPosition);
+        //
+        //         if (currentBlockId == BlockController.AirID)
+        //         {
+        //             continue;
+        //         }
+        //
+        //         TraverseIndex(index, globalPosition, localPosition, currentBlockId,
+        //             BlockController.Current.CheckBlockHasProperty(currentBlockId, BlockDefinition.Property.Transparent));
+        //     }
+        //
+        //     // clear mask, add to object pool, and unset reference
+        //     Array.Clear(_Mask, 0, _Mask.Length);
+        //     _masksPool.TryAdd(_Mask);
+        //     _Mask = default;
+        //
+        //     _Stopwatch.Stop();
+        //
+        //     _MeshingTimeSpan = _Stopwatch.Elapsed;
+        // }
 
-            for (int index = 0; index < _Mask.Length; index++)
-            {
-                // observe cancellation token
-                if (CancellationToken.IsCancellationRequested)
-                {
-                    return;
-                }
 
-                // set local and global position according to index
-                int3 localPosition = WydMath.IndexTo3D(index, GenerationConstants.CHUNK_SIZE);
-                int3 globalPosition = WydMath.ToInt(_OriginPoint + localPosition);
-
-                ushort currentBlockId = _BlockIDs[index];
-
-                if (currentBlockId == BlockController.AirID)
-                {
-                    continue;
-                }
-
-                TraverseIndex(index, globalPosition, localPosition, currentBlockId,
-                    BlockController.Current.CheckBlockHasProperty(currentBlockId, BlockDefinition.Property.Transparent));
-            }
-
-            // clear mask, add to object pool, and unset reference
-            Array.Clear(_Mask, 0, _Mask.Length);
-            _masksPool.TryAdd(_Mask);
-            _Mask = default;
-
-            // clear block ids, add to object pool, and unset reference
-            Array.Clear(_BlockIDs, 0, _BlockIDs.Length);
-            _blocksPool.TryAdd(_BlockIDs);
-            _BlockIDs = default;
-
-            _Stopwatch.Stop();
-
-            _MeshingTimeSpan = _Stopwatch.Elapsed;
-        }
-
-        private void TraverseIndex(int index, int3 globalPosition, int3 localPosition, ushort currentBlockId, bool transparentTraversal)
-        {
-            for (int normalIndex = 0; normalIndex < 6; normalIndex++)
-            {
-                // face direction always exists on a single bit, so offset 1 by the current normalIndex (0-5)
-                Direction faceDirection = (Direction)(1 << normalIndex);
-
-                // check if current index has face already
-                if (_Mask[index].HasFace(faceDirection))
-                {
-                    continue;
-                }
-
-                // normalIndex constrained to represent the 3 axes
-                int iModulo3 = normalIndex % 3;
-                // indicates how many times the traversal function has executed for this face direction
-                int traversalIterations = 0;
-                // total number of successful traversals
-                // remark: this is outside the for loop below so that the function can determine if any traversals have happened
-                int traversals = 0;
-
-                for (int perpendicularNormalIndex = 1; perpendicularNormalIndex < 3; perpendicularNormalIndex++)
-                {
-                    // the index of the int3 traversalNormal to traverse on
-                    int traversalNormalAxisIndex = (iModulo3 + perpendicularNormalIndex) % 3;
-                    // traversal normal, which is a zeroed out int3 with only the traversal axis index set to one
-                    int3 traversalNormal = new int3(0)
-                    {
-                        [traversalNormalAxisIndex] = 1
-                    };
-
-                    // current value of the local position by traversal direction
-                    int traversalNormalLocalPositionIndexValue = localPosition[traversalNormalAxisIndex];
-                    // maximum number of traversals, which is only sliceIndexValue + 1 when not using AggressiveFaceMerging
-                    // remark: it's likely that not using AggressiveFaceMerging is much slower since the traversal function still
-                    //     runs, but only ever hits once at maximum (thus resulting in a higher total amount of traversing overhead).
-                    int maximumTraversals = _AggressiveFaceMerging ? GenerationConstants.CHUNK_SIZE : traversalNormalLocalPositionIndexValue + 1;
-                    // amount by integer to add to current index to get 1D projected position of traversal position
-                    int traversalIndexStep = GenerationConstants.IndexStepByNormalIndex[traversalNormalAxisIndex];
-                    // amount by integer to add to current traversal index to get 1D projected position of facing block
-                    int facingBlockIndexStep = GenerationConstants.IndexStepByNormalIndex[normalIndex];
-
-                    // current traversal index, which is increased by traversalIndexStep every iteration the for loop below
-                    int traversalIndex = index + (traversals * traversalIndexStep);
-                    // current local traversal position, which is increased by TraversalNormal every iteration of the for loop below
-                    int3 traversalPosition = localPosition + (traversalNormal * traversals);
-
-                    for (; (traversalNormalLocalPositionIndexValue + traversals) < maximumTraversals;
-                        traversals++, // increment traversals
-                        traversalIndex += traversalIndexStep, // increment traversal index by index step to adjust local working position
-                        traversalPosition += traversalNormal) // increment traversal position by traversal normal to adjust local working position
-                    {
-                        // check if block's mask already has face set, or if we've traversed at all, ensure block ids match
-                        // remark: in the case block ids don't match, we've likely reached textures that won't match.
-                        if (_Mask[traversalIndex].HasFace(faceDirection) || ((traversals > 0) && (_BlockIDs[traversalIndex] != currentBlockId)))
-                        {
-                            break;
-                        }
-
-                        // normal direction of current face
-                        int3 faceNormal = GenerationConstants.FaceNormalByIteration[normalIndex];
-                        // local position of facing block
-                        int3 facingBlockPosition = traversalPosition + faceNormal;
-                        // axis value of facing block position
-                        int facingPositionAxisValue = facingBlockPosition[iModulo3];
-
-                        ushort facingBlockId;
-
-                        // check if current facing block axis value is within the local chunk
-                        if ((facingPositionAxisValue >= 0) && (facingPositionAxisValue <= GenerationConstants.CHUNK_SIZE_MINUS_ONE))
-                        {
-                            // if so, index into block ids and set facingBlockId
-                            facingBlockId = _BlockIDs[traversalIndex + facingBlockIndexStep];
-                        }
-                        else
-                        {
-                            // if not, get local position adjusted to relative position across the chunk boundary
-                            int3 boundaryAdjustedLocalPosition = facingBlockPosition + (faceNormal * -GenerationConstants.CHUNK_SIZE_MINUS_ONE);
-
-                            // index into neighbor blocks collections, call .GetPoint() with adjusted local position
-                            // remark: if there's no neighbor at the index given, then no chunk exists there (for instance,
-                            //     chunks at the edge of render distance). In this case, return NullID so no face is rendered on edges.
-                            facingBlockId = _NeighborBlocksCollections[normalIndex]?.GetPoint(boundaryAdjustedLocalPosition) ?? BlockController.NullID;
-                        }
-
-                        // if transparent, traverse as long as block is the same
-                        // if opaque, traverse as long as faceNormal-adjacent block is transparent
-                        if ((transparentTraversal && (currentBlockId != facingBlockId))
-                            || !BlockController.Current.CheckBlockHasProperty(facingBlockId, BlockDefinition.Property.Transparent))
-                        {
-                            break;
-                        }
-
-                        _Mask[traversalIndex].SetFace(faceDirection);
-                    }
-
-                    // if we haven't traversed at all, continue to next axis
-                    if ((traversals == 0) || ((traversalIterations == 0) && (traversals == 1)))
-                    {
-                        traversalIterations += 1;
-                        continue;
-                    }
-
-                    // add triangles
-                    int verticesCount = _MeshData.VerticesCount;
-                    int transparentAsInt = Convert.ToInt32(transparentTraversal);
-
-                    // ReSharper disable once ForCanBeConvertedToForeach
-                    for (int triangleIndex = 0; triangleIndex < BlockFaces.Triangles.FaceTriangles.Length; triangleIndex++)
-                    {
-                        _MeshData.AddTriangle(transparentAsInt, BlockFaces.Triangles.FaceTriangles[triangleIndex] + verticesCount);
-                    }
-
-                    // add vertices
-                    int3 traversalVertexOffset = math.max(traversals * traversalNormal, 1);
-                    float3[] vertices = BlockFaces.Vertices.FaceVerticesByNormalIndex[normalIndex];
-
-                    // ReSharper disable once ForCanBeConvertedToForeach
-                    for (int verticesIndex = 0; verticesIndex < vertices.Length; verticesIndex++)
-                    {
-                        _MeshData.AddVertex(localPosition + (vertices[verticesIndex] * traversalVertexOffset));
-                    }
-
-                    if (BlockController.Current.GetUVs(currentBlockId, globalPosition, faceDirection, new float2(1f)
-                    {
-                        [GenerationConstants.UVIndexAdjustments[iModulo3][traversalNormalAxisIndex]] = traversals
-                    }, out BlockUVs blockUVs))
-                    {
-                        _MeshData.AddUV(blockUVs.TopLeft);
-                        _MeshData.AddUV(blockUVs.TopRight);
-                        _MeshData.AddUV(blockUVs.BottomLeft);
-                        _MeshData.AddUV(blockUVs.BottomRight);
-                    }
-
-                    break;
-                }
-            }
-        }
+        // private void TraverseIndex(int index, int3 globalPosition, int3 localPosition, ushort currentBlockId, bool transparentTraversal)
+        // {
+        //     for (int normalIndex = 0; normalIndex < 6; normalIndex++)
+        //     {
+        //         // face direction always exists on a single bit, so offset 1 by the current normalIndex (0-5)
+        //         Direction faceDirection = (Direction)(1 << normalIndex);
+        //
+        //         // check if current index has face already
+        //         if (_Mask[index].HasFace(faceDirection))
+        //         {
+        //             continue;
+        //         }
+        //
+        //         // normalIndex constrained to represent the 3 axes
+        //         int iModulo3 = normalIndex % 3;
+        //         // indicates how many times the traversal function has executed for this face direction
+        //         int traversalIterations = 0;
+        //         // total number of successful traversals
+        //         // remark: this is outside the for loop below so that the function can determine if any traversals have happened
+        //         int traversals = 0;
+        //
+        //         for (int perpendicularNormalIndex = 1; perpendicularNormalIndex < 3; perpendicularNormalIndex++)
+        //         {
+        //             // the index of the int3 traversalNormal to traverse on
+        //             int traversalNormalAxisIndex = (iModulo3 + perpendicularNormalIndex) % 3;
+        //             // traversal normal, which is a zeroed out int3 with only the traversal axis index set to one
+        //             int3 traversalNormal = new int3(0)
+        //             {
+        //                 [traversalNormalAxisIndex] = 1
+        //             };
+        //
+        //             // current value of the local position by traversal direction
+        //             int traversalNormalLocalPositionIndexValue = localPosition[traversalNormalAxisIndex];
+        //             // maximum number of traversals, which is only sliceIndexValue + 1 when not using AggressiveFaceMerging
+        //             // remark: it's likely that not using AggressiveFaceMerging is much slower since the traversal function still
+        //             //     runs, but only ever hits once at maximum (thus resulting in a higher total amount of traversing overhead).
+        //             int maximumTraversals = _AggressiveFaceMerging ? GenerationConstants.CHUNK_SIZE : traversalNormalLocalPositionIndexValue + 1;
+        //             // amount by integer to add to current index to get 1D projected position of traversal position
+        //             int traversalIndexStep = GenerationConstants.IndexStepByNormalIndex[traversalNormalAxisIndex];
+        //             // amount by integer to add to current traversal index to get 1D projected position of facing block
+        //             int facingBlockIndexStep = GenerationConstants.IndexStepByNormalIndex[normalIndex];
+        //
+        //             // current traversal index, which is increased by traversalIndexStep every iteration the for loop below
+        //             int traversalIndex = index + (traversals * traversalIndexStep);
+        //             // current local traversal position, which is increased by TraversalNormal every iteration of the for loop below
+        //             int3 traversalPosition = localPosition + (traversalNormal * traversals);
+        //
+        //             for (; (traversalNormalLocalPositionIndexValue + traversals) < maximumTraversals;
+        //                 traversals++, // increment traversals
+        //                 traversalIndex += traversalIndexStep, // increment traversal index by index step to adjust local working position
+        //                 traversalPosition += traversalNormal) // increment traversal position by traversal normal to adjust local working position
+        //             {
+        //                 // check if block's mask already has face set, or if we've traversed at all, ensure block ids match
+        //                 // remark: in the case block ids don't match, we've likely reached textures that won't match.
+        //                 if (_Mask[traversalIndex].HasFace(faceDirection) || ((traversals > 0) && (_Blocks[traversalIndex] != currentBlockId)))
+        //                 {
+        //                     break;
+        //                 }
+        //
+        //                 // normal direction of current face
+        //                 int3 faceNormal = GenerationConstants.FaceNormalByIteration[normalIndex];
+        //                 // local position of facing block
+        //                 int3 facingBlockPosition = traversalPosition + faceNormal;
+        //                 // axis value of facing block position
+        //                 int facingPositionAxisValue = facingBlockPosition[iModulo3];
+        //
+        //                 ushort facingBlockId;
+        //
+        //                 // check if current facing block axis value is within the local chunk
+        //                 if ((facingPositionAxisValue >= 0) && (facingPositionAxisValue <= GenerationConstants.CHUNK_SIZE_MINUS_ONE))
+        //                 {
+        //                     // if so, index into block ids and set facingBlockId
+        //                     facingBlockId = _Blocks[traversalIndex + facingBlockIndexStep];
+        //                 }
+        //                 else
+        //                 {
+        //                     // if not, get local position adjusted to relative position across the chunk boundary
+        //                     int3 boundaryAdjustedLocalPosition = facingBlockPosition + (faceNormal * -GenerationConstants.CHUNK_SIZE_MINUS_ONE);
+        //
+        //                     // index into neighbor blocks collections, call .GetPoint() with adjusted local position
+        //                     // remark: if there's no neighbor at the index given, then no chunk exists there (for instance,
+        //                     //     chunks at the edge of render distance). In this case, return NullID so no face is rendered on edges.
+        //                     facingBlockId = _NeighborBlocksCollections[normalIndex]?.GetPoint(boundaryAdjustedLocalPosition) ?? BlockController.NullID;
+        //                 }
+        //
+        //                 // if transparent, traverse as long as block is the same
+        //                 // if opaque, traverse as long as faceNormal-adjacent block is transparent
+        //                 if ((transparentTraversal && (currentBlockId != facingBlockId))
+        //                     || !BlockController.Current.CheckBlockHasProperty(facingBlockId, BlockDefinition.Property.Transparent))
+        //                 {
+        //                     break;
+        //                 }
+        //
+        //                 _Mask[traversalIndex].SetFace(faceDirection);
+        //             }
+        //
+        //             // if we haven't traversed at all, continue to next axis
+        //             if ((traversals == 0) || ((traversalIterations == 0) && (traversals == 1)))
+        //             {
+        //                 traversalIterations += 1;
+        //                 continue;
+        //             }
+        //
+        //             // add triangles
+        //             int verticesCount = _MeshData.VerticesCount;
+        //             int transparentAsInt = Convert.ToInt32(transparentTraversal);
+        //
+        //             // ReSharper disable once ForCanBeConvertedToForeach
+        //             for (int triangleIndex = 0; triangleIndex < BlockFaces.Triangles.FaceTriangles.Length; triangleIndex++)
+        //             {
+        //                 _MeshData.AddTriangle(transparentAsInt, BlockFaces.Triangles.FaceTriangles[triangleIndex] + verticesCount);
+        //             }
+        //
+        //             // add vertices
+        //             int3 traversalVertexOffset = math.max(traversals * traversalNormal, 1);
+        //             float3[] vertices = BlockFaces.Vertices.FaceVerticesByNormalIndex[normalIndex];
+        //
+        //             // ReSharper disable once ForCanBeConvertedToForeach
+        //             for (int verticesIndex = 0; verticesIndex < vertices.Length; verticesIndex++)
+        //             {
+        //                 _MeshData.AddVertex(localPosition + (vertices[verticesIndex] * traversalVertexOffset));
+        //             }
+        //
+        //             if (BlockController.Current.GetUVs(currentBlockId, globalPosition, faceDirection, new float2(1f)
+        //             {
+        //                 [GenerationConstants.UVIndexAdjustments[iModulo3][traversalNormalAxisIndex]] = traversals
+        //             }, out BlockUVs blockUVs))
+        //             {
+        //                 _MeshData.AddUV(blockUVs.TopLeft);
+        //                 _MeshData.AddUV(blockUVs.TopRight);
+        //                 _MeshData.AddUV(blockUVs.BottomLeft);
+        //                 _MeshData.AddUV(blockUVs.BottomRight);
+        //             }
+        //
+        //             break;
+        //         }
+        //     }
+        // }
 
         #endregion
     }
