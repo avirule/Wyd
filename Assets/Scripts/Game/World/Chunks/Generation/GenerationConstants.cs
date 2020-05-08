@@ -9,14 +9,24 @@ namespace Wyd.Game.World.Chunks.Generation
 {
     public static class GenerationConstants
     {
+        public const float FREQUENCY = 0.0075f;
+        public const float PERSISTENCE = 0.6f;
+
+        public const int CHUNK_SIZE = 32;
+        public const int CHUNK_SIZE_SQUARED = CHUNK_SIZE * CHUNK_SIZE;
+        public const int CHUNK_SIZE_SQUARED_HALF = CHUNK_SIZE_SQUARED / 2;
+        public const int CHUNK_SIZE_CUBED = CHUNK_SIZE * CHUNK_SIZE * CHUNK_SIZE;
+        public const int CHUNK_SIZE_CUBED_HALF = CHUNK_SIZE_CUBED / 2;
+        public const int CHUNK_SIZE_MINUS_ONE = CHUNK_SIZE - 1;
+
         public static readonly int[] IndexStepByNormalIndex =
         {
             1,
-            ChunkController.SIZE_SQUARED,
-            ChunkController.SIZE,
+            CHUNK_SIZE_SQUARED,
+            CHUNK_SIZE,
             -1,
-            -ChunkController.SIZE_SQUARED,
-            -ChunkController.SIZE
+            -CHUNK_SIZE_SQUARED,
+            -CHUNK_SIZE
         };
 
         public static readonly int3[] FaceNormalByIteration =

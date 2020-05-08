@@ -4,6 +4,7 @@ using System;
 using System.Collections.Generic;
 using Unity.Mathematics;
 using Wyd.Controllers.World;
+using Wyd.Game.World.Chunks.Generation;
 
 #endregion
 
@@ -28,7 +29,7 @@ namespace Wyd.System.Collections
 
         public T GetPoint(float3 point)
         {
-            int index = WydMath.PointToIndex(point, ChunkController.SIZE);
+            int index = WydMath.PointToIndex(point, GenerationConstants.CHUNK_SIZE);
             LinkedListNode<RLENode<T>> currentNode = _RLENodes.First;
 
             for (uint i = 0; (i < index) && ((currentNode = currentNode.Next) != null);)
@@ -50,7 +51,7 @@ namespace Wyd.System.Collections
 
         public void SetPoint(float3 point, T value)
         {
-            int index = WydMath.PointToIndex(point, ChunkController.SIZE);
+            int index = WydMath.PointToIndex(point, GenerationConstants.CHUNK_SIZE);
             LinkedListNode<RLENode<T>> currentNode = _RLENodes.First;
 
             for (uint i = 0; i < index;)

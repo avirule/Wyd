@@ -10,6 +10,7 @@ using Wyd.Controllers.UI;
 using Wyd.Controllers.World;
 using Wyd.Game.Entities;
 using Wyd.Game.World.Blocks;
+using Wyd.Game.World.Chunks.Generation;
 using Wyd.System;
 
 #endregion
@@ -309,7 +310,7 @@ namespace Wyd.Controllers.Entity
 
         private void CheckChangedChunkPosition()
         {
-            float3 rounded = WydMath.RoundBy(Transform.position, ChunkController.SIZE);
+            float3 rounded = WydMath.RoundBy(Transform.position, GenerationConstants.CHUNK_SIZE);
             int3 chunkPosition = WydMath.ToInt(rounded);
 
             if (math.all(chunkPosition == ChunkPosition))

@@ -119,23 +119,23 @@ namespace Wyd.Game.World.Chunks.Generation
         private void GenerateNoise()
         {
             // SIZE_SQUARED + 1 to facilitate compute shader's above-y-value count
-            _Heightmap = _heightmapPool.Retrieve() ?? new int[ChunkController.SIZE_SQUARED];
-            _CaveNoise = _caveNoisePool.Retrieve() ?? new float[ChunkController.SIZE_CUBED];
+            _Heightmap = _heightmapPool.Retrieve() ?? new int[GenerationConstants.CHUNK_SIZE_SQUARED];
+            _CaveNoise = _caveNoisePool.Retrieve() ?? new float[GenerationConstants.CHUNK_SIZE_CUBED];
 
             if ((_HeightmapBuffer == null) || (_CaveNoiseBuffer == null))
             {
-                for (int x = 0; x < ChunkController.SIZE; x++)
-                for (int z = 0; z < ChunkController.SIZE; z++)
+                for (int x = 0; x < GenerationConstants.CHUNK_SIZE; x++)
+                for (int z = 0; z < GenerationConstants.CHUNK_SIZE; z++)
                 {
                     int2 xzCoords = new int2(x, z);
-                    int heightmapIndex = WydMath.PointToIndex(xzCoords, ChunkController.SIZE);
+                    int heightmapIndex = WydMath.PointToIndex(xzCoords, GenerationConstants.CHUNK_SIZE);
                     _Heightmap[heightmapIndex] = GetHeightByGlobalPosition(_OriginPoint.xz + xzCoords);
 
-                    for (int y = 0; y < ChunkController.SIZE; y++)
+                    for (int y = 0; y < GenerationConstants.CHUNK_SIZE; y++)
                     {
                         int3 localPosition = new int3(x, y, z);
                         int3 globalPosition = _OriginPoint + localPosition;
-                        int caveNoiseIndex = WydMath.PointToIndex(localPosition, ChunkController.SIZE);
+                        int caveNoiseIndex = WydMath.PointToIndex(localPosition, GenerationConstants.CHUNK_SIZE);
 
                         _CaveNoise[caveNoiseIndex] = GetCaveNoiseByGlobalPosition(globalPosition);
                     }
@@ -155,17 +155,17 @@ namespace Wyd.Game.World.Chunks.Generation
 
         private void Generate()
         {
-            _Blocks = new Octree(ChunkController.SIZE, BlockController.AirID);
+            _Blocks = new Octree(GenerationConstants.CHUNK_SIZE, BlockController.AirID);
 
-            for (int x = 0; x < ChunkController.SIZE; x++)
-            for (int z = 0; z < ChunkController.SIZE; z++)
+            for (int x = 0; x < GenerationConstants.CHUNK_SIZE; x++)
+            for (int z = 0; z < GenerationConstants.CHUNK_SIZE; z++)
             {
                 if (CancellationToken.IsCancellationRequested)
                 {
                     return;
                 }
 
-                int heightmapIndex = WydMath.PointToIndex(new int2(x, z), ChunkController.SIZE);
+                int heightmapIndex = WydMath.PointToIndex(new int2(x, z), GenerationConstants.CHUNK_SIZE);
                 int noiseHeight = _Heightmap[heightmapIndex];
 
                 if (noiseHeight < _OriginPoint.y)
@@ -173,7 +173,7 @@ namespace Wyd.Game.World.Chunks.Generation
                     continue;
                 }
 
-                int noiseHeightClamped = math.clamp(noiseHeight - _OriginPoint.y, 0, ChunkController.SIZE_MINUS_ONE);
+                int noiseHeightClamped = math.clamp(noiseHeight - _OriginPoint.y, 0, GenerationConstants.CHUNK_SIZE_MINUS_ONE);
 
                 for (int y = noiseHeightClamped; y >= 0; y--)
                 {
@@ -185,7 +185,7 @@ namespace Wyd.Game.World.Chunks.Generation
                         _Blocks.SetPoint(localPosition, GetCachedBlockID("bedrock"));
                         continue;
                     }
-                    else if (_CaveNoise[WydMath.PointToIndex(localPosition, ChunkController.SIZE)] < 0.000225f)
+                    else if (_CaveNoise[WydMath.PointToIndex(localPosition, GenerationConstants.CHUNK_SIZE)] < 0.000225f)
                     {
                         continue;
                     }

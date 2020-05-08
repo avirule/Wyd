@@ -6,6 +6,7 @@ using System.Collections.ObjectModel;
 using System.Runtime.CompilerServices;
 using Unity.Mathematics;
 using Wyd.Controllers.World;
+using Wyd.Game.World.Chunks.Generation;
 
 #endregion
 
@@ -68,7 +69,6 @@ namespace Wyd.Game
         public static int3 Down { get; }
 
         public static int3[] CardinalDirectionNormals { get; }
-
         public static int3[] AllDirectionNormals { get; }
 
         static Directions()
@@ -192,12 +192,12 @@ namespace Wyd.Game
 
             _directionsAsIndexStep = new Dictionary<Direction, int>
             {
-                { Direction.North, ChunkController.SIZE },
+                { Direction.North, GenerationConstants.CHUNK_SIZE },
                 { Direction.East, 1 },
-                { Direction.South, -ChunkController.SIZE },
+                { Direction.South, -GenerationConstants.CHUNK_SIZE },
                 { Direction.West, -1 },
-                { Direction.Up, ChunkController.SIZE_SQUARED },
-                { Direction.Down, -ChunkController.SIZE_SQUARED }
+                { Direction.Up, GenerationConstants.CHUNK_SIZE_SQUARED },
+                { Direction.Down, -GenerationConstants.CHUNK_SIZE_SQUARED }
             };
         }
 
@@ -235,17 +235,17 @@ namespace Wyd.Game
             switch (direction)
             {
                 case Direction.North:
-                    return ChunkController.SIZE;
+                    return GenerationConstants.CHUNK_SIZE;
                 case Direction.East:
                     return 1;
                 case Direction.South:
-                    return -ChunkController.SIZE;
+                    return -GenerationConstants.CHUNK_SIZE;
                 case Direction.West:
                     return -1;
                 case Direction.Up:
-                    return ChunkController.SIZE_SQUARED;
+                    return GenerationConstants.CHUNK_SIZE_SQUARED;
                 case Direction.Down:
-                    return -ChunkController.SIZE_SQUARED;
+                    return -GenerationConstants.CHUNK_SIZE_SQUARED;
                 case Direction.Mask:
                     return default;
                 default:

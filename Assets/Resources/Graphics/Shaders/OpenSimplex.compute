@@ -268,7 +268,6 @@ float3 _Offset;
 float _Frequency;
 float _Persistence;
 float _SurfaceHeight;
-uint _HeightmapBufferLength;
 
 RWStructuredBuffer<int> HeightmapResult;
 RWStructuredBuffer<float> CaveNoiseResult;
@@ -311,13 +310,13 @@ float get2DHeightmap(float2 coord) {
     return noisePersistedWorldHeight;
 }
 
-[numthreads(1024, 1, 1)]
+[numthreads(8, 1, 8)]
 void Heightmap2D (uint3 id : SV_DispatchThreadID)
 {
-    float2 coord = _Offset.xz + coordTo2D(id.x);
+    float2 coord = _Offset.xz + id.xz;
     float noise = get2DHeightmap(coord);
 
-    HeightmapResult[id.x] = (int)fastFloor(noise);
+    HeightmapResult[coordFrom2DTo1D(id.xz)] = (int)fastFloor(noise);
 }
 
 
@@ -332,12 +331,12 @@ float customSimplexNoise3DCaveNoise(float3 xyz) {
     return (noiseAPow2 + noiseBPow2) / 2.0;
 }
 
-[numthreads(1024, 1, 1)]
+[numthreads(8, 8, 8)]
 void CaveNoise3D(uint3 id : SV_DispatchThreadID) {
-    float3 coord = _Offset + coordTo3D(id.x);
+    float3 coord = _Offset + id;
     float noise = customSimplexNoise3DCaveNoise(coord);
 
-    CaveNoiseResult[id.x] = noise;
+    CaveNoiseResult[coordFrom3DTo1D(id)] = noise;
 }
 
 

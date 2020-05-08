@@ -1,5 +1,6 @@
 #region
 
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Threading;
@@ -15,7 +16,7 @@ namespace Wyd.Game.World.Chunks.Generation
 {
     public abstract class ChunkTerrainJob : AsyncJob
     {
-        private static readonly Dictionary<string, ushort> _blockIDCache = new Dictionary<string, ushort>();
+        private static readonly ConcurrentDictionary<string, ushort> _blockIDCache = new ConcurrentDictionary<string, ushort>();
 
         protected readonly Stopwatch Stopwatch;
 
@@ -41,7 +42,7 @@ namespace Wyd.Game.World.Chunks.Generation
             }
             else if (BlockController.Current.TryGetBlockId(blockName, out id))
             {
-                _blockIDCache.Add(blockName, id);
+                _blockIDCache.TryAdd(blockName, id);
                 return id;
             }
 

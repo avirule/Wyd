@@ -39,16 +39,6 @@ namespace Wyd.Controllers.World
 
     public class ChunkController : MonoBehaviour, IPerFrameIncrementalUpdate
     {
-        private const float _FREQUENCY = 0.0075f;
-        private const float _PERSISTENCE = 0.6f;
-
-        public const int SIZE = 32;
-        public const int SIZE_SQUARED = SIZE * SIZE;
-        public const int SIZE_SQUARED_HALF = SIZE_SQUARED / 2;
-        public const int SIZE_CUBED = SIZE * SIZE * SIZE;
-        public const int SIZE_CUBED_HALF = SIZE_CUBED / 2;
-        public const int SIZE_MINUS_ONE = SIZE - 1;
-
         private static readonly ObjectPool<BlockAction> _blockActionsPool = new ObjectPool<BlockAction>(1024);
         private static readonly ObjectPool<ChunkTerrainBuilderJob> _terrainBuilderJobs = new ObjectPool<ChunkTerrainBuilderJob>();
         private static readonly ObjectPool<ChunkMeshingJob> _meshingJobs = new ObjectPool<ChunkMeshingJob>();
@@ -64,7 +54,7 @@ namespace Wyd.Controllers.World
             _NoiseShader.SetInt("_CaveNoiseSeedA", WorldController.Current.Seed ^ 2);
             _NoiseShader.SetInt("_CaveNoiseSeedB", WorldController.Current.Seed ^ 3);
             _NoiseShader.SetFloat("_WorldHeight", WorldController.WORLD_HEIGHT);
-            _NoiseShader.SetVector("_MaximumSize", new float4(SIZE));
+            _NoiseShader.SetVector("_MaximumSize", new float4(GenerationConstants.CHUNK_SIZE));
         }
 
         #endregion
@@ -211,7 +201,7 @@ namespace Wyd.Controllers.World
 #if UNITY_EDITOR
 
             MinimumPoint = WydMath.ToFloat(OriginPoint);
-            MaximumPoint = WydMath.ToFloat(OriginPoint + SIZE);
+            MaximumPoint = WydMath.ToFloat(OriginPoint + GenerationConstants.CHUNK_SIZE);
 
 #endif
         }
@@ -432,14 +422,13 @@ namespace Wyd.Controllers.World
         private void BeginBuilding()
         {
             // use SIZE_SQUARED (to represent full x,z range)
-            ComputeBuffer heightmapBuffer = new ComputeBuffer(SIZE_SQUARED, 4);
-            ComputeBuffer caveNoiseBuffer = new ComputeBuffer(SIZE_CUBED, 4);
+            ComputeBuffer heightmapBuffer = new ComputeBuffer(GenerationConstants.CHUNK_SIZE_SQUARED, 4);
+            ComputeBuffer caveNoiseBuffer = new ComputeBuffer(GenerationConstants.CHUNK_SIZE_CUBED, 4);
 
             _NoiseShader.SetVector("_Offset", new float4(OriginPoint.xyzz));
-            _NoiseShader.SetFloat("_Frequency", _FREQUENCY);
-            _NoiseShader.SetFloat("_Persistence", _PERSISTENCE);
+            _NoiseShader.SetFloat("_Frequency", GenerationConstants.FREQUENCY);
+            _NoiseShader.SetFloat("_Persistence", GenerationConstants.PERSISTENCE);
             _NoiseShader.SetFloat("_SurfaceHeight", WorldController.WORLD_HEIGHT / 2f);
-            _NoiseShader.SetInt("_HeightmapBufferLength", SIZE_SQUARED);
 
             int heightmapKernel = _NoiseShader.FindKernel("Heightmap2D");
             _NoiseShader.SetBuffer(heightmapKernel, "HeightmapResult", heightmapBuffer);
@@ -447,11 +436,11 @@ namespace Wyd.Controllers.World
             int caveNoiseKernel = _NoiseShader.FindKernel("CaveNoise3D");
             _NoiseShader.SetBuffer(caveNoiseKernel, "CaveNoiseResult", caveNoiseBuffer);
 
-            _NoiseShader.Dispatch(heightmapKernel, 1024, 1, 1);
-            _NoiseShader.Dispatch(caveNoiseKernel, 1024, 1, 1);
+            _NoiseShader.Dispatch(heightmapKernel, 4, 1, 4);
+            _NoiseShader.Dispatch(caveNoiseKernel, 4, 4, 4);
 
             ChunkTerrainBuilderJob terrainBuilderJob = new ChunkTerrainBuilderJob();
-            terrainBuilderJob.SetData(_CancellationTokenSource.Token, OriginPoint, _FREQUENCY, _PERSISTENCE,
+            terrainBuilderJob.SetData(_CancellationTokenSource.Token, OriginPoint, GenerationConstants.FREQUENCY, GenerationConstants.PERSISTENCE,
                 OptionsController.Current.GPUAcceleration ? heightmapBuffer : null,
                 OptionsController.Current.GPUAcceleration ? caveNoiseBuffer : null);
 
@@ -557,7 +546,7 @@ namespace Wyd.Controllers.World
         {
             blockId = BlockController.NullID;
 
-            if (math.any(localPosition < 0f) || math.any(localPosition >= SIZE) || (Blocks == null))
+            if (math.any(localPosition < 0f) || math.any(localPosition >= GenerationConstants.CHUNK_SIZE) || (Blocks == null))
             {
                 return false;
             }
@@ -597,7 +586,7 @@ namespace Wyd.Controllers.World
             float3 localPosition = math.abs(globalPosition - OriginPoint);
 
             List<float3> normals = new List<float3>();
-            normals.AddRange(WydMath.ToComponents(math.select(float3.zero, new float3(1f), localPosition == SIZE_MINUS_ONE)));
+            normals.AddRange(WydMath.ToComponents(math.select(float3.zero, new float3(1f), localPosition == GenerationConstants.CHUNK_SIZE_MINUS_ONE)));
             normals.AddRange(WydMath.ToComponents(math.select(float3.zero, new float3(1f), localPosition == 0f)));
 
             return normals;

@@ -25,9 +25,9 @@
 //         {
 //             Stopwatch.Restart();
 //
-//             for (int index = 0; index < ChunkController.SIZE_CUBED; index++)
+//             for (int index = 0; index < GenerationConstants.CHUNK_SIZE_CUBED; index++)
 //             {
-//                 int3 localPosition = WydMath.IndexTo3D(index, ChunkController.SIZE);
+//                 int3 localPosition = WydMath.IndexTo3D(index, GenerationConstants.CHUNK_SIZE);
 //                 int3 globalPosition = _OriginPoint + localPosition;
 //
 //                 ushort blockId = _Blocks.GetPoint(localPosition);
@@ -69,7 +69,7 @@
 //                             int3 faceNormal = GenerationConstants.FaceNormalByIteration[attemptedIndex];
 //                             int3 faceNormalVeinTipPosition = veinTipPosition + faceNormal;
 //
-//                             if ((veinTipPosition[attemptedIndexModulo] < ChunkController.SIZE)
+//                             if ((veinTipPosition[attemptedIndexModulo] < GenerationConstants.CHUNK_SIZE)
 //                                 && (veinTipPosition[attemptedIndexModulo] >= 0)
 //                                 && (_Blocks.GetPoint(faceNormalVeinTipPosition) == GetCachedBlockID("stone")))
 //                             {
@@ -125,7 +125,7 @@
 //         {
 //             int3 localPosition = globalPosition - _OriginPoint;
 //
-//             if (math.any(localPosition < 0) || math.any(localPosition >= ChunkController.SIZE))
+//             if (math.any(localPosition < 0) || math.any(localPosition >= GenerationConstants.CHUNK_SIZE))
 //             {
 //                 return WorldController.Current.GetBlock(globalPosition);
 //             }
@@ -139,7 +139,7 @@
 //         {
 //             int3 localPosition = globalPosition - _OriginPoint;
 //
-//             if (math.any(localPosition < 0) || math.any(localPosition >= ChunkController.SIZE))
+//             if (math.any(localPosition < 0) || math.any(localPosition >= GenerationConstants.CHUNK_SIZE))
 //             {
 //                 WorldController.Current.PlaceBlock(globalPosition, blockId);
 //             }

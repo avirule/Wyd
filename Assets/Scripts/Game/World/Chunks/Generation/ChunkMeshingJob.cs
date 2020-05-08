@@ -128,8 +128,8 @@ namespace Wyd.Game.World.Chunks.Generation
             _Stopwatch.Restart();
 
             // retrieve existing objects from object pool
-            _Mask = _masksPool.Retrieve() ?? new BlockFaces[ChunkController.SIZE_CUBED];
-            _BlockIDs = _blocksPool.Retrieve() ?? new ushort[ChunkController.SIZE_CUBED];
+            _Mask = _masksPool.Retrieve() ?? new BlockFaces[GenerationConstants.CHUNK_SIZE_CUBED];
+            _BlockIDs = _blocksPool.Retrieve() ?? new ushort[GenerationConstants.CHUNK_SIZE_CUBED];
             _MeshData = _meshDataPool.Retrieve() ?? new MeshData(new List<Vector3>(), new List<Vector3>(), new List<int>(), new List<int>());
 
             // set _BlocksIDs from _BlocksCollection
@@ -189,7 +189,7 @@ namespace Wyd.Game.World.Chunks.Generation
                 }
 
                 // set local and global position according to index
-                int3 localPosition = WydMath.IndexTo3D(index, ChunkController.SIZE);
+                int3 localPosition = WydMath.IndexTo3D(index, GenerationConstants.CHUNK_SIZE);
                 int3 globalPosition = WydMath.ToInt(_OriginPoint + localPosition);
 
                 ushort currentBlockId = _BlockIDs[index];
@@ -254,7 +254,7 @@ namespace Wyd.Game.World.Chunks.Generation
                     // maximum number of traversals, which is only sliceIndexValue + 1 when not using AggressiveFaceMerging
                     // remark: it's likely that not using AggressiveFaceMerging is much slower since the traversal function still
                     //     runs, but only ever hits once at maximum (thus resulting in a higher total amount of traversing overhead).
-                    int maximumTraversals = _AggressiveFaceMerging ? ChunkController.SIZE : traversalNormalLocalPositionIndexValue + 1;
+                    int maximumTraversals = _AggressiveFaceMerging ? GenerationConstants.CHUNK_SIZE : traversalNormalLocalPositionIndexValue + 1;
                     // amount by integer to add to current index to get 1D projected position of traversal position
                     int traversalIndexStep = GenerationConstants.IndexStepByNormalIndex[traversalNormalAxisIndex];
                     // amount by integer to add to current traversal index to get 1D projected position of facing block
@@ -287,7 +287,7 @@ namespace Wyd.Game.World.Chunks.Generation
                         ushort facingBlockId;
 
                         // check if current facing block axis value is within the local chunk
-                        if ((facingPositionAxisValue >= 0) && (facingPositionAxisValue <= ChunkController.SIZE_MINUS_ONE))
+                        if ((facingPositionAxisValue >= 0) && (facingPositionAxisValue <= GenerationConstants.CHUNK_SIZE_MINUS_ONE))
                         {
                             // if so, index into block ids and set facingBlockId
                             facingBlockId = _BlockIDs[traversalIndex + facingBlockIndexStep];
@@ -295,7 +295,7 @@ namespace Wyd.Game.World.Chunks.Generation
                         else
                         {
                             // if not, get local position adjusted to relative position across the chunk boundary
-                            int3 boundaryAdjustedLocalPosition = facingBlockPosition + (faceNormal * -ChunkController.SIZE_MINUS_ONE);
+                            int3 boundaryAdjustedLocalPosition = facingBlockPosition + (faceNormal * -GenerationConstants.CHUNK_SIZE_MINUS_ONE);
 
                             // index into neighbor blocks collections, call .GetPoint() with adjusted local position
                             // remark: if there's no neighbor at the index given, then no chunk exists there (for instance,

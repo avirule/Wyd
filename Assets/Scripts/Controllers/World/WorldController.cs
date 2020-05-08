@@ -15,6 +15,7 @@ using Wyd.Game;
 using Wyd.Game.Entities;
 using Wyd.Game.World;
 using Wyd.Game.World.Chunks;
+using Wyd.Game.World.Chunks.Generation;
 using Wyd.System;
 using Wyd.System.Collections;
 using Wyd.System.Extensions;
@@ -28,7 +29,7 @@ namespace Wyd.Controllers.World
     public class WorldController : SingletonController<WorldController>, IPerFrameIncrementalUpdate
     {
         public const int WORLD_HEIGHT = 256;
-        public const int WORLD_HEIGHT_IN_CHUNKS = WORLD_HEIGHT / ChunkController.SIZE;
+        public const int WORLD_HEIGHT_IN_CHUNKS = WORLD_HEIGHT / GenerationConstants.CHUNK_SIZE;
 
 
         #region Instance Members
@@ -248,7 +249,7 @@ namespace Wyd.Controllers.World
         {
             foreach (float3 normal in Directions.AllDirectionNormals)
             {
-                if (TryGetChunk(origin + (normal * ChunkController.SIZE), out ChunkController chunkController))
+                if (TryGetChunk(origin + (normal * GenerationConstants.CHUNK_SIZE), out ChunkController chunkController))
                 {
                     yield return chunkController;
                 }
@@ -259,7 +260,7 @@ namespace Wyd.Controllers.World
         {
             foreach (float3 normal in normals)
             {
-                if (TryGetChunk(origin + (normal * ChunkController.SIZE), out ChunkController chunkController))
+                if (TryGetChunk(origin + (normal * GenerationConstants.CHUNK_SIZE), out ChunkController chunkController))
                 {
                     yield return chunkController;
                 }
@@ -270,7 +271,7 @@ namespace Wyd.Controllers.World
         {
             foreach (int3 normal in Directions.AllDirectionNormals)
             {
-                if (TryGetChunk(origin + (normal * ChunkController.SIZE), out ChunkController chunkController))
+                if (TryGetChunk(origin + (normal * GenerationConstants.CHUNK_SIZE), out ChunkController chunkController))
                 {
                     yield return (Directions.NormalToDirection(normal), chunkController);
                 }
@@ -281,7 +282,7 @@ namespace Wyd.Controllers.World
         {
             foreach (int3 normal in Directions.AllDirectionNormals)
             {
-                if (TryGetChunk(origin + (normal * ChunkController.SIZE), out ChunkController chunkController))
+                if (TryGetChunk(origin + (normal * GenerationConstants.CHUNK_SIZE), out ChunkController chunkController))
                 {
                     yield return (normal, chunkController);
                 }
@@ -290,14 +291,14 @@ namespace Wyd.Controllers.World
 
         public IEnumerable<ChunkController> GetVerticalSlice(float2 origin)
         {
-            if (((origin.x % ChunkController.SIZE) > 0f) || ((origin.y % ChunkController.SIZE) > 0f))
+            if (((origin.x % GenerationConstants.CHUNK_SIZE) > 0f) || ((origin.y % GenerationConstants.CHUNK_SIZE) > 0f))
             {
                 throw new ArgumentException("Given coordinates must be chunk-aligned.", nameof(origin));
             }
 
             for (int y = 0; y < WORLD_HEIGHT_IN_CHUNKS; y++)
             {
-                float3 chunkOrigin = new float3(origin.x, y * ChunkController.SIZE, origin.y);
+                float3 chunkOrigin = new float3(origin.x, y * GenerationConstants.CHUNK_SIZE, origin.y);
 
                 if (TryGetChunk(chunkOrigin, out ChunkController chunkController))
                 {
@@ -364,7 +365,7 @@ namespace Wyd.Controllers.World
                 for (int z = -renderRadius; z < (renderRadius + 1); z++)
                 for (int y = 0; y < WORLD_HEIGHT_IN_CHUNKS; y++)
                 {
-                    float3 localOrigin = new float3(x, y, z) * ChunkController.SIZE;
+                    float3 localOrigin = new float3(x, y, z) * GenerationConstants.CHUNK_SIZE;
                     float3 globalOrigin = localOrigin + new float3(loader.ChunkPosition.x, 0, loader.ChunkPosition.z);
 
                     if (!chunksRequiringActivation.Contains(globalOrigin))
@@ -393,7 +394,7 @@ namespace Wyd.Controllers.World
         }
 
         private static bool IsWithinLoaderRange(float3 difference) =>
-            math.all(difference <= (ChunkController.SIZE * OptionsController.Current.RenderDistance));
+            math.all(difference <= (GenerationConstants.CHUNK_SIZE * OptionsController.Current.RenderDistance));
 
         #endregion
 
@@ -407,7 +408,7 @@ namespace Wyd.Controllers.World
 
         public ushort GetBlock(float3 globalPosition)
         {
-            if (!TryGetChunk(WydMath.RoundBy(globalPosition, ChunkController.SIZE), out ChunkController chunkController))
+            if (!TryGetChunk(WydMath.RoundBy(globalPosition, GenerationConstants.CHUNK_SIZE), out ChunkController chunkController))
             {
                 throw new ArgumentException("Chunk does not exist at coordinates.", nameof(globalPosition));
             }
@@ -418,13 +419,13 @@ namespace Wyd.Controllers.World
         public bool TryGetBlock(float3 globalPosition, out ushort blockId)
         {
             blockId = BlockController.NullID;
-            return TryGetChunk(WydMath.RoundBy(globalPosition, ChunkController.SIZE), out ChunkController chunkController)
+            return TryGetChunk(WydMath.RoundBy(globalPosition, GenerationConstants.CHUNK_SIZE), out ChunkController chunkController)
                    && chunkController.TryGetBlock(math.abs(chunkController.OriginPoint - globalPosition), out blockId);
         }
 
         public void PlaceBlock(float3 globalPosition, ushort id)
         {
-            if (!TryGetChunk(WydMath.RoundBy(globalPosition, ChunkController.SIZE), out ChunkController chunkController))
+            if (!TryGetChunk(WydMath.RoundBy(globalPosition, GenerationConstants.CHUNK_SIZE), out ChunkController chunkController))
             {
                 throw new ArgumentException("Chunk does not exist at coordinates.", nameof(globalPosition));
             }
