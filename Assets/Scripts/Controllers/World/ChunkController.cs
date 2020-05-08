@@ -436,8 +436,9 @@ namespace Wyd.Controllers.World
             int caveNoiseKernel = _NoiseShader.FindKernel("CaveNoise3D");
             _NoiseShader.SetBuffer(caveNoiseKernel, "CaveNoiseResult", caveNoiseBuffer);
 
-            _NoiseShader.Dispatch(heightmapKernel, 4, 1, 4);
-            _NoiseShader.Dispatch(caveNoiseKernel, 4, 4, 4);
+            _NoiseShader.Dispatch(heightmapKernel, GenerationConstants.CHUNK_THREAD_GROUP_SIZE, 1, GenerationConstants.CHUNK_THREAD_GROUP_SIZE);
+            _NoiseShader.Dispatch(caveNoiseKernel, GenerationConstants.CHUNK_THREAD_GROUP_SIZE, GenerationConstants.CHUNK_THREAD_GROUP_SIZE,
+                GenerationConstants.CHUNK_THREAD_GROUP_SIZE);
 
             ChunkTerrainBuilderJob terrainBuilderJob = new ChunkTerrainBuilderJob();
             terrainBuilderJob.SetData(_CancellationTokenSource.Token, OriginPoint, GenerationConstants.FREQUENCY, GenerationConstants.PERSISTENCE,
@@ -586,7 +587,8 @@ namespace Wyd.Controllers.World
             float3 localPosition = math.abs(globalPosition - OriginPoint);
 
             List<float3> normals = new List<float3>();
-            normals.AddRange(WydMath.ToComponents(math.select(float3.zero, new float3(1f), localPosition == GenerationConstants.CHUNK_SIZE_MINUS_ONE)));
+            normals.AddRange(
+                WydMath.ToComponents(math.select(float3.zero, new float3(1f), localPosition == GenerationConstants.CHUNK_SIZE_MINUS_ONE)));
             normals.AddRange(WydMath.ToComponents(math.select(float3.zero, new float3(1f), localPosition == 0f)));
 
             return normals;
