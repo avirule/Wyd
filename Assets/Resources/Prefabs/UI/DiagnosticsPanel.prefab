@@ -280,7 +280,6 @@ MonoBehaviour:
   m_ChildControlHeight: 1
   m_ChildScaleWidth: 0
   m_ChildScaleHeight: 0
-  m_ReverseArrangement: 0
 --- !u!1 &5678378753479700322
 GameObject:
   m_ObjectHideFlags: 0
@@ -385,7 +384,6 @@ MonoBehaviour:
   m_ChildControlHeight: 1
   m_ChildScaleWidth: 0
   m_ChildScaleHeight: 0
-  m_ReverseArrangement: 0
 --- !u!1 &5830996186003970321
 GameObject:
   m_ObjectHideFlags: 0
@@ -450,8 +448,6 @@ MonoBehaviour:
   m_Material: {fileID: 0}
   m_Color: {r: 0.5188679, g: 0.5188679, b: 0.5188679, a: 0}
   m_RaycastTarget: 1
-  m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
-  m_Maskable: 1
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
@@ -490,7 +486,6 @@ MonoBehaviour:
   m_ChildControlHeight: 1
   m_ChildScaleWidth: 0
   m_ChildScaleHeight: 0
-  m_ReverseArrangement: 0
 --- !u!114 &5722103879565979551
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -674,7 +669,6 @@ MonoBehaviour:
   m_ChildControlHeight: 1
   m_ChildScaleWidth: 0
   m_ChildScaleHeight: 0
-  m_ReverseArrangement: 0
 --- !u!1 &6909369712123931032
 GameObject:
   m_ObjectHideFlags: 0
@@ -778,7 +772,6 @@ MonoBehaviour:
   m_ChildControlHeight: 0
   m_ChildScaleWidth: 0
   m_ChildScaleHeight: 0
-  m_ReverseArrangement: 0
 --- !u!1 &8169207463347215253
 GameObject:
   m_ObjectHideFlags: 0
@@ -883,7 +876,6 @@ MonoBehaviour:
   m_ChildControlHeight: 1
   m_ChildScaleWidth: 0
   m_ChildScaleHeight: 0
-  m_ReverseArrangement: 0
 --- !u!1001 &1350402533365551060
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -1210,7 +1202,7 @@ PrefabInstance:
     - target: {fileID: 5521364810674680098, guid: 522502ab0fcea204c846d784c30e0957,
         type: 3}
       propertyPath: m_text
-      value: 'Position: plyr(x{0:0.0}, y{1:0.0}, z{2:0.0}), cnk(x{3}, y{4}, z{5})'
+      value: 'Position: glbl(x{0:0.0}, y{1:0.0}, z{2:0.0}), cnk(x{3}, y{4}, z{5})'
       objectReference: {fileID: 0}
     - target: {fileID: 5521364810674680098, guid: 522502ab0fcea204c846d784c30e0957,
         type: 3}

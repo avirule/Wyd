@@ -14,6 +14,8 @@ namespace Wyd.System.Collections
 
         T GetPoint(float3 point);
         void SetPoint(float3 point, T value);
+
         IEnumerable<T> GetAllData();
+        void CopyTo(T[] destinationArray);
     }
 }

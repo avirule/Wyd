@@ -33,7 +33,7 @@ namespace Wyd.Game.World.Chunks.Generation
         private INodeCollection<ushort> _BlocksCollection;
         private MeshData _MeshData;
         private BlockFaces[] _Mask;
-        private ushort[] _BlockIDs;
+        private ushort[] _Blocks;
         private bool _AggressiveFaceMerging;
         private TimeSpan _PreMeshingTimeSpan;
         private TimeSpan _MeshingTimeSpan;
@@ -61,6 +61,9 @@ namespace Wyd.Game.World.Chunks.Generation
 
             return Task.CompletedTask;
         }
+
+
+        #region Data
 
         /// <summary>
         ///     Sets the data required for mesh generation.
@@ -96,17 +99,14 @@ namespace Wyd.Game.World.Chunks.Generation
             // remove the existing reference
             _MeshData = default;
 
-            // clear neighbor nodes to free RAM
-            Array.Clear(_NeighborBlocksCollections, 0, _NeighborBlocksCollections.Length);
-
-            _OriginPoint = default;
-            _BlocksCollection = default;
-            _AggressiveFaceMerging = default;
             _PreMeshingTimeSpan = default;
             _MeshingTimeSpan = default;
         }
 
         public void ApplyMeshData(ref Mesh mesh) => _MeshData.ApplyMeshData(ref mesh);
+
+        #endregion
+
 
         #region Generation
 
@@ -117,29 +117,35 @@ namespace Wyd.Game.World.Chunks.Generation
                 return;
             }
 
+            // restart stopwatch to measure pre-mesh op time
+            _Stopwatch.Restart();
+
             PrepareMeshing();
 
+            _Stopwatch.Stop();
+
+            _PreMeshingTimeSpan = _Stopwatch.Elapsed;
+
+            _Stopwatch.Restart();
+
             GenerateMesh();
+
+            FinishMeshing();
+
+            _Stopwatch.Stop();
+
+            _MeshingTimeSpan = _Stopwatch.Elapsed;
         }
 
         private void PrepareMeshing()
         {
-            // restart stopwatch to measure pre-mesh op time
-            _Stopwatch.Restart();
-
             // retrieve existing objects from object pool
             _Mask = _masksPool.Retrieve() ?? new BlockFaces[GenerationConstants.CHUNK_SIZE_CUBED];
-            _BlockIDs = _blocksPool.Retrieve() ?? new ushort[GenerationConstants.CHUNK_SIZE_CUBED];
+            _Blocks = _blocksPool.Retrieve() ?? new ushort[GenerationConstants.CHUNK_SIZE_CUBED];
             _MeshData = _meshDataPool.Retrieve() ?? new MeshData(new List<Vector3>(), new List<Vector3>(), new List<int>(), new List<int>());
 
             // set _BlocksIDs from _BlocksCollection
-            int index = 0;
-            foreach (ushort blockId in _BlocksCollection.GetAllData())
-            {
-                _BlockIDs[index] = blockId;
-
-                index += 1;
-            }
+            _BlocksCollection.CopyTo(_Blocks);
 
             // unset reference to block collection to avoid use during meshing generation
             _BlocksCollection = null;
@@ -164,10 +170,24 @@ namespace Wyd.Game.World.Chunks.Generation
 
                 _NeighborBlocksCollections[neighborIndex] = chunkController.Blocks;
             }
+        }
 
-            _Stopwatch.Stop();
+        private void FinishMeshing()
+        {
+            // clear mask, add to object pool, and unset reference
+            Array.Clear(_Mask, 0, _Mask.Length);
+            _masksPool.TryAdd(_Mask);
+            _Mask = default;
 
-            _PreMeshingTimeSpan = _Stopwatch.Elapsed;
+            // clear block ids, add to object pool, and unset reference
+            _blocksPool.TryAdd(_Blocks);
+            _Blocks = default;
+
+            Array.Clear(_NeighborBlocksCollections, 0, _NeighborBlocksCollections.Length);
+
+            _OriginPoint = default;
+            _BlocksCollection = default;
+            _AggressiveFaceMerging = default;
         }
 
         /// <summary>
@@ -178,8 +198,6 @@ namespace Wyd.Game.World.Chunks.Generation
         /// </remarks>
         private void GenerateMesh()
         {
-            _Stopwatch.Restart();
-
             for (int index = 0; index < _Mask.Length; index++)
             {
                 // observe cancellation token
@@ -192,7 +210,7 @@ namespace Wyd.Game.World.Chunks.Generation
                 int3 localPosition = WydMath.IndexTo3D(index, GenerationConstants.CHUNK_SIZE);
                 int3 globalPosition = WydMath.ToInt(_OriginPoint + localPosition);
 
-                ushort currentBlockId = _BlockIDs[index];
+                ushort currentBlockId = _Blocks[index];
 
                 if (currentBlockId == BlockController.AirID)
                 {
@@ -202,20 +220,6 @@ namespace Wyd.Game.World.Chunks.Generation
                 TraverseIndex(index, globalPosition, localPosition, currentBlockId,
                     BlockController.Current.CheckBlockHasProperty(currentBlockId, BlockDefinition.Property.Transparent));
             }
-
-            // clear mask, add to object pool, and unset reference
-            Array.Clear(_Mask, 0, _Mask.Length);
-            _masksPool.TryAdd(_Mask);
-            _Mask = default;
-
-            // clear block ids, add to object pool, and unset reference
-            Array.Clear(_BlockIDs, 0, _BlockIDs.Length);
-            _blocksPool.TryAdd(_BlockIDs);
-            _BlockIDs = default;
-
-            _Stopwatch.Stop();
-
-            _MeshingTimeSpan = _Stopwatch.Elapsed;
         }
 
         private void TraverseIndex(int index, int3 globalPosition, int3 localPosition, ushort currentBlockId, bool transparentTraversal)
@@ -265,14 +269,15 @@ namespace Wyd.Game.World.Chunks.Generation
                     // current local traversal position, which is increased by TraversalNormal every iteration of the for loop below
                     int3 traversalPosition = localPosition + (traversalNormal * traversals);
 
-                    for (; (traversalNormalLocalPositionIndexValue + traversals) < maximumTraversals;
+                    for (;
+                        (traversalNormalLocalPositionIndexValue + traversals) < maximumTraversals;
                         traversals++, // increment traversals
                         traversalIndex += traversalIndexStep, // increment traversal index by index step to adjust local working position
                         traversalPosition += traversalNormal) // increment traversal position by traversal normal to adjust local working position
                     {
                         // check if block's mask already has face set, or if we've traversed at all, ensure block ids match
                         // remark: in the case block ids don't match, we've likely reached textures that won't match.
-                        if (_Mask[traversalIndex].HasFace(faceDirection) || ((traversals > 0) && (_BlockIDs[traversalIndex] != currentBlockId)))
+                        if (_Mask[traversalIndex].HasFace(faceDirection) || ((traversals > 0) && (_Blocks[traversalIndex] != currentBlockId)))
                         {
                             break;
                         }
@@ -290,7 +295,7 @@ namespace Wyd.Game.World.Chunks.Generation
                         if ((facingPositionAxisValue >= 0) && (facingPositionAxisValue <= GenerationConstants.CHUNK_SIZE_MINUS_ONE))
                         {
                             // if so, index into block ids and set facingBlockId
-                            facingBlockId = _BlockIDs[traversalIndex + facingBlockIndexStep];
+                            facingBlockId = _Blocks[traversalIndex + facingBlockIndexStep];
                         }
                         else
                         {
@@ -300,7 +305,8 @@ namespace Wyd.Game.World.Chunks.Generation
                             // index into neighbor blocks collections, call .GetPoint() with adjusted local position
                             // remark: if there's no neighbor at the index given, then no chunk exists there (for instance,
                             //     chunks at the edge of render distance). In this case, return NullID so no face is rendered on edges.
-                            facingBlockId = _NeighborBlocksCollections[normalIndex]?.GetPoint(boundaryAdjustedLocalPosition) ?? BlockController.NullID;
+                            facingBlockId = _NeighborBlocksCollections[normalIndex]?.GetPoint(boundaryAdjustedLocalPosition)
+                                            ?? BlockController.NullID;
                         }
 
                         // if transparent, traverse as long as block is the same

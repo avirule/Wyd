@@ -124,6 +124,9 @@ namespace Wyd.System.Jobs
             Task.Run(() => ExecuteInvocation(invocation));
         }
 
+        public static async Task WaitAsync() => await _WorkerSemaphore.WaitAsync();
+        public static async Task WaitAsync(TimeSpan timeout) => await _WorkerSemaphore.WaitAsync(timeout);
+        
         #endregion
 
 

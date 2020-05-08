@@ -3,7 +3,6 @@
 using System;
 using System.Collections.Generic;
 using Unity.Mathematics;
-using Wyd.Controllers.World;
 using Wyd.Game.World.Chunks.Generation;
 
 #endregion
@@ -120,5 +119,10 @@ namespace Wyd.System.Collections
         }
 
         public IEnumerable<T> GetAllData() => RunLengthCompression.DecompressLinkedList(_RLENodes);
+
+        public void CopyTo(T[] destinationArray)
+        {
+            throw new NotImplementedException();
+        }
     }
 }

@@ -116,6 +116,27 @@ namespace Wyd.System.Collections
             }
         }
 
+        public void CopyTo(ushort[] destinationArray)
+        {
+            if (destinationArray == null)
+            {
+                throw new NullReferenceException(nameof(destinationArray));
+            }
+            else if (destinationArray.Rank != 1)
+            {
+                throw new RankException("Only single dimension arrays are supported here.");
+            }
+            else if (destinationArray.Length < math.pow(_Size, 3))
+            {
+                throw new ArgumentOutOfRangeException(nameof(destinationArray), "Destination array was not long enough.");
+            }
+
+            for (int index = 0; index < destinationArray.Length; index++)
+            {
+                destinationArray[index] = GetPoint(WydMath.IndexTo3D(index, _Size));
+            }
+        }
+
         public void CollapseRecursive()
         {
             _RootNode.CollapseRecursive();
