@@ -65,7 +65,7 @@ namespace Wyd.Game.World.Chunks.Generation
         /// </summary>
         /// <param name="cancellationToken">Token to observe for cancellation indication.</param>
         /// <param name="originPoint">Origin point of the chunk that's being meshed.</param>
-        /// <param name="blocks"><see cref="INodeCollection{T}"/> of blocks contained within the chunk.</param>
+        /// <param name="blocks"><see cref="INodeCollection{T}" /> of blocks contained within the chunk.</param>
         /// <param name="aggressiveFaceMerging">Indicates whether to merge similarly textured faces.</param>
         public void SetData(CancellationToken cancellationToken, float3 originPoint, INodeCollection<ushort> blocks,
             bool aggressiveFaceMerging)
@@ -77,12 +77,11 @@ namespace Wyd.Game.World.Chunks.Generation
         }
 
         /// <summary>
-        ///     Clears all the <see cref="ChunkMeshingJob"/>'s internal data.
+        ///     Clears all the <see cref="ChunkMeshingJob" />'s internal data.
         /// </summary>
         /// <remarks>
-        ///    This should be called only after its mesh data has been applied to a mesh.
-        ///
-        ///    This is because the <see cref="MeshData"/> object is cleared and added to the
+        ///     This should be called only after its mesh data has been applied to a mesh.
+        ///     This is because the <see cref="MeshData" /> object is cleared and added to the
         ///     internal object pool for use in other jobs.
         /// </remarks>
         public void ClearData()
@@ -113,7 +112,7 @@ namespace Wyd.Game.World.Chunks.Generation
         ///     Generates the mesh data.
         /// </summary>
         /// <remarks>
-        ///    The generated data is stored in the <see cref="MeshData"/> object <see cref="_MeshData"/>.
+        ///     The generated data is stored in the <see cref="MeshData" /> object <see cref="_MeshData" />.
         /// </remarks>
         private void GenerateMesh()
         {
@@ -219,19 +218,20 @@ namespace Wyd.Game.World.Chunks.Generation
                     int maximumTraversals = _AggressiveFaceMerging ? ChunkController.SIZE : sliceIndexValue + 1;
                     int traversalFactor = GenerationConstants.IndexStepByTraversalNormalIndex[traversalNormalAxisIndex];
 
-                    for (; (sliceIndexValue + traversals) < maximumTraversals; traversals++)
-                    {
-                        int traversalIndex = index + (traversals * traversalFactor);
-                        int3 currentTraversalPosition = localPosition + (traversalNormal * traversals);
+                    int traversalIndex = index + (traversals * traversalFactor);
+                    int3 traversalPosition = localPosition +  (traversalNormal * traversals);
 
+                    for (; (sliceIndexValue + traversals) < maximumTraversals;
+                        traversals++, traversalIndex += traversalFactor, traversalPosition += traversalNormal)
+                    {
                         if (_Mask[traversalIndex].HasFace(faceDirection)
-                            || ((traversals > 0) && (_Blocks.GetPoint(currentTraversalPosition) != currentBlockId)))
+                            || ((traversals > 0) && (_Blocks.GetPoint(traversalPosition) != currentBlockId)))
                         {
                             break;
                         }
 
                         int3 faceNormal = GenerationConstants.FaceNormalByIteration[normalIndex];
-                        int3 traversalFacingBlockPosition = currentTraversalPosition + faceNormal;
+                        int3 traversalFacingBlockPosition = traversalPosition + faceNormal;
                         int facingPositionAxisValue = traversalFacingBlockPosition[iModulo3];
 
                         ushort facingBlockId;

@@ -1,6 +1,5 @@
 #region
 
-using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Threading;
@@ -24,10 +23,7 @@ namespace Wyd.Game.World.Chunks.Generation
         protected Random _SeededRandom;
         protected INodeCollection<ushort> _Blocks;
 
-        protected ChunkTerrainJob()
-        {
-            Stopwatch = new Stopwatch();
-        }
+        protected ChunkTerrainJob() => Stopwatch = new Stopwatch();
 
         protected void SetData(CancellationToken cancellationToken, int3 originPoint)
         {

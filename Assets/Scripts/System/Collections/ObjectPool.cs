@@ -1,7 +1,6 @@
 #region
 
 using System.Collections.Concurrent;
-using Unity.Mathematics;
 
 #endregion
 
@@ -27,7 +26,7 @@ namespace Wyd.System.Collections
         public bool TryAdd(T item)
         {
             // null check without boxing
-            if (!(item is object) || (MaximumSize > -1 && _InternalCache.Count > MaximumSize))
+            if (!(item is object) || ((MaximumSize > -1) && (_InternalCache.Count > MaximumSize)))
             {
                 return false;
             }
