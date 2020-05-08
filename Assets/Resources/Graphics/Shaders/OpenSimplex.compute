@@ -268,8 +268,9 @@ float3 _Offset;
 float _Frequency;
 float _Persistence;
 float _SurfaceHeight;
+uint _HeightmapBufferLength;
 
-RWStructuredBuffer<float> HeightmapResult;
+RWStructuredBuffer<int> HeightmapResult;
 RWStructuredBuffer<float> CaveNoiseResult;
 
 
@@ -316,7 +317,7 @@ void Heightmap2D (uint3 id : SV_DispatchThreadID)
     float2 coord = _Offset.xz + coordTo2D(id.x);
     float noise = get2DHeightmap(coord);
 
-    HeightmapResult[id.x] = fastFloor(noise);
+    HeightmapResult[id.x] = (int)fastFloor(noise);
 }
 
 

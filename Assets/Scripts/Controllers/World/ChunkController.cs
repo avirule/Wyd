@@ -44,7 +44,9 @@ namespace Wyd.Controllers.World
 
         public const int SIZE = 32;
         public const int SIZE_SQUARED = SIZE * SIZE;
+        public const int SIZE_SQUARED_HALF = SIZE_SQUARED / 2;
         public const int SIZE_CUBED = SIZE * SIZE * SIZE;
+        public const int SIZE_CUBED_HALF = SIZE_CUBED / 2;
         public const int SIZE_MINUS_ONE = SIZE - 1;
 
         private static readonly ObjectPool<BlockAction> _blockActionsPool = new ObjectPool<BlockAction>(1024);
@@ -429,6 +431,7 @@ namespace Wyd.Controllers.World
 
         private void BeginBuilding()
         {
+            // use SIZE_SQUARED (to represent full x,z range)
             ComputeBuffer heightmapBuffer = new ComputeBuffer(SIZE_SQUARED, 4);
             ComputeBuffer caveNoiseBuffer = new ComputeBuffer(SIZE_CUBED, 4);
 
@@ -436,6 +439,7 @@ namespace Wyd.Controllers.World
             _NoiseShader.SetFloat("_Frequency", _FREQUENCY);
             _NoiseShader.SetFloat("_Persistence", _PERSISTENCE);
             _NoiseShader.SetFloat("_SurfaceHeight", WorldController.WORLD_HEIGHT / 2f);
+            _NoiseShader.SetInt("_HeightmapBufferLength", SIZE_SQUARED);
 
             int heightmapKernel = _NoiseShader.FindKernel("Heightmap2D");
             _NoiseShader.SetBuffer(heightmapKernel, "HeightmapResult", heightmapBuffer);

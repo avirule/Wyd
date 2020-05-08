@@ -17,7 +17,7 @@ namespace Wyd.Game.World.Chunks.Generation
 {
     public class ChunkTerrainBuilderJob : ChunkTerrainJob
     {
-        private static readonly ObjectPool<float[]> _heightmapPool = new ObjectPool<float[]>();
+        private static readonly ObjectPool<int[]> _heightmapPool = new ObjectPool<int[]>();
         private static readonly ObjectPool<float[]> _caveNoisePool = new ObjectPool<float[]>();
 
         private readonly int _NoiseSeedA;
@@ -30,7 +30,7 @@ namespace Wyd.Game.World.Chunks.Generation
 
         private ComputeBuffer _HeightmapBuffer;
         private ComputeBuffer _CaveNoiseBuffer;
-        private float[] _Heightmap;
+        private int[] _Heightmap;
         private float[] _CaveNoise;
 
         public ChunkTerrainBuilderJob()
@@ -118,7 +118,8 @@ namespace Wyd.Game.World.Chunks.Generation
 
         private void GenerateNoise()
         {
-            _Heightmap = _heightmapPool.Retrieve() ?? new float[ChunkController.SIZE_SQUARED];
+            // SIZE_SQUARED + 1 to facilitate compute shader's above-y-value count
+            _Heightmap = _heightmapPool.Retrieve() ?? new int[ChunkController.SIZE_SQUARED];
             _CaveNoise = _caveNoisePool.Retrieve() ?? new float[ChunkController.SIZE_CUBED];
 
             if ((_HeightmapBuffer == null) || (_CaveNoiseBuffer == null))
@@ -128,7 +129,7 @@ namespace Wyd.Game.World.Chunks.Generation
                 {
                     int2 xzCoords = new int2(x, z);
                     int heightmapIndex = WydMath.PointToIndex(xzCoords, ChunkController.SIZE);
-                    _Heightmap[heightmapIndex] = GetNoiseValueByGlobalPosition(_OriginPoint.xz + xzCoords);
+                    _Heightmap[heightmapIndex] = GetHeightByGlobalPosition(_OriginPoint.xz + xzCoords);
 
                     for (int y = 0; y < ChunkController.SIZE; y++)
                     {
@@ -142,8 +143,13 @@ namespace Wyd.Game.World.Chunks.Generation
             }
             else
             {
-                using ManualResetEvent manualResetEvent = MainThreadActionsController.Current.QueueAction(GetComputeBufferData);
-                manualResetEvent.WaitOne();
+                // ReSharper disable once ConvertToUsingDeclaration
+                // .... because Rider doesn't actually consider language feature version
+                // remark: thanks JetBrains
+                using (ManualResetEvent manualResetEvent = MainThreadActionsController.Current.QueueAction(GetComputeBufferData))
+                {
+                    manualResetEvent.WaitOne();
+                }
             }
         }
 
@@ -160,15 +166,14 @@ namespace Wyd.Game.World.Chunks.Generation
                 }
 
                 int heightmapIndex = WydMath.PointToIndex(new int2(x, z), ChunkController.SIZE);
-                float noiseHeight = _Heightmap[heightmapIndex];
+                int noiseHeight = _Heightmap[heightmapIndex];
 
                 if (noiseHeight < _OriginPoint.y)
                 {
                     continue;
                 }
 
-                int noiseHeightInt = (int)noiseHeight;
-                int noiseHeightClamped = math.clamp(noiseHeightInt - _OriginPoint.y, 0, ChunkController.SIZE_MINUS_ONE);
+                int noiseHeightClamped = math.clamp(noiseHeight - _OriginPoint.y, 0, ChunkController.SIZE_MINUS_ONE);
 
                 for (int y = noiseHeightClamped; y >= 0; y--)
                 {
@@ -185,12 +190,12 @@ namespace Wyd.Game.World.Chunks.Generation
                         continue;
                     }
 
-                    if (globalPositionY == noiseHeightInt)
+                    if (globalPositionY == noiseHeight)
                     {
                         _Blocks.SetPoint(localPosition, GetCachedBlockID("grass"));
                     }
                     // lay dirt up to 3 blocks below noise height
-                    else if ((globalPositionY < noiseHeightInt) && (globalPositionY >= (noiseHeightInt - 3)))
+                    else if ((globalPositionY < noiseHeight) && (globalPositionY >= (noiseHeight - 3)))
                     {
                         _Blocks.SetPoint(localPosition, _SeededRandom.Next(0, 8) == 0
                             ? GetCachedBlockID("dirt_coarse")
@@ -220,14 +225,14 @@ namespace Wyd.Game.World.Chunks.Generation
             return (noiseAPow2 + noiseBPow2) / 2f;
         }
 
-        private float GetNoiseValueByGlobalPosition(int2 globalPosition)
+        private int GetHeightByGlobalPosition(int2 globalPosition)
         {
             float noise = OpenSimplexSlim.GetSimplex(WorldController.Current.Seed, _Frequency, globalPosition);
             float noiseAsWorldHeight = math.unlerp(-1f, 1f, noise) * WorldController.WORLD_HEIGHT;
             float noisePersistedWorldHeight =
                 noiseAsWorldHeight + (((WorldController.WORLD_HEIGHT / 2f) - (noiseAsWorldHeight * 1.25f)) * _Persistence);
 
-            return noisePersistedWorldHeight;
+            return (int)math.floor(noisePersistedWorldHeight);
         }
     }
 }
