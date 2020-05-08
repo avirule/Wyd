@@ -142,10 +142,8 @@ namespace Wyd.Game.World.Chunks.Generation
             }
             else
             {
-                using (ManualResetEvent manualResetEvent = MainThreadActionsController.Current.QueueAction(GetComputeBufferData))
-                {
-                    manualResetEvent.WaitOne();
-                }
+                using ManualResetEvent manualResetEvent = MainThreadActionsController.Current.QueueAction(GetComputeBufferData);
+                manualResetEvent.WaitOne();
             }
         }
 
@@ -169,31 +167,30 @@ namespace Wyd.Game.World.Chunks.Generation
                     continue;
                 }
 
-                int noiseHeightClamped = math.clamp((int)math.floor(noiseHeight - _OriginPoint.y), 0, ChunkController.SIZE_MINUS_ONE);
+                int noiseHeightInt = (int)noiseHeight;
+                int noiseHeightClamped = math.clamp(noiseHeightInt - _OriginPoint.y, 0, ChunkController.SIZE_MINUS_ONE);
 
                 for (int y = noiseHeightClamped; y >= 0; y--)
                 {
                     int3 localPosition = new int3(x, y, z);
-                    int3 globalPosition = _OriginPoint + localPosition;
-                    int positionAsIndex = WydMath.PointToIndex(localPosition, ChunkController.SIZE);
+                    int globalPositionY = _OriginPoint.y + y;
 
-                    if ((globalPosition.y < 4) && (globalPosition.y <= _SeededRandom.Next(0, 4)))
+                    if ((globalPositionY < 4) && (globalPositionY <= _SeededRandom.Next(0, 4)))
                     {
                         _Blocks.SetPoint(localPosition, GetCachedBlockID("bedrock"));
                         continue;
                     }
-                    else if (_CaveNoise[positionAsIndex] < 0.000225f)
+                    else if (_CaveNoise[WydMath.PointToIndex(localPosition, ChunkController.SIZE)] < 0.000225f)
                     {
                         continue;
                     }
 
-                    int noiseHeightInt = (int)noiseHeight;
-
-                    if (globalPosition.y == noiseHeightInt)
+                    if (globalPositionY == noiseHeightInt)
                     {
                         _Blocks.SetPoint(localPosition, GetCachedBlockID("grass"));
                     }
-                    else if ((globalPosition.y < noiseHeightInt) && (globalPosition.y >= (noiseHeightInt - 3)))
+                    // lay dirt up to 3 blocks below noise height
+                    else if ((globalPositionY < noiseHeightInt) && (globalPositionY >= (noiseHeightInt - 3)))
                     {
                         _Blocks.SetPoint(localPosition, _SeededRandom.Next(0, 8) == 0
                             ? GetCachedBlockID("dirt_coarse")

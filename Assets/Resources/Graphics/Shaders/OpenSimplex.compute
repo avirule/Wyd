@@ -316,7 +316,7 @@ void Heightmap2D (uint3 id : SV_DispatchThreadID)
     float2 coord = _Offset.xz + coordTo2D(id.x);
     float noise = get2DHeightmap(coord);
 
-    HeightmapResult[id.x] = noise;
+    HeightmapResult[id.x] = fastFloor(noise);
 }
 
 

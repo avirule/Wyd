@@ -71,7 +71,6 @@ namespace Wyd.Controllers.World
         #region Instance Members
 
         private CancellationTokenSource _CancellationTokenSource;
-        private ChunkBlockData _BlockData;
         private ConcurrentQueue<BlockAction> _BlockActions;
         private List<ChunkController> _Neighbors;
         private Mesh _Mesh;
@@ -109,7 +108,7 @@ namespace Wyd.Controllers.World
             }
         }
 
-        public INodeCollection<ushort> Blocks => _BlockData.Blocks;
+        public INodeCollection<ushort> Blocks { get; private set; }
 
         public int3 OriginPoint { get; private set; }
 
@@ -188,7 +187,6 @@ namespace Wyd.Controllers.World
 
             _Neighbors = new List<ChunkController>();
             _BlockActions = new ConcurrentQueue<BlockAction>();
-            _BlockData = new ChunkBlockData();
             _Mesh = new Mesh();
 
             MeshFilter.sharedMesh = _Mesh;
@@ -227,7 +225,6 @@ namespace Wyd.Controllers.World
 
             _CancellationTokenSource.Cancel();
             _Neighbors.Clear();
-            _BlockData.Deallocate();
             _BlockActions = new ConcurrentQueue<BlockAction>();
 
 #if UNITY_EDITOR
@@ -236,6 +233,7 @@ namespace Wyd.Controllers.World
 
 #endif
 
+            Blocks = null;
             State = ChunkState.Unbuilt;
             UpdateMesh = false;
             BlocksChanged = TerrainChanged = MeshChanged = null;
@@ -248,7 +246,7 @@ namespace Wyd.Controllers.World
 
             _CancellationTokenSource?.Cancel();
             _Neighbors = null;
-            _BlockData = null;
+            Blocks = null;
             _BlockActions = null;
 
             State = 0;
@@ -394,7 +392,7 @@ namespace Wyd.Controllers.World
         {
             Stopwatch stopwatch = Stopwatch.StartNew();
 
-            byte[] bytes = WydMath.ObjectToByteArray(_BlockData.Blocks);
+            byte[] bytes = WydMath.ObjectToByteArray(Blocks);
             byte[] target = new byte[bytes.Length];
 
             Log.Information($"Serialized in {stopwatch.ElapsedMilliseconds}ms for {bytes.Length / 1000}kb");
@@ -459,21 +457,13 @@ namespace Wyd.Controllers.World
 
                 if (Active)
                 {
-                    _BlockData.Blocks = terrainBuilderJob.GetGeneratedBlockData();
+                    Blocks = terrainBuilderJob.GetGeneratedBlockData();
                     _terrainBuilderJobs.TryAdd(terrainBuilderJob);
 
                     State = ChunkState.Undetailed;
                 }
 
                 terrainBuilderJob.ClearData();
-
-                MainThreadActionsController.Current.QueueAction(() =>
-                {
-                    heightmapBuffer?.Release();
-                    caveNoiseBuffer?.Release();
-
-                    return true;
-                });
 
                 return Task.CompletedTask;
             }
@@ -563,7 +553,7 @@ namespace Wyd.Controllers.World
         {
             blockId = BlockController.NullID;
 
-            if (math.any(localPosition < 0f) || math.any(localPosition >= SIZE) || (_BlockData.Blocks == null))
+            if (math.any(localPosition < 0f) || math.any(localPosition >= SIZE) || (Blocks == null))
             {
                 return false;
             }
