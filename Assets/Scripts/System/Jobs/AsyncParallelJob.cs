@@ -23,22 +23,22 @@ namespace Wyd.System.Jobs
         {
             List<Task> batchedTasks = new List<Task>();
 
-            for (int remainingLength = _Length; remainingLength > 0; remainingLength -= _BatchLength)
+            for (int aggregateLength = 0; aggregateLength <= _Length; aggregateLength += _BatchLength)
             {
-                int batchedRemainingLength = remainingLength - _BatchLength;
+                int aggregateBatchLength = aggregateLength + _BatchLength;
 
-                if (batchedRemainingLength == 0)
+                if (aggregateBatchLength == 0)
                 {
                     break;
                 }
                 else if (batchedRemainingLength < 0)
                 {
-                    batchedTasks.Add(ProcessBatch(0, remainingLength));
+                    batchedTasks.Add(ProcessBatch(0, aggregateLength));
                     break;
                 }
                 else
                 {
-                    batchedTasks.Add(ProcessBatch(batchedRemainingLength, remainingLength));
+                    batchedTasks.Add(ProcessBatch(batchedRemainingLength, aggregateLength));
                 }
             }
 
