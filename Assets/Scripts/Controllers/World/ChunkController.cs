@@ -513,8 +513,11 @@ namespace Wyd.Controllers.World
                 {
                     MainThreadActionsController.Current.QueueAction(() => ApplyMesh(meshingJob));
                 }
-
-                meshingJob.ClearData();
+                else
+                {
+                    meshingJob.ClearData();
+                    _meshingJobs.TryAdd(meshingJob);
+                }
 
                 State = ChunkState.Meshed;
 
@@ -530,6 +533,7 @@ namespace Wyd.Controllers.World
         {
             meshingJob.ApplyMeshData(ref _Mesh);
             meshingJob.ClearData();
+            _meshingJobs.TryAdd(meshingJob);
 
             MeshRenderer.enabled = _Mesh.vertexCount > 0;
 
@@ -542,6 +546,7 @@ namespace Wyd.Controllers.World
             TimesMeshed += 1;
 
 #endif
+
 
             return true;
         }

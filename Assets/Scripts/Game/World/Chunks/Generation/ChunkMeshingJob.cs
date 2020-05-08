@@ -26,27 +26,25 @@ namespace Wyd.Game.World.Chunks.Generation
         private static readonly ObjectPool<MeshData> _meshDataPool = new ObjectPool<MeshData>();
 
         private readonly Stopwatch _Stopwatch;
+        private readonly INodeCollection<ushort>[] _NeighborNodes;
 
         private float3 _OriginPoint;
         private MeshData _MeshData;
         private BlockFaces[] _Mask;
         private INodeCollection<ushort> _Blocks;
-        private List<INodeCollection<ushort>> _NeighborNodes;
         private bool _AggressiveFaceMerging;
         private TimeSpan _SetBlockTimeSpan;
         private TimeSpan _MeshingTimeSpan;
 
-        public ChunkMeshingJob() => _Stopwatch = new Stopwatch();
+        public ChunkMeshingJob()
+        {
+            _Stopwatch = new Stopwatch();
+            _NeighborNodes = new INodeCollection<ushort>[6];
+        }
 
         protected override Task Process()
         {
-            _MeshData = _meshDataPool.Retrieve() ?? new MeshData();
-            _Mask = _masksPool.Retrieve() ?? new BlockFaces[ChunkController.SIZE_CUBED];
-
             GenerateMesh();
-
-            _masksPool.TryAdd(_Mask);
-            _Mask = null;
 
             return Task.CompletedTask;
         }
@@ -62,6 +60,13 @@ namespace Wyd.Game.World.Chunks.Generation
             return Task.CompletedTask;
         }
 
+        /// <summary>
+        ///     Sets the data required for mesh generation.
+        /// </summary>
+        /// <param name="cancellationToken">Token to observe for cancellation indication.</param>
+        /// <param name="originPoint">Origin point of the chunk that's being meshed.</param>
+        /// <param name="blocks"><see cref="INodeCollection{T}"/> of blocks contained within the chunk.</param>
+        /// <param name="aggressiveFaceMerging">Indicates whether to merge similarly textured faces.</param>
         public void SetData(CancellationToken cancellationToken, float3 originPoint, INodeCollection<ushort> blocks,
             bool aggressiveFaceMerging)
         {
@@ -71,15 +76,30 @@ namespace Wyd.Game.World.Chunks.Generation
             _AggressiveFaceMerging = aggressiveFaceMerging;
         }
 
+        /// <summary>
+        ///     Clears all the <see cref="ChunkMeshingJob"/>'s internal data.
+        /// </summary>
+        /// <remarks>
+        ///    This should be called only after its mesh data has been applied to a mesh.
+        ///
+        ///    This is because the <see cref="MeshData"/> object is cleared and added to the
+        ///     internal object pool for use in other jobs.
+        /// </remarks>
         public void ClearData()
         {
+            // clear existing data from mesh object
+            // 'true' for trimming excess data from the lists.
             _MeshData.Clear(true);
+            // add the mesh data to the internal object pool
             _meshDataPool.TryAdd(_MeshData);
+            // remove the existing reference
             _MeshData = default;
+
+            // clear neighbor nodes to free RAM
+            Array.Clear(_NeighborNodes, 0, _NeighborNodes.Length);
 
             _OriginPoint = default;
             _Blocks = default;
-            _NeighborNodes = default;
             _AggressiveFaceMerging = default;
             _SetBlockTimeSpan = default;
             _MeshingTimeSpan = default;
@@ -89,6 +109,12 @@ namespace Wyd.Game.World.Chunks.Generation
 
         #region Generation
 
+        /// <summary>
+        ///     Generates the mesh data.
+        /// </summary>
+        /// <remarks>
+        ///    The generated data is stored in the <see cref="MeshData"/> object <see cref="_MeshData"/>.
+        /// </remarks>
         private void GenerateMesh()
         {
             if ((_Blocks == null) || (_Blocks.IsUniform && (_Blocks.Value == BlockController.AirID)))
@@ -96,20 +122,17 @@ namespace Wyd.Game.World.Chunks.Generation
                 return;
             }
 
+            // restart stopwatch to measure pre-mesh op time
             _Stopwatch.Restart();
 
-            if (_NeighborNodes == null)
-            {
-                _NeighborNodes = new List<INodeCollection<ushort>>(6);
-            }
+            // retrieve existing objects from object pool
+            _MeshData = _meshDataPool.Retrieve() ?? new MeshData(new List<Vector3>(), new List<Vector3>(), new List<int>(), new List<int>());
+            _Mask = _masksPool.Retrieve() ?? new BlockFaces[ChunkController.SIZE_CUBED];
 
-            _NeighborNodes.Clear();
+            // clear masks for new meshing
+            Array.Clear(_Mask, 0, _Mask.Length);
 
-            for (int i = 0; i < 6; i++)
-            {
-                _NeighborNodes.Add(null);
-            }
-
+            // set block data for relevant neighbor indexes
             foreach ((int3 normal, ChunkController chunkController) in WorldController.Current.GetNeighboringChunksWithNormal(_OriginPoint))
             {
                 int index = -1;
@@ -130,9 +153,6 @@ namespace Wyd.Game.World.Chunks.Generation
                 _NeighborNodes[index] = chunkController.Blocks;
             }
 
-            // clear masks for new meshing
-            Array.Clear(_Mask, 0, _Mask.Length);
-
             _Stopwatch.Stop();
 
             _SetBlockTimeSpan = _Stopwatch.Elapsed;
@@ -141,11 +161,13 @@ namespace Wyd.Game.World.Chunks.Generation
 
             for (int index = 0; index < _Mask.Length; index++)
             {
+                // observe cancellation token
                 if (CancellationToken.IsCancellationRequested)
                 {
                     return;
                 }
 
+                // set local and global position according to index
                 int3 localPosition = WydMath.IndexTo3D(index, ChunkController.SIZE);
                 int3 globalPosition = WydMath.ToInt(_OriginPoint + localPosition);
 
@@ -160,7 +182,13 @@ namespace Wyd.Game.World.Chunks.Generation
                     BlockController.Current.CheckBlockHasProperty(currentBlockId, BlockDefinition.Property.Transparent));
             }
 
+            // clear mask, add to object pool, and unset reference
+            Array.Clear(_Mask, 0, _Mask.Length);
+            _masksPool.TryAdd(_Mask);
+            _Mask = null;
+
             _Stopwatch.Stop();
+
             _MeshingTimeSpan = _Stopwatch.Elapsed;
         }
 
