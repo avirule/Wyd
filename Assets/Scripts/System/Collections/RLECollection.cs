@@ -16,6 +16,7 @@ namespace Wyd.System.Collections
 
         public T Value => _RLENodes.First.Value.Value;
         public bool IsUniform => _RLENodes.Count == 1;
+        public int Length { get; }
 
         public RLECollection(uint cubicDepth, T initialValue)
         {

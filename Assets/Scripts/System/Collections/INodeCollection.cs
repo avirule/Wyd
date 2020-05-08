@@ -11,6 +11,7 @@ namespace Wyd.System.Collections
     {
         T Value { get; }
         bool IsUniform { get; }
+        int Length { get; }
 
         T GetPoint(float3 point);
         void SetPoint(float3 point, T value);

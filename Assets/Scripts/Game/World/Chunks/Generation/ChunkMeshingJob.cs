@@ -117,7 +117,6 @@ namespace Wyd.Game.World.Chunks.Generation
                 return;
             }
 
-            // restart stopwatch to measure pre-mesh op time
             _Stopwatch.Restart();
 
             PrepareMeshing();
@@ -179,10 +178,11 @@ namespace Wyd.Game.World.Chunks.Generation
             _masksPool.TryAdd(_Mask);
             _Mask = default;
 
-            // clear block ids, add to object pool, and unset reference
+            // add to object pool, and unset reference
             _blocksPool.TryAdd(_Blocks);
             _Blocks = default;
 
+            // clear array to free RAM until next execution
             Array.Clear(_NeighborBlocksCollections, 0, _NeighborBlocksCollections.Length);
 
             _OriginPoint = default;

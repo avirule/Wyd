@@ -17,6 +17,8 @@ namespace Wyd.System.Collections
         public ushort Value => _RootNode.Value;
         public bool IsUniform => _RootNode.IsUniform;
 
+        public int Length { get; }
+
         public Octree(byte size, ushort initialValue, bool fullyPopulate)
         {
             if ((size <= 0) || ((size & (size - 1)) != 0))
@@ -26,6 +28,8 @@ namespace Wyd.System.Collections
 
             _Size = size;
             _RootNode = new OctreeNode(initialValue);
+
+            Length = (int)math.pow(_Size, 3);
 
             if (fullyPopulate)
             {
@@ -42,7 +46,6 @@ namespace Wyd.System.Collections
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private ushort GetPointRecursive(float3 point) => _RootNode.GetPoint(_Size / 2f, point.x, point.y, point.z);
 
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private ushort GetPointIterative(float3 point)
         {
             OctreeNode currentNode = _RootNode;
@@ -110,7 +113,7 @@ namespace Wyd.System.Collections
 
         public IEnumerable<ushort> GetAllData()
         {
-            for (int index = 0; index < math.pow(_Size, 3); index++)
+            for (int index = 0; index < Length; index++)
             {
                 yield return GetPoint(WydMath.IndexTo3D(index, _Size));
             }
@@ -126,7 +129,7 @@ namespace Wyd.System.Collections
             {
                 throw new RankException("Only single dimension arrays are supported here.");
             }
-            else if (destinationArray.Length < math.pow(_Size, 3))
+            else if (destinationArray.Length < Length)
             {
                 throw new ArgumentOutOfRangeException(nameof(destinationArray), "Destination array was not long enough.");
             }
