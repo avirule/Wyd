@@ -1,6 +1,8 @@
 #region
 
+using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 
 #endregion
@@ -11,45 +13,41 @@ namespace Wyd.System.Jobs
     {
         private readonly int _Length;
         private readonly int _BatchLength;
+        private readonly int _TotalBatches;
 
-        public AsyncParallelJob(int length, int batchLength)
+        protected AsyncParallelJob(int length, int batchLength)
         {
             _Length = length;
             _BatchLength = batchLength;
+            _TotalBatches = (int)Math.Ceiling((double)_Length / _BatchLength);
         }
 
-
-        protected override Task Process()
-        {
-            List<Task> batchedTasks = new List<Task>();
-
-            for (int aggregateLength = 0; aggregateLength <= _Length; aggregateLength += _BatchLength)
-            {
-                int aggregateBatchLength = aggregateLength + _BatchLength;
-
-                if (aggregateBatchLength == 0)
-                {
-                    break;
-                }
-                else if (batchedRemainingLength < 0)
-                {
-                    batchedTasks.Add(ProcessBatch(0, aggregateLength));
-                    break;
-                }
-                else
-                {
-                    batchedTasks.Add(ProcessBatch(batchedRemainingLength, aggregateLength));
-                }
-            }
-
-            Task.WaitAll(batchedTasks.ToArray(), CancellationToken);
-
-            return Task.CompletedTask;
-        }
+        protected override async Task Process() => await BatchTasksAndAwait();
 
         protected virtual Task ProcessIndex(int index) => Task.CompletedTask;
 
-        private async Task ProcessBatch(int startIndex, int endIndex)
+        protected async Task BatchTasksAndAwait() => await Task.WhenAll(GetBatchedTasks()).ConfigureAwait(false);
+
+        private IEnumerable<Task> GetBatchedTasks()
+        {
+            int currentStartIndex = 0, batchIndex = 0;
+
+            for (; batchIndex < _TotalBatches; batchIndex++, currentStartIndex = batchIndex * _BatchLength)
+            {
+                int currentEndIndex = currentStartIndex + (_BatchLength - 1);
+
+                if (currentEndIndex >= _Length)
+                {
+                    yield return ProcessIndexes(currentStartIndex, _Length - 1);
+                }
+                else
+                {
+                    yield return ProcessIndexes(currentStartIndex, currentEndIndex);
+                }
+            }
+        }
+
+        private async Task ProcessIndexes(int startIndex, int endIndex)
         {
             for (int index = startIndex; index < endIndex; index++)
             {

@@ -19,17 +19,17 @@ namespace Wyd.Controllers.System
     {
         private class MainThreadAction
         {
-            private readonly ManualResetEvent _ManualResetEvent;
+            private readonly SemaphoreSlim _SemaphoreReset;
             private readonly MainThreadActionInvocation _Invocation;
 
-            public MainThreadAction(ManualResetEvent manualResetEvent, MainThreadActionInvocation invocation)
+            public MainThreadAction(SemaphoreSlim semaphoreReset, MainThreadActionInvocation invocation)
             {
-                _ManualResetEvent = manualResetEvent;
+                _SemaphoreReset = semaphoreReset;
                 _Invocation = invocation ?? throw new NullReferenceException(nameof(invocation));
             }
 
             public bool Invoke() => _Invocation();
-            public void Set() => _ManualResetEvent?.Set();
+            public void Set() => _SemaphoreReset?.Release();
         }
 
         private ConcurrentQueue<MainThreadAction> _Actions;
@@ -51,13 +51,13 @@ namespace Wyd.Controllers.System
             PerFrameUpdateController.Current.DeregisterPerFrameUpdater(-900, this);
         }
 
-        public ManualResetEvent QueueAction(MainThreadActionInvocation invocation)
+        public SemaphoreSlim QueueAction(MainThreadActionInvocation invocation)
         {
-            ManualResetEvent resetEvent = new ManualResetEvent(false);
+            SemaphoreSlim semaphoreReset = new SemaphoreSlim(0, 1);
 
-            _Actions.Enqueue(new MainThreadAction(resetEvent, invocation));
+            _Actions.Enqueue(new MainThreadAction(semaphoreReset, invocation));
 
-            return resetEvent;
+            return semaphoreReset;
         }
 
         public void FrameUpdate() { }

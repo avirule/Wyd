@@ -98,7 +98,7 @@ namespace Wyd.System.Jobs
             OnMaximumProcessingJobsChanged(MaximumProcessingJobs);
         }
 
-        public static async Task QueueAsyncJob(AsyncJob asyncJob, bool configureAwait = false)
+        public static void QueueAsyncJob(AsyncJob asyncJob)
         {
             if (AbortToken.IsCancellationRequested)
             {
@@ -107,20 +107,21 @@ namespace Wyd.System.Jobs
 
             OnJobQueued(new AsyncJobEventArgs(asyncJob));
 
-            await ExecuteJob(asyncJob, configureAwait).ConfigureAwait(configureAwait);
+            Task.Run(() => ExecuteJob(asyncJob));
         }
 
-        public static async Task QueueAsync(AsyncInvocation invocation, bool configureAwait = false)
+        public static void QueueAsyncInvocation(AsyncInvocation invocation)
         {
             if (AbortToken.IsCancellationRequested)
             {
                 return;
-            } else if (invocation == null)
+            }
+            else if (invocation == null)
             {
                 throw new NullReferenceException(nameof(invocation));
             }
 
-            await ExecuteInvocation(invocation, configureAwait).ConfigureAwait(configureAwait);
+            Task.Run(() => ExecuteInvocation(invocation));
         }
 
         #endregion
@@ -128,35 +129,34 @@ namespace Wyd.System.Jobs
 
         #region Runtime
 
-        private static async Task ExecuteInvocation(AsyncInvocation invocation, bool configureAwait)
+        private static async Task ExecuteInvocation(AsyncInvocation invocation)
         {
             if (AbortToken.IsCancellationRequested)
             {
                 return;
             }
 
-            await _WorkerSemaphore.WaitAsync().ConfigureAwait(true);
+            await _WorkerSemaphore.WaitAsync().ConfigureAwait(false);
 
-            await invocation.Invoke().ConfigureAwait(configureAwait);
+            await invocation.Invoke().ConfigureAwait(false);
 
             _WorkerSemaphore.Release();
-
         }
 
-        private static async Task ExecuteJob(AsyncJob asyncJob, bool configureAwait)
+        private static async Task ExecuteJob(AsyncJob asyncJob)
         {
             if (_AbortTokenSource.IsCancellationRequested)
             {
                 return;
             }
 
-            await _WorkerSemaphore.WaitAsync().ConfigureAwait(true);
+            await _WorkerSemaphore.WaitAsync().ConfigureAwait(false);
 
             AsyncJobEventArgs args = new AsyncJobEventArgs(asyncJob);
 
             OnJobStarted(args);
 
-            await asyncJob.Execute().ConfigureAwait(configureAwait);
+            await asyncJob.Execute().ConfigureAwait(false);
 
             OnJobFinished(args);
 
