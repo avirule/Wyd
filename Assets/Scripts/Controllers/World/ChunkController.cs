@@ -42,6 +42,8 @@ namespace Wyd.Controllers.World
         private static readonly ObjectPool<BlockAction> _blockActionsPool = new ObjectPool<BlockAction>(1024);
         private static readonly ObjectPool<ChunkTerrainBuilderJob> _terrainBuilderJobs = new ObjectPool<ChunkTerrainBuilderJob>();
         private static readonly ObjectPool<ChunkMeshingJob> _meshingJobs = new ObjectPool<ChunkMeshingJob>();
+        private static readonly int _offsetCoordinate = Shader.PropertyToID("_OffsetCoordinate");
+
 
         #region NoiseShader
 
@@ -188,6 +190,7 @@ namespace Wyd.Controllers.World
         private void OnEnable()
         {
             OriginPoint = WydMath.ToInt(SelfTransform.position);
+            MeshRenderer.materials.First().SetVector(_offsetCoordinate, WydMath.ToFloat(OriginPoint.xyzz));
 
             PerFrameUpdateController.Current.RegisterPerFrameUpdater(20, this);
 

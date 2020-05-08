@@ -120,6 +120,7 @@ namespace Wyd.System
         #region ToFloat()
 
         public static float3 ToFloat(int3 a) => new float3(a.x, a.y, a.z);
+        public static float4 ToFloat(int4 a) => new float4(a.x, a.y, a.z, a.w);
 
         #endregion
 

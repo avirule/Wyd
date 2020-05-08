@@ -335,10 +335,10 @@ namespace Wyd.Game.World.Chunks.Generation
                     int3[] vertices = BlockFaces.Vertices.FaceVerticesByNormalIndex[normalIndex];
 
                     // add highest-to-lowest to avoid persistent bounds check
-                    _MeshData.AddVertex(VertexToInt(localPosition + (vertices[3] * traversalVertexOffset)));
-                    _MeshData.AddVertex(VertexToInt(localPosition + (vertices[2] * traversalVertexOffset)));
-                    _MeshData.AddVertex(VertexToInt(localPosition + (vertices[1] * traversalVertexOffset)));
-                    _MeshData.AddVertex(VertexToInt(localPosition + (vertices[0] * traversalVertexOffset)));
+                    _MeshData.AddVertex(CompressVertex(localPosition + (vertices[3] * traversalVertexOffset)));
+                    _MeshData.AddVertex(CompressVertex(localPosition + (vertices[2] * traversalVertexOffset)));
+                    _MeshData.AddVertex(CompressVertex(localPosition + (vertices[1] * traversalVertexOffset)));
+                    _MeshData.AddVertex(CompressVertex(localPosition + (vertices[0] * traversalVertexOffset)));
 
                     if (BlockController.Current.GetUVs(currentBlockId, globalPosition, faceDirection, new float2(1f)
                     {
@@ -356,12 +356,12 @@ namespace Wyd.Game.World.Chunks.Generation
             }
         }
 
-        private static int VertexToInt(int3 vertex)
+        private static int CompressVertex(int3 vertex)
         {
             const int vertex_mask = 0b11111;
             int x = vertex.x & vertex_mask;
             int y = (vertex.y & vertex_mask) << 5;
-            int z = (vertex.z & vertex_mask) << 15;
+            int z = (vertex.z & vertex_mask) << 10;
 
             return x | y | z;
         }

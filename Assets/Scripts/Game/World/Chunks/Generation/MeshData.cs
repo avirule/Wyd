@@ -75,25 +75,15 @@ namespace Wyd.Game.World.Chunks.Generation
                 mesh.Clear();
             }
 
-            mesh.subMeshCount = 2;
-            mesh.indexFormat = _Vertices.Count > 65000
-                ? IndexFormat.UInt32
-                : IndexFormat.UInt16;
+            mesh.subMeshCount = _Triangles.Count;
 
             mesh.SetVertexBufferParams(_Vertices.Count, new VertexAttributeDescriptor(VertexAttribute.Position, VertexAttributeFormat.SInt32, 1));
-            mesh.SetVertexBufferData(_Vertices, 0, 0, _Vertices.Count, 0,
-                MeshUpdateFlags.DontRecalculateBounds | MeshUpdateFlags.DontValidateIndices | MeshUpdateFlags.DontResetBoneBounds);
+            mesh.SetVertexBufferData(_Vertices, 0, 0, _Vertices.Count, 0);
 
-            foreach (List<uint> triangles in _Triangles)
+            foreach (List<uint> triangles in _Triangles.Where(triangles => triangles.Count != 0))
             {
-                if (triangles.Count == 0)
-                {
-                    continue;
-                }
-
                 mesh.SetIndexBufferParams(triangles.Count, IndexFormat.UInt32);
-                mesh.SetIndexBufferData(triangles, 0, 0, triangles.Count,
-                    MeshUpdateFlags.DontRecalculateBounds | MeshUpdateFlags.DontValidateIndices | MeshUpdateFlags.DontResetBoneBounds);
+                mesh.SetIndexBufferData(triangles, 0, 0, triangles.Count);
             }
 
             // check uvs count in case of no UVs to apply to mesh
