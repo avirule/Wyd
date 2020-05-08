@@ -13,8 +13,8 @@ namespace Wyd.System.Collections
         bool IsUniform { get; }
         int Length { get; }
 
-        T GetPoint(float3 point);
-        void SetPoint(float3 point, T value);
+        T GetPoint(int3 point);
+        void SetPoint(int3 point, T value);
 
         IEnumerable<T> GetAllData();
         void CopyTo(T[] destinationArray);

@@ -29,7 +29,7 @@ namespace Wyd.System.Collections
 
         #region Data Operations
 
-        public ushort GetPoint(float extent, float x, float y, float z)
+        public ushort GetPoint(int extent, int x, int y, int z)
         {
             if (IsUniform)
             {
@@ -38,10 +38,10 @@ namespace Wyd.System.Collections
 
             Octree.DetermineOctant(extent, ref x, ref y, ref z, out int octant);
 
-            return _Nodes[octant].GetPoint(extent / 2f, x, y, z);
+            return _Nodes[octant].GetPoint(extent >> 1, x, y, z);
         }
 
-        public void SetPoint(float extent, float x, float y, float z, ushort newValue)
+        public void SetPoint(int extent, int x, int y, int z, ushort newValue)
         {
             if (IsUniform)
             {
@@ -49,7 +49,7 @@ namespace Wyd.System.Collections
                 {
                     return;
                 }
-                else if (extent < 1f)
+                else if (extent < 1)
                 {
                     // reached smallest possible depth (usually 1x1x1) so
                     // set value and return
@@ -65,7 +65,7 @@ namespace Wyd.System.Collections
             Octree.DetermineOctant(extent, ref x, ref y, ref z, out int octant);
 
             // recursively dig into octree and set
-            _Nodes[octant].SetPoint(extent / 2f, x, y, z, newValue);
+            _Nodes[octant].SetPoint(extent >> 1, x, y, z, newValue);
 
             // on each recursion back-step, ensure integrity of node
             // and collapse if all child node values are equal

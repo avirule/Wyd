@@ -11,7 +11,7 @@ namespace Wyd.System.Collections
 {
     public class Octree : INodeCollection<ushort>
     {
-        private readonly byte _Size;
+        private readonly int _Extent;
         private readonly OctreeNode _RootNode;
 
         public ushort Value => _RootNode.Value;
@@ -26,14 +26,14 @@ namespace Wyd.System.Collections
                 throw new ArgumentException("Size must be a power of two.", nameof(size));
             }
 
-            _Size = size;
+            _Extent = size >> 1;
             _RootNode = new OctreeNode(initialValue);
 
-            Length = (int)math.pow(_Size, 3);
+            Length = (int)math.pow(size, 3);
 
             if (fullyPopulate)
             {
-                _RootNode.PopulateRecursive(_Size / 2f);
+                _RootNode.PopulateRecursive(_Extent);
             }
         }
 
@@ -41,17 +41,17 @@ namespace Wyd.System.Collections
         #region GetPoint
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public ushort GetPoint(float3 point) => GetPointIterative(point);
+        public ushort GetPoint(int3 point) => GetPointIterative(point);
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private ushort GetPointRecursive(float3 point) => _RootNode.GetPoint(_Size / 2f, point.x, point.y, point.z);
+        private ushort GetPointRecursive(int3 point) => _RootNode.GetPoint(_Extent, point.x, point.y, point.z);
 
-        private ushort GetPointIterative(float3 point)
+        private ushort GetPointIterative(int3 point)
         {
             OctreeNode currentNode = _RootNode;
-            float x = point.x, y = point.y, z = point.z;
+            int x = point.x, y = point.y, z = point.z;
 
-            for (float extent = _Size / 2f; !currentNode.IsUniform; extent /= 2f)
+            for (int extent = _Extent; !currentNode.IsUniform; extent >>= 1)
             {
                 DetermineOctant(extent, ref x, ref y, ref z, out int octant);
 
@@ -67,20 +67,20 @@ namespace Wyd.System.Collections
         #region SetPoint
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void SetPoint(float3 point, ushort value) => SetPointRecursive(point, value);
+        public void SetPoint(int3 point, ushort value) => SetPointRecursive(point, value);
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void SetPointNoCollapse(float3 point, ushort value) => SetPointIterative(point, value);
+        public void SetPointNoCollapse(int3 point, ushort value) => SetPointIterative(point, value);
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private void SetPointRecursive(float3 point, ushort value) => _RootNode.SetPoint(_Size / 2f, point.x, point.y, point.z, value);
+        private void SetPointRecursive(int3 point, ushort value) => _RootNode.SetPoint(_Extent, point.x, point.y, point.z, value);
 
-        private void SetPointIterative(float3 point, ushort value)
+        private void SetPointIterative(int3 point, ushort value)
         {
             OctreeNode currentNode = _RootNode;
-            float x = point.x, y = point.y, z = point.z;
+            int x = point.x, y = point.y, z = point.z;
 
-            for (float extent = _Size / 2f;; extent /= 2f)
+            for (int extent = _Extent;; extent >>= 1)
             {
                 if (currentNode.IsUniform)
                 {
@@ -88,7 +88,7 @@ namespace Wyd.System.Collections
                     {
                         return;
                     }
-                    else if (extent < 1f)
+                    else if (extent < 1)
                     {
                         // reached smallest possible depth (usually 1x1x1) so
                         // set value and return
@@ -113,9 +113,11 @@ namespace Wyd.System.Collections
 
         public IEnumerable<ushort> GetAllData()
         {
+            int size = _Extent << 1;
+
             for (int index = 0; index < Length; index++)
             {
-                yield return GetPoint(WydMath.IndexTo3D(index, _Size));
+                yield return GetPoint(WydMath.IndexTo3D(index, size));
             }
         }
 
@@ -134,9 +136,11 @@ namespace Wyd.System.Collections
                 throw new ArgumentOutOfRangeException(nameof(destinationArray), "Destination array was not long enough.");
             }
 
+            int size = _Extent << 1;
+
             for (int index = 0; index < destinationArray.Length; index++)
             {
-                destinationArray[index] = GetPoint(WydMath.IndexTo3D(index, _Size));
+                destinationArray[index] = GetPoint(WydMath.IndexTo3D(index, size));
             }
         }
 
@@ -155,7 +159,7 @@ namespace Wyd.System.Collections
         // 5 7
         // 4 6
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static void DetermineOctant(float extent, ref float x, ref float y, ref float z, out int octant)
+        public static void DetermineOctant(int extent, ref int x, ref int y, ref int z, out int octant)
         {
             octant = 0;
 

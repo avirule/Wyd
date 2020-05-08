@@ -7,5 +7,11 @@ namespace Wyd.System.Extensions
             bool b = a;
             return *(byte*)&b;
         }
+
+        public static unsafe int ToInt(this bool a)
+        {
+            bool b = a;
+            return *(int*)&b;
+        }
     }
 }

@@ -207,9 +207,9 @@ namespace Wyd.Controllers.Entity
                 return;
             }
 
-            ushort blockId = WorldController.Current.GetBlock(math.all(math.csum(_LastReachRayHit.normal) > float3.zero)
+            ushort blockId = WorldController.Current.GetBlock((int3)(math.all(math.csum(_LastReachRayHit.normal) > float3.zero)
                 ? math.floor(_LastReachRayHit.point) - (float3)_LastReachRayHit.normal
-                : math.floor(_LastReachRayHit.point));
+                : math.floor(_LastReachRayHit.point)));
 
             if (!BlockController.Current.CheckBlockHasProperty(blockId, BlockDefinition.Property.Destroyable))
             {

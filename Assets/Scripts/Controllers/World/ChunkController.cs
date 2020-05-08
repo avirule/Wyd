@@ -540,14 +540,14 @@ namespace Wyd.Controllers.World
 
         #region Block Actions
 
-        public ushort GetBlock(float3 globalPosition) =>
+        public ushort GetBlock(int3 globalPosition) =>
             Blocks?.GetPoint(math.abs(globalPosition - OriginPoint)) ?? BlockController.NullID;
 
-        public bool TryGetBlock(float3 localPosition, out ushort blockId)
+        public bool TryGetBlock(int3 localPosition, out ushort blockId)
         {
             blockId = BlockController.NullID;
 
-            if (math.any(localPosition < 0f) || math.any(localPosition >= GenerationConstants.CHUNK_SIZE) || (Blocks == null))
+            if (math.any(localPosition < 0) || math.any(localPosition >= GenerationConstants.CHUNK_SIZE) || (Blocks == null))
             {
                 return false;
             }
@@ -556,10 +556,10 @@ namespace Wyd.Controllers.World
             return true;
         }
 
-        public void PlaceBlock(float3 globalPosition, ushort newBlockId) =>
+        public void PlaceBlock(int3 globalPosition, ushort newBlockId) =>
             AllocateBlockAction(math.abs(globalPosition - OriginPoint), newBlockId);
 
-        private void AllocateBlockAction(float3 localPosition, ushort id)
+        private void AllocateBlockAction(int3 localPosition, ushort id)
         {
             if (_blockActionsPool.TryRetrieve(out BlockAction blockAction))
             {

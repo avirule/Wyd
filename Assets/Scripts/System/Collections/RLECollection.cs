@@ -27,7 +27,7 @@ namespace Wyd.System.Collections
             _RLENodes.AddFirst(new RLENode<T>((uint)math.pow(cubicDepth, 3), initialValue));
         }
 
-        public T GetPoint(float3 point)
+        public T GetPoint(int3 point)
         {
             int index = WydMath.PointToIndex(point, GenerationConstants.CHUNK_SIZE);
             LinkedListNode<RLENode<T>> currentNode = _RLENodes.First;
@@ -49,7 +49,7 @@ namespace Wyd.System.Collections
             return default;
         }
 
-        public void SetPoint(float3 point, T value)
+        public void SetPoint(int3 point, T value)
         {
             int index = WydMath.PointToIndex(point, GenerationConstants.CHUNK_SIZE);
             LinkedListNode<RLENode<T>> currentNode = _RLENodes.First;

@@ -13,6 +13,7 @@ using Wyd.Controllers.World;
 using Wyd.Game.World.Blocks;
 using Wyd.System;
 using Wyd.System.Collections;
+using Wyd.System.Extensions;
 using Wyd.System.Graphics;
 using Wyd.System.Jobs;
 
@@ -237,8 +238,6 @@ namespace Wyd.Game.World.Chunks.Generation
 
                 // normalIndex constrained to represent the 3 axes
                 int iModulo3 = normalIndex % 3;
-                // indicates how many times the traversal function has executed for this face direction
-                int traversalIterations = 0;
                 // total number of successful traversals
                 // remark: this is outside the for loop below so that the function can determine if any traversals have happened
                 int traversals = 0;
@@ -270,18 +269,13 @@ namespace Wyd.Game.World.Chunks.Generation
                     int3 traversalPosition = localPosition + (traversalNormal * traversals);
 
                     for (;
-                        (traversalNormalLocalPositionIndexValue + traversals) < maximumTraversals;
+                        (traversalNormalLocalPositionIndexValue + traversals) < maximumTraversals
+                        && !_Mask[traversalIndex].HasFace(faceDirection)
+                        && _Blocks[traversalIndex] == currentBlockId;
                         traversals++, // increment traversals
                         traversalIndex += traversalIndexStep, // increment traversal index by index step to adjust local working position
                         traversalPosition += traversalNormal) // increment traversal position by traversal normal to adjust local working position
                     {
-                        // check if block's mask already has face set, or if we've traversed at all, ensure block ids match
-                        // remark: in the case block ids don't match, we've likely reached textures that won't match.
-                        if (_Mask[traversalIndex].HasFace(faceDirection) || ((traversals > 0) && (_Blocks[traversalIndex] != currentBlockId)))
-                        {
-                            break;
-                        }
-
                         // normal direction of current face
                         int3 faceNormal = GenerationConstants.FaceNormalByIteration[normalIndex];
                         // local position of facing block
@@ -321,9 +315,8 @@ namespace Wyd.Game.World.Chunks.Generation
                     }
 
                     // if we haven't traversed at all, continue to next axis
-                    if ((traversals == 0) || ((traversalIterations == 0) && (traversals == 1)))
+                    if ((traversals == 0) || ((perpendicularNormalIndex == 1) && (traversals == 1)))
                     {
-                        traversalIterations += 1;
                         continue;
                     }
 
@@ -331,31 +324,32 @@ namespace Wyd.Game.World.Chunks.Generation
                     int verticesCount = _MeshData.VerticesCount;
                     int transparentAsInt = Convert.ToInt32(transparentTraversal);
 
-                    // ReSharper disable once ForCanBeConvertedToForeach
-                    for (int triangleIndex = 0; triangleIndex < BlockFaces.Triangles.FaceTriangles.Length; triangleIndex++)
-                    {
-                        _MeshData.AddTriangle(transparentAsInt, BlockFaces.Triangles.FaceTriangles[triangleIndex] + verticesCount);
-                    }
+                    _MeshData.AddTriangle(transparentAsInt, 0 + verticesCount);
+                    _MeshData.AddTriangle(transparentAsInt, 2 + verticesCount);
+                    _MeshData.AddTriangle(transparentAsInt, 1 + verticesCount);
+                    _MeshData.AddTriangle(transparentAsInt, 2 + verticesCount);
+                    _MeshData.AddTriangle(transparentAsInt, 3 + verticesCount);
+                    _MeshData.AddTriangle(transparentAsInt, 1 + verticesCount);
 
                     // add vertices
                     int3 traversalVertexOffset = math.max(traversals * traversalNormal, 1);
                     float3[] vertices = BlockFaces.Vertices.FaceVerticesByNormalIndex[normalIndex];
 
-                    // ReSharper disable once ForCanBeConvertedToForeach
-                    for (int verticesIndex = 0; verticesIndex < vertices.Length; verticesIndex++)
-                    {
-                        _MeshData.AddVertex(localPosition + (vertices[verticesIndex] * traversalVertexOffset));
-                    }
+                    // add highest-to-lowest to avoid persistent bounds check
+                    _MeshData.AddVertex(localPosition + (vertices[3] * traversalVertexOffset));
+                    _MeshData.AddVertex(localPosition + (vertices[2] * traversalVertexOffset));
+                    _MeshData.AddVertex(localPosition + (vertices[1] * traversalVertexOffset));
+                    _MeshData.AddVertex(localPosition + (vertices[0] * traversalVertexOffset));
 
                     if (BlockController.Current.GetUVs(currentBlockId, globalPosition, faceDirection, new float2(1f)
                     {
                         [GenerationConstants.UVIndexAdjustments[iModulo3][traversalNormalAxisIndex]] = traversals
                     }, out BlockUVs blockUVs))
                     {
-                        _MeshData.AddUV(blockUVs.TopLeft);
-                        _MeshData.AddUV(blockUVs.TopRight);
-                        _MeshData.AddUV(blockUVs.BottomLeft);
                         _MeshData.AddUV(blockUVs.BottomRight);
+                        _MeshData.AddUV(blockUVs.BottomLeft);
+                        _MeshData.AddUV(blockUVs.TopRight);
+                        _MeshData.AddUV(blockUVs.TopLeft);
                     }
 
                     break;

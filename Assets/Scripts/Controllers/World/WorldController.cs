@@ -237,13 +237,8 @@ namespace Wyd.Controllers.World
             }
         }
 
-        public IEnumerable<ushort> GetNeighboringBlocks(float3 globalPosition)
-        {
-            foreach (float3 normal in Directions.AllDirectionNormals)
-            {
-                yield return GetBlock(globalPosition + normal);
-            }
-        }
+        public IEnumerable<ushort> GetNeighboringBlocks(int3 globalPosition) =>
+            Directions.AllDirectionNormals.Select(normal => GetBlock(globalPosition + normal));
 
         public IEnumerable<ChunkController> GetNeighboringChunks(float3 origin)
         {
@@ -406,7 +401,7 @@ namespace Wyd.Controllers.World
         public bool TryGetChunk(float3 origin, out ChunkController chunkController) =>
             _Chunks.TryGetValue(origin, out chunkController);
 
-        public ushort GetBlock(float3 globalPosition)
+        public ushort GetBlock(int3 globalPosition)
         {
             if (!TryGetChunk(WydMath.RoundBy(globalPosition, GenerationConstants.CHUNK_SIZE), out ChunkController chunkController))
             {
@@ -416,14 +411,14 @@ namespace Wyd.Controllers.World
             return chunkController.GetBlock(globalPosition);
         }
 
-        public bool TryGetBlock(float3 globalPosition, out ushort blockId)
+        public bool TryGetBlock(int3 globalPosition, out ushort blockId)
         {
             blockId = BlockController.NullID;
             return TryGetChunk(WydMath.RoundBy(globalPosition, GenerationConstants.CHUNK_SIZE), out ChunkController chunkController)
                    && chunkController.TryGetBlock(math.abs(chunkController.OriginPoint - globalPosition), out blockId);
         }
 
-        public void PlaceBlock(float3 globalPosition, ushort id)
+        public void PlaceBlock(int3 globalPosition, ushort id)
         {
             if (!TryGetChunk(WydMath.RoundBy(globalPosition, GenerationConstants.CHUNK_SIZE), out ChunkController chunkController))
             {
