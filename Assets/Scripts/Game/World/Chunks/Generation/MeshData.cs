@@ -1,7 +1,9 @@
 #region
 
+using System;
 using System.Collections.Generic;
 using System.Linq;
+using Unity.Mathematics;
 using UnityEngine;
 using UnityEngine.Rendering;
 
@@ -66,33 +68,38 @@ namespace Wyd.Game.World.Chunks.Generation
         public void ApplyMeshData(ref Mesh mesh)
         {
             // 'is object' to bypass unity lifetime check for null
-            if (mesh is object)
+            if (!(mesh is object))
             {
-                mesh = new Mesh();
+                throw new NullReferenceException(nameof(mesh));
             }
             else
             {
                 mesh.Clear();
             }
 
+            const MeshUpdateFlags default_flags = MeshUpdateFlags.DontRecalculateBounds | MeshUpdateFlags.DontValidateIndices;
+
             mesh.subMeshCount = _Triangles.Count;
 
             mesh.SetVertexBufferParams(_Vertices.Count, new VertexAttributeDescriptor(VertexAttribute.Position, VertexAttributeFormat.SInt32, 1));
-            mesh.SetVertexBufferData(_Vertices, 0, 0, _Vertices.Count, 0);
+            mesh.SetVertexBufferData(_Vertices, 0, 0, _Vertices.Count, 0, default_flags);
+
+            if (_UVs.Count > 0)
+            {
+                // mesh.SetVertexBufferParams(_UVs.Count, new VertexAttributeDescriptor(VertexAttribute.TexCoord0));
+                // mesh.SetVertexBufferData(_UVs, 0, 0, _UVs.Count, 0, default_flags);
+
+                mesh.SetUVs(0, _UVs);
+            }
 
             foreach (List<uint> triangles in _Triangles.Where(triangles => triangles.Count != 0))
             {
                 mesh.SetIndexBufferParams(triangles.Count, IndexFormat.UInt32);
-                mesh.SetIndexBufferData(triangles, 0, 0, triangles.Count);
+                mesh.SetIndexBufferData(triangles, 0, 0, triangles.Count, default_flags);
+                mesh.SetSubMesh(0, new SubMeshDescriptor(0, triangles.Count), default_flags);
             }
 
-            // check uvs count in case of no UVs to apply to mesh
-            // if (_UVs.Count > 0)
-            // {
-            //     mesh.SetUVs(0, _UVs);
-            // }
-
-            // mesh.RecalculateNormals();
+            mesh.bounds = new Bounds(new float3(GenerationConstants.CHUNK_SIZE / 2), new float3(GenerationConstants.CHUNK_SIZE));
         }
     }
 }

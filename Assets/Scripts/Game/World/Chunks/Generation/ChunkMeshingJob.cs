@@ -141,7 +141,7 @@ namespace Wyd.Game.World.Chunks.Generation
             // retrieve existing objects from object pool
             _Mask = _masksPool.Retrieve() ?? new BlockFaces[GenerationConstants.CHUNK_SIZE_CUBED];
             _Blocks = _blocksPool.Retrieve() ?? new ushort[GenerationConstants.CHUNK_SIZE_CUBED];
-            _MeshData = _meshDataPool.Retrieve() ?? new MeshData(new List<int>(), new List<Vector3>(), new List<uint>(), new List<uint>());
+            _MeshData = _meshDataPool.Retrieve() ?? new MeshData(new List<int>(), new List<Vector3>(), new List<uint>());
 
             // set _BlocksIDs from _BlocksCollection
             _BlocksCollection.CopyTo(_Blocks);
@@ -371,10 +371,10 @@ namespace Wyd.Game.World.Chunks.Generation
 
         private static int CompressVertex(int3 vertex)
         {
-            const int vertex_mask = 0b11111;
+            const int vertex_mask = (1 << GenerationConstants.CHUNK_SIZE_BIT_SHIFT) - 1;
             int x = vertex.x & vertex_mask;
-            int y = (vertex.y & vertex_mask) << 5;
-            int z = (vertex.z & vertex_mask) << 10;
+            int y = (vertex.y & vertex_mask) << GenerationConstants.CHUNK_SIZE_BIT_SHIFT;
+            int z = (vertex.z & vertex_mask) << (GenerationConstants.CHUNK_SIZE_BIT_SHIFT * 2);
 
             return x | y | z;
         }

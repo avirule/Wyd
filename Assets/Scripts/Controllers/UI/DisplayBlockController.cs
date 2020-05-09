@@ -42,7 +42,7 @@ namespace Wyd.Controllers.UI
 
         private void Start()
         {
-            MeshRenderer.material = TextureController.Current.AllBlocksMaterials[0];
+            MeshRenderer.material = TextureController.Current.BlockMaterials[0];
         }
 
         public void InitializeAs(ItemStack itemStack)

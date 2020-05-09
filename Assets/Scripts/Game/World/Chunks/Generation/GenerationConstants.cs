@@ -11,7 +11,8 @@ namespace Wyd.Game.World.Chunks.Generation
         public const float FREQUENCY = 0.0075f;
         public const float PERSISTENCE = 0.6f;
 
-        public const int CHUNK_SIZE = 32;
+        public const int CHUNK_SIZE_BIT_SHIFT = 6;
+        public const int CHUNK_SIZE = 1 << (CHUNK_SIZE_BIT_SHIFT - 1);
         public const int CHUNK_SIZE_SQUARED = CHUNK_SIZE * CHUNK_SIZE;
         public const int CHUNK_SIZE_SQUARED_HALF = CHUNK_SIZE_SQUARED / 2;
         public const int CHUNK_SIZE_CUBED = CHUNK_SIZE * CHUNK_SIZE * CHUNK_SIZE;

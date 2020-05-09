@@ -23,7 +23,7 @@ namespace Wyd.System.Collections
         {
             if ((size <= 0) || ((size & (size - 1)) != 0))
             {
-                throw new ArgumentException("Size must be a power of two.", nameof(size));
+                throw new ArgumentException($"Size must be a power of two ({size}).", nameof(size));
             }
 
             _Extent = size >> 1;

@@ -1,9 +1,9 @@
-﻿Shader "Wyd/Standard Terrain"
+﻿Shader "Wyd/Blocks - Opaque"
 {
     Properties
     {
         _MainTex ("Albedo (RGB)", 2DArray) = "white" {}
-        _Offset ("_CoordinateOffset", Vector) = (0.0, 0.0, 0.0, 0.0)
+        _Offset ("_Offset", Vector) = (0.0, 0.0, 0.0, 0.0)
     }
 
     SubShader
@@ -26,13 +26,11 @@
             {
                 int position : POSITION;
                 float3 texcoord : TEXCOORD0;
-                float4 color : COLOR;
             };
 
             struct v2f {
                 float4 position : SV_POSITION;
                 float3 texcoord : TEXCOORD0;
-                float4 color: COLOR;
             };
 
             float4 _Offset;
@@ -40,9 +38,8 @@
             v2f vert(appdata v)
             {
                 v2f f;
-                f.position = UnityObjectToClipPos(_Offset.xyz + float3(v.position & 31, (v.position >> 5) & 31, (v.position >> 10) & 31));
+                f.position = UnityObjectToClipPos(float3(v.position & 63, (v.position >> 6) & 63, (v.position >> 12) & 63));
                 f.texcoord = v.texcoord;
-                f.color = v.color;
                 return f;
             }
 

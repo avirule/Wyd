@@ -13,11 +13,19 @@ namespace Wyd.Controllers.State
         public MeshRenderer MeshRenderer;
 
         public static int MainTexPropertyID => Shader.PropertyToID("_MainTex");
-        public Texture2DArray BlocksTexture { get; private set; }
-        public Material BlocksMaterial { get; private set; }
-        public Material TransparentBlocksMaterial { get; private set; }
-        public Material[] AllBlocksMaterials { get; private set; }
+
         private Dictionary<string, int> _TextureIDs;
+
+        public Texture2DArray BlocksTexture { get; private set; }
+
+        /// <summary>
+        ///    Array storing all materials for blocks.
+        /// </summary>
+        /// <remarks>
+        ///    [0] is for opaque blocks
+        ///    [1] is for transparent blocks
+        /// </remarks>
+        public Material[] BlockMaterials { get; private set; }
 
         private void Awake()
         {
@@ -35,9 +43,7 @@ namespace Wyd.Controllers.State
                 material.SetTexture(MainTexPropertyID, BlocksTexture);
             }
 
-            AllBlocksMaterials = MeshRenderer.materials;
-            BlocksMaterial = AllBlocksMaterials[0];
-            TransparentBlocksMaterial = AllBlocksMaterials[1];
+            BlockMaterials = MeshRenderer.materials;
         }
 
         private void ProcessSprites()

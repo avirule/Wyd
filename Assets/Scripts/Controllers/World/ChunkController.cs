@@ -42,7 +42,7 @@ namespace Wyd.Controllers.World
         private static readonly ObjectPool<BlockAction> _blockActionsPool = new ObjectPool<BlockAction>(1024);
         private static readonly ObjectPool<ChunkTerrainBuilderJob> _terrainBuilderJobs = new ObjectPool<ChunkTerrainBuilderJob>();
         private static readonly ObjectPool<ChunkMeshingJob> _meshingJobs = new ObjectPool<ChunkMeshingJob>();
-        private static readonly int _offsetCoordinate = Shader.PropertyToID("_OffsetCoordinate");
+        private static readonly int _offset = Shader.PropertyToID("_Offset");
 
 
         #region NoiseShader
@@ -184,13 +184,12 @@ namespace Wyd.Controllers.World
             _Mesh = new Mesh();
 
             MeshFilter.sharedMesh = _Mesh;
-            MeshRenderer.materials = TextureController.Current.AllBlocksMaterials;
+            MeshRenderer.materials = TextureController.Current.BlockMaterials;
         }
 
         private void OnEnable()
         {
             OriginPoint = WydMath.ToInt(SelfTransform.position);
-            MeshRenderer.materials.First().SetVector(_offsetCoordinate, WydMath.ToFloat(OriginPoint.xyzz));
 
             PerFrameUpdateController.Current.RegisterPerFrameUpdater(20, this);
 
@@ -488,6 +487,8 @@ namespace Wyd.Controllers.World
 
         private void BeginMeshing()
         {
+            MeshRenderer.materials[0].SetVector(_offset, WydMath.ToFloat(OriginPoint.xyzz));
+
             // todo make setting for improved meshing
             ChunkMeshingJob meshingJob = _meshingJobs.Retrieve() ?? new ChunkMeshingJob();
             meshingJob.SetData(_CancellationTokenSource.Token, OriginPoint, Blocks, OptionsController.Current.GPUAcceleration);
