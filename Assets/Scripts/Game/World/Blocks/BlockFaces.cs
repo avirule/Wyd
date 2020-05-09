@@ -2,6 +2,7 @@
 
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
+using Unity.Collections;
 using Unity.Mathematics;
 
 #endregion
@@ -14,6 +15,55 @@ namespace Wyd.Game.World.Blocks
         {
             public static readonly IReadOnlyDictionary<Direction, int3[]> FaceVerticesByDirection;
             public static readonly int3[][] FaceVerticesByNormalIndex;
+            public static readonly int[][] FaceVerticesInt32ByNormalIndex;
+
+            public static readonly int[] North_ =
+            {
+                0b000001_000000_000000,
+                0b000001_000001_000000,
+                0b000001_000000_000001,
+                0b000001_000001_000001,
+            };
+
+            public static readonly int[] East_ =
+            {
+                0b000001_000000_000001,
+                0b000001_000001_000001,
+                0b000000_000000_000001,
+                0b000000_000001_000001,
+            };
+
+            public static readonly int[] South_ =
+            {
+                0b000000_000000_000001,
+                0b000000_000001_000001,
+                0b000000_000000_000000,
+                0b000000_000001_000000,
+            };
+
+            public static readonly int[] West_ =
+            {
+                0b000000_000000_000000,
+                0b000000_000001_000000,
+                0b000001_000000_000000,
+                0b000001_000001_000000,
+            };
+
+            public static readonly int[] Up_ =
+            {
+                0b000001_000001_000000,
+                0b000000_000001_000000,
+                0b000001_000001_000001,
+                0b000000_000001_000001,
+            };
+
+            public static readonly int[] Down_ =
+            {
+                0b000000_000000_000000,
+                0b000001_000000_000000,
+                0b000000_000000_000001,
+                0b000001_000000_000001,
+            };
 
             public static readonly int3[] North =
             {
@@ -83,6 +133,16 @@ namespace Wyd.Game.World.Blocks
                     West,
                     Down,
                     South
+                };
+
+                FaceVerticesInt32ByNormalIndex = new[]
+                {
+                    East_,
+                    Up_,
+                    North_,
+                    West_,
+                    Down_,
+                    South_
                 };
             }
         }

@@ -78,7 +78,7 @@ namespace Wyd.Controllers.State
         ///     <see cref="BlockDefinition" />.
         /// </param>
         public void RegisterBlockDefinition(string blockName, Block.Types type,
-            Func<int3, Direction, string> uvsRule, params BlockDefinition.Property[] properties)
+            Func<Direction, string> uvsRule, params BlockDefinition.Property[] properties)
         {
             blockName = blockName.ToLowerInvariant();
 
@@ -96,7 +96,7 @@ namespace Wyd.Controllers.State
 
             if (uvsRule == default)
             {
-                uvsRule = (position, direction) => blockName;
+                uvsRule = direction => blockName;
             }
 
             BlockDefinition blockDefinition =
@@ -109,12 +109,8 @@ namespace Wyd.Controllers.State
             Log.Information($"Successfully added block `{blockName}` with ID: {assignedBlockId}");
         }
 
-        public bool GetUVs(ushort blockId, int3 position, Direction direction, float2 size2d,
-            out BlockUVs blockUVs)
+        public bool GetUVs(ushort blockId, Direction direction, float2 size2d, out BlockUVs blockUVs)
         {
-            // todo return UV index instead
-
-
             if (!BlockIdExists(blockId))
             {
                 Log.Error(
@@ -123,7 +119,7 @@ namespace Wyd.Controllers.State
                 return false;
             }
 
-            BlockDefinitions[blockId].EvaluateUVsRule(blockId, position, direction, out string textureName);
+            BlockDefinitions[blockId].EvaluateUVsRule(blockId, direction, out string textureName);
             if (!TextureController.Current.TryGetTextureId(textureName, out int textureId))
             {
                 Log.Warning(

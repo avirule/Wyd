@@ -55,8 +55,7 @@ namespace Wyd.Controllers.UI
 
             AddTriangles();
             AddVertices(Direction.Up, Vector3.zero);
-            if (BlockController.Current.GetUVs(BlockId, int3.zero, Direction.Up, new float2(1f),
-                out BlockUVs blockUVs))
+            if (BlockController.Current.GetUVs(BlockId, Direction.Up, new float2(1f), out BlockUVs blockUVs))
             {
                 _UVs.Add(blockUVs[0]);
                 _UVs.Add(blockUVs[2]);
@@ -66,8 +65,7 @@ namespace Wyd.Controllers.UI
 
             AddTriangles();
             AddVertices(Direction.North, Vector3.zero);
-            if (BlockController.Current.GetUVs(BlockId, int3.zero, Direction.North, new float2(1f),
-                out blockUVs))
+            if (BlockController.Current.GetUVs(BlockId, Direction.North, new float2(1f), out blockUVs))
             {
                 _UVs.Add(blockUVs[1]);
                 _UVs.Add(blockUVs[3]);
@@ -77,8 +75,7 @@ namespace Wyd.Controllers.UI
 
             AddTriangles();
             AddVertices(Direction.East, Vector3.zero);
-            if (BlockController.Current.GetUVs(BlockId, int3.zero, Direction.East, new float2(1f),
-                out blockUVs))
+            if (BlockController.Current.GetUVs(BlockId, Direction.East, new float2(1f), out blockUVs))
             {
                 _UVs.Add(blockUVs[0]);
                 _UVs.Add(blockUVs[1]);

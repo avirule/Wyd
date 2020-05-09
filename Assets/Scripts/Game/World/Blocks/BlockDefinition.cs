@@ -2,7 +2,6 @@
 
 using System;
 using Serilog;
-using Unity.Mathematics;
 using UnityEngine;
 using Random = System.Random;
 
@@ -24,14 +23,14 @@ namespace Wyd.Game.World.Blocks
             LightSource = 16
         }
 
-        private static readonly Func<int3, Direction, string> _defaultUVsRule;
+        private static readonly Func<Direction, string> _defaultUVsRule;
 
         static BlockDefinition()
         {
-            _defaultUVsRule = (position, direction) => string.Empty;
+            _defaultUVsRule = direction => string.Empty;
         }
 
-        private Func<int3, Direction, string> UVsRule { get; }
+        private Func<Direction, string> UVsRule { get; }
 
         public ushort Id { get; }
         public string BlockName { get; }
@@ -50,8 +49,7 @@ namespace Wyd.Game.World.Blocks
         public bool LightSource => (Properties & Property.LightSource) > 0;
 
 
-        public BlockDefinition(ushort id, string blockName, Block.Types type,
-            Func<int3, Direction, string> uvsRule, params Property[] properties)
+        public BlockDefinition(ushort id, string blockName, Block.Types type, Func<Direction, string> uvsRule, params Property[] properties)
         {
             Id = id;
             BlockName = blockName;
@@ -65,7 +63,7 @@ namespace Wyd.Game.World.Blocks
             UVsRule = uvsRule ?? _defaultUVsRule;
         }
 
-        public virtual bool EvaluateUVsRule(ushort blockId, int3 position, Direction direction, out string spriteName)
+        public virtual bool EvaluateUVsRule(ushort blockId, Direction direction, out string spriteName)
         {
             if (Id != blockId)
             {
@@ -75,7 +73,7 @@ namespace Wyd.Game.World.Blocks
                 return false;
             }
 
-            spriteName = UVsRule(position, direction);
+            spriteName = UVsRule(direction);
             return true;
         }
 

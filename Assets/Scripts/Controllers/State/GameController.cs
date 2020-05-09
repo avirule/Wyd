@@ -1,7 +1,6 @@
 #region
 
 using System;
-using Unity.Mathematics;
 using UnityEditor;
 using UnityEngine;
 using UnityEngine.SceneManagement;
@@ -64,7 +63,7 @@ namespace Wyd.Controllers.State
                 BlockDefinition.Property.Destroyable);
 
             BlockController.Current.RegisterBlockDefinition("oak_log", Block.Types.None,
-                (vector3, direction) =>
+                direction =>
                 {
                     switch (direction)
                     {
@@ -99,7 +98,7 @@ namespace Wyd.Controllers.State
                 BlockDefinition.Property.Transparent);
         }
 
-        private static string GrassUVsRule(int3 globalPosition, Direction direction)
+        private static string GrassUVsRule(Direction direction)
         {
             switch (direction)
             {
