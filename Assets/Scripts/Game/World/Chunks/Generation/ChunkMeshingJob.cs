@@ -222,6 +222,14 @@ namespace Wyd.Game.World.Chunks.Generation
             }
         }
 
+        /// <summary>
+        ///     Traverse given index of <see cref="_Mask"/> and <see cref="_Blocks"/> to conditionally output vertex data for each face.
+        /// </summary>
+        /// <param name="index">Current working index.</param>
+        /// <param name="globalPosition">3D projected global position of the current working index.</param>
+        /// <param name="localPosition">3D projected local position of the current working index.</param>
+        /// <param name="currentBlockId">Block ID present at the current working index.</param>
+        /// <param name="transparentTraversal">Whether or not this traversal uses transparent-specific conditionals.</param>
         private void TraverseIndex(int index, int3 globalPosition, int3 localPosition, ushort currentBlockId, bool transparentTraversal)
         {
             for (int normalIndex = 0; normalIndex < 6; normalIndex++)
@@ -238,7 +246,7 @@ namespace Wyd.Game.World.Chunks.Generation
                 // normalIndex constrained to represent the 3 axes
                 int iModulo3 = normalIndex % 3;
                 // total number of successful traversals
-                // remark: this is outside the for loop below so that the function can determine if any traversals have happened
+                // remark: this is outside the for loop so that the if statement can determine if any traversals have happened
                 int traversals = 0;
 
                 for (int perpendicularNormalIndex = 1; perpendicularNormalIndex < 3; perpendicularNormalIndex++)
@@ -313,7 +321,7 @@ namespace Wyd.Game.World.Chunks.Generation
                         _Mask[traversalIndex].SetFace(faceDirection);
                     }
 
-                    // if we haven't traversed at all, continue to next axis
+                    // if we haven't traversed at all, or it's the first traversal and we've only made a 1x1x1 face, continue to test next axis
                     if ((traversals == 0) || ((perpendicularNormalIndex == 1) && (traversals == 1)))
                     {
                         continue;
@@ -331,6 +339,9 @@ namespace Wyd.Game.World.Chunks.Generation
                     _MeshData.AddTriangle(transparentAsInt, 1 + verticesCount);
 
                     // add vertices
+                    // multiply traversals by the traversal normal, and then constrain the other axes to a minimum of 1.
+                    // remark: this is to avoid accidentally zeroing-out given vertices for any faces, for instance with
+                    //    a traversal of (0, 17, 0) and a vertex of (1, 0, 1) resulting in a [face] vertex of (0, 17, 0).
                     int3 traversalVertexOffset = math.max(traversals * traversalNormal, 1);
                     int3[] vertices = BlockFaces.Vertices.FaceVerticesByNormalIndex[normalIndex];
 
@@ -340,6 +351,7 @@ namespace Wyd.Game.World.Chunks.Generation
                     _MeshData.AddVertex(CompressVertex(localPosition + (vertices[1] * traversalVertexOffset)));
                     _MeshData.AddVertex(CompressVertex(localPosition + (vertices[0] * traversalVertexOffset)));
 
+                    // conditionally add UVs
                     if (BlockController.Current.GetUVs(currentBlockId, globalPosition, faceDirection, new float2(1f)
                     {
                         [GenerationConstants.UVIndexAdjustments[iModulo3][traversalNormalAxisIndex]] = traversals
