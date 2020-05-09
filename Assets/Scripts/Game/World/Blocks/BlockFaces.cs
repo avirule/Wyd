@@ -14,23 +14,22 @@ namespace Wyd.Game.World.Blocks
         public static class Vertices
         {
             public static readonly IReadOnlyDictionary<Direction, int3[]> FaceVerticesByDirection;
-            public static readonly int3[][] FaceVerticesByNormalIndex;
             public static readonly int[][] FaceVerticesInt32ByNormalIndex;
 
             public static readonly int[] North_ =
             {
-                0b000001_000000_000000,
-                0b000001_000001_000000,
-                0b000001_000000_000001,
-                0b000001_000001_000001,
+                0b000001_000000_000000, // new int3(0, 0, 1),
+                0b000001_000001_000000, // new int3(0, 1, 1),
+                0b000001_000000_000001, // new int3(1, 0, 1),
+                0b000001_000001_000001, // new int3(1, 1, 1)
             };
 
             public static readonly int[] East_ =
             {
-                0b000001_000000_000001,
-                0b000001_000001_000001,
-                0b000000_000000_000001,
-                0b000000_000001_000001,
+                0b000001_000000_000001, // new int3(1, 0, 1),
+                0b000001_000001_000001, // new int3(1, 1, 1),
+                0b000000_000000_000001, // new int3(1, 0, 0),
+                0b000000_000001_000001, // new int3(1, 1, 0)
             };
 
             public static readonly int[] South_ =
@@ -123,16 +122,6 @@ namespace Wyd.Game.World.Blocks
                     { Direction.West, West },
                     { Direction.Up, Up },
                     { Direction.Down, Down }
-                };
-
-                FaceVerticesByNormalIndex = new[]
-                {
-                    East,
-                    Up,
-                    North,
-                    West,
-                    Down,
-                    South
                 };
 
                 FaceVerticesInt32ByNormalIndex = new[]

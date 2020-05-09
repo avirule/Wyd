@@ -293,11 +293,7 @@ namespace Wyd.Game.World.Chunks.Generation
                         else
                         {
                             // if not, get local position adjusted to relative position across the chunk boundary
-                            int3 boundaryAdjustedLocalPosition = new int3(localPosition & GenerationConstants.CHUNK_SIZE_BIT_MASK,
-                                                                     (localPosition >> GenerationConstants.CHUNK_SIZE_BIT_SHIFT)
-                                                                     & GenerationConstants.CHUNK_SIZE_BIT_MASK,
-                                                                     (localPosition >> (GenerationConstants.CHUNK_SIZE_BIT_SHIFT * 2))
-                                                                     & GenerationConstants.CHUNK_SIZE_BIT_MASK)
+                            int3 boundaryAdjustedLocalPosition = DecompressVertex(localPosition)
                                                                  + (traversalNormal * traversals)
                                                                  + (GenerationConstants.FaceNormalByIteration[normalIndex]
                                                                     * -GenerationConstants.CHUNK_SIZE);
@@ -353,23 +349,27 @@ namespace Wyd.Game.World.Chunks.Generation
                     // multiply traversals by the traversal normal, and then constrain the other axes to a minimum of 1.
                     // remark: this is to avoid accidentally zeroing-out given vertices for any faces, for instance with
                     //    a traversal of (0, 17, 0) and a vertex of (1, 0, 1) resulting in a [face] vertex of (0, 17, 0).
-                    int traversalVertexOffset = CompressVertex(math.max(traversals * traversalNormal, 1));
+                    int traversalVertex = CompressVertex(math.max(traversals * traversalNormal, 1));
                     int[] compressedVertices = BlockFaces.Vertices.FaceVerticesInt32ByNormalIndex[normalIndex];
 
-
                     // add highest-to-lowest to avoid persistent bounds check
-                    _MeshData.AddVertex(aggregatePositionNormal
-                                        + MultiplyCompressedVertices(compressedVertices[3], traversalVertexOffset,
-                                            GenerationConstants.CHUNK_SIZE_BIT_MASK, GenerationConstants.CHUNK_SIZE_BIT_SHIFT));
-                    _MeshData.AddVertex(aggregatePositionNormal
-                                        + MultiplyCompressedVertices(compressedVertices[2], traversalVertexOffset,
-                                            GenerationConstants.CHUNK_SIZE_BIT_MASK, GenerationConstants.CHUNK_SIZE_BIT_SHIFT));
-                    _MeshData.AddVertex(aggregatePositionNormal
-                                        + MultiplyCompressedVertices(compressedVertices[1], traversalVertexOffset,
-                                            GenerationConstants.CHUNK_SIZE_BIT_MASK, GenerationConstants.CHUNK_SIZE_BIT_SHIFT));
-                    _MeshData.AddVertex(aggregatePositionNormal
-                                        + MultiplyCompressedVertices(compressedVertices[0], traversalVertexOffset,
-                                            GenerationConstants.CHUNK_SIZE_BIT_MASK, GenerationConstants.CHUNK_SIZE_BIT_SHIFT));
+                    // ReSharper disable once ForCanBeConvertedToForeach
+                    for (int vertexIndex = 0; vertexIndex < compressedVertices.Length; vertexIndex++)
+                    {
+                        int vertexRaw = compressedVertices[vertexIndex];
+
+                        // these constant shorthands are for the sanity of people reading this mess
+                        const int mask = GenerationConstants.CHUNK_SIZE_BIT_MASK;
+                        const int shift = GenerationConstants.CHUNK_SIZE_BIT_SHIFT;
+
+                        // basically, this entire operation just multiplies the 'components' of this compressed vector.
+                        int compressedTraversalVertex =
+                            ((vertexRaw * traversalVertex) & mask)
+                            | ((((vertexRaw >> shift) & mask) * ((traversalVertex >> shift) & mask)) << shift)
+                            | ((((vertexRaw >> (shift * 2)) & mask) * ((traversalVertex >> (shift * 2)) & mask)) << (shift * 2));
+
+                        _MeshData.AddVertex(aggregatePositionNormal + compressedTraversalVertex);
+                    }
 
                     // conditionally add UVs
                     if (BlockController.Current.GetUVs(currentBlockId, faceDirection, new float2(1f)
@@ -395,12 +395,16 @@ namespace Wyd.Game.World.Chunks.Generation
             | ((vertex.z & GenerationConstants.CHUNK_SIZE_BIT_MASK) << (GenerationConstants.CHUNK_SIZE_BIT_SHIFT * 2));
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private static int MultiplyCompressedVertices(int a, int b, int mask, int bitShift)
-        {
-            return ((a * b) & mask)
-                   | ((((a >> bitShift) * (b >> bitShift)) & mask) << bitShift)
-                   | ((((a >> (bitShift * 2)) * (b >> (bitShift * 2))) & mask) << (bitShift * 2));
-        }
+        private static int3 DecompressVertex(int vertex) =>
+            new int3(vertex & GenerationConstants.CHUNK_SIZE_BIT_MASK,
+                (vertex >> GenerationConstants.CHUNK_SIZE_BIT_SHIFT) & GenerationConstants.CHUNK_SIZE_BIT_MASK,
+                (vertex >> (GenerationConstants.CHUNK_SIZE_BIT_SHIFT * 2)) & GenerationConstants.CHUNK_SIZE_BIT_MASK);
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private static int MultiplyCompressedVertices(int a, int b, int mask, int bitShift) =>
+            ((a * b) & mask)
+            | ((a & (mask << bitShift)) * (b & (mask << bitShift)))
+            | ((a & (mask << (bitShift * 2))) * (b & (mask << (bitShift * 2))));
 
         #endregion
     }
