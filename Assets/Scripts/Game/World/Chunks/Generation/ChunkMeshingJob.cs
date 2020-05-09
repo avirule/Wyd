@@ -141,7 +141,7 @@ namespace Wyd.Game.World.Chunks.Generation
             // retrieve existing objects from object pool
             _Mask = _masksPool.Retrieve() ?? new BlockFaces[GenerationConstants.CHUNK_SIZE_CUBED];
             _Blocks = _blocksPool.Retrieve() ?? new ushort[GenerationConstants.CHUNK_SIZE_CUBED];
-            _MeshData = _meshDataPool.Retrieve() ?? new MeshData(new List<Vector3>(), new List<Vector3>(), new List<uint>(), new List<uint>());
+            _MeshData = _meshDataPool.Retrieve() ?? new MeshData(new List<int>(), new List<Vector3>(), new List<uint>(), new List<uint>());
 
             // set _BlocksIDs from _BlocksCollection
             _BlocksCollection.CopyTo(_Blocks);
@@ -322,14 +322,8 @@ namespace Wyd.Game.World.Chunks.Generation
                         _Mask[traversalIndex].SetFace(faceDirection);
                     }
 
-                    // if we haven't made any faces, that means the current face needs to be culled.
-                    if (traversals == 0)
-                    {
-                        break;
-                    }
-
-                    // if it's the first traversal and we've only made a 1x1 face, continue to test next axis
-                    if ((perpendicularNormalIndex == 1) && (traversals == 1))
+                    // if we haven't traversed at all, or it's the first traversal and we've only made a 1x1x1 face, continue to test next axis
+                    if ((traversals == 0) || ((perpendicularNormalIndex == 1) && (traversals == 1)))
                     {
                         continue;
                     }
@@ -353,10 +347,10 @@ namespace Wyd.Game.World.Chunks.Generation
                     int3[] vertices = BlockFaces.Vertices.FaceVerticesByNormalIndex[normalIndex];
 
                     // add highest-to-lowest to avoid persistent bounds check
-                    _MeshData.AddVertex(localPosition + (vertices[3] * traversalVertexOffset));
-                    _MeshData.AddVertex(localPosition + (vertices[2] * traversalVertexOffset));
-                    _MeshData.AddVertex(localPosition + (vertices[1] * traversalVertexOffset));
-                    _MeshData.AddVertex(localPosition + (vertices[0] * traversalVertexOffset));
+                    _MeshData.AddVertex(CompressVertex(localPosition + (vertices[3] * traversalVertexOffset)));
+                    _MeshData.AddVertex(CompressVertex(localPosition + (vertices[2] * traversalVertexOffset)));
+                    _MeshData.AddVertex(CompressVertex(localPosition + (vertices[1] * traversalVertexOffset)));
+                    _MeshData.AddVertex(CompressVertex(localPosition + (vertices[0] * traversalVertexOffset)));
 
                     // conditionally add UVs
                     if (BlockController.Current.GetUVs(currentBlockId, globalPosition, faceDirection, new float2(1f)
