@@ -36,7 +36,7 @@
 //                 localPartitionLength /= Partitions, maximumDepthReached = localPartitionLength <= Partitions)
 //             {
 //                 float3 pointIndexAligned = maximumDepthReached ? point : math.floor(point / Partitions);
-//                 int index = WydMath.PointToIndex(pointIndexAligned, localPartitionLength);
+//                 int index = WydMath.ProjectToIndex(pointIndexAligned, localPartitionLength);
 //
 //                 currentNode = currentNode[index];
 //                 point -= pointIndexAligned *

@@ -29,7 +29,7 @@ namespace Wyd.System.Collections
 
         public T GetPoint(int3 point)
         {
-            int index = WydMath.PointToIndex(point, GenerationConstants.CHUNK_SIZE);
+            int index = WydMath.ProjectToIndex(point, GenerationConstants.CHUNK_SIZE);
             LinkedListNode<RLENode<T>> currentNode = _RLENodes.First;
 
             for (uint i = 0; (i < index) && ((currentNode = currentNode.Next) != null);)
@@ -51,7 +51,7 @@ namespace Wyd.System.Collections
 
         public void SetPoint(int3 point, T value)
         {
-            int index = WydMath.PointToIndex(point, GenerationConstants.CHUNK_SIZE);
+            int index = WydMath.ProjectToIndex(point, GenerationConstants.CHUNK_SIZE);
             LinkedListNode<RLENode<T>> currentNode = _RLENodes.First;
 
             for (uint i = 0; i < index;)

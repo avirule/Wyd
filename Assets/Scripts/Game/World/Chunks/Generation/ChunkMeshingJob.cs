@@ -41,7 +41,7 @@ namespace Wyd.Game.World.Chunks.Generation
         public ChunkMeshingJob()
         {
             _Stopwatch = new Stopwatch();
-            _NeighborBlocksCollections = new INodeCollection<ushort>[6];
+            _NeighborBlocksCollections = new INodeCollection<ushort>[4];
         }
 
         protected override Task Process()
@@ -138,37 +138,75 @@ namespace Wyd.Game.World.Chunks.Generation
 
         private void PrepareMeshing()
         {
+            const int chunk_size_plus_one_cubed = (GenerationConstants.CHUNK_SIZE + 1)
+                                                  * (GenerationConstants.CHUNK_SIZE + 1)
+                                                  * (GenerationConstants.CHUNK_SIZE + 1);
+
             // retrieve existing objects from object pool
-            _Mask = _masksPool.Retrieve() ?? new BlockFaces[GenerationConstants.CHUNK_SIZE_CUBED];
-            _Blocks = _blocksPool.Retrieve() ?? new ushort[GenerationConstants.CHUNK_SIZE_CUBED];
+            _Mask = _masksPool.Retrieve() ?? new BlockFaces[chunk_size_plus_one_cubed];
+            _Blocks = _blocksPool.Retrieve() ?? new ushort[chunk_size_plus_one_cubed];
             _MeshData = _meshDataPool.Retrieve() ?? new MeshData(new List<int>(), new List<Vector3>(), new List<uint>());
 
             // set _BlocksIDs from _BlocksCollection
-            _BlocksCollection.CopyTo(_Blocks);
+            for (int index = 0; index < GenerationConstants.CHUNK_SIZE_CUBED; index++)
+            {
+                _Blocks[index] = _BlocksCollection.GetPoint(WydMath.IndexTo3D(index, GenerationConstants.CHUNK_SIZE_CUBED));
+            }
+
+            // set block data for relevant neighbor indexes
+            if (WorldController.Current.TryGetChunk(_OriginPoint + (new int3(1, 0, 0) * GenerationConstants.CHUNK_SIZE),
+                out ChunkController chunkController))
+            {
+                _NeighborBlocksCollections[0] = chunkController.Blocks;
+            }
+
+            if (WorldController.Current.TryGetChunk(_OriginPoint + (new int3(0, 1, 0) * GenerationConstants.CHUNK_SIZE),
+                out chunkController))
+            {
+                _NeighborBlocksCollections[1] = chunkController.Blocks;
+            }
+
+            if (WorldController.Current.TryGetChunk(_OriginPoint + (new int3(0, 0, 1) * GenerationConstants.CHUNK_SIZE),
+                out chunkController))
+            {
+                _NeighborBlocksCollections[2] = chunkController.Blocks;
+            }
+
+            if (WorldController.Current.TryGetChunk(_OriginPoint + (new int3(1, 1, 1) * GenerationConstants.CHUNK_SIZE),
+                out chunkController))
+            {
+                _NeighborBlocksCollections[3] = chunkController.Blocks;
+            }
+
+            for (int x = 0; x < GenerationConstants.CHUNK_SIZE; x++)
+            for (int z = 0; z < GenerationConstants.CHUNK_SIZE; z++)
+            for (int y = 0; y < GenerationConstants.CHUNK_SIZE; y++)
+            {
+                int3 localPosition = new int3(x, y, z);
+                int index = WydMath.ProjectToIndex(localPosition, GenerationConstants.CHUNK_SIZE + 1);
+
+                _Blocks[index] = _BlocksCollection.GetPoint(localPosition);
+            }
+
+            for (int x = 1; x < 2; x++)
+            for (int z = 1; z < 2; z++)
+            for (int y = 1; y < 2; y++)
+            {
+                int3 localPosition = new int3(x, y, z) * GenerationConstants.CHUNK_SIZE;
+                int index = WydMath.ProjectToIndex(localPosition, GenerationConstants.CHUNK_SIZE);
+
+                if (WorldController.Current.TryGetBlock(_OriginPoint + localPosition, out ushort blockId))
+                {
+                    _Blocks[index] = blockId;
+                }
+                else
+                {
+                    _Blocks[index] = BlockController.NullID;
+                }
+            }
 
             // unset reference to block collection to avoid use during meshing generation
             _BlocksCollection = null;
-
-            // set block data for relevant neighbor indexes
-            foreach ((int3 normal, ChunkController chunkController) in WorldController.Current.GetNeighboringChunksWithNormal(_OriginPoint))
-            {
-                int neighborIndex = -1;
-
-                if (normal.x != 0)
-                {
-                    neighborIndex = normal.x > 0 ? 0 : 3;
-                }
-                else if (normal.y != 0)
-                {
-                    neighborIndex = normal.y > 0 ? 1 : 4;
-                }
-                else if (normal.z != 0)
-                {
-                    neighborIndex = normal.z > 0 ? 2 : 5;
-                }
-
-                _NeighborBlocksCollections[neighborIndex] = chunkController.Blocks;
-            }
         }
 
         private void FinishMeshing()
@@ -198,32 +236,105 @@ namespace Wyd.Game.World.Chunks.Generation
         /// </remarks>
         private void GenerateMesh()
         {
+            for (int index = 0; index < GenerationConstants.CHUNK_SIZE_CUBED; index++)
+            {
+                ushort currentBlockId = _Blocks[index];
+                bool currentBlockTransparent = BlockController.Current.CheckBlockHasProperty(currentBlockId, BlockDefinition.Property.Transparent);
+
+                for (int face = 0; face < 3; face++)
+                {
+                    int faceNormalAsIndexStep = GenerationConstants.IndexStepByNormalIndex[face];
+
+                    ushort facingBlockId = _Blocks[index + faceNormalAsIndexStep];
+
+                    if (currentBlockTransparent)
+                    {
+                        _Mask[index].SetFace((Direction)(1 << face));
+
+                        if (!BlockController.Current.CheckBlockHasProperty(facingBlockId, BlockDefinition.Property.Transparent))
+                        {
+                            _Mask[index + faceNormalAsIndexStep].SetFace((Direction)(1 << (face + 3)));
+                        }
+                    }
+                    else if (BlockController.Current.CheckBlockHasProperty(facingBlockId, BlockDefinition.Property.Transparent))
+                    {
+                        _Mask[index].SetFace((Direction)(1 << face));
+
+                        if ((facingBlockId != BlockController.NullID) && (facingBlockId != BlockController.AirID))
+                        {
+                            _Mask[index + faceNormalAsIndexStep].SetFace((Direction)(1 << (face + 3)));
+
+                        }
+                    }
+                }
+            }
+
             for (int index = 0; index < _Mask.Length; index++)
             {
-                // observe cancellation token
-                if (CancellationToken.IsCancellationRequested)
-                {
-                    return;
-                }
-
-                // set local and global position according to index
                 int3 localPosition = WydMath.IndexTo3D(index, GenerationConstants.CHUNK_SIZE);
-                int3 globalPosition = _OriginPoint + localPosition;
-
-                // WydMath.IndexTo3D(index, GenerationConstants.CHUNK_SIZE, out int x, out int y, out int z);
-                // int intLocalPosition = x | ((y & GenerationConstants.CHUNK_SIZE_BIT_MASK) << GenerationConstants.CHUNK_SIZE_BIT_SHIFT)
-                //                          | ((z & GenerationConstants.CHUNK_SIZE_BIT_MASK) << (GenerationConstants.CHUNK_SIZE_BIT_SHIFT * 2));
-
                 ushort currentBlockId = _Blocks[index];
+                bool currentBlockTransparent = BlockController.Current.CheckBlockHasProperty(currentBlockId, BlockDefinition.Property.Transparent);
 
-                if (currentBlockId == BlockController.AirID)
+                for (int face = 0; face < 6; face++)
                 {
-                    continue;
-                }
+                    Direction faceDirection = (Direction)(1 << face);
 
-                TraverseIndex(index, globalPosition, localPosition, currentBlockId,
-                    BlockController.Current.CheckBlockHasProperty(currentBlockId, BlockDefinition.Property.Transparent));
+                    if (_Mask[index].HasFace(faceDirection))
+                    {
+                        uint verticesCount = (uint)_MeshData.VerticesCount;
+                        //int transparentAsInt = Convert.ToInt32(currentBlockTransparent);
+
+                        _MeshData.AddTriangle(0, 0 + verticesCount);
+                        _MeshData.AddTriangle(0, 2 + verticesCount);
+                        _MeshData.AddTriangle(0, 1 + verticesCount);
+                        _MeshData.AddTriangle(0, 2 + verticesCount);
+                        _MeshData.AddTriangle(0, 3 + verticesCount);
+                        _MeshData.AddTriangle(0, 1 + verticesCount);
+
+                        int3[] vertices = BlockFaces.Vertices.FaceVerticesByNormalIndex[face];
+                        _MeshData.AddVertex(CompressVertex(localPosition + vertices[3]));
+                        _MeshData.AddVertex(CompressVertex(localPosition + vertices[2]));
+                        _MeshData.AddVertex(CompressVertex(localPosition + vertices[1]));
+                        _MeshData.AddVertex(CompressVertex(localPosition + vertices[0]));
+
+                        if (BlockController.Current.GetUVs(currentBlockId, _OriginPoint + localPosition, faceDirection, new float2(1f),
+                            out BlockUVs blockUVs))
+                        {
+                            _MeshData.AddUV(blockUVs.BottomRight);
+                            _MeshData.AddUV(blockUVs.BottomLeft);
+                            _MeshData.AddUV(blockUVs.TopRight);
+                            _MeshData.AddUV(blockUVs.TopLeft);
+                        }
+                    }
+                }
             }
+
+            // for (int index = 0; index < _Mask.Length; index++)
+            // {
+            //     // observe cancellation token
+            //     if (CancellationToken.IsCancellationRequested)
+            //     {
+            //         return;
+            //     }
+            //
+            //     // set local and global position according to index
+            //     int3 localPosition = WydMath.IndexTo3D(index, GenerationConstants.CHUNK_SIZE + 1);
+            //     int3 globalPosition = _OriginPoint + localPosition;
+            //
+            //     // WydMath.IndexTo3D(index, GenerationConstants.CHUNK_SIZE, out int x, out int y, out int z);
+            //     // int intLocalPosition = x | ((y & GenerationConstants.CHUNK_SIZE_BIT_MASK) << GenerationConstants.CHUNK_SIZE_BIT_SHIFT)
+            //     //                          | ((z & GenerationConstants.CHUNK_SIZE_BIT_MASK) << (GenerationConstants.CHUNK_SIZE_BIT_SHIFT * 2));
+            //
+            //     ushort currentBlockId = _Blocks[index];
+            //
+            //     if (currentBlockId == BlockController.AirID)
+            //     {
+            //         continue;
+            //     }
+            //
+            //     TraverseIndex(index, globalPosition, localPosition, currentBlockId,
+            //         );
+            // }
         }
 
         /// <summary>
@@ -237,6 +348,9 @@ namespace Wyd.Game.World.Chunks.Generation
         /// <param name="transparentTraversal">Whether or not this traversal uses transparent-specific conditionals.</param>
         private void TraverseIndex(int index, int3 globalPosition, int3 localPosition, ushort currentBlockId, bool transparentTraversal)
         {
+            // build mask
+
+
             // iterate once over all 6 faces of given cubic space
             for (int normalIndex = 0; normalIndex < 6; normalIndex++)
             {
@@ -256,9 +370,6 @@ namespace Wyd.Game.World.Chunks.Generation
                 // axis value of the current face check direction
                 // example: for iteration normalIndex == 0—which is positive X—it'd be equal to localPosition.x
                 int faceCheckAxisValue = localPosition[iModulo3];
-                // indicates whether or not the face check is within the current chunk bounds
-                bool isFaceCheckOutOfBounds = (negativeFace && ((faceCheckAxisValue - 1) <= 0))
-                                              || (!negativeFace && ((faceCheckAxisValue + 1) >= GenerationConstants.CHUNK_SIZE_MINUS_ONE));
                 // total number of successful traversals
                 // remark: this is outside the for loop so that the if statement after can determine if any traversals have happened
                 int traversals = 0;
@@ -295,31 +406,8 @@ namespace Wyd.Game.World.Chunks.Generation
                         traversals++, // increment traversals
                         traversalIndex += traversalIndexStep) // increment traversal index by index step to adjust local working position
                     {
-                        ushort facingBlockId;
-
-                        // check if current facing block axis value is within the local chunk
-                        if (!isFaceCheckOutOfBounds)
-                        {
-                            // if so, index into block ids and set facingBlockId
-                            facingBlockId = _Blocks[traversalIndex + facingBlockIndexStep];
-                        }
-                        else
-                        {
-                            // current local traversal position, which is increased by TraversalNormal every iteration of the for loop below
-                            int3 traversalPosition = localPosition + (traversalNormal * traversals);
-                            // normal direction of current face
-                            int3 faceNormal = GenerationConstants.FaceNormalByIteration[normalIndex];
-                            // local position of facing block
-                            int3 facingBlockPosition = traversalPosition + faceNormal;
-                            // if not, get local position adjusted to relative position across the chunk boundary
-                            int3 boundaryAdjustedLocalPosition = facingBlockPosition + (faceNormal * -GenerationConstants.CHUNK_SIZE_MINUS_ONE);
-
-                            // index into neighbor blocks collections, call .GetPoint() with adjusted local position
-                            // remark: if there's no neighbor at the index given, then no chunk exists there (for instance,
-                            //     chunks at the edge of render distance). In this case, return NullID so no face is rendered on edges.
-                            facingBlockId = _NeighborBlocksCollections[normalIndex]?.GetPoint(boundaryAdjustedLocalPosition)
-                                            ?? BlockController.NullID;
-                        }
+                        // if so, index into block ids and set facingBlockId
+                        ushort facingBlockId = _Blocks[traversalIndex + facingBlockIndexStep];
 
                         // if transparent, traverse so long as facing block is not the same block id
                         // if opaque, traverse so long as facing block is transparent
@@ -363,16 +451,7 @@ namespace Wyd.Game.World.Chunks.Generation
                     _MeshData.AddVertex(CompressVertex(localPosition + (vertices[0] * traversalVertexOffset)));
 
                     // conditionally add UVs
-                    if (BlockController.Current.GetUVs(currentBlockId, globalPosition, faceDirection, new float2(1f)
-                    {
-                        [GenerationConstants.UVIndexAdjustments[iModulo3][traversalNormalIndex]] = traversals
-                    }, out BlockUVs blockUVs))
-                    {
-                        _MeshData.AddUV(blockUVs.BottomRight);
-                        _MeshData.AddUV(blockUVs.BottomLeft);
-                        _MeshData.AddUV(blockUVs.TopRight);
-                        _MeshData.AddUV(blockUVs.TopLeft);
-                    }
+
 
                     break;
                 }
@@ -386,6 +465,31 @@ namespace Wyd.Game.World.Chunks.Generation
             int z = (vertex.z & GenerationConstants.CHUNK_SIZE_BIT_MASK) << (GenerationConstants.CHUNK_SIZE_BIT_SHIFT * 2);
 
             return x | y | z;
+        }
+
+        private static int GetNeighborIndex(int x, int y, int z)
+        {
+
+            switch (x)
+            {
+                case 1 when (y == 1) && (z == 1):
+                    return 3;
+                case 1:
+                    return 0;
+                default:
+                {
+                    if (y == 1)
+                    {
+                        return 2;
+                    }
+                    else if (z == 1)
+                    {
+                        return 1;
+                    }
+
+                    return -1;
+                }
+            }
         }
 
         #endregion

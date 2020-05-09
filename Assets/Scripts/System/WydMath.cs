@@ -14,9 +14,9 @@ namespace Wyd.System
 {
     public static class WydMath
     {
-        public static int PointToIndex(int2 a, int size) => a.x + (size * a.y);
-        public static int PointToIndex(int3 a, int size) => a.x + (size * (a.z + (size * a.y)));
-        public static int PointToIndex(float3 a, int size) => (int)(a.z + (size * (a.z + (size * a.y))));
+        public static int ProjectToIndex(int2 a, int size) => a.x + (size * a.y);
+        public static int ProjectToIndex(int3 a, int size) => a.x + (size * (a.z + (size * a.y)));
+        public static int ProjectToIndex(float3 a, int size) => (int)(a.z + (size * (a.z + (size * a.y))));
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static int2 IndexTo2D(int index, int bounds)

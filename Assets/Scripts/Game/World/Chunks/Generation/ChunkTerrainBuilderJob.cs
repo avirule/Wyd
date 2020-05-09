@@ -75,7 +75,7 @@ namespace Wyd.Game.World.Chunks.Generation
         protected override Task ProcessIndex(int index)
         {
             int3 localPosition = WydMath.IndexTo3D(index, GenerationConstants.CHUNK_SIZE);
-            int heightmapIndex = WydMath.PointToIndex(localPosition.xz, GenerationConstants.CHUNK_SIZE);
+            int heightmapIndex = WydMath.ProjectToIndex(localPosition.xz, GenerationConstants.CHUNK_SIZE);
 
             int noiseHeight = _Heightmap[heightmapIndex];
 
@@ -175,14 +175,14 @@ namespace Wyd.Game.World.Chunks.Generation
                 for (int z = 0; z < GenerationConstants.CHUNK_SIZE; z++)
                 {
                     int2 xzCoords = new int2(x, z);
-                    int heightmapIndex = WydMath.PointToIndex(xzCoords, GenerationConstants.CHUNK_SIZE);
+                    int heightmapIndex = WydMath.ProjectToIndex(xzCoords, GenerationConstants.CHUNK_SIZE);
                     _Heightmap[heightmapIndex] = GetHeightByGlobalPosition(_OriginPoint.xz + xzCoords);
 
                     for (int y = 0; y < GenerationConstants.CHUNK_SIZE; y++)
                     {
                         int3 localPosition = new int3(x, y, z);
                         int3 globalPosition = _OriginPoint + localPosition;
-                        int caveNoiseIndex = WydMath.PointToIndex(localPosition, GenerationConstants.CHUNK_SIZE);
+                        int caveNoiseIndex = WydMath.ProjectToIndex(localPosition, GenerationConstants.CHUNK_SIZE);
 
                         _CaveNoise[caveNoiseIndex] = GetCaveNoiseByGlobalPosition(globalPosition);
                     }
@@ -212,7 +212,7 @@ namespace Wyd.Game.World.Chunks.Generation
                     return;
                 }
 
-                int heightmapIndex = WydMath.PointToIndex(new int2(x, z), GenerationConstants.CHUNK_SIZE);
+                int heightmapIndex = WydMath.ProjectToIndex(new int2(x, z), GenerationConstants.CHUNK_SIZE);
                 int noiseHeight = _Heightmap[heightmapIndex];
 
                 if (noiseHeight < _OriginPoint.y)
@@ -220,7 +220,7 @@ namespace Wyd.Game.World.Chunks.Generation
                     continue;
                 }
 
-                int noiseHeightClamped = math.clamp(noiseHeight - _OriginPoint.y, 0, GenerationConstants.CHUNK_SIZE_MINUS_ONE);
+                int noiseHeightClamped = math.clamp(noiseHeight - _OriginPoint.y, 0, GenerationConstants.CHUNK_SIZE - 1);
 
                 for (int y = noiseHeightClamped; y >= 0; y--)
                 {
@@ -232,7 +232,7 @@ namespace Wyd.Game.World.Chunks.Generation
                         _Blocks.SetPoint(localPosition, GetCachedBlockID("bedrock"));
                         continue;
                     }
-                    else if (_CaveNoise[WydMath.PointToIndex(localPosition, GenerationConstants.CHUNK_SIZE)] < 0.000225f)
+                    else if (_CaveNoise[WydMath.ProjectToIndex(localPosition, GenerationConstants.CHUNK_SIZE)] < 0.000225f)
                     {
                         continue;
                     }

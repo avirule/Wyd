@@ -109,7 +109,7 @@
 //         private (int, float3) GetPartitionedIndex(float3 point, int partitionedSize)
 //         {
 //             float3 indexPoint = math.floor(point / partitionedSize);
-//             int index = WydMath.PointToIndex(indexPoint, _CellLength < _Partitions ? _CellLength : _Partitions);
+//             int index = WydMath.ProjectToIndex(indexPoint, _CellLength < _Partitions ? _CellLength : _Partitions);
 //
 //             return (index, indexPoint);
 //         }
