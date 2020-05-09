@@ -232,6 +232,7 @@ namespace Wyd.Game.World.Chunks.Generation
         /// <param name="transparentTraversal">Whether or not this traversal uses transparent-specific conditionals.</param>
         private void TraverseIndex(int index, int3 globalPosition, int3 localPosition, ushort currentBlockId, bool transparentTraversal)
         {
+            // iterate once over all 6 faces of given cubic space
             for (int normalIndex = 0; normalIndex < 6; normalIndex++)
             {
                 // face direction always exists on a single bit, so offset 1 by the current normalIndex (0-5)
@@ -246,7 +247,7 @@ namespace Wyd.Game.World.Chunks.Generation
                 // normalIndex constrained to represent the 3 axes
                 int iModulo3 = normalIndex % 3;
                 // total number of successful traversals
-                // remark: this is outside the for loop so that the if statement can determine if any traversals have happened
+                // remark: this is outside the for loop so that the if statement after can determine if any traversals have happened
                 int traversals = 0;
 
                 for (int perpendicularNormalIndex = 1; perpendicularNormalIndex < 3; perpendicularNormalIndex++)
@@ -261,13 +262,13 @@ namespace Wyd.Game.World.Chunks.Generation
 
                     // current value of the local position by traversal direction
                     int traversalNormalLocalPositionIndexValue = localPosition[traversalNormalAxisIndex];
-                    // maximum number of traversals, which is only sliceIndexValue + 1 when not using AggressiveFaceMerging
+                    // maximum number of traversals, which is only current axis position + 1 when not using AggressiveFaceMerging
                     // remark: it's likely that not using AggressiveFaceMerging is much slower since the traversal function still
                     //     runs, but only ever hits once at maximum (thus resulting in a higher total amount of traversing overhead).
                     int maximumTraversals = _AggressiveFaceMerging ? GenerationConstants.CHUNK_SIZE : traversalNormalLocalPositionIndexValue + 1;
-                    // amount by integer to add to current index to get 1D projected position of traversal position
+                    // amount by integer to add to current index to get 3D->1D position of traversal position
                     int traversalIndexStep = GenerationConstants.IndexStepByNormalIndex[traversalNormalAxisIndex];
-                    // amount by integer to add to current traversal index to get 1D projected position of facing block
+                    // amount by integer to add to current traversal index to get 3D->1D position of facing block
                     int facingBlockIndexStep = GenerationConstants.IndexStepByNormalIndex[normalIndex];
 
                     // current traversal index, which is increased by traversalIndexStep every iteration the for loop below
