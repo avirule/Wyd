@@ -35,6 +35,13 @@ namespace Wyd.System
             return new int3(x, y, z);
         }
 
+        public static void IndexTo3D(int index, int bounds, out int x, out int y, out int z)
+        {
+            int xQuotient = Math.DivRem(index, bounds, out x);
+            int zQuotient = Math.DivRem(xQuotient, bounds, out z);
+            y = zQuotient % bounds;
+        }
+
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static int3 IndexTo3D(int index, int3 bounds)
         {
