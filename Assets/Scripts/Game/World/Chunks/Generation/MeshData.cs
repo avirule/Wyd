@@ -13,39 +13,39 @@ namespace Wyd.Game.World.Chunks.Generation
 {
     public class MeshData
     {
+        private static readonly VertexAttributeDescriptor[] _layout =
+        {
+            new VertexAttributeDescriptor(VertexAttribute.Position, VertexAttributeFormat.SInt32, 1),
+            new VertexAttributeDescriptor(VertexAttribute.TexCoord0, VertexAttributeFormat.SInt32, 1)
+        };
+
         private readonly List<int> _Vertices;
         private readonly List<List<int>> _Triangles;
-        private readonly List<Vector3> _UVs;
 
         public int VerticesCount => _Vertices.Count;
 
         public bool Empty => (_Vertices.Count == 0)
-                             && (_UVs.Count == 0)
                              && ((_Triangles.Count == 0) || _Triangles.All(triangles => triangles.Count == 0));
 
         private MeshData()
         {
             _Vertices = new List<int>();
-            _UVs = new List<Vector3>();
             _Triangles = new List<List<int>>();
         }
 
-        public MeshData(List<int> vertices, List<Vector3> uvs, params List<int>[] triangles) : this()
+        public MeshData(List<int> vertices, params List<int>[] triangles) : this()
         {
             _Vertices = vertices;
-            _UVs = uvs;
             _Triangles.InsertRange(0, triangles);
         }
 
         public void Clear(bool trimExcess = false)
         {
             _Vertices.Clear();
-            _UVs.Clear();
 
             if (trimExcess)
             {
                 _Vertices.TrimExcess();
-                _UVs.TrimExcess();
             }
 
             foreach (List<int> triangles in _Triangles)
@@ -60,7 +60,6 @@ namespace Wyd.Game.World.Chunks.Generation
         }
 
         public void AddVertex(int compressedVertex) => _Vertices.Add(compressedVertex);
-        public void AddUV(Vector3 uv) => _UVs.Add(uv);
         public void AddTriangle(int subMesh, int triangle) => _Triangles[subMesh].Add(triangle);
         public void AddTriangles(int subMesh, params int[] triangles) => _Triangles[subMesh].AddRange(triangles);
         public void AddTriangles(int subMesh, IEnumerable<int> triangles) => _Triangles[subMesh].AddRange(triangles);
@@ -80,17 +79,8 @@ namespace Wyd.Game.World.Chunks.Generation
             const MeshUpdateFlags default_flags = MeshUpdateFlags.DontRecalculateBounds | MeshUpdateFlags.DontValidateIndices;
 
             mesh.subMeshCount = _Triangles.Count;
-
-            mesh.SetVertexBufferParams(_Vertices.Count, new VertexAttributeDescriptor(VertexAttribute.Position, VertexAttributeFormat.SInt32, 1));
+            mesh.SetVertexBufferParams(_Vertices.Count, _layout);
             mesh.SetVertexBufferData(_Vertices, 0, 0, _Vertices.Count, 0, default_flags);
-
-            if (_UVs.Count > 0)
-            {
-                // mesh.SetVertexBufferParams(_UVs.Count, new VertexAttributeDescriptor(VertexAttribute.TexCoord0));
-                // mesh.SetVertexBufferData(_UVs, 0, 0, _UVs.Count, 0, default_flags);
-
-                mesh.SetUVs(0, _UVs);
-            }
 
             foreach (List<int> triangles in _Triangles.Where(triangles => triangles.Count != 0))
             {

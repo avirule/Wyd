@@ -14,7 +14,7 @@ namespace Wyd.Controllers.State
 
         public static int MainTexPropertyID => Shader.PropertyToID("_MainTex");
 
-        private Dictionary<string, int> _TextureIDs;
+        private Dictionary<string, ushort> _TextureIDs;
 
         public Texture2DArray BlocksTexture { get; private set; }
 
@@ -31,7 +31,7 @@ namespace Wyd.Controllers.State
         {
             AssignSingletonInstance(this);
 
-            _TextureIDs = new Dictionary<string, int>();
+            _TextureIDs = new Dictionary<string, ushort>();
         }
 
         private void Start()
@@ -57,7 +57,7 @@ namespace Wyd.Controllers.State
                 wrapMode = TextureWrapMode.Repeat
             };
 
-            for (int depth = 0; depth < BlocksTexture.depth; depth++)
+            for (ushort depth = 0; depth < BlocksTexture.depth; depth++)
             {
                 Color[] spritePixels = GetPixels(sprites[depth]);
                 BlocksTexture.SetPixels(spritePixels, depth, 0);
@@ -79,7 +79,7 @@ namespace Wyd.Controllers.State
             return sprite.texture.GetPixels(x, y, width, height);
         }
 
-        public bool TryGetTextureId(string textureName, out int textureId) =>
+        public bool TryGetTextureId(string textureName, out ushort textureId) =>
             _TextureIDs.TryGetValue(textureName, out textureId);
     }
 }

@@ -4,7 +4,6 @@ using System;
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 using Serilog;
-using Unity.Mathematics;
 using Wyd.Game;
 using Wyd.Game.World.Blocks;
 using Wyd.System.Extensions;
@@ -109,27 +108,25 @@ namespace Wyd.Controllers.State
             Log.Information($"Successfully added block `{blockName}` with ID: {assignedBlockId}");
         }
 
-        public bool GetUVs(ushort blockId, Direction direction, float2 size2d, out BlockUVs blockUVs)
+        public bool GetUVs(ushort blockId, Direction direction, out ushort textureId)
         {
+            textureId = 0;
+
             if (!BlockIdExists(blockId))
             {
                 Log.Error(
                     $"Failed to return block sprite UVs for direction `{direction}` of block with id `{blockId}`: block id does not exist.");
-                blockUVs = null;
                 return false;
             }
 
             BlockDefinitions[blockId].EvaluateUVsRule(blockId, direction, out string textureName);
-            if (!TextureController.Current.TryGetTextureId(textureName, out int textureId))
+
+            if (!TextureController.Current.TryGetTextureId(textureName, out textureId))
             {
                 Log.Warning(
                     $"Failed to return block sprite UVs for direction `{direction}` of block with id `{blockId}`: texture does not exist for block.");
-                blockUVs = null;
                 return false;
             }
-
-            blockUVs = new BlockUVs(new float3(0, 0, textureId), new float3(size2d.x, 0, textureId),
-                new float3(0, size2d.y, textureId), new float3(size2d.x, size2d.y, textureId));
 
             return true;
         }

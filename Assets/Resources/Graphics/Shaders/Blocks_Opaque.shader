@@ -24,7 +24,7 @@
             struct appdata
             {
                 int position : POSITION;
-                float3 texcoord : TEXCOORD0;
+                int texcoord : TEXCOORD0;
             };
 
             struct v2f {
@@ -40,11 +40,12 @@
             {
                 float3 uncompressedVertex = float3(v.position & 63, (v.position >> 6) & 63, (v.position >> 12) & 63);
                 half3 uncompressedNormal = half3(((v.position >> 18) & 3) - 1.0, ((v.position >> 20) & 3) - 1.0, ((v.position >> 22) & 3) - 1.0);
+                float3 uncompressedUv = float3(v.texcoord & 63, (v.texcoord >> 6) & 63, (v.texcoord >> 12) & 0x7FFFFFFF);
 
                 v2f f;
                 f.position = UnityObjectToClipPos(uncompressedVertex);
-                f.texcoord = v.texcoord;
                 f.normal = UnityObjectToClipPos(uncompressedNormal);
+                f.texcoord = uncompressedUv;
                 f.color = float4((uncompressedNormal + 1.0) / 2.0, 1.0);
                 return f;
             }

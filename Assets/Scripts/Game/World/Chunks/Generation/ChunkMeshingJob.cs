@@ -13,7 +13,6 @@ using Wyd.Controllers.System;
 using Wyd.Controllers.World;
 using Wyd.Game.World.Blocks;
 using Wyd.System.Collections;
-using Wyd.System.Graphics;
 using Wyd.System.Jobs;
 
 #endregion
@@ -25,7 +24,6 @@ namespace Wyd.Game.World.Chunks.Generation
         private static readonly ObjectPool<BlockFaces[]> _masksPool = new ObjectPool<BlockFaces[]>();
         private static readonly ObjectPool<ushort[]> _blocksPool = new ObjectPool<ushort[]>();
         private static readonly ObjectPool<MeshData> _meshDataPool = new ObjectPool<MeshData>();
-        private static readonly INodeCollection<ushort> _nullCollection = new Octree(GenerationConstants.CHUNK_SIZE, BlockController.NullID, false);
 
         private readonly Stopwatch _Stopwatch;
         private readonly INodeCollection<ushort>[] _NeighborBlocksCollections;
@@ -142,7 +140,7 @@ namespace Wyd.Game.World.Chunks.Generation
             // retrieve existing objects from object pool
             _Mask = _masksPool.Retrieve() ?? new BlockFaces[GenerationConstants.CHUNK_SIZE_CUBED];
             _Blocks = _blocksPool.Retrieve() ?? new ushort[GenerationConstants.CHUNK_SIZE_CUBED];
-            _MeshData = _meshDataPool.Retrieve() ?? new MeshData(new List<int>(), new List<Vector3>(), new List<int>());
+            _MeshData = _meshDataPool.Retrieve() ?? new MeshData(new List<int>(), new List<int>());
 
             // set _BlocksIDs from _BlocksCollection
             _BlocksCollection.CopyTo(_Blocks);
@@ -281,15 +279,26 @@ namespace Wyd.Game.World.Chunks.Generation
                         traversals++, // increment traversals
                         traversalIndex += traversalIndexStep) // increment traversal index by index step to adjust local working position
                     {
-                        ushort facingBlockId;
+                        ;
 
                         // check if current facing block axis value is within the local chunk
                         if (!isFaceCheckOutOfBounds)
                         {
                             // amount by integer to add to current traversal index to get 3D->1D position of facing block
-                            int facingBlockIndexStep = GenerationConstants.IndexStepByNormalIndex[normalIndex];
+                            int facedBlockIndex = traversalIndex + GenerationConstants.IndexStepByNormalIndex[normalIndex];
                             // if so, index into block ids and set facingBlockId
-                            facingBlockId = _Blocks[traversalIndex + facingBlockIndexStep];
+                            ushort facedBlockId = _Blocks[facedBlockIndex];
+
+                            // if transparent, traverse so long as facing block is not the same block id
+                            // if opaque, traverse so long as facing block is transparent
+                            if ((transparentTraversal && (currentBlockId != facedBlockId))
+                                || !BlockController.Current.CheckBlockHasProperty(facedBlockId, BlockDefinition.Property.Transparent))
+                            {
+                                Direction inverseFaceDirection = (Direction)(1 << ((normalIndex + 3) % 6));
+                                _Mask[facedBlockIndex].SetFace(inverseFaceDirection);
+
+                                break;
+                            }
                         }
                         else
                         {
@@ -302,15 +311,14 @@ namespace Wyd.Game.World.Chunks.Generation
                             // index into neighbor blocks collections, call .GetPoint() with adjusted local position
                             // remark: if there's no neighbor at the index given, then no chunk exists there (for instance,
                             //     chunks at the edge of render distance). In this case, return NullID so no face is rendered on edges.
-                            facingBlockId = _NeighborBlocksCollections[normalIndex]?.GetPoint(translatedLocalPosition) ?? BlockController.NullID;
-                        }
+                            ushort facedBlockId = _NeighborBlocksCollections[normalIndex]?.GetPoint(translatedLocalPosition)
+                                                  ?? BlockController.NullID;
 
-                        // if transparent, traverse so long as facing block is not the same block id
-                        // if opaque, traverse so long as facing block is transparent
-                        if ((transparentTraversal && (currentBlockId != facingBlockId))
-                            || !BlockController.Current.CheckBlockHasProperty(facingBlockId, BlockDefinition.Property.Transparent))
-                        {
-                            break;
+                            if ((transparentTraversal && (currentBlockId != facedBlockId))
+                                || !BlockController.Current.CheckBlockHasProperty(facedBlockId, BlockDefinition.Property.Transparent))
+                            {
+                                break;
+                            }
                         }
 
                         _Mask[traversalIndex].SetFace(faceDirection);
@@ -322,78 +330,84 @@ namespace Wyd.Game.World.Chunks.Generation
                     {
                         break;
                     }
+
                     // if it's the first traversal and we've only made a 1x1x1 face, continue to test next axis
-                    else if ((traversals == 1) && (perpendicularNormalIndex == 1))
+                    if ((traversals == 1) && (perpendicularNormalIndex == 1))
                     {
                         continue;
                     }
 
-                    // add triangles
-                    int verticesCount = _MeshData.VerticesCount;
-                    int transparentAsInt = Convert.ToInt32(transparentTraversal);
-
-                    _MeshData.AddTriangle(transparentAsInt, 0 + verticesCount);
-                    _MeshData.AddTriangle(transparentAsInt, 2 + verticesCount);
-                    _MeshData.AddTriangle(transparentAsInt, 1 + verticesCount);
-                    _MeshData.AddTriangle(transparentAsInt, 2 + verticesCount);
-                    _MeshData.AddTriangle(transparentAsInt, 3 + verticesCount);
-                    _MeshData.AddTriangle(transparentAsInt, 1 + verticesCount);
-
-                    int3 normal = GenerationConstants.FaceNormalByIteration[normalIndex];
-
-                    int aggregatePositionNormal = localPosition
-                                                  | (((normal.x + 1) & 3) << 18)
-                                                  | (((normal.y + 1) & 3) << 20)
-                                                  | (((normal.z + 1) & 3) << 22);
-
-                    int traversalShift = GenerationConstants.CHUNK_SIZE_BIT_SHIFT * traversalNormalIndex;
-                    int traversalShiftedMask = GenerationConstants.CHUNK_SIZE_BIT_MASK << traversalShift;
-                    int[] compressedVertices = BlockFaces.Vertices.FaceVerticesInt32ByNormalIndex[normalIndex];
-
-                    // add highest-to-lowest to avoid persistent bounds check
-                    // ReSharper disable once ForCanBeConvertedToForeach
-                    for (int vertexIndex = 0; vertexIndex < compressedVertices.Length; vertexIndex++)
+                    if (BlockController.Current.GetUVs(currentBlockId, faceDirection, out ushort textureId))
                     {
-                        int rawVertex = compressedVertices[vertexIndex];
+                        int3 normal = GenerationConstants.FaceNormalByIteration[normalIndex];
+                        int aggregatePositionNormal = localPosition
+                                                      | (((normal.x + 1) & 3) << 18)
+                                                      | (((normal.y + 1) & 3) << 20)
+                                                      | (((normal.z + 1) & 3) << 22);
 
-                        _MeshData.AddVertex((aggregatePositionNormal + (~traversalShiftedMask & rawVertex))
-                                            | ((((rawVertex >> traversalShift) * traversals) << traversalShift) & traversalShiftedMask));
+                        int traversalShift = GenerationConstants.CHUNK_SIZE_BIT_SHIFT * traversalNormalIndex;
+                        int traversalShiftedMask = GenerationConstants.CHUNK_SIZE_BIT_MASK << traversalShift;
+                        int unaryTraversalShiftedMask = ~traversalShiftedMask;
+                        int[] compressedVertices = BlockFaces.Vertices.FaceVerticesInt32ByNormalIndex[normalIndex];
+
+                        int uvShift = (iModulo3 + traversalNormalIndex) % 2;
+                        int compressedUv = (textureId << (GenerationConstants.CHUNK_SIZE_BIT_SHIFT * 2))
+                                           | (1 << (GenerationConstants.CHUNK_SIZE_BIT_SHIFT * ((uvShift + 1) % 2)))
+                                           | (traversals << (GenerationConstants.CHUNK_SIZE_BIT_SHIFT * uvShift));
+
+                        _MeshData.AddVertex(aggregatePositionNormal
+                                            + ((unaryTraversalShiftedMask & compressedVertices[3])
+                                               | ((((compressedVertices[3] >> traversalShift) * traversals) << traversalShift)
+                                                  & traversalShiftedMask)));
+                        _MeshData.AddVertex(compressedUv & (int.MaxValue << (GenerationConstants.CHUNK_SIZE_BIT_SHIFT * 2)));
+
+
+                        _MeshData.AddVertex(aggregatePositionNormal
+                                            + ((unaryTraversalShiftedMask & compressedVertices[2])
+                                               | ((((compressedVertices[2] >> traversalShift) * traversals) << traversalShift)
+                                                  & traversalShiftedMask)));
+                        _MeshData.AddVertex(compressedUv & (int.MaxValue << GenerationConstants.CHUNK_SIZE_BIT_SHIFT));
+
+
+                        _MeshData.AddVertex(aggregatePositionNormal
+                                            + ((unaryTraversalShiftedMask & compressedVertices[1])
+                                               | ((((compressedVertices[1] >> traversalShift) * traversals) << traversalShift)
+                                                  & traversalShiftedMask)));
+                        _MeshData.AddVertex(compressedUv & ~(GenerationConstants.CHUNK_SIZE_BIT_MASK << GenerationConstants.CHUNK_SIZE_BIT_SHIFT));
+
+
+                        _MeshData.AddVertex(aggregatePositionNormal
+                                            + ((unaryTraversalShiftedMask & compressedVertices[0])
+                                               | ((((compressedVertices[0] >> traversalShift) * traversals) << traversalShift)
+                                                  & traversalShiftedMask)));
+                        _MeshData.AddVertex(compressedUv & int.MaxValue);
+
+                        // add triangles
+                        int verticesCount = _MeshData.VerticesCount / 2;
+                        int transparentAsInt = Convert.ToInt32(transparentTraversal);
+
+                        _MeshData.AddTriangle(transparentAsInt, 0 + verticesCount);
+                        _MeshData.AddTriangle(transparentAsInt, 2 + verticesCount);
+                        _MeshData.AddTriangle(transparentAsInt, 1 + verticesCount);
+                        _MeshData.AddTriangle(transparentAsInt, 2 + verticesCount);
+                        _MeshData.AddTriangle(transparentAsInt, 3 + verticesCount);
+                        _MeshData.AddTriangle(transparentAsInt, 1 + verticesCount);
+
+                        // string str = Convert.ToString(compressedUv, 2);
+
+                        // Log.Information($" x{str.Substring(str.Length - 6, 6)}, y {str.Substring(str.Length - 12, 6)}, tex {str.Substring(0, str.Length - 12)}");
+
+                        break;
                     }
-
-                    // conditionally add UVs
-                    if (BlockController.Current.GetUVs(currentBlockId, faceDirection, new float2(1f)
-                    {
-                        [GenerationConstants.UVIndexAdjustments[iModulo3][traversalNormalIndex]] = traversals
-                    }, out BlockUVs blockUVs))
-                    {
-                        _MeshData.AddUV(blockUVs.BottomRight);
-                        _MeshData.AddUV(blockUVs.BottomLeft);
-                        _MeshData.AddUV(blockUVs.TopRight);
-                        _MeshData.AddUV(blockUVs.TopLeft);
-                    }
-
-                    break;
                 }
             }
         }
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private static int CompressVertex(int3 vertex) =>
-            (vertex.x & GenerationConstants.CHUNK_SIZE_BIT_MASK)
-            | ((vertex.y & GenerationConstants.CHUNK_SIZE_BIT_MASK) << GenerationConstants.CHUNK_SIZE_BIT_SHIFT)
-            | ((vertex.z & GenerationConstants.CHUNK_SIZE_BIT_MASK) << (GenerationConstants.CHUNK_SIZE_BIT_SHIFT * 2));
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private static int3 DecompressVertex(int vertex) =>
             new int3(vertex & GenerationConstants.CHUNK_SIZE_BIT_MASK,
                 (vertex >> GenerationConstants.CHUNK_SIZE_BIT_SHIFT) & GenerationConstants.CHUNK_SIZE_BIT_MASK,
                 (vertex >> (GenerationConstants.CHUNK_SIZE_BIT_SHIFT * 2)) & GenerationConstants.CHUNK_SIZE_BIT_MASK);
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private static int MultiplyCompressedVertices(int a, int b, int mask, int bitShift) =>
-            ((a * b) & mask)
-            | ((a & (mask << bitShift)) * (b & (mask << bitShift)))
-            | ((a & (mask << (bitShift * 2))) * (b & (mask << (bitShift * 2))));
 
         #endregion
     }
