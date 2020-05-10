@@ -220,7 +220,7 @@ namespace Wyd.Game.World.Chunks.Generation
                     continue;
                 }
 
-                int noiseHeightClamped = math.clamp(noiseHeight - _OriginPoint.y, 0, GenerationConstants.CHUNK_SIZE_MINUS_ONE);
+                int noiseHeightClamped = math.clamp(noiseHeight - _OriginPoint.y, 0, GenerationConstants.CHUNK_SIZE - 1);
 
                 for (int y = noiseHeightClamped; y >= 0; y--)
                 {

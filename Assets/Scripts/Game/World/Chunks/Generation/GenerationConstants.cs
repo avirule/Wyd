@@ -16,10 +16,7 @@ namespace Wyd.Game.World.Chunks.Generation
 
         public const int CHUNK_SIZE = 1 << (CHUNK_SIZE_BIT_SHIFT - 1);
         public const int CHUNK_SIZE_SQUARED = CHUNK_SIZE * CHUNK_SIZE;
-        public const int CHUNK_SIZE_SQUARED_HALF = CHUNK_SIZE_SQUARED / 2;
         public const int CHUNK_SIZE_CUBED = CHUNK_SIZE * CHUNK_SIZE * CHUNK_SIZE;
-        public const int CHUNK_SIZE_CUBED_HALF = CHUNK_SIZE_CUBED / 2;
-        public const int CHUNK_SIZE_MINUS_ONE = CHUNK_SIZE - 1;
 
 
         // '8' is the 'numthreads[]' value in the compute shader

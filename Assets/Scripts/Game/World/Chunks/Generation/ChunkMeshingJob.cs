@@ -241,7 +241,7 @@ namespace Wyd.Game.World.Chunks.Generation
                 // example: for iteration normalIndex == 0—which is positive X—it'd be equal to localPosition.x
                 int faceCheckAxisValue = (localPosition >> iModulo3Shift) & GenerationConstants.CHUNK_SIZE_BIT_MASK;
                 // indicates whether or not the face check is within the current chunk bounds
-                bool isFaceCheckOutOfBounds = (!isNegativeFace && (faceCheckAxisValue == GenerationConstants.CHUNK_SIZE_MINUS_ONE))
+                bool isFaceCheckOutOfBounds = (!isNegativeFace && (faceCheckAxisValue == GenerationConstants.CHUNK_SIZE - 1))
                                               || (isNegativeFace && (faceCheckAxisValue == 0));
                 // total number of successful traversals
                 // remark: this is outside the for loop so that the if statement after can determine if any traversals have happened
@@ -280,19 +280,12 @@ namespace Wyd.Game.World.Chunks.Generation
 
                             // if transparent, traverse so long as facing block is not the same block id
                             // if opaque, traverse so long as facing block is transparent
-                            if (transparentTraversal)
-                            {
-                                if (currentBlockId != facedBlockId)
-                                {
-                                    break;
-                                }
-                            }
-                            else if (!BlockController.Current.CheckBlockHasProperty(facedBlockId, BlockDefinition.Property.Transparent))
+                            if (transparentTraversal && currentBlockId != facedBlockId || !BlockController.Current.CheckBlockHasProperty(facedBlockId, BlockDefinition.Property.Transparent))
                             {
                                 if (!isNegativeFace)
                                 {
-                                    Direction inverseFaceDirection = (Direction)(1 << ((normalIndex + 3) % 6));
-                                    _Mask[facedBlockIndex].SetFace(inverseFaceDirection);
+                                    //Direction inverseFaceDirection = (Direction)(1 << ((normalIndex + 3) % 6));
+                                    //_Mask[facedBlockIndex].SetFace(inverseFaceDirection);
                                 }
 
                                 break;
@@ -314,14 +307,8 @@ namespace Wyd.Game.World.Chunks.Generation
                             ushort facedBlockId = _NeighborBlocksCollections[normalIndex]?.GetPoint(DecompressVertex(translatedLocalPosition))
                                                   ?? BlockController.NullID;
 
-                            if (transparentTraversal)
-                            {
-                                if (currentBlockId != facedBlockId)
-                                {
-                                    break;
-                                }
-                            }
-                            else if (!BlockController.Current.CheckBlockHasProperty(facedBlockId, BlockDefinition.Property.Transparent))
+                            if (transparentTraversal && currentBlockId != facedBlockId
+                                || !BlockController.Current.CheckBlockHasProperty(facedBlockId, BlockDefinition.Property.Transparent))
 
                             {
                                 break;
