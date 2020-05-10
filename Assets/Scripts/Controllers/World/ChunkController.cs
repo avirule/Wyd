@@ -488,7 +488,7 @@ namespace Wyd.Controllers.World
         {
             // todo make setting for improved meshing
             ChunkMeshingJob meshingJob = _meshingJobs.Retrieve() ?? new ChunkMeshingJob();
-            meshingJob.SetData(_CancellationTokenSource.Token, OriginPoint, Blocks, false);
+            meshingJob.SetData(_CancellationTokenSource.Token, OriginPoint, Blocks, true);
 
             Task OnMeshingFinished(object sender, AsyncJobEventArgs args)
             {

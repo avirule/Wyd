@@ -20,7 +20,7 @@ using Wyd.System.Jobs;
 
 namespace Wyd.Game.World.Chunks.Generation
 {
-    public class ChunkMeshingJob : AsyncParallelJob
+    public class ChunkMeshingJob : AsyncJob
     {
         private static readonly ObjectPool<BlockFaces[]> _masksPool = new ObjectPool<BlockFaces[]>();
         private static readonly ObjectPool<ushort[]> _blocksPool = new ObjectPool<ushort[]>();
@@ -38,17 +38,17 @@ namespace Wyd.Game.World.Chunks.Generation
         private TimeSpan _PreMeshingTimeSpan;
         private TimeSpan _MeshingTimeSpan;
 
-        public ChunkMeshingJob() : base(GenerationConstants.CHUNK_SIZE_CUBED, 128)
+        public ChunkMeshingJob()
         {
             _Stopwatch = new Stopwatch();
             _NeighborBlocksCollections = new INodeCollection<ushort>[6];
         }
 
-        protected override async Task Process()
+        protected override Task Process()
         {
             if ((_BlocksCollection == null) || (_BlocksCollection.IsUniform && (_BlocksCollection.Value == BlockController.AirID)))
             {
-                return;
+                return Task.CompletedTask;
             }
 
             _Stopwatch.Restart();
@@ -63,11 +63,11 @@ namespace Wyd.Game.World.Chunks.Generation
 
             if (_AggressiveFaceMerging)
             {
-                GenerateMesh();
+                GenerateTraversalMesh();
             }
             else
             {
-                await BatchTasksAndAwait().ConfigureAwait(false);
+                //await BatchTasksAndAwait().ConfigureAwait(false);
             }
 
 
@@ -76,9 +76,11 @@ namespace Wyd.Game.World.Chunks.Generation
             _Stopwatch.Stop();
 
             _MeshingTimeSpan = _Stopwatch.Elapsed;
+
+            return Task.CompletedTask;
         }
 
-        protected override Task ProcessIndex(int index)
+        protected Task ProcessIndex(int index)
         {
             if (CancellationToken.IsCancellationRequested)
             {
@@ -181,21 +183,23 @@ namespace Wyd.Game.World.Chunks.Generation
 
                 if (BlockController.Current.GetUVs(currentBlockId, faceDirection, out ushort textureId))
                 {
-                    int compressedUv = (textureId << (GenerationConstants.CHUNK_SIZE_BIT_SHIFT * 2)) ^ 0b000001_000001;
+                    int compressedUv = (textureId << (GenerationConstants.CHUNK_SIZE_BIT_SHIFT * 2))
+                                       ^ (1 << GenerationConstants.CHUNK_SIZE_BIT_SHIFT)
+                                       ^ 1;
 
-                    int aggregatePositionNormal = localPosition | GenerationConstants.NormalInt32ByIteration[normalIndex];
+                    int normals = GenerationConstants.NormalInt32ByIteration[normalIndex];
                     int[] compressedVertices = BlockFaces.Vertices.FaceVerticesInt32ByNormalIndex[normalIndex];
 
-                    _MeshData.AddVertex(aggregatePositionNormal + compressedVertices[3]);
+                    _MeshData.AddVertex((localPosition + compressedVertices[3]) | normals);
                     _MeshData.AddVertex(compressedUv & (int.MaxValue << (GenerationConstants.CHUNK_SIZE_BIT_SHIFT * 2)));
 
-                    _MeshData.AddVertex(aggregatePositionNormal + compressedVertices[2]);
+                    _MeshData.AddVertex((localPosition + compressedVertices[2]) | normals);
                     _MeshData.AddVertex(compressedUv & (int.MaxValue << GenerationConstants.CHUNK_SIZE_BIT_SHIFT));
 
-                    _MeshData.AddVertex(aggregatePositionNormal + compressedVertices[1]);
+                    _MeshData.AddVertex((localPosition + compressedVertices[1]) | normals);
                     _MeshData.AddVertex(compressedUv & ~(GenerationConstants.CHUNK_SIZE_BIT_MASK << GenerationConstants.CHUNK_SIZE_BIT_SHIFT));
 
-                    _MeshData.AddVertex(aggregatePositionNormal + compressedVertices[0]);
+                    _MeshData.AddVertex((localPosition + compressedVertices[0]) | normals);
                     _MeshData.AddVertex(compressedUv & int.MaxValue);
 
 
@@ -209,6 +213,7 @@ namespace Wyd.Game.World.Chunks.Generation
                     _MeshData.AddTriangle(transparentAsInt, 3 + verticesCount);
                     _MeshData.AddTriangle(transparentAsInt, 1 + verticesCount);
                 }
+                else { }
             }
 
             return Task.CompletedTask;
@@ -322,7 +327,7 @@ namespace Wyd.Game.World.Chunks.Generation
         /// <remarks>
         ///     The generated data is stored in the <see cref="MeshData" /> object <see cref="_MeshData" />.
         /// </remarks>
-        private void GenerateMesh()
+        private void GenerateTraversalMesh()
         {
             int index = 0;
 
@@ -461,7 +466,6 @@ namespace Wyd.Game.World.Chunks.Generation
                                 }
                             }
                             else if (!BlockController.Current.CheckBlockHasProperty(facedBlockId, BlockDefinition.Property.Transparent))
-
                             {
                                 break;
                             }
@@ -470,73 +474,68 @@ namespace Wyd.Game.World.Chunks.Generation
                         _Mask[traversalIndex].SetFace(faceDirection);
                     }
 
-                    // if we haven't traversed at all, that means the initial facing block didn't meet
-                    //     conditions, so break the loop.
-                    if (traversals == 0)
-                    {
-                        break;
-                    }
-
                     // if it's the first traversal and we've only made a 1x1x1 face, continue to test next axis
                     if ((traversals == 1) && (perpendicularNormalIndex == 1))
                     {
                         continue;
                     }
 
-                    if (BlockController.Current.GetUVs(currentBlockId, faceDirection, out ushort textureId))
+                    if (traversals == 0 || !BlockController.Current.GetUVs(currentBlockId, faceDirection, out ushort textureId))
                     {
-                        int uvShift = (iModulo3 + traversalNormalIndex) % 2;
-                        int compressedUv = (textureId << (GenerationConstants.CHUNK_SIZE_BIT_SHIFT * 2))
-                                           | (1 << (GenerationConstants.CHUNK_SIZE_BIT_SHIFT * ((uvShift + 1) % 2)))
-                                           | (traversals << (GenerationConstants.CHUNK_SIZE_BIT_SHIFT * uvShift));
-
-                        int traversalShiftedMask = GenerationConstants.CHUNK_SIZE_BIT_MASK << traversalNormalShift;
-                        int unaryTraversalShiftedMask = ~traversalShiftedMask;
-
-                        int aggregatePositionNormal = localPosition | GenerationConstants.NormalInt32ByIteration[normalIndex];
-                        int[] compressedVertices = BlockFaces.Vertices.FaceVerticesInt32ByNormalIndex[normalIndex];
-
-
-                        _MeshData.AddVertex(aggregatePositionNormal
-                                            + ((unaryTraversalShiftedMask & compressedVertices[3])
-                                               | ((((compressedVertices[3] >> traversalNormalShift) * traversals) << traversalNormalShift)
-                                                  & traversalShiftedMask)));
-                        _MeshData.AddVertex(compressedUv & (int.MaxValue << (GenerationConstants.CHUNK_SIZE_BIT_SHIFT * 2)));
-
-
-                        _MeshData.AddVertex(aggregatePositionNormal
-                                            + ((unaryTraversalShiftedMask & compressedVertices[2])
-                                               | ((((compressedVertices[2] >> traversalNormalShift) * traversals) << traversalNormalShift)
-                                                  & traversalShiftedMask)));
-                        _MeshData.AddVertex(compressedUv & (int.MaxValue << GenerationConstants.CHUNK_SIZE_BIT_SHIFT));
-
-
-                        _MeshData.AddVertex(aggregatePositionNormal
-                                            + ((unaryTraversalShiftedMask & compressedVertices[1])
-                                               | ((((compressedVertices[1] >> traversalNormalShift) * traversals) << traversalNormalShift)
-                                                  & traversalShiftedMask)));
-                        _MeshData.AddVertex(compressedUv & ~(GenerationConstants.CHUNK_SIZE_BIT_MASK << GenerationConstants.CHUNK_SIZE_BIT_SHIFT));
-
-
-                        _MeshData.AddVertex(aggregatePositionNormal
-                                            + ((unaryTraversalShiftedMask & compressedVertices[0])
-                                               | ((((compressedVertices[0] >> traversalNormalShift) * traversals) << traversalNormalShift)
-                                                  & traversalShiftedMask)));
-                        _MeshData.AddVertex(compressedUv & int.MaxValue);
-
-                        // add triangles
-                        int verticesCount = _MeshData.VerticesCount / 2;
-                        int transparentAsInt = Convert.ToInt32(transparentTraversal);
-
-                        _MeshData.AddTriangle(transparentAsInt, 0 + verticesCount);
-                        _MeshData.AddTriangle(transparentAsInt, 2 + verticesCount);
-                        _MeshData.AddTriangle(transparentAsInt, 1 + verticesCount);
-                        _MeshData.AddTriangle(transparentAsInt, 2 + verticesCount);
-                        _MeshData.AddTriangle(transparentAsInt, 3 + verticesCount);
-                        _MeshData.AddTriangle(transparentAsInt, 1 + verticesCount);
-
                         break;
                     }
+
+                    int uvShift = (iModulo3 + traversalNormalIndex) % 2;
+                    int compressedUv = (textureId << (GenerationConstants.CHUNK_SIZE_BIT_SHIFT * 2))
+                                       | (1 << (GenerationConstants.CHUNK_SIZE_BIT_SHIFT * ((uvShift + 1) % 2)))
+                                       | (traversals << (GenerationConstants.CHUNK_SIZE_BIT_SHIFT * uvShift));
+
+                    int traversalShiftedMask = GenerationConstants.CHUNK_SIZE_BIT_MASK << traversalNormalShift;
+                    int unaryTraversalShiftedMask = ~traversalShiftedMask;
+
+                    int aggregatePositionNormal = localPosition | GenerationConstants.NormalInt32ByIteration[normalIndex];
+                    int[] compressedVertices = BlockFaces.Vertices.FaceVerticesInt32ByNormalIndex[normalIndex];
+
+
+                    _MeshData.AddVertex(aggregatePositionNormal
+                                        + ((unaryTraversalShiftedMask & compressedVertices[3])
+                                           | ((((compressedVertices[3] >> traversalNormalShift) * traversals) << traversalNormalShift)
+                                              & traversalShiftedMask)));
+                    _MeshData.AddVertex(compressedUv & (int.MaxValue << (GenerationConstants.CHUNK_SIZE_BIT_SHIFT * 2)));
+
+
+                    _MeshData.AddVertex(aggregatePositionNormal
+                                        + ((unaryTraversalShiftedMask & compressedVertices[2])
+                                           | ((((compressedVertices[2] >> traversalNormalShift) * traversals) << traversalNormalShift)
+                                              & traversalShiftedMask)));
+                    _MeshData.AddVertex(compressedUv & (int.MaxValue << GenerationConstants.CHUNK_SIZE_BIT_SHIFT));
+
+
+                    _MeshData.AddVertex(aggregatePositionNormal
+                                        + ((unaryTraversalShiftedMask & compressedVertices[1])
+                                           | ((((compressedVertices[1] >> traversalNormalShift) * traversals) << traversalNormalShift)
+                                              & traversalShiftedMask)));
+                    _MeshData.AddVertex(compressedUv & ~(GenerationConstants.CHUNK_SIZE_BIT_MASK << GenerationConstants.CHUNK_SIZE_BIT_SHIFT));
+
+
+                    _MeshData.AddVertex(aggregatePositionNormal
+                                        + ((unaryTraversalShiftedMask & compressedVertices[0])
+                                           | ((((compressedVertices[0] >> traversalNormalShift) * traversals) << traversalNormalShift)
+                                              & traversalShiftedMask)));
+                    _MeshData.AddVertex(compressedUv & int.MaxValue);
+
+                    // add triangles
+                    int verticesCount = _MeshData.VerticesCount / 2;
+                    int transparentAsInt = Convert.ToInt32(transparentTraversal);
+
+                    _MeshData.AddTriangle(transparentAsInt, 0 + verticesCount);
+                    _MeshData.AddTriangle(transparentAsInt, 2 + verticesCount);
+                    _MeshData.AddTriangle(transparentAsInt, 1 + verticesCount);
+                    _MeshData.AddTriangle(transparentAsInt, 2 + verticesCount);
+                    _MeshData.AddTriangle(transparentAsInt, 3 + verticesCount);
+                    _MeshData.AddTriangle(transparentAsInt, 1 + verticesCount);
+
+                    break;
                 }
             }
         }
