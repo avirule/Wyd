@@ -42,7 +42,7 @@ namespace Wyd.Game.World.Chunks.Generation
             new int3(0, 0, -1),
         };
 
-        public static readonly int[] NormalInt32ByIteration =
+        public static readonly int[] FaceNormalInt32ByIteration =
         {
             0b11_01_01_000000_000000_000000,
             0b01_11_01_000000_000000_000000,
