@@ -20,7 +20,7 @@ using Wyd.System.Jobs;
 
 namespace Wyd.Game.World.Chunks.Generation
 {
-    public class ChunkMeshingJob : AsyncJob
+    public class ChunkMeshingJob : AsyncParallelJob
     {
         private static readonly ObjectPool<BlockFaces[]> _masksPool = new ObjectPool<BlockFaces[]>();
         private static readonly ObjectPool<ushort[]> _blocksPool = new ObjectPool<ushort[]>();
@@ -38,15 +38,178 @@ namespace Wyd.Game.World.Chunks.Generation
         private TimeSpan _PreMeshingTimeSpan;
         private TimeSpan _MeshingTimeSpan;
 
-        public ChunkMeshingJob()
+        public ChunkMeshingJob() : base(GenerationConstants.CHUNK_SIZE_CUBED, 128)
         {
             _Stopwatch = new Stopwatch();
             _NeighborBlocksCollections = new INodeCollection<ushort>[6];
         }
 
-        protected override Task Process()
+        protected override async Task Process()
         {
-            TimeMeasuredGenerate();
+            if ((_BlocksCollection == null) || (_BlocksCollection.IsUniform && (_BlocksCollection.Value == BlockController.AirID)))
+            {
+                return;
+            }
+
+            _Stopwatch.Restart();
+
+            PrepareMeshing();
+
+            _Stopwatch.Stop();
+
+            _PreMeshingTimeSpan = _Stopwatch.Elapsed;
+
+            _Stopwatch.Restart();
+
+            if (_AggressiveFaceMerging)
+            {
+                GenerateMesh();
+            }
+            else
+            {
+                await BatchTasksAndAwait().ConfigureAwait(false);
+            }
+
+
+            FinishMeshing();
+
+            _Stopwatch.Stop();
+
+            _MeshingTimeSpan = _Stopwatch.Elapsed;
+        }
+
+        protected override Task ProcessIndex(int index)
+        {
+            if (CancellationToken.IsCancellationRequested)
+            {
+                return Task.CompletedTask;
+            }
+
+            int localPosition = CompressVertex(WydMath.IndexTo3D(index, GenerationConstants.CHUNK_SIZE));
+            ushort currentBlockId = _Blocks[index];
+
+            if (currentBlockId == BlockController.AirID)
+            {
+                return Task.CompletedTask;
+            }
+
+            bool transparentTraversal = BlockController.Current.CheckBlockHasProperty(currentBlockId, BlockDefinition.Property.Transparent);
+
+            // iterate once over all 6 faces of given cubic space
+            for (int normalIndex = 0; normalIndex < 6; normalIndex++)
+            {
+                // face direction always exists on a single bit, so shift 1 by the current normalIndex (0-5)
+                Direction faceDirection = (Direction)(1 << normalIndex);
+
+                // check if current index has face already
+                if (_Mask[index].HasFace(faceDirection))
+                {
+                    continue;
+                }
+
+                // indicates whether the current face checking direction is negative or positive
+                bool isNegativeFace = (normalIndex - 3) >= 0;
+                // normalIndex constrained to represent the 3 axes
+                int iModulo3 = normalIndex % 3;
+                int iModulo3Shift = GenerationConstants.CHUNK_SIZE_BIT_SHIFT * iModulo3;
+                // axis value of the current face check direction
+                // example: for iteration normalIndex == 0—which is positive X—it'd be equal to localPosition.x
+                int faceCheckAxisValue = (localPosition >> iModulo3Shift) & GenerationConstants.CHUNK_SIZE_BIT_MASK;
+                // indicates whether or not the face check is within the current chunk bounds
+                bool isFaceCheckOutOfBounds = (!isNegativeFace && (faceCheckAxisValue == (GenerationConstants.CHUNK_SIZE - 1)))
+                                              || (isNegativeFace && (faceCheckAxisValue == 0));
+
+
+                if (!isFaceCheckOutOfBounds)
+                {
+                    // amount by integer to add to current traversal index to get 3D->1D position of facing block
+                    int facedBlockIndex = index + GenerationConstants.IndexStepByNormalIndex[normalIndex];
+                    // if so, index into block ids and set facingBlockId
+                    ushort facedBlockId = _Blocks[facedBlockIndex];
+
+                    // if transparent, traverse so long as facing block is not the same block id
+                    // if opaque, traverse so long as facing block is transparent
+                    if (transparentTraversal)
+                    {
+                        if (currentBlockId != facedBlockId)
+                        {
+                            continue;
+                        }
+                    }
+                    else if (!BlockController.Current.CheckBlockHasProperty(facedBlockId, BlockDefinition.Property.Transparent))
+                    {
+                        if (!isNegativeFace)
+                        {
+                            Direction inverseFaceDirection = (Direction)(1 << ((normalIndex + 3) % 6));
+                            _Mask[facedBlockIndex].SetFace(inverseFaceDirection);
+                        }
+
+                        continue;
+                    }
+                }
+                else
+                {
+                    // this block of code translates the integer local position to the local position of the neighbor at [normalIndex]
+                    int sign = isNegativeFace ? -1 : 1;
+                    int iModuloComponentMask = GenerationConstants.CHUNK_SIZE_BIT_MASK << iModulo3Shift;
+                    int finalLocalPosition = (~iModuloComponentMask & localPosition)
+                                             | (WydMath.Wrap(((localPosition & iModuloComponentMask) >> iModulo3Shift) + sign,
+                                                    GenerationConstants.CHUNK_SIZE, 0, GenerationConstants.CHUNK_SIZE - 1)
+                                                << iModulo3Shift);
+
+                    // index into neighbor blocks collections, call .GetPoint() with adjusted local position
+                    // remark: if there's no neighbor at the index given, then no chunk exists there (for instance,
+                    //     chunks at the edge of render distance). In this case, return NullID so no face is rendered on edges.
+                    ushort facedBlockId = _NeighborBlocksCollections[normalIndex]?.GetPoint(DecompressVertex(finalLocalPosition))
+                                          ?? BlockController.NullID;
+
+                    if (transparentTraversal)
+                    {
+                        if (currentBlockId != facedBlockId)
+                        {
+                            continue;
+                        }
+                    }
+                    else if (!BlockController.Current.CheckBlockHasProperty(facedBlockId, BlockDefinition.Property.Transparent))
+
+                    {
+                        continue;
+                    }
+                }
+
+                _Mask[index].SetFace(faceDirection);
+
+                if (BlockController.Current.GetUVs(currentBlockId, faceDirection, out ushort textureId))
+                {
+                    int compressedUv = (textureId << (GenerationConstants.CHUNK_SIZE_BIT_SHIFT * 2)) ^ 0b000001_000001;
+
+                    int aggregatePositionNormal = localPosition | GenerationConstants.NormalInt32ByIteration[normalIndex];
+                    int[] compressedVertices = BlockFaces.Vertices.FaceVerticesInt32ByNormalIndex[normalIndex];
+
+                    _MeshData.AddVertex(aggregatePositionNormal + compressedVertices[3]);
+                    _MeshData.AddVertex(compressedUv & (int.MaxValue << (GenerationConstants.CHUNK_SIZE_BIT_SHIFT * 2)));
+
+                    _MeshData.AddVertex(aggregatePositionNormal + compressedVertices[2]);
+                    _MeshData.AddVertex(compressedUv & (int.MaxValue << GenerationConstants.CHUNK_SIZE_BIT_SHIFT));
+
+                    _MeshData.AddVertex(aggregatePositionNormal + compressedVertices[1]);
+                    _MeshData.AddVertex(compressedUv & ~(GenerationConstants.CHUNK_SIZE_BIT_MASK << GenerationConstants.CHUNK_SIZE_BIT_SHIFT));
+
+                    _MeshData.AddVertex(aggregatePositionNormal + compressedVertices[0]);
+                    _MeshData.AddVertex(compressedUv & int.MaxValue);
+
+
+                    int verticesCount = _MeshData.VerticesCount / 2;
+                    int transparentAsInt = Convert.ToInt32(transparentTraversal);
+
+                    _MeshData.AddTriangle(transparentAsInt, 0 + verticesCount);
+                    _MeshData.AddTriangle(transparentAsInt, 2 + verticesCount);
+                    _MeshData.AddTriangle(transparentAsInt, 1 + verticesCount);
+                    _MeshData.AddTriangle(transparentAsInt, 2 + verticesCount);
+                    _MeshData.AddTriangle(transparentAsInt, 3 + verticesCount);
+                    _MeshData.AddTriangle(transparentAsInt, 1 + verticesCount);
+                }
+            }
 
             return Task.CompletedTask;
         }
@@ -109,32 +272,6 @@ namespace Wyd.Game.World.Chunks.Generation
 
 
         #region Generation
-
-        private void TimeMeasuredGenerate()
-        {
-            if ((_BlocksCollection == null) || (_BlocksCollection.IsUniform && (_BlocksCollection.Value == BlockController.AirID)))
-            {
-                return;
-            }
-
-            _Stopwatch.Restart();
-
-            PrepareMeshing();
-
-            _Stopwatch.Stop();
-
-            _PreMeshingTimeSpan = _Stopwatch.Elapsed;
-
-            _Stopwatch.Restart();
-
-            GenerateMesh();
-
-            FinishMeshing();
-
-            _Stopwatch.Stop();
-
-            _MeshingTimeSpan = _Stopwatch.Elapsed;
-        }
 
         private void PrepareMeshing()
         {
@@ -356,7 +493,7 @@ namespace Wyd.Game.World.Chunks.Generation
                         int traversalShiftedMask = GenerationConstants.CHUNK_SIZE_BIT_MASK << traversalNormalShift;
                         int unaryTraversalShiftedMask = ~traversalShiftedMask;
 
-                        int aggregatePositionNormal = localPosition | GenerationConstants.FaceNormalInt32ByIteration[normalIndex];
+                        int aggregatePositionNormal = localPosition | GenerationConstants.NormalInt32ByIteration[normalIndex];
                         int[] compressedVertices = BlockFaces.Vertices.FaceVerticesInt32ByNormalIndex[normalIndex];
 
 
@@ -403,6 +540,12 @@ namespace Wyd.Game.World.Chunks.Generation
                 }
             }
         }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private static int CompressVertex(int3 vertex) =>
+            (vertex.x & GenerationConstants.CHUNK_SIZE_BIT_MASK)
+            | ((vertex.y & GenerationConstants.CHUNK_SIZE_BIT_MASK) << GenerationConstants.CHUNK_SIZE_BIT_SHIFT)
+            | ((vertex.z & GenerationConstants.CHUNK_SIZE_BIT_MASK) << (GenerationConstants.CHUNK_SIZE_BIT_SHIFT * 2));
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private static int3 DecompressVertex(int vertex) =>
