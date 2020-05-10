@@ -14,6 +14,14 @@ namespace Wyd.System
 {
     public static class WydMath
     {
+        public static int Wrap(int v, int delta, int minVal, int maxVal)
+        {
+            int mod = (maxVal + 1) - minVal;
+            v += delta - minVal;
+            v += (1 - (v / mod)) * mod;
+            return (v % mod) + minVal;
+        }
+
         public static int PointToIndex(int2 a, int size) => a.x + (size * a.y);
         public static int PointToIndex(int3 a, int size) => a.x + (size * (a.z + (size * a.y)));
         public static int PointToIndex(float3 a, int size) => (int)(a.z + (size * (a.z + (size * a.y))));

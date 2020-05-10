@@ -31,8 +31,8 @@ namespace Wyd.Controllers.State
 
             InitializeBlockPropertiesBuckets();
 
-            RegisterBlockDefinition("null", Block.Types.None, null);
-            RegisterBlockDefinition("air", Block.Types.None, null, BlockDefinition.Property.Transparent);
+            RegisterBlockDefinition("null", null);
+            RegisterBlockDefinition("air", null, BlockDefinition.Property.Transparent);
 
             TryGetBlockId("null", out NullID);
             TryGetBlockId("air", out AirID);
@@ -75,8 +75,7 @@ namespace Wyd.Controllers.State
         ///     Optional <see cref="BlockDefinition.Property" />s to full qualify the
         ///     <see cref="BlockDefinition" />.
         /// </param>
-        public void RegisterBlockDefinition(string blockName, Block.Types type,
-            Func<Direction, string> uvsRule, params BlockDefinition.Property[] properties)
+        public void RegisterBlockDefinition(string blockName, Func<Direction, string> uvsRule, params BlockDefinition.Property[] properties)
         {
             blockName = blockName.ToLowerInvariant();
 
@@ -98,7 +97,7 @@ namespace Wyd.Controllers.State
             }
 
             BlockDefinition blockDefinition =
-                new BlockDefinition(assignedBlockId, blockName, type, uvsRule, properties);
+                new BlockDefinition(assignedBlockId, blockName, uvsRule, properties);
 
             BlockDefinitions.Add(blockDefinition);
             BlockNames.Add(blockName, assignedBlockId);
@@ -163,13 +162,12 @@ namespace Wyd.Controllers.State
 
         public IReadOnlyBlockDefinition GetBlockDefinition(ushort blockId)
         {
-            if (BlockIdExists(blockId))
+            if (!BlockIdExists(blockId))
             {
-                return BlockDefinitions[blockId];
+                throw new ArgumentException("Given block ID does not exist.", nameof(blockId));
             }
 
-            Log.Error($"Failed to return block rule for block with id `{blockId}`: block does not exist.");
-            return null;
+            return BlockDefinitions[blockId];
         }
 
         public bool TryGetBlockDefinition(ushort blockId, out IReadOnlyBlockDefinition blockDefinition)

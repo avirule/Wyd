@@ -41,15 +41,17 @@ namespace Wyd.System.Collections
         #region GetPoint
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public ushort GetPoint(int3 point) => GetPointIterative(point);
+        public ushort GetPoint(int3 point) => GetPointIterative(point.x, point.y, point.z);
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public ushort GetPoint(int x, int y, int z) => GetPointIterative(x, y, z);
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private ushort GetPointRecursive(int3 point) => _RootNode.GetPoint(_Extent, point.x, point.y, point.z);
 
-        private ushort GetPointIterative(int3 point)
+        private ushort GetPointIterative(int x, int y, int z)
         {
             OctreeNode currentNode = _RootNode;
-            int x = point.x, y = point.y, z = point.z;
 
             for (int extent = _Extent; !currentNode.IsUniform; extent >>= 1)
             {

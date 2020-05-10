@@ -587,7 +587,7 @@ namespace Wyd.Controllers.World
 
             List<float3> normals = new List<float3>();
             normals.AddRange(
-                WydMath.ToComponents(math.select(float3.zero, new float3(1f), localPosition == GenerationConstants.CHUNK_SIZE - 1)));
+                WydMath.ToComponents(math.select(float3.zero, new float3(1f), localPosition == (GenerationConstants.CHUNK_SIZE - 1))));
             normals.AddRange(WydMath.ToComponents(math.select(float3.zero, new float3(1f), localPosition == 0f)));
 
             return normals;

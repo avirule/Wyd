@@ -2,8 +2,6 @@
 
 using System;
 using Serilog;
-using UnityEngine;
-using Random = System.Random;
 
 // ReSharper disable TypeParameterCanBeVariant
 
@@ -30,37 +28,31 @@ namespace Wyd.Game.World.Blocks
             _defaultUVsRule = direction => string.Empty;
         }
 
-        private Func<Direction, string> UVsRule { get; }
+        private readonly Func<Direction, string> _UVsRule;
 
         public ushort Id { get; }
         public string BlockName { get; }
         public Property Properties { get; }
-        public Block.Types Type { get; }
         public byte LightLevel { get; }
 
-        public bool Transparent => (Properties & Property.Transparent) > 0;
-
-        public bool Collideable => (Properties & Property.Collideable) > 0;
-
-        public bool Destroyable => (Properties & Property.Destroyable) > 0;
-
-        public bool Collectible => (Properties & Property.Collectible) > 0;
-
-        public bool LightSource => (Properties & Property.LightSource) > 0;
+        public bool Transparent => (Properties & Property.Transparent) == Property.Transparent;
+        public bool Collideable => (Properties & Property.Collideable) == Property.Collideable;
+        public bool Destroyable => (Properties & Property.Destroyable) == Property.Destroyable;
+        public bool Collectible => (Properties & Property.Collectible) == Property.Collectible;
+        public bool LightSource => (Properties & Property.LightSource) == Property.LightSource;
 
 
-        public BlockDefinition(ushort id, string blockName, Block.Types type, Func<Direction, string> uvsRule, params Property[] properties)
+        public BlockDefinition(ushort id, string blockName, Func<Direction, string> uvsRule, params Property[] properties)
         {
             Id = id;
             BlockName = blockName;
-            Type = type;
 
             foreach (Property property in properties)
             {
                 Properties |= property;
             }
 
-            UVsRule = uvsRule ?? _defaultUVsRule;
+            _UVsRule = uvsRule ?? _defaultUVsRule;
         }
 
         public virtual bool EvaluateUVsRule(ushort blockId, Direction direction, out string spriteName)
@@ -73,10 +65,8 @@ namespace Wyd.Game.World.Blocks
                 return false;
             }
 
-            spriteName = UVsRule(direction);
+            spriteName = _UVsRule(direction);
             return true;
         }
-
-        public virtual bool ShouldPlaceAt(Random rand, int index, Vector3 position, Block[] blocks) => false;
     }
 }

@@ -12,6 +12,7 @@ using Wyd.Controllers.State;
 using Wyd.Controllers.System;
 using Wyd.Controllers.World;
 using Wyd.Game.World.Blocks;
+using Wyd.System;
 using Wyd.System.Collections;
 using Wyd.System.Jobs;
 
@@ -241,7 +242,7 @@ namespace Wyd.Game.World.Chunks.Generation
                 // example: for iteration normalIndex == 0—which is positive X—it'd be equal to localPosition.x
                 int faceCheckAxisValue = (localPosition >> iModulo3Shift) & GenerationConstants.CHUNK_SIZE_BIT_MASK;
                 // indicates whether or not the face check is within the current chunk bounds
-                bool isFaceCheckOutOfBounds = (!isNegativeFace && (faceCheckAxisValue == GenerationConstants.CHUNK_SIZE - 1))
+                bool isFaceCheckOutOfBounds = (!isNegativeFace && (faceCheckAxisValue == (GenerationConstants.CHUNK_SIZE - 1)))
                                               || (isNegativeFace && (faceCheckAxisValue == 0));
                 // total number of successful traversals
                 // remark: this is outside the for loop so that the if statement after can determine if any traversals have happened
@@ -280,12 +281,19 @@ namespace Wyd.Game.World.Chunks.Generation
 
                             // if transparent, traverse so long as facing block is not the same block id
                             // if opaque, traverse so long as facing block is transparent
-                            if (transparentTraversal && currentBlockId != facedBlockId || !BlockController.Current.CheckBlockHasProperty(facedBlockId, BlockDefinition.Property.Transparent))
+                            if (transparentTraversal)
+                            {
+                                if (currentBlockId != facedBlockId)
+                                {
+                                    break;
+                                }
+                            }
+                            else if (!BlockController.Current.CheckBlockHasProperty(facedBlockId, BlockDefinition.Property.Transparent))
                             {
                                 if (!isNegativeFace)
                                 {
-                                    //Direction inverseFaceDirection = (Direction)(1 << ((normalIndex + 3) % 6));
-                                    //_Mask[facedBlockIndex].SetFace(inverseFaceDirection);
+                                    Direction inverseFaceDirection = (Direction)(1 << ((normalIndex + 3) % 6));
+                                    _Mask[facedBlockIndex].SetFace(inverseFaceDirection);
                                 }
 
                                 break;
@@ -297,18 +305,25 @@ namespace Wyd.Game.World.Chunks.Generation
                             int sign = isNegativeFace ? -1 : 1;
                             int iModuloComponentMask = GenerationConstants.CHUNK_SIZE_BIT_MASK << iModulo3Shift;
                             int translatedLocalPosition = localPosition + (traversals << traversalNormalShift);
-                            int translatedIModuloComponent = (translatedLocalPosition & iModuloComponentMask) >> iModulo3Shift;
-                            int translatedRelative = (translatedIModuloComponent + sign) % GenerationConstants.CHUNK_SIZE;
-                            translatedLocalPosition = (~iModuloComponentMask & translatedLocalPosition) | (translatedRelative << iModulo3Shift);
+                            int finalLocalPosition = (~iModuloComponentMask & translatedLocalPosition)
+                                                     | (WydMath.Wrap(((translatedLocalPosition & iModuloComponentMask) >> iModulo3Shift) + sign,
+                                                            GenerationConstants.CHUNK_SIZE, 0, GenerationConstants.CHUNK_SIZE - 1)
+                                                        << iModulo3Shift);
 
                             // index into neighbor blocks collections, call .GetPoint() with adjusted local position
                             // remark: if there's no neighbor at the index given, then no chunk exists there (for instance,
                             //     chunks at the edge of render distance). In this case, return NullID so no face is rendered on edges.
-                            ushort facedBlockId = _NeighborBlocksCollections[normalIndex]?.GetPoint(DecompressVertex(translatedLocalPosition))
+                            ushort facedBlockId = _NeighborBlocksCollections[normalIndex]?.GetPoint(DecompressVertex(finalLocalPosition))
                                                   ?? BlockController.NullID;
 
-                            if (transparentTraversal && currentBlockId != facedBlockId
-                                || !BlockController.Current.CheckBlockHasProperty(facedBlockId, BlockDefinition.Property.Transparent))
+                            if (transparentTraversal)
+                            {
+                                if (currentBlockId != facedBlockId)
+                                {
+                                    break;
+                                }
+                            }
+                            else if (!BlockController.Current.CheckBlockHasProperty(facedBlockId, BlockDefinition.Property.Transparent))
 
                             {
                                 break;
@@ -382,10 +397,6 @@ namespace Wyd.Game.World.Chunks.Generation
                         _MeshData.AddTriangle(transparentAsInt, 2 + verticesCount);
                         _MeshData.AddTriangle(transparentAsInt, 3 + verticesCount);
                         _MeshData.AddTriangle(transparentAsInt, 1 + verticesCount);
-
-                        // string str = Convert.ToString(compressedUv, 2);
-
-                        // Log.Information($" x{str.Substring(str.Length - 6, 6)}, y {str.Substring(str.Length - 12, 6)}, tex {str.Substring(0, str.Length - 12)}");
 
                         break;
                     }

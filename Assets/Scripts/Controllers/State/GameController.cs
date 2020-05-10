@@ -27,42 +27,42 @@ namespace Wyd.Controllers.State
 
         private static void RegisterDefaultBlocks()
         {
-            BlockController.Current.RegisterBlockDefinition("bedrock", Block.Types.None, null,
+            BlockController.Current.RegisterBlockDefinition("bedrock", null,
                 BlockDefinition.Property.Collideable);
 
-            BlockController.Current.RegisterBlockDefinition("grass", Block.Types.Raw, GrassUVsRule,
+            BlockController.Current.RegisterBlockDefinition("grass", GrassUVsRule,
                 BlockDefinition.Property.Collectible, BlockDefinition.Property.Collideable,
                 BlockDefinition.Property.Destroyable);
 
-            BlockController.Current.RegisterBlockDefinition("dirt", Block.Types.Raw, null,
+            BlockController.Current.RegisterBlockDefinition("dirt", null,
                 BlockDefinition.Property.Collectible, BlockDefinition.Property.Collideable,
                 BlockDefinition.Property.Destroyable);
 
-            BlockController.Current.RegisterBlockDefinition("dirt_coarse", Block.Types.Raw, null,
+            BlockController.Current.RegisterBlockDefinition("dirt_coarse", null,
                 BlockDefinition.Property.Collectible, BlockDefinition.Property.Collideable,
                 BlockDefinition.Property.Destroyable);
 
-            BlockController.Current.RegisterBlockDefinition("stone", Block.Types.None, null,
+            BlockController.Current.RegisterBlockDefinition("stone", null,
                 BlockDefinition.Property.Collectible, BlockDefinition.Property.Collideable,
                 BlockDefinition.Property.Destroyable);
 
-            BlockController.Current.RegisterBlockDefinition("glass", Block.Types.Raw, null,
+            BlockController.Current.RegisterBlockDefinition("glass", null,
                 BlockDefinition.Property.Transparent, BlockDefinition.Property.Collectible,
                 BlockDefinition.Property.Collideable, BlockDefinition.Property.Destroyable);
 
-            BlockController.Current.RegisterBlockDefinition("coal_ore", Block.Types.Ore, null,
+            BlockController.Current.RegisterBlockDefinition("coal_ore", null,
                 BlockDefinition.Property.Collectible, BlockDefinition.Property.Collideable,
                 BlockDefinition.Property.Destroyable);
 
-            BlockController.Current.RegisterBlockDefinition("gold_ore", Block.Types.Ore, null,
+            BlockController.Current.RegisterBlockDefinition("gold_ore", null,
                 BlockDefinition.Property.Collectible, BlockDefinition.Property.Collideable,
                 BlockDefinition.Property.Destroyable);
 
-            BlockController.Current.RegisterBlockDefinition("diamond_ore", Block.Types.Ore, null,
+            BlockController.Current.RegisterBlockDefinition("diamond_ore", null,
                 BlockDefinition.Property.Collectible, BlockDefinition.Property.Collideable,
                 BlockDefinition.Property.Destroyable);
 
-            BlockController.Current.RegisterBlockDefinition("oak_log", Block.Types.None,
+            BlockController.Current.RegisterBlockDefinition("oak_log",
                 direction =>
                 {
                     switch (direction)
@@ -82,19 +82,19 @@ namespace Wyd.Controllers.State
                 BlockDefinition.Property.Collectible, BlockDefinition.Property.Collideable,
                 BlockDefinition.Property.Destroyable);
 
-            BlockController.Current.RegisterBlockDefinition("oak_leaf", Block.Types.None, null,
+            BlockController.Current.RegisterBlockDefinition("oak_leaf", null,
                 BlockDefinition.Property.Collectible, BlockDefinition.Property.Collideable,
                 BlockDefinition.Property.Destroyable);
 
-            BlockController.Current.RegisterBlockDefinition("oak_leaf_apple", Block.Types.None, null,
+            BlockController.Current.RegisterBlockDefinition("oak_leaf_apple", null,
                 BlockDefinition.Property.Collectible, BlockDefinition.Property.Collideable,
                 BlockDefinition.Property.Destroyable);
 
-            BlockController.Current.RegisterBlockDefinition("sand", Block.Types.Raw, null,
+            BlockController.Current.RegisterBlockDefinition("sand", null,
                 BlockDefinition.Property.Collectible, BlockDefinition.Property.Collideable,
                 BlockDefinition.Property.Destroyable);
 
-            BlockController.Current.RegisterBlockDefinition("water", Block.Types.Raw, null,
+            BlockController.Current.RegisterBlockDefinition("water", null,
                 BlockDefinition.Property.Transparent);
         }
 
