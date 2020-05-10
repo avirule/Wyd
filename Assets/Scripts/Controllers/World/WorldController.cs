@@ -79,6 +79,9 @@ namespace Wyd.Controllers.World
         private ChunkController ChunkControllerPrefab;
 
         [SerializeField]
+        private LineRenderer LineRenderer;
+
+        [SerializeField]
         private string SeedString;
 
 #if UNITY_EDITOR

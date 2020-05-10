@@ -46,7 +46,7 @@
                 f.position = UnityObjectToClipPos(uncompressedVertex);
                 f.normal = UnityObjectToClipPos(uncompressedNormal);
                 f.texcoord = uncompressedUv;
-                f.color = float4((uncompressedNormal + 1.0) / 2.0, 1.0);
+                f.color = float4(1.0, 1.0, 1.0, 1.0);
                 return f;
             }
 

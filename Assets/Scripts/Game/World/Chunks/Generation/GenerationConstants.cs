@@ -45,6 +45,16 @@ namespace Wyd.Game.World.Chunks.Generation
             new int3(0, 0, -1),
         };
 
+        public static readonly int[] FaceNormalInt32ByIteration =
+        {
+            0b11_01_01_000000_000000_000000,
+            0b01_11_01_000000_000000_000000,
+            0b01_01_11_000000_000000_000000,
+            0b00_01_01_000000_000000_000000,
+            0b01_00_01_000000_000000_000000,
+            0b01_01_00_000000_000000_000000,
+        };
+
         public static readonly int[][] UVIndexAdjustments =
         {
             new[]
