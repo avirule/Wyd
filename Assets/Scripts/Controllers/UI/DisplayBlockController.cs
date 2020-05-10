@@ -8,7 +8,6 @@ using Wyd.Controllers.State;
 using Wyd.Game;
 using Wyd.Game.Entities.Inventory;
 using Wyd.Game.World.Blocks;
-using Wyd.System.Graphics;
 
 #endregion
 

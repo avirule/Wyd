@@ -7,7 +7,6 @@ using Serilog;
 using Wyd.Game;
 using Wyd.Game.World.Blocks;
 using Wyd.System.Extensions;
-using Wyd.System.Graphics;
 
 #endregion
 

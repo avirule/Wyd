@@ -2,7 +2,6 @@
 
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
-using Unity.Collections;
 using Unity.Mathematics;
 
 #endregion

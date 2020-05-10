@@ -223,7 +223,7 @@ namespace Wyd.Game.World.Chunks.Generation
             // iterate once over all 6 faces of given cubic space
             for (int normalIndex = 0; normalIndex < 6; normalIndex++)
             {
-                // face direction always exists on a single bit, so offset 1 by the current normalIndex (0-5)
+                // face direction always exists on a single bit, so shift 1 by the current normalIndex (0-5)
                 Direction faceDirection = (Direction)(1 << normalIndex);
 
                 // check if current index has face already
@@ -233,7 +233,7 @@ namespace Wyd.Game.World.Chunks.Generation
                 }
 
                 // indicates whether the current face checking direction is negative or positive
-                bool negativeFace = (normalIndex - 3) >= 0;
+                bool isNegativeFace = (normalIndex - 3) >= 0;
                 // normalIndex constrained to represent the 3 axes
                 int iModulo3 = normalIndex % 3;
                 int iModulo3Shift = GenerationConstants.CHUNK_SIZE_BIT_SHIFT * iModulo3;
@@ -241,8 +241,8 @@ namespace Wyd.Game.World.Chunks.Generation
                 // example: for iteration normalIndex == 0—which is positive X—it'd be equal to localPosition.x
                 int faceCheckAxisValue = (localPosition >> iModulo3Shift) & GenerationConstants.CHUNK_SIZE_BIT_MASK;
                 // indicates whether or not the face check is within the current chunk bounds
-                bool isFaceCheckOutOfBounds = (!negativeFace && (faceCheckAxisValue == GenerationConstants.CHUNK_SIZE_MINUS_ONE))
-                                              || (negativeFace && (faceCheckAxisValue == 0));
+                bool isFaceCheckOutOfBounds = (!isNegativeFace && (faceCheckAxisValue == GenerationConstants.CHUNK_SIZE_MINUS_ONE))
+                                              || (isNegativeFace && (faceCheckAxisValue == 0));
                 // total number of successful traversals
                 // remark: this is outside the for loop so that the if statement after can determine if any traversals have happened
                 int traversals = 0;
@@ -280,15 +280,20 @@ namespace Wyd.Game.World.Chunks.Generation
 
                             // if transparent, traverse so long as facing block is not the same block id
                             // if opaque, traverse so long as facing block is transparent
-                            if (transparentTraversal && (currentBlockId != facedBlockId))
+                            if (transparentTraversal)
                             {
-                                break;
+                                if (currentBlockId != facedBlockId)
+                                {
+                                    break;
+                                }
                             }
-                            else if (!transparentTraversal
-                                     && !BlockController.Current.CheckBlockHasProperty(facedBlockId, BlockDefinition.Property.Transparent))
+                            else if (!BlockController.Current.CheckBlockHasProperty(facedBlockId, BlockDefinition.Property.Transparent))
                             {
-                                Direction inverseFaceDirection = (Direction)(1 << ((normalIndex + 3) % 6));
-                                _Mask[facedBlockIndex].SetFace(inverseFaceDirection);
+                                if (!isNegativeFace)
+                                {
+                                    Direction inverseFaceDirection = (Direction)(1 << ((normalIndex + 3) % 6));
+                                    _Mask[facedBlockIndex].SetFace(inverseFaceDirection);
+                                }
 
                                 break;
                             }
@@ -296,7 +301,7 @@ namespace Wyd.Game.World.Chunks.Generation
                         else
                         {
                             // this block of code translates the integer local position to the local position of the neighbor at [normalIndex]
-                            int sign = negativeFace ? -1 : 1;
+                            int sign = isNegativeFace ? -1 : 1;
                             int iModuloComponentMask = GenerationConstants.CHUNK_SIZE_BIT_MASK << iModulo3Shift;
                             int translatedLocalPosition = localPosition + (traversals << traversalNormalShift);
                             int translatedIModuloComponent = (translatedLocalPosition & iModuloComponentMask) >> iModulo3Shift;
@@ -309,9 +314,15 @@ namespace Wyd.Game.World.Chunks.Generation
                             ushort facedBlockId = _NeighborBlocksCollections[normalIndex]?.GetPoint(DecompressVertex(translatedLocalPosition))
                                                   ?? BlockController.NullID;
 
-                            if ((transparentTraversal && (currentBlockId != facedBlockId))
-                                || (!transparentTraversal
-                                    && !BlockController.Current.CheckBlockHasProperty(facedBlockId, BlockDefinition.Property.Transparent)))
+                            if (transparentTraversal)
+                            {
+                                if (currentBlockId != facedBlockId)
+                                {
+                                    break;
+                                }
+                            }
+                            else if (!BlockController.Current.CheckBlockHasProperty(facedBlockId, BlockDefinition.Property.Transparent))
+
                             {
                                 break;
                             }

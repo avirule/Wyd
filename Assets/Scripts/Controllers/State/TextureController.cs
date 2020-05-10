@@ -19,11 +19,11 @@ namespace Wyd.Controllers.State
         public Texture2DArray BlocksTexture { get; private set; }
 
         /// <summary>
-        ///    Array storing all materials for blocks.
+        ///     Array storing all materials for blocks.
         /// </summary>
         /// <remarks>
-        ///    [0] is for opaque blocks
-        ///    [1] is for transparent blocks
+        ///     [0] is for opaque blocks
+        ///     [1] is for transparent blocks
         /// </remarks>
         public Material[] BlockMaterials { get; private set; }
 

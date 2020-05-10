@@ -28,7 +28,7 @@ namespace Wyd.Controllers.UI.Components.Text.Diagnostic
             if ((Math.Abs(_RecentNoiseRetrievalTime - averageNoiseRetrievalTime) < _TOLERANCE)
                 && (Math.Abs(_RecentTerrainBuildingTime - averageTerrainBuildingTime) < _TOLERANCE)
                 && (Math.Abs(_RecentTerrainDetailingTime - averageTerrainDetailingTime) < _TOLERANCE)
-                && Math.Abs(_RecentPreMeshingTime - averagePreMeshingTime) < _TOLERANCE
+                && (Math.Abs(_RecentPreMeshingTime - averagePreMeshingTime) < _TOLERANCE)
                 && (Math.Abs(_RecentMeshingTime - averageMeshingTime) < _TOLERANCE))
             {
                 return;

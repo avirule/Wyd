@@ -98,11 +98,11 @@ namespace Wyd.Game.World.Chunks.Generation
 
             if (globalPositionY == noiseHeight)
             {
-                BlocksOctree.SetPointNoCollapse(localPosition,  GetCachedBlockID("grass"));
+                BlocksOctree.SetPointNoCollapse(localPosition, GetCachedBlockID("grass"));
             }
             else if ((globalPositionY < noiseHeight) && (globalPositionY >= (noiseHeight - 3))) // lay dirt up to 3 blocks below noise height
             {
-                BlocksOctree.SetPointNoCollapse(localPosition,  _SeededRandom.Next(0, 8) == 0
+                BlocksOctree.SetPointNoCollapse(localPosition, _SeededRandom.Next(0, 8) == 0
                     ? GetCachedBlockID("dirt_coarse")
                     : GetCachedBlockID("dirt"));
             }
@@ -114,7 +114,7 @@ namespace Wyd.Game.World.Chunks.Generation
                 }
                 else
                 {
-                    BlocksOctree.SetPointNoCollapse(localPosition,  GetCachedBlockID("stone"));
+                    BlocksOctree.SetPointNoCollapse(localPosition, GetCachedBlockID("stone"));
                 }
             }
 
