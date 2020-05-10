@@ -12,7 +12,6 @@ using Wyd.Controllers.State;
 using Wyd.Controllers.System;
 using Wyd.Controllers.World;
 using Wyd.Game.World.Blocks;
-using Wyd.System;
 using Wyd.System.Collections;
 using Wyd.System.Graphics;
 using Wyd.System.Jobs;
@@ -159,10 +158,6 @@ namespace Wyd.Game.World.Chunks.Generation
                 {
                     _NeighborBlocksCollections[normal] = chunkController.Blocks;
                 }
-                else
-                {
-                    _NeighborBlocksCollections[normal] = _nullCollection;
-                }
             }
         }
 
@@ -193,12 +188,18 @@ namespace Wyd.Game.World.Chunks.Generation
         /// </remarks>
         private void GenerateMesh()
         {
-            for (int x = 0; x < GenerationConstants.CHUNK_SIZE; x++)
-            for (int z = 0; z < GenerationConstants.CHUNK_SIZE; z++)
+            int index = 0;
+
             for (int y = 0; y < GenerationConstants.CHUNK_SIZE; y++)
+            for (int z = 0; z < GenerationConstants.CHUNK_SIZE; z++)
+            for (int x = 0; x < GenerationConstants.CHUNK_SIZE; x++, index++)
             {
+                if (CancellationToken.IsCancellationRequested)
+                {
+                    return;
+                }
+
                 int localPosition = x | (y << GenerationConstants.CHUNK_SIZE_BIT_SHIFT) | (z << (GenerationConstants.CHUNK_SIZE_BIT_SHIFT * 2));
-                int index = WydMath.PointToIndex(x, y, z, GenerationConstants.CHUNK_SIZE);
                 ushort currentBlockId = _Blocks[index];
 
                 if (currentBlockId == BlockController.AirID)
@@ -242,8 +243,8 @@ namespace Wyd.Game.World.Chunks.Generation
                 int faceCheckAxisValue = (localPosition >> (GenerationConstants.CHUNK_SIZE_BIT_SHIFT * iModulo3))
                                          & GenerationConstants.CHUNK_SIZE_BIT_MASK;
                 // indicates whether or not the face check is within the current chunk bounds
-                bool isFaceCheckOutOfBounds = (negativeFace && ((faceCheckAxisValue - 1) <= 0))
-                                              || (!negativeFace && ((faceCheckAxisValue + 1) >= GenerationConstants.CHUNK_SIZE_MINUS_ONE));
+                bool isFaceCheckOutOfBounds = (negativeFace && (faceCheckAxisValue == 0))
+                                              || (!negativeFace && (faceCheckAxisValue == GenerationConstants.CHUNK_SIZE_MINUS_ONE));
                 // total number of successful traversals
                 // remark: this is outside the for loop so that the if statement after can determine if any traversals have happened
                 int traversals = 0;
@@ -293,15 +294,15 @@ namespace Wyd.Game.World.Chunks.Generation
                         else
                         {
                             // if not, get local position adjusted to relative position across the chunk boundary
-                            int3 boundaryAdjustedLocalPosition = DecompressVertex(localPosition)
-                                                                 + (traversalNormal * traversals)
-                                                                 + (GenerationConstants.FaceNormalByIteration[normalIndex]
-                                                                    * -GenerationConstants.CHUNK_SIZE);
+                            int3 translatedLocalPosition = DecompressVertex(localPosition)
+                                                           + (traversalNormal * traversals)
+                                                           + (GenerationConstants.FaceNormalByIteration[normalIndex]
+                                                              * -GenerationConstants.CHUNK_SIZE);
 
                             // index into neighbor blocks collections, call .GetPoint() with adjusted local position
                             // remark: if there's no neighbor at the index given, then no chunk exists there (for instance,
                             //     chunks at the edge of render distance). In this case, return NullID so no face is rendered on edges.
-                            facingBlockId = _NeighborBlocksCollections[normalIndex].GetPoint(boundaryAdjustedLocalPosition);
+                            facingBlockId = _NeighborBlocksCollections[normalIndex]?.GetPoint(translatedLocalPosition) ?? BlockController.NullID;
                         }
 
                         // if transparent, traverse so long as facing block is not the same block id
@@ -345,30 +346,18 @@ namespace Wyd.Game.World.Chunks.Generation
                                                   | (((normal.y + 1) & 3) << 20)
                                                   | (((normal.z + 1) & 3) << 22);
 
-                    // add vertices
-                    // multiply traversals by the traversal normal, and then constrain the other axes to a minimum of 1.
-                    // remark: this is to avoid accidentally zeroing-out given vertices for any faces, for instance with
-                    //    a traversal of (0, 17, 0) and a vertex of (1, 0, 1) resulting in a [face] vertex of (0, 17, 0).
-                    int traversalVertex = CompressVertex(math.max(traversals * traversalNormal, 1));
+                    int traversalShift = GenerationConstants.CHUNK_SIZE_BIT_SHIFT * traversalNormalIndex;
+                    int traversalShiftedMask = GenerationConstants.CHUNK_SIZE_BIT_MASK << traversalShift;
                     int[] compressedVertices = BlockFaces.Vertices.FaceVerticesInt32ByNormalIndex[normalIndex];
 
                     // add highest-to-lowest to avoid persistent bounds check
                     // ReSharper disable once ForCanBeConvertedToForeach
                     for (int vertexIndex = 0; vertexIndex < compressedVertices.Length; vertexIndex++)
                     {
-                        int vertexRaw = compressedVertices[vertexIndex];
+                        int rawVertex = compressedVertices[vertexIndex];
 
-                        // these constant shorthands are for the sanity of people reading this mess
-                        const int mask = GenerationConstants.CHUNK_SIZE_BIT_MASK;
-                        const int shift = GenerationConstants.CHUNK_SIZE_BIT_SHIFT;
-
-                        // basically, this entire operation just multiplies the 'components' of this compressed vector.
-                        int compressedTraversalVertex =
-                            ((vertexRaw * traversalVertex) & mask)
-                            | ((((vertexRaw >> shift) & mask) * ((traversalVertex >> shift) & mask)) << shift)
-                            | ((((vertexRaw >> (shift * 2)) & mask) * ((traversalVertex >> (shift * 2)) & mask)) << (shift * 2));
-
-                        _MeshData.AddVertex(aggregatePositionNormal + compressedTraversalVertex);
+                        _MeshData.AddVertex((aggregatePositionNormal + (~traversalShiftedMask & rawVertex))
+                                            | ((((rawVertex >> traversalShift) * traversals) << traversalShift) & traversalShiftedMask));
                     }
 
                     // conditionally add UVs

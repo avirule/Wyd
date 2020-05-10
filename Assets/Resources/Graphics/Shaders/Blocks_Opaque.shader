@@ -30,7 +30,7 @@
             struct v2f {
                 float4 position : SV_POSITION;
                 float3 texcoord : TEXCOORD0;
-                float3 normal : NORMAL;
+                half3 normal : NORMAL;
                 float4 color : COLOR;
             };
 
@@ -38,11 +38,14 @@
 
             v2f vert(appdata v)
             {
+                float3 uncompressedVertex = float3(v.position & 63, (v.position >> 6) & 63, (v.position >> 12) & 63);
+                half3 uncompressedNormal = half3(((v.position >> 18) & 3) - 1.0, ((v.position >> 20) & 3) - 1.0, ((v.position >> 22) & 3) - 1.0);
+
                 v2f f;
-                f.position = UnityObjectToClipPos(float3(v.position & 63, (v.position >> 6) & 63, (v.position >> 12) & 63));
+                f.position = UnityObjectToClipPos(uncompressedVertex);
                 f.texcoord = v.texcoord;
-                f.normal = float3(((v.position >> 18) & 3) - 1.0, ((v.position >> 20) & 3) - 1.0, ((v.position >> 22) & 3) - 1.0);
-                f.color = 1.0;
+                f.normal = UnityObjectToClipPos(uncompressedNormal);
+                f.color = float4((uncompressedNormal + 1.0) / 2.0, 1.0);
                 return f;
             }
 
