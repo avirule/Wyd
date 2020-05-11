@@ -10,8 +10,7 @@ using Serilog.Events;
 using TMPro;
 using UnityEngine;
 using Wyd.Controllers.System;
-using Wyd.System;
-using Wyd.System.Logging.Sinks;
+using Wyd.Logging.Sinks;
 
 #endregion
 

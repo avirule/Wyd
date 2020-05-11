@@ -6,7 +6,7 @@ using System.Collections.Specialized;
 using System.Linq;
 using UnityEngine;
 using Wyd.Controllers.UI;
-using Wyd.Game.Entities.Inventory;
+using Wyd.Entities.Inventory;
 
 #endregion
 

@@ -4,8 +4,8 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using Serilog;
-using Wyd.Game.Entities;
-using Wyd.System.Extensions;
+using Wyd.Entities;
+using Wyd.Extensions;
 
 #endregion
 

@@ -1,7 +1,7 @@
 #region
 
 using System.Threading.Tasks;
-using Wyd.System.Jobs;
+using Wyd.Jobs;
 
 #endregion
 

@@ -6,8 +6,8 @@ using System.Threading.Tasks;
 using Serilog;
 using Serilog.Events;
 using UnityEngine;
-using Wyd.System.Jobs;
-using Wyd.System.Logging;
+using Wyd.Jobs;
+using Wyd.Logging;
 
 #endregion
 

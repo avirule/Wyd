@@ -6,7 +6,7 @@ using System.Collections.ObjectModel;
 using System.Collections.Specialized;
 using UnityEngine;
 using Wyd.Controllers.State;
-using Wyd.Game.Entities.Inventory;
+using Wyd.Entities.Inventory;
 
 #endregion
 

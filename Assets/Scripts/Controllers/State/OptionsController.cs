@@ -10,7 +10,7 @@ using JetBrains.Annotations;
 using Serilog;
 using SharpConfig;
 using UnityEngine;
-using Wyd.System.Graphics;
+using Wyd.Graphics;
 
 #endregion
 

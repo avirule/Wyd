@@ -12,15 +12,17 @@ using K4os.Compression.LZ4;
 using Serilog;
 using Unity.Mathematics;
 using UnityEngine;
+using UnityEngine.Assertions;
+using Wyd.Collections;
 using Wyd.Controllers.State;
 using Wyd.Controllers.System;
-using Wyd.Game.World.Blocks;
-using Wyd.Game.World.Chunks;
-using Wyd.Game.World.Chunks.Generation;
-using Wyd.System;
-using Wyd.System.Collections;
-using Wyd.System.Extensions;
-using Wyd.System.Jobs;
+using Wyd.Diagnostics;
+using Wyd.Extensions;
+using Wyd.Jobs;
+using Wyd.World.Blocks;
+using Wyd.World.Chunks;
+using Wyd.World.Chunks.Generation;
+using Debug = System.Diagnostics.Debug;
 
 #endregion
 
@@ -30,8 +32,6 @@ namespace Wyd.Controllers.World
     {
         Unbuilt,
         BuildingDispatched,
-        Undetailed,
-        DetailingDispatched,
         Mesh,
         MeshingDispatched,
         Meshed
@@ -336,9 +336,6 @@ namespace Wyd.Controllers.World
                     }
 
                     break;
-                case ChunkState.Undetailed:
-                case ChunkState.DetailingDispatched:
-                    State = State.Next();
                     break;
                 default:
                     throw new ArgumentOutOfRangeException();
@@ -448,17 +445,21 @@ namespace Wyd.Controllers.World
 
             Task OnTerrainBuildingFinished(object sender, AsyncJobEventArgs args)
             {
+                Debug.Assert(State == ChunkState.BuildingDispatched,
+                    $"{nameof(State)} should always be in the '{nameof(ChunkState.BuildingDispatched)}' state when meshing finishes.\r\n"
+                    + $"\tremark: see the {nameof(State)} property's xmldoc for  explanation.");
+
                 terrainBuilderJob.WorkFinished -= OnTerrainBuildingFinished;
 
                 if (Active)
                 {
                     Blocks = terrainBuilderJob.GetGeneratedBlockData();
-                    _terrainBuilderJobs.TryAdd(terrainBuilderJob);
 
-                    State = ChunkState.Undetailed;
+                    State = State.Next();
                 }
 
                 terrainBuilderJob.ClearData();
+                _terrainBuilderJobs.TryAdd(terrainBuilderJob);
 
                 return Task.CompletedTask;
             }
@@ -466,22 +467,6 @@ namespace Wyd.Controllers.World
             terrainBuilderJob.WorkFinished += OnTerrainBuildingFinished;
 
             AsyncJobScheduler.QueueAsyncJob(terrainBuilderJob);
-        }
-
-        public void BeginDetailing(CancellationToken cancellationToken, AsyncJobEventHandler callback, INodeCollection<ushort> blocks,
-            out object jobIdentity)
-        {
-            // ChunkTerrainDetailerJob asyncJob = new ChunkTerrainDetailerJob(cancellationToken, OriginPoint, blocks);
-            //
-            // if (callback != null)
-            // {
-            //     asyncJob.WorkFinished += callback;
-            // }
-            //
-            // jobIdentity = asyncJob.Identity;
-            //
-            // AsyncJobScheduler.QueueAsyncJob(asyncJob);
-            jobIdentity = null;
         }
 
         private void BeginMeshing()
@@ -492,10 +477,15 @@ namespace Wyd.Controllers.World
 
             Task OnMeshingFinished(object sender, AsyncJobEventArgs args)
             {
+                Debug.Assert(State == ChunkState.MeshingDispatched,
+                    $"{nameof(State)} should always be in the '{nameof(ChunkState.MeshingDispatched)}' state when meshing finishes.\r\n"
+                    + $"\tremark: see the {nameof(State)} property's xmldoc for  explanation.");
+
                 meshingJob.WorkFinished -= OnMeshingFinished;
 
                 if (Active)
                 {
+                    // in this case, the meshing job's data will be cleared and pooled synchronously, after the mesh is applied.
                     MainThreadActionsController.Current.QueueAction(() => ApplyMesh(meshingJob));
                 }
                 else
@@ -504,7 +494,8 @@ namespace Wyd.Controllers.World
                     _meshingJobs.TryAdd(meshingJob);
                 }
 
-                State = ChunkState.Meshed;
+
+                State = State.Next();
 
                 return Task.CompletedTask;
             }

@@ -7,8 +7,7 @@ using System.Diagnostics;
 using System.Runtime.CompilerServices;
 using Serilog;
 using Wyd.Controllers.State;
-using Wyd.System;
-using Wyd.System.Extensions;
+using Wyd.Extensions;
 
 #endregion
 

@@ -2,7 +2,7 @@
 
 using System.ComponentModel;
 using Wyd.Controllers.State;
-using Wyd.System.Graphics;
+using Wyd.Graphics;
 
 #endregion
 

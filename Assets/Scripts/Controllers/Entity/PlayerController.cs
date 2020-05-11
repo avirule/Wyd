@@ -8,10 +8,9 @@ using UnityEngine;
 using Wyd.Controllers.State;
 using Wyd.Controllers.UI;
 using Wyd.Controllers.World;
-using Wyd.Game.Entities;
-using Wyd.Game.World.Blocks;
-using Wyd.Game.World.Chunks.Generation;
-using Wyd.System;
+using Wyd.Entities;
+using Wyd.World.Blocks;
+using Wyd.World.Chunks.Generation;
 
 #endregion
 

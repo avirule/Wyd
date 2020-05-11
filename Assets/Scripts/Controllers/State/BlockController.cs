@@ -4,9 +4,8 @@ using System;
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 using Serilog;
-using Wyd.Game;
-using Wyd.Game.World.Blocks;
-using Wyd.System.Extensions;
+using Wyd.Extensions;
+using Wyd.World.Blocks;
 
 #endregion
 

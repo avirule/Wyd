@@ -4,8 +4,7 @@ using System;
 using UnityEditor;
 using UnityEngine;
 using UnityEngine.SceneManagement;
-using Wyd.Game;
-using Wyd.Game.World.Blocks;
+using Wyd.World.Blocks;
 
 #endregion
 

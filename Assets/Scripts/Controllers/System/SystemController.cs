@@ -3,7 +3,7 @@
 using System.Threading;
 using UnityEngine;
 using Wyd.Controllers.State;
-using Wyd.System.Jobs;
+using Wyd.Jobs;
 
 #endregion
 

@@ -9,16 +9,14 @@ using System.Threading;
 using Serilog;
 using Unity.Mathematics;
 using UnityEngine;
+using Wyd.Collections;
 using Wyd.Controllers.State;
 using Wyd.Controllers.System;
-using Wyd.Game;
-using Wyd.Game.Entities;
-using Wyd.Game.World;
-using Wyd.Game.World.Chunks;
-using Wyd.Game.World.Chunks.Generation;
-using Wyd.System;
-using Wyd.System.Collections;
-using Wyd.System.Extensions;
+using Wyd.Entities;
+using Wyd.Extensions;
+using Wyd.World;
+using Wyd.World.Chunks;
+using Wyd.World.Chunks.Generation;
 
 // ReSharper disable UnusedAutoPropertyAccessor.Global
 
@@ -408,7 +406,7 @@ namespace Wyd.Controllers.World
         {
             if (!TryGetChunk(WydMath.RoundBy(globalPosition, GenerationConstants.CHUNK_SIZE), out ChunkController chunkController))
             {
-                throw new ArgumentException("Chunk does not exist at coordinates.", nameof(globalPosition));
+                throw new ArgumentException("No chunk exists around given coordinate.", nameof(globalPosition));
             }
 
             return chunkController.GetBlock(globalPosition);
@@ -425,7 +423,7 @@ namespace Wyd.Controllers.World
         {
             if (!TryGetChunk(WydMath.RoundBy(globalPosition, GenerationConstants.CHUNK_SIZE), out ChunkController chunkController))
             {
-                throw new ArgumentException("Chunk does not exist at coordinates.", nameof(globalPosition));
+                throw new ArgumentException("No chunk exists around given coordinate.", nameof(globalPosition));
             }
 
             chunkController.PlaceBlock(globalPosition, id);
