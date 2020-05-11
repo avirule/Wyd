@@ -77,7 +77,7 @@ namespace Wyd.Collections
         public void SetPoint(int3 point, ushort value) => SetPointRecursive(point, value);
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void SetPointNoCollapse(int3 point, ushort value) => SetPointIterative(point.x, point.y , point.z, value);
+        public void SetPointNoCollapse(int3 point, ushort value) => SetPointIterative(point.x, point.y, point.z, value);
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private void SetPointRecursive(int3 point, ushort value) => _RootNode.SetPoint(_Extent, point.x, point.y, point.z, value);

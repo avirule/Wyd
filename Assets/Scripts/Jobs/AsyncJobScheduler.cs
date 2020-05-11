@@ -96,8 +96,6 @@ namespace Wyd.Jobs
         /// </remarks>
         public static void QueueAsyncJob(AsyncJob asyncJob)
         {
-            Debug.Assert(asyncJob.ProcessInstanced != null);
-
             if (AbortToken.IsCancellationRequested)
             {
                 return;
@@ -164,7 +162,6 @@ namespace Wyd.Jobs
         private static async Task ExecuteJob(AsyncJob asyncJob)
         {
             Debug.Assert(asyncJob != null);
-            Debug.Assert(asyncJob.ProcessInstanced != null);
 
             // observe cancellation token
             if (_AbortTokenSource.IsCancellationRequested)
@@ -173,14 +170,11 @@ namespace Wyd.Jobs
             }
 
             // if semaphore is empty, wait until it is released
-            if (_WorkerSemaphore.CurrentCount == 0)
-            {
-                await _WorkerSemaphore.WaitAsync().ConfigureAwait(false);
-            }
+            await _WorkerSemaphore.WaitAsync().ConfigureAwait(false);
 
             OnJobStarted(asyncJob);
 
-            await asyncJob.ProcessInstanced.ConfigureAwait(false);
+            await asyncJob.Execute().ConfigureAwait(false);
 
             OnJobFinished(asyncJob);
 

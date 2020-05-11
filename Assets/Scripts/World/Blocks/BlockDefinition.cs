@@ -1,7 +1,6 @@
 #region
 
 using System;
-using Serilog;
 
 // ReSharper disable TypeParameterCanBeVariant
 

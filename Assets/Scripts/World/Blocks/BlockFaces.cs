@@ -15,7 +15,6 @@ namespace Wyd.World.Blocks
             public static readonly IReadOnlyDictionary<Direction, int3[]> FaceVerticesByDirection;
 
 
-
             public static readonly int3[] North =
             {
                 new int3(0, 0, 1),
@@ -64,8 +63,7 @@ namespace Wyd.World.Blocks
                 new int3(1, 0, 1)
             };
 
-            static Vertices()
-            {
+            static Vertices() =>
                 FaceVerticesByDirection = new Dictionary<Direction, int3[]>
                 {
                     { Direction.North, North },
@@ -75,7 +73,6 @@ namespace Wyd.World.Blocks
                     { Direction.Up, Up },
                     { Direction.Down, Down }
                 };
-            }
         }
 
         public static class Triangles

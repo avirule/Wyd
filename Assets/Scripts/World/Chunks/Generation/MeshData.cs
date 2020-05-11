@@ -76,7 +76,7 @@ namespace Wyd.World.Chunks.Generation
                 mesh.Clear();
             }
 
-            if (_Vertices.Count == 0 || _Triangles.Count == 0)
+            if ((_Vertices.Count == 0) || (_Triangles.Count == 0))
             {
                 return;
             }

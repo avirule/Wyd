@@ -445,7 +445,7 @@ namespace Wyd.Controllers.World
             {
                 Debug.Assert(State == ChunkState.BuildingDispatched,
                     $"{nameof(State)} should always be in the '{nameof(ChunkState.BuildingDispatched)}' state when meshing finishes.\r\n"
-                    + $"\tremark: see the {nameof(State)} property's xmldoc for  explanation.");
+                    + $"\tremark: see the {nameof(State)} property's xmldoc for explanation.");
 
                 terrainBuilderJob.WorkFinished -= OnTerrainBuildingFinished;
 
