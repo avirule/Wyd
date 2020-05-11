@@ -1,6 +1,5 @@
 #region
 
-using System.Threading.Tasks;
 using Wyd.Jobs;
 
 #endregion
@@ -11,33 +10,40 @@ namespace Wyd.Controllers.UI.Components.Text.Diagnostic
     {
         private bool _UpdateDiagInfo;
 
-        protected override void Awake()
+        protected override void OnEnable()
         {
-            base.Awake();
+            base.OnEnable();
 
             AsyncJobScheduler.JobQueued += OnJobSchedulerStateChange;
             AsyncJobScheduler.JobStarted += OnJobSchedulerStateChange;
             AsyncJobScheduler.JobFinished += OnJobSchedulerStateChange;
+
+            _UpdateDiagInfo = true;
+        }
+
+        protected override void OnDisable()
+        {
+            base.OnDisable();
+
+            AsyncJobScheduler.JobQueued -= OnJobSchedulerStateChange;
+            AsyncJobScheduler.JobStarted -= OnJobSchedulerStateChange;
+            AsyncJobScheduler.JobFinished -= OnJobSchedulerStateChange;
         }
 
         protected override void TimedUpdate()
         {
             if (_UpdateDiagInfo)
             {
-                _TextObject.text = string.Format(_Format,
-                    AsyncJobScheduler.MaximumProcessingJobs,
-                    AsyncJobScheduler.ProcessingJobs,
+                _TextObject.text = string.Format(_Format, AsyncJobScheduler.MaximumProcessingJobs, AsyncJobScheduler.ProcessingJobs,
                     AsyncJobScheduler.QueuedJobs);
 
                 _UpdateDiagInfo = false;
             }
         }
 
-        private Task OnJobSchedulerStateChange(object sender, AsyncJobEventArgs args)
+        private void OnJobSchedulerStateChange(object _, AsyncJob __)
         {
             _UpdateDiagInfo = true;
-
-            return Task.CompletedTask;
         }
     }
 }

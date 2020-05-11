@@ -2,7 +2,6 @@
 
 using System.Collections.Generic;
 using System.Threading;
-using System.Threading.Tasks;
 using Serilog;
 using Serilog.Events;
 using UnityEngine;
@@ -44,12 +43,9 @@ namespace Wyd.Controllers.System
                     $"'{nameof(AsyncJobScheduler.MaximumProcessingJobs)}' modified ({newMaximumProcessingJobs}).");
             };
 
-            AsyncJobScheduler.JobQueued += (sender, args) =>
+            AsyncJobScheduler.JobQueued += (sender, asyncJob) =>
             {
-                Log.Information(
-                    $"Queued new {nameof(AsyncJob)} for completion ({args.AsyncJob.GetType().Name}).");
-
-                return Task.CompletedTask;
+                Log.Information($"Queued new {nameof(AsyncJob)} for completion ({asyncJob.GetType().Name}).");
             };
 
             Application.logMessageReceived += LogHandler;

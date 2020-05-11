@@ -41,12 +41,16 @@ namespace Wyd.Jobs
 
         public event AsyncJobEventHandler WorkFinished;
 
+        internal Task ProcessInstanced { get; }
+
         public AsyncJob()
         {
             _Stopwatch = new Stopwatch();
             Identity = Guid.NewGuid();
             CancellationToken = AsyncJobScheduler.AbortToken;
             IsWorkFinished = false;
+
+            ProcessInstanced = Execute();
         }
 
         /// <summary>
@@ -58,13 +62,17 @@ namespace Wyd.Jobs
             Identity = Guid.NewGuid();
             CancellationToken = CancellationTokenSource.CreateLinkedTokenSource(AsyncJobScheduler.AbortToken, cancellationToken).Token;
             IsWorkFinished = false;
+
+            ProcessInstanced = Execute();
         }
 
         /// <summary>
         ///     Begins executing the <see cref="AsyncJob" />.
         /// </summary>
-        public async Task Execute()
+        private async Task Execute()
         {
+            Debug.Assert(ProcessInstanced != null);
+
             try
             {
                 if (CancellationToken.IsCancellationRequested)

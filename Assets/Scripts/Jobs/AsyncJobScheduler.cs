@@ -3,6 +3,7 @@
 using System;
 using System.Threading;
 using System.Threading.Tasks;
+using UnityEngine;
 
 #endregion
 
@@ -35,25 +36,13 @@ namespace Wyd.Jobs
         {
             _AbortTokenSource = new CancellationTokenSource();
 
-            JobQueued += (sender, args) =>
-            {
-                Interlocked.Increment(ref _QueuedJobs);
-
-                return Task.CompletedTask;
-            };
+            JobQueued += (sender, args) => { Interlocked.Increment(ref _QueuedJobs); };
             JobStarted += (sender, args) =>
             {
                 Interlocked.Decrement(ref _QueuedJobs);
                 Interlocked.Increment(ref _ProcessingJobs);
-
-                return Task.CompletedTask;
             };
-            JobFinished += (sender, args) =>
-            {
-                Interlocked.Decrement(ref _ProcessingJobs);
-
-                return Task.CompletedTask;
-            };
+            JobFinished += (sender, args) => { Interlocked.Decrement(ref _ProcessingJobs); };
 
             ModifyMaximumProcessingJobCount(1);
         }
@@ -98,34 +87,58 @@ namespace Wyd.Jobs
             OnMaximumProcessingJobsChanged(MaximumProcessingJobs);
         }
 
+        /// <summary>
+        ///     Queues given <see cref="AsyncInvocation" /> for execution by <see cref="AsyncJobScheduler" />.
+        /// </summary>
+        /// <param name="asyncJob"><see cref="AsyncJob" /> to execute.</param>
+        /// <remarks>
+        ///     For performance reasons, the internal execution method utilizes ConfigureAwait(false).
+        /// </remarks>
         public static void QueueAsyncJob(AsyncJob asyncJob)
         {
+            Debug.Assert(asyncJob.ProcessInstanced != null);
+
             if (AbortToken.IsCancellationRequested)
             {
                 return;
             }
 
-            OnJobQueued(new AsyncJobEventArgs(asyncJob));
+            OnJobQueued(asyncJob);
 
             Task.Run(() => ExecuteJob(asyncJob));
         }
 
-        public static void QueueAsyncInvocation(AsyncInvocation invocation)
+        /// <summary>
+        ///     Queues given <see cref="AsyncInvocation" /> for execution by <see cref="AsyncJobScheduler" />.
+        /// </summary>
+        /// <param name="asyncInvocation"><see cref="AsyncInvocation" /> to invoke.</param>
+        /// <remarks>
+        ///     For performance reasons, the internal execution method utilizes ConfigureAwait(false).
+        /// </remarks>
+        public static void QueueAsyncInvocation(AsyncInvocation asyncInvocation)
         {
             if (AbortToken.IsCancellationRequested)
             {
                 return;
             }
-            else if (invocation == null)
+            else if (asyncInvocation == null)
             {
-                throw new NullReferenceException(nameof(invocation));
+                throw new NullReferenceException(nameof(asyncInvocation));
             }
 
-            Task.Run(() => ExecuteInvocation(invocation));
+            Task.Run(() => ExecuteInvocation(asyncInvocation));
         }
 
+        /// <summary>
+        ///     Waits asynchronously until work is ready to be done.
+        /// </summary>
         public static async Task WaitAsync() => await _WorkerSemaphore.WaitAsync();
-        public static async Task WaitAsync(TimeSpan timeout) => await _WorkerSemaphore.WaitAsync(timeout);
+
+        /// <summary>
+        ///     Waits asynchronously until work is ready to be done, or until timeout is reached..
+        /// </summary>
+        /// <param name="timeout"><see cref="TimeSpan" /> to wait until returning without successful wait.</param>
+        public static async Task<bool> WaitAsync(TimeSpan timeout) => await _WorkerSemaphore.WaitAsync(timeout);
 
         #endregion
 
@@ -134,6 +147,8 @@ namespace Wyd.Jobs
 
         private static async Task ExecuteInvocation(AsyncInvocation invocation)
         {
+            Debug.Assert(invocation != null);
+
             if (AbortToken.IsCancellationRequested)
             {
                 return;
@@ -148,20 +163,26 @@ namespace Wyd.Jobs
 
         private static async Task ExecuteJob(AsyncJob asyncJob)
         {
+            Debug.Assert(asyncJob != null);
+            Debug.Assert(asyncJob.ProcessInstanced != null);
+
+            // observe cancellation token
             if (_AbortTokenSource.IsCancellationRequested)
             {
                 return;
             }
 
-            await _WorkerSemaphore.WaitAsync().ConfigureAwait(false);
+            // if semaphore is empty, wait until it is released
+            if (_WorkerSemaphore.CurrentCount == 0)
+            {
+                await _WorkerSemaphore.WaitAsync().ConfigureAwait(false);
+            }
 
-            AsyncJobEventArgs args = new AsyncJobEventArgs(asyncJob);
+            OnJobStarted(asyncJob);
 
-            OnJobStarted(args);
+            await asyncJob.ProcessInstanced.ConfigureAwait(false);
 
-            await asyncJob.Execute().ConfigureAwait(false);
-
-            OnJobFinished(args);
+            OnJobFinished(asyncJob);
 
             _WorkerSemaphore.Release();
         }
@@ -177,19 +198,19 @@ namespace Wyd.Jobs
         ///     Called when a job is queued.
         /// </summary>
         /// <remarks>This event will not necessarily happen synchronously with the main thread.</remarks>
-        public static event AsyncJobEventHandler JobQueued;
+        public static event EventHandler<AsyncJob> JobQueued;
 
         /// <summary>
         ///     Called when a job starts execution.
         /// </summary>
         /// <remarks>This event will not necessarily happen synchronously with the main thread.</remarks>
-        public static event AsyncJobEventHandler JobStarted;
+        public static event EventHandler<AsyncJob> JobStarted;
 
         /// <summary>
         ///     Called when a job finishes execution.
         /// </summary>
         /// <remarks>This event will not necessarily happen synchronously with the main thread.</remarks>
-        public static event AsyncJobEventHandler JobFinished;
+        public static event EventHandler<AsyncJob> JobFinished;
 
 
         private static void OnMaximumProcessingJobsChanged(long newMaximumProcessingJobs)
@@ -197,17 +218,17 @@ namespace Wyd.Jobs
             MaximumProcessingJobsChanged?.Invoke(MaximumProcessingJobsChanged, newMaximumProcessingJobs);
         }
 
-        private static void OnJobQueued(AsyncJobEventArgs args)
+        private static void OnJobQueued(AsyncJob args)
         {
             JobQueued?.Invoke(JobQueued, args);
         }
 
-        private static void OnJobStarted(AsyncJobEventArgs args)
+        private static void OnJobStarted(AsyncJob args)
         {
             JobStarted?.Invoke(JobStarted, args);
         }
 
-        private static void OnJobFinished(AsyncJobEventArgs args)
+        private static void OnJobFinished(AsyncJob args)
         {
             JobFinished?.Invoke(JobFinished, args);
         }

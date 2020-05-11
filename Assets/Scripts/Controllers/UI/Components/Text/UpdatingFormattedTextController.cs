@@ -14,7 +14,7 @@ namespace Wyd.Controllers.UI.Components.Text
         private TimeSpan _UpdatesPerSecondTimeSpan;
         private Stopwatch _UpdateTimer;
 
-        protected float UpdatesPerSecond
+        private float UpdatesPerSecond
         {
             get => _UpdatesPerSecond;
             set
@@ -34,12 +34,12 @@ namespace Wyd.Controllers.UI.Components.Text
             _TextObject.text = string.Format(_Format, "0", "0", "0", "0", "0", "0");
         }
 
-        private void OnEnable()
+        protected virtual void OnEnable()
         {
             PerFrameUpdateController.Current.RegisterPerFrameUpdater(150, this);
         }
 
-        private void OnDisable()
+        protected virtual void OnDisable()
         {
             PerFrameUpdateController.Current.DeregisterPerFrameUpdater(150, this);
         }

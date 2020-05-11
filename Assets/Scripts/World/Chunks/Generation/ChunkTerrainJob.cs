@@ -23,7 +23,7 @@ namespace Wyd.World.Chunks.Generation
         protected Random _SeededRandom;
         protected INodeCollection<ushort> _Blocks;
 
-        protected ChunkTerrainJob() : base(GenerationConstants.CHUNK_SIZE_CUBED, 128) => Stopwatch = new Stopwatch();
+        protected ChunkTerrainJob() : base(GenerationConstants.CHUNK_SIZE_CUBED, 256) => Stopwatch = new Stopwatch();
 
         protected void SetData(CancellationToken cancellationToken, int3 originPoint)
         {
