@@ -4,6 +4,7 @@ using System;
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 using Serilog;
+using UnityEngine;
 using Wyd.Extensions;
 using Wyd.World.Blocks;
 
@@ -68,7 +69,6 @@ namespace Wyd.Controllers.State
         ///     Friendly name for <see cref="BlockDefinition" />. NOTE: This value is automatically lowercased
         ///     upon registration.
         /// </param>
-        /// <param name="type">Given type for <see cref="BlockDefinition" /></param>
         /// <param name="uvsRule">Optional function to return custom textures for <see cref="BlockDefinition" />.</param>
         /// <param name="properties">
         ///     Optional <see cref="BlockDefinition.Property" />s to full qualify the
@@ -107,25 +107,22 @@ namespace Wyd.Controllers.State
 
         public bool GetUVs(ushort blockId, Direction direction, out ushort textureId)
         {
-            textureId = 0;
-
             if (!BlockIdExists(blockId))
             {
-                Log.Error(
-                    $"Failed to return block sprite UVs for direction `{direction}` of block with id `{blockId}`: block id does not exist.");
-                return false;
+                throw new ArgumentOutOfRangeException(nameof(blockId), "Block ID does not exist.");
             }
 
-            BlockDefinitions[blockId].EvaluateUVsRule(blockId, direction, out string textureName);
+            BlockDefinitions[blockId].GetUVs(direction, out string textureName);
 
             if (!TextureController.Current.TryGetTextureId(textureName, out textureId))
             {
-                Log.Warning(
-                    $"Failed to return block sprite UVs for direction `{direction}` of block with id `{blockId}`: texture does not exist for block.");
+                textureId = 0;
                 return false;
             }
-
-            return true;
+            else
+            {
+                return true;
+            }
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]

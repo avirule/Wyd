@@ -42,190 +42,6 @@ namespace Wyd.World.Chunks.Generation
             _NeighborBlocksCollections = new INodeCollection<ushort>[6];
         }
 
-        protected override async Task Process()
-        {
-            if ((_BlocksCollection == null) || (_BlocksCollection.IsUniform && (_BlocksCollection.Value == BlockController.AirID)))
-            {
-                return;
-            }
-
-            _Stopwatch.Restart();
-
-            PrepareMeshing();
-
-            _Stopwatch.Stop();
-
-            _PreMeshingTimeSpan = _Stopwatch.Elapsed;
-
-            _Stopwatch.Restart();
-
-            if (_AggressiveFaceMerging)
-            {
-                GenerateTraversalMesh();
-            }
-            else
-            {
-                await BatchTasksAndAwait().ConfigureAwait(false);
-            }
-
-
-            FinishMeshing();
-
-            _Stopwatch.Stop();
-
-            _MeshingTimeSpan = _Stopwatch.Elapsed;
-        }
-
-        protected override Task ProcessIndex(int index)
-        {
-            if (CancellationToken.IsCancellationRequested)
-            {
-                return Task.CompletedTask;
-            }
-
-            int localPosition = CompressVertex(WydMath.IndexTo3D(index, GenerationConstants.CHUNK_SIZE));
-            ushort currentBlockId = _MeshingBlocks[index].ID;
-
-            if (currentBlockId == BlockController.AirID)
-            {
-                return Task.CompletedTask;
-            }
-
-            bool transparentTraversal = BlockController.Current.CheckBlockHasProperty(currentBlockId, BlockDefinition.Property.Transparent);
-
-            // iterate once over all 6 faces of given cubic space
-            for (int normalIndex = 0; normalIndex < 6; normalIndex++)
-            {
-                // face direction always exists on a single bit, so shift 1 by the current normalIndex (0-5)
-                Direction faceDirection = (Direction)(1 << normalIndex);
-
-                // check if current index has face already
-                if (_MeshingBlocks[index].HasFace(faceDirection))
-                {
-                    continue;
-                }
-
-                // indicates whether the current face checking direction is negative or positive
-                bool isNegativeFace = (normalIndex - 3) >= 0;
-                // normalIndex constrained to represent the 3 axes
-                int iModulo3 = normalIndex % 3;
-                int iModulo3Shift = GenerationConstants.CHUNK_SIZE_BIT_SHIFT * iModulo3;
-                // axis value of the current face check direction
-                // example: for iteration normalIndex == 0—which is positive X—it'd be equal to localPosition.x
-                int faceCheckAxisValue = (localPosition >> iModulo3Shift) & GenerationConstants.CHUNK_SIZE_BIT_MASK;
-                // indicates whether or not the face check is within the current chunk bounds
-                bool isFaceCheckOutOfBounds = (!isNegativeFace && (faceCheckAxisValue == (GenerationConstants.CHUNK_SIZE - 1)))
-                                              || (isNegativeFace && (faceCheckAxisValue == 0));
-
-
-                if (!isFaceCheckOutOfBounds)
-                {
-                    // amount by integer to add to current traversal index to get 3D->1D position of facing block
-                    int facedBlockIndex = index + GenerationConstants.IndexStepByNormalIndex[normalIndex];
-                    // if so, index into block ids and set facingBlockId
-                    ushort facedBlockId = _MeshingBlocks[facedBlockIndex].ID;
-
-                    // if transparent, traverse so long as facing block is not the same block id
-                    // if opaque, traverse so long as facing block is transparent
-                    if (transparentTraversal)
-                    {
-                        if (currentBlockId != facedBlockId)
-                        {
-                            continue;
-                        }
-                    }
-                    else if (!BlockController.Current.CheckBlockHasProperty(facedBlockId, BlockDefinition.Property.Transparent))
-                    {
-                        if (!isNegativeFace)
-                        {
-                            Direction inverseFaceDirection = (Direction)(1 << ((normalIndex + 3) % 6));
-                            _MeshingBlocks[facedBlockIndex].SetFace(inverseFaceDirection);
-                        }
-
-                        continue;
-                    }
-                }
-                else
-                {
-                    // this block of code translates the integer local position to the local position of the neighbor at [normalIndex]
-                    int sign = isNegativeFace ? -1 : 1;
-                    int iModuloComponentMask = GenerationConstants.CHUNK_SIZE_BIT_MASK << iModulo3Shift;
-                    int finalLocalPosition = (~iModuloComponentMask & localPosition)
-                                             | (WydMath.Wrap(((localPosition & iModuloComponentMask) >> iModulo3Shift) + sign,
-                                                    GenerationConstants.CHUNK_SIZE, 0, GenerationConstants.CHUNK_SIZE - 1)
-                                                << iModulo3Shift);
-
-                    // index into neighbor blocks collections, call .GetPoint() with adjusted local position
-                    // remark: if there's no neighbor at the index given, then no chunk exists there (for instance,
-                    //     chunks at the edge of render distance). In this case, return NullID so no face is rendered on edges.
-                    ushort facedBlockId = _NeighborBlocksCollections[normalIndex]?.GetPoint(DecompressVertex(finalLocalPosition))
-                                          ?? BlockController.NullID;
-
-                    if (transparentTraversal)
-                    {
-                        if (currentBlockId != facedBlockId)
-                        {
-                            continue;
-                        }
-                    }
-                    else if (!BlockController.Current.CheckBlockHasProperty(facedBlockId, BlockDefinition.Property.Transparent))
-
-                    {
-                        continue;
-                    }
-                }
-
-                _MeshingBlocks[index].SetFace(faceDirection);
-
-                if (BlockController.Current.GetUVs(currentBlockId, faceDirection, out ushort textureId))
-                {
-                    int compressedUv = (textureId << (GenerationConstants.CHUNK_SIZE_BIT_SHIFT * 2))
-                                       ^ (1 << GenerationConstants.CHUNK_SIZE_BIT_SHIFT)
-                                       ^ 1;
-
-                    int normals = GenerationConstants.NormalByIteration[normalIndex];
-                    int[] compressedVertices = GenerationConstants.VerticesByIteration[normalIndex];
-
-                    _MeshData.AddVertex((localPosition + compressedVertices[3]) | normals);
-                    _MeshData.AddVertex(compressedUv & (int.MaxValue << (GenerationConstants.CHUNK_SIZE_BIT_SHIFT * 2)));
-
-                    _MeshData.AddVertex((localPosition + compressedVertices[2]) | normals);
-                    _MeshData.AddVertex(compressedUv & (int.MaxValue << GenerationConstants.CHUNK_SIZE_BIT_SHIFT));
-
-                    _MeshData.AddVertex((localPosition + compressedVertices[1]) | normals);
-                    _MeshData.AddVertex(compressedUv & ~(GenerationConstants.CHUNK_SIZE_BIT_MASK << GenerationConstants.CHUNK_SIZE_BIT_SHIFT));
-
-                    _MeshData.AddVertex((localPosition + compressedVertices[0]) | normals);
-                    _MeshData.AddVertex(compressedUv & int.MaxValue);
-
-
-                    int verticesCount = _MeshData.VerticesCount / 2;
-                    int transparentAsInt = Convert.ToInt32(transparentTraversal);
-
-                    _MeshData.AddTriangle(transparentAsInt, 0 + verticesCount);
-                    _MeshData.AddTriangle(transparentAsInt, 2 + verticesCount);
-                    _MeshData.AddTriangle(transparentAsInt, 1 + verticesCount);
-                    _MeshData.AddTriangle(transparentAsInt, 2 + verticesCount);
-                    _MeshData.AddTriangle(transparentAsInt, 3 + verticesCount);
-                    _MeshData.AddTriangle(transparentAsInt, 1 + verticesCount);
-                }
-                else { }
-            }
-
-            return Task.CompletedTask;
-        }
-
-        protected override Task ProcessFinished()
-        {
-            if (!CancellationToken.IsCancellationRequested)
-            {
-                DiagnosticsController.Current.RollingPreMeshingTimes.Enqueue(_PreMeshingTimeSpan);
-                DiagnosticsController.Current.RollingMeshingTimes.Enqueue(_MeshingTimeSpan);
-            }
-
-            return Task.CompletedTask;
-        }
-
 
         #region Data
 
@@ -272,13 +88,88 @@ namespace Wyd.World.Chunks.Generation
         #endregion
 
 
-        #region Generation
+        #region AsyncJob Overrides
+
+        protected override async Task Process()
+        {
+            if ((_BlocksCollection == null) || (_BlocksCollection.IsUniform && (_BlocksCollection.Value == BlockController.AirID)))
+            {
+                return;
+            }
+
+            _Stopwatch.Restart();
+
+            PrepareMeshing();
+
+            _Stopwatch.Stop();
+
+            _PreMeshingTimeSpan = _Stopwatch.Elapsed;
+
+            _Stopwatch.Restart();
+
+            if (_AggressiveFaceMerging)
+            {
+                GenerateTraversalMesh();
+            }
+            else
+            {
+                await BatchTasksAndAwait().ConfigureAwait(false);
+            }
+
+
+            FinishMeshing();
+
+            _Stopwatch.Stop();
+
+            _MeshingTimeSpan = _Stopwatch.Elapsed;
+        }
+
+        protected override Task ProcessIndex(int index)
+        {
+            if (CancellationToken.IsCancellationRequested)
+            {
+                return Task.CompletedTask;
+            }
+
+            ushort currentBlockId = _MeshingBlocks[index].ID;
+            int localPosition = CompressVertex(WydMath.IndexTo3D(index, GenerationConstants.CHUNK_SIZE));
+
+            if (currentBlockId == BlockController.AirID)
+            {
+                return Task.CompletedTask;
+            }
+
+            bool transparentTraversal = BlockController.Current.CheckBlockHasProperty(currentBlockId, BlockDefinition.Property.Transparent);
+
+            NaiveMeshIndex(index, localPosition, currentBlockId, transparentTraversal);
+
+            return Task.CompletedTask;
+        }
+
+        protected override Task ProcessFinished()
+        {
+            if (!CancellationToken.IsCancellationRequested)
+            {
+                DiagnosticsController.Current.RollingPreMeshingTimes.Enqueue(_PreMeshingTimeSpan);
+                DiagnosticsController.Current.RollingMeshingTimes.Enqueue(_MeshingTimeSpan);
+            }
+
+            return Task.CompletedTask;
+        }
+
+        #endregion
+
+
+        #region Mesh Generation
 
         private void PrepareMeshing()
         {
-            Debug.Assert(_BlocksCollection != null, $"{nameof(_BlocksCollection)} should not be null when meshing is started. It's possible {nameof(SetData)}() has not been called.");
-            Debug.Assert(_NeighborBlocksCollections != null, $"{nameof(_NeighborBlocksCollections)} should not be null when meshing is started. It's possible {nameof(SetData)}() has not been called.");
-            Debug.Assert(_NeighborBlocksCollections.Length == 6, $"{nameof(_NeighborBlocksCollections)} should have a length of 6, one for each neighboring chunk. It's possible {nameof(SetData)}() has not been called.");
+            Debug.Assert(_BlocksCollection != null,
+                $"{nameof(_BlocksCollection)} should not be null when meshing is started. It's possible {nameof(SetData)}() has not been called.");
+            Debug.Assert(_NeighborBlocksCollections != null,
+                $"{nameof(_NeighborBlocksCollections)} should not be null when meshing is started. It's possible {nameof(SetData)}() has not been called.");
+            Debug.Assert(_NeighborBlocksCollections.Length == 6,
+                $"{nameof(_NeighborBlocksCollections)} should have a length of 6, one for each neighboring chunk. It's possible {nameof(SetData)}() has not been called.");
 
             // retrieve existing objects from object pool
             _MeshingBlocks = _meshingBlockArrayPool.Retrieve() ?? new MeshingBlock[GenerationConstants.CHUNK_SIZE_CUBED];
@@ -329,8 +220,9 @@ namespace Wyd.World.Chunks.Generation
                 }
 
                 ushort currentBlockId = _MeshingBlocks[index].ID;
-                int localPosition = x | (y << GenerationConstants.CHUNK_SIZE_BIT_SHIFT)
-                                      | (z << (GenerationConstants.CHUNK_SIZE_BIT_SHIFT * 2));
+                int localPosition = x
+                                    | (y << GenerationConstants.CHUNK_SIZE_BIT_SHIFT)
+                                    | (z << (GenerationConstants.CHUNK_SIZE_BIT_SHIFT * 2));
 
                 if (currentBlockId == BlockController.AirID)
                 {
@@ -348,10 +240,17 @@ namespace Wyd.World.Chunks.Generation
         /// <param name="index">Current working index.</param>
         /// <param name="localPosition">3D projected local position of the current working index.</param>
         /// <param name="currentBlockId">Block ID present at the current working index.</param>
-        /// <param name="transparentTraversal">Whether or not this traversal uses transparent-specific conditionals.</param>
-        private void TraverseIndex(int index, int localPosition, ushort currentBlockId, bool transparentTraversal)
+        /// <param name="isCurrentBlockTransparent">Whether or not this traversal uses transparent-specific conditionals.</param>
+        private void TraverseIndex(int index, int localPosition, ushort currentBlockId, bool isCurrentBlockTransparent)
         {
             Debug.Assert(currentBlockId != BlockController.AirID, $"{nameof(TraverseIndex)} should not run on air blocks.");
+            Debug.Assert((index >= 0) && (index < GenerationConstants.CHUNK_SIZE_CUBED), $"{nameof(index)} is not within chunk bounds.");
+            Debug.Assert(WydMath.PointToIndex(DecompressVertex(localPosition), GenerationConstants.CHUNK_SIZE) == index,
+                $"{nameof(localPosition)} does not match given {nameof(index)}.");
+            Debug.Assert(_MeshingBlocks[index].ID == currentBlockId, $"{currentBlockId} is not equal to block ID at given index.");
+            Debug.Assert(
+                BlockController.Current.CheckBlockHasProperty(currentBlockId, BlockDefinition.Property.Transparent) == isCurrentBlockTransparent,
+                $"Given transparency state for {nameof(currentBlockId)} does not match actual block transparency.");
 
             // iterate once over all 6 faces of given cubic space
             for (int normalIndex = 0; normalIndex < 6; normalIndex++)
@@ -413,7 +312,7 @@ namespace Wyd.World.Chunks.Generation
 
                             // if transparent, traverse so long as facing block is not the same block id
                             // if opaque, traverse so long as facing block is transparent
-                            if (transparentTraversal)
+                            if (isCurrentBlockTransparent)
                             {
                                 if (currentBlockId != facedBlockId)
                                 {
@@ -448,7 +347,7 @@ namespace Wyd.World.Chunks.Generation
                             ushort facedBlockId = _NeighborBlocksCollections[normalIndex]?.GetPoint(DecompressVertex(finalLocalPosition))
                                                   ?? BlockController.NullID;
 
-                            if (transparentTraversal)
+                            if (isCurrentBlockTransparent)
                             {
                                 if (currentBlockId != facedBlockId)
                                 {
@@ -470,7 +369,7 @@ namespace Wyd.World.Chunks.Generation
                         continue;
                     }
 
-                    if (traversals == 0 || !BlockController.Current.GetUVs(currentBlockId, faceDirection, out ushort textureId))
+                    if ((traversals == 0) || !BlockController.Current.GetUVs(currentBlockId, faceDirection, out ushort textureId))
                     {
                         break;
                     }
@@ -516,7 +415,7 @@ namespace Wyd.World.Chunks.Generation
 
                     // add triangles
                     int verticesCount = _MeshData.VerticesCount / 2;
-                    int transparentAsInt = Convert.ToInt32(transparentTraversal);
+                    int transparentAsInt = Convert.ToInt32(isCurrentBlockTransparent);
 
                     _MeshData.AddTriangle(transparentAsInt, 0 + verticesCount);
                     _MeshData.AddTriangle(transparentAsInt, 2 + verticesCount);
@@ -527,6 +426,136 @@ namespace Wyd.World.Chunks.Generation
 
                     break;
                 }
+            }
+        }
+
+        private void NaiveMeshIndex(int index, int localPosition, ushort currentBlockId, bool isCurrentBlockTransparent)
+        {
+            Debug.Assert(currentBlockId != BlockController.AirID, $"{nameof(TraverseIndex)} should not run on air blocks.");
+            Debug.Assert((index >= 0) && (index < GenerationConstants.CHUNK_SIZE_CUBED), $"{nameof(index)} is not within chunk bounds.");
+            Debug.Assert(WydMath.PointToIndex(DecompressVertex(localPosition), GenerationConstants.CHUNK_SIZE) == index,
+                $"{nameof(localPosition)} does not match given {nameof(index)}.");
+            Debug.Assert(_MeshingBlocks[index].ID == currentBlockId, $"{currentBlockId} is not equal to block ID at given index.");
+            Debug.Assert(
+                BlockController.Current.CheckBlockHasProperty(currentBlockId, BlockDefinition.Property.Transparent) == isCurrentBlockTransparent,
+                $"Given transparency state for {nameof(currentBlockId)} does not match actual block transparency.");
+
+            // iterate once over all 6 faces of given cubic space
+            for (int normalIndex = 0; normalIndex < 6; normalIndex++)
+            {
+                // face direction always exists on a single bit, so shift 1 by the current normalIndex (0-5)
+                Direction faceDirection = (Direction)(1 << normalIndex);
+
+                // check if current index has face already
+                if (_MeshingBlocks[index].HasFace(faceDirection))
+                {
+                    continue;
+                }
+
+                // indicates whether the current face checking direction is negative or positive
+                bool isNegativeFace = (normalIndex - 3) >= 0;
+                // normalIndex constrained to represent the 3 axes
+                int iModulo3 = normalIndex % 3;
+                int iModulo3Shift = GenerationConstants.CHUNK_SIZE_BIT_SHIFT * iModulo3;
+                // axis value of the current face check direction
+                // example: for iteration normalIndex == 0—which is positive X—it'd be equal to localPosition.x
+                int faceCheckAxisValue = (localPosition >> iModulo3Shift) & GenerationConstants.CHUNK_SIZE_BIT_MASK;
+                // indicates whether or not the face check is within the current chunk bounds
+                bool isFaceCheckOutOfBounds = (!isNegativeFace && (faceCheckAxisValue == (GenerationConstants.CHUNK_SIZE - 1)))
+                                              || (isNegativeFace && (faceCheckAxisValue == 0));
+
+                if (!isFaceCheckOutOfBounds)
+                {
+                    // amount by integer to add to current traversal index to get 3D->1D position of facing block
+                    int facedBlockIndex = index + GenerationConstants.IndexStepByNormalIndex[normalIndex];
+                    // if so, index into block ids and set facingBlockId
+                    ushort facedBlockId = _MeshingBlocks[facedBlockIndex].ID;
+
+                    // if transparent, traverse so long as facing block is not the same block id
+                    // if opaque, traverse so long as facing block is transparent
+                    if (isCurrentBlockTransparent)
+                    {
+                        if (currentBlockId != facedBlockId)
+                        {
+                            continue;
+                        }
+                    }
+                    else if (!BlockController.Current.CheckBlockHasProperty(facedBlockId, BlockDefinition.Property.Transparent))
+                    {
+                        if (!isNegativeFace)
+                        {
+                            Direction inverseFaceDirection = (Direction)(1 << ((normalIndex + 3) % 6));
+                            _MeshingBlocks[facedBlockIndex].SetFace(inverseFaceDirection);
+                        }
+
+                        continue;
+                    }
+                }
+                else
+                {
+                    // this block of code translates the integer local position to the local position of the neighbor at [normalIndex]
+                    int sign = isNegativeFace ? -1 : 1;
+                    int iModuloComponentMask = GenerationConstants.CHUNK_SIZE_BIT_MASK << iModulo3Shift;
+                    int finalLocalPosition = (~iModuloComponentMask & localPosition)
+                                             | (WydMath.Wrap(((localPosition & iModuloComponentMask) >> iModulo3Shift) + sign,
+                                                    GenerationConstants.CHUNK_SIZE, 0, GenerationConstants.CHUNK_SIZE - 1)
+                                                << iModulo3Shift);
+
+                    // index into neighbor blocks collections, call .GetPoint() with adjusted local position
+                    // remark: if there's no neighbor at the index given, then no chunk exists there (for instance,
+                    //     chunks at the edge of render distance). In this case, return NullID so no face is rendered on edges.
+                    ushort facedBlockId = _NeighborBlocksCollections[normalIndex]?.GetPoint(DecompressVertex(finalLocalPosition))
+                                          ?? BlockController.NullID;
+
+                    if (isCurrentBlockTransparent)
+                    {
+                        if (currentBlockId != facedBlockId)
+                        {
+                            continue;
+                        }
+                    }
+                    else if (!BlockController.Current.CheckBlockHasProperty(facedBlockId, BlockDefinition.Property.Transparent))
+
+                    {
+                        continue;
+                    }
+                }
+
+                _MeshingBlocks[index].SetFace(faceDirection);
+
+                if (BlockController.Current.GetUVs(currentBlockId, faceDirection, out ushort textureId))
+                {
+                    int compressedUv = (textureId << (GenerationConstants.CHUNK_SIZE_BIT_SHIFT * 2))
+                                       ^ (1 << GenerationConstants.CHUNK_SIZE_BIT_SHIFT)
+                                       ^ 1;
+
+                    int normals = GenerationConstants.NormalByIteration[normalIndex];
+                    int[] compressedVertices = GenerationConstants.VerticesByIteration[normalIndex];
+
+                    _MeshData.AddVertex((localPosition + compressedVertices[3]) | normals);
+                    _MeshData.AddVertex(compressedUv & (int.MaxValue << (GenerationConstants.CHUNK_SIZE_BIT_SHIFT * 2)));
+
+                    _MeshData.AddVertex((localPosition + compressedVertices[2]) | normals);
+                    _MeshData.AddVertex(compressedUv & (int.MaxValue << GenerationConstants.CHUNK_SIZE_BIT_SHIFT));
+
+                    _MeshData.AddVertex((localPosition + compressedVertices[1]) | normals);
+                    _MeshData.AddVertex(compressedUv & ~(GenerationConstants.CHUNK_SIZE_BIT_MASK << GenerationConstants.CHUNK_SIZE_BIT_SHIFT));
+
+                    _MeshData.AddVertex((localPosition + compressedVertices[0]) | normals);
+                    _MeshData.AddVertex(compressedUv & int.MaxValue);
+
+
+                    int verticesCount = _MeshData.VerticesCount / 2;
+                    int transparentAsInt = Convert.ToInt32(isCurrentBlockTransparent);
+
+                    _MeshData.AddTriangle(transparentAsInt, 0 + verticesCount);
+                    _MeshData.AddTriangle(transparentAsInt, 2 + verticesCount);
+                    _MeshData.AddTriangle(transparentAsInt, 1 + verticesCount);
+                    _MeshData.AddTriangle(transparentAsInt, 2 + verticesCount);
+                    _MeshData.AddTriangle(transparentAsInt, 3 + verticesCount);
+                    _MeshData.AddTriangle(transparentAsInt, 1 + verticesCount);
+                }
+                else { }
             }
         }
 
@@ -563,7 +592,5 @@ namespace Wyd.World.Chunks.Generation
                 (vertex >> (GenerationConstants.CHUNK_SIZE_BIT_SHIFT * 2)) & GenerationConstants.CHUNK_SIZE_BIT_MASK);
 
         #endregion
-
-
     }
 }

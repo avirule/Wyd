@@ -55,16 +55,8 @@ namespace Wyd.World.Blocks
             _UVsRule = uvsRule ?? _defaultUVsRule;
         }
 
-        public virtual bool EvaluateUVsRule(ushort blockId, Direction direction, out string spriteName)
+        public virtual bool GetUVs(Direction direction, out string spriteName)
         {
-            if (Id != blockId)
-            {
-                Log.Warning(
-                    $"Failed to get rule of specified block `{blockId}`: block name mismatch (referenced {blockId}, targeted {BlockName}).");
-                spriteName = string.Empty;
-                return false;
-            }
-
             spriteName = _UVsRule(direction);
             return true;
         }
