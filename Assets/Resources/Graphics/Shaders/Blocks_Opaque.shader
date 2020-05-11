@@ -3,6 +3,7 @@
     Properties
     {
         _MainTex ("Albedo (RGB)", 2DArray) = "white" {}
+        _Color ("Color", Color) = (1.0, 1.0, 1.0, 1.0)
     }
 
     SubShader
@@ -19,8 +20,6 @@
             #pragma target 3.5
             #pragma require 2darray
 
-            UNITY_DECLARE_TEX2DARRAY(_MainTex);
-
             struct appdata
             {
                 int position : POSITION;
@@ -30,19 +29,21 @@
             struct v2f {
                 float4 position : SV_POSITION;
                 float3 texcoord : TEXCOORD0;
-                half3 normal : NORMAL;
                 float4 color : COLOR;
+                half3 normal : NORMAL;
             };
 
-            float _GlobalColorOffset;
-            float4 _GlobalColorInterpolationRange;
+            UNITY_DECLARE_TEX2DARRAY(_MainTex);
+
+            float4 _Color;
 
             v2f vert(appdata v)
             {
                 float3 uncompressedVertex = float3(v.position & 63, (v.position >> 6) & 63, (v.position >> 12) & 63);
-                half3 uncompressedNormal = half3(((v.position >> 18) & 3) - 1.0, ((v.position >> 20) & 3) - 1.0, ((v.position >> 22) & 3) - 1.0);
                 float3 uncompressedUv = float3(v.texcoord & 63, (v.texcoord >> 6) & 63, (v.texcoord >> 12) & 0x7FFFFFFF);
-                float normalColor = smoothstep(-2.0, 2.0, uncompressedNormal.x + uncompressedNormal.y + uncompressedNormal.z) + 0.15;
+                half3 uncompressedNormal = half3(((v.position >> 18) & 3) - 1.0, ((v.position >> 20) & 3) - 1.0, ((v.position >> 22) & 3) - 1.0);
+                float3 normalLerpedColor = float3(smoothstep(-1.5, 4.25, uncompressedNormal.x) * 1.3, smoothstep(-1.5, 4.25, uncompressedNormal.y) * 1.15, smoothstep(-1.0, 4.25, uncompressedNormal.z));
+                float normalColor = normalLerpedColor.x + normalLerpedColor.y + normalLerpedColor.z;
 
                 v2f f;
                 f.position = UnityObjectToClipPos(uncompressedVertex);
@@ -54,7 +55,7 @@
 
             fixed4 frag(v2f f) : SV_TARGET
             {
-                return UNITY_SAMPLE_TEX2DARRAY(_MainTex, f.texcoord) * f.color;
+                return UNITY_SAMPLE_TEX2DARRAY(_MainTex, f.texcoord) * f.color * _Color;
             }
 
             ENDCG

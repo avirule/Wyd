@@ -12,11 +12,16 @@ namespace Wyd.Controllers.State
     {
         public MeshRenderer MeshRenderer;
 
-        public static int MainTexPropertyID => Shader.PropertyToID("_MainTex");
+        private static int MainTexPropertyID => Shader.PropertyToID("_MainTex");
+        private static int ColorPropertyID = Shader.PropertyToID("_Color");
 
         private Dictionary<string, ushort> _TextureIDs;
+        private Color Color;
+        private double TimeOfDay;
+        private bool IsNightTime;
+        private double SecondsInCycle;
 
-        public Texture2DArray BlocksTexture { get; private set; }
+        private Texture2DArray BlocksTexture { get; set; }
 
         /// <summary>
         ///     Array storing all materials for blocks.
@@ -32,6 +37,9 @@ namespace Wyd.Controllers.State
             AssignSingletonInstance(this);
 
             _TextureIDs = new Dictionary<string, ushort>();
+
+            Color = Color.white;
+            SecondsInCycle = 1d;
         }
 
         private void Start()
@@ -44,6 +52,26 @@ namespace Wyd.Controllers.State
             }
 
             BlockMaterials = MeshRenderer.materials;
+        }
+
+        private Color Daytime = new Color(0.9f, 0.9f, 0.9f, 1.0f);
+        private Color Nighttime = new Color(0.2f, 0.2f, 0.2f, 1.0f);
+
+        private void Update()
+        {
+            if (TimeOfDay < 0d)
+            {
+                IsNightTime = false;
+            }
+            else if (TimeOfDay > SecondsInCycle)
+            {
+                IsNightTime = true;
+            }
+
+            double timeAdjustment = Time.deltaTime / SecondsInCycle;
+            TimeOfDay += IsNightTime ? -timeAdjustment : timeAdjustment;
+
+            BlockMaterials[0].SetColor(ColorPropertyID, Color.Lerp(Nighttime, Daytime, (float)(TimeOfDay / SecondsInCycle)));
         }
 
         private void ProcessSprites()
