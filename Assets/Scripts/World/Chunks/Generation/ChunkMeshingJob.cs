@@ -22,8 +22,7 @@ namespace Wyd.World.Chunks.Generation
 {
     public class ChunkMeshingJob : AsyncParallelJob
     {
-        private static readonly ObjectPool<BlockFaces[]> _masksPool = new ObjectPool<BlockFaces[]>();
-        private static readonly ObjectPool<ushort[]> _blocksPool = new ObjectPool<ushort[]>();
+        private static readonly ObjectPool<MeshingBlock[]> _meshingBlockArrayPool = new ObjectPool<MeshingBlock[]>();
         private static readonly ObjectPool<MeshData> _meshDataPool = new ObjectPool<MeshData>();
 
         private readonly Stopwatch _Stopwatch;
@@ -32,8 +31,7 @@ namespace Wyd.World.Chunks.Generation
         private int3 _OriginPoint;
         private INodeCollection<ushort> _BlocksCollection;
         private MeshData _MeshData;
-        private BlockFaces[] _Mask;
-        private ushort[] _Blocks;
+        private MeshingBlock[] _MeshingBlocks;
         private bool _AggressiveFaceMerging;
         private TimeSpan _PreMeshingTimeSpan;
         private TimeSpan _MeshingTimeSpan;
@@ -86,7 +84,7 @@ namespace Wyd.World.Chunks.Generation
             }
 
             int localPosition = CompressVertex(WydMath.IndexTo3D(index, GenerationConstants.CHUNK_SIZE));
-            ushort currentBlockId = _Blocks[index];
+            ushort currentBlockId = _MeshingBlocks[index].ID;
 
             if (currentBlockId == BlockController.AirID)
             {
@@ -102,7 +100,7 @@ namespace Wyd.World.Chunks.Generation
                 Direction faceDirection = (Direction)(1 << normalIndex);
 
                 // check if current index has face already
-                if (_Mask[index].HasFace(faceDirection))
+                if (_MeshingBlocks[index].HasFace(faceDirection))
                 {
                     continue;
                 }
@@ -125,7 +123,7 @@ namespace Wyd.World.Chunks.Generation
                     // amount by integer to add to current traversal index to get 3D->1D position of facing block
                     int facedBlockIndex = index + GenerationConstants.IndexStepByNormalIndex[normalIndex];
                     // if so, index into block ids and set facingBlockId
-                    ushort facedBlockId = _Blocks[facedBlockIndex];
+                    ushort facedBlockId = _MeshingBlocks[facedBlockIndex].ID;
 
                     // if transparent, traverse so long as facing block is not the same block id
                     // if opaque, traverse so long as facing block is transparent
@@ -141,7 +139,7 @@ namespace Wyd.World.Chunks.Generation
                         if (!isNegativeFace)
                         {
                             Direction inverseFaceDirection = (Direction)(1 << ((normalIndex + 3) % 6));
-                            _Mask[facedBlockIndex].SetFace(inverseFaceDirection);
+                            _MeshingBlocks[facedBlockIndex].SetFace(inverseFaceDirection);
                         }
 
                         continue;
@@ -177,7 +175,7 @@ namespace Wyd.World.Chunks.Generation
                     }
                 }
 
-                _Mask[index].SetFace(faceDirection);
+                _MeshingBlocks[index].SetFace(faceDirection);
 
                 if (BlockController.Current.GetUVs(currentBlockId, faceDirection, out ushort textureId))
                 {
@@ -185,8 +183,8 @@ namespace Wyd.World.Chunks.Generation
                                        ^ (1 << GenerationConstants.CHUNK_SIZE_BIT_SHIFT)
                                        ^ 1;
 
-                    int normals = GenerationConstants.NormalInt32ByIteration[normalIndex];
-                    int[] compressedVertices = BlockFaces.Vertices.FaceVerticesInt32ByNormalIndex[normalIndex];
+                    int normals = GenerationConstants.NormalByIteration[normalIndex];
+                    int[] compressedVertices = GenerationConstants.VerticesByIteration[normalIndex];
 
                     _MeshData.AddVertex((localPosition + compressedVertices[3]) | normals);
                     _MeshData.AddVertex(compressedUv & (int.MaxValue << (GenerationConstants.CHUNK_SIZE_BIT_SHIFT * 2)));
@@ -283,12 +281,17 @@ namespace Wyd.World.Chunks.Generation
             Debug.Assert(_NeighborBlocksCollections.Length == 6, $"{nameof(_NeighborBlocksCollections)} should have a length of 6, one for each neighboring chunk. It's possible {nameof(SetData)}() has not been called.");
 
             // retrieve existing objects from object pool
-            _Mask = _masksPool.Retrieve() ?? new BlockFaces[GenerationConstants.CHUNK_SIZE_CUBED];
-            _Blocks = _blocksPool.Retrieve() ?? new ushort[GenerationConstants.CHUNK_SIZE_CUBED];
+            _MeshingBlocks = _meshingBlockArrayPool.Retrieve() ?? new MeshingBlock[GenerationConstants.CHUNK_SIZE_CUBED];
             _MeshData = _meshDataPool.Retrieve() ?? new MeshData(new List<int>(), new List<int>());
 
-            // set _BlocksIDs from _BlocksCollection
-            _BlocksCollection.CopyTo(_Blocks);
+            int index = 0;
+
+            for (int y = 0; y < GenerationConstants.CHUNK_SIZE; y++)
+            for (int z = 0; z < GenerationConstants.CHUNK_SIZE; z++)
+            for (int x = 0; x < GenerationConstants.CHUNK_SIZE; x++, index++)
+            {
+                _MeshingBlocks[index].ID = ((Octree)_BlocksCollection).GetPoint(x, y, z);
+            }
 
             // unset reference to block collection to avoid use during meshing generation
             _BlocksCollection = null;
@@ -312,8 +315,7 @@ namespace Wyd.World.Chunks.Generation
         /// </remarks>
         private void GenerateTraversalMesh()
         {
-            Debug.Assert(_Mask.Length == GenerationConstants.CHUNK_SIZE_CUBED, $"{_Mask} should be the same length as chunk data.");
-            Debug.Assert(_Blocks.Length == GenerationConstants.CHUNK_SIZE_CUBED, $"{_Blocks} should be the same length as chunk data.");
+            Debug.Assert(_MeshingBlocks.Length == GenerationConstants.CHUNK_SIZE_CUBED, $"{_MeshingBlocks} should be the same length as chunk data.");
 
             int index = 0;
 
@@ -326,7 +328,7 @@ namespace Wyd.World.Chunks.Generation
                     return;
                 }
 
-                ushort currentBlockId = _Blocks[index];
+                ushort currentBlockId = _MeshingBlocks[index].ID;
                 int localPosition = x | (y << GenerationConstants.CHUNK_SIZE_BIT_SHIFT)
                                       | (z << (GenerationConstants.CHUNK_SIZE_BIT_SHIFT * 2));
 
@@ -341,8 +343,7 @@ namespace Wyd.World.Chunks.Generation
         }
 
         /// <summary>
-        ///     Traverse given index of <see cref="_Mask" /> and <see cref="_Blocks" /> to conditionally output vertex data for
-        ///     each face.
+        ///     Traverse given index of <see cref="_MeshingBlocks" /> to conditionally emit vertex data for each face.
         /// </summary>
         /// <param name="index">Current working index.</param>
         /// <param name="localPosition">3D projected local position of the current working index.</param>
@@ -359,7 +360,7 @@ namespace Wyd.World.Chunks.Generation
                 Direction faceDirection = (Direction)(1 << normalIndex);
 
                 // check if current index has face already
-                if (_Mask[index].HasFace(faceDirection))
+                if (_MeshingBlocks[index].HasFace(faceDirection))
                 {
                     continue;
                 }
@@ -396,8 +397,8 @@ namespace Wyd.World.Chunks.Generation
 
                     for (;
                         (totalTraversalLength < GenerationConstants.CHUNK_SIZE)
-                        && !_Mask[traversalIndex].HasFace(faceDirection)
-                        && (_Blocks[traversalIndex] == currentBlockId);
+                        && !_MeshingBlocks[traversalIndex].HasFace(faceDirection)
+                        && (_MeshingBlocks[traversalIndex].ID == currentBlockId);
                         totalTraversalLength++,
                         traversals++, // increment traversals
                         traversalIndex += traversalIndexStep) // increment traversal index by index step to adjust local working position
@@ -408,7 +409,7 @@ namespace Wyd.World.Chunks.Generation
                             // amount by integer to add to current traversal index to get 3D->1D position of facing block
                             int facedBlockIndex = traversalIndex + GenerationConstants.IndexStepByNormalIndex[normalIndex];
                             // if so, index into block ids and set facingBlockId
-                            ushort facedBlockId = _Blocks[facedBlockIndex];
+                            ushort facedBlockId = _MeshingBlocks[facedBlockIndex].ID;
 
                             // if transparent, traverse so long as facing block is not the same block id
                             // if opaque, traverse so long as facing block is transparent
@@ -424,7 +425,7 @@ namespace Wyd.World.Chunks.Generation
                                 if (!isNegativeFace)
                                 {
                                     Direction inverseFaceDirection = (Direction)(1 << ((normalIndex + 3) % 6));
-                                    _Mask[facedBlockIndex].SetFace(inverseFaceDirection);
+                                    _MeshingBlocks[facedBlockIndex].SetFace(inverseFaceDirection);
                                 }
 
                                 break;
@@ -460,7 +461,7 @@ namespace Wyd.World.Chunks.Generation
                             }
                         }
 
-                        _Mask[traversalIndex].SetFace(faceDirection);
+                        _MeshingBlocks[traversalIndex].SetFace(faceDirection);
                     }
 
                     // if it's the first traversal and we've only made a 1x1x1 face, continue to test next axis
@@ -482,8 +483,8 @@ namespace Wyd.World.Chunks.Generation
                     int traversalShiftedMask = GenerationConstants.CHUNK_SIZE_BIT_MASK << traversalNormalShift;
                     int unaryTraversalShiftedMask = ~traversalShiftedMask;
 
-                    int aggregatePositionNormal = localPosition | GenerationConstants.NormalInt32ByIteration[normalIndex];
-                    int[] compressedVertices = BlockFaces.Vertices.FaceVerticesInt32ByNormalIndex[normalIndex];
+                    int aggregatePositionNormal = localPosition | GenerationConstants.NormalByIteration[normalIndex];
+                    int[] compressedVertices = GenerationConstants.VerticesByIteration[normalIndex];
 
 
                     _MeshData.AddVertex(aggregatePositionNormal
@@ -532,13 +533,9 @@ namespace Wyd.World.Chunks.Generation
         private void FinishMeshing()
         {
             // clear mask, add to object pool, and unset reference
-            Array.Clear(_Mask, 0, _Mask.Length);
-            _masksPool.TryAdd(_Mask);
-            _Mask = default;
-
-            // add to object pool, and unset reference
-            _blocksPool.TryAdd(_Blocks);
-            _Blocks = default;
+            Array.Clear(_MeshingBlocks, 0, _MeshingBlocks.Length);
+            _meshingBlockArrayPool.TryAdd(_MeshingBlocks);
+            _MeshingBlocks = default;
 
             // clear array to free RAM until next execution
             Array.Clear(_NeighborBlocksCollections, 0, _NeighborBlocksCollections.Length);

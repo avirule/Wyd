@@ -13,55 +13,8 @@ namespace Wyd.World.Blocks
         public static class Vertices
         {
             public static readonly IReadOnlyDictionary<Direction, int3[]> FaceVerticesByDirection;
-            public static readonly int[][] FaceVerticesInt32ByNormalIndex;
 
-            public static readonly int[] North_ =
-            {
-                0b000001_000000_000000, // new int3(0, 0, 1),
-                0b000001_000001_000000, // new int3(0, 1, 1),
-                0b000001_000000_000001, // new int3(1, 0, 1),
-                0b000001_000001_000001, // new int3(1, 1, 1)
-            };
 
-            public static readonly int[] East_ =
-            {
-                0b000001_000000_000001, // new int3(1, 0, 1),
-                0b000001_000001_000001, // new int3(1, 1, 1),
-                0b000000_000000_000001, // new int3(1, 0, 0),
-                0b000000_000001_000001, // new int3(1, 1, 0)
-            };
-
-            public static readonly int[] South_ =
-            {
-                0b000000_000000_000001,
-                0b000000_000001_000001,
-                0b000000_000000_000000,
-                0b000000_000001_000000,
-            };
-
-            public static readonly int[] West_ =
-            {
-                0b000000_000000_000000,
-                0b000000_000001_000000,
-                0b000001_000000_000000,
-                0b000001_000001_000000,
-            };
-
-            public static readonly int[] Up_ =
-            {
-                0b000001_000001_000000,
-                0b000000_000001_000000,
-                0b000001_000001_000001,
-                0b000000_000001_000001,
-            };
-
-            public static readonly int[] Down_ =
-            {
-                0b000000_000000_000000,
-                0b000001_000000_000000,
-                0b000000_000000_000001,
-                0b000001_000000_000001,
-            };
 
             public static readonly int3[] North =
             {
@@ -121,16 +74,6 @@ namespace Wyd.World.Blocks
                     { Direction.West, West },
                     { Direction.Up, Up },
                     { Direction.Down, Down }
-                };
-
-                FaceVerticesInt32ByNormalIndex = new[]
-                {
-                    East_,
-                    Up_,
-                    North_,
-                    West_,
-                    Down_,
-                    South_
                 };
             }
         }

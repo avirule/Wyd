@@ -12,7 +12,6 @@ using K4os.Compression.LZ4;
 using Serilog;
 using Unity.Mathematics;
 using UnityEngine;
-using UnityEngine.Assertions;
 using Wyd.Collections;
 using Wyd.Controllers.State;
 using Wyd.Controllers.System;
@@ -335,7 +334,6 @@ namespace Wyd.Controllers.World
                         State = ChunkState.Mesh;
                     }
 
-                    break;
                     break;
                 default:
                     throw new ArgumentOutOfRangeException();

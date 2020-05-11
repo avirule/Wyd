@@ -77,15 +77,18 @@ namespace Wyd.Collections
         public void SetPoint(int3 point, ushort value) => SetPointRecursive(point, value);
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void SetPointNoCollapse(int3 point, ushort value) => SetPointIterative(point, value);
+        public void SetPointNoCollapse(int3 point, ushort value) => SetPointIterative(point.x, point.y , point.z, value);
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private void SetPointRecursive(int3 point, ushort value) => _RootNode.SetPoint(_Extent, point.x, point.y, point.z, value);
 
-        private void SetPointIterative(int3 point, ushort value)
+        private void SetPointIterative(int x, int y, int z, ushort value)
         {
+            Debug.Assert((x >= 0) && (x < (_Extent * 2)), "Given coordinates are not within local bounds.");
+            Debug.Assert((y >= 0) && (y < (_Extent * 2)), "Given coordinates are not within local bounds.");
+            Debug.Assert((z >= 0) && (z < (_Extent * 2)), "Given coordinates are not within local bounds.");
+
             OctreeNode currentNode = _RootNode;
-            int x = point.x, y = point.y, z = point.z;
 
             for (int extent = _Extent;; extent >>= 1)
             {
