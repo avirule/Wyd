@@ -127,7 +127,7 @@ namespace Wyd.Controllers.World
             SpawnPoint = WydMath.IndexTo3D(Seed, new int3(int.MaxValue, int.MaxValue, int.MaxValue));
 
             ChunkStateVerificationTimes =
-                new FixedConcurrentQueue<TimeSpan>(OptionsController.Current.MaximumDiagnosticBuffersSize);
+                new FixedConcurrentQueue<TimeSpan>(OptionsController.Current.DiagnosticBufferLength);
         }
 
         private void OnEnable()

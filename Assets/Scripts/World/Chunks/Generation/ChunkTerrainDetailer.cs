@@ -66,7 +66,7 @@
 //
 //                             attempts[attemptedIndexModulo] = true;
 //
-//                             int3 faceNormal = GenerationConstants.FaceNormalByIteration[attemptedIndex];
+//                             int3 faceNormal = GenerationConstants.NormalVectorByIteration[attemptedIndex];
 //                             int3 faceNormalVeinTipPosition = veinTipPosition + faceNormal;
 //
 //                             if ((veinTipPosition[attemptedIndexModulo] < GenerationConstants.CHUNK_SIZE)

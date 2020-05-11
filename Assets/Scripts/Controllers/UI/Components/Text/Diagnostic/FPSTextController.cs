@@ -24,7 +24,7 @@ namespace Wyd.Controllers.UI.Components.Text.Diagnostic
 
         private void Start()
         {
-            _FrameTimes = new FixedConcurrentQueue<float>(OptionsController.Current.MaximumDiagnosticBuffersSize);
+            _FrameTimes = new FixedConcurrentQueue<float>(OptionsController.Current.DiagnosticBufferLength);
         }
 
         private void Update()

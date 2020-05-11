@@ -25,7 +25,7 @@ namespace Wyd.Controllers.System
 
         private void Start()
         {
-            AsyncJobScheduler.ModifyMaximumProcessingJobCount(OptionsController.Current.AsyncWorkerCount);
+            AsyncJobScheduler.ModifyMaximumProcessingJobCount(OptionsController.Current.MaximumConcurrentJobs);
         }
 
         private void OnDestroy()

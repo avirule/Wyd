@@ -16,7 +16,7 @@ namespace Wyd.Controllers.State
         public static ushort NullID;
         public static ushort AirID;
 
-        public Dictionary<string, ushort> BlockNames;
+        public Dictionary<string, ushort> BlockNamesByID;
         public List<IBlockDefinition> BlockDefinitions;
 
         private Dictionary<BlockDefinition.Property, HashSet<ushort>> _PropertiesBuckets;
@@ -25,7 +25,7 @@ namespace Wyd.Controllers.State
         {
             AssignSingletonInstance(this);
 
-            BlockNames = new Dictionary<string, ushort>();
+            BlockNamesByID = new Dictionary<string, ushort>();
             BlockDefinitions = new List<IBlockDefinition>();
 
             InitializeBlockPropertiesBuckets();
@@ -41,8 +41,7 @@ namespace Wyd.Controllers.State
         {
             _PropertiesBuckets = new Dictionary<BlockDefinition.Property, HashSet<ushort>>();
 
-            Log.Debug(
-                $"Initializing property buckets for all '{nameof(BlockDefinition)}.{nameof(BlockDefinition.Property)}'s.");
+            Log.Verbose($"Initializing property buckets for all '{nameof(BlockDefinition)}.{nameof(BlockDefinition.Property)}'s.");
 
             foreach (BlockDefinition.Property property in EnumExtensions.GetEnumsList<BlockDefinition.Property>())
             {
@@ -65,13 +64,12 @@ namespace Wyd.Controllers.State
         ///     Registers a new <see cref="BlockDefinition" /> with the given parameters.
         /// </summary>
         /// <param name="blockName">
-        ///     Friendly name for <see cref="BlockDefinition" />. NOTE: This value is automatically lowercased
-        ///     upon registration.
+        ///     Friendly name for <see cref="BlockDefinition" />.
+        ///     remark: This value is automatically lowercased upon registration.
         /// </param>
         /// <param name="uvsRule">Optional function to return custom textures for <see cref="BlockDefinition" />.</param>
         /// <param name="properties">
-        ///     Optional <see cref="BlockDefinition.Property" />s to full qualify the
-        ///     <see cref="BlockDefinition" />.
+        ///     Optional <see cref="BlockDefinition.Property" />s to full qualify the <see cref="BlockDefinition" />.
         /// </param>
         public void RegisterBlockDefinition(string blockName, Func<Direction, string> uvsRule, params BlockDefinition.Property[] properties)
         {
@@ -98,7 +96,7 @@ namespace Wyd.Controllers.State
                 new BlockDefinition(assignedBlockId, blockName, uvsRule, properties);
 
             BlockDefinitions.Add(blockDefinition);
-            BlockNames.Add(blockName, assignedBlockId);
+            BlockNamesByID.Add(blockName, assignedBlockId);
             SortBlockDefinitionPropertiesToBuckets(blockDefinition);
 
             Log.Information($"Successfully added block `{blockName}` with ID: {assignedBlockId}");
@@ -131,7 +129,7 @@ namespace Wyd.Controllers.State
         {
             blockId = 0;
 
-            if (!BlockNames.TryGetValue(blockName, out blockId))
+            if (!BlockNamesByID.TryGetValue(blockName, out blockId))
             {
                 Log.Warning(
                     $"({nameof(BlockController)}) Failed to return block id for '{blockName}': block does not exist.");
@@ -178,6 +176,8 @@ namespace Wyd.Controllers.State
             blockDefinition = default;
             return false;
         }
+
+        public HashSet<ushort> GetPropertyBucket(BlockDefinition.Property property) => _PropertiesBuckets[property];
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public bool CheckBlockHasProperty(ushort blockId, BlockDefinition.Property property) =>

@@ -22,15 +22,16 @@ namespace Wyd.Controllers.State
         {
             // General
             // ReSharper disable once InconsistentNaming
-            public static readonly int ASYNC_WORKER_COUNT = Environment.ProcessorCount - 2;
+            public static readonly int MAXIMUM_CONCURRENT_JOBS = Environment.ProcessorCount - 2;
             public const bool VERBOSE_LOGGING = false;
             public const bool GPU_ACCELERATION = true;
-            public const int MAXIMUM_DIAGNOSTIC_BUFFERS_LENGTH = 600;
+            public const int DIAGNOSTIC_BUFFER_LENGTH = 600;
             public const int RENDER_DISTANCE = 4;
             public const int SHADOW_DISTANCE = 4;
 
             // Graphics
-            public const int TARGET_FRAME_RATE = 60;
+            // ReSharper disable once InconsistentNaming
+            public static readonly int TARGET_FRAME_RATE = (int)(Screen.currentResolution.refreshRate * 1.5f);
             public const int VSYNC_LEVEL = 1;
             public const int WINDOW_MODE = (int)WindowMode.Fullscreen;
         }
@@ -40,17 +41,16 @@ namespace Wyd.Controllers.State
         public static string ConfigPath { get; private set; }
         public TimeSpan TargetFrameRateTimeSpan { get; private set; }
 
-        public static readonly WindowMode MaximumWindowModeValue =
-            Enum.GetValues(typeof(WindowMode)).Cast<WindowMode>().Last();
+        public static readonly WindowMode MaximumWindowModeValue = Enum.GetValues(typeof(WindowMode)).Cast<WindowMode>().Last();
 
 
         #region PRIVATE FIELDS
 
         private Configuration _Configuration;
-        private int _AsyncWorkerCount;
+        private int _MaximumConcurrentJobs;
         private bool _GPUAcceleration;
         private int _TargetFrameRate;
-        private int _MaximumDiagnosticBuffersSize;
+        private int _DiagnosticBufferLength;
         private int _ShadowDistance;
         private int _RenderDistance;
         private WindowMode _WindowMode;
@@ -61,13 +61,13 @@ namespace Wyd.Controllers.State
 
         #region GENERAL OPTIONS MEMBERS
 
-        public int AsyncWorkerCount
+        public int MaximumConcurrentJobs
         {
-            get => _AsyncWorkerCount;
+            get => _MaximumConcurrentJobs;
             set
             {
-                _AsyncWorkerCount = value;
-                _Configuration["General"][nameof(AsyncWorkerCount)].IntValue = _AsyncWorkerCount;
+                _MaximumConcurrentJobs = value;
+                _Configuration["General"][nameof(MaximumConcurrentJobs)].IntValue = _MaximumConcurrentJobs;
                 SaveSettings();
                 OnPropertyChanged();
             }
@@ -121,14 +121,14 @@ namespace Wyd.Controllers.State
             }
         }
 
-        public int MaximumDiagnosticBuffersSize
+        public int DiagnosticBufferLength
         {
-            get => _MaximumDiagnosticBuffersSize;
+            get => _DiagnosticBufferLength;
             set
             {
-                _MaximumDiagnosticBuffersSize = value;
-                _Configuration["General"][nameof(MaximumDiagnosticBuffersSize)].IntValue =
-                    _MaximumDiagnosticBuffersSize;
+                _DiagnosticBufferLength = value;
+                _Configuration["General"][nameof(DiagnosticBufferLength)].IntValue =
+                    _DiagnosticBufferLength;
                 SaveSettings();
                 OnPropertyChanged();
             }
@@ -222,12 +222,12 @@ namespace Wyd.Controllers.State
 
             // General
 
-            if (!GetSetting("General", nameof(AsyncWorkerCount), out _AsyncWorkerCount)
-                || (AsyncWorkerCount > Environment.ProcessorCount)
-                || (AsyncWorkerCount < 1))
+            if (!GetSetting("General", nameof(MaximumConcurrentJobs), out _MaximumConcurrentJobs)
+                || (MaximumConcurrentJobs > Environment.ProcessorCount)
+                || (MaximumConcurrentJobs < 1))
             {
-                LogSettingLoadError(nameof(AsyncWorkerCount), Defaults.ASYNC_WORKER_COUNT);
-                AsyncWorkerCount = Defaults.ASYNC_WORKER_COUNT;
+                LogSettingLoadError(nameof(MaximumConcurrentJobs), Defaults.MAXIMUM_CONCURRENT_JOBS);
+                MaximumConcurrentJobs = Defaults.MAXIMUM_CONCURRENT_JOBS;
                 SaveSettings();
             }
 
@@ -256,24 +256,28 @@ namespace Wyd.Controllers.State
                 SaveSettings();
             }
 
-            if (!GetSetting("General", nameof(MaximumDiagnosticBuffersSize), out _MaximumDiagnosticBuffersSize)
-                || (MaximumDiagnosticBuffersSize < 30)
-                || (MaximumDiagnosticBuffersSize > 6000))
+            if (!GetSetting("General", nameof(DiagnosticBufferLength), out _DiagnosticBufferLength)
+                || (DiagnosticBufferLength < 30)
+                || (DiagnosticBufferLength > 6000))
             {
-                LogSettingLoadError(nameof(MaximumDiagnosticBuffersSize), Defaults.MAXIMUM_DIAGNOSTIC_BUFFERS_LENGTH);
-                MaximumDiagnosticBuffersSize = Defaults.MAXIMUM_DIAGNOSTIC_BUFFERS_LENGTH;
+                LogSettingLoadError(nameof(DiagnosticBufferLength), Defaults.DIAGNOSTIC_BUFFER_LENGTH);
+                DiagnosticBufferLength = Defaults.DIAGNOSTIC_BUFFER_LENGTH;
                 SaveSettings();
             }
 
             // Graphics
 
             if (!GetSetting("Graphics", nameof(TargetFrameRate), out _TargetFrameRate)
-                || (TargetFrameRate < 15)
+                || (TargetFrameRate == 0)
+                || (TargetFrameRate < -1)
                 || (TargetFrameRate > 300))
             {
                 LogSettingLoadError(nameof(TargetFrameRate), Defaults.TARGET_FRAME_RATE);
                 TargetFrameRate = Defaults.TARGET_FRAME_RATE;
                 SaveSettings();
+            } else if (TargetFrameRate == -1)
+            {
+                TargetFrameRate = (int)(Screen.currentResolution.refreshRate * 1.5f);
             }
 
             TargetFrameRateTimeSpan = TimeSpan.FromSeconds(1d / TargetFrameRate);
@@ -313,15 +317,14 @@ namespace Wyd.Controllers.State
 
             // General
 
-            _Configuration["General"][nameof(AsyncWorkerCount)].PreComment =
-                "Total number of asynchronous workers to initialize.\r\n"
-                + "Note: maximum number of workers is equal to your logical core count.\r\n"
-                + "On most machines, this will be: (core count x 2).";
-            _Configuration["General"][nameof(AsyncWorkerCount)].IntValue = Defaults.ASYNC_WORKER_COUNT;
+            _Configuration["General"][nameof(MaximumConcurrentJobs)].PreComment =
+                "Maximum number of jobs that can run concurrently.\r\n"
+                + "Note: absolute maximum number is equal to your logical core count. On most machines, this will be (core count * 2).";
+            _Configuration["General"][nameof(MaximumConcurrentJobs)].IntValue = Defaults.MAXIMUM_CONCURRENT_JOBS;
 
             _Configuration["General"][nameof(GPUAcceleration)].PreComment =
                 "Determines whether the GPU will be used for operations other than rendering.\r\n"
-                + "Note: disabling this will create more work for the CPU.";
+                + "Note: disabling this will notably increase CPU stress.";
             _Configuration["General"][nameof(GPUAcceleration)].BoolValue = Defaults.GPU_ACCELERATION;
 
             _Configuration["General"][nameof(VerboseLogging)].BoolValue = Defaults.VERBOSE_LOGGING;
@@ -336,11 +339,10 @@ namespace Wyd.Controllers.State
             _Configuration["General"][nameof(RenderDistance)].Comment = $"(min 1, max {MAXIMUM_RENDER_DISTANCE})";
             _Configuration["General"][nameof(RenderDistance)].IntValue = Defaults.RENDER_DISTANCE;
 
-            _Configuration["General"][nameof(MaximumDiagnosticBuffersSize)].PreComment =
+            _Configuration["General"][nameof(DiagnosticBufferLength)].PreComment =
                 "Determines maximum length of internal buffers used to allocate diagnostic data.";
-            _Configuration["General"][nameof(MaximumDiagnosticBuffersSize)].Comment = "(min 30, max 6000)";
-            _Configuration["General"][nameof(MaximumDiagnosticBuffersSize)].IntValue =
-                Defaults.MAXIMUM_DIAGNOSTIC_BUFFERS_LENGTH;
+            _Configuration["General"][nameof(DiagnosticBufferLength)].Comment = "(min 30, max 6000)";
+            _Configuration["General"][nameof(DiagnosticBufferLength)].IntValue = Defaults.DIAGNOSTIC_BUFFER_LENGTH;
 
 
             // Graphics
@@ -349,9 +351,8 @@ namespace Wyd.Controllers.State
                 "Target FPS internal updaters will attempt to maintain.\r\n"
                 + "Note: this is a soft limitation. Some operations will blatantly exceed the internal time constraint.";
             _Configuration["Graphics"][nameof(TargetFrameRate)].Comment =
-                "Higher values decrease overall CPU stress (min 15, max 300).";
-            _Configuration["Graphics"][nameof(TargetFrameRate)].IntValue =
-                Defaults.TARGET_FRAME_RATE;
+                "Higher values decrease overall CPU stress (min 1 or -1 (not 0), max 300).";
+            _Configuration["Graphics"][nameof(TargetFrameRate)].IntValue = Defaults.TARGET_FRAME_RATE;
 
             _Configuration["Graphics"][nameof(VSyncLevel)].PreComment =
                 "When enabled, internal update loop will sleep until enough time has passed to synchronize with monitor framerate.\r\n"

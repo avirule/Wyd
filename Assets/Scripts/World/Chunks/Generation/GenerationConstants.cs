@@ -32,7 +32,7 @@ namespace Wyd.World.Chunks.Generation
             -CHUNK_SIZE,
         };
 
-        public static readonly int3[] FaceNormalByIteration =
+        public static readonly int3[] NormalVectorByIteration =
         {
             new int3(1, 0, 0),
             new int3(0, 1, 0),

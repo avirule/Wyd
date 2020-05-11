@@ -22,8 +22,8 @@ namespace Wyd.World.Chunks.Generation
 {
     public class ChunkMeshingJob : AsyncParallelJob
     {
-        private static readonly ObjectPool<MeshingBlock[]> _meshingBlockArrayPool = new ObjectPool<MeshingBlock[]>();
-        private static readonly ObjectPool<MeshData> _meshDataPool = new ObjectPool<MeshData>();
+        private static readonly ObjectPool<MeshingBlock[]> _MeshingBlockArrayPool = new ObjectPool<MeshingBlock[]>();
+        private static readonly ObjectPool<MeshData> _MeshDataPool = new ObjectPool<MeshData>();
 
         private readonly Stopwatch _Stopwatch;
         private readonly INodeCollection<ushort>[] _NeighborBlocksCollections;
@@ -75,7 +75,7 @@ namespace Wyd.World.Chunks.Generation
             // 'true' for trimming excess data from the lists.
             _MeshData.Clear(true);
             // add the mesh data to the internal object pool
-            _meshDataPool.TryAdd(_MeshData);
+            _MeshDataPool.TryAdd(_MeshData);
             // remove the existing reference
             _MeshData = default;
 
@@ -92,7 +92,9 @@ namespace Wyd.World.Chunks.Generation
 
         protected override async Task Process()
         {
-            if ((_BlocksCollection == null) || (_BlocksCollection.IsUniform && (_BlocksCollection.Value == BlockController.AirID)))
+            Debug.Assert(_BlocksCollection != null);
+
+            if (_BlocksCollection.IsUniform && (_BlocksCollection.Value == BlockController.AirID))
             {
                 return;
             }
@@ -167,13 +169,13 @@ namespace Wyd.World.Chunks.Generation
             Debug.Assert(_BlocksCollection != null,
                 $"{nameof(_BlocksCollection)} should not be null when meshing is started. It's possible {nameof(SetData)}() has not been called.");
             Debug.Assert(_NeighborBlocksCollections != null,
-                $"{nameof(_NeighborBlocksCollections)} should not be null when meshing is started. It's possible {nameof(SetData)}() has not been called.");
+                $"{nameof(_NeighborBlocksCollections)} should not be null when meshing is started.");
             Debug.Assert(_NeighborBlocksCollections.Length == 6,
-                $"{nameof(_NeighborBlocksCollections)} should have a length of 6, one for each neighboring chunk. It's possible {nameof(SetData)}() has not been called.");
+                $"{nameof(_NeighborBlocksCollections)} should have a length of 6, one for each neighboring chunk.");
 
             // retrieve existing objects from object pool
-            _MeshingBlocks = _meshingBlockArrayPool.Retrieve() ?? new MeshingBlock[GenerationConstants.CHUNK_SIZE_CUBED];
-            _MeshData = _meshDataPool.Retrieve() ?? new MeshData(new List<int>(), new List<int>());
+            _MeshingBlocks = _MeshingBlockArrayPool.Retrieve() ?? new MeshingBlock[GenerationConstants.CHUNK_SIZE_CUBED];
+            _MeshData = _MeshDataPool.Retrieve() ?? new MeshData(new List<int>(), new List<int>());
 
             int index = 0;
 
@@ -189,7 +191,7 @@ namespace Wyd.World.Chunks.Generation
 
             for (int normalIndex = 0; normalIndex < 6; normalIndex++)
             {
-                int3 globalPosition = _OriginPoint + (GenerationConstants.FaceNormalByIteration[normalIndex] * GenerationConstants.CHUNK_SIZE);
+                int3 globalPosition = _OriginPoint + (GenerationConstants.NormalVectorByIteration[normalIndex] * GenerationConstants.CHUNK_SIZE);
 
                 if (WorldController.Current.TryGetChunk(globalPosition, out ChunkController chunkController))
                 {
@@ -220,14 +222,13 @@ namespace Wyd.World.Chunks.Generation
                 }
 
                 ushort currentBlockId = _MeshingBlocks[index].ID;
-                int localPosition = x
-                                    | (y << GenerationConstants.CHUNK_SIZE_BIT_SHIFT)
-                                    | (z << (GenerationConstants.CHUNK_SIZE_BIT_SHIFT * 2));
 
                 if (currentBlockId == BlockController.AirID)
                 {
                     continue;
                 }
+
+                int localPosition = x | (y << GenerationConstants.CHUNK_SIZE_BIT_SHIFT) | (z << (GenerationConstants.CHUNK_SIZE_BIT_SHIFT * 2));
 
                 TraverseIndex(index, localPosition, currentBlockId,
                     BlockController.Current.CheckBlockHasProperty(currentBlockId, BlockDefinition.Property.Transparent));
@@ -563,7 +564,7 @@ namespace Wyd.World.Chunks.Generation
         {
             // clear mask, add to object pool, and unset reference
             Array.Clear(_MeshingBlocks, 0, _MeshingBlocks.Length);
-            _meshingBlockArrayPool.TryAdd(_MeshingBlocks);
+            _MeshingBlockArrayPool.TryAdd(_MeshingBlocks);
             _MeshingBlocks = default;
 
             // clear array to free RAM until next execution

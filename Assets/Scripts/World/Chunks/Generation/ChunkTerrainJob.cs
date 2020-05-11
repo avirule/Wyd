@@ -1,5 +1,6 @@
 #region
 
+using System;
 using System.Collections.Concurrent;
 using System.Diagnostics;
 using System.Threading;
@@ -15,7 +16,7 @@ namespace Wyd.World.Chunks.Generation
 {
     public abstract class ChunkTerrainJob : AsyncParallelJob
     {
-        private static readonly ConcurrentDictionary<string, ushort> _blockIDCache = new ConcurrentDictionary<string, ushort>();
+        private static readonly ConcurrentDictionary<string, ushort> _BlockIDCache = new ConcurrentDictionary<string, ushort>();
 
         protected readonly Stopwatch Stopwatch;
 
@@ -35,17 +36,17 @@ namespace Wyd.World.Chunks.Generation
 
         protected static ushort GetCachedBlockID(string blockName)
         {
-            if (_blockIDCache.TryGetValue(blockName, out ushort id))
+            if (_BlockIDCache.TryGetValue(blockName, out ushort id))
             {
                 return id;
             }
             else if (BlockController.Current.TryGetBlockId(blockName, out id))
             {
-                _blockIDCache.TryAdd(blockName, id);
+                _BlockIDCache.TryAdd(blockName, id);
                 return id;
             }
 
-            return BlockController.AirID;
+            throw new ArgumentException("Block with given name does not exist.", nameof(blockName));
         }
 
         public INodeCollection<ushort> GetGeneratedBlockData() => _Blocks;

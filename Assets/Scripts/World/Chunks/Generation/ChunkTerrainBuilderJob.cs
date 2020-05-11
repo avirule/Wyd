@@ -33,8 +33,6 @@ namespace Wyd.World.Chunks.Generation
         private int[] _Heightmap;
         private float[] _CaveNoise;
 
-        private Octree BlocksOctree => (Octree)_Blocks;
-
         public ChunkTerrainBuilderJob()
         {
             _NoiseSeedA = WorldController.Current.Seed ^ 2;
@@ -53,10 +51,9 @@ namespace Wyd.World.Chunks.Generation
 
             Stopwatch.Restart();
 
-            _Blocks = new Octree(GenerationConstants.CHUNK_SIZE, BlockController.AirID, true);
+            _Blocks = new Octree(GenerationConstants.CHUNK_SIZE, BlockController.AirID, false);
 
             await BatchTasksAndAwait().ConfigureAwait(false);
-            BlocksOctree.CollapseRecursive();
 
             Array.Clear(_Heightmap, 0, _Heightmap.Length);
             Array.Clear(_CaveNoise, 0, _CaveNoise.Length);
@@ -174,7 +171,7 @@ namespace Wyd.World.Chunks.Generation
 
             if ((globalPositionY < 4) && (globalPositionY <= _SeededRandom.Next(0, 4)))
             {
-                BlocksOctree.SetPointNoCollapse(localPosition, GetCachedBlockID("bedrock"));
+                _Blocks.SetPoint(localPosition, GetCachedBlockID("bedrock"));
                 return;
             }
             else if (_CaveNoise[index] < 0.000225f)
@@ -184,11 +181,11 @@ namespace Wyd.World.Chunks.Generation
 
             if (globalPositionY == noiseHeight)
             {
-                BlocksOctree.SetPointNoCollapse(localPosition, GetCachedBlockID("grass"));
+                _Blocks.SetPoint(localPosition, GetCachedBlockID("grass"));
             }
             else if ((globalPositionY < noiseHeight) && (globalPositionY >= (noiseHeight - 3))) // lay dirt up to 3 blocks below noise height
             {
-                BlocksOctree.SetPointNoCollapse(localPosition, _SeededRandom.Next(0, 8) == 0
+                _Blocks.SetPoint(localPosition, _SeededRandom.Next(0, 8) == 0
                     ? GetCachedBlockID("dirt_coarse")
                     : GetCachedBlockID("dirt"));
             }
@@ -196,11 +193,11 @@ namespace Wyd.World.Chunks.Generation
             {
                 if (_SeededRandom.Next(0, 100) == 0)
                 {
-                    BlocksOctree.SetPointNoCollapse(localPosition, GetCachedBlockID("coal_ore"));
+                    _Blocks.SetPoint(localPosition, GetCachedBlockID("coal_ore"));
                 }
                 else
                 {
-                    BlocksOctree.SetPointNoCollapse(localPosition, GetCachedBlockID("stone"));
+                    _Blocks.SetPoint(localPosition, GetCachedBlockID("stone"));
                 }
             }
         }

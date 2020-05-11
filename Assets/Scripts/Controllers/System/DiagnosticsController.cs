@@ -42,15 +42,15 @@ namespace Wyd.Controllers.System
             AssignSingletonInstance(this);
 
             RollingNoiseRetrievalTimes =
-                new FixedConcurrentQueue<TimeSpan>(OptionsController.Current.MaximumDiagnosticBuffersSize);
+                new FixedConcurrentQueue<TimeSpan>(OptionsController.Current.DiagnosticBufferLength);
             RollingTerrainBuildingTimes =
-                new FixedConcurrentQueue<TimeSpan>(OptionsController.Current.MaximumDiagnosticBuffersSize);
+                new FixedConcurrentQueue<TimeSpan>(OptionsController.Current.DiagnosticBufferLength);
             RollingTerrainDetailingTimes =
-                new FixedConcurrentQueue<TimeSpan>(OptionsController.Current.MaximumDiagnosticBuffersSize);
+                new FixedConcurrentQueue<TimeSpan>(OptionsController.Current.DiagnosticBufferLength);
             RollingPreMeshingTimes =
-                new FixedConcurrentQueue<TimeSpan>(OptionsController.Current.MaximumDiagnosticBuffersSize);
+                new FixedConcurrentQueue<TimeSpan>(OptionsController.Current.DiagnosticBufferLength);
             RollingMeshingTimes =
-                new FixedConcurrentQueue<TimeSpan>(OptionsController.Current.MaximumDiagnosticBuffersSize);
+                new FixedConcurrentQueue<TimeSpan>(OptionsController.Current.DiagnosticBufferLength);
         }
     }
 }
