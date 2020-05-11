@@ -275,7 +275,8 @@ namespace Wyd.Controllers.State
                 LogSettingLoadError(nameof(TargetFrameRate), Defaults.TARGET_FRAME_RATE);
                 TargetFrameRate = Defaults.TARGET_FRAME_RATE;
                 SaveSettings();
-            } else if (TargetFrameRate == -1)
+            }
+            else if (TargetFrameRate == -1)
             {
                 TargetFrameRate = (int)(Screen.currentResolution.refreshRate * 1.5f);
             }

@@ -324,6 +324,7 @@ namespace Wyd.World.Chunks.Generation
                             {
                                 if (!isNegativeFace)
                                 {
+                                    // we've culled this face, and faced block is opaque as well, so cull it's face inverse to the current.
                                     Direction inverseFaceDirection = (Direction)(1 << ((normalIndex + 3) % 6));
                                     _MeshingBlocks[facedBlockIndex].SetFace(inverseFaceDirection);
                                 }

@@ -34,19 +34,21 @@
                 float4 color : COLOR;
             };
 
-            float4 _Offset;
+            float _GlobalColorOffset;
+            float4 _GlobalColorInterpolationRange;
 
             v2f vert(appdata v)
             {
                 float3 uncompressedVertex = float3(v.position & 63, (v.position >> 6) & 63, (v.position >> 12) & 63);
                 half3 uncompressedNormal = half3(((v.position >> 18) & 3) - 1.0, ((v.position >> 20) & 3) - 1.0, ((v.position >> 22) & 3) - 1.0);
                 float3 uncompressedUv = float3(v.texcoord & 63, (v.texcoord >> 6) & 63, (v.texcoord >> 12) & 0x7FFFFFFF);
+                float normalColor = smoothstep(-2.0, 2.0, uncompressedNormal.x + uncompressedNormal.y + uncompressedNormal.z) + 0.15;
 
                 v2f f;
                 f.position = UnityObjectToClipPos(uncompressedVertex);
                 f.normal = UnityObjectToClipPos(uncompressedNormal);
                 f.texcoord = uncompressedUv;
-                f.color = float4(1.0, 1.0, 1.0, 1.0);
+                f.color = float4(normalColor, normalColor, normalColor, 1.0);
                 return f;
             }
 
