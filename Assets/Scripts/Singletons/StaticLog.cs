@@ -10,59 +10,37 @@ using Wyd.Logging;
 
 #endregion
 
-namespace Wyd.Controllers.System
+namespace Wyd.Singletons
 {
-    public class LogController : MonoBehaviour
+    public class StaticLog : Singleton<StaticLog>
     {
         private const string _DEFAULT_TEMPLATE = "{Timestamp:MM/dd/yy-HH:mm:ss} | {Level:u3} | {Message}\r\n";
-        private const int _MAXIMUM_RUNTIME_ERRORS = 10;
 
         private static string _LogPath;
         private static int _RuntimeErrorCount;
-        private static bool _KillApplication;
         private static List<LogEvent> _LogEvents;
 
         public static IReadOnlyList<LogEvent> LoggedEvents => _LogEvents;
 
-#if UNITY_EDITOR
-
-        public LogEventLevel MinimumLevel;
-
-#endif
-
-        private void Awake()
+        public StaticLog()
         {
             _LogPath = $@"{Application.persistentDataPath}\logs\";
             _LogEvents = new List<LogEvent>();
 
             SetupStaticLogger();
 
-
             Log.Information(
-                $"[{nameof(LogController)}] '{nameof(AsyncJobScheduler)}' set to {nameof(AsyncJobScheduler.MaximumConcurrentJobs)}: {AsyncJobScheduler.MaximumConcurrentJobs}");
+                $"[{nameof(StaticLog)}] '{nameof(AsyncJobScheduler)}' set to {nameof(AsyncJobScheduler.MaximumConcurrentJobs)}: {AsyncJobScheduler.MaximumConcurrentJobs}");
 
             AsyncJobScheduler.JobQueued += (sender, asyncJob) =>
             {
-                Log.Verbose($"[{nameof(LogController)}] Queued {nameof(AsyncJob)}: {asyncJob.GetType().Name}");
+                Log.Verbose($"[{nameof(StaticLog)}] Queued {nameof(AsyncJob)}: {asyncJob.GetType().Name}");
             };
 
             Application.logMessageReceived += LogHandler;
         }
 
-        private void Update()
-        {
-            if (_KillApplication)
-            {
-                Application.Quit(-1);
-            }
-        }
-
-        private void OnDestroy()
-        {
-            Log.CloseAndFlush();
-        }
-
-        private void SetupStaticLogger()
+        private static void SetupStaticLogger()
         {
             Log.Logger = new LoggerConfiguration()
                 .WriteTo.Async(configuration =>
@@ -83,7 +61,7 @@ namespace Wyd.Controllers.System
                         rollOnFileSizeLimit: true,
                         restrictedToMinimumLevel: LogEventLevel.Error))
 #if UNITY_EDITOR
-                .WriteTo.UnityDebugSink(_DEFAULT_TEMPLATE, MinimumLevel)
+                .WriteTo.UnityDebugSink(_DEFAULT_TEMPLATE, LogEventLevel.Information)
 #endif
                 .WriteTo.MemorySink(ref _LogEvents)
                 .WriteTo.EventSink()
@@ -101,11 +79,6 @@ namespace Wyd.Controllers.System
             Log.Fatal(stackTrace);
 
             Interlocked.Increment(ref _RuntimeErrorCount);
-
-            if (_RuntimeErrorCount > _MAXIMUM_RUNTIME_ERRORS)
-            {
-                _KillApplication = true;
-            }
         }
     }
 }

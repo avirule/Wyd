@@ -1,23 +1,20 @@
 #region
 
-using System;
 using System.ComponentModel;
-using UnityEngine;
-using Wyd.Controllers.State;
-using Wyd.Graphics;
+using Wyd.Extensions;
 using Wyd.Singletons;
 
 #endregion
 
 namespace Wyd.Controllers.UI.Components.Text
 {
-    public class WindowModeTextController : OptionDisplayTextController
+    public class FullScreenModeTextController : OptionDisplayTextController
     {
         protected override void UpdateTextObjectText(PropertyChangedEventArgs args, bool force = false)
         {
             if (force || args.PropertyName.Equals(nameof(Options.Instance.FullScreenMode)))
             {
-                _TextObject.text = string.Format(_Format, Enum.GetName(typeof(FullScreenMode), Options.Instance.FullScreenMode));
+                _TextObject.text = string.Format(_Format, Options.Instance.FullScreenMode.GetAlias());
             }
         }
     }

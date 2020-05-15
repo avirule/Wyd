@@ -22,6 +22,7 @@ namespace Wyd.Controllers.System
 
             TextObject = Resources.Load<GameObject>(@"Prefabs\UI\Components\Text\DiagnosticText");
 
+            Singleton.InstantiateSingleton<StaticLog>();
             Singleton.InstantiateSingleton<Options>();
             Singleton.InstantiateSingleton<Singletons.Diagnostics>();
         }

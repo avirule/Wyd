@@ -3,6 +3,7 @@
 using System;
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
+using UnityEngine;
 using Wyd.World;
 using Wyd.World.Blocks;
 
@@ -39,6 +40,22 @@ namespace Wyd.Extensions
             int intFlag = (int)flag;
 
             return (intProperty & intFlag) == intFlag;
+        }
+
+        public static string GetAlias(this FullScreenMode fullScreenMode)
+        {
+            switch (fullScreenMode)
+            {
+                case FullScreenMode.ExclusiveFullScreen:
+                    return "Fullscreen";
+                case FullScreenMode.FullScreenWindow:
+                    return "Borderless Windowed";
+                case FullScreenMode.MaximizedWindow:
+                case FullScreenMode.Windowed:
+                    return "Windowed";
+                default:
+                    throw new ArgumentOutOfRangeException(nameof(fullScreenMode), fullScreenMode, null);
+            }
         }
     }
 }

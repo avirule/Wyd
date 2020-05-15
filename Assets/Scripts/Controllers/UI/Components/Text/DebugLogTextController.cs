@@ -11,6 +11,7 @@ using TMPro;
 using UnityEngine;
 using Wyd.Controllers.System;
 using Wyd.Logging.Sinks;
+using Wyd.Singletons;
 
 #endregion
 
@@ -101,7 +102,7 @@ namespace Wyd.Controllers.UI.Components.Text
 
         private void CheckSetDebugEventsLogged()
         {
-            IReadOnlyList<LogEvent> loggedEvents = LogController.LoggedEvents;
+            IReadOnlyList<LogEvent> loggedEvents = StaticLog.LoggedEvents;
 
             if ((loggedEvents == null) || (loggedEvents.Count <= 0))
             {
