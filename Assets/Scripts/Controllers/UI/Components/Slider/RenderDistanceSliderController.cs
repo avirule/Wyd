@@ -1,7 +1,6 @@
 #region
 
 using UnityEngine;
-using Wyd.Controllers.State;
 using Wyd.Singletons;
 
 #endregion

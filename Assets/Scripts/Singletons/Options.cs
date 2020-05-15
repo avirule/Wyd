@@ -22,8 +22,12 @@ namespace Wyd.Singletons
         private static readonly Dictionary<string, string> _DefaultComments = new Dictionary<string, string>
         {
             {
-                nameof(GPUAcceleration), "Determines whether the GPU will be used for operations other than rendering.\r\n"
+                nameof(GPUAcceleration), "Whether the GPU will be used for operations other than rendering.\r\n"
                                          + "Remark: disabling this will notably increase CPU stress."
+            },
+            {
+                nameof(AdvancedMeshing), "Whether chunk meshes will use same-face-combination techniques to generate less total terrain data.\r\n"
+                                         + "Remark: this can be useful if you have low VRAM on your graphics card, although it may be overall slower than the naive meshing."
             },
             { nameof(DiagnosticBufferSize), "Determines maximum length of internal buffers used to allocate diagnostic data (min 30, max 300)." },
             {
@@ -52,6 +56,18 @@ namespace Wyd.Singletons
             set
             {
                 _GPUAcceleration.Value = value;
+                OnPropertyChanged();
+            }
+        }
+
+        private Option<bool> _AdvancedMeshing;
+
+        public bool AdvancedMeshing
+        {
+            get => _AdvancedMeshing.Value;
+            set
+            {
+                _AdvancedMeshing.Value = value;
                 OnPropertyChanged();
             }
         }
@@ -152,6 +168,9 @@ namespace Wyd.Singletons
             _GPUAcceleration = new Option<bool>(_Configuration, GENERAL_CATEGORY, nameof(GPUAcceleration), true, gpuAcceleration => true,
                 PropertyChanged);
 
+            _AdvancedMeshing = new Option<bool>(_Configuration, GENERAL_CATEGORY, nameof(AdvancedMeshing), true, advancedMeshing => true,
+                PropertyChanged);
+
             _DiagnosticBufferSize = new Option<int>(_Configuration, GENERAL_CATEGORY, nameof(DiagnosticBufferSize), 180,
                 diagnosticBufferSize => (diagnosticBufferSize >= 30) && (diagnosticBufferSize <= 300), PropertyChanged);
 
@@ -185,6 +204,9 @@ namespace Wyd.Singletons
 
             _Configuration[GENERAL_CATEGORY][nameof(GPUAcceleration)].PreComment = _DefaultComments[nameof(GPUAcceleration)];
             _Configuration[GENERAL_CATEGORY][nameof(GPUAcceleration)].BoolValue = true;
+
+            _Configuration[GENERAL_CATEGORY][nameof(AdvancedMeshing)].PreComment = _DefaultComments[nameof(GPUAcceleration)];
+            _Configuration[GENERAL_CATEGORY][nameof(AdvancedMeshing)].BoolValue = true;
 
             _Configuration[GENERAL_CATEGORY][nameof(DiagnosticBufferSize)].PreComment = _DefaultComments[nameof(DiagnosticBufferSize)];
             _Configuration[GENERAL_CATEGORY][nameof(DiagnosticBufferSize)].IntValue = 180;

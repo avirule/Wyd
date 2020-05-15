@@ -10,7 +10,6 @@ using Wyd.Controllers.State;
 using Wyd.Controllers.System;
 using Wyd.Controllers.World;
 using Wyd.Noise;
-using Wyd.Singletons;
 
 #endregion
 

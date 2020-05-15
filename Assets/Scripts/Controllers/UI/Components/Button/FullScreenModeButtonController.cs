@@ -18,6 +18,12 @@ namespace Wyd.Controllers.UI.Components.Button
             {
                 case PointerEventData.InputButton.Left:
                     Options.Instance.FullScreenMode = Options.Instance.FullScreenMode.Next();
+
+                    if (Options.Instance.FullScreenMode == FullScreenMode.MaximizedWindow)
+                    {
+                        Options.Instance.FullScreenMode = Options.Instance.FullScreenMode.Next();
+                    }
+
                     break;
                 case PointerEventData.InputButton.Right:
                 case PointerEventData.InputButton.Middle:

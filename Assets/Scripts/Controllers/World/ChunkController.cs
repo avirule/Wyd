@@ -7,7 +7,6 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Threading;
-using System.Threading.Tasks;
 using K4os.Compression.LZ4;
 using Serilog;
 using Unity.Mathematics;
@@ -470,7 +469,7 @@ namespace Wyd.Controllers.World
         {
             // todo make setting for improved meshing
             ChunkMeshingJob meshingJob = _MeshingJobs.Retrieve() ?? new ChunkMeshingJob();
-            meshingJob.SetData(_CancellationTokenSource.Token, OriginPoint, Blocks, true);
+            meshingJob.SetData(_CancellationTokenSource.Token, OriginPoint, Blocks, Options.Instance.AdvancedMeshing);
 
             void OnMeshingFinished(object sender, AsyncJob asyncJob)
             {
