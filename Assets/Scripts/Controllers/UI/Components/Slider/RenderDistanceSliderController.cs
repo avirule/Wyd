@@ -2,6 +2,7 @@
 
 using UnityEngine;
 using Wyd.Controllers.State;
+using Wyd.Singletons;
 
 #endregion
 
@@ -14,7 +15,7 @@ namespace Wyd.Controllers.UI.Components.Slider
         private void Awake()
         {
             _RenderDistanceSlider = GetComponent<UnityEngine.UI.Slider>();
-            _RenderDistanceSlider.maxValue = OptionsController.MAXIMUM_RENDER_DISTANCE;
+            _RenderDistanceSlider.maxValue = 16;
             _RenderDistanceSlider.onValueChanged.AddListener(RenderDistanceSliderValueChanged);
         }
 
@@ -25,17 +26,14 @@ namespace Wyd.Controllers.UI.Components.Slider
 
         private static void RenderDistanceSliderValueChanged(float newValue)
         {
-            OptionsController.Current.RenderDistance = (int)newValue;
+            Options.Instance.RenderDistance = (int)newValue;
         }
 
         private void UpdateSliderValue()
         {
-            if (OptionsController.Current == null)
-            {
-                return;
-            }
+            Options.Validate();
 
-            _RenderDistanceSlider.value = OptionsController.Current.RenderDistance;
+            _RenderDistanceSlider.value = Options.Instance.RenderDistance;
         }
     }
 }

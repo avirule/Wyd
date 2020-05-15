@@ -1,6 +1,7 @@
 #region
 
 using Wyd.Controllers.World;
+using Wyd.Jobs;
 
 #endregion
 
@@ -8,47 +9,49 @@ namespace Wyd.Controllers.UI.Components.Text.Diagnostic
 {
     public class ChunksLoadedTextController : UpdatingFormattedTextController
     {
-        private int _LastQueuedForCreationCount;
-        private int _LastChunkRegionsActiveCount;
-        private int _LastChunkRegionsCachedCount;
+        private bool _UpdateText;
 
-        private void Start()
+        protected override void OnEnable()
         {
-            int chunksQueued = WorldController.Current.ChunksQueuedCount;
-            int chunksActive = WorldController.Current.ChunksActiveCount;
-            int chunksCached = WorldController.Current.ChunksCachedCount;
+            base.OnEnable();
 
-            UpdateChunkRegionsLoadedText(chunksQueued, chunksActive, chunksCached,
-                WorldController.Current.AverageChunkStateVerificationTime);
+            _UpdateText = true;
+
+            AsyncJobScheduler.JobQueued += OnAsyncJobSchedulerEvent;
+            AsyncJobScheduler.JobStarted += OnAsyncJobSchedulerEvent;
+            AsyncJobScheduler.JobFinished += OnAsyncJobSchedulerEvent;
+        }
+
+        protected override void OnDisable()
+        {
+            base.OnDisable();
+
+            _UpdateText = false;
+
+            AsyncJobScheduler.JobQueued -= OnAsyncJobSchedulerEvent;
+            AsyncJobScheduler.JobStarted -= OnAsyncJobSchedulerEvent;
+            AsyncJobScheduler.JobFinished -= OnAsyncJobSchedulerEvent;
         }
 
         protected override void TimedUpdate()
         {
-            int chunksQueued = WorldController.Current.ChunksQueuedCount;
-            int chunksActive = WorldController.Current.ChunksActiveCount;
-            int chunksCached = WorldController.Current.ChunksCachedCount;
-
-            if ((chunksQueued != _LastQueuedForCreationCount)
-                || (chunksActive != _LastChunkRegionsActiveCount)
-                || (chunksCached != _LastChunkRegionsCachedCount))
+            if (_UpdateText)
             {
-                UpdateChunkRegionsLoadedText(chunksQueued, chunksActive, chunksCached,
-                    WorldController.Current.AverageChunkStateVerificationTime);
+                UpdateChunkRegionsLoadedText(WorldController.Current.ChunksQueuedCount, WorldController.Current.ChunksActiveCount,
+                    WorldController.Current.ChunksCachedCount,
+                    Singletons.Diagnostics.Instance.GetAverage("WorldStateVerification").Milliseconds);
             }
         }
 
-        private void UpdateChunkRegionsLoadedText(int chunksQueuedForCreation, int chunksActive,
+        private void UpdateChunkRegionsLoadedText(int chunksQueued, int chunksActive,
             int chunksCached, double averageStateVerificationTime)
         {
-            _LastQueuedForCreationCount = chunksQueuedForCreation;
-            _LastChunkRegionsActiveCount = chunksActive;
-            _LastChunkRegionsCachedCount = chunksCached;
+            _TextObject.text = string.Format(_Format, chunksQueued, chunksActive, chunksCached, averageStateVerificationTime);
+        }
 
-            _TextObject.text = string.Format(_Format,
-                _LastQueuedForCreationCount,
-                _LastChunkRegionsActiveCount,
-                _LastChunkRegionsCachedCount,
-                averageStateVerificationTime);
+        private void OnAsyncJobSchedulerEvent(object _, AsyncJob __)
+        {
+            _UpdateText = true;
         }
     }
 }

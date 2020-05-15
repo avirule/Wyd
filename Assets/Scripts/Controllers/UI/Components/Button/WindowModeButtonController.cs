@@ -4,7 +4,9 @@ using System;
 using UnityEngine;
 using UnityEngine.EventSystems;
 using Wyd.Controllers.State;
+using Wyd.Extensions;
 using Wyd.Graphics;
+using Wyd.Singletons;
 
 #endregion
 
@@ -17,17 +19,9 @@ namespace Wyd.Controllers.UI.Components.Button
             switch (eventData.button)
             {
                 case PointerEventData.InputButton.Left:
-                    int final = (int)OptionsController.Current.WindowMode - 1;
-
-                    OptionsController.Current.WindowMode = final >= 0
-                        ? (WindowMode)final
-                        : OptionsController.MaximumWindowModeValue;
+                    Options.Instance.FullScreenMode = Options.Instance.FullScreenMode.Next();
                     break;
                 case PointerEventData.InputButton.Right:
-                    OptionsController.Current.WindowMode =
-                        (WindowMode)(((int)OptionsController.Current.WindowMode + 1)
-                                     % ((int)OptionsController.MaximumWindowModeValue + 1));
-                    break;
                 case PointerEventData.InputButton.Middle:
                     break;
                 default:

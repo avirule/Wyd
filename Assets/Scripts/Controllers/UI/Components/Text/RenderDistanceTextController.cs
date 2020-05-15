@@ -2,6 +2,7 @@
 
 using System.ComponentModel;
 using Wyd.Controllers.State;
+using Wyd.Singletons;
 
 #endregion
 
@@ -11,9 +12,9 @@ namespace Wyd.Controllers.UI.Components.Text
     {
         protected override void UpdateTextObjectText(PropertyChangedEventArgs args, bool force = false)
         {
-            if (force || args.PropertyName.Equals(nameof(OptionsController.Current.RenderDistance)))
+            if (force || args.PropertyName.Equals(nameof(Options.Instance.RenderDistance)))
             {
-                _TextObject.text = string.Format(_Format, OptionsController.Current.RenderDistance);
+                _TextObject.text = string.Format(_Format, Options.Instance.RenderDistance);
             }
         }
     }

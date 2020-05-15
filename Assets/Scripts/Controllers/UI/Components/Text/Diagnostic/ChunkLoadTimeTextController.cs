@@ -1,7 +1,6 @@
 #region
 
 using System;
-using Wyd.Controllers.System;
 
 #endregion
 
@@ -9,59 +8,49 @@ namespace Wyd.Controllers.UI.Components.Text.Diagnostic
 {
     public class ChunkLoadTimeTextController : UpdatingFormattedTextController
     {
-        private const double _TOLERANCE = 0.01d;
+        private bool _UpdateDisplayData;
 
-        private double _RecentNoiseRetrievalTime;
-        private double _RecentTerrainBuildingTime;
-        private double _RecentTerrainDetailingTime;
-        private double _RecentPreMeshingTime;
-        private double _RecentMeshingTime;
+        protected override void OnEnable()
+        {
+            base.OnEnable();
+
+            Singletons.Diagnostics.Instance.DiagnosticBuffersChanged += OnDiagnosticBuffersChanged;
+        }
+
+        protected override void OnDisable()
+        {
+            base.OnDisable();
+
+            Singletons.Diagnostics.Instance.DiagnosticBuffersChanged -= OnDiagnosticBuffersChanged;
+        }
 
         protected override void TimedUpdate()
         {
-            double averageNoiseRetrievalTime = DiagnosticsController.Current.AverageNoiseRetrievalTime;
-            double averageTerrainBuildingTime = DiagnosticsController.Current.AverageTerrainBuildingTime;
-            double averageTerrainDetailingTime = DiagnosticsController.Current.AverageTerrainDetailingTime;
-            double averagePreMeshingTime = DiagnosticsController.Current.AverageMeshingPreMeshingTime;
-            double averageMeshingTime = DiagnosticsController.Current.AverageMeshingTime;
-
-            if ((Math.Abs(_RecentNoiseRetrievalTime - averageNoiseRetrievalTime) < _TOLERANCE)
-                && (Math.Abs(_RecentTerrainBuildingTime - averageTerrainBuildingTime) < _TOLERANCE)
-                && (Math.Abs(_RecentTerrainDetailingTime - averageTerrainDetailingTime) < _TOLERANCE)
-                && (Math.Abs(_RecentPreMeshingTime - averagePreMeshingTime) < _TOLERANCE)
-                && (Math.Abs(_RecentMeshingTime - averageMeshingTime) < _TOLERANCE))
+            if (_UpdateDisplayData)
             {
-                return;
+                SetAverages(
+                    Singletons.Diagnostics.Instance.GetAverage("ChunkNoiseRetrieval"),
+                    Singletons.Diagnostics.Instance.GetAverage("ChunkBuilding"),
+                    Singletons.Diagnostics.Instance.GetAverage("ChunkDetailing"),
+                    Singletons.Diagnostics.Instance.GetAverage("ChunkPreMeshing"),
+                    Singletons.Diagnostics.Instance.GetAverage("ChunkMeshing"));
             }
-
-            SetRecentAverages(
-                averageNoiseRetrievalTime,
-                averageTerrainBuildingTime,
-                averageTerrainDetailingTime,
-                averagePreMeshingTime,
-                averageMeshingTime);
-
-            UpdateChunkLoadTimeText();
         }
 
-        private void SetRecentAverages(double averageNoiseRetrievalTime, double averageTerrainBuildingTime, double averageTerrainDetailingTime,
-            double averagePreMeshingTime, double averageMeshingTime)
-        {
-            _RecentNoiseRetrievalTime = averageNoiseRetrievalTime;
-            _RecentTerrainBuildingTime = averageTerrainBuildingTime;
-            _RecentTerrainDetailingTime = averageTerrainDetailingTime;
-            _RecentPreMeshingTime = averagePreMeshingTime;
-            _RecentMeshingTime = averageMeshingTime;
-        }
-
-        private void UpdateChunkLoadTimeText()
+        private void SetAverages(TimeSpan averageNoiseRetrievalTime, TimeSpan averageTerrainBuildingTime, TimeSpan averageTerrainDetailingTime,
+            TimeSpan averagePreMeshingTime, TimeSpan averageMeshingTime)
         {
             _TextObject.text = string.Format(_Format,
-                _RecentNoiseRetrievalTime,
-                _RecentTerrainBuildingTime,
-                _RecentTerrainDetailingTime,
-                _RecentPreMeshingTime,
-                _RecentMeshingTime);
+                averageNoiseRetrievalTime.Milliseconds,
+                averageTerrainBuildingTime.Milliseconds,
+                averageTerrainDetailingTime.Milliseconds,
+                averagePreMeshingTime.Milliseconds,
+                averageMeshingTime.Milliseconds);
+        }
+
+        private void OnDiagnosticBuffersChanged(object sender, TimeSpan changedTimeSpan)
+        {
+            _UpdateDisplayData = true;
         }
     }
 }

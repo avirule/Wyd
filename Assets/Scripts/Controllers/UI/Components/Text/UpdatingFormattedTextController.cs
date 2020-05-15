@@ -36,12 +36,12 @@ namespace Wyd.Controllers.UI.Components.Text
 
         protected virtual void OnEnable()
         {
-            PerFrameUpdateController.Current.RegisterPerFrameUpdater(150, this);
+            PerFrameUpdateController.Current.RegisterPerFrameUpdater(30000, this);
         }
 
         protected virtual void OnDisable()
         {
-            PerFrameUpdateController.Current.DeregisterPerFrameUpdater(150, this);
+            PerFrameUpdateController.Current.DeregisterPerFrameUpdater(30000, this);
         }
 
         public virtual void FrameUpdate()

@@ -10,6 +10,7 @@ using Wyd.Controllers.State;
 using Wyd.Controllers.System;
 using Wyd.Controllers.World;
 using Wyd.Noise;
+using Wyd.Singletons;
 
 #endregion
 
@@ -82,8 +83,8 @@ namespace Wyd.World.Chunks.Generation
         {
             if (!_CancellationToken.IsCancellationRequested)
             {
-                DiagnosticsController.Current.RollingNoiseRetrievalTimes.Enqueue(_NoiseRetrievalTimeSpan);
-                DiagnosticsController.Current.RollingTerrainBuildingTimes.Enqueue(_TerrainGenerationTimeSpan);
+                Singletons.Diagnostics.Instance["ChunkNoiseRetrieval"].Enqueue(_NoiseRetrievalTimeSpan);
+                Singletons.Diagnostics.Instance["ChunkBuilding"].Enqueue(_TerrainGenerationTimeSpan);
             }
 
             return Task.CompletedTask;

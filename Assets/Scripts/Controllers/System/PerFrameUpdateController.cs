@@ -6,8 +6,8 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Runtime.CompilerServices;
 using Serilog;
-using Wyd.Controllers.State;
 using Wyd.Extensions;
+using Wyd.Singletons;
 
 #endregion
 
@@ -30,7 +30,7 @@ namespace Wyd.Controllers.System
         private Stack<PerFrameUpdateCollectionModification> _PerFrameUpdateCollectionModifications;
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public bool IsSafeFrameTime() => _FrameTimer.Elapsed <= OptionsController.Current.TargetFrameRateTimeSpan;
+        public bool IsSafeFrameTime() => _FrameTimer.Elapsed <= Options.Instance.TargetFrameTime;
 
         private void Awake()
         {

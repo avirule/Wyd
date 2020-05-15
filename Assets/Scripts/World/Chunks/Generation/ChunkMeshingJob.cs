@@ -152,8 +152,8 @@ namespace Wyd.World.Chunks.Generation
         {
             if (!_CancellationToken.IsCancellationRequested)
             {
-                DiagnosticsController.Current.RollingPreMeshingTimes.Enqueue(_PreMeshingTimeSpan);
-                DiagnosticsController.Current.RollingMeshingTimes.Enqueue(_MeshingTimeSpan);
+                Singletons.Diagnostics.Instance["ChunkPreMeshing"].Enqueue(_PreMeshingTimeSpan);
+                Singletons.Diagnostics.Instance["ChunkMeshing"].Enqueue(_MeshingTimeSpan);
             }
 
             return Task.CompletedTask;

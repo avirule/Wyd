@@ -26,6 +26,8 @@ namespace Wyd.Collections
 
         public int Count => _Count;
 
+        public event EventHandler<T> ItemEnqueued;
+
         public FixedConcurrentQueue(int maximumSize)
         {
             _InternalQueue = new ConcurrentQueue<T>();
@@ -50,6 +52,8 @@ namespace Wyd.Collections
             {
                 Interlocked.Increment(ref _Count);
             }
+
+            ItemEnqueued?.Invoke(this, item);
         }
 
         private bool TryDequeue(out T item) => _InternalQueue.TryDequeue(out item);

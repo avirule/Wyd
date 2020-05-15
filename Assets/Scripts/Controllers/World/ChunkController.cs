@@ -18,6 +18,7 @@ using Wyd.Controllers.System;
 using Wyd.Diagnostics;
 using Wyd.Extensions;
 using Wyd.Jobs;
+using Wyd.Singletons;
 using Wyd.World.Blocks;
 using Wyd.World.Chunks;
 using Wyd.World.Chunks.Generation;
@@ -438,8 +439,8 @@ namespace Wyd.Controllers.World
 
             ChunkTerrainBuilderJob terrainBuilderJob = new ChunkTerrainBuilderJob();
             terrainBuilderJob.SetData(_CancellationTokenSource.Token, OriginPoint, GenerationConstants.FREQUENCY, GenerationConstants.PERSISTENCE,
-                OptionsController.Current.GPUAcceleration ? heightmapBuffer : null,
-                OptionsController.Current.GPUAcceleration ? caveNoiseBuffer : null);
+                Options.Instance.GPUAcceleration ? heightmapBuffer : null,
+                Options.Instance.GPUAcceleration ? caveNoiseBuffer : null);
 
             void OnTerrainBuildingFinished(object sender, AsyncJob asyncJob)
             {

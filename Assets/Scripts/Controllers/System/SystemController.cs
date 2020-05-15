@@ -2,8 +2,8 @@
 
 using System.Threading;
 using UnityEngine;
-using Wyd.Controllers.State;
 using Wyd.Jobs;
+using Wyd.Singletons;
 
 #endregion
 
@@ -21,6 +21,9 @@ namespace Wyd.Controllers.System
             DontDestroyOnLoad(this);
 
             TextObject = Resources.Load<GameObject>(@"Prefabs\UI\Components\Text\DiagnosticText");
+
+            Singleton.InstantiateSingleton<Options>();
+            Singleton.InstantiateSingleton<Singletons.Diagnostics>();
         }
 
         private void OnDestroy()

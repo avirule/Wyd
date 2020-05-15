@@ -2,6 +2,7 @@
 
 using System.ComponentModel;
 using Wyd.Controllers.State;
+using Wyd.Singletons;
 
 #endregion
 
@@ -11,7 +12,7 @@ namespace Wyd.Controllers.UI.Components.Text
     {
         protected void Start()
         {
-            OptionsController.Current.PropertyChanged += OnOptionControllerChangedProperty;
+            Options.Instance.PropertyChanged += OnOptionControllerChangedProperty;
             UpdateTextObjectText(null, true);
         }
 

@@ -10,16 +10,9 @@ namespace Wyd.Controllers.State
 {
     public class TextureController : SingletonController<TextureController>
     {
-        public MeshRenderer MeshRenderer;
-
         private static readonly int _MainTexPropertyID = Shader.PropertyToID("_MainTex");
-        private static readonly int _ColorPropertyID = Shader.PropertyToID("_Color");
 
         private Dictionary<string, ushort> _TextureIDs;
-        private Color _Color;
-        private double _TimeOfDay;
-        private bool _IsNightTime;
-        private double _SecondsInCycle;
 
         private Texture2DArray BlocksTexture { get; set; }
 
@@ -37,41 +30,18 @@ namespace Wyd.Controllers.State
             AssignSingletonInstance(this);
 
             _TextureIDs = new Dictionary<string, ushort>();
-
-            _Color = Color.white;
-            _SecondsInCycle = 5d;
         }
 
         private void Start()
         {
             ProcessSprites();
 
-            foreach (Material material in MeshRenderer.materials)
+            BlockMaterials = new[]
             {
-                material.SetTexture(_MainTexPropertyID, BlocksTexture);
-            }
+                new Material(Shader.Find("Wyd/Blocks - Opaque")),
+            };
 
-            BlockMaterials = MeshRenderer.materials;
-        }
-
-        private Color _Daytime = new Color(0.9f, 0.9f, 0.9f, 1.0f);
-        private Color _Nighttime = new Color(0.2f, 0.2f, 0.2f, 1.0f);
-
-        private void Update()
-        {
-            if (_TimeOfDay < 0d)
-            {
-                _IsNightTime = false;
-            }
-            else if (_TimeOfDay > _SecondsInCycle)
-            {
-                _IsNightTime = true;
-            }
-
-            double timeAdjustment = Time.deltaTime / _SecondsInCycle;
-            _TimeOfDay += _IsNightTime ? -timeAdjustment : timeAdjustment;
-
-            BlockMaterials[0].SetColor(_ColorPropertyID, Color.Lerp(_Nighttime, _Daytime, (float)(_TimeOfDay / _SecondsInCycle)));
+            BlockMaterials[0].SetTexture(_MainTexPropertyID, BlocksTexture);
         }
 
         private void ProcessSprites()

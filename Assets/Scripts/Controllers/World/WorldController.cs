@@ -14,6 +14,7 @@ using Wyd.Controllers.State;
 using Wyd.Controllers.System;
 using Wyd.Entities;
 using Wyd.Extensions;
+using Wyd.Singletons;
 using Wyd.World;
 using Wyd.World.Chunks;
 using Wyd.World.Chunks.Generation;
@@ -55,13 +56,6 @@ namespace Wyd.Controllers.World
         public int ChunksActiveCount => _Chunks.Count;
         public int ChunksCachedCount => _ChunkPool.Size;
 
-        public double AverageChunkStateVerificationTime =>
-            (ChunkStateVerificationTimes != null)
-            && (ChunkStateVerificationTimes.Count > 0)
-                ? ChunkStateVerificationTimes.Average(time => time.Milliseconds)
-                : 0d;
-
-        public FixedConcurrentQueue<TimeSpan> ChunkStateVerificationTimes { get; private set; }
         public WorldSeed Seed { get; private set; }
         public int3 SpawnPoint { get; private set; }
 
@@ -113,9 +107,9 @@ namespace Wyd.Controllers.World
         private void Start()
         {
             SetMaximumChunkCacheSize();
-            OptionsController.Current.PropertyChanged += (sender, args) =>
+            Options.Instance.PropertyChanged += (sender, args) =>
             {
-                if (args.PropertyName.Equals(nameof(OptionsController.Current.RenderDistance)))
+                if (args.PropertyName.Equals(nameof(Options.Instance.RenderDistance)))
                 {
                     SetMaximumChunkCacheSize();
                 }
@@ -126,13 +120,19 @@ namespace Wyd.Controllers.World
 
             SpawnPoint = WydMath.IndexTo3D(Seed, new int3(int.MaxValue, int.MaxValue, int.MaxValue));
 
-            ChunkStateVerificationTimes =
-                new FixedConcurrentQueue<TimeSpan>(OptionsController.Current.DiagnosticBufferLength);
+            Singletons.Diagnostics.Instance.RegisterDiagnosticBuffer("WorldStateVerification");
+            Singletons.Diagnostics.Instance.RegisterDiagnosticBuffer("ChunkNoiseRetrieval");
+            Singletons.Diagnostics.Instance.RegisterDiagnosticBuffer("ChunkBuilding");
+            Singletons.Diagnostics.Instance.RegisterDiagnosticBuffer("ChunkDetailing");
+            Singletons.Diagnostics.Instance.RegisterDiagnosticBuffer("ChunkPreMeshing");
+            Singletons.Diagnostics.Instance.RegisterDiagnosticBuffer("ChunkMeshing");
         }
 
         private void OnEnable()
         {
             PerFrameUpdateController.Current.RegisterPerFrameUpdater(10, this);
+
+            WorldState = WorldState.RequiresStateVerification;
         }
 
         private void OnDisable()
@@ -172,7 +172,9 @@ namespace Wyd.Controllers.World
 
             while (_ChunksPendingActivation.Count > 0)
             {
-                yield return null; // yield at the start since these operations are very time consuming
+                // yield at the start since these operations are very time consuming
+                // this allows the PerFrameIncrementalUpdater to cancel the operation early
+                yield return null;
 
                 float3 origin = _ChunksPendingActivation.Pop();
 
@@ -201,7 +203,9 @@ namespace Wyd.Controllers.World
 
             while (_ChunksPendingDeactivation.Count > 0)
             {
-                yield return null; // yield at the start since these operations are very time consuming
+                // yield at the start since these operations are very time consuming
+                // this allows the PerFrameIncrementalUpdater to cancel the operation early
+                yield return null;
 
                 float3 origin = _ChunksPendingDeactivation.Pop();
 
@@ -316,13 +320,7 @@ namespace Wyd.Controllers.World
 
         private void SetMaximumChunkCacheSize()
         {
-            if (OptionsController.Current == null)
-            {
-                return;
-            }
-
-            int totalRenderDistance =
-                OptionsController.Current.RenderDistance + /*OptionsController.Current.PreLoadChunkDistance*/ +1;
+            int totalRenderDistance = Options.Instance.RenderDistance + /* OptionsController.Current.PreLoadChunkDistance + */ 1;
             _ChunkPool.SetMaximumSize(((totalRenderDistance * 2) - 1) * WORLD_HEIGHT_IN_CHUNKS);
         }
 
@@ -354,8 +352,8 @@ namespace Wyd.Controllers.World
                 }
 
                 // todo this should be some setting inside loader
-                int renderRadius = OptionsController.Current.RenderDistance
-                    /*+ OptionsController.Current.PreLoadChunkDistance*/;
+                int renderRadius = Options.Instance.RenderDistance
+                    /* + OptionsController.Current.PreLoadChunkDistance*/;
 
                 for (int x = -renderRadius; x < (renderRadius + 1); x++)
                 for (int z = -renderRadius; z < (renderRadius + 1); z++)
@@ -385,12 +383,12 @@ namespace Wyd.Controllers.World
             }
 
             WorldState &= ~WorldState.VerifyingState;
-            ChunkStateVerificationTimes.Enqueue(_Stopwatch.Elapsed);
+            Singletons.Diagnostics.Instance["WorldStateVerification"].Enqueue(_Stopwatch.Elapsed);
             _Stopwatch.Reset();
         }
 
         private static bool IsWithinLoaderRange(float3 difference) =>
-            math.all(difference <= (GenerationConstants.CHUNK_SIZE * OptionsController.Current.RenderDistance));
+            math.all(difference <= (GenerationConstants.CHUNK_SIZE * Options.Instance.RenderDistance));
 
         #endregion
 

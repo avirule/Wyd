@@ -1,8 +1,11 @@
 #region
 
+using System;
 using System.ComponentModel;
+using UnityEngine;
 using Wyd.Controllers.State;
 using Wyd.Graphics;
+using Wyd.Singletons;
 
 #endregion
 
@@ -12,11 +15,9 @@ namespace Wyd.Controllers.UI.Components.Text
     {
         protected override void UpdateTextObjectText(PropertyChangedEventArgs args, bool force = false)
         {
-            if (force || args.PropertyName.Equals(nameof(OptionsController.Current.WindowMode)))
+            if (force || args.PropertyName.Equals(nameof(Options.Instance.FullScreenMode)))
             {
-                _TextObject.text = OptionsController.Current.WindowMode == WindowMode.BorderlessWindowed
-                    ? string.Format(_Format, "Borderless Windowed")
-                    : string.Format(_Format, OptionsController.Current.WindowMode);
+                _TextObject.text = string.Format(_Format, Enum.GetName(typeof(FullScreenMode), Options.Instance.FullScreenMode));
             }
         }
     }

@@ -1,5 +1,6 @@
 #region
 
+using System;
 using System.Linq;
 using UnityEngine;
 using Wyd.Collections;
@@ -12,8 +13,7 @@ namespace Wyd.Controllers.UI.Components.Text.Diagnostic
     public class FPSTextController : FormattedTextController
     {
         private int _FramesWaited;
-
-        private FixedConcurrentQueue<float> _FrameTimes;
+        private bool _Enabled;
 
         protected override void Awake()
         {
@@ -22,14 +22,29 @@ namespace Wyd.Controllers.UI.Components.Text.Diagnostic
             _FramesWaited = 0;
         }
 
-        private void Start()
+        private void OnEnable()
         {
-            _FrameTimes = new FixedConcurrentQueue<float>(OptionsController.Current.DiagnosticBufferLength);
+            Singletons.Diagnostics.Instance.RegisterDiagnosticBuffer("FrameTimes");
+
+            _Enabled = true;
+        }
+
+        private void OnDisable()
+        {
+            Singletons.Diagnostics.Instance.UnregisterDiagnosticTimeEntry("FrameTimes");
+
+            _Enabled = false;
         }
 
         private void Update()
         {
-            _FrameTimes.Enqueue(Time.deltaTime);
+            if (!_Enabled)
+            {
+                return;
+            }
+
+            TimeSpan delta = TimeSpan.FromTicks((long)(TimeSpan.TicksPerSecond * Time.deltaTime));
+            Singletons.Diagnostics.Instance["FrameTimes"].Enqueue(delta);
 
             if (_FramesWaited < 4)
             {
@@ -37,11 +52,11 @@ namespace Wyd.Controllers.UI.Components.Text.Diagnostic
                 return;
             }
 
+            TimeSpan averageFPS = Singletons.Diagnostics.Instance.GetAverage("FrameTimes");
+            double framesPerSecond = 1d / averageFPS.TotalSeconds;
+            double framesInMilliseconds = averageFPS.TotalMilliseconds;
 
-            float averageFPS = 1f / _FrameTimes.Average();
-            float averageFrameTimeMilliseconds = (1f / averageFPS) * 1000f;
-
-            _TextObject.text = string.Format(_Format, averageFPS, averageFrameTimeMilliseconds);
+            _TextObject.text = string.Format(_Format, framesPerSecond, framesInMilliseconds);
             _FramesWaited = 0;
         }
     }

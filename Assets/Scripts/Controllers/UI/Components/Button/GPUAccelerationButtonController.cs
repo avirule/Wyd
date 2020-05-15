@@ -3,6 +3,7 @@
 using UnityEngine;
 using UnityEngine.EventSystems;
 using Wyd.Controllers.State;
+using Wyd.Singletons;
 
 #endregion
 
@@ -12,7 +13,7 @@ namespace Wyd.Controllers.UI.Components.Button
     {
         public void OnPointerClick(PointerEventData eventData)
         {
-            OptionsController.Current.GPUAcceleration = !OptionsController.Current.GPUAcceleration;
+            Options.Instance.GPUAcceleration = !Options.Instance.GPUAcceleration;
         }
     }
 }
