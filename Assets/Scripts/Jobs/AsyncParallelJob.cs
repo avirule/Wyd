@@ -24,7 +24,7 @@ namespace Wyd.Jobs
 
         protected override async Task Process() => await BatchTasksAndAwaitAll().ConfigureAwait(false);
 
-        protected virtual Task ProcessIndex(int index) => Task.CompletedTask;
+        protected virtual void ProcessIndex(int index) { }
 
         protected async Task BatchTasksAndAwaitAll() => await Task.WhenAll(GetBatchedTasks()).ConfigureAwait(false);
 
@@ -47,12 +47,14 @@ namespace Wyd.Jobs
             }
         }
 
-        private async Task ProcessIndexes(int startIndex, int endIndex)
+        private Task ProcessIndexes(int startIndex, int endIndex)
         {
             for (int index = startIndex; index <= endIndex; index++)
             {
-                await ProcessIndex(index);
+                ProcessIndex(index);
             }
+
+            return Task.CompletedTask;
         }
     }
 }

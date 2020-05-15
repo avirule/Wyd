@@ -12,6 +12,7 @@ using Wyd.Collections;
 using Wyd.Controllers.State;
 using Wyd.Controllers.World;
 using Wyd.Jobs;
+using Wyd.Singletons;
 using Wyd.World.Blocks;
 using Debug = System.Diagnostics.Debug;
 
@@ -35,7 +36,7 @@ namespace Wyd.World.Chunks.Generation
         private TimeSpan _PreMeshingTimeSpan;
         private TimeSpan _MeshingTimeSpan;
 
-        public ChunkMeshingJob() : base(GenerationConstants.CHUNK_SIZE, 128)
+        public ChunkMeshingJob() : base(GenerationConstants.CHUNK_SIZE_CUBED, Options.Instance.NaiveMeshingGroupSize)
         {
             _RuntimeStopwatch = new Stopwatch();
             _NeighborBlocksCollections = new INodeCollection<ushort>[6];
@@ -125,26 +126,25 @@ namespace Wyd.World.Chunks.Generation
             _MeshingTimeSpan = _RuntimeStopwatch.Elapsed;
         }
 
-        protected override Task ProcessIndex(int index)
+        protected override void ProcessIndex(int index)
         {
             if (_CancellationToken.IsCancellationRequested)
             {
-                return Task.CompletedTask;
+                return;
             }
 
             ushort currentBlockId = _MeshingBlocks[index].ID;
-            int localPosition = CompressVertex(WydMath.IndexTo3D(index, GenerationConstants.CHUNK_SIZE));
 
             if (currentBlockId == BlockController.AirID)
             {
-                return Task.CompletedTask;
+                return;
             }
+
+            int localPosition = CompressVertex(WydMath.IndexTo3D(index, GenerationConstants.CHUNK_SIZE));
 
             bool transparentTraversal = BlockController.Current.CheckBlockHasProperty(currentBlockId, BlockDefinition.Property.Transparent);
 
             NaiveMeshIndex(index, localPosition, currentBlockId, transparentTraversal);
-
-            return Task.CompletedTask;
         }
 
         protected override Task ProcessFinished()
@@ -313,7 +313,7 @@ namespace Wyd.World.Chunks.Generation
                             // if opaque, traverse so long as facing block is transparent
                             if (isCurrentBlockTransparent)
                             {
-                                if (currentBlockId != facedBlockId)
+                                if (currentBlockId == facedBlockId)
                                 {
                                     break;
                                 }
@@ -349,7 +349,7 @@ namespace Wyd.World.Chunks.Generation
 
                             if (isCurrentBlockTransparent)
                             {
-                                if (currentBlockId != facedBlockId)
+                                if (currentBlockId == facedBlockId)
                                 {
                                     break;
                                 }
@@ -446,7 +446,6 @@ namespace Wyd.World.Chunks.Generation
                 // face direction always exists on a single bit, so shift 1 by the current normalIndex (0-5)
                 Direction faceDirection = (Direction)(1 << normalIndex);
 
-                // check if current index has face already
                 if (_MeshingBlocks[index].HasFace(faceDirection))
                 {
                     continue;
@@ -475,18 +474,15 @@ namespace Wyd.World.Chunks.Generation
                     // if opaque, traverse so long as facing block is transparent
                     if (isCurrentBlockTransparent)
                     {
-                        if (currentBlockId != facedBlockId)
+                        if (currentBlockId == facedBlockId)
                         {
                             continue;
                         }
                     }
                     else if (!BlockController.Current.CheckBlockHasProperty(facedBlockId, BlockDefinition.Property.Transparent))
                     {
-                        if (!isNegativeFace)
-                        {
-                            Direction inverseFaceDirection = (Direction)(1 << ((normalIndex + 3) % 6));
-                            _MeshingBlocks[facedBlockIndex].SetFace(inverseFaceDirection);
-                        }
+                        Direction inverseFaceDirection = (Direction)(1 << ((normalIndex + 3) % 6));
+                        _MeshingBlocks[facedBlockIndex].SetFace(inverseFaceDirection);
 
                         continue;
                     }
@@ -509,53 +505,52 @@ namespace Wyd.World.Chunks.Generation
 
                     if (isCurrentBlockTransparent)
                     {
-                        if (currentBlockId != facedBlockId)
+                        if (currentBlockId == facedBlockId)
                         {
                             continue;
                         }
                     }
                     else if (!BlockController.Current.CheckBlockHasProperty(facedBlockId, BlockDefinition.Property.Transparent))
-
                     {
                         continue;
                     }
                 }
 
+                if (!BlockController.Current.GetUVs(currentBlockId, faceDirection, out ushort textureId))
+                {
+                    continue;
+                }
+
+                int compressedUv = (textureId << (GenerationConstants.CHUNK_SIZE_BIT_SHIFT * 2))
+                                   ^ (1 << GenerationConstants.CHUNK_SIZE_BIT_SHIFT)
+                                   ^ 1;
+
+                int normals = GenerationConstants.NormalByIteration[normalIndex];
+                int[] compressedVertices = GenerationConstants.VerticesByIteration[normalIndex];
+
                 _MeshingBlocks[index].SetFace(faceDirection);
 
-                if (BlockController.Current.GetUVs(currentBlockId, faceDirection, out ushort textureId))
-                {
-                    int compressedUv = (textureId << (GenerationConstants.CHUNK_SIZE_BIT_SHIFT * 2))
-                                       ^ (1 << GenerationConstants.CHUNK_SIZE_BIT_SHIFT)
-                                       ^ 1;
+                int verticesCount = _MeshData.VerticesCount / 2;
+                int transparentAsInt = Convert.ToInt32(isCurrentBlockTransparent);
 
-                    int normals = GenerationConstants.NormalByIteration[normalIndex];
-                    int[] compressedVertices = GenerationConstants.VerticesByIteration[normalIndex];
+                _MeshData.AddTriangle(transparentAsInt, 0 + verticesCount);
+                _MeshData.AddTriangle(transparentAsInt, 2 + verticesCount);
+                _MeshData.AddTriangle(transparentAsInt, 1 + verticesCount);
+                _MeshData.AddTriangle(transparentAsInt, 2 + verticesCount);
+                _MeshData.AddTriangle(transparentAsInt, 3 + verticesCount);
+                _MeshData.AddTriangle(transparentAsInt, 1 + verticesCount);
 
-                    _MeshData.AddVertex((localPosition + compressedVertices[3]) | normals);
-                    _MeshData.AddVertex(compressedUv & (int.MaxValue << (GenerationConstants.CHUNK_SIZE_BIT_SHIFT * 2)));
+                _MeshData.AddVertex((localPosition + compressedVertices[3]) | normals);
+                _MeshData.AddVertex(compressedUv & (int.MaxValue << (GenerationConstants.CHUNK_SIZE_BIT_SHIFT * 2)));
 
-                    _MeshData.AddVertex((localPosition + compressedVertices[2]) | normals);
-                    _MeshData.AddVertex(compressedUv & (int.MaxValue << GenerationConstants.CHUNK_SIZE_BIT_SHIFT));
+                _MeshData.AddVertex((localPosition + compressedVertices[2]) | normals);
+                _MeshData.AddVertex(compressedUv & (int.MaxValue << GenerationConstants.CHUNK_SIZE_BIT_SHIFT));
 
-                    _MeshData.AddVertex((localPosition + compressedVertices[1]) | normals);
-                    _MeshData.AddVertex(compressedUv & ~(GenerationConstants.CHUNK_SIZE_BIT_MASK << GenerationConstants.CHUNK_SIZE_BIT_SHIFT));
+                _MeshData.AddVertex((localPosition + compressedVertices[1]) | normals);
+                _MeshData.AddVertex(compressedUv & ~(GenerationConstants.CHUNK_SIZE_BIT_MASK << GenerationConstants.CHUNK_SIZE_BIT_SHIFT));
 
-                    _MeshData.AddVertex((localPosition + compressedVertices[0]) | normals);
-                    _MeshData.AddVertex(compressedUv & int.MaxValue);
-
-
-                    int verticesCount = _MeshData.VerticesCount / 2;
-                    int transparentAsInt = Convert.ToInt32(isCurrentBlockTransparent);
-
-                    _MeshData.AddTriangle(transparentAsInt, 0 + verticesCount);
-                    _MeshData.AddTriangle(transparentAsInt, 2 + verticesCount);
-                    _MeshData.AddTriangle(transparentAsInt, 1 + verticesCount);
-                    _MeshData.AddTriangle(transparentAsInt, 2 + verticesCount);
-                    _MeshData.AddTriangle(transparentAsInt, 3 + verticesCount);
-                    _MeshData.AddTriangle(transparentAsInt, 1 + verticesCount);
-                }
-                else { }
+                _MeshData.AddVertex((localPosition + compressedVertices[0]) | normals);
+                _MeshData.AddVertex(compressedUv & int.MaxValue);
             }
         }
 

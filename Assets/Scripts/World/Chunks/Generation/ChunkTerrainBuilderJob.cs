@@ -3,6 +3,7 @@
 using System;
 using System.Threading;
 using System.Threading.Tasks;
+using Serilog;
 using Unity.Mathematics;
 using UnityEngine;
 using Wyd.Collections;
@@ -37,8 +38,8 @@ namespace Wyd.World.Chunks.Generation
         {
             int seed = WorldController.Current.Seed;
 
-            _NoiseSeedA = seed ^ (seed * 2);
-            _NoiseSeedB = seed ^ (seed * 3);
+            _NoiseSeedA = seed ^ 2;
+            _NoiseSeedB = seed ^ 3;
         }
 
         protected override async Task Process()
@@ -71,12 +72,7 @@ namespace Wyd.World.Chunks.Generation
             _TerrainGenerationTimeSpan = Stopwatch.Elapsed;
         }
 
-        protected override Task ProcessIndex(int index)
-        {
-            GenerateIndex(index);
-
-            return Task.CompletedTask;
-        }
+        protected override void ProcessIndex(int index) => GenerateIndex(index);
 
         protected override Task ProcessFinished()
         {
@@ -105,7 +101,7 @@ namespace Wyd.World.Chunks.Generation
             _OriginPoint = default;
             _Frequency = default;
             _Persistence = default;
-            _Blocks = default;
+            _Blocks = null;
         }
 
         private bool GetComputeBufferData()

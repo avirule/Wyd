@@ -29,6 +29,7 @@ namespace Wyd.Singletons
                 nameof(AdvancedMeshing), "Whether chunk meshes will use same-face-combination techniques to generate less total terrain data.\r\n"
                                          + "Remark: this can be useful if you have low VRAM on your graphics card, although it may be overall slower than the naive meshing."
             },
+            { nameof(NaiveMeshingGroupSize), "Group size to use when doing naive meshing. This value must be a power of two (min 8, max 1024)." },
             { nameof(DiagnosticBufferSize), "Determines maximum length of internal buffers used to allocate diagnostic data (min 30, max 300)." },
             {
                 nameof(TargetFrameRate), "Target FPS internal updaters will attempt to maintain (min 15, max 300).\r\n"
@@ -53,11 +54,7 @@ namespace Wyd.Singletons
         public bool GPUAcceleration
         {
             get => _GPUAcceleration.Value;
-            set
-            {
-                _GPUAcceleration.Value = value;
-                OnPropertyChanged();
-            }
+            set => _GPUAcceleration.Value = value;
         }
 
         private Option<bool> _AdvancedMeshing;
@@ -65,11 +62,15 @@ namespace Wyd.Singletons
         public bool AdvancedMeshing
         {
             get => _AdvancedMeshing.Value;
-            set
-            {
-                _AdvancedMeshing.Value = value;
-                OnPropertyChanged();
-            }
+            set => _AdvancedMeshing.Value = value;
+        }
+
+        private Option<int> _NaiveMeshingGroupSize;
+
+        public int NaiveMeshingGroupSize
+        {
+            get => _NaiveMeshingGroupSize.Value;
+            set => _NaiveMeshingGroupSize.Value = value;
         }
 
         private Option<int> _DiagnosticBufferSize;
@@ -77,11 +78,7 @@ namespace Wyd.Singletons
         public int DiagnosticBufferSize
         {
             get => _DiagnosticBufferSize.Value;
-            set
-            {
-                _DiagnosticBufferSize.Value = value;
-                OnPropertyChanged();
-            }
+            set => _DiagnosticBufferSize.Value = value;
         }
 
 
@@ -96,7 +93,6 @@ namespace Wyd.Singletons
             {
                 _TargetFrameRate.Value = value;
                 TargetFrameTime = TimeSpan.FromTicks((long)(TimeSpan.TicksPerSecond * (1d / _TargetFrameRate.Value)));
-                OnPropertyChanged();
             }
         }
 
@@ -107,11 +103,7 @@ namespace Wyd.Singletons
         public int RenderDistance
         {
             get => _RenderDistance.Value;
-            set
-            {
-                _RenderDistance.Value = value;
-                OnPropertyChanged();
-            }
+            set => _RenderDistance.Value = value;
         }
 
         private Option<bool> _VSync;
@@ -123,7 +115,6 @@ namespace Wyd.Singletons
             {
                 _VSync.Value = value;
                 QualitySettings.vSyncCount = Convert.ToInt32(_VSync.Value);
-                OnPropertyChanged();
             }
         }
 
@@ -136,7 +127,6 @@ namespace Wyd.Singletons
             {
                 _WindowMode.Value = value;
                 Screen.fullScreenMode = _WindowMode.Value;
-                OnPropertyChanged();
             }
         }
 
@@ -170,6 +160,10 @@ namespace Wyd.Singletons
 
             _AdvancedMeshing = new Option<bool>(_Configuration, GENERAL_CATEGORY, nameof(AdvancedMeshing), true, advancedMeshing => true,
                 PropertyChanged);
+
+            _NaiveMeshingGroupSize = new Option<int>(_Configuration, GENERAL_CATEGORY, nameof(NaiveMeshingGroupSize), 64,
+                naiveMeshingGroupSize =>
+                    (naiveMeshingGroupSize >= 8) && (naiveMeshingGroupSize <= 4096) && WydMath.IsPowerOfTwo(naiveMeshingGroupSize), PropertyChanged);
 
             _DiagnosticBufferSize = new Option<int>(_Configuration, GENERAL_CATEGORY, nameof(DiagnosticBufferSize), 180,
                 diagnosticBufferSize => (diagnosticBufferSize >= 30) && (diagnosticBufferSize <= 300), PropertyChanged);
@@ -205,8 +199,11 @@ namespace Wyd.Singletons
             _Configuration[GENERAL_CATEGORY][nameof(GPUAcceleration)].PreComment = _DefaultComments[nameof(GPUAcceleration)];
             _Configuration[GENERAL_CATEGORY][nameof(GPUAcceleration)].BoolValue = true;
 
-            _Configuration[GENERAL_CATEGORY][nameof(AdvancedMeshing)].PreComment = _DefaultComments[nameof(GPUAcceleration)];
+            _Configuration[GENERAL_CATEGORY][nameof(AdvancedMeshing)].PreComment = _DefaultComments[nameof(AdvancedMeshing)];
             _Configuration[GENERAL_CATEGORY][nameof(AdvancedMeshing)].BoolValue = true;
+
+            _Configuration[GENERAL_CATEGORY][nameof(NaiveMeshingGroupSize)].PreComment = _DefaultComments[nameof(NaiveMeshingGroupSize)];
+            _Configuration[GENERAL_CATEGORY][nameof(NaiveMeshingGroupSize)].IntValue = 64;
 
             _Configuration[GENERAL_CATEGORY][nameof(DiagnosticBufferSize)].PreComment = _DefaultComments[nameof(DiagnosticBufferSize)];
             _Configuration[GENERAL_CATEGORY][nameof(DiagnosticBufferSize)].IntValue = 180;

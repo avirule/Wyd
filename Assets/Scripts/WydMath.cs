@@ -14,6 +14,8 @@ namespace Wyd
 {
     public static class WydMath
     {
+        public static bool IsPowerOfTwo(int a) => !(a <= 0) || ((a & (a - 1)) != 0);
+
         public static int Wrap(int v, int delta, int minVal, int maxVal)
         {
             int mod = (maxVal + 1) - minVal;
