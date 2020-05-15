@@ -351,7 +351,6 @@ namespace Wyd.Controllers.Entity
             float3 interpolatedMovement = TravelSpeed * Time.fixedDeltaTime * _Movement;
             float3 finalMovement = CameraTransform.TransformDirection(interpolatedMovement);
 
-            // todo don't move relative to camera, it's fuckin dumb
             Rigidbody.MovePosition(Rigidbody.position + (Vector3)finalMovement);
         }
 

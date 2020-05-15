@@ -277,7 +277,6 @@ namespace Wyd.World.Chunks.Generation
                 bool isFaceCheckOutOfBounds = (!isNegativeFace && (faceCheckAxisValue == (GenerationConstants.CHUNK_SIZE - 1)))
                                               || (isNegativeFace && (faceCheckAxisValue == 0));
                 // total number of successful traversals
-                // remark: this is outside the for loop so that the if statement after can determine if any traversals have happened
                 int traversals = 0;
 
                 for (int perpendicularNormalIndex = 1; perpendicularNormalIndex < 3; perpendicularNormalIndex++)

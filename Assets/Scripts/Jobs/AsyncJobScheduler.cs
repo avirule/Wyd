@@ -169,16 +169,21 @@ namespace Wyd.Jobs
                 return;
             }
 
-            // if semaphore is empty, wait until it is released
-            await _WorkerSemaphore.WaitAsync().ConfigureAwait(false);
+            try
+            {
+                // if semaphore is empty, wait until it is released
+                await _WorkerSemaphore.WaitAsync().ConfigureAwait(false);
 
-            OnJobStarted(asyncJob);
+                OnJobStarted(asyncJob);
 
-            await asyncJob.Execute().ConfigureAwait(false);
+                await asyncJob.Execute().ConfigureAwait(false);
 
-            OnJobFinished(asyncJob);
-
-            _WorkerSemaphore.Release();
+                OnJobFinished(asyncJob);
+            }
+            finally
+            {
+                _WorkerSemaphore.Release();
+            }
         }
 
         #endregion

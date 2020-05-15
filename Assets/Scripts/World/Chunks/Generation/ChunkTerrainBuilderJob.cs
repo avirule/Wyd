@@ -35,8 +35,10 @@ namespace Wyd.World.Chunks.Generation
 
         public ChunkTerrainBuilderJob()
         {
-            _NoiseSeedA = WorldController.Current.Seed ^ 2;
-            _NoiseSeedB = WorldController.Current.Seed ^ 3;
+            int seed = WorldController.Current.Seed;
+
+            _NoiseSeedA = seed ^ (seed * 2);
+            _NoiseSeedB = seed ^ (seed * 3);
         }
 
         protected override async Task Process()
