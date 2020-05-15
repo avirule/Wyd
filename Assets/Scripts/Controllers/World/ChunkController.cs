@@ -441,13 +441,13 @@ namespace Wyd.Controllers.World
                 OptionsController.Current.GPUAcceleration ? heightmapBuffer : null,
                 OptionsController.Current.GPUAcceleration ? caveNoiseBuffer : null);
 
-            Task OnTerrainBuildingFinished(object sender, AsyncJobEventArgs args)
+            void OnTerrainBuildingFinished(object sender, AsyncJob asyncJob)
             {
                 Debug.Assert(State == ChunkState.BuildingDispatched,
                     $"{nameof(State)} should always be in the '{nameof(ChunkState.BuildingDispatched)}' state when meshing finishes.\r\n"
                     + $"\tremark: see the {nameof(State)} property's xmldoc for explanation.");
 
-                terrainBuilderJob.WorkFinished -= OnTerrainBuildingFinished;
+                asyncJob.WorkFinished -= OnTerrainBuildingFinished;
 
                 if (Active)
                 {
@@ -458,8 +458,6 @@ namespace Wyd.Controllers.World
 
                 terrainBuilderJob.ClearData();
                 _terrainBuilderJobs.TryAdd(terrainBuilderJob);
-
-                return Task.CompletedTask;
             }
 
             terrainBuilderJob.WorkFinished += OnTerrainBuildingFinished;
@@ -473,13 +471,13 @@ namespace Wyd.Controllers.World
             ChunkMeshingJob meshingJob = _meshingJobs.Retrieve() ?? new ChunkMeshingJob();
             meshingJob.SetData(_CancellationTokenSource.Token, OriginPoint, Blocks, true);
 
-            Task OnMeshingFinished(object sender, AsyncJobEventArgs args)
+            void OnMeshingFinished(object sender, AsyncJob asyncJob)
             {
                 Debug.Assert(State == ChunkState.MeshingDispatched,
                     $"{nameof(State)} should always be in the '{nameof(ChunkState.MeshingDispatched)}' state when meshing finishes.\r\n"
                     + $"\tremark: see the {nameof(State)} property's xmldoc for  explanation.");
 
-                meshingJob.WorkFinished -= OnMeshingFinished;
+                asyncJob.WorkFinished -= OnMeshingFinished;
 
                 if (Active)
                 {
@@ -494,8 +492,6 @@ namespace Wyd.Controllers.World
 
 
                 State = State.Next();
-
-                return Task.CompletedTask;
             }
 
             meshingJob.WorkFinished += OnMeshingFinished;
@@ -605,20 +601,6 @@ namespace Wyd.Controllers.World
         private void OnMeshChanged(object sender, ChunkChangedEventArgs args)
         {
             MeshChanged?.Invoke(sender, args);
-        }
-
-
-        private Task OnTerrainBuildingFinished(object sender, AsyncJobEventArgs args)
-        {
-            args.AsyncJob.WorkFinished -= OnTerrainBuildingFinished;
-
-            if (!Active)
-            {
-                return Task.CompletedTask;
-            }
-
-
-            return Task.CompletedTask;
         }
 
         private void FlagUpdateMeshCallback(object sender, ChunkChangedEventArgs args)

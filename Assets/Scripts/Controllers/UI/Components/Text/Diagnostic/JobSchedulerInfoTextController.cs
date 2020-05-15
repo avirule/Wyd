@@ -34,8 +34,8 @@ namespace Wyd.Controllers.UI.Components.Text.Diagnostic
         {
             if (_UpdateDiagInfo)
             {
-                _TextObject.text = string.Format(_Format, AsyncJobScheduler.MaximumProcessingJobs, AsyncJobScheduler.ProcessingJobs,
-                    AsyncJobScheduler.QueuedJobs);
+                _TextObject.text = string.Format(_Format, AsyncJobScheduler.MaximumConcurrentJobs, AsyncJobScheduler.ProcessingJobsCount,
+                    AsyncJobScheduler.QueuedJobsCount);
 
                 _UpdateDiagInfo = false;
             }

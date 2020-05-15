@@ -37,15 +37,13 @@ namespace Wyd.Controllers.System
 
             SetupStaticLogger();
 
-            AsyncJobScheduler.MaximumProcessingJobsChanged += (sender, newMaximumProcessingJobs) =>
-            {
-                Log.Information(
-                    $"'{nameof(AsyncJobScheduler.MaximumProcessingJobs)}' modified ({newMaximumProcessingJobs}).");
-            };
+
+            Log.Information(
+                $"[{nameof(LogController)}] '{nameof(AsyncJobScheduler)}' set to {nameof(AsyncJobScheduler.MaximumConcurrentJobs)}: {AsyncJobScheduler.MaximumConcurrentJobs}");
 
             AsyncJobScheduler.JobQueued += (sender, asyncJob) =>
             {
-                Log.Information($"Queued new {nameof(AsyncJob)} for completion ({asyncJob.GetType().Name}).");
+                Log.Verbose($"[{nameof(LogController)}] Queued {nameof(AsyncJob)}: {asyncJob.GetType().Name}");
             };
 
             Application.logMessageReceived += LogHandler;

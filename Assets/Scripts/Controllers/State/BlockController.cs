@@ -41,7 +41,7 @@ namespace Wyd.Controllers.State
         {
             _PropertiesBuckets = new Dictionary<BlockDefinition.Property, HashSet<ushort>>();
 
-            Log.Verbose($"Initializing property buckets for all '{nameof(BlockDefinition)}.{nameof(BlockDefinition.Property)}'s.");
+            Log.Verbose($"[{nameof(BlockController)}] Initializing cache buckets.");
 
             foreach (BlockDefinition.Property property in EnumExtensions.GetEnumsList<BlockDefinition.Property>())
             {
@@ -99,7 +99,7 @@ namespace Wyd.Controllers.State
             BlockNamesByID.Add(blockName, assignedBlockId);
             SortBlockDefinitionPropertiesToBuckets(blockDefinition);
 
-            Log.Information($"Successfully added block `{blockName}` with ID: {assignedBlockId}");
+            Log.Information($"[{nameof(BlockController)}] ID {assignedBlockId}: '{blockName}'");
         }
 
         public bool GetUVs(ushort blockId, Direction direction, out ushort textureId)

@@ -28,7 +28,7 @@ namespace Wyd.World.Chunks.Generation
 
         protected void SetData(CancellationToken cancellationToken, int3 originPoint)
         {
-            CancellationToken = CancellationTokenSource.CreateLinkedTokenSource(AsyncJobScheduler.AbortToken, cancellationToken).Token;
+            _CancellationToken = CancellationTokenSource.CreateLinkedTokenSource(AsyncJobScheduler.AbortToken, cancellationToken).Token;
             _OriginPoint = originPoint;
 
             _SeededRandom = new Random(_OriginPoint.GetHashCode());

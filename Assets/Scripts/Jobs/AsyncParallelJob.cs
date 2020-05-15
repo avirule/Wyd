@@ -8,7 +8,7 @@ using System.Threading.Tasks;
 
 namespace Wyd.Jobs
 {
-    public class AsyncParallelJob : AsyncJob
+    public abstract class AsyncParallelJob : AsyncJob
     {
         private readonly int _Length;
         private readonly int _BatchLength;
@@ -18,14 +18,15 @@ namespace Wyd.Jobs
         {
             _Length = length;
             _BatchLength = batchLength;
+            // round up to not lose the remainder
             _TotalBatches = (int)Math.Ceiling((double)_Length / _BatchLength);
         }
 
-        protected override async Task Process() => await BatchTasksAndAwait();
+        protected override async Task Process() => await BatchTasksAndAwaitAll().ConfigureAwait(false);
 
         protected virtual Task ProcessIndex(int index) => Task.CompletedTask;
 
-        protected async Task BatchTasksAndAwait() => await Task.WhenAll(GetBatchedTasks()).ConfigureAwait(false);
+        protected async Task BatchTasksAndAwaitAll() => await Task.WhenAll(GetBatchedTasks()).ConfigureAwait(false);
 
         private IEnumerable<Task> GetBatchedTasks()
         {

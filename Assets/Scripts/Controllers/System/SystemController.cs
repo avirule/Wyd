@@ -13,7 +13,7 @@ namespace Wyd.Controllers.System
     {
         public static readonly int MainThreadId = Thread.CurrentThread.ManagedThreadId;
 
-        public static GameObject TextObject { get; private set; }
+        private static GameObject TextObject { get; set; }
 
         private void Awake()
         {
@@ -21,11 +21,6 @@ namespace Wyd.Controllers.System
             DontDestroyOnLoad(this);
 
             TextObject = Resources.Load<GameObject>(@"Prefabs\UI\Components\Text\DiagnosticText");
-        }
-
-        private void Start()
-        {
-            AsyncJobScheduler.ModifyMaximumProcessingJobCount(OptionsController.Current.MaximumConcurrentJobs);
         }
 
         private void OnDestroy()

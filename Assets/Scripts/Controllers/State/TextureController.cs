@@ -12,8 +12,8 @@ namespace Wyd.Controllers.State
     {
         public MeshRenderer MeshRenderer;
 
-        private static int MainTexPropertyID => Shader.PropertyToID("_MainTex");
-        private static int ColorPropertyID = Shader.PropertyToID("_Color");
+        private static readonly int _MainTexPropertyID = Shader.PropertyToID("_MainTex");
+        private static readonly int _ColorPropertyID = Shader.PropertyToID("_Color");
 
         private Dictionary<string, ushort> _TextureIDs;
         private Color Color;
@@ -39,7 +39,7 @@ namespace Wyd.Controllers.State
             _TextureIDs = new Dictionary<string, ushort>();
 
             Color = Color.white;
-            SecondsInCycle = 1d;
+            SecondsInCycle = 5d;
         }
 
         private void Start()
@@ -48,7 +48,7 @@ namespace Wyd.Controllers.State
 
             foreach (Material material in MeshRenderer.materials)
             {
-                material.SetTexture(MainTexPropertyID, BlocksTexture);
+                material.SetTexture(_MainTexPropertyID, BlocksTexture);
             }
 
             BlockMaterials = MeshRenderer.materials;
@@ -71,7 +71,7 @@ namespace Wyd.Controllers.State
             double timeAdjustment = Time.deltaTime / SecondsInCycle;
             TimeOfDay += IsNightTime ? -timeAdjustment : timeAdjustment;
 
-            BlockMaterials[0].SetColor(ColorPropertyID, Color.Lerp(Nighttime, Daytime, (float)(TimeOfDay / SecondsInCycle)));
+            BlockMaterials[0].SetColor(_ColorPropertyID, Color.Lerp(Nighttime, Daytime, (float)(TimeOfDay / SecondsInCycle)));
         }
 
         private void ProcessSprites()
@@ -91,7 +91,7 @@ namespace Wyd.Controllers.State
                 BlocksTexture.SetPixels(spritePixels, depth, 0);
                 _TextureIDs.Add(sprites[depth].name.ToLower(), depth);
 
-                Log.Information($"Texture processed (depth {depth}): {sprites[depth].name}");
+                Log.Information($"[{nameof(TextureController)}] Processed depth {depth}: '{sprites[depth].name}'");
             }
 
             BlocksTexture.Apply();

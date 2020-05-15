@@ -55,7 +55,7 @@ namespace Wyd.World.Chunks.Generation
 
             _Blocks = new Octree(GenerationConstants.CHUNK_SIZE, BlockController.AirID, false);
 
-            await BatchTasksAndAwait().ConfigureAwait(false);
+            await BatchTasksAndAwaitAll().ConfigureAwait(false);
 
             Array.Clear(_Heightmap, 0, _Heightmap.Length);
             Array.Clear(_CaveNoise, 0, _CaveNoise.Length);
@@ -80,7 +80,7 @@ namespace Wyd.World.Chunks.Generation
 
         protected override Task ProcessFinished()
         {
-            if (!CancellationToken.IsCancellationRequested)
+            if (!_CancellationToken.IsCancellationRequested)
             {
                 DiagnosticsController.Current.RollingNoiseRetrievalTimes.Enqueue(_NoiseRetrievalTimeSpan);
                 DiagnosticsController.Current.RollingTerrainBuildingTimes.Enqueue(_TerrainGenerationTimeSpan);
@@ -102,7 +102,6 @@ namespace Wyd.World.Chunks.Generation
 
         public void ClearData()
         {
-            CancellationToken = default;
             _OriginPoint = default;
             _Frequency = default;
             _Persistence = default;
@@ -152,7 +151,7 @@ namespace Wyd.World.Chunks.Generation
                 // remark: thanks JetBrains
                 using (SemaphoreSlim semaphoreReset = MainThreadActionsController.Current.QueueAction(GetComputeBufferData))
                 {
-                    await semaphoreReset.WaitAsync(CancellationToken);
+                    await semaphoreReset.WaitAsync(_CancellationToken);
                 }
             }
         }

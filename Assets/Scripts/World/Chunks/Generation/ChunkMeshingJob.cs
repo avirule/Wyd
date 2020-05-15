@@ -25,7 +25,7 @@ namespace Wyd.World.Chunks.Generation
         private static readonly ObjectPool<MeshingBlock[]> _MeshingBlockArrayPool = new ObjectPool<MeshingBlock[]>();
         private static readonly ObjectPool<MeshData> _MeshDataPool = new ObjectPool<MeshData>();
 
-        private readonly Stopwatch _Stopwatch;
+        private readonly Stopwatch _RuntimeStopwatch;
         private readonly INodeCollection<ushort>[] _NeighborBlocksCollections;
 
         private int3 _OriginPoint;
@@ -38,7 +38,7 @@ namespace Wyd.World.Chunks.Generation
 
         public ChunkMeshingJob() : base(GenerationConstants.CHUNK_SIZE, 128)
         {
-            _Stopwatch = new Stopwatch();
+            _RuntimeStopwatch = new Stopwatch();
             _NeighborBlocksCollections = new INodeCollection<ushort>[6];
         }
 
@@ -55,7 +55,7 @@ namespace Wyd.World.Chunks.Generation
         public void SetData(CancellationToken cancellationToken, int3 originPoint, INodeCollection<ushort> blocksCollection,
             bool aggressiveFaceMerging)
         {
-            CancellationToken = CancellationTokenSource.CreateLinkedTokenSource(AsyncJobScheduler.AbortToken, cancellationToken).Token;
+            _CancellationToken = CancellationTokenSource.CreateLinkedTokenSource(AsyncJobScheduler.AbortToken, cancellationToken).Token;
             _OriginPoint = originPoint;
             _BlocksCollection = blocksCollection;
             _AggressiveFaceMerging = aggressiveFaceMerging;
@@ -99,15 +99,15 @@ namespace Wyd.World.Chunks.Generation
                 return;
             }
 
-            _Stopwatch.Restart();
+            _RuntimeStopwatch.Restart();
 
             PrepareMeshing();
 
-            _Stopwatch.Stop();
+            _RuntimeStopwatch.Stop();
 
-            _PreMeshingTimeSpan = _Stopwatch.Elapsed;
+            _PreMeshingTimeSpan = _RuntimeStopwatch.Elapsed;
 
-            _Stopwatch.Restart();
+            _RuntimeStopwatch.Restart();
 
             if (_AggressiveFaceMerging)
             {
@@ -115,20 +115,20 @@ namespace Wyd.World.Chunks.Generation
             }
             else
             {
-                await BatchTasksAndAwait().ConfigureAwait(false);
+                await BatchTasksAndAwaitAll().ConfigureAwait(false);
             }
 
 
             FinishMeshing();
 
-            _Stopwatch.Stop();
+            _RuntimeStopwatch.Stop();
 
-            _MeshingTimeSpan = _Stopwatch.Elapsed;
+            _MeshingTimeSpan = _RuntimeStopwatch.Elapsed;
         }
 
         protected override Task ProcessIndex(int index)
         {
-            if (CancellationToken.IsCancellationRequested)
+            if (_CancellationToken.IsCancellationRequested)
             {
                 return Task.CompletedTask;
             }
@@ -150,7 +150,7 @@ namespace Wyd.World.Chunks.Generation
 
         protected override Task ProcessFinished()
         {
-            if (!CancellationToken.IsCancellationRequested)
+            if (!_CancellationToken.IsCancellationRequested)
             {
                 DiagnosticsController.Current.RollingPreMeshingTimes.Enqueue(_PreMeshingTimeSpan);
                 DiagnosticsController.Current.RollingMeshingTimes.Enqueue(_MeshingTimeSpan);
@@ -216,7 +216,7 @@ namespace Wyd.World.Chunks.Generation
             for (int z = 0; z < GenerationConstants.CHUNK_SIZE; z++)
             for (int x = 0; x < GenerationConstants.CHUNK_SIZE; x++, index++)
             {
-                if (CancellationToken.IsCancellationRequested)
+                if (_CancellationToken.IsCancellationRequested)
                 {
                     return;
                 }
@@ -375,6 +375,17 @@ namespace Wyd.World.Chunks.Generation
                         break;
                     }
 
+                    // add triangles
+                    int verticesCount = _MeshData.VerticesCount / 2;
+                    int transparentAsInt = Convert.ToInt32(isCurrentBlockTransparent);
+
+                    _MeshData.AddTriangle(transparentAsInt, 0 + verticesCount);
+                    _MeshData.AddTriangle(transparentAsInt, 2 + verticesCount);
+                    _MeshData.AddTriangle(transparentAsInt, 1 + verticesCount);
+                    _MeshData.AddTriangle(transparentAsInt, 2 + verticesCount);
+                    _MeshData.AddTriangle(transparentAsInt, 3 + verticesCount);
+                    _MeshData.AddTriangle(transparentAsInt, 1 + verticesCount);
+
                     int uvShift = (iModulo3 + traversalNormalIndex) % 2;
                     int compressedUv = (textureId << (GenerationConstants.CHUNK_SIZE_BIT_SHIFT * 2))
                                        | (1 << (GenerationConstants.CHUNK_SIZE_BIT_SHIFT * ((uvShift + 1) % 2)))
@@ -413,17 +424,6 @@ namespace Wyd.World.Chunks.Generation
                                            | ((((compressedVertices[0] >> traversalNormalShift) * traversals) << traversalNormalShift)
                                               & traversalShiftedMask)));
                     _MeshData.AddVertex(compressedUv & int.MaxValue);
-
-                    // add triangles
-                    int verticesCount = _MeshData.VerticesCount / 2;
-                    int transparentAsInt = Convert.ToInt32(isCurrentBlockTransparent);
-
-                    _MeshData.AddTriangle(transparentAsInt, 0 + verticesCount);
-                    _MeshData.AddTriangle(transparentAsInt, 2 + verticesCount);
-                    _MeshData.AddTriangle(transparentAsInt, 1 + verticesCount);
-                    _MeshData.AddTriangle(transparentAsInt, 2 + verticesCount);
-                    _MeshData.AddTriangle(transparentAsInt, 3 + verticesCount);
-                    _MeshData.AddTriangle(transparentAsInt, 1 + verticesCount);
 
                     break;
                 }
