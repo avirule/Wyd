@@ -13,7 +13,7 @@ namespace Wyd.World.Chunks.Generation
 {
     public class MeshData
     {
-        private static readonly VertexAttributeDescriptor[] _layout =
+        private static readonly VertexAttributeDescriptor[] _Layout =
         {
             new VertexAttributeDescriptor(VertexAttribute.Position, VertexAttributeFormat.SInt32, 1),
             new VertexAttributeDescriptor(VertexAttribute.TexCoord0, VertexAttributeFormat.SInt32, 1)
@@ -90,7 +90,7 @@ namespace Wyd.World.Chunks.Generation
                                                   | MeshUpdateFlags.DontValidateIndices
                                                   | MeshUpdateFlags.DontResetBoneBounds;
 
-            mesh.SetVertexBufferParams(_Vertices.Count, _layout);
+            mesh.SetVertexBufferParams(_Vertices.Count, _Layout);
             mesh.SetVertexBufferData(_Vertices, 0, 0, _Vertices.Count, 0, default_flags);
 
             mesh.subMeshCount = _Triangles.Count;

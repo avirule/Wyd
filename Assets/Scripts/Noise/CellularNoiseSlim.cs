@@ -33,7 +33,7 @@ namespace Wyd.Noise
         private const int _Y_PRIME = 31337;
         private const int _Z_PRIME = 6971;
 
-        private static readonly float3[] _cell3D =
+        private static readonly float3[] _Cell3D =
         {
             new float3(-0.7292736885f, -0.6618439697f, 0.1735581948f),
             new float3(0.790292081f, -0.5480887466f, -0.2739291014f),
@@ -343,7 +343,7 @@ namespace Wyd.Noise
                         {
                             for (int zi = zr - 1; zi <= (zr + 1); zi++)
                             {
-                                float3 vec = _cell3D[Hash3D(seed, xi, yi, zi) & 255];
+                                float3 vec = _Cell3D[Hash3D(seed, xi, yi, zi) & 255];
 
                                 float vecX = (xi - x) + (vec.x * jitter);
                                 float vecY = (yi - y) + (vec.y * jitter);
@@ -370,7 +370,7 @@ namespace Wyd.Noise
                         {
                             for (int zi = zr - 1; zi <= (zr + 1); zi++)
                             {
-                                float3 vec = _cell3D[Hash3D(seed, xi, yi, zi) & 255];
+                                float3 vec = _Cell3D[Hash3D(seed, xi, yi, zi) & 255];
 
                                 float vecX = (xi - x) + (vec.x * jitter);
                                 float vecY = (yi - y) + (vec.y * jitter);
@@ -397,7 +397,7 @@ namespace Wyd.Noise
                         {
                             for (int zi = zr - 1; zi <= (zr + 1); zi++)
                             {
-                                float3 vec = _cell3D[Hash3D(seed, xi, yi, zi) & 255];
+                                float3 vec = _Cell3D[Hash3D(seed, xi, yi, zi) & 255];
 
                                 float vecX = (xi - x) + (vec.x * jitter);
                                 float vecY = (yi - y) + (vec.y * jitter);

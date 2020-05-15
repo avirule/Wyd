@@ -38,9 +38,9 @@ namespace Wyd.Controllers.World
 
     public class ChunkController : MonoBehaviour, IPerFrameIncrementalUpdate
     {
-        private static readonly ObjectPool<BlockAction> _blockActionsPool = new ObjectPool<BlockAction>(1024);
-        private static readonly ObjectPool<ChunkTerrainBuilderJob> _terrainBuilderJobs = new ObjectPool<ChunkTerrainBuilderJob>();
-        private static readonly ObjectPool<ChunkMeshingJob> _meshingJobs = new ObjectPool<ChunkMeshingJob>();
+        private static readonly ObjectPool<BlockAction> _BlockActionsPool = new ObjectPool<BlockAction>(1024);
+        private static readonly ObjectPool<ChunkTerrainBuilderJob> _TerrainBuilderJobs = new ObjectPool<ChunkTerrainBuilderJob>();
+        private static readonly ObjectPool<ChunkMeshingJob> _MeshingJobs = new ObjectPool<ChunkMeshingJob>();
 
 
         #region NoiseShader
@@ -351,7 +351,7 @@ namespace Wyd.Controllers.World
             {
                 ProcessBlockAction(blockAction);
 
-                _blockActionsPool.TryAdd(blockAction);
+                _BlockActionsPool.TryAdd(blockAction);
 
                 Interlocked.Decrement(ref _BlockActionsCount);
 
@@ -457,7 +457,7 @@ namespace Wyd.Controllers.World
                 }
 
                 terrainBuilderJob.ClearData();
-                _terrainBuilderJobs.TryAdd(terrainBuilderJob);
+                _TerrainBuilderJobs.TryAdd(terrainBuilderJob);
             }
 
             terrainBuilderJob.WorkFinished += OnTerrainBuildingFinished;
@@ -468,7 +468,7 @@ namespace Wyd.Controllers.World
         private void BeginMeshing()
         {
             // todo make setting for improved meshing
-            ChunkMeshingJob meshingJob = _meshingJobs.Retrieve() ?? new ChunkMeshingJob();
+            ChunkMeshingJob meshingJob = _MeshingJobs.Retrieve() ?? new ChunkMeshingJob();
             meshingJob.SetData(_CancellationTokenSource.Token, OriginPoint, Blocks, true);
 
             void OnMeshingFinished(object sender, AsyncJob asyncJob)
@@ -487,7 +487,7 @@ namespace Wyd.Controllers.World
                 else
                 {
                     meshingJob.ClearData();
-                    _meshingJobs.TryAdd(meshingJob);
+                    _MeshingJobs.TryAdd(meshingJob);
                 }
 
 
@@ -503,7 +503,7 @@ namespace Wyd.Controllers.World
         {
             meshingJob.ApplyMeshData(ref _Mesh);
             meshingJob.ClearData();
-            _meshingJobs.TryAdd(meshingJob);
+            _MeshingJobs.TryAdd(meshingJob);
 
 #if UNITY_EDITOR
 
@@ -545,7 +545,7 @@ namespace Wyd.Controllers.World
 
         private void AllocateBlockAction(int3 localPosition, ushort id)
         {
-            if (_blockActionsPool.TryRetrieve(out BlockAction blockAction))
+            if (_BlockActionsPool.TryRetrieve(out BlockAction blockAction))
             {
                 blockAction.SetData(localPosition, id);
             }

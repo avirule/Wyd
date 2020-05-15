@@ -20,8 +20,8 @@ namespace Wyd.Controllers.Entity
     {
         public const int REACH = 5;
 
-        private static readonly TimeSpan _regularCheckWaitInterval = TimeSpan.FromSeconds(1d);
-        private static readonly TimeSpan _minimumActionInterval = TimeSpan.FromSeconds(1f / 4f);
+        private static readonly TimeSpan _RegularCheckWaitInterval = TimeSpan.FromSeconds(1d);
+        private static readonly TimeSpan _MinimumActionInterval = TimeSpan.FromSeconds(1f / 4f);
 
         private Ray _ReachRay;
         private RaycastHit _LastReachRayHit;
@@ -168,7 +168,7 @@ namespace Wyd.Controllers.Entity
             UpdateLastLookAtCubeOrigin();
             CheckMouseClickActions();
 
-            if (_RegularCheckWait.Elapsed > _regularCheckWaitInterval)
+            if (_RegularCheckWait.Elapsed > _RegularCheckWaitInterval)
             {
                 CheckChangedChunkPosition();
 
@@ -247,7 +247,7 @@ namespace Wyd.Controllers.Entity
         {
             if (InputController.Current.GetButton("LeftClick")
                 && _IsInReachOfValidSurface
-                && (_ActionCooldown.Elapsed > _minimumActionInterval))
+                && (_ActionCooldown.Elapsed > _MinimumActionInterval))
             {
                 int3 position;
 
@@ -274,7 +274,7 @@ namespace Wyd.Controllers.Entity
             if (InputController.Current.GetButton("RightClick")
                 && _IsInReachOfValidSurface
                 && !Collider.bounds.Contains(_LastReachRayHit.point)
-                && (_ActionCooldown.Elapsed > _minimumActionInterval))
+                && (_ActionCooldown.Elapsed > _MinimumActionInterval))
             {
                 if (math.csum(_LastReachRayHit.normal) > 0f)
                 {

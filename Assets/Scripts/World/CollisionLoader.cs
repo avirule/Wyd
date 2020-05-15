@@ -17,17 +17,7 @@ namespace Wyd.World
 {
     public class CollisionLoader : MonoBehaviour, IPerFrameUpdate
     {
-        private static readonly ObjectPool<GameObject> _colliderCubePool = new ObjectPool<GameObject>();
-
-        private static ref GameObject DeactivateGameObject(ref GameObject obj)
-        {
-            if (obj != default)
-            {
-                obj.SetActive(false);
-            }
-
-            return ref obj;
-        }
+        private static readonly ObjectPool<GameObject> _ColliderCubePool = new ObjectPool<GameObject>();
 
         private Transform _SelfTransform;
         private int3 _LastCalculatedPosition;
@@ -172,14 +162,14 @@ namespace Wyd.World
 
                     obj.SetActive(false);
 
-                    _colliderCubePool.TryAdd(obj);
+                    _ColliderCubePool.TryAdd(obj);
                 }
             }
         }
 
         private GameObject GetCollisionCube(float3 position)
         {
-            if (!_colliderCubePool.TryRetrieve(out GameObject surfaceCollider))
+            if (!_ColliderCubePool.TryRetrieve(out GameObject surfaceCollider))
             {
                 surfaceCollider = Instantiate(CollisionCubeObject);
             }

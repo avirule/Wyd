@@ -175,10 +175,10 @@ namespace Wyd
                 index += 1;
             }
 
-            _directionAsOrderPlacement = new ReadOnlyDictionary<Direction, int>(directionAsOrderPlacement);
+            _DirectionAsOrderPlacement = new ReadOnlyDictionary<Direction, int>(directionAsOrderPlacement);
 
 
-            _directionsAsAxes = new Dictionary<Direction, int3>
+            _DirectionsAsAxes = new Dictionary<Direction, int3>
             {
                 { Direction.North, Directions.North },
                 { Direction.East, Directions.East },
@@ -189,7 +189,7 @@ namespace Wyd
                 { Direction.Mask, int3.zero }
             };
 
-            _directionsAsIndexStep = new Dictionary<Direction, int>
+            _DirectionsAsIndexStep = new Dictionary<Direction, int>
             {
                 { Direction.North, GenerationConstants.CHUNK_SIZE },
                 { Direction.East, 1 },
@@ -200,11 +200,11 @@ namespace Wyd
             };
         }
 
-        private static readonly IReadOnlyDictionary<Direction, int> _directionAsOrderPlacement;
-        private static readonly IReadOnlyDictionary<Direction, int3> _directionsAsAxes;
-        private static readonly IReadOnlyDictionary<Direction, int> _directionsAsIndexStep;
+        private static readonly IReadOnlyDictionary<Direction, int> _DirectionAsOrderPlacement;
+        private static readonly IReadOnlyDictionary<Direction, int3> _DirectionsAsAxes;
+        private static readonly IReadOnlyDictionary<Direction, int> _DirectionsAsIndexStep;
 
-        public static int OrderPlacement(this Direction direction) => _directionAsOrderPlacement[direction];
+        public static int OrderPlacement(this Direction direction) => _DirectionAsOrderPlacement[direction];
 
         public static int3 AsInt3(this Direction direction)
         {

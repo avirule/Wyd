@@ -16,10 +16,10 @@ namespace Wyd.Controllers.State
         private static readonly int _ColorPropertyID = Shader.PropertyToID("_Color");
 
         private Dictionary<string, ushort> _TextureIDs;
-        private Color Color;
-        private double TimeOfDay;
-        private bool IsNightTime;
-        private double SecondsInCycle;
+        private Color _Color;
+        private double _TimeOfDay;
+        private bool _IsNightTime;
+        private double _SecondsInCycle;
 
         private Texture2DArray BlocksTexture { get; set; }
 
@@ -38,8 +38,8 @@ namespace Wyd.Controllers.State
 
             _TextureIDs = new Dictionary<string, ushort>();
 
-            Color = Color.white;
-            SecondsInCycle = 5d;
+            _Color = Color.white;
+            _SecondsInCycle = 5d;
         }
 
         private void Start()
@@ -54,24 +54,24 @@ namespace Wyd.Controllers.State
             BlockMaterials = MeshRenderer.materials;
         }
 
-        private Color Daytime = new Color(0.9f, 0.9f, 0.9f, 1.0f);
-        private Color Nighttime = new Color(0.2f, 0.2f, 0.2f, 1.0f);
+        private Color _Daytime = new Color(0.9f, 0.9f, 0.9f, 1.0f);
+        private Color _Nighttime = new Color(0.2f, 0.2f, 0.2f, 1.0f);
 
         private void Update()
         {
-            if (TimeOfDay < 0d)
+            if (_TimeOfDay < 0d)
             {
-                IsNightTime = false;
+                _IsNightTime = false;
             }
-            else if (TimeOfDay > SecondsInCycle)
+            else if (_TimeOfDay > _SecondsInCycle)
             {
-                IsNightTime = true;
+                _IsNightTime = true;
             }
 
-            double timeAdjustment = Time.deltaTime / SecondsInCycle;
-            TimeOfDay += IsNightTime ? -timeAdjustment : timeAdjustment;
+            double timeAdjustment = Time.deltaTime / _SecondsInCycle;
+            _TimeOfDay += _IsNightTime ? -timeAdjustment : timeAdjustment;
 
-            BlockMaterials[0].SetColor(_ColorPropertyID, Color.Lerp(Nighttime, Daytime, (float)(TimeOfDay / SecondsInCycle)));
+            BlockMaterials[0].SetColor(_ColorPropertyID, Color.Lerp(_Nighttime, _Daytime, (float)(_TimeOfDay / _SecondsInCycle)));
         }
 
         private void ProcessSprites()

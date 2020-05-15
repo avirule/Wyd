@@ -20,11 +20,11 @@ namespace Wyd.World.Blocks
             LightSource = 16
         }
 
-        private static readonly Func<Direction, string> _defaultUVsRule;
+        private static readonly Func<Direction, string> _DefaultUVsRule;
 
         static BlockDefinition()
         {
-            _defaultUVsRule = direction => string.Empty;
+            _DefaultUVsRule = direction => string.Empty;
         }
 
         private readonly Func<Direction, string> _UVsRule;
@@ -51,7 +51,7 @@ namespace Wyd.World.Blocks
                 Properties |= property;
             }
 
-            _UVsRule = uvsRule ?? _defaultUVsRule;
+            _UVsRule = uvsRule ?? _DefaultUVsRule;
         }
 
         public virtual bool GetUVs(Direction direction, out string spriteName)
