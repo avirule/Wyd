@@ -136,7 +136,7 @@ namespace Wyd.Jobs
                 // observe cancellation token
                 if (_CancellationToken.IsCancellationRequested)
                 {
-                    Cancelled();
+                    Cancel();
                     return;
                 }
 
@@ -181,9 +181,15 @@ namespace Wyd.Jobs
         /// </summary>
         protected virtual Task ProcessFinished() => Task.CompletedTask;
 
-        internal virtual void Cancelled()
+        protected virtual void Cancelled() { }
+
+        public void Cancel()
         {
-            IsCancelled = true;
+            if (!IsCancelled)
+            {
+                Cancelled();
+                IsCancelled = true;
+            }
         }
     }
 }

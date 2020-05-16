@@ -10,18 +10,17 @@ using Serilog;
 using Unity.Mathematics;
 using UnityEngine;
 using Wyd.Collections;
+using Wyd.Controllers.App;
 using Wyd.Controllers.State;
-using Wyd.Controllers.System;
 using Wyd.Entities;
 using Wyd.Extensions;
 using Wyd.Singletons;
 using Wyd.World;
 using Wyd.World.Chunks;
 using Wyd.World.Chunks.Generation;
+using Debug = System.Diagnostics.Debug;
 
 #endregion
-
-// ReSharper disable UnusedAutoPropertyAccessor.Global
 
 namespace Wyd.Controllers.World
 {
@@ -40,6 +39,9 @@ namespace Wyd.Controllers.World
         private Stack<float3> _ChunksPendingDeactivation;
         private List<IEntity> _EntityLoaders;
         private long _WorldState;
+
+        private HashSet<float3> _ChunksRequiringActivation;
+        private HashSet<float3> _ChunksRequiringDeactivation;
 
         public WorldState WorldState
         {
@@ -99,6 +101,9 @@ namespace Wyd.Controllers.World
             _ChunksPendingActivation = new Stack<float3>();
             _ChunksPendingDeactivation = new Stack<float3>();
             _EntityLoaders = new List<IEntity>();
+
+            _ChunksRequiringActivation = new HashSet<float3>();
+            _ChunksRequiringDeactivation = new HashSet<float3>();
 
             Seed = new WorldSeed(SeedString);
         }
@@ -177,10 +182,7 @@ namespace Wyd.Controllers.World
 
                 float3 origin = _ChunksPendingActivation.Pop();
 
-                if (CheckChunkExists(origin))
-                {
-                    continue;
-                }
+                Debug.Assert(!CheckChunkExists(origin));
 
                 if (_ChunkControllerPool.TryTake(out ChunkController chunkController))
                 {
@@ -188,8 +190,7 @@ namespace Wyd.Controllers.World
                 }
                 else
                 {
-                    chunkController = Instantiate(ChunkControllerPrefab, origin,
-                        quaternion.identity, transform);
+                    chunkController = Instantiate(ChunkControllerPrefab, origin, quaternion.identity, transform);
                 }
 
                 chunkController.TerrainChanged += OnChunkShapeChanged;
@@ -197,7 +198,7 @@ namespace Wyd.Controllers.World
                 chunkController.MeshChanged += OnChunkMeshChanged;
                 _Chunks.Add(origin, chunkController);
 
-                Log.Verbose($"Created chunk at {origin}.");
+                Log.Verbose($"({nameof(WorldController)}) Chunk created: {origin}.");
             }
 
             while (_ChunksPendingDeactivation.Count > 0)
@@ -208,36 +209,36 @@ namespace Wyd.Controllers.World
 
                 float3 origin = _ChunksPendingDeactivation.Pop();
 
-                if (!CheckChunkExists(origin))
-                {
-                    continue;
-                }
+                Debug.Assert(CheckChunkExists(origin));
 
                 CacheChunk(origin);
             }
         }
 
-        private void CacheChunk(float3 chunkOrigin)
+        private void CacheChunk(float3 origin)
         {
-            if (!_Chunks.TryGetValue(chunkOrigin, out ChunkController chunkController))
+            if (!_Chunks.TryGetValue(origin, out ChunkController chunkController))
             {
                 return;
             }
 
             chunkController.TerrainChanged -= OnChunkShapeChanged;
-            chunkController.BlocksChanged += OnChunkShapeChanged;
+            chunkController.BlocksChanged -= OnChunkShapeChanged;
             chunkController.MeshChanged -= OnChunkMeshChanged;
 
             FlagNeighborsForMeshUpdate(chunkController.OriginPoint);
-            _Chunks.Remove(chunkOrigin);
+            _Chunks.Remove(origin);
 
             chunkController.Deactivate();
 
-            // Chunk is automatically deactivated by ObjectPool
-            // additionally, neighbors are flagged for update by ObjectPool
-            if (!_ChunkControllerPool.TryAdd(chunkController))
+            if (_ChunkControllerPool.TryAdd(chunkController))
+            {
+                Log.Verbose($"({nameof(WorldController)}) Chunk cached: {origin}.");
+            }
+            else
             {
                 Destroy(chunkController.gameObject);
+                Log.Verbose($"({nameof(WorldController)}) Chunk destroyed: {origin}.");
             }
         }
 
@@ -266,17 +267,6 @@ namespace Wyd.Controllers.World
             }
         }
 
-        public IEnumerable<(Direction, ChunkController)> GetNeighboringChunksWithDirection(float3 origin)
-        {
-            foreach (int3 normal in Directions.AllDirectionNormals)
-            {
-                if (TryGetChunk(origin + (normal * GenerationConstants.CHUNK_SIZE), out ChunkController chunkController))
-                {
-                    yield return (Directions.NormalToDirection(normal), chunkController);
-                }
-            }
-        }
-
         public IEnumerable<(int3, ChunkController)> GetNeighboringChunksWithNormal(float3 origin)
         {
             foreach (int3 normal in Directions.AllDirectionNormals)
@@ -284,24 +274,6 @@ namespace Wyd.Controllers.World
                 if (TryGetChunk(origin + (normal * GenerationConstants.CHUNK_SIZE), out ChunkController chunkController))
                 {
                     yield return (normal, chunkController);
-                }
-            }
-        }
-
-        public IEnumerable<ChunkController> GetVerticalSlice(float2 origin)
-        {
-            if (((origin.x % GenerationConstants.CHUNK_SIZE) > 0f) || ((origin.y % GenerationConstants.CHUNK_SIZE) > 0f))
-            {
-                throw new ArgumentException("Given coordinates must be chunk-aligned.", nameof(origin));
-            }
-
-            for (int y = 0; y < WORLD_HEIGHT_IN_CHUNKS; y++)
-            {
-                float3 chunkOrigin = new float3(origin.x, y * GenerationConstants.CHUNK_SIZE, origin.y);
-
-                if (TryGetChunk(chunkOrigin, out ChunkController chunkController))
-                {
-                    yield return chunkController;
                 }
             }
         }
@@ -328,8 +300,6 @@ namespace Wyd.Controllers.World
             _Stopwatch.Restart();
 
             WorldState |= WorldState.VerifyingState;
-            HashSet<float3> chunksRequiringActivation = new HashSet<float3>();
-            HashSet<float3> chunksRequiringDeactivation = new HashSet<float3>();
 
             // get total list of out of bounds chunks
             foreach (IEntity loader in _EntityLoaders)
@@ -342,17 +312,16 @@ namespace Wyd.Controllers.World
 
                     if (!IsWithinLoaderRange(difference))
                     {
-                        chunksRequiringDeactivation.Add(origin);
+                        _ChunksRequiringDeactivation.Add(origin);
                     }
-                    else if (chunksRequiringDeactivation.Contains(origin))
+                    else
                     {
-                        chunksRequiringDeactivation.Remove(origin);
+                        _ChunksRequiringDeactivation.Remove(origin);
                     }
                 }
 
                 // todo this should be some setting inside loader
-                int renderRadius = Options.Instance.RenderDistance
-                    /* + OptionsController.Current.PreLoadChunkDistance*/;
+                int renderRadius = Options.Instance.RenderDistance;
 
                 for (int x = -renderRadius; x < (renderRadius + 1); x++)
                 for (int z = -renderRadius; z < (renderRadius + 1); z++)
@@ -361,28 +330,30 @@ namespace Wyd.Controllers.World
                     float3 localOrigin = new float3(x, y, z) * GenerationConstants.CHUNK_SIZE;
                     float3 globalOrigin = localOrigin + new float3(loader.ChunkPosition.x, 0, loader.ChunkPosition.z);
 
-                    if (!chunksRequiringActivation.Contains(globalOrigin))
-                    {
-                        chunksRequiringActivation.Add(globalOrigin);
-                    }
+                    _ChunksRequiringActivation.Add(globalOrigin);
                 }
             }
 
             Log.Debug(
-                $"{nameof(WorldController)} state check resulted in '{chunksRequiringActivation.Count}' activations and '{chunksRequiringDeactivation.Count}' deactivations.");
+                $"({nameof(WorldController)}) State verification: {_ChunksRequiringActivation.Count} activations, {_ChunksRequiringDeactivation.Count} deactivations.");
 
-            foreach (float3 origin in chunksRequiringActivation)
+            foreach (float3 origin in _ChunksRequiringActivation.Where(origin => !CheckChunkExists(origin)))
             {
                 _ChunksPendingActivation.Push(origin);
             }
 
-            foreach (float3 origin in chunksRequiringDeactivation)
+            foreach (float3 origin in _ChunksRequiringDeactivation)
             {
                 _ChunksPendingDeactivation.Push(origin);
             }
 
+            _ChunksRequiringActivation.Clear();
+            _ChunksRequiringDeactivation.Clear();
+
             WorldState &= ~WorldState.VerifyingState;
+
             Singletons.Diagnostics.Instance["WorldStateVerification"].Enqueue(_Stopwatch.Elapsed);
+
             _Stopwatch.Reset();
         }
 

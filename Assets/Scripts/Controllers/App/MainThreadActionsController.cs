@@ -7,7 +7,7 @@ using System.Threading;
 
 #endregion
 
-namespace Wyd.Controllers.System
+namespace Wyd.Controllers.App
 {
     public delegate bool MainThreadActionInvocation();
 

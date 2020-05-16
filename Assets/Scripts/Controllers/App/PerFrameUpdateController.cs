@@ -11,7 +11,7 @@ using Wyd.Singletons;
 
 #endregion
 
-namespace Wyd.Controllers.System
+namespace Wyd.Controllers.App
 {
     public class PerFrameUpdateController : SingletonController<PerFrameUpdateController>
     {

@@ -39,7 +39,7 @@ namespace Wyd.Controllers.UI.Components.Text.Diagnostic
             {
                 UpdateChunkRegionsLoadedText(WorldController.Current.ChunksQueuedCount, WorldController.Current.ChunksActiveCount,
                     WorldController.Current.ChunksCachedCount,
-                    Singletons.Diagnostics.Instance.GetAverage("WorldStateVerification").Milliseconds);
+                    Singletons.Diagnostics.Instance.GetAverage("WorldStateVerification").TotalMilliseconds);
             }
         }
 

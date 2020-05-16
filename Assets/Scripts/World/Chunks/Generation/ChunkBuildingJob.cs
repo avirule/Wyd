@@ -7,8 +7,8 @@ using System.Threading.Tasks;
 using Unity.Mathematics;
 using UnityEngine;
 using Wyd.Collections;
+using Wyd.Controllers.App;
 using Wyd.Controllers.State;
-using Wyd.Controllers.System;
 using Wyd.Controllers.World;
 using Wyd.Jobs;
 using Wyd.Noise;
@@ -86,7 +86,7 @@ namespace Wyd.World.Chunks.Generation
             return Task.CompletedTask;
         }
 
-        internal override void Cancelled()
+        protected override void Cancelled()
         {
             if (IsCancelled)
             {
