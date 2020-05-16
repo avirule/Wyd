@@ -12,12 +12,36 @@ using System.Threading.Tasks;
 
 namespace Wyd.Jobs
 {
-    public delegate Task AsyncInvocation();
-
+    /// <summary>
+    ///     This class can be used to instantiate work on the .NET ThreadPool, utilizing the <see cref="AsyncJob"/>
+    ///      class—or the <see cref="AsyncInvocation"/>—as a convenient way to deliver completed work and relevant work data to
+    ///      any interested subscriptors, all without starving the system at large of CPU time.
+    /// </summary>
+    /// <remarks>
+    ///    The class also utilizes a semaphore to ensure the work being done leaves multiple
+    ///     cores unstressed, so any other critical processes aren't interfered with.
+    ///
+    ///    Generally, the maximum number of concurrent jobs that can run is limited to {logical core count - 2},
+    ///     and in my testing, being able to increase the amount of concurrent work only leads to resource shortages
+    ///     for other processes (in the case of a game, it will lead to significant frame rate drop as the main core is
+    ///     consumed for other tasks).
+    ///
+    ///    However, in the interest of usability, I may add functionality to meaningfully increase the
+    ///     cap later on.
+    /// </remarks>
     public static class AsyncJobScheduler
     {
+        /// <summary>
+        ///     Global cancellation token source to provide an observable <see cref="CancellationToken"/> that cancels
+        ///      when the <see cref="AsyncJobScheduler"/> is aborted.
+        /// </summary>
         private static readonly CancellationTokenSource _AbortTokenSource;
-        private static readonly SemaphoreSlim _WorkerSemaphore;
+
+        /// <summary>
+        ///     Limits the total number of jobs or invocations that can execute concurrently.
+        /// </summary>
+        private static readonly SemaphoreSlim _ConcurrentWorkSemaphore;
+
         private static long _QueuedJobs;
         private static long _ProcessingJobs;
 
@@ -55,7 +79,7 @@ namespace Wyd.Jobs
             MaximumConcurrentJobs = Environment.ProcessorCount - 2;
 
             _AbortTokenSource = new CancellationTokenSource();
-            _WorkerSemaphore = new SemaphoreSlim(MaximumConcurrentJobs, MaximumConcurrentJobs);
+            _ConcurrentWorkSemaphore = new SemaphoreSlim(MaximumConcurrentJobs, MaximumConcurrentJobs);
 
             JobQueued += (sender, args) => { Interlocked.Increment(ref _QueuedJobs); };
             JobStarted += (sender, args) =>
@@ -112,7 +136,7 @@ namespace Wyd.Jobs
         /// <summary>
         ///     Waits asynchronously until work is ready to be done.
         /// </summary>
-        public static async Task WaitAsync() => await _WorkerSemaphore.WaitAsync(AbortToken);
+        public static async Task WaitAsync() => await _ConcurrentWorkSemaphore.WaitAsync(AbortToken);
 
         /// <summary>
         ///     Waits asynchronously until work is ready to be done, or until timeout is reached.
@@ -123,7 +147,7 @@ namespace Wyd.Jobs
         /// <returns>
         ///     <c>true</c> if the wait did not exceed given timeout, otherwise <c>false</c>.
         /// </returns>
-        public static async Task<bool> WaitAsync(TimeSpan timeout) => await _WorkerSemaphore.WaitAsync(timeout);
+        public static async Task<bool> WaitAsync(TimeSpan timeout) => await _ConcurrentWorkSemaphore.WaitAsync(timeout);
 
         /// <summary>
         ///     Aborts execution of job scheduler.
@@ -157,7 +181,7 @@ namespace Wyd.Jobs
             try
             {
                 // if semaphore is empty, wait until it is released
-                await _WorkerSemaphore.WaitAsync().ConfigureAwait(false);
+                await _ConcurrentWorkSemaphore.WaitAsync().ConfigureAwait(false);
 
                 // signal JobStarted event
                 OnJobStarted(asyncJob);
@@ -171,7 +195,7 @@ namespace Wyd.Jobs
             finally
             {
                 // release semaphore regardless of any job errors
-                _WorkerSemaphore.Release();
+                _ConcurrentWorkSemaphore.Release();
             }
         }
 
@@ -186,14 +210,14 @@ namespace Wyd.Jobs
 
             try
             {
-                await _WorkerSemaphore.WaitAsync().ConfigureAwait(false);
+                await _ConcurrentWorkSemaphore.WaitAsync().ConfigureAwait(false);
 
                 await invocation.Invoke().ConfigureAwait(false);
             }
             finally
             {
                 // release semaphore regardless of any invocation errors
-                _WorkerSemaphore.Release();
+                _ConcurrentWorkSemaphore.Release();
             }
         }
 

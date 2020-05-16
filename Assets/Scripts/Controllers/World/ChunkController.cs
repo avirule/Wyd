@@ -64,8 +64,15 @@ namespace Wyd.Controllers.World
 
         private CancellationTokenSource _CancellationTokenSource;
         private ConcurrentQueue<BlockAction> _BlockActions;
+        private INodeCollection<ushort> _Blocks;
         private List<ChunkController> _Neighbors;
         private Mesh _Mesh;
+
+        #if DEBUG
+
+        private WeakReference _BlocksReference;
+
+        #endif
 
         private bool _CacheNeighbors;
         private long _BlockActionsCount;
@@ -100,7 +107,20 @@ namespace Wyd.Controllers.World
             }
         }
 
-        public INodeCollection<ushort> Blocks { get; private set; }
+        public INodeCollection<ushort> Blocks
+        {
+            get => _Blocks;
+            private set
+            {
+                _Blocks = value;
+
+#if DEBUG
+
+                _BlocksReference = new WeakReference(_Blocks);
+
+                #endif
+            }
+        }
 
         public int3 OriginPoint { get; private set; }
 
@@ -228,6 +248,15 @@ namespace Wyd.Controllers.World
             _Neighbors = null;
             Blocks = null;
             _BlockActions = null;
+
+#if DEBUG
+
+            if (_BlocksReference.IsAlive)
+            {
+                Log.Warning($"{nameof(Blocks)} has not been garbage collected and chunk is being destroyed. This is likely a memory leak.");
+            }
+
+#endif
 
             State = 0;
             UpdateMesh = false;

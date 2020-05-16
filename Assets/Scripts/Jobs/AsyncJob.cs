@@ -15,6 +15,9 @@ using Serilog;
 
 namespace Wyd.Jobs
 {
+    /// <summary>
+    ///     Used for
+    /// </summary>
     public abstract class AsyncJob
     {
         private readonly object _IsWorkFinishedLock;
