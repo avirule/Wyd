@@ -20,8 +20,10 @@ namespace Wyd.Jobs
     /// </summary>
     public abstract class AsyncJob
     {
+        private readonly object _IsCancelledLock;
         private readonly object _IsWorkFinishedLock;
 
+        private bool _IsCancelled;
         private bool _IsWorkFinished;
 
         /// <summary>
@@ -35,6 +37,27 @@ namespace Wyd.Jobs
         ///     Identity of the <see cref="AsyncJob" />.
         /// </summary>
         public Guid Identity { get; }
+
+        public bool IsCancelled
+        {
+            get
+            {
+                bool tmp;
+                lock (_IsCancelledLock)
+                {
+                    tmp = _IsCancelled;
+                }
+
+                return tmp;
+            }
+            set
+            {
+                lock (_IsCancelledLock)
+                {
+                    _IsCancelled = value;
+                }
+            }
+        }
 
         /// <summary>
         ///     Thread-safe determination of execution status.
@@ -75,6 +98,7 @@ namespace Wyd.Jobs
 
         protected AsyncJob()
         {
+            _IsCancelledLock = new object();
             _IsWorkFinishedLock = new object();
             _Stopwatch = new Stopwatch();
 
@@ -90,6 +114,7 @@ namespace Wyd.Jobs
         /// </summary>
         protected AsyncJob(CancellationToken cancellationToken)
         {
+            _IsCancelledLock = new object();
             _IsWorkFinishedLock = new object();
             _Stopwatch = new Stopwatch();
 
@@ -111,6 +136,7 @@ namespace Wyd.Jobs
                 // observe cancellation token
                 if (_CancellationToken.IsCancellationRequested)
                 {
+                    Cancelled();
                     return;
                 }
 
@@ -154,5 +180,10 @@ namespace Wyd.Jobs
         ///     The final method, run after <see cref="Process" />.
         /// </summary>
         protected virtual Task ProcessFinished() => Task.CompletedTask;
+
+        internal virtual void Cancelled()
+        {
+            IsCancelled = true;
+        }
     }
 }

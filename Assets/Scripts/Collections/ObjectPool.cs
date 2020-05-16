@@ -17,7 +17,14 @@ namespace Wyd.Collections
 
         public int Size => _InternalCache.Count;
 
-        public ObjectPool(int maximumSize = -1)
+        public ObjectPool()
+        {
+            _InternalCache = new ConcurrentBag<T>();
+
+            MaximumSize = -1;
+        }
+
+        public ObjectPool(int maximumSize)
         {
             _InternalCache = new ConcurrentBag<T>();
 

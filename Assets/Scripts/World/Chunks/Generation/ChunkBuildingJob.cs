@@ -86,6 +86,25 @@ namespace Wyd.World.Chunks.Generation
             return Task.CompletedTask;
         }
 
+        internal override void Cancelled()
+        {
+            if (IsCancelled)
+            {
+                return;
+            }
+            else
+            {
+                IsCancelled = true;
+            }
+
+            MainThreadActionsController.Current.QueueAction(() =>
+            {
+                _HeightmapBuffer?.Release();
+                _CavemapBuffer?.Release();
+                return true;
+            });
+        }
+
         public void SetData(CancellationToken cancellationToken, int3 originPoint, float frequency, float persistence,
             ComputeBuffer heightmapBuffer = null, ComputeBuffer caveNoiseBuffer = null)
         {

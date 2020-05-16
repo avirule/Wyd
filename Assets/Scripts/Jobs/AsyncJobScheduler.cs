@@ -104,6 +104,7 @@ namespace Wyd.Jobs
         {
             if (AbortToken.IsCancellationRequested)
             {
+                asyncJob.Cancelled();
                 return;
             }
 
@@ -175,6 +176,7 @@ namespace Wyd.Jobs
             // observe cancellation token
             if (_AbortTokenSource.IsCancellationRequested)
             {
+                asyncJob.Cancelled();
                 return;
             }
 

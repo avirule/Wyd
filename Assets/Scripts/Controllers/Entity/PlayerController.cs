@@ -16,6 +16,8 @@ using Wyd.World.Chunks.Generation;
 
 namespace Wyd.Controllers.Entity
 {
+    [RequireComponent(typeof(Collider))]
+    [RequireComponent(typeof(Rigidbody))]
     public class PlayerController : SingletonController<PlayerController>, IEntity
     {
         public const int REACH = 5;

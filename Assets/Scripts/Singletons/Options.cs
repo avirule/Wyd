@@ -201,7 +201,7 @@ namespace Wyd.Singletons
 
 
             _VSync = new Option<bool>(_Configuration, GRAPHICS_CATEGORY, nameof(VSync), true, vSync => true, PropertyChanged);
-            QualitySettings.vSyncCount = VSync ? 1 : 0;
+            QualitySettings.vSyncCount = Convert.ToInt32(VSync);
 
 
             _WindowMode = new Option<FullScreenMode>(_Configuration, GRAPHICS_CATEGORY, nameof(FullScreenMode), FullScreenMode.FullScreenWindow,

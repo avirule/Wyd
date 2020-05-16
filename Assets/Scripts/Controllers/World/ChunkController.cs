@@ -38,11 +38,11 @@ namespace Wyd.Controllers.World
 
     public class ChunkController : MonoBehaviour, IPerFrameIncrementalUpdate
     {
-        private const int JobPoolSize = (11 * 11 /* 8 render dst as diameter */) * WorldController.WORLD_HEIGHT_IN_CHUNKS;
+        private const int _JOB_POOL_SIZE = 11 * 11 * WorldController.WORLD_HEIGHT_IN_CHUNKS;
 
         private static readonly ObjectPool<BlockAction> _BlockActionsPool = new ObjectPool<BlockAction>(1024);
-        private static readonly ObjectPool<ChunkBuildingJob> _BuildingJobs = new ObjectPool<ChunkBuildingJob>(JobPoolSize);
-        private static readonly ObjectPool<ChunkMeshingJob> _MeshingJobs = new ObjectPool<ChunkMeshingJob>(JobPoolSize);
+        private static readonly ObjectPool<ChunkBuildingJob> _BuildingJobs = new ObjectPool<ChunkBuildingJob>(_JOB_POOL_SIZE);
+        private static readonly ObjectPool<ChunkMeshingJob> _MeshingJobs = new ObjectPool<ChunkMeshingJob>(_JOB_POOL_SIZE);
 
 
         #region NoiseShader
