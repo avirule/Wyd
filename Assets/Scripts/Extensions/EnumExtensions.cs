@@ -49,7 +49,7 @@ namespace Wyd.Extensions
                 case FullScreenMode.ExclusiveFullScreen:
                     return "Fullscreen";
                 case FullScreenMode.FullScreenWindow:
-                    return "Borderless Windowed";
+                    return "Borderless";
                 case FullScreenMode.MaximizedWindow:
                 case FullScreenMode.Windowed:
                     return "Windowed";

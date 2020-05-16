@@ -201,19 +201,23 @@ namespace Wyd.Singletons
 
 
             _VSync = new Option<bool>(_Configuration, GRAPHICS_CATEGORY, nameof(VSync), true, vSync => true, PropertyChanged);
+            QualitySettings.vSyncCount = VSync ? 1 : 0;
+
 
             _WindowMode = new Option<FullScreenMode>(_Configuration, GRAPHICS_CATEGORY, nameof(FullScreenMode), FullScreenMode.FullScreenWindow,
                 windowMode => true, PropertyChanged);
+            Screen.fullScreenMode = FullScreenMode;
+
 
             _RenderDistance = new Option<int>(_Configuration, GRAPHICS_CATEGORY, nameof(RenderDistance), 8,
                 renderDistance => (renderDistance >= 1) && (renderDistance <= 16), PropertyChanged);
 
-            Log.Information("({nameof(Options)}) Configuration loaded.");
+            Log.Information($"({nameof(Options)}) Configuration loaded.");
         }
 
         private Configuration InitialiseDefaultConfig()
         {
-            Log.Information("({nameof(Options)}) Initializing default configuration file...");
+            Log.Information($"({nameof(Options)}) Initializing default configuration file...");
 
             _Configuration = new Configuration();
 
