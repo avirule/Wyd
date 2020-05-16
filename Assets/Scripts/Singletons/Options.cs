@@ -54,7 +54,11 @@ namespace Wyd.Singletons
         public bool GPUAcceleration
         {
             get => _GPUAcceleration.Value;
-            set => _GPUAcceleration.Value = value;
+            set
+            {
+                _GPUAcceleration.Value = value;
+                OnPropertyChanged();
+            }
         }
 
         private Option<bool> _AdvancedMeshing;
@@ -62,7 +66,11 @@ namespace Wyd.Singletons
         public bool AdvancedMeshing
         {
             get => _AdvancedMeshing.Value;
-            set => _AdvancedMeshing.Value = value;
+            set
+            {
+                _AdvancedMeshing.Value = value;
+                OnPropertyChanged();
+            }
         }
 
         private Option<int> _NaiveMeshingGroupSize;
@@ -70,7 +78,11 @@ namespace Wyd.Singletons
         public int NaiveMeshingGroupSize
         {
             get => _NaiveMeshingGroupSize.Value;
-            set => _NaiveMeshingGroupSize.Value = value;
+            set
+            {
+                _NaiveMeshingGroupSize.Value = value;
+                OnPropertyChanged();
+            }
         }
 
         private Option<int> _DiagnosticBufferSize;
@@ -78,7 +90,11 @@ namespace Wyd.Singletons
         public int DiagnosticBufferSize
         {
             get => _DiagnosticBufferSize.Value;
-            set => _DiagnosticBufferSize.Value = value;
+            set
+            {
+                _DiagnosticBufferSize.Value = value;
+                OnPropertyChanged();
+            }
         }
 
 
@@ -93,6 +109,7 @@ namespace Wyd.Singletons
             {
                 _TargetFrameRate.Value = value;
                 TargetFrameTime = TimeSpan.FromTicks((long)(TimeSpan.TicksPerSecond * (1d / _TargetFrameRate.Value)));
+                OnPropertyChanged();
             }
         }
 
@@ -103,7 +120,11 @@ namespace Wyd.Singletons
         public int RenderDistance
         {
             get => _RenderDistance.Value;
-            set => _RenderDistance.Value = value;
+            set
+            {
+                _RenderDistance.Value = value;
+                OnPropertyChanged();
+            }
         }
 
         private Option<bool> _VSync;
@@ -115,6 +136,7 @@ namespace Wyd.Singletons
             {
                 _VSync.Value = value;
                 QualitySettings.vSyncCount = Convert.ToInt32(_VSync.Value);
+                OnPropertyChanged();
             }
         }
 
@@ -127,6 +149,7 @@ namespace Wyd.Singletons
             {
                 _WindowMode.Value = value;
                 Screen.fullScreenMode = _WindowMode.Value;
+                OnPropertyChanged();
             }
         }
 

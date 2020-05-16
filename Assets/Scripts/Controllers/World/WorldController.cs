@@ -19,9 +19,9 @@ using Wyd.World;
 using Wyd.World.Chunks;
 using Wyd.World.Chunks.Generation;
 
-// ReSharper disable UnusedAutoPropertyAccessor.Global
-
 #endregion
+
+// ReSharper disable UnusedAutoPropertyAccessor.Global
 
 namespace Wyd.Controllers.World
 {
@@ -77,9 +77,6 @@ namespace Wyd.Controllers.World
         private string SeedString;
 
 #if UNITY_EDITOR
-
-        [SerializeField]
-        public float InterimGenerationValue;
 
         [SerializeField]
         private bool RegenerateWorld;
