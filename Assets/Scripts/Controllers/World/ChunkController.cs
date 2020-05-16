@@ -475,7 +475,7 @@ namespace Wyd.Controllers.World
                 if (Active)
                 {
                     // in this case, the meshing job's data will be cleared and pooled synchronously after the mesh is applied.
-                    MainThreadActionsController.Current.QueueAction(() =>
+                    MainThreadActions.Instance.QueueAction(() =>
                     {
                         if (_Mesh is object)
                         {

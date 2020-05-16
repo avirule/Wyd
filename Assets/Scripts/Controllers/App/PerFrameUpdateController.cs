@@ -39,6 +39,11 @@ namespace Wyd.Controllers.App
             _FrameTimer = new Stopwatch();
             _PerFrameUpdates = new SortedList<int, List<IPerFrameUpdate>>();
             _PerFrameUpdateCollectionModifications = new Stack<PerFrameUpdateCollectionModification>();
+
+            // register main thread actions updater manually
+            MainThreadActions.Validate();
+
+            _PerFrameUpdateCollectionModifications.Push(new PerFrameUpdateCollectionModification(-50000, MainThreadActions.Instance, true));
         }
 
         private void Update()
@@ -131,8 +136,12 @@ namespace Wyd.Controllers.App
 
         public void RegisterPerFrameUpdater(int order, IPerFrameUpdate perFrameUpdate)
         {
-            _PerFrameUpdateCollectionModifications.Push(
-                new PerFrameUpdateCollectionModification(order, perFrameUpdate, true));
+            if (perFrameUpdate is MainThreadActions)
+            {
+                throw new ArgumentException(nameof(perFrameUpdate));
+            }
+
+            _PerFrameUpdateCollectionModifications.Push(new PerFrameUpdateCollectionModification(order, perFrameUpdate, true));
         }
 
         public void DeregisterPerFrameUpdater(int order, IPerFrameUpdate perFrameUpdate)
@@ -142,8 +151,7 @@ namespace Wyd.Controllers.App
                 return;
             }
 
-            _PerFrameUpdateCollectionModifications.Push(
-                new PerFrameUpdateCollectionModification(order, perFrameUpdate, false));
+            _PerFrameUpdateCollectionModifications.Push(new PerFrameUpdateCollectionModification(order, perFrameUpdate, false));
         }
     }
 }

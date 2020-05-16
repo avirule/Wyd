@@ -25,6 +25,7 @@ namespace Wyd.Controllers.App
             Singleton.InstantiateSingleton<StaticLog>();
             Singleton.InstantiateSingleton<Options>();
             Singleton.InstantiateSingleton<Singletons.Diagnostics>();
+            Singleton.InstantiateSingleton<MainThreadActions>();
         }
 
         private void OnDestroy()

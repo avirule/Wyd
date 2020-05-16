@@ -12,6 +12,7 @@ using Wyd.Controllers.State;
 using Wyd.Controllers.World;
 using Wyd.Jobs;
 using Wyd.Noise;
+using Wyd.Singletons;
 
 #endregion
 
@@ -97,7 +98,7 @@ namespace Wyd.World.Chunks.Generation
                 IsCancelled = true;
             }
 
-            MainThreadActionsController.Current.QueueAction(() =>
+            MainThreadActions.Instance.QueueAction(() =>
             {
                 _HeightmapBuffer?.Release();
                 _CavemapBuffer?.Release();
@@ -164,7 +165,7 @@ namespace Wyd.World.Chunks.Generation
                 // ReSharper disable once ConvertToUsingDeclaration
                 // .... because Rider doesn't actually consider language feature version
                 // remark: thanks JetBrains
-                using (SemaphoreSlim semaphoreReset = MainThreadActionsController.Current.QueueAction(GetComputeBufferData))
+                using (SemaphoreSlim semaphoreReset = MainThreadActions.Instance.QueueAction(GetComputeBufferData))
                 {
                     await semaphoreReset.WaitAsync(_CancellationToken);
                 }

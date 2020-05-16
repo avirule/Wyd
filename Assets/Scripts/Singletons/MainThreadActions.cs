@@ -7,14 +7,11 @@ using System.Threading;
 
 #endregion
 
-namespace Wyd.Controllers.App
+namespace Wyd.Singletons
 {
     public delegate bool MainThreadActionInvocation();
 
-    /// <summary>
-    ///     Controller allowing qu
-    /// </summary>
-    public class MainThreadActionsController : SingletonController<MainThreadActionsController>, IPerFrameIncrementalUpdate
+    public class MainThreadActions : Singleton<MainThreadActions>, IPerFrameIncrementalUpdate
     {
         private class MainThreadAction
         {
@@ -31,23 +28,13 @@ namespace Wyd.Controllers.App
             public void Set() => _SemaphoreReset?.Release();
         }
 
-        private ConcurrentQueue<MainThreadAction> _Actions;
+        private readonly ConcurrentQueue<MainThreadAction> _Actions;
 
-        private void Awake()
+        public MainThreadActions()
         {
             AssignSingletonInstance(this);
 
             _Actions = new ConcurrentQueue<MainThreadAction>();
-        }
-
-        private void OnEnable()
-        {
-            PerFrameUpdateController.Current.RegisterPerFrameUpdater(-900, this);
-        }
-
-        private void OnDisable()
-        {
-            PerFrameUpdateController.Current.DeregisterPerFrameUpdater(-900, this);
         }
 
         public SemaphoreSlim QueueAction(MainThreadActionInvocation invocation)

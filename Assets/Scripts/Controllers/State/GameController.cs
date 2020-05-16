@@ -16,7 +16,6 @@ namespace Wyd.Controllers.State
         {
             AssignSingletonInstance(this);
             DontDestroyOnLoad(this);
-            QualitySettings.vSyncCount = 0;
         }
 
         private void Start()
