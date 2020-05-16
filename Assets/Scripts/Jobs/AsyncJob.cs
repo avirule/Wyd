@@ -61,17 +61,11 @@ namespace Wyd.Jobs
         /// <summary>
         ///     Elapsed execution time of the <see cref="Process" /> function.
         /// </summary>
-        /// <remarks>
-        ///     This member is null in the case that the job has not finished processing.
-        /// </remarks>
         public TimeSpan ProcessTime { get; private set; }
 
         /// <summary>
         ///     Elapsed execution time of job.
         /// </summary>
-        /// <remarks>
-        ///     This members is null in the case that the job has not finished execution.
-        /// </remarks>
         public TimeSpan ExecutionTime { get; private set; }
 
         public event EventHandler<AsyncJob> WorkFinished;
@@ -83,6 +77,7 @@ namespace Wyd.Jobs
 
             // create new, unique job identity
             Identity = Guid.NewGuid();
+
             _CancellationToken = AsyncJobScheduler.AbortToken;
             IsWorkFinished = false;
         }

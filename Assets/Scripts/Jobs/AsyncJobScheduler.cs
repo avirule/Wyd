@@ -47,8 +47,8 @@ namespace Wyd.Jobs
         static AsyncJobScheduler()
         {
             // set maximum concurrent jobs to logical core count - 2
-            // remark: two is subtracted from total logical core count to avoid bogging
-            //     down the main thread, with an extra logical core omitted as a buffer.
+            // remark: two is subtracted from total logical core count to avoid hogging
+            //     resources from the core the main thread is on, with an extra logical core as a buffer.
             //
             //     Largely, the goal here is to ensure this class remains lightweight and doesn't
             //     interfere with other critical processes.
@@ -112,7 +112,7 @@ namespace Wyd.Jobs
         /// <summary>
         ///     Waits asynchronously until work is ready to be done.
         /// </summary>
-        public static async Task WaitAsync() => await _WorkerSemaphore.WaitAsync();
+        public static async Task WaitAsync() => await _WorkerSemaphore.WaitAsync(AbortToken);
 
         /// <summary>
         ///     Waits asynchronously until work is ready to be done, or until timeout is reached.

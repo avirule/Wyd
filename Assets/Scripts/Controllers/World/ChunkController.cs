@@ -30,9 +30,9 @@ namespace Wyd.Controllers.World
     public enum ChunkState
     {
         Unbuilt,
-        BuildingDispatched,
-        Mesh,
-        MeshingDispatched,
+        AwaitingBuilding,
+        Unmeshed,
+        AwaitingMeshing,
         Meshed
     }
 
@@ -149,18 +149,6 @@ namespace Wyd.Controllers.World
         private long TimesMeshed;
 
         [SerializeField]
-        [ReadOnlyInspectorField]
-        private long VertexCount;
-
-        [SerializeField]
-        [ReadOnlyInspectorField]
-        private long TrianglesCount;
-
-        [SerializeField]
-        [ReadOnlyInspectorField]
-        private long UVsCount;
-
-        [SerializeField]
         private bool Regenerate;
 
 #endif
@@ -221,7 +209,7 @@ namespace Wyd.Controllers.World
 
 #if UNITY_EDITOR
 
-            TimesMeshed = VertexCount = TrianglesCount = UVsCount = 0;
+            TimesMeshed = 0;
 
 #endif
 
@@ -275,7 +263,7 @@ namespace Wyd.Controllers.World
             {
                 return;
             }
-            else if ((State > ChunkState.Unbuilt) && (State < ChunkState.Mesh))
+            else if ((State > ChunkState.Unbuilt) && (State < ChunkState.Unmeshed))
             {
                 if (_Neighbors.Any(chunkController => chunkController.State < State))
                 {
@@ -290,26 +278,9 @@ namespace Wyd.Controllers.World
 
                     State = State.Next();
                     break;
-                case ChunkState.BuildingDispatched:
+                case ChunkState.AwaitingBuilding:
                     break;
-                // case ChunkState.Undetailed:
-                //     TerrainController.BeginDetailing(_CancellationTokenSource.Token, OnTerrainDetailingFinished, _Blocks, out _TerrainJobIdentity);
-                //
-                //     State = State.Next();
-                //     break;
-                // case ChunkState.DetailingDispatched:
-                //     if (_FinishedTerrainJob != null)
-                //     {
-                //         _FinishedTerrainJob.GetGeneratedBlockData(out _Blocks);
-                //         _FinishedTerrainJob = null;
-                //         State = State.Next();
-                //         OnLocalTerrainChanged(this, new ChunkChangedEventArgs(OriginPoint, Directions.AllDirectionNormals.Select(WydMath.ToFloat)));
-                //     }
-                //
-                //     State = State.Next();
-                //
-                //     break;
-                case ChunkState.Mesh:
+                case ChunkState.Unmeshed:
                     if (Blocks.IsUniform
                         && ((Blocks.Value == BlockController.AirID)
                             || _Neighbors.All(chunkController => (chunkController.Blocks != null)
@@ -326,12 +297,12 @@ namespace Wyd.Controllers.World
                     UpdateMesh = false;
 
                     break;
-                case ChunkState.MeshingDispatched:
+                case ChunkState.AwaitingMeshing:
                     break;
                 case ChunkState.Meshed:
                     if (UpdateMesh && _BlockActions.IsEmpty)
                     {
-                        State = ChunkState.Mesh;
+                        State = ChunkState.Unmeshed;
                     }
 
                     break;
@@ -342,7 +313,7 @@ namespace Wyd.Controllers.World
 
         public IEnumerable IncrementalFrameUpdate()
         {
-            if ((State < ChunkState.Mesh) || (Interlocked.Read(ref _BlockActionsCount) == 0))
+            if ((State < ChunkState.Unmeshed) || (Interlocked.Read(ref _BlockActionsCount) == 0))
             {
                 yield break;
             }
@@ -443,8 +414,8 @@ namespace Wyd.Controllers.World
 
             void OnTerrainBuildingFinished(object sender, AsyncJob asyncJob)
             {
-                Debug.Assert(State == ChunkState.BuildingDispatched,
-                    $"{nameof(State)} should always be in the '{nameof(ChunkState.BuildingDispatched)}' state when meshing finishes.\r\n"
+                Debug.Assert(State == ChunkState.AwaitingBuilding,
+                    $"{nameof(State)} should always be in the '{nameof(ChunkState.AwaitingBuilding)}' state when meshing finishes.\r\n"
                     + $"\tremark: see the {nameof(State)} property's xmldoc for explanation.");
 
                 asyncJob.WorkFinished -= OnTerrainBuildingFinished;
@@ -452,6 +423,8 @@ namespace Wyd.Controllers.World
                 if (Active)
                 {
                     Blocks = terrainBuilderJob.GetGeneratedBlockData();
+
+                    WeakReference<INodeCollection<ushort>> reff = new WeakReference<INodeCollection<ushort>>(Blocks);
 
                     State = State.Next();
                 }
@@ -473,15 +446,15 @@ namespace Wyd.Controllers.World
 
             void OnMeshingFinished(object sender, AsyncJob asyncJob)
             {
-                Debug.Assert(State == ChunkState.MeshingDispatched,
-                    $"{nameof(State)} should always be in the '{nameof(ChunkState.MeshingDispatched)}' state when meshing finishes.\r\n"
-                    + $"\tremark: see the {nameof(State)} property's xmldoc for  explanation.");
+                Debug.Assert(State == ChunkState.AwaitingMeshing,
+                    $"{nameof(State)} should always be in the '{nameof(ChunkState.AwaitingMeshing)}' state when meshing finishes.\r\n"
+                    + $"\tremark: see the {nameof(State)} property's xml doc for  explanation.");
 
                 asyncJob.WorkFinished -= OnMeshingFinished;
 
                 if (Active)
                 {
-                    // in this case, the meshing job's data will be cleared and pooled synchronously, after the mesh is applied.
+                    // in this case, the meshing job's data will be cleared and pooled synchronously after the mesh is applied.
                     MainThreadActionsController.Current.QueueAction(() => ApplyMesh(meshingJob));
                 }
                 else
@@ -489,7 +462,6 @@ namespace Wyd.Controllers.World
                     meshingJob.ClearData();
                     _MeshingJobs.TryAdd(meshingJob);
                 }
-
 
                 State = State.Next();
             }
@@ -507,9 +479,6 @@ namespace Wyd.Controllers.World
 
 #if UNITY_EDITOR
 
-            //VertexCount = _Mesh.vertices.Length;
-            //TrianglesCount = _Mesh.triangles.Length;
-            //UVsCount = _Mesh.uv.Length;
             TotalTimesMeshed += 1;
             TimesMeshed += 1;
 
