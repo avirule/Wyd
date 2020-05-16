@@ -1,6 +1,7 @@
 #region
 
 using System;
+using System.Buffers;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Runtime.CompilerServices;
@@ -22,7 +23,8 @@ namespace Wyd.World.Chunks.Generation
 {
     public class ChunkMeshingJob : AsyncParallelJob
     {
-        private static readonly ObjectPool<MeshingBlock[]> _MeshingBlockArrayPool = new ObjectPool<MeshingBlock[]>();
+        private static readonly ArrayPool<MeshingBlock> _MeshingBlocksPool = ArrayPool<MeshingBlock>.Create(GenerationConstants.CHUNK_SIZE_CUBED, 8);
+
         private static readonly ObjectPool<MeshData> _MeshDataPool = new ObjectPool<MeshData>();
 
         private readonly Stopwatch _RuntimeStopwatch;
@@ -172,9 +174,12 @@ namespace Wyd.World.Chunks.Generation
             Debug.Assert(_NeighborBlocksCollections.Length == 6,
                 $"{nameof(_NeighborBlocksCollections)} should have a length of 6, one for each neighboring chunk.");
 
-            // retrieve existing objects from object pool
-            _MeshingBlocks = _MeshingBlockArrayPool.Retrieve() ?? new MeshingBlock[GenerationConstants.CHUNK_SIZE_CUBED];
-            _MeshData = _MeshDataPool.Retrieve() ?? new MeshData(new List<int>(), new List<int>());
+                _MeshingBlocks = _MeshingBlocksPool.Rent(GenerationConstants.CHUNK_SIZE_CUBED);
+
+                if (!_MeshDataPool.TryTake(out _MeshData))
+            {
+                _MeshData = new MeshData(new List<int>(), new List<int>());
+            }
 
             int index = 0;
 
@@ -557,9 +562,8 @@ namespace Wyd.World.Chunks.Generation
         private void FinishMeshing()
         {
             // clear mask, add to object pool, and unset reference
-            Array.Clear(_MeshingBlocks, 0, _MeshingBlocks.Length);
-            _MeshingBlockArrayPool.TryAdd(_MeshingBlocks);
-            _MeshingBlocks = default;
+            _MeshingBlocksPool.Return(_MeshingBlocks, true);
+            _MeshingBlocks = null;
 
             // clear array to free RAM until next execution
             Array.Clear(_NeighborBlocksCollections, 0, _NeighborBlocksCollections.Length);

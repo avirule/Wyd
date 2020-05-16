@@ -34,7 +34,7 @@ namespace Wyd.Controllers.World
         #region Instance Members
 
         private Stopwatch _Stopwatch;
-        private ObjectPool<ChunkController> _ChunkPool;
+        private ObjectPool<ChunkController> _ChunkControllerPool;
         private Dictionary<float3, ChunkController> _Chunks;
         private Stack<float3> _ChunksPendingActivation;
         private Stack<float3> _ChunksPendingDeactivation;
@@ -54,7 +54,7 @@ namespace Wyd.Controllers.World
 
         public int ChunksQueuedCount => _ChunksPendingActivation.Count;
         public int ChunksActiveCount => _Chunks.Count;
-        public int ChunksCachedCount => _ChunkPool.Size;
+        public int ChunksCachedCount => _ChunkControllerPool.Size;
 
         public WorldSeed Seed { get; private set; }
         public int3 SpawnPoint { get; private set; }
@@ -90,8 +90,10 @@ namespace Wyd.Controllers.World
         {
             AssignSingletonInstance(this);
 
+            _ChunkControllerPool = new ObjectPool<ChunkController>();
+            _ChunkControllerPool.ItemCulled += (sender, chunkController) => Destroy(chunkController);
+
             _Stopwatch = new Stopwatch();
-            _ChunkPool = new ObjectPool<ChunkController>();
 
             _Chunks = new Dictionary<float3, ChunkController>();
             _ChunksPendingActivation = new Stack<float3>();
@@ -180,7 +182,7 @@ namespace Wyd.Controllers.World
                     continue;
                 }
 
-                if (_ChunkPool.TryRetrieve(out ChunkController chunkController))
+                if (_ChunkControllerPool.TryTake(out ChunkController chunkController))
                 {
                     chunkController.Activate(origin);
                 }
@@ -233,7 +235,7 @@ namespace Wyd.Controllers.World
 
             // Chunk is automatically deactivated by ObjectPool
             // additionally, neighbors are flagged for update by ObjectPool
-            if (!_ChunkPool.TryAdd(chunkController))
+            if (!_ChunkControllerPool.TryAdd(chunkController))
             {
                 Destroy(chunkController.gameObject);
             }
@@ -318,7 +320,7 @@ namespace Wyd.Controllers.World
         private void SetMaximumChunkCacheSize()
         {
             int totalRenderDistance = Options.Instance.RenderDistance + /* OptionsController.Current.PreLoadChunkDistance + */ 1;
-            _ChunkPool.SetMaximumSize(((totalRenderDistance * 2) - 1) * WORLD_HEIGHT_IN_CHUNKS);
+            _ChunkControllerPool.SetMaximumSize(((totalRenderDistance * 2) - 1) * WORLD_HEIGHT_IN_CHUNKS);
         }
 
         private void VerifyAllChunkStatesAroundLoaders()

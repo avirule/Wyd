@@ -1,5 +1,6 @@
 #region
 
+using System;
 using System.Collections.Concurrent;
 
 #endregion
@@ -35,9 +36,7 @@ namespace Wyd.Collections
             return true;
         }
 
-        public T Retrieve() => _InternalCache.TryTake(out T item) ? item : default;
-
-        public bool TryRetrieve(out T item) => _InternalCache.TryTake(out item);
+        public bool TryTake(out T item) => _InternalCache.TryTake(out item);
 
         public void SetMaximumSize(int maximumSize)
         {
@@ -45,8 +44,14 @@ namespace Wyd.Collections
 
             for (int iterations = _InternalCache.Count - MaximumSize; iterations > 0; iterations--)
             {
-                _InternalCache.TryTake(out T _);
+                _InternalCache.TryTake(out T item);
+                ItemCulled?.Invoke(this, item);
             }
         }
+
+        /// <summary>
+        ///     Event fired when an item is thrown away due to exceeding maximum size.
+        /// </summary>
+        public event EventHandler<T> ItemCulled;
     }
 }

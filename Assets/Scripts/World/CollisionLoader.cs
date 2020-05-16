@@ -169,7 +169,7 @@ namespace Wyd.World
 
         private GameObject GetCollisionCube(float3 position)
         {
-            if (!_ColliderCubePool.TryRetrieve(out GameObject surfaceCollider))
+            if (!_ColliderCubePool.TryTake(out GameObject surfaceCollider))
             {
                 surfaceCollider = Instantiate(CollisionCubeObject);
             }

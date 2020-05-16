@@ -1,25 +1,29 @@
 #region
 
 using System;
+using System.Buffers;
 using System.Threading;
 using System.Threading.Tasks;
-using Serilog;
 using Unity.Mathematics;
 using UnityEngine;
 using Wyd.Collections;
 using Wyd.Controllers.State;
 using Wyd.Controllers.System;
 using Wyd.Controllers.World;
+using Wyd.Jobs;
 using Wyd.Noise;
 
 #endregion
 
 namespace Wyd.World.Chunks.Generation
 {
-    public class ChunkTerrainBuilderJob : ChunkTerrainJob
+    public class ChunkBuildingJob : ChunkTerrainJob
     {
-        private static readonly ObjectPool<int[]> _HeightmapPool = new ObjectPool<int[]>();
-        private static readonly ObjectPool<float[]> _CaveNoisePool = new ObjectPool<float[]>();
+        private readonly ArrayPool<int> _HeightmapPool =
+            ArrayPool<int>.Create(GenerationConstants.CHUNK_SIZE_SQUARED, AsyncJobScheduler.MaximumConcurrentJobs);
+
+        private readonly ArrayPool<float> _CavemapPool =
+            ArrayPool<float>.Create(GenerationConstants.CHUNK_SIZE_CUBED, AsyncJobScheduler.MaximumConcurrentJobs);
 
         private readonly int _NoiseSeedA;
         private readonly int _NoiseSeedB;
@@ -30,11 +34,11 @@ namespace Wyd.World.Chunks.Generation
         private TimeSpan _TerrainGenerationTimeSpan;
 
         private ComputeBuffer _HeightmapBuffer;
-        private ComputeBuffer _CaveNoiseBuffer;
+        private ComputeBuffer _CavemapBuffer;
         private int[] _Heightmap;
-        private float[] _CaveNoise;
+        private float[] _Cavemap;
 
-        public ChunkTerrainBuilderJob()
+        public ChunkBuildingJob()
         {
             int seed = WorldController.Current.Seed;
 
@@ -58,14 +62,11 @@ namespace Wyd.World.Chunks.Generation
 
             await BatchTasksAndAwaitAll().ConfigureAwait(false);
 
-            Array.Clear(_Heightmap, 0, _Heightmap.Length);
-            Array.Clear(_CaveNoise, 0, _CaveNoise.Length);
-
-            _HeightmapPool.TryAdd(_Heightmap);
-            _CaveNoisePool.TryAdd(_CaveNoise);
+            _HeightmapPool.Return(_Heightmap);
+            _CavemapPool.Return(_Cavemap);
 
             _Heightmap = null;
-            _CaveNoise = null;
+            _Cavemap = null;
 
             Stopwatch.Stop();
 
@@ -93,7 +94,7 @@ namespace Wyd.World.Chunks.Generation
             _Frequency = frequency;
             _Persistence = persistence;
             _HeightmapBuffer = heightmapBuffer;
-            _CaveNoiseBuffer = caveNoiseBuffer;
+            _CavemapBuffer = caveNoiseBuffer;
         }
 
         public void ClearData()
@@ -107,21 +108,20 @@ namespace Wyd.World.Chunks.Generation
         private bool GetComputeBufferData()
         {
             _HeightmapBuffer?.GetData(_Heightmap);
-            _CaveNoiseBuffer?.GetData(_CaveNoise);
+            _CavemapBuffer?.GetData(_Cavemap);
 
             _HeightmapBuffer?.Release();
-            _CaveNoiseBuffer?.Release();
+            _CavemapBuffer?.Release();
 
             return true;
         }
 
         private async Task GenerateNoise()
         {
-            // SIZE_SQUARED + 1 to facilitate compute shader's above-y-value count
-            _Heightmap = _HeightmapPool.Retrieve() ?? new int[GenerationConstants.CHUNK_SIZE_SQUARED];
-            _CaveNoise = _CaveNoisePool.Retrieve() ?? new float[GenerationConstants.CHUNK_SIZE_CUBED];
+            _Heightmap = _HeightmapPool.Rent(GenerationConstants.CHUNK_SIZE_SQUARED);
+            _Cavemap = _CavemapPool.Rent(GenerationConstants.CHUNK_SIZE_CUBED);
 
-            if ((_HeightmapBuffer == null) || (_CaveNoiseBuffer == null))
+            if ((_HeightmapBuffer == null) || (_CavemapBuffer == null))
             {
                 for (int x = 0; x < GenerationConstants.CHUNK_SIZE; x++)
                 for (int z = 0; z < GenerationConstants.CHUNK_SIZE; z++)
@@ -136,7 +136,7 @@ namespace Wyd.World.Chunks.Generation
                         int3 globalPosition = _OriginPoint + localPosition;
                         int caveNoiseIndex = WydMath.PointToIndex(localPosition, GenerationConstants.CHUNK_SIZE);
 
-                        _CaveNoise[caveNoiseIndex] = GetCaveNoiseByGlobalPosition(globalPosition);
+                        _Cavemap[caveNoiseIndex] = GetCaveNoiseByGlobalPosition(globalPosition);
                     }
                 }
             }
@@ -171,7 +171,7 @@ namespace Wyd.World.Chunks.Generation
                 _Blocks.SetPoint(localPosition, GetCachedBlockID("bedrock"));
                 return;
             }
-            else if (_CaveNoise[index] < 0.000225f)
+            else if (_Cavemap[index] < 0.000225f)
             {
                 return;
             }
@@ -188,14 +188,7 @@ namespace Wyd.World.Chunks.Generation
             }
             else if (globalPositionY < (noiseHeight - 3))
             {
-                if (_SeededRandom.Next(0, 100) == 0)
-                {
-                    _Blocks.SetPoint(localPosition, GetCachedBlockID("coal_ore"));
-                }
-                else
-                {
-                    _Blocks.SetPoint(localPosition, GetCachedBlockID("stone"));
-                }
+                _Blocks.SetPoint(localPosition, _SeededRandom.Next(0, 100) == 0 ? GetCachedBlockID("coal_ore") : GetCachedBlockID("stone"));
             }
         }
 

@@ -38,9 +38,11 @@ namespace Wyd.Controllers.World
 
     public class ChunkController : MonoBehaviour, IPerFrameIncrementalUpdate
     {
+        private const int JobPoolSize = (11 * 11 /* 8 render dst as diameter */) * WorldController.WORLD_HEIGHT_IN_CHUNKS;
+
         private static readonly ObjectPool<BlockAction> _BlockActionsPool = new ObjectPool<BlockAction>(1024);
-        private static readonly ObjectPool<ChunkTerrainBuilderJob> _TerrainBuilderJobs = new ObjectPool<ChunkTerrainBuilderJob>();
-        private static readonly ObjectPool<ChunkMeshingJob> _MeshingJobs = new ObjectPool<ChunkMeshingJob>();
+        private static readonly ObjectPool<ChunkBuildingJob> _BuildingJobs = new ObjectPool<ChunkBuildingJob>(JobPoolSize);
+        private static readonly ObjectPool<ChunkMeshingJob> _MeshingJobs = new ObjectPool<ChunkMeshingJob>(JobPoolSize);
 
 
         #region NoiseShader
@@ -68,11 +70,11 @@ namespace Wyd.Controllers.World
         private List<ChunkController> _Neighbors;
         private Mesh _Mesh;
 
-        #if DEBUG
+#if DEBUG
 
         private WeakReference _BlocksReference;
 
-        #endif
+#endif
 
         private bool _CacheNeighbors;
         private long _BlockActionsCount;
@@ -118,7 +120,7 @@ namespace Wyd.Controllers.World
 
                 _BlocksReference = new WeakReference(_Blocks);
 
-                #endif
+#endif
             }
         }
 
@@ -151,22 +153,6 @@ namespace Wyd.Controllers.World
         [SerializeField]
         [ReadOnlyInspectorField]
         private ChunkState InternalState;
-
-        /// <summary>
-        ///     Total numbers of times chunk has been
-        ///     meshed, persisting through de/activation.
-        /// </summary>
-        [SerializeField]
-        [ReadOnlyInspectorField]
-        private long TotalTimesMeshed;
-
-        /// <summary>
-        ///     Number of times chunk has been meshed,
-        ///     resetting every de/activation.
-        /// </summary>
-        [SerializeField]
-        [ReadOnlyInspectorField]
-        private long TimesMeshed;
 
         [SerializeField]
         private bool Regenerate;
@@ -226,12 +212,6 @@ namespace Wyd.Controllers.World
             _CancellationTokenSource.Cancel();
             _Neighbors.Clear();
             _BlockActions = new ConcurrentQueue<BlockAction>();
-
-#if UNITY_EDITOR
-
-            TimesMeshed = 0;
-
-#endif
 
             Blocks = null;
             State = ChunkState.Unbuilt;
@@ -436,42 +416,52 @@ namespace Wyd.Controllers.World
             _NoiseShader.Dispatch(caveNoiseKernel, GenerationConstants.CHUNK_THREAD_GROUP_SIZE, GenerationConstants.CHUNK_THREAD_GROUP_SIZE,
                 GenerationConstants.CHUNK_THREAD_GROUP_SIZE);
 
-            ChunkTerrainBuilderJob terrainBuilderJob = new ChunkTerrainBuilderJob();
-            terrainBuilderJob.SetData(_CancellationTokenSource.Token, OriginPoint, GenerationConstants.FREQUENCY, GenerationConstants.PERSISTENCE,
+            if (!_BuildingJobs.TryTake(out ChunkBuildingJob chunkBuildingJob))
+            {
+                chunkBuildingJob = new ChunkBuildingJob();
+            }
+
+            chunkBuildingJob.SetData(_CancellationTokenSource.Token, OriginPoint, GenerationConstants.FREQUENCY, GenerationConstants.PERSISTENCE,
                 Options.Instance.GPUAcceleration ? heightmapBuffer : null,
                 Options.Instance.GPUAcceleration ? caveNoiseBuffer : null);
+            chunkBuildingJob.WorkFinished += OnTerrainBuildingFinished;
+
+            AsyncJobScheduler.QueueAsyncJob(chunkBuildingJob);
+
 
             void OnTerrainBuildingFinished(object sender, AsyncJob asyncJob)
             {
                 Debug.Assert(State == ChunkState.AwaitingBuilding,
                     $"{nameof(State)} should always be in the '{nameof(ChunkState.AwaitingBuilding)}' state when meshing finishes.\r\n"
-                    + $"\tremark: see the {nameof(State)} property's xmldoc for explanation.");
+                    + $"\tremark: see the {nameof(State)} property's xml doc for explanation.");
 
-                asyncJob.WorkFinished -= OnTerrainBuildingFinished;
+                ChunkBuildingJob finishedChunkBuildingJob = (ChunkBuildingJob)asyncJob;
+                finishedChunkBuildingJob.WorkFinished -= OnTerrainBuildingFinished;
 
                 if (Active)
                 {
-                    Blocks = terrainBuilderJob.GetGeneratedBlockData();
-
-                    WeakReference<INodeCollection<ushort>> reff = new WeakReference<INodeCollection<ushort>>(Blocks);
+                    Blocks = finishedChunkBuildingJob.GetGeneratedBlockData();
 
                     State = State.Next();
                 }
 
-                terrainBuilderJob.ClearData();
-                _TerrainBuilderJobs.TryAdd(terrainBuilderJob);
+                finishedChunkBuildingJob.ClearData();
+                _BuildingJobs.TryAdd(finishedChunkBuildingJob);
             }
-
-            terrainBuilderJob.WorkFinished += OnTerrainBuildingFinished;
-
-            AsyncJobScheduler.QueueAsyncJob(terrainBuilderJob);
         }
 
         private void BeginMeshing()
         {
-            // todo make setting for improved meshing
-            ChunkMeshingJob meshingJob = _MeshingJobs.Retrieve() ?? new ChunkMeshingJob();
-            meshingJob.SetData(_CancellationTokenSource.Token, OriginPoint, Blocks, Options.Instance.AdvancedMeshing);
+            if (!_MeshingJobs.TryTake(out ChunkMeshingJob chunkMeshingJob))
+            {
+                chunkMeshingJob = new ChunkMeshingJob();
+            }
+
+            chunkMeshingJob.SetData(_CancellationTokenSource.Token, OriginPoint, Blocks, Options.Instance.AdvancedMeshing);
+            chunkMeshingJob.WorkFinished += OnMeshingFinished;
+
+            AsyncJobScheduler.QueueAsyncJob(chunkMeshingJob);
+
 
             void OnMeshingFinished(object sender, AsyncJob asyncJob)
             {
@@ -479,43 +469,35 @@ namespace Wyd.Controllers.World
                     $"{nameof(State)} should always be in the '{nameof(ChunkState.AwaitingMeshing)}' state when meshing finishes.\r\n"
                     + $"\tremark: see the {nameof(State)} property's xml doc for  explanation.");
 
-                asyncJob.WorkFinished -= OnMeshingFinished;
+                ChunkMeshingJob finishedChunkMeshingJob = (ChunkMeshingJob)asyncJob;
+                finishedChunkMeshingJob.WorkFinished -= OnMeshingFinished;
 
                 if (Active)
                 {
                     // in this case, the meshing job's data will be cleared and pooled synchronously after the mesh is applied.
-                    MainThreadActionsController.Current.QueueAction(() => ApplyMesh(meshingJob));
+                    MainThreadActionsController.Current.QueueAction(() =>
+                    {
+                        if (_Mesh is object)
+                        {
+                            finishedChunkMeshingJob.ApplyMeshData(ref _Mesh);
+                            finishedChunkMeshingJob.ClearData();
+                            _MeshingJobs.TryAdd(finishedChunkMeshingJob);
+                        }
+
+                        return true;
+                    });
                 }
                 else
                 {
-                    meshingJob.ClearData();
-                    _MeshingJobs.TryAdd(meshingJob);
+                    finishedChunkMeshingJob.ClearData();
+                    _MeshingJobs.TryAdd(finishedChunkMeshingJob);
                 }
 
                 State = State.Next();
             }
-
-            meshingJob.WorkFinished += OnMeshingFinished;
-
-            AsyncJobScheduler.QueueAsyncJob(meshingJob);
         }
 
-        private bool ApplyMesh(ChunkMeshingJob meshingJob)
-        {
-            meshingJob.ApplyMeshData(ref _Mesh);
-            meshingJob.ClearData();
-            _MeshingJobs.TryAdd(meshingJob);
-
-#if UNITY_EDITOR
-
-            TotalTimesMeshed += 1;
-            TimesMeshed += 1;
-
-#endif
-
-
-            return true;
-        }
+        private bool ApplyMesh(ChunkMeshingJob meshingJob) => true;
 
         #endregion
 
@@ -543,7 +525,7 @@ namespace Wyd.Controllers.World
 
         private void AllocateBlockAction(int3 localPosition, ushort id)
         {
-            if (_BlockActionsPool.TryRetrieve(out BlockAction blockAction))
+            if (_BlockActionsPool.TryTake(out BlockAction blockAction))
             {
                 blockAction.SetData(localPosition, id);
             }
