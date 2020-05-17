@@ -4,13 +4,12 @@ using System;
 using System.Buffers;
 using System.Threading;
 using System.Threading.Tasks;
+using ConcurrentAsyncScheduler;
 using Unity.Mathematics;
 using UnityEngine;
 using Wyd.Collections;
-using Wyd.Controllers.App;
 using Wyd.Controllers.State;
 using Wyd.Controllers.World;
-using Wyd.Jobs;
 using Wyd.Noise;
 using Wyd.Singletons;
 
@@ -89,15 +88,6 @@ namespace Wyd.World.Chunks.Generation
 
         protected override void Cancelled()
         {
-            if (IsCancelled)
-            {
-                return;
-            }
-            else
-            {
-                IsCancelled = true;
-            }
-
             MainThreadActions.Instance.QueueAction(() =>
             {
                 _HeightmapBuffer?.Release();
@@ -109,7 +99,7 @@ namespace Wyd.World.Chunks.Generation
         public void SetData(CancellationToken cancellationToken, int3 originPoint, float frequency, float persistence,
             ComputeBuffer heightmapBuffer = null, ComputeBuffer caveNoiseBuffer = null)
         {
-            SetData(cancellationToken, originPoint);
+            SetData(originPoint);
 
             _Frequency = frequency;
             _Persistence = persistence;

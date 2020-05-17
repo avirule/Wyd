@@ -41,8 +41,6 @@ namespace Wyd.Controllers.App
             _PerFrameUpdateCollectionModifications = new Stack<PerFrameUpdateCollectionModification>();
 
             // register main thread actions updater manually
-            MainThreadActions.Validate();
-
             _PerFrameUpdateCollectionModifications.Push(new PerFrameUpdateCollectionModification(-50000, MainThreadActions.Instance, true));
         }
 

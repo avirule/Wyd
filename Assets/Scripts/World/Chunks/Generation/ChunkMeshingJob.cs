@@ -7,12 +7,12 @@ using System.Diagnostics;
 using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Tasks;
+using ConcurrentAsyncScheduler;
 using Unity.Mathematics;
 using UnityEngine;
 using Wyd.Collections;
 using Wyd.Controllers.State;
 using Wyd.Controllers.World;
-using Wyd.Jobs;
 using Wyd.Singletons;
 using Wyd.World.Blocks;
 using Debug = System.Diagnostics.Debug;
@@ -57,7 +57,6 @@ namespace Wyd.World.Chunks.Generation
         public void SetData(CancellationToken cancellationToken, int3 originPoint, INodeCollection<ushort> blocksCollection,
             bool aggressiveFaceMerging)
         {
-            _CancellationToken = CancellationTokenSource.CreateLinkedTokenSource(AsyncJobScheduler.AbortToken, cancellationToken).Token;
             _OriginPoint = originPoint;
             _BlocksCollection = blocksCollection;
             _AggressiveFaceMerging = aggressiveFaceMerging;
@@ -174,9 +173,9 @@ namespace Wyd.World.Chunks.Generation
             Debug.Assert(_NeighborBlocksCollections.Length == 6,
                 $"{nameof(_NeighborBlocksCollections)} should have a length of 6, one for each neighboring chunk.");
 
-                _MeshingBlocks = _MeshingBlocksPool.Rent(GenerationConstants.CHUNK_SIZE_CUBED);
+            _MeshingBlocks = _MeshingBlocksPool.Rent(GenerationConstants.CHUNK_SIZE_CUBED);
 
-                if (!_MeshDataPool.TryTake(out _MeshData))
+            if (!_MeshDataPool.TryTake(out _MeshData))
             {
                 _MeshData = new MeshData(new List<int>(), new List<int>());
             }
@@ -398,32 +397,31 @@ namespace Wyd.World.Chunks.Generation
                     int traversalShiftedMask = GenerationConstants.CHUNK_SIZE_BIT_MASK << traversalNormalShift;
                     int unaryTraversalShiftedMask = ~traversalShiftedMask;
 
-                    int aggregatePositionNormal = localPosition | GenerationConstants.NormalByIteration[normalIndex];
                     int[] compressedVertices = GenerationConstants.VerticesByIteration[normalIndex];
 
 
-                    _MeshData.AddVertex(aggregatePositionNormal
+                    _MeshData.AddVertex(localPosition
                                         + ((unaryTraversalShiftedMask & compressedVertices[3])
                                            | ((((compressedVertices[3] >> traversalNormalShift) * traversals) << traversalNormalShift)
                                               & traversalShiftedMask)));
                     _MeshData.AddVertex(compressedUv & (int.MaxValue << (GenerationConstants.CHUNK_SIZE_BIT_SHIFT * 2)));
 
 
-                    _MeshData.AddVertex(aggregatePositionNormal
+                    _MeshData.AddVertex(localPosition
                                         + ((unaryTraversalShiftedMask & compressedVertices[2])
                                            | ((((compressedVertices[2] >> traversalNormalShift) * traversals) << traversalNormalShift)
                                               & traversalShiftedMask)));
                     _MeshData.AddVertex(compressedUv & (int.MaxValue << GenerationConstants.CHUNK_SIZE_BIT_SHIFT));
 
 
-                    _MeshData.AddVertex(aggregatePositionNormal
+                    _MeshData.AddVertex(localPosition
                                         + ((unaryTraversalShiftedMask & compressedVertices[1])
                                            | ((((compressedVertices[1] >> traversalNormalShift) * traversals) << traversalNormalShift)
                                               & traversalShiftedMask)));
                     _MeshData.AddVertex(compressedUv & ~(GenerationConstants.CHUNK_SIZE_BIT_MASK << GenerationConstants.CHUNK_SIZE_BIT_SHIFT));
 
 
-                    _MeshData.AddVertex(aggregatePositionNormal
+                    _MeshData.AddVertex(localPosition
                                         + ((unaryTraversalShiftedMask & compressedVertices[0])
                                            | ((((compressedVertices[0] >> traversalNormalShift) * traversals) << traversalNormalShift)
                                               & traversalShiftedMask)));
@@ -530,7 +528,6 @@ namespace Wyd.World.Chunks.Generation
                                    ^ (1 << GenerationConstants.CHUNK_SIZE_BIT_SHIFT)
                                    ^ 1;
 
-                int normals = GenerationConstants.NormalByIteration[normalIndex];
                 int[] compressedVertices = GenerationConstants.VerticesByIteration[normalIndex];
 
                 _MeshingBlocks[index].SetFace(faceDirection);
@@ -545,16 +542,16 @@ namespace Wyd.World.Chunks.Generation
                 _MeshData.AddTriangle(transparentAsInt, 3 + verticesCount);
                 _MeshData.AddTriangle(transparentAsInt, 1 + verticesCount);
 
-                _MeshData.AddVertex((localPosition + compressedVertices[3]) | normals);
+                _MeshData.AddVertex(localPosition + compressedVertices[3]);
                 _MeshData.AddVertex(compressedUv & (int.MaxValue << (GenerationConstants.CHUNK_SIZE_BIT_SHIFT * 2)));
 
-                _MeshData.AddVertex((localPosition + compressedVertices[2]) | normals);
+                _MeshData.AddVertex(localPosition + compressedVertices[2]);
                 _MeshData.AddVertex(compressedUv & (int.MaxValue << GenerationConstants.CHUNK_SIZE_BIT_SHIFT));
 
-                _MeshData.AddVertex((localPosition + compressedVertices[1]) | normals);
+                _MeshData.AddVertex(localPosition + compressedVertices[1]);
                 _MeshData.AddVertex(compressedUv & ~(GenerationConstants.CHUNK_SIZE_BIT_MASK << GenerationConstants.CHUNK_SIZE_BIT_SHIFT));
 
-                _MeshData.AddVertex((localPosition + compressedVertices[0]) | normals);
+                _MeshData.AddVertex(localPosition + compressedVertices[0]);
                 _MeshData.AddVertex(compressedUv & int.MaxValue);
             }
         }

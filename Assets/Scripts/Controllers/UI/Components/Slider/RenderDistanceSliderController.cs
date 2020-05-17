@@ -30,8 +30,6 @@ namespace Wyd.Controllers.UI.Components.Slider
 
         private void UpdateSliderValue()
         {
-            Options.Validate();
-
             _RenderDistanceSlider.value = Options.Instance.RenderDistance;
         }
     }

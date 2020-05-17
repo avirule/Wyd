@@ -3,11 +3,10 @@
 using System;
 using System.Collections.Concurrent;
 using System.Diagnostics;
-using System.Threading;
+using ConcurrentAsyncScheduler;
 using Unity.Mathematics;
 using Wyd.Collections;
 using Wyd.Controllers.State;
-using Wyd.Jobs;
 using Random = System.Random;
 
 #endregion
@@ -26,9 +25,8 @@ namespace Wyd.World.Chunks.Generation
 
         protected ChunkTerrainJob() : base(GenerationConstants.CHUNK_SIZE_CUBED, 256) => Stopwatch = new Stopwatch();
 
-        protected void SetData(CancellationToken cancellationToken, int3 originPoint)
+        protected void SetData(int3 originPoint)
         {
-            _CancellationToken = CancellationTokenSource.CreateLinkedTokenSource(AsyncJobScheduler.AbortToken, cancellationToken).Token;
             _OriginPoint = originPoint;
 
             _SeededRandom = new Random(_OriginPoint.GetHashCode());

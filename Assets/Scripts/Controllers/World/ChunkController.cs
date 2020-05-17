@@ -7,6 +7,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Threading;
+using ConcurrentAsyncScheduler;
 using K4os.Compression.LZ4;
 using Serilog;
 using Unity.Mathematics;
@@ -16,7 +17,6 @@ using Wyd.Controllers.App;
 using Wyd.Controllers.State;
 using Wyd.Diagnostics;
 using Wyd.Extensions;
-using Wyd.Jobs;
 using Wyd.Singletons;
 using Wyd.World.Blocks;
 using Wyd.World.Chunks;
@@ -38,11 +38,9 @@ namespace Wyd.Controllers.World
 
     public class ChunkController : MonoBehaviour, IPerFrameIncrementalUpdate
     {
-        private const int _JOB_POOL_SIZE = 11 * 11 * WorldController.WORLD_HEIGHT_IN_CHUNKS;
-
         private static readonly ObjectPool<BlockAction> _BlockActionsPool = new ObjectPool<BlockAction>(1024);
-        private static readonly ObjectPool<ChunkBuildingJob> _BuildingJobs = new ObjectPool<ChunkBuildingJob>(_JOB_POOL_SIZE);
-        private static readonly ObjectPool<ChunkMeshingJob> _MeshingJobs = new ObjectPool<ChunkMeshingJob>(_JOB_POOL_SIZE);
+        private static readonly ObjectPool<ChunkBuildingJob> _BuildingJobs = new ObjectPool<ChunkBuildingJob>();
+        private static readonly ObjectPool<ChunkMeshingJob> _MeshingJobs = new ObjectPool<ChunkMeshingJob>();
 
 
         #region NoiseShader
@@ -76,7 +74,7 @@ namespace Wyd.Controllers.World
 
 #endif
 
-        private bool _CacheNeighbors;
+        private bool _GenerateNeighbors;
         private long _BlockActionsCount;
         private long _State;
         private long _Active;
@@ -187,7 +185,7 @@ namespace Wyd.Controllers.World
 
             _CancellationTokenSource = new CancellationTokenSource();
             Active = gameObject.activeSelf;
-            _CacheNeighbors = true;
+            _GenerateNeighbors = true;
 
             BlocksChanged += FlagUpdateMeshCallback;
             TerrainChanged += FlagUpdateMeshCallback;
@@ -259,13 +257,23 @@ namespace Wyd.Controllers.World
 
 #endif
 
-            if (_CacheNeighbors)
+            if (_BuildingJobs.MaximumSize != WorldController.WorldExpansionEdgeSize)
+            {
+                _BuildingJobs.SetMaximumSize(WorldController.WorldExpansionEdgeSize);
+            }
+
+            if (_MeshingJobs.MaximumSize != WorldController.WorldExpansionEdgeSize)
+            {
+                _MeshingJobs.SetMaximumSize(WorldController.WorldExpansionEdgeSize);
+            }
+
+            if (_GenerateNeighbors)
             {
                 _Neighbors.InsertRange(0, WorldController.Current.GetNeighboringChunks(OriginPoint));
 
                 State = ChunkState.Unbuilt;
 
-                _CacheNeighbors = false;
+                _GenerateNeighbors = false;
             }
 
             if (((State == ChunkState.Meshed) && !UpdateMesh) || !WorldController.Current.ReadyForGeneration)

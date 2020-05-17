@@ -47,6 +47,11 @@ namespace Wyd.Collections
 
         public void SetMaximumSize(int maximumSize)
         {
+            if (MaximumSize == maximumSize)
+            {
+                return;
+            }
+
             MaximumSize = maximumSize;
 
             for (int iterations = _InternalCache.Count - MaximumSize; iterations > 0; iterations--)

@@ -21,20 +21,15 @@ namespace Wyd.Singletons
         {
             get
             {
-                if (!(_Instance is object))
-                {
-                    throw new NullReferenceException($"Singleton has not been instantiated ({typeof(T)}).");
-                }
-                else
-                {
-                    return _Instance;
-                }
+                Validate();
+
+                return _Instance;
             }
         }
 
-        public static void Validate()
+        private static void Validate()
         {
-            if (!(Instance is object))
+            if (!(_Instance is object))
             {
                 throw new InvalidOperationException($"Singleton '{typeof(T)}' has not been instantiated.");
             }

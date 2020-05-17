@@ -29,6 +29,8 @@ namespace Wyd.Controllers.World
         public const int WORLD_HEIGHT = 256;
         public const int WORLD_HEIGHT_IN_CHUNKS = WORLD_HEIGHT / GenerationConstants.CHUNK_SIZE;
 
+        public static int WorldExpansionEdgeSize = ((Options.Instance.RenderDistance * 2) - 1) * WORLD_HEIGHT_IN_CHUNKS;
+
 
         #region Instance Members
 
@@ -92,8 +94,15 @@ namespace Wyd.Controllers.World
         {
             AssignSingletonInstance(this);
 
-            _ChunkControllerPool = new ObjectPool<ChunkController>();
+            _ChunkControllerPool = new ObjectPool<ChunkController>(WorldExpansionEdgeSize);
             _ChunkControllerPool.ItemCulled += (sender, chunkController) => Destroy(chunkController);
+            Options.Instance.PropertyChanged += (sender, args) =>
+            {
+                if (args.PropertyName.Equals(nameof(Options.Instance.RenderDistance)))
+                {
+                    _ChunkControllerPool.SetMaximumSize(WorldExpansionEdgeSize);
+                }
+            };
 
             _Stopwatch = new Stopwatch();
 
@@ -110,15 +119,6 @@ namespace Wyd.Controllers.World
 
         private void Start()
         {
-            SetMaximumChunkCacheSize();
-            Options.Instance.PropertyChanged += (sender, args) =>
-            {
-                if (args.PropertyName.Equals(nameof(Options.Instance.RenderDistance)))
-                {
-                    SetMaximumChunkCacheSize();
-                }
-            };
-
             EntityController.Current.RegisterWatchForTag(RegisterCollideableEntity, "collider");
             EntityController.Current.RegisterWatchForTag(RegisterLoaderEntity, "loader");
 
@@ -288,12 +288,6 @@ namespace Wyd.Controllers.World
 
 
         #region State Management
-
-        private void SetMaximumChunkCacheSize()
-        {
-            int totalRenderDistance = Options.Instance.RenderDistance + /* OptionsController.Current.PreLoadChunkDistance + */ 1;
-            _ChunkControllerPool.SetMaximumSize(((totalRenderDistance * 2) - 1) * WORLD_HEIGHT_IN_CHUNKS);
-        }
 
         private void VerifyAllChunkStatesAroundLoaders()
         {
