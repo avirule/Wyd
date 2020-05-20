@@ -8,11 +8,13 @@ using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Tasks;
 using ConcurrentAsyncScheduler;
+using Serilog;
 using Unity.Mathematics;
 using UnityEngine;
 using Wyd.Collections;
 using Wyd.Controllers.State;
 using Wyd.Controllers.World;
+using Wyd.Jobs;
 using Wyd.Singletons;
 using Wyd.World.Blocks;
 using Debug = System.Diagnostics.Debug;
@@ -21,7 +23,7 @@ using Debug = System.Diagnostics.Debug;
 
 namespace Wyd.World.Chunks.Generation
 {
-    public class ChunkMeshingJob : AsyncParallelJob
+    public class ChunkMeshingJob
     {
         private static readonly ArrayPool<MeshingBlock> _MeshingBlocksPool = ArrayPool<MeshingBlock>.Create(GenerationConstants.CHUNK_SIZE_CUBED, 8);
 
@@ -38,7 +40,7 @@ namespace Wyd.World.Chunks.Generation
         private TimeSpan _PreMeshingTimeSpan;
         private TimeSpan _MeshingTimeSpan;
 
-        public ChunkMeshingJob() : base(GenerationConstants.CHUNK_SIZE_CUBED, Options.Instance.NaiveMeshingGroupSize)
+        public ChunkMeshingJob()
         {
             _RuntimeStopwatch = new Stopwatch();
             _NeighborBlocksCollections = new INodeCollection<ushort>[6];
@@ -91,7 +93,7 @@ namespace Wyd.World.Chunks.Generation
 
         #region AsyncJob Overrides
 
-        protected override async Task Process()
+        protected override void Process()
         {
             Debug.Assert(_BlocksCollection != null);
 
@@ -116,7 +118,7 @@ namespace Wyd.World.Chunks.Generation
             }
             else
             {
-                await BatchTasksAndAwaitAll().ConfigureAwait(false);
+                //await BatchTasksAndAwaitAll().ConfigureAwait(false);
             }
 
 
@@ -127,12 +129,12 @@ namespace Wyd.World.Chunks.Generation
             _MeshingTimeSpan = _RuntimeStopwatch.Elapsed;
         }
 
-        protected override void ProcessIndex(int index)
+        protected void ProcessIndex(int index)
         {
-            if (_CancellationToken.IsCancellationRequested)
-            {
-                return;
-            }
+            // if (_CancellationToken.IsCancellationRequested)
+            // {
+            //     return;
+            // }
 
             ushort currentBlockId = _MeshingBlocks[index].ID;
 
@@ -148,13 +150,13 @@ namespace Wyd.World.Chunks.Generation
             NaiveMeshIndex(index, localPosition, currentBlockId, transparentTraversal);
         }
 
-        protected override Task ProcessFinished()
+        protected Task ProcessFinished()
         {
-            if (!_CancellationToken.IsCancellationRequested)
-            {
+            //if (!_CancellationToken.IsCancellationRequested)
+            //{
                 Singletons.Diagnostics.Instance["ChunkPreMeshing"].Enqueue(_PreMeshingTimeSpan);
                 Singletons.Diagnostics.Instance["ChunkMeshing"].Enqueue(_MeshingTimeSpan);
-            }
+            //}
 
             return Task.CompletedTask;
         }
@@ -219,10 +221,10 @@ namespace Wyd.World.Chunks.Generation
             for (int z = 0; z < GenerationConstants.CHUNK_SIZE; z++)
             for (int x = 0; x < GenerationConstants.CHUNK_SIZE; x++, index++)
             {
-                if (_CancellationToken.IsCancellationRequested)
-                {
-                    return;
-                }
+                // if (_CancellationToken.IsCancellationRequested)
+                // {
+                //     return;
+                // }
 
                 ushort currentBlockId = _MeshingBlocks[index].ID;
 

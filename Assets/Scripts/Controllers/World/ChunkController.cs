@@ -17,6 +17,7 @@ using Wyd.Controllers.App;
 using Wyd.Controllers.State;
 using Wyd.Diagnostics;
 using Wyd.Extensions;
+using Wyd.Jobs;
 using Wyd.Singletons;
 using Wyd.World.Blocks;
 using Wyd.World.Chunks;
@@ -468,16 +469,16 @@ namespace Wyd.Controllers.World
             chunkMeshingJob.SetData(_CancellationTokenSource.Token, OriginPoint, Blocks, Options.Instance.AdvancedMeshing);
             chunkMeshingJob.WorkFinished += OnMeshingFinished;
 
-            AsyncJobScheduler.QueueAsyncJob(chunkMeshingJob);
+            ConcurrentWorker.Queue(chunkMeshingJob);
 
 
-            void OnMeshingFinished(object sender, AsyncJob asyncJob)
+            void OnMeshingFinished(object sender, ConcurrentWorker.Work work)
             {
                 Debug.Assert(State == ChunkState.AwaitingMeshing,
                     $"{nameof(State)} should always be in the '{nameof(ChunkState.AwaitingMeshing)}' state when meshing finishes.\r\n"
                     + $"\tremark: see the {nameof(State)} property's xml doc for  explanation.");
 
-                ChunkMeshingJob finishedChunkMeshingJob = (ChunkMeshingJob)asyncJob;
+                ChunkMeshingJob finishedChunkMeshingJob = (ChunkMeshingJob)work;
                 finishedChunkMeshingJob.WorkFinished -= OnMeshingFinished;
 
                 if (Active)

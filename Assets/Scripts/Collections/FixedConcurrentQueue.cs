@@ -15,18 +15,8 @@ namespace Wyd.Collections
         private readonly ConcurrentQueue<T> _InternalQueue;
         private int _Count;
 
-        bool ICollection.IsSynchronized => false;
-
-        object ICollection.SyncRoot =>
-            throw new NotSupportedException(
-                "The SyncRoot property may not be used for the synchronization of concurrent collections.");
-
         public int MaximumSize { get; }
         public bool IsEmpty => _InternalQueue.IsEmpty;
-
-        public int Count => _Count;
-
-        public event EventHandler<T> ItemEnqueued;
 
         public FixedConcurrentQueue(int maximumSize)
         {
@@ -40,25 +30,13 @@ namespace Wyd.Collections
             MaximumSize = _Count = _InternalQueue.Count;
         }
 
-        public void Enqueue(T item)
-        {
-            _InternalQueue.Enqueue(item);
+        bool ICollection.IsSynchronized => false;
 
-            if (Count == MaximumSize)
-            {
-                _InternalQueue.TryDequeue(out T _);
-            }
-            else
-            {
-                Interlocked.Increment(ref _Count);
-            }
+        object ICollection.SyncRoot => throw new NotSupportedException(
+            "The SyncRoot property may not be used for the synchronization of concurrent collections."
+        );
 
-            ItemEnqueued?.Invoke(this, item);
-        }
-
-        private bool TryDequeue(out T item) => _InternalQueue.TryDequeue(out item);
-
-        public bool TryPeek(out T item) => _InternalQueue.TryPeek(out item);
+        public int Count => _Count;
 
         public IEnumerator<T> GetEnumerator() => _InternalQueue.GetEnumerator();
 
@@ -91,5 +69,27 @@ namespace Wyd.Collections
         {
             _InternalQueue.CopyTo(array, index);
         }
+
+        public event EventHandler<T> ItemEnqueued;
+
+        public void Enqueue(T item)
+        {
+            _InternalQueue.Enqueue(item);
+
+            if (Count == MaximumSize)
+            {
+                _InternalQueue.TryDequeue(out T _);
+            }
+            else
+            {
+                Interlocked.Increment(ref _Count);
+            }
+
+            ItemEnqueued?.Invoke(this, item);
+        }
+
+        private bool TryDequeue(out T item) => _InternalQueue.TryDequeue(out item);
+
+        public bool TryPeek(out T item) => _InternalQueue.TryPeek(out item);
     }
 }
