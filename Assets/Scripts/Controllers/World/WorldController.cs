@@ -174,6 +174,20 @@ namespace Wyd.Controllers.World
                 yield break;
             }
 
+            // deactivate chunks first to ensure resources are freed for activating chunks
+            while (_ChunksPendingDeactivation.Count > 0)
+            {
+                // yield at the start since these operations are very time consuming
+                // this allows the PerFrameIncrementalUpdater to cancel the operation early
+                yield return null;
+
+                float3 origin = _ChunksPendingDeactivation.Pop();
+
+                Debug.Assert(CheckChunkExists(origin));
+
+                CacheChunk(origin);
+            }
+
             while (_ChunksPendingActivation.Count > 0)
             {
                 // yield at the start since these operations are very time consuming
@@ -199,19 +213,6 @@ namespace Wyd.Controllers.World
                 _Chunks.Add(origin, chunkController);
 
                 Log.Verbose($"({nameof(WorldController)}) Chunk created: {origin}.");
-            }
-
-            while (_ChunksPendingDeactivation.Count > 0)
-            {
-                // yield at the start since these operations are very time consuming
-                // this allows the PerFrameIncrementalUpdater to cancel the operation early
-                yield return null;
-
-                float3 origin = _ChunksPendingDeactivation.Pop();
-
-                Debug.Assert(CheckChunkExists(origin));
-
-                CacheChunk(origin);
             }
         }
 

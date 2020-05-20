@@ -1,6 +1,8 @@
 #region
 
+using System.Threading;
 using Unity.Mathematics;
+using Wyd.Jobs;
 
 #endregion
 
@@ -8,6 +10,8 @@ namespace Wyd.World.Chunks.Generation
 {
     public static class GenerationConstants
     {
+        public static readonly SemaphoreSlim ResourceAccessSemaphore = new SemaphoreSlim(ConcurrentWorkers.Count);
+
         public const float FREQUENCY = 0.0075f;
         public const float PERSISTENCE = 0.6f;
 

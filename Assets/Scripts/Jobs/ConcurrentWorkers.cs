@@ -17,7 +17,7 @@ namespace Wyd.Jobs
         private static readonly CancellationTokenSource _CancellationTokenSource;
         private static readonly Thread[] _WorkerThreads;
         private static readonly Channel<Work> _PendingWork;
-        private static readonly AutoResetEvent _WorkReset;
+        private static readonly SemaphoreSlim _PendingWorkNotifier;
 
         private static bool _Started;
 
@@ -37,7 +37,7 @@ namespace Wyd.Jobs
                 SingleReader = false,
                 SingleWriter = false
             });
-            _WorkReset = new AutoResetEvent(false);
+            _PendingWorkNotifier = new SemaphoreSlim(0, int.MaxValue);
 
             Start();
         }
@@ -63,29 +63,29 @@ namespace Wyd.Jobs
             }
         }
 
-        public static unsafe void Queue(Func<object> invocation, bool autoReleaseOnFinish, WorkEventHandler callback)
+        public static unsafe void Queue(Func<object> invocation, Action cancelled, bool autoReleaseOnFinish, WorkEventHandler callback)
         {
             if (invocation == null)
             {
                 throw new NullReferenceException();
             }
 
-            WorkMetadata* workData = (WorkMetadata*)Marshal.AllocHGlobal(sizeof(WorkMetadata));
+            Work.Metadata* workData = (Work.Metadata*)Marshal.AllocHGlobal(sizeof(Work.Metadata));
             workData->AutoRelease = autoReleaseOnFinish;
-            Work work = new Work(workData, invocation);
+            Work work = new Work(workData, invocation, cancelled);
 
             if (callback != null)
             {
-                work.WorkFinished += callback;
+                work.Complete += callback;
             }
 
             if (_PendingWork.Writer.TryWrite(work))
             {
-                _WorkReset.Set();
+                _PendingWorkNotifier.Release();
             }
         }
 
-        private static unsafe void Worker(object data)
+        private static void Worker(object data)
         {
             if (!(data is CancellationToken cancellationToken))
             {
@@ -99,21 +99,21 @@ namespace Wyd.Jobs
             {
                 while (!cancellationToken.IsCancellationRequested)
                 {
-                    _WorkReset.WaitOne();
+                    _PendingWorkNotifier.Wait();
 
-                    while (_PendingWork.Reader.TryRead(out currentWork))
+                    if (_PendingWork.Reader.TryRead(out currentWork))
                     {
-                        stopwatch.Restart();
-
-                        currentWork.Execute();
-
-                        stopwatch.Stop();
-
-                        currentWork.Metadata->ProcessTime = stopwatch.Elapsed;
+                        currentWork.Execute(stopwatch);
+                        currentWork = null;
 
                         Thread.Sleep(0);
                     }
                 }
+            }
+            catch (Exception)
+            {
+                currentWork?.Cancel();
+                throw;
             }
             finally
             {
@@ -121,60 +121,86 @@ namespace Wyd.Jobs
             }
         }
 
-        [StructLayout(LayoutKind.Sequential)]
-        public struct WorkMetadata
+
+        public sealed unsafe class Work
         {
-            private bool _AutoRelease;
-            private TimeSpan _ProcessTime;
+            private Action _Cancelled;
+            private Func<object> _Invocation;
 
-            public bool AutoRelease
+            public Metadata* PMetadata { get; }
+            public object Result { get; private set; }
+
+            public Work(Metadata* pMetadata, Func<object> invocation, Action cancelled)
             {
-                get => _AutoRelease;
-                internal set => _AutoRelease = value;
-            }
-
-            public TimeSpan ProcessTime
-            {
-                get => _ProcessTime;
-                internal set => _ProcessTime = value;
-            }
-        }
-
-        public unsafe class Work
-        {
-            private readonly Func<object> _Invocation;
-
-            public WorkMetadata* Metadata { get; }
-            public object Result { get; internal set; }
-
-            public Work(WorkMetadata* metadata, Func<object> invocation)
-            {
-                Metadata = metadata;
+                PMetadata = pMetadata;
                 _Invocation = invocation;
+                _Cancelled = cancelled;
             }
 
-            internal event WorkEventHandler WorkFinished;
+            internal event WorkEventHandler Complete;
 
-            internal void Execute()
+            internal void Execute(Stopwatch stopwatch)
             {
+                stopwatch.Restart();
+
                 Result = _Invocation.Invoke();
 
-                if (Metadata->AutoRelease)
+                stopwatch.Stop();
+
+                PMetadata->ProcessTime = stopwatch.Elapsed;
+
+                Complete?.Invoke(this, this);
+
+                if (PMetadata->AutoRelease)
                 {
                     Release();
                 }
-
-                WorkFinished?.Invoke(this, this);
             }
 
-            public void Release()
+            internal void Cancel()
             {
-                if (Metadata == null)
+                if (_Cancelled == null)
                 {
                     return;
                 }
 
-                Marshal.FreeHGlobal((IntPtr)Metadata);
+                _Cancelled.Invoke();
+
+                // ensure it cannot be called again
+                _Cancelled = null;
+
+                Release();
+            }
+
+            public void Release()
+            {
+                if (PMetadata == null)
+                {
+                    return;
+                }
+
+                Marshal.FreeHGlobal((IntPtr)PMetadata);
+                _Invocation = null;
+                _Cancelled = null;
+            }
+
+            [StructLayout(LayoutKind.Sequential)]
+            public struct Metadata
+            {
+                private bool _AutoRelease;
+                private TimeSpan _ProcessTime;
+
+                public bool AutoRelease
+                {
+                    get => _AutoRelease;
+                    internal set => _AutoRelease = value;
+                }
+
+                public TimeSpan ProcessTime
+                {
+                    get => _ProcessTime;
+                    internal set => _ProcessTime = value;
+                }
             }
         }
     }

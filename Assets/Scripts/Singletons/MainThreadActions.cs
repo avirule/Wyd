@@ -15,17 +15,17 @@ namespace Wyd.Singletons
     {
         private class MainThreadAction
         {
-            private readonly SemaphoreSlim _SemaphoreReset;
+            private readonly ManualResetEventSlim _ManualResetSlim;
             private readonly MainThreadActionInvocation _Invocation;
 
-            public MainThreadAction(SemaphoreSlim semaphoreReset, MainThreadActionInvocation invocation)
+            public MainThreadAction(ManualResetEventSlim manualResetSlim, MainThreadActionInvocation invocation)
             {
-                _SemaphoreReset = semaphoreReset;
+                _ManualResetSlim = manualResetSlim;
                 _Invocation = invocation ?? throw new NullReferenceException(nameof(invocation));
             }
 
             public bool Invoke() => _Invocation();
-            public void Set() => _SemaphoreReset?.Release();
+            public void Set() => _ManualResetSlim?.Set();
         }
 
         private readonly ConcurrentQueue<MainThreadAction> _Actions;
@@ -37,13 +37,13 @@ namespace Wyd.Singletons
             _Actions = new ConcurrentQueue<MainThreadAction>();
         }
 
-        public SemaphoreSlim QueueAction(MainThreadActionInvocation invocation)
+        public ManualResetEventSlim QueueAction(MainThreadActionInvocation invocation)
         {
-            SemaphoreSlim semaphoreReset = new SemaphoreSlim(0, 1);
+            ManualResetEventSlim manualResetSlim = new ManualResetEventSlim(false);
 
-            _Actions.Enqueue(new MainThreadAction(semaphoreReset, invocation));
+            _Actions.Enqueue(new MainThreadAction(manualResetSlim, invocation));
 
-            return semaphoreReset;
+            return manualResetSlim;
         }
 
         public void FrameUpdate() { }

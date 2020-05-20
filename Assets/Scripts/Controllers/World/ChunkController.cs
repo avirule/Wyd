@@ -7,7 +7,6 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Threading;
-using ConcurrentAsyncScheduler;
 using K4os.Compression.LZ4;
 using Serilog;
 using Unity.Mathematics;
@@ -41,7 +40,6 @@ namespace Wyd.Controllers.World
     public class ChunkController : MonoBehaviour, IPerFrameIncrementalUpdate
     {
         private static readonly ObjectPool<BlockAction> _BlockActionsPool = new ObjectPool<BlockAction>(1024);
-        private static readonly ObjectPool<ChunkBuildingJob> _BuildingJobs = new ObjectPool<ChunkBuildingJob>();
 
 
         public void FrameUpdate()
@@ -55,16 +53,6 @@ namespace Wyd.Controllers.World
             }
 
 #endif
-
-            if (_BuildingJobs.MaximumSize != WorldController.WorldExpansionEdgeSize)
-            {
-                _BuildingJobs.SetMaximumSize(WorldController.WorldExpansionEdgeSize);
-            }
-
-            // if (_MeshingJobs.MaximumSize != WorldController.WorldExpansionEdgeSize)
-            // {
-            //     _MeshingJobs.SetMaximumSize(WorldController.WorldExpansionEdgeSize);
-            // }
 
             if (_GenerateNeighbors)
             {
@@ -181,7 +169,7 @@ namespace Wyd.Controllers.World
 
             Log.Information($"{stopwatch.ElapsedMilliseconds}ms from {bytes.Length / 1000}kb to {final.Length / 1000}kb");
         }
-        //private static readonly ObjectPool<ChunkMeshingJob> _MeshingJobs = new ObjectPool<ChunkMeshingJob>();
+        //private static readonly ObjectPool<ChunkMesher> _MeshingJobs = new ObjectPool<ChunkMesher>();
 
 
         #region NoiseShader
@@ -407,62 +395,70 @@ namespace Wyd.Controllers.World
 
         private void BeginBuilding()
         {
-            // use SIZE_SQUARED (to represent full x,z range)
-            ComputeBuffer heightmapBuffer = new ComputeBuffer(GenerationConstants.CHUNK_SIZE_SQUARED, 4);
-            ComputeBuffer caveNoiseBuffer = new ComputeBuffer(GenerationConstants.CHUNK_SIZE_CUBED, 4);
-
-            _NoiseShader.SetVector("_Offset", new float4(OriginPoint.xyzz));
-            _NoiseShader.SetFloat("_Frequency", GenerationConstants.FREQUENCY);
-            _NoiseShader.SetFloat("_Persistence", GenerationConstants.PERSISTENCE);
-            _NoiseShader.SetFloat("_SurfaceHeight", WorldController.WORLD_HEIGHT / 2f);
-
-            int heightmapKernel = _NoiseShader.FindKernel("Heightmap2D");
-            _NoiseShader.SetBuffer(heightmapKernel, "HeightmapResult", heightmapBuffer);
-
-            int caveNoiseKernel = _NoiseShader.FindKernel("CaveNoise3D");
-            _NoiseShader.SetBuffer(caveNoiseKernel, "CaveNoiseResult", caveNoiseBuffer);
-
-            _NoiseShader.Dispatch(heightmapKernel, GenerationConstants.CHUNK_THREAD_GROUP_SIZE, 1, GenerationConstants.CHUNK_THREAD_GROUP_SIZE);
-            _NoiseShader.Dispatch(caveNoiseKernel, GenerationConstants.CHUNK_THREAD_GROUP_SIZE, GenerationConstants.CHUNK_THREAD_GROUP_SIZE,
-                GenerationConstants.CHUNK_THREAD_GROUP_SIZE);
-
-            if (!_BuildingJobs.TryTake(out ChunkBuildingJob chunkBuildingJob))
-            {
-                chunkBuildingJob = new ChunkBuildingJob();
-            }
-
-            chunkBuildingJob.SetData(_CancellationTokenSource.Token, OriginPoint, GenerationConstants.FREQUENCY, GenerationConstants.PERSISTENCE,
-                Options.Instance.GPUAcceleration ? heightmapBuffer : null,
-                Options.Instance.GPUAcceleration ? caveNoiseBuffer : null);
-            chunkBuildingJob.WorkFinished += OnTerrainBuildingFinished;
-
-            AsyncJobScheduler.QueueAsyncJob(chunkBuildingJob);
-
-
-            void OnTerrainBuildingFinished(object sender, AsyncJob asyncJob)
+            unsafe void OnTerrainBuildingFinished(object sender, ConcurrentWorkers.Work work)
             {
                 Debug.Assert(State == ChunkState.AwaitingBuilding,
                     $"{nameof(State)} should always be in the '{nameof(ChunkState.AwaitingBuilding)}' state when meshing finishes.\r\n"
                     + $"\tremark: see the {nameof(State)} property's xml doc for explanation.");
 
-                ChunkBuildingJob finishedChunkBuildingJob = (ChunkBuildingJob)asyncJob;
-                finishedChunkBuildingJob.WorkFinished -= OnTerrainBuildingFinished;
+                work.Complete -= OnTerrainBuildingFinished;
 
-                if (Active)
+                if (Active && work.Result is INodeCollection<ushort> blocks)
                 {
-                    Blocks = finishedChunkBuildingJob.GetGeneratedBlockData();
+                    Blocks = blocks;
+
+                    Singletons.Diagnostics.Instance["ChunkBuilding"].Enqueue(work.PMetadata->ProcessTime);
 
                     State = State.Next();
                 }
+                else
+                {
 
-                finishedChunkBuildingJob.ClearData();
-                _BuildingJobs.TryAdd(finishedChunkBuildingJob);
+                }
+            }
+
+            if (Options.Instance.GPUAcceleration)
+            {
+                ComputeBuffer heightmapBuffer = new ComputeBuffer(GenerationConstants.CHUNK_SIZE_SQUARED, 4);
+                ComputeBuffer cavemapBuffer = new ComputeBuffer(GenerationConstants.CHUNK_SIZE_CUBED, 4);
+
+                _NoiseShader.SetVector("_Offset", new float4(OriginPoint.xyzz));
+                _NoiseShader.SetFloat("_Frequency", GenerationConstants.FREQUENCY);
+                _NoiseShader.SetFloat("_Persistence", GenerationConstants.PERSISTENCE);
+                _NoiseShader.SetFloat("_SurfaceHeight", WorldController.WORLD_HEIGHT / 2f);
+
+                int heightmapKernel = _NoiseShader.FindKernel("Heightmap2D");
+                _NoiseShader.SetBuffer(heightmapKernel, "HeightmapResult", heightmapBuffer);
+
+                int cavemapKernel = _NoiseShader.FindKernel("CaveNoise3D");
+                _NoiseShader.SetBuffer(cavemapKernel, "CaveNoiseResult", cavemapBuffer);
+
+                _NoiseShader.Dispatch(heightmapKernel, GenerationConstants.CHUNK_THREAD_GROUP_SIZE, 1, GenerationConstants.CHUNK_THREAD_GROUP_SIZE);
+                _NoiseShader.Dispatch(cavemapKernel, GenerationConstants.CHUNK_THREAD_GROUP_SIZE, GenerationConstants.CHUNK_THREAD_GROUP_SIZE,
+                    GenerationConstants.CHUNK_THREAD_GROUP_SIZE);
+
+                ConcurrentWorkers.Queue(() => ChunkBuilder.Generate(OriginPoint, heightmapBuffer, cavemapBuffer,
+                    GenerationConstants.FREQUENCY, GenerationConstants.PERSISTENCE), () =>
+                {
+                    MainThreadActions.Instance.QueueAction(() =>
+                    {
+                        heightmapBuffer?.Release();
+                        cavemapBuffer?.Release();
+
+                        return true;
+                    });
+                }, true, OnTerrainBuildingFinished);
+            }
+            else
+            {
+                ConcurrentWorkers.Queue(() => ChunkBuilder.Generate(OriginPoint, null, null, GenerationConstants.FREQUENCY,
+                    GenerationConstants.PERSISTENCE), null, true, OnTerrainBuildingFinished);
             }
         }
 
         private void BeginMeshing()
         {
-            ConcurrentWorkers.Queue(() => ChunkMeshingJob.ProcessMesh(OriginPoint, Blocks, true), true, OnMeshingFinished);
+            ConcurrentWorkers.Queue(() => ChunkMesher.Generate(OriginPoint, Blocks, true), null, true, OnMeshingFinished);
 
 
             unsafe void OnMeshingFinished(object sender, ConcurrentWorkers.Work work)
@@ -471,31 +467,22 @@ namespace Wyd.Controllers.World
                     $"{nameof(State)} should always be in the '{nameof(ChunkState.AwaitingMeshing)}' state when meshing finishes.\r\n"
                     + $"\tremark: see the {nameof(State)} property's xml doc for  explanation.");
 
-                work.WorkFinished -= OnMeshingFinished;
+                work.Complete -= OnMeshingFinished;
 
-                if (work.Result is MeshData meshData)
+                if (Active && work.Result is MeshData meshData)
                 {
-                    if (Active)
+                    // in this case, the meshing job's data will be cleared and pooled synchronously after the mesh is applied.
+                    MainThreadActions.Instance.QueueAction(() =>
                     {
-                        // in this case, the meshing job's data will be cleared and pooled synchronously after the mesh is applied.
-                        MainThreadActions.Instance.QueueAction(() =>
+                        if (_Mesh is object)
                         {
-                            if (_Mesh is object)
-                            {
-                                ApplyMeshData(ref _Mesh, meshData.Vertexes, meshData.VertexesCount, meshData.Triangles, meshData.TrianglesCount);
-                            }
+                            ApplyMeshData(ref _Mesh, meshData.Vertexes, meshData.VertexesCount, meshData.Triangles, meshData.TrianglesCount);
+                        }
 
-                            meshData.Release();
+                        return true;
+                    });
 
-                            return true;
-                        });
-                    }
-                    else
-                    {
-                        meshData.Release();
-                    }
-
-                    Singletons.Diagnostics.Instance["ChunkMeshing"].Enqueue(work.Metadata->ProcessTime);
+                    Singletons.Diagnostics.Instance["ChunkMeshing"].Enqueue(work.PMetadata->ProcessTime);
                 }
 
                 State = State.Next();

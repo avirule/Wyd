@@ -16,20 +16,19 @@ using Wyd.World.Blocks;
 
 namespace Wyd.World.Chunks.Generation
 {
-    public static class ChunkMeshingJob
+    public static class ChunkMesher
     {
-        private const int _ARRAY_SIZE_IN_PACKED_VERTEXES_ANd_TEX_COORDS = 4 * 6 * GenerationConstants.CHUNK_SIZE_CUBED * 2;
-        private const int _ARRAY_SIZE_IN_TRIANGLES = (int)(_ARRAY_SIZE_IN_PACKED_VERTEXES_ANd_TEX_COORDS * 1.5);
+        private const int _ARRAY_SIZE_IN_PACKED_VERTEXES_AND_TEX_COORDS = 4 * 6 * GenerationConstants.CHUNK_SIZE_CUBED * 2;
+        private const int _ARRAY_SIZE_IN_TRIANGLES = (int)(_ARRAY_SIZE_IN_PACKED_VERTEXES_AND_TEX_COORDS * 1.5);
 
         private static readonly ArrayPool<MeshingBlock> _MeshingBlocksPool = ArrayPool<MeshingBlock>.Create(GenerationConstants.CHUNK_SIZE_CUBED, 8);
 
         private static readonly ArrayPool<int> _VertexesArrayPool =
-            ArrayPool<int>.Create(_ARRAY_SIZE_IN_PACKED_VERTEXES_ANd_TEX_COORDS, ConcurrentWorkers.Count);
+            ArrayPool<int>.Create(_ARRAY_SIZE_IN_PACKED_VERTEXES_AND_TEX_COORDS, ConcurrentWorkers.Count);
 
         private static readonly ArrayPool<int> _TrianglesArrayPool = ArrayPool<int>.Create(_ARRAY_SIZE_IN_TRIANGLES, ConcurrentWorkers.Count);
-        private static readonly SemaphoreSlim _ResourceAccessSemaphore = new SemaphoreSlim(ConcurrentWorkers.Count);
 
-        public static object ProcessMesh(int3 originPoint, INodeCollection<ushort> blocksCollection, bool advancedMeshing)
+        public static object Generate(int3 originPoint, INodeCollection<ushort> blocksCollection, bool advancedMeshing)
         {
             Debug.Assert(blocksCollection != null);
 
@@ -38,10 +37,10 @@ namespace Wyd.World.Chunks.Generation
                 return null;
             }
 
-            _ResourceAccessSemaphore.Wait();
+            GenerationConstants.ResourceAccessSemaphore.Wait();
 
             MeshingBlock[] meshingBlocks = _MeshingBlocksPool.Rent(GenerationConstants.CHUNK_SIZE_CUBED);
-            MeshData meshData = new MeshData(ReleaseResources, _VertexesArrayPool.Rent(_ARRAY_SIZE_IN_PACKED_VERTEXES_ANd_TEX_COORDS),
+            MeshData meshData = new MeshData(ReleaseResources, _VertexesArrayPool.Rent(_ARRAY_SIZE_IN_PACKED_VERTEXES_AND_TEX_COORDS),
                 _TrianglesArrayPool.Rent(_ARRAY_SIZE_IN_TRIANGLES));
 
             int index = 0;
@@ -83,7 +82,7 @@ namespace Wyd.World.Chunks.Generation
         {
             _VertexesArrayPool.Return(vertexes);
             _TrianglesArrayPool.Return(triangles);
-            _ResourceAccessSemaphore.Release();
+            GenerationConstants.ResourceAccessSemaphore.Release();
         }
 
         // protected void ProcessIndex(int index)
