@@ -43,6 +43,145 @@ namespace Wyd.Controllers.World
         private static readonly ObjectPool<ChunkMeshingJob> _MeshingJobs = new ObjectPool<ChunkMeshingJob>();
 
 
+        public void FrameUpdate()
+        {
+#if UNITY_EDITOR
+
+            if (Regenerate)
+            {
+                State = ChunkState.Unbuilt;
+                Regenerate = false;
+            }
+
+#endif
+
+            if (_BuildingJobs.MaximumSize != WorldController.WorldExpansionEdgeSize)
+            {
+                _BuildingJobs.SetMaximumSize(WorldController.WorldExpansionEdgeSize);
+            }
+
+            if (_MeshingJobs.MaximumSize != WorldController.WorldExpansionEdgeSize)
+            {
+                _MeshingJobs.SetMaximumSize(WorldController.WorldExpansionEdgeSize);
+            }
+
+            if (_GenerateNeighbors)
+            {
+                _Neighbors.InsertRange(0, WorldController.Current.GetNeighboringChunks(OriginPoint));
+
+                State = ChunkState.Unbuilt;
+
+                _GenerateNeighbors = false;
+            }
+
+            if (((State == ChunkState.Meshed) && !UpdateMesh) || !WorldController.Current.ReadyForGeneration)
+            {
+                return;
+            }
+            else if ((State > ChunkState.Unbuilt) && (State < ChunkState.Unmeshed))
+            {
+                if (_Neighbors.Any(chunkController => chunkController.State < State))
+                {
+                    return;
+                }
+            }
+
+            switch (State)
+            {
+                case ChunkState.Unbuilt:
+                    BeginBuilding();
+
+                    State = State.Next();
+                    break;
+                case ChunkState.AwaitingBuilding:
+                    break;
+                case ChunkState.Unmeshed:
+                    if (Blocks.IsUniform
+                        && ((Blocks.Value == BlockController.AirID)
+                            || _Neighbors.All(chunkController => (chunkController.Blocks != null)
+                                                                 && chunkController.Blocks.IsUniform)))
+                    {
+                        State = ChunkState.Meshed;
+                    }
+                    else
+                    {
+                        BeginMeshing();
+                        State = State.Next();
+                    }
+
+                    UpdateMesh = false;
+
+                    break;
+                case ChunkState.AwaitingMeshing:
+                    break;
+                case ChunkState.Meshed:
+                    if (UpdateMesh && _BlockActions.IsEmpty)
+                    {
+                        State = ChunkState.Unmeshed;
+                    }
+
+                    break;
+                default:
+                    throw new ArgumentOutOfRangeException();
+            }
+        }
+
+        public IEnumerable IncrementalFrameUpdate()
+        {
+            if ((State < ChunkState.Unmeshed) || (Interlocked.Read(ref _BlockActionsCount) == 0))
+            {
+                yield break;
+            }
+
+            while (_BlockActions.TryDequeue(out BlockAction blockAction))
+            {
+                ProcessBlockAction(blockAction);
+
+                _BlockActionsPool.TryAdd(blockAction);
+
+                Interlocked.Decrement(ref _BlockActionsCount);
+
+                yield return null;
+            }
+        }
+
+        public void FlagMeshForUpdate()
+        {
+            if (!UpdateMesh)
+            {
+                UpdateMesh = true;
+            }
+        }
+
+#if UNITY_EDITOR
+
+        public void FlagRegenerate()
+        {
+            Regenerate = true;
+        }
+
+#endif
+
+        public void Compress()
+        {
+            Stopwatch stopwatch = Stopwatch.StartNew();
+
+            byte[] bytes = WydMath.ObjectToByteArray(Blocks);
+            byte[] target = new byte[bytes.Length];
+
+            Log.Information($"Serialized in {stopwatch.ElapsedMilliseconds}ms for {bytes.Length / 1000}kb");
+
+            int bytesUsed = LZ4Codec.Encode(bytes, 0, bytes.Length, target, 0, target.Length);
+
+            byte[] final = new byte[bytesUsed];
+            Array.Copy(target, 0, final, 0, final.Length);
+
+            stopwatch.Stop();
+
+            Log.Information($"{stopwatch.ElapsedMilliseconds}ms from {bytes.Length / 1000}kb to {final.Length / 1000}kb");
+        }
+
+
         #region NoiseShader
 
         private static ComputeShader _NoiseShader;
@@ -245,145 +384,6 @@ namespace Wyd.Controllers.World
         #endregion
 
 
-        public void FrameUpdate()
-        {
-#if UNITY_EDITOR
-
-            if (Regenerate)
-            {
-                State = ChunkState.Unbuilt;
-                Regenerate = false;
-            }
-
-#endif
-
-            if (_BuildingJobs.MaximumSize != WorldController.WorldExpansionEdgeSize)
-            {
-                _BuildingJobs.SetMaximumSize(WorldController.WorldExpansionEdgeSize);
-            }
-
-            if (_MeshingJobs.MaximumSize != WorldController.WorldExpansionEdgeSize)
-            {
-                _MeshingJobs.SetMaximumSize(WorldController.WorldExpansionEdgeSize);
-            }
-
-            if (_GenerateNeighbors)
-            {
-                _Neighbors.InsertRange(0, WorldController.Current.GetNeighboringChunks(OriginPoint));
-
-                State = ChunkState.Unbuilt;
-
-                _GenerateNeighbors = false;
-            }
-
-            if (((State == ChunkState.Meshed) && !UpdateMesh) || !WorldController.Current.ReadyForGeneration)
-            {
-                return;
-            }
-            else if ((State > ChunkState.Unbuilt) && (State < ChunkState.Unmeshed))
-            {
-                if (_Neighbors.Any(chunkController => chunkController.State < State))
-                {
-                    return;
-                }
-            }
-
-            switch (State)
-            {
-                case ChunkState.Unbuilt:
-                    BeginBuilding();
-
-                    State = State.Next();
-                    break;
-                case ChunkState.AwaitingBuilding:
-                    break;
-                case ChunkState.Unmeshed:
-                    if (Blocks.IsUniform
-                        && ((Blocks.Value == BlockController.AirID)
-                            || _Neighbors.All(chunkController => (chunkController.Blocks != null)
-                                                                 && chunkController.Blocks.IsUniform)))
-                    {
-                        State = ChunkState.Meshed;
-                    }
-                    else
-                    {
-                        BeginMeshing();
-                        State = State.Next();
-                    }
-
-                    UpdateMesh = false;
-
-                    break;
-                case ChunkState.AwaitingMeshing:
-                    break;
-                case ChunkState.Meshed:
-                    if (UpdateMesh && _BlockActions.IsEmpty)
-                    {
-                        State = ChunkState.Unmeshed;
-                    }
-
-                    break;
-                default:
-                    throw new ArgumentOutOfRangeException();
-            }
-        }
-
-        public IEnumerable IncrementalFrameUpdate()
-        {
-            if ((State < ChunkState.Unmeshed) || (Interlocked.Read(ref _BlockActionsCount) == 0))
-            {
-                yield break;
-            }
-
-            while (_BlockActions.TryDequeue(out BlockAction blockAction))
-            {
-                ProcessBlockAction(blockAction);
-
-                _BlockActionsPool.TryAdd(blockAction);
-
-                Interlocked.Decrement(ref _BlockActionsCount);
-
-                yield return null;
-            }
-        }
-
-        public void FlagMeshForUpdate()
-        {
-            if (!UpdateMesh)
-            {
-                UpdateMesh = true;
-            }
-        }
-
-#if UNITY_EDITOR
-
-        public void FlagRegenerate()
-        {
-            Regenerate = true;
-        }
-
-#endif
-
-        public void Compress()
-        {
-            Stopwatch stopwatch = Stopwatch.StartNew();
-
-            byte[] bytes = WydMath.ObjectToByteArray(Blocks);
-            byte[] target = new byte[bytes.Length];
-
-            Log.Information($"Serialized in {stopwatch.ElapsedMilliseconds}ms for {bytes.Length / 1000}kb");
-
-            int bytesUsed = LZ4Codec.Encode(bytes, 0, bytes.Length, target, 0, target.Length);
-
-            byte[] final = new byte[bytesUsed];
-            Array.Copy(target, 0, final, 0, final.Length);
-
-            stopwatch.Stop();
-
-            Log.Information($"{stopwatch.ElapsedMilliseconds}ms from {bytes.Length / 1000}kb to {final.Length / 1000}kb");
-        }
-
-
         #region De/Activation
 
         public void Activate(float3 position)
@@ -462,10 +462,10 @@ namespace Wyd.Controllers.World
         {
             if (!_MeshingJobs.TryTake(out ChunkMeshingJob chunkMeshingJob))
             {
-                chunkMeshingJob = new ChunkMeshingJob();
+                chunkMeshingJob = new ChunkMeshingJob(_CancellationTokenSource.Token, Blocks, _Neighbors.Select(neighbor =>
+                    neighbor.Blocks).ToArray(), Options.Instance.AdvancedMeshing);
             }
 
-            chunkMeshingJob.SetData(_CancellationTokenSource.Token, OriginPoint, Blocks, Options.Instance.AdvancedMeshing);
             chunkMeshingJob.WorkFinished += OnMeshingFinished;
 
             AsyncJobScheduler.QueueAsyncJob(chunkMeshingJob);
@@ -480,32 +480,21 @@ namespace Wyd.Controllers.World
                 ChunkMeshingJob finishedChunkMeshingJob = (ChunkMeshingJob)asyncJob;
                 finishedChunkMeshingJob.WorkFinished -= OnMeshingFinished;
 
-                if (Active)
+                if (Active && _Mesh is object)
                 {
                     // in this case, the meshing job's data will be cleared and pooled synchronously after the mesh is applied.
                     MainThreadActions.Instance.QueueAction(() =>
                     {
-                        if (_Mesh is object)
-                        {
-                            finishedChunkMeshingJob.ApplyMeshData(ref _Mesh);
-                            finishedChunkMeshingJob.ClearData();
-                            _MeshingJobs.TryAdd(finishedChunkMeshingJob);
-                        }
+                        finishedChunkMeshingJob.ApplyMeshData(ref _Mesh);
+                        finishedChunkMeshingJob.ReleaseResources();
 
                         return true;
                     });
-                }
-                else
-                {
-                    finishedChunkMeshingJob.ClearData();
-                    _MeshingJobs.TryAdd(finishedChunkMeshingJob);
                 }
 
                 State = State.Next();
             }
         }
-
-        private bool ApplyMesh(ChunkMeshingJob meshingJob) => true;
 
         #endregion
 
