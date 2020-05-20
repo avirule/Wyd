@@ -10,8 +10,10 @@ using System.Threading.Channels;
 
 namespace Wyd.Jobs
 {
-    public static class ConcurrentWorker
+    public static class ConcurrentWorkers
     {
+        public delegate void WorkEventHandler(object sender, Work work);
+
         private static readonly CancellationTokenSource _CancellationTokenSource;
         private static readonly Thread[] _WorkerThreads;
         private static readonly Channel<Work> _PendingWork;
@@ -19,12 +21,16 @@ namespace Wyd.Jobs
 
         private static bool _Started;
 
-        public static CancellationToken CancellationToken => _CancellationTokenSource.Token;
+        public static CancellationToken AbortToken => _CancellationTokenSource.Token;
 
-        static ConcurrentWorker()
+        public static int Count { get; }
+
+        static ConcurrentWorkers()
         {
+            Count = Environment.ProcessorCount - 2;
+
             _CancellationTokenSource = new CancellationTokenSource();
-            _WorkerThreads = new Thread[Environment.ProcessorCount - 2];
+            _WorkerThreads = new Thread[Count];
             _PendingWork = Channel.CreateUnbounded<Work>(new UnboundedChannelOptions
             {
                 AllowSynchronousContinuations = false,
@@ -49,24 +55,24 @@ namespace Wyd.Jobs
             {
                 _WorkerThreads[index] = new Thread(Worker)
                 {
-                    Name = $"{nameof(ConcurrentWorker)}_{index:##}",
+                    Name = $"{nameof(ConcurrentWorkers)}_{index:##}",
                     Priority = ThreadPriority.BelowNormal,
                     IsBackground = true
                 };
-                _WorkerThreads[index].Start();
+                _WorkerThreads[index].Start(AbortToken);
             }
         }
 
-        public static unsafe void Queue(Action action, bool autoReleaseOnFinish, EventHandler callback)
+        public static unsafe void Queue(Func<object> invocation, bool autoReleaseOnFinish, WorkEventHandler callback)
         {
-            if (action == null)
+            if (invocation == null)
             {
                 throw new NullReferenceException();
             }
 
             WorkMetadata* workData = (WorkMetadata*)Marshal.AllocHGlobal(sizeof(WorkMetadata));
             workData->AutoRelease = autoReleaseOnFinish;
-            Work work = new Work(workData, action);
+            Work work = new Work(workData, invocation);
 
             if (callback != null)
             {
@@ -79,26 +85,39 @@ namespace Wyd.Jobs
             }
         }
 
-        private static unsafe void Worker()
+        private static unsafe void Worker(object data)
         {
-            Stopwatch stopwatch = new Stopwatch();
-
-            while (!_CancellationTokenSource.IsCancellationRequested)
+            if (!(data is CancellationToken cancellationToken))
             {
-                _WorkReset.WaitOne();
+                throw new ArgumentException($"Argument is not of type {typeof(CancellationToken)}.");
+            }
 
-                while (_PendingWork.Reader.TryRead(out Work work))
+            Stopwatch stopwatch = new Stopwatch();
+            Work currentWork = null;
+
+            try
+            {
+                while (!cancellationToken.IsCancellationRequested)
                 {
-                    stopwatch.Restart();
+                    _WorkReset.WaitOne();
 
-                    work.Execute();
+                    while (_PendingWork.Reader.TryRead(out currentWork))
+                    {
+                        stopwatch.Restart();
 
-                    stopwatch.Stop();
+                        currentWork.Execute();
 
-                    work.Metadata->ProcessTime = stopwatch.Elapsed;
+                        stopwatch.Stop();
 
-                    Thread.Sleep(0);
+                        currentWork.Metadata->ProcessTime = stopwatch.Elapsed;
+
+                        Thread.Sleep(0);
+                    }
                 }
+            }
+            finally
+            {
+                currentWork?.Release();
             }
         }
 
@@ -119,33 +138,33 @@ namespace Wyd.Jobs
                 get => _ProcessTime;
                 internal set => _ProcessTime = value;
             }
-
         }
 
         public unsafe class Work
         {
-            private readonly Action _WorkAction;
+            private readonly Func<object> _Invocation;
 
-            internal readonly WorkMetadata* Metadata;
+            public WorkMetadata* Metadata { get; }
+            public object Result { get; internal set; }
 
-            public Work(WorkMetadata* metadata, Action workAction)
+            public Work(WorkMetadata* metadata, Func<object> invocation)
             {
                 Metadata = metadata;
-                _WorkAction = workAction;
+                _Invocation = invocation;
             }
 
-            internal event EventHandler WorkFinished;
+            internal event WorkEventHandler WorkFinished;
 
             internal void Execute()
             {
-                _WorkAction.Invoke();
+                Result = _Invocation.Invoke();
 
                 if (Metadata->AutoRelease)
                 {
                     Release();
                 }
 
-                WorkFinished?.Invoke(this, EventArgs.Empty);
+                WorkFinished?.Invoke(this, this);
             }
 
             public void Release()

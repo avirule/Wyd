@@ -17,7 +17,7 @@
 //     {
 //         public TimeSpan TerrainDetailTimeSpan { get; private set; }
 //
-//         public ChunkTerrainDetailer(CancellationToken cancellationToken, int3 originPoint, INodeCollection<ushort> blocks)
+//         public ChunkTerrainDetailer(AbortToken cancellationToken, int3 originPoint, INodeCollection<ushort> blocks)
 //             : base(cancellationToken, originPoint) =>
 //             _Blocks = blocks;
 //

@@ -14,12 +14,12 @@
 //     {
 //         private readonly INodeCollection<ushort> _Blocks;
 //
-//         public ChunkTerrainDetailerJob(CancellationToken cancellationToken, int3 originPoint, INodeCollection<ushort> blocks)
+//         public ChunkTerrainDetailerJob(AbortToken cancellationToken, int3 originPoint, INodeCollection<ushort> blocks)
 //             : base(cancellationToken, originPoint) => _Blocks = blocks;
 //
 //         protected override Task Process()
 //         {
-//             ChunkTerrainDetailer detailer = new ChunkTerrainDetailer(CancellationToken, _OriginPoint, _Blocks);
+//             ChunkTerrainDetailer detailer = new ChunkTerrainDetailer(AbortToken, _OriginPoint, _Blocks);
 //             detailer.Detail();
 //
 //             // detailer has finished execution, so set
