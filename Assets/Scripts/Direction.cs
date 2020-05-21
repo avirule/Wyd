@@ -72,12 +72,12 @@ namespace Wyd
 
         static Directions()
         {
-            North = new int3(0, 0, 1);
             East = new int3(1, 0, 0);
-            South = new int3(0, 0, -1);
-            West = new int3(-1, 0, 0);
             Up = new int3(0, 1, 0);
+            North = new int3(0, 0, 1);
+            West = new int3(-1, 0, 0);
             Down = new int3(0, -1, 0);
+            South = new int3(0, 0, -1);
 
             CardinalDirectionNormals = new[]
             {
@@ -89,12 +89,12 @@ namespace Wyd
 
             AllDirectionNormals = new[]
             {
-                North,
                 East,
-                South,
-                West,
                 Up,
-                Down
+                North,
+                West,
+                Down,
+                South,
             };
         }
 

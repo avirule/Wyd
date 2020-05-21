@@ -31,119 +31,6 @@ namespace Wyd.Controllers.World
 
         public static int WorldExpansionEdgeSize = ((Options.Instance.RenderDistance * 2) - 1) * WORLD_HEIGHT_IN_CHUNKS;
 
-
-        #region Instance Members
-
-        private Stopwatch _Stopwatch;
-        private ObjectPool<ChunkController> _ChunkControllerPool;
-        private Dictionary<float3, ChunkController> _Chunks;
-        private Stack<float3> _ChunksPendingActivation;
-        private Stack<float3> _ChunksPendingDeactivation;
-        private List<IEntity> _EntityLoaders;
-        private long _WorldState;
-
-        private HashSet<float3> _ChunksRequiringActivation;
-        private HashSet<float3> _ChunksRequiringDeactivation;
-
-        public WorldState WorldState
-        {
-            get => (WorldState)Interlocked.Read(ref _WorldState);
-            set => Interlocked.Exchange(ref _WorldState, (long)value);
-        }
-
-        public bool ReadyForGeneration =>
-            (_ChunksPendingActivation.Count == 0)
-            && (_ChunksPendingDeactivation.Count == 0)
-            && !WorldState.HasState(WorldState.VerifyingState);
-
-        public int ChunksQueuedCount => _ChunksPendingActivation.Count;
-        public int ChunksActiveCount => _Chunks.Count;
-        public int ChunksCachedCount => _ChunkControllerPool.Size;
-
-        public WorldSeed Seed { get; private set; }
-        public int3 SpawnPoint { get; private set; }
-
-        #endregion
-
-
-        #region Serialized Members
-
-        [SerializeField]
-        private CollisionLoaderController CollisionLoaderController;
-
-        [SerializeField]
-        private ChunkController ChunkControllerPrefab;
-
-        [SerializeField]
-        private LineRenderer LineRenderer;
-
-        [SerializeField]
-        private string SeedString;
-
-#if UNITY_EDITOR
-
-        [SerializeField]
-        private bool RegenerateWorld;
-
-#endif
-
-        #endregion
-
-
-        private void Awake()
-        {
-            AssignSingletonInstance(this);
-
-            _ChunkControllerPool = new ObjectPool<ChunkController>(WorldExpansionEdgeSize);
-            _ChunkControllerPool.ItemCulled += (sender, chunkController) => Destroy(chunkController);
-            Options.Instance.PropertyChanged += (sender, args) =>
-            {
-                if (args.PropertyName.Equals(nameof(Options.Instance.RenderDistance)))
-                {
-                    _ChunkControllerPool.SetMaximumSize(WorldExpansionEdgeSize);
-                }
-            };
-
-            _Stopwatch = new Stopwatch();
-
-            _Chunks = new Dictionary<float3, ChunkController>();
-            _ChunksPendingActivation = new Stack<float3>();
-            _ChunksPendingDeactivation = new Stack<float3>();
-            _EntityLoaders = new List<IEntity>();
-
-            _ChunksRequiringActivation = new HashSet<float3>();
-            _ChunksRequiringDeactivation = new HashSet<float3>();
-
-            Seed = new WorldSeed(SeedString);
-        }
-
-        private void Start()
-        {
-            EntityController.Current.RegisterWatchForTag(RegisterCollideableEntity, "collider");
-            EntityController.Current.RegisterWatchForTag(RegisterLoaderEntity, "loader");
-
-            SpawnPoint = WydMath.IndexTo3D(Seed, new int3(int.MaxValue, int.MaxValue, int.MaxValue));
-
-            Singletons.Diagnostics.Instance.RegisterDiagnosticBuffer("WorldStateVerification");
-            Singletons.Diagnostics.Instance.RegisterDiagnosticBuffer("ChunkNoiseRetrieval");
-            Singletons.Diagnostics.Instance.RegisterDiagnosticBuffer("ChunkBuilding");
-            Singletons.Diagnostics.Instance.RegisterDiagnosticBuffer("ChunkDetailing");
-            Singletons.Diagnostics.Instance.RegisterDiagnosticBuffer("ChunkPreMeshing");
-            Singletons.Diagnostics.Instance.RegisterDiagnosticBuffer("ChunkMeshing");
-        }
-
-        private void OnEnable()
-        {
-            PerFrameUpdateController.Current.RegisterPerFrameUpdater(10, this);
-
-            WorldState = WorldState.RequiresStateVerification;
-        }
-
-        private void OnDisable()
-        {
-            PerFrameUpdateController.Current.DeregisterPerFrameUpdater(10, this);
-        }
-
         public void FrameUpdate()
         {
 #if UNITY_EDITOR
@@ -215,6 +102,61 @@ namespace Wyd.Controllers.World
             }
         }
 
+
+        private void Awake()
+        {
+            AssignSingletonInstance(this);
+
+            _ChunkControllerPool = new ObjectPool<ChunkController>(WorldExpansionEdgeSize);
+            _ChunkControllerPool.ItemCulled += (sender, chunkController) => Destroy(chunkController);
+            Options.Instance.PropertyChanged += (sender, args) =>
+            {
+                if (args.PropertyName.Equals(nameof(Options.Instance.RenderDistance)))
+                {
+                    _ChunkControllerPool.SetMaximumSize(WorldExpansionEdgeSize);
+                }
+            };
+
+            _Stopwatch = new Stopwatch();
+
+            _Chunks = new Dictionary<float3, ChunkController>();
+            _ChunksPendingActivation = new Stack<float3>();
+            _ChunksPendingDeactivation = new Stack<float3>();
+            _EntityLoaders = new List<IEntity>();
+
+            _ChunksRequiringActivation = new HashSet<float3>();
+            _ChunksRequiringDeactivation = new HashSet<float3>();
+
+            Seed = new WorldSeed(SeedString);
+        }
+
+        private void Start()
+        {
+            EntityController.Current.RegisterWatchForTag(RegisterCollideableEntity, "collider");
+            EntityController.Current.RegisterWatchForTag(RegisterLoaderEntity, "loader");
+
+            SpawnPoint = WydMath.IndexTo3D(Seed, new int3(int.MaxValue, int.MaxValue, int.MaxValue));
+
+            Singletons.Diagnostics.Instance.RegisterDiagnosticBuffer("WorldStateVerification");
+            Singletons.Diagnostics.Instance.RegisterDiagnosticBuffer("ChunkNoiseRetrieval");
+            Singletons.Diagnostics.Instance.RegisterDiagnosticBuffer("ChunkBuilding");
+            Singletons.Diagnostics.Instance.RegisterDiagnosticBuffer("ChunkDetailing");
+            Singletons.Diagnostics.Instance.RegisterDiagnosticBuffer("ChunkPreMeshing");
+            Singletons.Diagnostics.Instance.RegisterDiagnosticBuffer("ChunkMeshing");
+        }
+
+        private void OnEnable()
+        {
+            PerFrameUpdateController.Current.RegisterPerFrameUpdater(10, this);
+
+            WorldState = WorldState.RequiresStateVerification;
+        }
+
+        private void OnDisable()
+        {
+            PerFrameUpdateController.Current.DeregisterPerFrameUpdater(10, this);
+        }
+
         private void CacheChunk(float3 origin)
         {
             if (!_Chunks.TryGetValue(origin, out ChunkController chunkController))
@@ -249,10 +191,8 @@ namespace Wyd.Controllers.World
         {
             foreach (float3 normal in Directions.AllDirectionNormals)
             {
-                if (TryGetChunk(origin + (normal * GenerationConstants.CHUNK_SIZE), out ChunkController chunkController))
-                {
-                    yield return chunkController;
-                }
+                TryGetChunk(origin + (normal * GenerationConstants.CHUNK_SIZE), out ChunkController chunkController);
+                yield return chunkController;
             }
         }
 
@@ -285,6 +225,64 @@ namespace Wyd.Controllers.World
                 neighborChunk.FlagMeshForUpdate();
             }
         }
+
+
+        #region Instance Members
+
+        private Stopwatch _Stopwatch;
+        private ObjectPool<ChunkController> _ChunkControllerPool;
+        private Dictionary<float3, ChunkController> _Chunks;
+        private Stack<float3> _ChunksPendingActivation;
+        private Stack<float3> _ChunksPendingDeactivation;
+        private List<IEntity> _EntityLoaders;
+        private long _WorldState;
+
+        private HashSet<float3> _ChunksRequiringActivation;
+        private HashSet<float3> _ChunksRequiringDeactivation;
+
+        public WorldState WorldState
+        {
+            get => (WorldState)Interlocked.Read(ref _WorldState);
+            set => Interlocked.Exchange(ref _WorldState, (long)value);
+        }
+
+        public bool ReadyForGeneration =>
+            (_ChunksPendingActivation.Count == 0)
+            && (_ChunksPendingDeactivation.Count == 0)
+            && !WorldState.HasState(WorldState.VerifyingState);
+
+        public int ChunksQueuedCount => _ChunksPendingActivation.Count;
+        public int ChunksActiveCount => _Chunks.Count;
+        public int ChunksCachedCount => _ChunkControllerPool.Size;
+
+        public WorldSeed Seed { get; private set; }
+        public int3 SpawnPoint { get; private set; }
+
+        #endregion
+
+
+        #region Serialized Members
+
+        [SerializeField]
+        private CollisionLoaderController CollisionLoaderController;
+
+        [SerializeField]
+        private ChunkController ChunkControllerPrefab;
+
+        [SerializeField]
+        private LineRenderer LineRenderer;
+
+        [SerializeField]
+        private string SeedString;
+
+#if UNITY_EDITOR
+
+        [SerializeField]
+        private bool RegenerateWorld;
+
+#endif
+
+        #endregion
 
 
         #region State Management

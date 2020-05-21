@@ -22,7 +22,7 @@ namespace Wyd.World.Chunks.Generation
 {
     public class ChunkMeshingJob : AsyncParallelJob
     {
-        private const int _VERTEXES_ARRAY_SIZE = 4 * 6 * GenerationConstants.CHUNK_SIZE * 2;
+        private const int _VERTEXES_ARRAY_SIZE = 4 * 6 * GenerationConstants.CHUNK_SIZE_CUBED * 2;
         private const int _TRIANGLES_ARRAY_SIZE = (int)((_VERTEXES_ARRAY_SIZE / 2f) * 1.5f);
 
         private static readonly VertexAttributeDescriptor[] _Layout =
@@ -43,11 +43,10 @@ namespace Wyd.World.Chunks.Generation
         private static readonly SemaphoreSlim _MeshDataResourceLock = new SemaphoreSlim(AsyncJobScheduler.MaximumConcurrentJobs,
             AsyncJobScheduler.MaximumConcurrentJobs);
 
+        private readonly Stopwatch _RuntimeStopwatch;
         private readonly bool _AdvancedMeshing;
         private readonly INodeCollection<ushort> _BlocksCollection;
         private readonly INodeCollection<ushort>[] _NeighborBlocksCollections;
-
-        private readonly Stopwatch _RuntimeStopwatch;
 
         private MeshingBlock[] _MeshingBlocks;
         private TimeSpan _MeshingTimeSpan;
@@ -70,8 +69,8 @@ namespace Wyd.World.Chunks.Generation
         {
             LinkCancellationToken(cancellationToken);
 
-            _NeighborBlocksCollections = neighborBlocksCollections;
             _RuntimeStopwatch = new Stopwatch();
+            _NeighborBlocksCollections = neighborBlocksCollections;
             _NeighborBlocksCollections = new INodeCollection<ushort>[6];
             _BlocksCollection = blocksCollection;
             _AdvancedMeshing = advancedMeshing;
@@ -136,6 +135,11 @@ namespace Wyd.World.Chunks.Generation
 
             _PreMeshingTimeSpan = _RuntimeStopwatch.Elapsed;
 
+            await _MeshDataResourceLock.WaitAsync().ConfigureAwait(false);
+
+            _Vertexes = _VertexesArrayPool.Rent(_VERTEXES_ARRAY_SIZE);
+            _Triangles = _TrianglesArrayPool.Rent(_TRIANGLES_ARRAY_SIZE);
+
             _RuntimeStopwatch.Restart();
 
             if (_AdvancedMeshing)
@@ -198,6 +202,8 @@ namespace Wyd.World.Chunks.Generation
             Debug.Assert(_NeighborBlocksCollections.Length == 6,
                 $"{nameof(_NeighborBlocksCollections)} should have a length of 6, one for each neighboring chunk.");
 
+            _MeshingBlocks = _MeshingBlocksPool.Rent(GenerationConstants.CHUNK_SIZE_CUBED);
+
             int index = 0;
             for (int y = 0; y < GenerationConstants.CHUNK_SIZE; y++)
             for (int z = 0; z < GenerationConstants.CHUNK_SIZE; z++)
@@ -205,12 +211,6 @@ namespace Wyd.World.Chunks.Generation
             {
                 _MeshingBlocks[index].ID = ((Octree)_BlocksCollection).GetPoint(x, y, z);
             }
-
-            await _MeshDataResourceLock.WaitAsync().ConfigureAwait(false);
-
-            _MeshingBlocks = _MeshingBlocksPool.Rent(GenerationConstants.CHUNK_SIZE_CUBED);
-            _Vertexes = _VertexesArrayPool.Rent(_VERTEXES_ARRAY_SIZE);
-            _Triangles = _TrianglesArrayPool.Rent(_TRIANGLES_ARRAY_SIZE);
         }
 
         public void ReleaseResources()

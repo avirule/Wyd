@@ -40,7 +40,6 @@ namespace Wyd.Controllers.World
     {
         private static readonly ObjectPool<BlockAction> _BlockActionsPool = new ObjectPool<BlockAction>(1024);
         private static readonly ObjectPool<ChunkBuildingJob> _BuildingJobs = new ObjectPool<ChunkBuildingJob>();
-        private static readonly ObjectPool<ChunkMeshingJob> _MeshingJobs = new ObjectPool<ChunkMeshingJob>();
 
 
         public void FrameUpdate()
@@ -60,18 +59,11 @@ namespace Wyd.Controllers.World
                 _BuildingJobs.SetMaximumSize(WorldController.WorldExpansionEdgeSize);
             }
 
-            if (_MeshingJobs.MaximumSize != WorldController.WorldExpansionEdgeSize)
-            {
-                _MeshingJobs.SetMaximumSize(WorldController.WorldExpansionEdgeSize);
-            }
-
-            if (_GenerateNeighbors)
+            if (GetNeighbors)
             {
                 _Neighbors.InsertRange(0, WorldController.Current.GetNeighboringChunks(OriginPoint));
 
-                State = ChunkState.Unbuilt;
-
-                _GenerateNeighbors = false;
+                GetNeighbors = false;
             }
 
             if (((State == ChunkState.Meshed) && !UpdateMesh) || !WorldController.Current.ReadyForGeneration)
@@ -80,7 +72,7 @@ namespace Wyd.Controllers.World
             }
             else if ((State > ChunkState.Unbuilt) && (State < ChunkState.Unmeshed))
             {
-                if (_Neighbors.Any(chunkController => chunkController.State < State))
+                if (_Neighbors.Any(chunkController => chunkController is object && chunkController.State < State))
                 {
                     return;
                 }
@@ -213,7 +205,7 @@ namespace Wyd.Controllers.World
 
 #endif
 
-        private bool _GenerateNeighbors;
+        private bool GetNeighbors;
         private long _BlockActionsCount;
         private long _State;
         private long _Active;
@@ -324,7 +316,8 @@ namespace Wyd.Controllers.World
 
             _CancellationTokenSource = new CancellationTokenSource();
             Active = gameObject.activeSelf;
-            _GenerateNeighbors = true;
+            GetNeighbors = true;
+            State = ChunkState.Unbuilt;
 
             BlocksChanged += FlagUpdateMeshCallback;
             TerrainChanged += FlagUpdateMeshCallback;
@@ -363,8 +356,8 @@ namespace Wyd.Controllers.World
 
             _CancellationTokenSource?.Cancel();
             _Neighbors = null;
-            Blocks = null;
             _BlockActions = null;
+            Blocks = null;
 
 #if DEBUG
 
@@ -460,17 +453,6 @@ namespace Wyd.Controllers.World
 
         private void BeginMeshing()
         {
-            if (!_MeshingJobs.TryTake(out ChunkMeshingJob chunkMeshingJob))
-            {
-                chunkMeshingJob = new ChunkMeshingJob(_CancellationTokenSource.Token, Blocks, _Neighbors.Select(neighbor =>
-                    neighbor.Blocks).ToArray(), Options.Instance.AdvancedMeshing);
-            }
-
-            chunkMeshingJob.WorkFinished += OnMeshingFinished;
-
-            AsyncJobScheduler.QueueAsyncJob(chunkMeshingJob);
-
-
             void OnMeshingFinished(object sender, AsyncJob asyncJob)
             {
                 Debug.Assert(State == ChunkState.AwaitingMeshing,
@@ -491,9 +473,20 @@ namespace Wyd.Controllers.World
                         return true;
                     });
                 }
+                else
+                {
+                    finishedChunkMeshingJob.ApplyMeshData(ref _Mesh);
+                }
 
                 State = State.Next();
             }
+
+            ChunkMeshingJob chunkMeshingJob = new ChunkMeshingJob(_CancellationTokenSource.Token, Blocks, _Neighbors.Select(neighbor =>
+                    neighbor?.Blocks).ToArray(), Options.Instance.AdvancedMeshing);
+
+            chunkMeshingJob.WorkFinished += OnMeshingFinished;
+
+            AsyncJobScheduler.QueueAsyncJob(chunkMeshingJob);
         }
 
         #endregion
